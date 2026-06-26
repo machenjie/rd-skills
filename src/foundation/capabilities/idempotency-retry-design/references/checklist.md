@@ -9,4 +9,6 @@
 - Prevent retries of unsafe mutations without idempotency.
 - Define deduplication for webhooks, async consumers, and external callbacks.
 - Define terminal failure, compensation, reconciliation, or manual recovery.
+- Reconcile repository graph, project memory, runbooks, old reports, and prior validation against current source.
+- Record read-only versus state-mutating replay, provider, queue, database, cache, validation, and diagnostic actions.
 - Add tests for duplicate request, timeout retry, conflict payload, permanent failure, and replay.

@@ -1,6 +1,6 @@
 ---
 name: agent-execution-discipline
-description: Enforces execution discipline for AI and agent-assisted code changes through evidence-based completion, verified-cause diagnosis, route repair after repeated failure, mandatory same-pattern scans before any local fix, reuse-and-placement rationale before adding structure, and proactive closure with explicit risk, boundary, and validation results at every handoff.
+description: Use when an AI or agent changes, diagnoses, validates, reviews, deploys, or hands off code or skill work; enforces evidence-based completion, verified cause, route repair, same-pattern scans, reuse/placement rationale, and residual-risk closure.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "102"
@@ -9,266 +9,200 @@ changeforge_version: 0.1.0
 
 # Mission
 
-Constrain agent-assisted change execution so that every claim is backed by evidence, every diagnosis is backed by verified cause, every retry is backed by a new approach after two failures, every local fix is backed by a same-pattern scan, every new function/class/file/directory is backed by reuse and placement rationale, and every handoff is backed by an explicit risk, boundary, and validation result statement. Provide a small, repeatable execution kernel that any professional skill or reviewer can apply without adding entertainment rhetoric, corporate narration, user-shaming, or runtime PUA-style state.
+Constrain agent-assisted execution so that every completion claim has fresh evidence, every diagnosis has a verified cause, every repeated failure changes route, every local fix has a same-pattern scan, every new structure has reuse and placement rationale, and every handoff states boundary, validation result, residual risk, and next owner. Couple skill selection, project memory, repository graph, validation broker output, and execution trajectory without adding personal corpus mapping, entertainment rhetoric, user-shaming, or runtime PUA-style state.
 
 # When To Use
 
-Use this capability whenever an AI or agent is producing, modifying, diagnosing, validating, deploying, or handing off any code change, including:
+Use when an AI or agent is producing, modifying, diagnosing, validating, reviewing, releasing, or handing off non-trivial work, especially:
 
-- AI or agent code generation, refactor, or patch authoring.
-- Bug investigation and root-cause analysis performed by an agent.
-- Deployment, release, rollback, or migration steps proposed by an agent.
-- Test failure triage and remediation by an agent.
-- Multi-step task execution where the agent reports completion, claims a fix, or hands off to another skill or human.
+- Code generation, refactor, patch authoring, or skill-authoring changes.
+- Bug investigation, failure triage, root-cause analysis, or repair after failed validation.
+- Release, migration, rollback, connector, or destructive filesystem actions.
+- Multi-step execution where the agent says done, fixed, ready, verified, blocked, or hands work to another skill or human.
 
 # Do Not Use When
 
-Do not use for trivial L1 changes such as text copy edits, README typo fixes, log message text, single-string label changes, or comment-only changes that have no code path, dependency, or behavior impact.
+Do not launch for trivial L1 changes such as README typos, copy-only label edits, comment-only cleanup, or single literal text changes with no behavior, dependency, test, registry, or release impact.
 
-Do not use to add narrative storytelling, persona styling, emoji-laden status lines, or persistent runtime state for "agent mood" or "agent score". This capability is a behavior constraint, not a runtime feature.
+Do not use this capability to add narrative status, persona styling, emoji progress lines, persistent mood/score state, personal archive ingestion, private archive mappings, or user-specific runtime content. It is a behavior constraint and report kernel.
 
 # Stage Fit
 
-Launched across stages as the execution kernel, with emphasis in debugging-diagnosis, bug-fix, and documentation-handoff. Per-stage focus:
+- **read / intake:** requirement clarification, repository context, memory and graph signal, proceed/block decision.
+- **plan / edit:** TDD or validation signal before implementation, owner/reviewer split, reuse and placement rationale.
+- **debugging / bug-fix:** verified cause, same-pattern scan, route repair after two same-path failures.
+- **test / review / release:** validation broker freshness, evidence limits, repair/re-review, rollback or release boundary.
+- **handoff:** boundary, residual risk, route manifest, next gate, unsupported adapter limits.
 
-- **debugging-diagnosis**: verified cause before fix; no same-path retry after two failures.
-- **bug-fix**: same-pattern scan, minimal diff, reuse and placement rationale.
-- **documentation-handoff**: evidence inventory, residual risk, and validation results before closure.
+# Mode Matrix
+
+| Stage mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+| --- | --- | --- | --- | --- | --- |
+| Read/intake | Target-project engineering request has code, skill, registry, hook, or release impact | Clarify requirement, non-goals, assumptions, repository graph, and project memory before plan | Requirement ledger, inspected paths, caller/callee or registry map, proceed/block decision | `change-intake-compiler`, `repository-context-map`, `project-memory-governance` | Skip only for no-action explanation or typo-only work with no behavior impact |
+| Plan/edit | Agent will mutate code, skill content, generated artifacts, configs, tests, or docs | Name validation signal, owner skill, review skill, reuse ladder, placement decision, and behavior preservation | Planned command, accepted boundary, reuse/placement rationale, old/new behavior coverage | `implementation-structure-design`, `quality-test-gate`, `ai-code-review-refactor` | Defer edit until target files and conventions were inspected |
+| Debug/repair | Failure, bug, flaky claim, or repeated failed command appears | Verify cause, compare counter-evidence, change route after two same-path failures | Symptom trace, tested hypothesis, exact cause, route repair ledger, new hypothesis | `failure-diagnosis`, `execution-trajectory-analysis` | Do not diagnose from speculation or retry the same path a third time |
+| Local fix | One occurrence of a query, permission, cache, schema, or state defect is patched | Scan repository graph and decide all/subset/local-only coverage | Pattern signature, search scope, other occurrences, rationale, regression output | `change-impact-analyzer`, `regression-testing` | Skip closure until scan result is recorded |
+| Validation/handoff | Agent claims done, fixed, green, ready, complete, or transfers ownership | Prove freshness, scope alignment, evidence limits, independent review, residual risk, and route manifest | Command, exit code, report/artifact, what evidence proves and does not prove, next owner | `validation-broker`, `plan-execution-consistency`, `quality-test-gate` | Treat stale, partial, failed, or no-outcome validation as partial or not verified |
 
 # Non-Negotiable Rules
 
-- **Evidence-based completion.** A change is not complete until concrete evidence (test output, validator output, fixture diff, screenshot, log excerpt, or measured result) is attached to the completion claim.
-- **No engineering action before requirement clarification.** For target-project engineering prompts, the agent must first record current behavior, desired behavior, non-goals, constraints, acceptance/TDD signal, blocking questions, assumptions, and proceed/block status. If blocking questions remain, the agent stops and asks them instead of reading, planning, or editing around the gap.
-- **No plan before target-project inspection.** A plan is invalid until the agent has inspected relevant target-project code, tests, configs, docs, existing implementation, conventions, and likely call chain, or has explicitly limited the work to non-executing advice with not-inspected risk.
-- **Repository context before plan or action.** Before planning or editing, record the owning surface, related files, caller/callee flow, local conventions, tests, configs/docs, generated artifacts, rejected locations, and not-inspected boundaries. A generic plan without repository context is not a plan.
-- **Workflow state before and after phase transitions.** Record current phase, allowed next phase, owner skill, reviewer skill, validation freshness, open findings, repair/re-review state, and closure readiness before moving from read to plan, plan to edit, edit to test, test to review, repair to re-review, or review to handoff.
-- **Tool permission/sandbox before risky action.** Before shell commands, connector/MCP actions, destructive filesystem operations, migrations, deploys, network writes, secret-bearing calls, or untrusted tool output handling, record tool/action class, permission state, sandbox boundary, dry-run/revert path, and redaction rule.
-- **No implementation before TDD or validation signal.** Before editing behavior, the agent names the failing, new, or updated test, eval, validation command, acceptance check, or explicit not-verified residual risk that will prove the change.
-- **No action closure without independent review.** Each action must name an owner skill or capability and a different review skill or capability. The action owner may not substitute self-review for an independent review gate.
-- **No review closure while findings remain.** When review finds issues, route repair to the owner skill or appropriate specialist, then re-run the independent review. Handoff is blocked until findings are repaired and re-reviewed, or explicitly carried as not-verified residual risk with an owner.
-- **No completion claim without fresh verification evidence.** Success-implying language ("done", "fixed", "should pass", "looks good", and similar phrases catalogued in the completion-evidence reference) is forbidden unless a fresh command output, validator result, or artifact from the current change backs it. Evidence from before the current change, from a different file, or from a superseded run is stale and must be re-run. The phrase is not the evidence; the captured outcome is.
-- **Broker freshness is evidence, not decoration.** When Validation Broker output exists, closure must state command level, outcome, coverage alignment, and whether the validation completed after the latest material edit. Stale, failed, not-run, no-outcome, or coverage-mismatch broker results cannot back completion language.
-- **Closure contract is adapter-bounded.** When an executor adapter supplies `AdapterCapabilities` or a `ClosureContract`, completion claims must stay within supported runtime events; unsupported stop, validation, permission, or lifecycle events require degraded evidence and residual risk.
-- **Honest not-verified disclosure.** When verification cannot be run, the agent must state "Not verified", state why it was not run, state the residual risk, and give the exact command the user or next agent should run. It may say "changes prepared, not yet verified"; it may not say the change is complete.
-- **Partial verification is reported as partial.** A passing linter is not a passing build, a passing unit test is not a passing integration suite, and one green test is not full coverage. Generalizing a partial run to "all checks pass" is an overclaim.
-- **Verified-cause diagnosis.** No bug or failure may be declared "diagnosed" without a verified cause traced to a specific symbol, configuration, dependency version, environment value, or input. Speculation about the environment, user, or unknown background process is not a diagnosis.
-- **Route repair after repeated failure.** After two failures of the same approach (same command, same patch shape, same hypothesis) the agent must change the route. Allowed route changes: reread the failing output, inspect the call site, reduce the change scope, or escalate. Repeating the same path a third time is forbidden.
-- **Same-pattern scan before local fix.** Before applying a local fix to a bug, defect, or wrong call, the agent must scan for the same pattern in the rest of the codebase. If the pattern exists elsewhere, the fix must either cover all instances or explicitly justify why it is local-only.
-- **Reuse and placement rationale before new structure.** No new function, class, file, directory, component, hook, service, repository, adapter, utility, or abstraction may be added without an explicit reuse search, placement decision, and shared/common/utils audit. This rule delegates to `implementation-structure-design` for the placement schema.
-- **Proactive closure with risk, boundary, and validation result.** Every handoff or task closure must include: the change boundary, the validation results that were actually run, the residual risks, and the next-skill or human handoff target. When the change was routed, the closure also restates the `changeforge_route` manifest (and `changeforge_stage_route` for non-trivial work) instead of dropping it after the first turn. Silent handoff is rejected.
-- **Plan-execution consistency before final review or handoff.** Compare accepted plan, actual changed files, validation commands, skipped work, stale evidence, unplanned behavior changes, and residual risk. Any mismatch routes back to planning or review.
-- **Local convention scan before naming.**
-  Before adding or renaming any file, function, method, class, directory, component, hook, service, repository, adapter, helper, or utility, the agent must inspect same-file, same-directory, parent-module, sibling-module, and test naming conventions.
-- **Reuse ladder before new code.**
-  Before adding new code, the agent must walk the reuse ladder and record why direct reuse, extension reuse, composition, adapter/wrapper, and extraction are insufficient.
-- **Extension safety before modifying existing logic.**
-  When extending an existing function, method, class, service, repository, adapter, component, or hook, the agent must prove old behavior is preserved and new behavior is covered by tests.
-- **Comment quality evidence.**
-  Any agent-assisted code addition or refactor must record whether exported declarations, complex internal logic, and non-trivial tests require comments. Missing required comments are not acceptable completion.
+- **Evidence-based completion:** no done/fixed/ready claim without fresh command output, validator result, artifact, screenshot, fixture diff, or measured result from the current change.
+- **Requirement and repository context first:** before target-project engineering action, record current behavior, desired behavior, non-goals, constraints, acceptance/TDD signal, assumptions, proceed/block status, inspected source, tests, configs, docs, call chain, conventions, generated artifacts, memory, and graph boundaries.
+- **Workflow state across transitions:** before read-to-plan, plan-to-edit, edit-to-test, test-to-review, repair-to-re-review, and review-to-handoff, record current phase, allowed next phase, owner skill, reviewer skill, validation freshness, open findings, and closure readiness.
+- **Tool and sandbox record:** risky shell, connector, MCP, migration, deploy, network write, destructive filesystem, secret-bearing, or untrusted-output action records permission state, sandbox boundary, dry-run or revert path, and redaction rule.
+- **Validation signal before edit:** behavior changes name the failing, new, or updated test, eval, validator, acceptance check, or explicit not-verified residual risk before implementation.
+- **Independent review and repair:** each non-trivial action names different owner/reviewer skills; findings route back to owner or specialist, then re-run review or become explicit residual risk.
+- **Broker freshness and partial verification:** Validation Broker output counts only with command level, outcome, coverage alignment, and post-edit freshness; lint is not build, one unit test is not integration, manual inspection is not regression, and stale evidence is not current evidence.
+- **Verified-cause diagnosis:** diagnoses name symptom, tested hypothesis, method, concrete cause, and counter-evidence; environment or flakiness guesses are not diagnosis.
+- **Route repair:** after two failures of the same command, patch shape, or hypothesis, stop and choose a new route: reread output, inspect call site, shrink scope, or escalate.
+- **Same-pattern scan:** local bug fixes record pattern signature, scan scope, other occurrences, and all/subset/local-only decision.
+- **Reuse, placement, behavior, and comments:** new or changed structure requires convention scan, reuse ladder, owner, dependency direction, placement decision, old behavior preservation, new behavior coverage, and necessary comments.
+- **Proactive closure:** handoff states change boundary, validation results, residual risks, next owner, and `changeforge_route` / `changeforge_stage_route` when routed.
 
 # Industry Benchmarks
 
-- **Google Site Reliability Engineering**: blameless postmortems and verified-cause analysis — no incident is "resolved" without a documented root cause and corrective action.
-- **NASA software engineering "ten rules"** and Toyota production-system "five whys": stop the line on failure, do not retry without changing the input.
-- **OWASP ASVS / SAMM verification controls**: every security claim must be backed by an evidence artifact (test, scan, review note).
-- **DevOps DORA metrics — change failure rate and MTTR**: silent fixes without same-pattern scans inflate change failure rate and lengthen MTTR.
-- **DDD / Clean Architecture placement rules**: reuse and placement rationale prevents shared-utility pollution and dependency-direction drift.
-- **Toyota Andon principle**: route repair after repeated failure mirrors "stop the line" — do not push through with the same failing approach.
+Google SRE, NASA ten rules, Toyota five whys, OWASP ASVS/SAMM, DORA, DDD, and Clean Architecture all point to the same execution bar: verified cause, changed input after failure, explicit evidence artifacts, same-pattern control, ownership, public/private API boundaries, and internal dependency direction.
 
 # Selection Rules
 
 Select this capability when:
 
-- A professional skill is being invoked by an AI or agent and the task has any non-trivial diagnosis, code-mutation, deployment, or handoff component.
-- `ai-code-review-refactor` is evaluating AI-generated output.
-- `quality-test-gate` is asked to accept a "fix" without test evidence.
-- `delivery-release-gate` is asked to roll out a change after a failed pipeline.
-- `reliability-observability-gate` is asked to close an incident.
-- `change-impact-analyzer` is producing a final impact statement that will be acted on by another agent.
-- `failure-diagnosis` is producing a diagnosis that will be acted on by another agent.
+- A professional skill performs non-trivial diagnosis, code mutation, generated artifact changes, deployment, release, validation, review, or handoff.
+- `ai-code-review-refactor` evaluates AI-generated output or hallucinated APIs.
+- `quality-test-gate` is asked to accept a fix without evidence.
+- `delivery-release-gate` closes rollout, rollback, or migration work after a failed pipeline.
+- `reliability-observability-gate` closes an incident or degraded service.
+- `change-impact-analyzer` produces an impact statement another agent will act on.
 
-Prefer companion capabilities for the substantive content: `implementation-structure-design` for placement detail, `failure-diagnosis` for root-cause workflow, `solution-optimality-evaluation` for algorithmic-choice review.
+Prefer companion capabilities for domain work: `implementation-structure-design` for placement schema, `failure-diagnosis` for root-cause workflow, `validation-broker` for validation result normalization, and `plan-execution-consistency` for final reconciliation.
 
 # With-Skill Vs Without-Skill Behavior
 
-This capability changes agent behavior from plausible completion to evidenced execution: engineering prompts start with requirement clarification, plans follow target-project inspection, implementation follows a TDD or validation signal, actions have owner and independent review skills, review findings trigger repair and re-review, completion must name boundary, fresh command output, residual risk, and handoff; diagnosis must name symptom, tested hypothesis, method, verified cause, and counter-evidence; local fixes require same-pattern scan; new helpers/classes/files require reuse and placement rationale; two same-path failures force route repair; validation states what it proves and does not prove.
+Without this capability, an agent can sound plausible while skipping cause, scope, validation, and residual risk. With it, execution is coupled to memory, graph, selected skills, validation broker output, and trajectory: every plan follows inspection, every edit follows a validation signal, every failure has a repair route, every local fix scans the same pattern, and every closure reports what is proven, what is not proven, and who owns the next gate.
+
+# Proactive Professional Triggers
+
+- **Signal:** Final response says done, fixed, green, ready, or complete after changing `src/` or generated reports, but no current command, working directory, exit code, or artifact is attached.
+  **Hidden risk:** unverified completion claim hides stale validation, wrong file boundary, or missing generated output.
+  **Required professional action:** block completion language, require fresh validation broker evidence, and state what the evidence proves and does not prove.
+  **Route to:** `validation-broker`, `quality-test-gate`, `plan-execution-consistency`.
+  **Evidence required:** command output with exit code, post-edit timestamp or freshness statement, artifact path, and residual risk.
+- **Signal:** Diagnosis labels a failure as flaky, environment, dependency, or user setup before inspecting stack trace, configuration, symbol, version, input, or logs.
+  **Hidden risk:** wrong verified cause leads to repeated wrong patch, hidden regression, or unresolved incident.
+  **Required professional action:** route to root-cause workflow, compare counter-evidence, and withhold diagnosis until the concrete cause is traced.
+  **Route to:** `failure-diagnosis`, `execution-trajectory-analysis`.
+  **Evidence required:** symptom trace, tested hypothesis, method used, verified cause, and counter-evidence record.
+- **Signal:** The same command, patch shape, prompt, or hypothesis has failed twice in one execution trajectory.
+  **Hidden risk:** a third same-path retry wastes context and may overwrite useful failure evidence.
+  **Required professional action:** stop same-route retry, reread failing output, inspect call site or graph edge, shrink scope, or escalate.
+  **Route to:** `execution-trajectory-analysis`, `failure-diagnosis`, `task-dag-planner`.
+  **Evidence required:** attempt ledger, shared failure signature, selected route change, and new hypothesis.
+- **Signal:** A local fix changes one query, permission check, API caller, cache invalidation, state transition, or validation rule.
+  **Hidden risk:** same defect remains in sibling repository, service, controller, schema, or test fixture.
+  **Required professional action:** scan the repository graph for the same pattern and decide all-instance, subset, or local-only treatment.
+  **Route to:** `change-impact-analyzer`, `regression-testing`, `backend-change-builder`.
+  **Evidence required:** pattern signature, search command output, other occurrences found, decision rationale, and regression validation.
+- **Signal:** Final diff, project memory, route manifest, generated report, or validation broker output disagrees with the stated plan or handoff.
+  **Hidden risk:** stale memory, dropped capability, unplanned behavior change, or residual risk hidden from the next owner.
+  **Required professional action:** reconcile accepted plan, actual paths, skipped work, validation coverage, and route/stage manifests before handoff.
+  **Route to:** `plan-execution-consistency`, `project-memory-governance`, `repository-graph-analysis`.
+  **Evidence required:** plan-vs-diff report, memory/graph note, validation coverage matrix, and explicit next gate.
 
 # Risk Escalation Rules
 
-- Escalate when the agent has produced two failed attempts at the same approach — the next step must be a route change or human escalation, not a third retry.
-- Escalate when a "fix" is proposed without a verified cause — route to `failure-diagnosis`.
-- Escalate when a same-pattern scan reveals the bug exists in multiple modules — route to `change-impact-analyzer` and the relevant `*-change-builder`.
-- Escalate when reuse-and-placement rationale cannot be produced — route to `implementation-structure-design` and, if module boundaries are affected, `architecture-impact-reviewer`.
-- Escalate when completion evidence cannot be produced because tests, fixtures, or validators are missing — route to `quality-test-gate`.
+- Escalate a fix without verified cause to `failure-diagnosis`.
+- Escalate two same-path failures to route repair or human owner; never attempt the same path a third time.
+- Escalate multi-occurrence same-pattern findings to `change-impact-analyzer` and the relevant `*-change-builder`.
+- Escalate missing reuse or placement rationale to `implementation-structure-design`, and cross-module boundary changes to `architecture-impact-reviewer`.
+- Escalate missing tests, fixtures, validators, or no-run verification to `quality-test-gate`.
 
 # Critical Details
 
-## Evidence Inventory
+- **Evidence inventory:** command, working directory, exit code, output or report, artifact path, outcome, what evidence proves, and what evidence does not prove.
+- **Completion claim gate:** success language is allowed only after fresh evidence from the current change; otherwise say "Not verified", why not run, residual risk, and exact verification command.
+- **Verified-cause statement:** symptom, hypothesis tested, method, cause traced to symbol/config/version/input, and counter-evidence.
+- **Route repair ledger:** attempt 1, attempt 2, shared failure signature, route change, and new hypothesis.
+- **Same-pattern scan record:** pattern signature, scope scanned, other occurrences, and all/subset/local-only rationale.
+- **Memory / graph / execution coupling:** compare project memory, repository graph, selected skills, validation broker output, accepted plan, actual diff, and execution trajectory before final review or handoff.
 
-Every completion claim must list the evidence in a structured inventory: **command run** (literal command line, working directory), **output captured** (exit code, head/tail, or fixture), **artifact produced** (file path, diff, screenshot, log excerpt), and **outcome** (pass/fail/inconclusive, what it proves, what it does not prove).
+# Evidence Contract
 
-Speculative evidence — "this should work", "based on the docs", "the linter probably passes" — is not evidence.
+Close only when these answers are concrete and current:
 
-## Completion Claim Gate
-
-When verification could not run, the closure replaces the completion claim with a not-verified disclosure: **status** (changes prepared, not yet verified), **why not run**, **residual risk**, and the **exact command** to verify. Dressing an unverified change as complete is a discipline violation. The success-language catalog, partial-verification traps, and worked disclosures live in [references/completion-evidence.md](references/completion-evidence.md).
-
-## Verified-Cause Statement
-
-A diagnosis is structured as:
-
-- **Symptom**: literal observable failure (message, stack frame, status code, metric drop).
-- **Hypothesis tested**: what was checked.
-- **Method**: how it was checked (file inspected, command run, value printed).
-- **Verified cause**: the specific symbol, file, line, configuration key, dependency version, environment value, or input that produced the symptom.
-- **Counter-evidence**: any signal that contradicts the cause (must be addressed, not ignored).
-
-Forbidden patterns: "must be environment", "probably the user's setup", "some background process", "intermittent flakiness" without a reproduction script.
-
-## Route Repair Ledger
-
-When two attempts of the same approach fail, log attempt 1, attempt 2, shared failure signature, route change chosen (re-read failing output / inspect call site / shrink scope / escalate), and the new hypothesis.
-
-A third attempt of the same approach without a route change is a discipline violation.
-
-## Same-Pattern Scan Record
-
-Before any local code fix, record pattern signature, scope scanned, other occurrences found, and decision: cover all / cover subset with rationale / local-only with rationale.
-
-## Reuse and Placement Rationale (delegated)
-
-Delegate the schema to `implementation-structure-design`; this capability requires its output be present before code is accepted, not redefine it.
-
-## Proactive Closure Package
-
-Every handoff must include boundary, validation results with exit codes, residual risk, and handoff target with the specific question or action required. When the change was routed, the package restates the `changeforge_route` manifest (and `changeforge_stage_route` when the work was non-trivial) so the closure carries the selected skills, capabilities, required references, and quality gates as machine-checkable evidence rather than dropping them after the first turn.
-
-## Runtime Prompt Flow Ledger
-
-For target-project engineering work, attach a ledger with: requirement clarification and proceed/block decision; files, code paths, configs, tests, docs, conventions, and call-chain boundaries inspected before plan; TDD or validation signal named before implementation; action owner/review skill map with different owner and review skills; review findings, repair owner, repair evidence, re-review result, and remaining risk. Pure explanation, translation, or no-action Q&A may record "no engineering action" and skip the full ledger.
-
-## Evidence Contract Answer Set
-
-The five questions every professional skill's own Evidence Contract must answer; the skill names the concrete artifact for each answer, this capability enforces that none is skipped:
-
-1. **Basis** — what authority backs the change: the requirement, contract, standard, prior art, or repository convention it rests on.
-2. **Files and boundaries inspected** — which files, modules, call sites, configs, and trust or ownership boundaries were actually read, and what was found.
-3. **Placement rationale** — why each new or changed element lives where it does: reuse-vs-new decision, owner, and dependency direction (schema from `implementation-structure-design`).
-4. **Validation commands** — the literal commands or checks run to prove the change works, with outcomes (schema from the Evidence Inventory above).
-5. **Residual risk** — what remains untested, unmigrated, unmonitored, or assumed, and who owns the follow-up.
-
-## AI Generated Code Discipline Failures
-
-Treat these as execution defects until corrected with evidence: local fix without same-pattern scan; invented helper without reuse search; completion claim without command output; diagnosis without verified cause; retrying the same failed approach; business logic in common/utils; scope expansion without boundary statement; validation overclaim such as presenting lint, typecheck, one unit test, or manual inspection as full build, full regression, or production readiness.
+- **Basis:** requirement, contract, standard, issue, prior art, or repository convention supporting the action.
+- **Boundaries inspected:** source paths, tests, configs, docs, generated artifacts, caller/callee graph, trust boundary, owner, permission, and not-inspected boundary.
+- **Reuse / placement rationale:** convention scan, reuse-vs-new decision, owner, public/private API, dependency direction, and rejected locations.
+- **Behavior preservation:** old behavior protected, new behavior covered, compatibility and rollback effects named.
+- **Validation evidence:** literal command, working directory, exit code, output/report, artifact, fixture, screenshot, or validation broker result after the latest material edit.
+- **What evidence proves:** the exact behavior, contract, build target, regression, routing, installation, or report freshness supported by the evidence.
+- **What evidence does not prove:** skipped suites, partial coverage, unsupported adapter events, untested migration/release paths, or stale external conditions.
+- **Residual risk:** remaining assumption, untested path, degraded evidence channel, release risk, or human decision with owner.
+- **Next gate:** required reviewer, specialist capability, validation command, rollout check, or human question before broader closure.
 
 # Reference Loading Policy
 
-The body carries the decision-critical execution rules and is the part compiled into professional-skill references for the recommended and full profiles. Deep material loads only when authoring or auditing discipline behavior:
+The body carries the execution rules compiled into professional-skill references. Load deep material only when authoring, auditing, or repairing discipline behavior:
 
-- [references/completion-evidence.md](references/completion-evidence.md) — success-language catalog, partial-verification traps, worked not-verified disclosures, and completion-claim pressure scenarios.
+- [references/completion-evidence.md](references/completion-evidence.md) - success-language catalog, partial-verification traps, not-verified disclosures, and pressure scenarios.
+- [references/execution-report-and-gates.md](references/execution-report-and-gates.md) - full Execution Discipline Report fields and exhaustive Quality Gate.
+- [references/checklist.md](references/checklist.md) - compact operator checklist for quick review.
+- [examples/example-output.md](examples/example-output.md) - example report shape when sample output is needed.
 
 # Failure Modes
 
-- Agent declares "done" with no command output, diff, or validator result attached.
-- Agent reports a lint-only or single-test pass as "all tests pass", "build is green", or "everything works".
-- Agent claims completion when verification could not run, instead of disclosing not-verified status, residual risk, and the exact command to run.
-- Agent diagnoses a bug as "probably the environment" without inspecting code, configuration, or logs.
-- Agent retries the same failing command three or more times with the same arguments, hoping for a different result.
-- Agent fixes one occurrence of a defect and ships, leaving the same defect present in five other modules.
-- Agent adds a new helper in `utils/` or `common/` without inspecting existing utilities or justifying placement.
-- Agent hands off with "ready for review" but lists no risks, no boundary, and no validation results.
-- Agent adds narrative storytelling, mock dialogue, persona styling, or persistent "agent state" instead of execution evidence.
-- Agent claims a security or migration step is complete without a verified artifact (no scan log, no migration plan, no rollback note).
+- Agent declares done with no command output, diff, artifact, report, or validator result.
+- Agent presents lint, one unit test, manual inspection, or stale output as full build or full regression.
+- Agent cannot run verification but writes completion language instead of not-verified disclosure.
+- Agent diagnoses environment, flakiness, user setup, or dependency behavior without verified cause.
+- Agent repeats the same failed command, patch shape, or hypothesis three times.
+- Agent fixes one permission, query, schema, cache, or state defect while same pattern remains elsewhere.
+- **Structure drift:** Agent adds `utils/`, `common/`, helper bags, tiny helper files, or adapters without reuse and placement rationale.
+- **Extension drift:** Agent extends existing logic without behavior preservation evidence or new behavior coverage.
+- **Silent handoff:** Agent hands off without risk, boundary, validation result, route manifest, or next owner.
+- **Narrative drift:** Agent introduces story, persona, emoji status, or runtime mood/score state instead of evidence.
 
 # Output Contract
 
-Return an Execution Discipline Report alongside any non-trivial agent-assisted change:
+Return an Execution Discipline Report with:
 
-- **Evidence inventory**: list of commands run, outputs captured, artifacts produced, outcomes.
-- **Runtime prompt flow ledger**: requirement clarification, inspected boundaries before plan, TDD/validation signal, action owner/review map, and repair/re-review record.
-- **Completion claim status**: verified (with the backing command and outcome), partially verified (with the gap named), or not verified (with the not-verified disclosure: status, why not run, residual risk, exact command).
-- **Validation broker result**: selected command level, outcome, evidence strength, coverage alignment, freshness after final material edit, and next route when evidence is weak or negative.
-- **Adapter closure contract**: supported closure checks, unsupported checks, degradation policy, fail-open/fail-closed status, and residual risk.
-- **Repository context map**: owning surface, related files, caller/callee flow, conventions, tests/config/docs, generated artifacts, rejected locations, and not-inspected boundaries.
-- **Workflow state summary**: current phase, allowed transition, owner/reviewer split, validation freshness, open findings, repair/re-review status, and closure readiness.
-- **Tool permission/sandbox record**: risky tool/action class, permission state, sandbox boundary, dry-run/revert path, and redaction rule.
-- **Verified cause statement** (when a diagnosis is part of the change): symptom, hypothesis, method, verified cause, counter-evidence.
-- **Route repair ledger** (when applicable): attempt 1, attempt 2, failure signature, route change, new hypothesis.
-- **Same-pattern scan record** (when a local fix is applied): pattern signature, scope, other occurrences, decision.
-- **Proactive closure package**: boundary, validation results, residual risk, handoff target.
-- **Plan-execution consistency record**: accepted plan, actual changed files, validation commands, skipped work, stale evidence, unplanned behavior changes, and residual-risk reconciliation.
-- **Professional evidence contract answer set**: basis; files and boundaries inspected; reuse/placement rationale; behavior preservation when applicable; validation commands; residual risk; next gate.
-- **Trajectory inspection record**: optional offline evidence view built from telemetry, memory facts, and validation signals. It may support review of skipped stages, stale validation, missing residual risk, or repair without re-review, but it never auto-mutates skills, routing rules, capabilities, or project content.
-- **Discipline violations**: any rule violation that was accepted with justification, or "none".
-- **Local convention scan record**: same file, same directory, parent module, sibling module, tests, selected convention.
-- **Reuse ladder record**: direct reuse, extension reuse, composition, adapter/wrapper, extraction, new code decision.
-- **Extension safety record**: old behavior preserved, compatibility risk, tests covering old and new behavior.
-- **Comment quality record**: exported/public comments, complex internal comments, test scenario/regression comments, redundant comments removed, and intentional omissions.
+- **Mode selected:** read/intake, plan/edit, debug/repair, local fix, validation/review, handoff/release, or not-applicable with reason.
+- **Decision:** approved, blocked, partial, not verified, route repair required, or handoff required.
+- **Boundaries inspected:** requirement, source paths, tests, configs/docs, generated artifacts, memory, graph, permissions, owner, and not-inspected areas.
+- **Execution flow:** workflow state, accepted plan, actual changed files, owner skill, reviewer skill, and plan-execution consistency result.
+- **Evidence inventory:** command, working directory, exit code, output/report, artifact, freshness, validation broker result, and evidence limits.
+- **Cause or route:** verified-cause statement, counter-evidence, route repair ledger, or reason diagnosis was not attempted.
+- **Same-pattern scan:** pattern signature, scope, hits, all/subset/local-only decision, and regression evidence.
+- **Structure controls:** naming convention scan, reuse ladder, reuse/placement rationale, behavior preservation, and comment quality decision.
+- **Tool controls:** permission state, sandbox boundary, dry-run/revert path, redaction rule, adapter capabilities, and unsupported events.
+- **Residual risk:** what remains untested, unmigrated, unmonitored, stale, assumed, or human-owned.
+- **Handoff:** next gate, owner, exact command or question, and routed `changeforge_route` / `changeforge_stage_route` manifests when applicable.
+
+For the full report field list and exhaustive Quality Gate, load [references/execution-report-and-gates.md](references/execution-report-and-gates.md).
 
 # Quality Gate
 
-1. Completion claim has an evidence inventory with at least one concrete command-output, artifact, or validator result.
-2. Engineering work did not start before requirement clarification, unless the output explicitly states no engineering action is being taken.
-3. Planning did not start before relevant target-project code, tests, configs, docs, conventions, and call-chain boundaries were inspected, or not-inspected risk was explicitly accepted for non-executing advice.
-4. Implementation did not start before a TDD or validation signal was named.
-5. Every action names an owner skill/capability and a different review skill/capability.
-6. Every review finding has a repair owner and re-review result before closure, or a not-verified residual risk disclosure with owner.
-7. Any diagnosis attached to the change carries a verified-cause statement.
-8. If the agent attempted the same approach twice and failed, a route repair ledger is attached and no third same-path retry occurred.
-9. Any local code fix carries a same-pattern scan record covering the rest of the codebase.
-10. Any new function, class, file, directory, component, hook, service, repository, adapter, utility, or abstraction carries reuse and placement rationale.
-11. The closure package lists boundary, validation results, residual risks, and the next handoff target.
-12. No entertainment rhetoric, persona narration, emoji status lines, or runtime PUA state are introduced by the change.
-13. Any new or renamed structure has local naming convention evidence.
-14. Any new code has a Reuse Ladder Record.
-15. Any extension of existing logic has an Extension Safety Record.
-16. Any exported/public declaration has a doc comment in the language-standard format.
-17. Any complex internal logic and non-trivial test has required comments or an explicit omission rationale.
-18. When a professional skill emits an Evidence Contract, all five canonical answers — basis, files and boundaries inspected, placement rationale, validation commands, residual risk — are present and non-empty.
-19. Any completion claim names a fresh verification (command, validator, or test) that ran against the current change; success-implying language without backing evidence is absent.
-20. Partial verification is reported as partial, never generalized to a full pass; "all tests pass" is not claimed from a lint-only or single-test run.
-21. When verification could not run, a not-verified disclosure — status, why not run, residual risk, exact command — replaces any completion claim.
-22. When the change is a review, spec compliance (requirement, acceptance criteria, non-goals, plan, compatibility, old-behavior preservation) is confirmed before code-quality judgement, and implementer self-review does not replace independent review.
-23. AI-generated code is rejected or repaired when it shows local-only fixing, invented helpers, missing reuse search, wrong shared/common placement, hidden scope expansion, or validation overclaim.
-24. Every professional skill closure answers the full evidence contract set: inspected boundaries, judgment, reuse/placement rationale, behavior preservation, validation evidence, residual risk, and next gate.
-25. Repository context is present before planning or action for target-project engineering and skill-authoring work.
-26. Workflow state is explicit before phase transitions and at handoff.
-27. Risky shell, connector/MCP, destructive, deploy, migration, network-write, secret-bearing, or untrusted-output actions carry tool permission/sandbox evidence.
-28. Final review and handoff include plan-execution consistency and disclose stale validation or unplanned changes.
-29. When a trajectory report is cited as evidence, its validation freshness, review integrity, and issue list are reconciled with the final handoff rather than treated as automatic approval.
-30. When adapter capabilities limit evidence collection, closure language names the unsupported capability and avoids full-verification claims.
+1. Completion language has fresh evidence inventory; missing or partial verification is labeled not verified or partial with exact follow-up command.
+2. Requirement clarification, repository context, memory/graph check, workflow state, validation signal, and owner/reviewer split precede action closure.
+3. Diagnoses have verified-cause statements; two same-path failures have route repair ledger.
+4. Local fixes have same-pattern scan; new or renamed structure has convention scan, reuse ladder, placement rationale, and behavior preservation evidence.
+5. Validation broker results are post-edit, scoped to changed paths, and state what they prove and do not prove.
+6. Risky tools have permission/sandbox evidence, revert path, and redaction rule; unsupported adapter channels degrade the claim.
+7. Closure answers basis, boundaries inspected, reuse / placement rationale, validation evidence, behavior preservation, residual risk, and next gate.
+8. Final handoff reconciles plan, actual diff, generated artifacts, skipped work, stale evidence, residual risks, route manifest, and handoff boundary.
 
 # Used By
 
-- change-forge-router
-- change-intake-compiler
-- change-impact-analyzer
-- acceptance-criteria-builder
-- task-dag-planner
-- experience-impact-modeler
-- domain-impact-modeler
-- architecture-impact-reviewer
-- data-api-contract-changer
-- frontend-change-builder
-- backend-change-builder
-- data-middleware-change-builder
-- integration-change-builder
-- quality-test-gate
-- security-privacy-gate
-- reliability-observability-gate
-- delivery-release-gate
-- ai-code-review-refactor
-- change-documentation-gate
+`change-forge-router`, `change-intake-compiler`, `change-impact-analyzer`, `task-dag-planner`, `frontend-change-builder`, `backend-change-builder`, `data-middleware-change-builder`, `integration-change-builder`, `quality-test-gate`, `security-privacy-gate`, `reliability-observability-gate`, `delivery-release-gate`, `ai-code-review-refactor`, `change-documentation-gate`, `skill-authoring-expert`.
 
 # Handoff
 
-- `failure-diagnosis` — when the verified-cause statement cannot be produced.
-- `implementation-structure-design` — when reuse and placement rationale cannot be produced.
-- `change-impact-analyzer` — when the same-pattern scan reveals broader blast radius.
-- `quality-test-gate` — when evidence cannot be produced because tests or fixtures are missing.
-- `delivery-release-gate` — when a release is being closed without a route repair ledger after a failed pipeline.
-- `reliability-observability-gate` — when an incident is being closed without a verified cause.
+- `failure-diagnosis` - verified cause is missing or contradicted.
+- `implementation-structure-design` - reuse, naming, owner, or placement rationale is missing.
+- `change-impact-analyzer` - same-pattern scan shows broader blast radius.
+- `quality-test-gate` - evidence cannot be produced, is partial, stale, or mismatched.
+- `delivery-release-gate` - rollout, migration, rollback, or pipeline closure lacks evidence.
+- `reliability-observability-gate` - incident closure lacks verified cause, metric evidence, or residual owner.
 
 # Completion Criteria
 
-The capability is complete for a given change when the Execution Discipline Report is attached, the evidence inventory is non-empty, repository context exists before planning, workflow state is current, risky tools have permission/sandbox evidence, every completion claim names a fresh verification that ran against the current change (or a not-verified disclosure replaces it), any diagnosis carries a verified cause, any repeated failure carries a route repair ledger, any local fix carries a same-pattern scan, any new structure carries reuse and placement rationale, plan-execution consistency reconciles the final work, and the closure package documents boundary, validation results, residual risks, and handoff target.
+This capability is complete for a change when the Execution Discipline Report is attached, evidence inventory is non-empty and fresh, repository context and memory/graph checks exist before planning, risky tools have sandbox evidence, completion language is bounded by validation, diagnoses have verified cause, repeated failures changed route, local fixes scanned same pattern, new structure has reuse and placement rationale, plan-execution consistency reconciles the final diff, and handoff states boundary, validation result, residual risk, route manifest, and next owner.

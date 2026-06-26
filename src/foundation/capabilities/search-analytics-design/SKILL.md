@@ -19,6 +19,10 @@ Use this capability when: a change requires full-text search with relevance rank
 
 Do not use this capability when: a relational `LIKE` query, full-text index (`tsvector` in PostgreSQL, `FULLTEXT INDEX` in MySQL), or a well-indexed range query can serve the product need at acceptable cost and latency (use `indexing-query-optimization` instead); only read latency reduction is needed without relevance, faceting, or OLAP requirements (use `cache-design`); the primary question is source-of-truth data modeling (use `data-model-design`); or the analytical query can be answered by an existing read model without a new engine.
 
+# Stage Fit
+
+Owns data-middleware planning, implementation review, and repair when the primary decision is whether a search index, search service, columnar analytics store, event analytics engine, or derived analytical read model is justified and safe. In planning, it turns product query needs, current source-of-truth boundaries, repository graph, project memory, execution trajectory, query telemetry, and existing read models into an engine decision with freshness, permission, drift, reindex, erasure, fallback, and validation obligations. In review, it rejects engine selection by trend, stale project memory, permission filters assumed outside the query contract, unbounded reindex/backfill plans, and analytics metrics that cannot be reconciled to source data. Hand off when the primary question is relational index tuning, cache-only acceleration, domain source modeling, pipeline migration sequencing, security/privacy depth, reliability SLO enforcement, or release orchestration.
+
 # Non-Negotiable Rules
 
 - **A search or analytics engine is a derived view, not a source of truth.** The source of truth must be explicitly named. The derived system is allowed to lag, contain stale data, and lose documents during reindex — but the product behavior for each of these degraded states must be explicitly defined. "Derived view" must be enforced architecturally: no write path writes to the search index first and the source-of-truth database second.
@@ -28,9 +32,21 @@ Do not use this capability when: a relational `LIKE` query, full-text index (`ts
 - **Schema changes to the index must be governed.** Changing an analyzer, changing a field from `keyword` to `text`, changing a field mapping, or renaming a field requires a full reindex — not an incremental update. These are breaking changes to relevance and must be reviewed as rigorously as database migrations.
 - **Drift detection and reconciliation are required for any ingestion pipeline.** The difference between document count in the source and document count in the index must be measurable. Missing documents due to ingestion failures, schema rejections, or pipeline restarts must be detectable and backfillable. A silent drift of 3% in search results is a product defect and a trust violation.
 
+# Mode Matrix
+
+Select the search or analytics mode before writing the design.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Search engine justification | Full-text relevance, ranking, stemming, synonyms, facets, fuzzy match, semantic/vector retrieval, or cross-field search is requested. | Prove relational indexes or existing read models are insufficient and define derived search behavior. | Query intent, current source/read-model evidence, relevance requirements, rejected relational/cache alternatives. | `indexing-query-optimization`, `data-model-design`, `performance-budgeting` | Engine choice by product label or vendor preference. |
+| Analytics engine justification | OLAP, rollups, dashboards, cohort/funnel, event analytics, large scans, or dimensional aggregation is requested. | Separate operational source data from analytical projection and define reconciliation. | Metric definitions, source tables/events, dimensional grain, freshness target, dedupe/reconciliation evidence. | `bigdata-product-extension`, `acceptance-standard-definition`, `quality-test-gate` | Dashboard shape before metric/source contract. |
+| Existing engine schema or query change | Analyzer, mapping, field, facet, dimension, rollup, relevance function, or query DSL changes. | Preserve old relevance/contracts while planning reindex/backfill and validation. | Current schema/query, consumers, sample queries, before/after relevance or metric checks, rollback. | `version-compatibility`, `data-migration-design`, `delivery-release-gate` | In-place analyzer or mapping mutation without reindex. |
+| Ingestion and freshness design | CDC, streaming, polling, batch ETL, late arrivals, deletion, lag, or drift are in scope. | Make derived data lag measurable, recoverable, and acceptable to product. | Source-of-truth writes, ingestion path, lag SLO, replay/backfill, drift check, staleness behavior. | `message-queue-design`, `data-side-effect-flow-tracing`, `reliability-observability-gate` | "Eventually consistent" with no SLO. |
+| Permission, privacy, and deletion review | Tenant, role, visibility, PII, erasure, support/admin search, or shared index is present. | Prevent search/analytics from bypassing source permissions or retaining deleted data. | Actor/resource/scope, query filter contract, erasure/tombstone path, audit and denial evidence. | `permission-boundary-modeling`, `security-privacy-gate` | UI-only filtering or periodic reindex as deletion proof. |
+
 # Industry Benchmarks
 
-Anchor against: **Elasticsearch / OpenSearch documentation** — analyzer design (standard, language-specific, custom n-gram), field mapping types (text vs. keyword vs. date vs. nested), query DSL (multi_match, bool, function_score, collapse), index aliases for zero-downtime reindex, index lifecycle management (ILM). **Apache Kafka / Kafka Connect** — CDC (Debezium) for near-real-time ingestion from relational sources; exactly-once semantics considerations; consumer lag as a freshness proxy. **Apache Druid / ClickHouse / BigQuery** — columnar storage; partition pruning; materialized views; time-series aggregation; approximate queries (HyperLogLog for cardinality, t-digest for percentiles). **Snowflake / Databricks** — ELT patterns; dbt for transformation governance; data quality checks (Great Expectations, dbt tests). **OWASP — Broken Access Control (A01:2021)** — multi-tenant search must enforce tenant isolation per query; failure to filter by tenant in search queries is an unauthorized disclosure vulnerability. **Google — Site-Specific Search Design** — search relevance signals (TF-IDF vs. BM25 vs. semantic/dense retrieval); result freshness vs. relevance trade-offs. **GDPR Article 17 (Right to Erasure)** — documents containing personal data that are deleted from the source must be deleted or suppressed from the search index within the legally required window; reindex alone is not sufficient — real-time deletion or tombstone must be supported.
+Anchor against Elasticsearch/OpenSearch analyzer, mapping, query DSL, alias-swap, and ILM practice; Kafka/Kafka Connect CDC and consumer lag; ClickHouse, Druid, Pinot, BigQuery, Snowflake, Databricks, and dbt analytical governance; OWASP Broken Access Control for tenant-filtered query contracts; SRE freshness/drift observability; and GDPR erasure expectations for indexed personal data. Keep this body focused on selection, evidence, output, and quality gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for engine-selection matrices, relevance/metric validation, ingestion and deletion patterns, graph/memory/trajectory coupling, and anti-pattern review.
 
 ### Search/Analytics Engine Selection Matrix
 
@@ -75,12 +91,24 @@ Select this capability when **full-text relevance, complex faceting, OLAP aggreg
 
 Escalate immediately when: a search query does not filter by tenant or permission level (unauthorized disclosure risk — OWASP A01:2021, escalate to `security-privacy-gate`); a search index contains personal data subject to GDPR Article 17 and no real-time deletion path exists (legal compliance risk — escalate to legal/privacy owner); a reindex is planned that requires downtime to a production search endpoint (breaking change — escalate to `delivery-release-gate`); analytics metrics directly affect billing, pricing, or SLA calculation (correctness is a financial obligation — escalate to the data governance owner); or ingestion pipeline lag has exceeded the product-approved freshness SLO without a user-visible staleness indicator.
 
+# Proactive Professional Triggers
+
+- **Signal:** A request says "add search", "analytics dashboard", "facets", "semantic search", or "make reporting faster" without naming the source query, current bottleneck, relevance/metric need, or relational alternative. **Hidden risk:** a new engine becomes unjustified operational complexity. **Required professional action:** prove the engine need or route to relational indexing/cache first. **Route to:** `search-analytics-design`, `indexing-query-optimization`, `cache-design`. **Evidence required:** requirement, existing source/read-model evidence, rejected simpler alternative, and engine justification.
+- **Signal:** Repository graph, previous execution trajectory, or project memory suggests an existing index, dashboard, pipeline, or query to reuse. **Hidden risk:** stale engine schema, renamed fields, changed permission model, or old metric definitions are treated as current truth. **Required professional action:** confirm with current source, schema, ingestion jobs, tests, dashboards, and owners before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected reuse, freshness limit, and evidence limits.
+- **Signal:** Search or analytics results include tenant, role, visibility, entitlement, personal data, deletion, or support/admin behavior. **Hidden risk:** derived systems disclose restricted or deleted data even when source systems are correct. **Required professional action:** make permission and erasure enforcement part of the query/ingestion contract. **Route to:** `permission-boundary-modeling`, `security-privacy-gate`. **Evidence required:** actor/resource/action/scope, filter contract, tombstone/delete path, and denied/deleted validation.
+- **Signal:** Reindex, backfill, analyzer change, mapping change, dimension change, metric definition change, or alias swap is proposed. **Hidden risk:** relevance, dashboards, or consumers break during mixed old/new data. **Required professional action:** require blue-green/replay/backfill plan with validation and rollback. **Route to:** `data-migration-design`, `version-compatibility`, `delivery-release-gate`. **Evidence required:** old/new schema, validation comparison, cutover, rollback, and retained old index/window.
+- **Signal:** Freshness is described as "eventual", "daily", "near real time", or "batch" without product-approved SLO and lag measurement. **Hidden risk:** users and decision makers act on stale or misleading derived data. **Required professional action:** define freshness SLO, staleness behavior, lag metric, alert, and reconciliation. **Route to:** `performance-budgeting`, `reliability-observability-gate`, `quality-test-gate`. **Evidence required:** lag SLO, measurement source, staleness indicator, drift check, and validation command.
+
 # Critical Details
 
 - **Permission filtering in search engines is easy to forget and hard to audit.** A multi-tenant application that stores all tenant documents in a shared Elasticsearch index must include `{ "term": { "tenant_id": "current-tenant" } }` (or equivalent document-level security) in every query. A developer who forgets the filter during a new query implementation silently exposes all tenants' data. The permission filter must be in a shared query builder that cannot be bypassed.
 - **Analyzer changes are breaking schema changes.** Changing the analyzer for a field (e.g., from `standard` to `english` stemmer) changes how tokens are stored. Documents indexed before the change are stored with the old tokens; new queries use the new token format — relevance breaks silently. The only fix is a full reindex. Treat analyzer changes as schema migrations requiring the same review discipline as database DDL changes.
 - **Reindex does not satisfy GDPR Right to Erasure in real time.** If a user requests deletion and the next scheduled reindex is in 6 hours, the deleted user's data remains discoverable via search for 6 hours. For products with GDPR obligations, real-time deletion (tombstone document, update by query, or partial update to null sensitive fields) must be implemented alongside the scheduled reindex path.
 - **Search results that affect eligibility, pricing, or inventory must enforce freshness.** A search for "available products" that can return out-of-stock items due to ingestion lag is a product defect. A search for "eligible users" that can return ineligible users due to lag is a compliance defect. For safety-critical freshness, either use the source-of-truth directly for the eligibility check, or add a real-time source-of-truth verification after the search returns candidates.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 selection, boundary, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete search/analytics design, when engine justification or permission/freshness coverage is uncertain, or before implementation planning depends on the design. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when engine selection, relevance/metric validation, ingestion/deletion patterns, drift/reconciliation, or graph/memory/trajectory reuse needs depth. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are enough.
 
 ### Anti-examples
 
@@ -106,6 +134,9 @@ Escalate immediately when: a search query does not filter by tenant or permissio
 
 Return a search or analytics design with:
 
+- `mode_selected` (search engine justification / analytics engine justification / schema or query change / ingestion and freshness / permission privacy deletion)
+- `design_scope` (product query, user or decision maker, source surfaces, excluded relational/cache/source-model alternatives, and release boundary)
+- `source_evidence` (current source-of-truth schema, queries, repository graph, project memory, execution trajectory, telemetry, dashboards, ingestion jobs, and freshness limits)
 - `engine_justification` (why relational/cache is insufficient; specific requirement that justifies the engine)
 - `source_of_truth` (named system; write path; derived-view contract)
 - `indexed_fields` (per field: name, type, analyzer/tokenizer, nullable, PII flag)
@@ -118,6 +149,23 @@ Return a search or analytics design with:
 - `schema_governance` (breaking vs. additive change classification; review requirement)
 - `fallback_behavior` (behavior when search is unavailable: degrade to source-of-truth query, show stale, or error)
 - `observability` (ingestion lag metric, document count delta, query error rate, relevance A/B flag)
+- `relevance_or_metric_validation` (sample queries, judgment set, metric definition, dedupe rule, reconciliation query, or dashboard validator)
+- `changed_design_to_validation_map` (each engine/schema/query/ingestion/freshness/permission/erasure decision mapped to test, validator, monitoring, or residual risk)
+- `handoff_boundaries` (what belongs to relational indexing, cache, data model, migration, security/privacy, reliability, release, or acceptance gates)
+- `reuse_and_freshness_judgment` (accepted/rejected graph, memory, or execution-trajectory evidence and why)
+- `evidence_limits` (what was not verified: production data distribution, live index mapping, real user relevance, dashboard consumers, erasure SLA, or pipeline lag)
+
+# Evidence Contract
+
+Close a search-analytics-design change only when the output names selected mode, design scope, current source evidence inspected, engine justification versus simpler alternatives, source-of-truth and derived-view boundary, permission/erasure contract, freshness SLO, reindex/backfill/rollback path, drift/reconciliation plan, relevance or metric validation, graph/memory/execution reuse judgment, changed-design-to-validation map, handoff boundaries, residual risk, and evidence limits. A design that only names an engine, index, or dashboard is not sufficient evidence.
+
+# Benchmark Coverage
+
+Behavior improvement should be validated structurally: weak designs usually choose an engine before proving need, omit source-of-truth boundaries, assume UI-side permission filtering, treat reindex as a maintenance task with downtime, use "eventually consistent" without SLO, skip erasure/tombstone behavior, or publish analytics without reconciliation. Improved outputs must name mode, source evidence, derived-view contract, permission/freshness/drift/reindex controls, validation mapping, and handoff boundaries while keeping detailed engine examples in references.
+
+# Routing Coverage
+
+Route here when the primary work is full-text relevance, faceted search, semantic/vector retrieval, OLAP aggregation, analytical read models, event analytics, search/analytics schema evolution, ingestion freshness, drift, reindex/backfill, or derived-data permission and erasure behavior. Guard against over-routing by handing off when the primary concern is SQL query/index tuning (`indexing-query-optimization`), cache-only acceleration (`cache-design`), conceptual domain source modeling (`data-model-design`), NoSQL key/document design (`nosql-database`), migration execution sequencing (`data-migration-design`), security/privacy approval (`security-privacy-gate`), reliability SLO/alert operation (`reliability-observability-gate`), or release cutover (`delivery-release-gate`).
 
 # Quality Gate
 
@@ -133,6 +181,11 @@ The design is complete only when:
 8. Schema/analyzer changes are classified as breaking or additive.
 9. Fallback behavior is defined for engine unavailability.
 10. Observability covers ingestion lag, document delta, query error rate.
+11. Selected mode, design scope, source evidence, and simpler alternatives rejected are explicit.
+12. Repository graph, project memory, and execution trajectory evidence are current-source confirmed or marked not verified.
+13. Relevance or metric validation is defined with sample queries, judgment set, reconciliation query, or dashboard validator.
+14. Every changed engine, schema, query, ingestion, freshness, permission, erasure, and fallback decision maps to validation evidence or named residual risk.
+15. Handoff boundaries and evidence limits are explicit so the design is not over-claimed as relational indexing proof, security approval, live production performance, release approval, or metric correctness certification.
 
 # Used By
 

@@ -1,6 +1,6 @@
 # Professionalism Release Readiness
 
-- Generated: 2026-06-25T13:02:58.548945+00:00
+- Generated: 2026-06-26T15:00:28.773378+00:00
 - Status: strict-release-ready
 - Authoring ready: ready
 - Release ready: ready
@@ -20,7 +20,7 @@
 
 ## Key Foundation Capability Coverage Summary
 
-- Count: 40; Statuses: acceptable: 29, needs-review: 10, sample-grade: 1
+- Count: 40; Statuses: acceptable: 1, sample-grade: 39
 
 ## Release Checklist
 
@@ -31,7 +31,7 @@
 | professional benchmarks | pass | `reports/professional-benchmarks-report.json` | true | errors=0; quality_failures=0; empty_baseline_cases=0 |
 | routing coverage | pass | `reports/professional-routing-coverage.json` | true | needs_manual_review=0 |
 | promoted agent samples strict | pass | `reports/professional-agent-samples-report.json from python3 scripts/eval-professional-agent-samples.py --promoted-only --strict` | true | returncode=0; failures=0 |
-| content bloat exceptions | pass | `config/skill-content-exceptions.yaml and reports/skill-content-audit.json` | true | - classifications: {'KEEP_AS_IS': 144, 'MOVE_SECTIONS_TO_REFERENCES': 2, 'TIGHTEN_BODY': 9}; - domain_extensions: 7; - foundation_capabilities: 127; - heavy_domain: 0; - heavy_foundation: 1; - heavy_professional: 1; - low_professionalism: 0; - move_to_reference: 2; - professional_skills: 21; - split_candidates: 0 |
+| content bloat exceptions | pass | `config/skill-content-exceptions.yaml and reports/skill-content-audit.json` | true | - classifications: {'KEEP_AS_IS': 155}; - domain_extensions: 7; - foundation_capabilities: 127; - heavy_domain: 0; - heavy_foundation: 0; - heavy_professional: 0; - low_professionalism: 0; - move_to_reference: 0; - professional_skills: 21; - split_candidates: 0 |
 | known warnings budget | pass | `config/professionalism-baseline.yaml global_thresholds.max_known_warnings` | true | budget_blockers=0 |
 | baseline update drift | pass | `reports/professionalism-regression-report.json baseline_changes` | false | baseline_changes=0 |
 
@@ -61,17 +61,16 @@
 - enhanced_foundation_review_warnings: 0
 - key_foundation_follow_up_warnings: 0
 - new_unaccepted_release_warnings: 0
-- non_key_foundation_advisory_warnings: 2
+- non_key_foundation_advisory_warnings: 0
 - policy: Professional skill warnings block release. Enhanced foundation warnings require release review. Key foundation warnings are follow-up unless evidence or reference precision is weak. Non-key foundation warnings are advisory-only.
 - release_blocking_warnings: 0
 - release_review_required_warnings: 0
-- total_skill_professionalism_warnings: 2
+- total_skill_professionalism_warnings: 0
 - tracked_release_warnings: 0
 
 | Warning | Scope | Release Relevance | Reason | Follow-up |
 | --- | --- | --- | --- | --- |
-| `src/foundation/capabilities/api-contract-design/SKILL.md`: long Markdown table in SKILL.md body (16 rows); consider moving deep table to references | non-key-foundation-capability | advisory-only | Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release. | Track as advisory cleanup; no release action required. |
-| `src/foundation/capabilities/design-pattern-selection/SKILL.md`: long Markdown table in SKILL.md body (37 rows); consider moving deep table to references | non-key-foundation-capability | advisory-only | Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release. | Track as advisory cleanup; no release action required. |
+| None | - | - | - | - |
 
 ## Release Review Decisions
 
@@ -92,8 +91,8 @@
 ## Content Bloat Status
 
 - heavy_domain: 0
-- heavy_foundation: 1
-- heavy_professional: 1
+- heavy_foundation: 0
+- heavy_professional: 0
 - low_professionalism: 0
 - split_candidates: 0
 
@@ -117,8 +116,8 @@
 - promoted_agent_sample_strict_warnings: 0
 - promoted_agent_samples_strict_checked: 5
 - release_blocking_professionalism_warnings: 0
-- skill_professionalism_average_score: 41.86
-- skill_professionalism_warnings: 2
+- skill_professionalism_average_score: 55.62
+- skill_professionalism_warnings: 0
 
 ## Release Blockers
 
@@ -126,13 +125,4 @@
 
 ## Non-Blocking Follow-Ups
 
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/algorithm-data-structure-selection/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/cleanup-deletion-governance/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/configuration-runtime-policy/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/consumer-impact-analysis/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/data-side-effect-flow-tracing/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/dependency-wiring-lifecycle/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/failure-contract-design/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/model-boundary-mapping/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/testability-seam-design/SKILL.md`: key foundation capability remains needs-review
+- None

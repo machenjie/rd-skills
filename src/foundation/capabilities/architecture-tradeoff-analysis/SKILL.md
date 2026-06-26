@@ -19,6 +19,13 @@ Use this capability when a change selects: a structural approach, a foundational
 
 Do not use this capability for minor implementation choices that are easily reversible, locally scoped, and already covered by existing project convention (e.g., picking a logger, picking a date utility). Do not use it as a substitute for `architecture-style-selection` (style is one option of many decisions) or `extensibility-design` (variation modeling).
 
+# Stage Fit
+
+- **Discovery / intake** - frame the decision question, hard constraints, owner, affected boundaries, and existing ADR/project-memory context before implementation starts.
+- **Design / architecture** - compare viable options using current repository graph, operational evidence, force weights, rejected alternatives, and reversibility class.
+- **Implementation / review** - verify the chosen option maps to tests, fitness functions, rollout assumptions, and specialist handoffs before code commits to the decision.
+- **Release / evolution** - record reassessment triggers, expiry conditions, monitoring evidence, and supersession rules so decisions do not silently rot.
+
 # Non-Negotiable Rules
 
 - Include **at least one rejected alternative** with the constraint that disqualified it. "No reasonable alternative" requires a documented mandatory constraint (regulatory, contractual, platform).
@@ -30,6 +37,7 @@ Do not use this capability for minor implementation choices that are easily reve
 - Define a **reassessment trigger** — the concrete signal (metric, time, event) that requires re-deciding. "Periodically" is not a trigger.
 - Name the **decision owner** (single accountable individual) and the **review owner** (separate person who challenged it).
 - Record the decision **before** implementation begins. Retroactive ADRs are documentation, not decisions.
+- Ground the decision in **current graph, memory, and execution evidence**. Prior ADRs, old benchmarks, generated summaries, or team memory are leads only until current source, validation, telemetry, or command evidence confirms them.
 
 # Industry Benchmarks
 
@@ -46,6 +54,24 @@ Select this capability when the decision needs **evidence and future accountabil
 - Prefer `version-compatibility` when the remaining question is rollout across clients.
 - Prefer `change-impact-analyzer` when the work is impact assessment of a decided change.
 - Use **with** `change-documentation-gate` to publish the ADR into the official record.
+
+# Proactive Professional Triggers
+
+Use this capability proactively, even when the request does not ask for a tradeoff analysis:
+
+- **Signal:** a change introduces a durable dependency, vendor, framework, runtime, storage engine, broker, identity model, topology, or public contract. **Hidden risk:** a long-lived choice becomes default architecture without rejected alternatives or exit cost. **Required professional action:** require an ADR-ready decision with force weights, reversibility class, rejected options, and reassessment trigger. **Route to:** `architecture-tradeoff-analysis`, `technology-stack-selection`, `language-runtime-selection`, and `change-documentation-gate`. **Evidence required:** decision question, options matrix, current constraints, exit cost, and owner/reviewer.
+- **Signal:** repository graph shows a boundary move across modules, services, tenants, regions, deploy units, data owners, or generated contracts. **Hidden risk:** the selected architecture can create hidden coupling, ownership gaps, or test/release blast radius. **Required professional action:** map affected graph edges and compare boundary alternatives before accepting the change. **Route to:** `repository-graph-analysis`, `module-boundary-design`, `architecture-impact-reviewer`, and this capability. **Evidence required:** caller/callee or dependency graph, affected tests, rejected boundary placements, and residual risk.
+- **Signal:** project memory, old ADRs, benchmark posts, prior incidents, or generated summaries are used to justify a decision. **Hidden risk:** stale context can preserve a decision after constraints, scale, ownership, or vendor risk changed. **Required professional action:** compare memory against current source, telemetry, validation, and owner reality before reusing it. **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`, and this capability. **Evidence required:** source date, accepted/rejected assumptions, current validation evidence, and expiry condition.
+- **Signal:** the winning option is defended with "best practice", "industry standard", "faster", "simpler", "future-proof", or senior preference. **Hidden risk:** authority or preference replaces weighted forces and hides the true decision driver. **Required professional action:** restate the decision question, rank forces before scoring, and reality-test the strongest objection to the winner. **Route to:** `solution-optimality-evaluation`, `architecture-style-selection`, and this capability. **Evidence required:** ranked forces, hostile-review objection, selected/rejected rationale, and not-chosen constraints.
+- **Signal:** a decision has high residual risk, unclear rollback, time pressure, regulated scope, cost threshold, or multi-year maintenance obligation. **Hidden risk:** an effectively irreversible decision ships without owner, monitoring, or supersession path. **Required professional action:** escalate rigor, name accountable owners, define fitness functions, and require release/documentation handoff. **Route to:** `delivery-release-gate`, `reliability-observability-gate`, `security-privacy-gate`, and this capability. **Evidence required:** residual-risk owner, fitness function, rollback/exit plan, approval record, and next review trigger.
+
+# Reference Loading Policy
+
+- **L1:** Use only this `SKILL.md` for routing or rejecting a local reversible choice that does not need an ADR.
+- **L2:** Load `references/checklist.md` when drafting or reviewing any real tradeoff analysis, ADR-ready decision, rejected-alternative record, or reassessment trigger.
+- **L3:** Load `examples/example-output.md` when the expected output shape is unclear or a concise user-facing decision record is needed.
+- **L4:** Load `references/tradeoff-benchmarks.md` for architecture review, ADR preparation, L4/L5 decisions, irreversible choices, force-weight calibration, or complex option matrices.
+- **L5:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the decision depends on current graph reachability, prior ADRs, command output, telemetry, tests, or validation freshness.
 
 # Risk Escalation Rules
 
@@ -105,6 +131,8 @@ Return an ADR-ready decision with:
 - `date`, `decision_owner`, `reviewers`
 - `context` (problem, constraints, what changed that requires a decision)
 - `decision_question` (precise question being answered)
+- `boundaries_inspected` (current source paths, graph edges, existing ADRs, owners, tests, configs, deployment/runtime surfaces, and skipped boundaries)
+- `graph_memory_execution_validation` (repository graph, project memory, telemetry, command output, and validation evidence accepted or rejected with freshness limits)
 - `forces` (ranked list with weights and probe data)
 - `options_considered` (≥ 3 where credible; each with description and cost-class)
 - `options_matrix` (weighted scoring table)
@@ -115,9 +143,11 @@ Return an ADR-ready decision with:
 - `risks` (list of `{risk, likelihood, impact, mitigation, residual_risk, owner}`)
 - `reversibility_class` (Type 1 / Type 2 + exit cost estimate)
 - `verification_plan` (how we will know the decision was right or wrong — fitness functions, metrics, review checkpoint)
+- `decision_to_validation_map` (each force, risk, and consequence mapped to test, metric, prototype, rollout guard, or specialist gate)
 - `reassessment_trigger` (concrete signal, not "periodically")
 - `expiry_conditions` (what would invalidate this decision)
 - `related_decisions` (links to ADRs that depend on or supersede this)
+- `evidence_limits` (unverified assumptions, stale memory, missing metrics, not-inspected boundaries, and residual risk owner)
 
 # Quality Gate
 
@@ -131,6 +161,22 @@ The analysis passes only when:
 6. Reassessment trigger is a measurable signal.
 7. Consequences cover delivery, testing, operations, security, privacy, cost, future flexibility — even when "none".
 8. The decision was recorded before implementation OR the ADR is explicitly marked "post-hoc" and a forward-looking ADR replaces it.
+9. Repository graph, project memory, and execution evidence were inspected or explicitly marked unavailable with next proof step.
+10. Decision-to-validation map links forces, risks, consequences, and reassessment trigger to tests, metrics, prototypes, rollout guards, or specialist gates.
+11. Evidence limits state what the analysis proves, what it does not prove, and which boundaries remain unverified.
+12. Required adjacent capabilities and skipped gates are recorded with rationale.
+
+# Evidence Contract
+
+The decision must cite `boundaries_inspected`, validation commands or artifacts, what evidence proves, what evidence does not prove, residual risk, and next handoff gate. Tradeoff evidence proves only the constraints, graph, metrics, and assumptions inspected at decision time; it does not prove future scale, downstream adoption, production reliability, or consumer compatibility unless those gates were selected and verified. Missing current graph, memory freshness, telemetry, or validation evidence blocks acceptance or downgrades the decision to proposed.
+
+# Benchmark Coverage
+
+Benchmark frameworks and ADR templates are calibration aids, not proof. Approval requires local decision forces, current repository graph, owner reality, reversible/irreversible classification, and a validation or fitness-function plan tied to the selected option.
+
+# Routing Coverage
+
+When selected by a router, report which adjacent capabilities were loaded or intentionally skipped: `architecture-style-selection`, `module-boundary-design`, `microservice-splitting`, `event-driven-architecture`, `data-model-design`, `solution-optimality-evaluation`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`, `change-documentation-gate`, `delivery-release-gate`, `security-privacy-gate`, and `reliability-observability-gate`.
 
 # Used By
 
@@ -143,4 +189,4 @@ Hand off to `change-documentation-gate` when the decision must enter the officia
 
 # Completion Criteria
 
-The capability is complete when the decision has: a precisely framed question, ≥ 1 credible rejected alternative with disqualifying constraint, weighted forces set before scoring, risks with mitigations and residual ownership, consequences across all required dimensions, a reversibility classification matched by analysis depth, and a measurable reassessment trigger — and is recorded publicly in an ADR-ready form before implementation begins.
+The capability is complete when the decision has: a precisely framed question, ≥ 1 credible rejected alternative with disqualifying constraint, weighted forces set before scoring, risks with mitigations and residual ownership, consequences across all required dimensions, a reversibility classification matched by analysis depth, current graph/memory/execution evidence with limits, a decision-to-validation map, and a measurable reassessment trigger — and is recorded publicly in an ADR-ready form before implementation begins.

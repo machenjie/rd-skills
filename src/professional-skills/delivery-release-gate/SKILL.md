@@ -204,31 +204,17 @@ Examples:
 - `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
 
 ## Output Contract
-Return a structured release plan with:
-- **Mode selected**: standard rollout, migration-sensitive, progressive delivery, IaC/K8s/Helm/GitOps, incident hotfix, or regulated release, with trigger signal.
-- **Boundaries inspected**: pipeline, artifact, config, secrets, migrations, flags, Helm/K8s/IaC, DNS/CDN/WAF/gateway, cloud IAM/KMS, dashboards, runbooks, consumers, and audit boundaries inspected or skipped with reason.
-- **Professional judgment**: rollout, rollback, migration/config compatibility, canary, incident, or compliance decision and risks ruled out or retained.
-- **Deployment strategy**: Rolling / canary / blue-green with configuration (percentages, replica counts, traffic routing).
-- **Pre-deployment checklist**: Environment config validation, secrets audit, staging parity confirmation, migration compatibility check.
-- **Cloud governance checklist**: IaC plan review, account/project boundary, namespace boundary, IAM diff, DNS/CDN/WAF/gateway rollback, KMS/key rotation impact, resource tagging, and audit trail.
-- **Helm release plan**: chart version, values diff, rendered manifest diff, CRD/hook handling, atomic upgrade, rollback scope, and verification.
-- **Migration sequence**: Forward migration execution order (before or after code deploy), rollback migration, tested execution evidence.
-- **Feature flag plan**: Flag state at deployment, % rollout schedule, disableability confirmation, cleanup task reference.
-- **Rollback procedure**: Step-by-step rollback instructions with expected execution time; tested in staging.
-- **Communication plan**: Consumer notification, partner coordination, on-call notification if needed.
-- **Incident release plan**: SEV severity, mitigation vs. resolution, incident roles, customer/status page communication owner, and validation signal when applicable.
-- **Compliance evidence**: Change approval, deploy audit event, artifact digest, SBOM/vulnerability scan evidence, evidence owner, and retention period.
-- **Post-release monitoring plan**: Named owner, dashboards, metrics, SLO burn rate, duration of watch window.
-- **Execution discipline evidence**: Deployment commands or pipeline links, exit status, failed-attempt ledger when applicable, route repair decision, and closure package.
-- **Tool permission/sandbox evidence**: deploy/migration/IaC/Helm/Kubernetes/cloud/secret action class, permission state, sandbox boundary, dry-run/rendered diff, rollback or revert path, and redaction rule.
-- **Validation evidence**: pipeline, staging, rollback, Helm/IaC, config, canary, post-release, or audit checks run, with outcomes tied to the release obligation.
-- **Reuse and placement rationale**: why migration, config, flag, Helm/IaC, pipeline, watch, and rollback responsibilities sit in the selected release boundary.
-- **Minimal Correctness Decision**: existing release control selected or rejected, new release machinery avoided or justified, stale flag/config/script deletion plan, and shortcut ceiling with rollback trigger.
-- **Behavior preservation**: old/new version compatibility, config defaults, feature flag off-state, public contract, and rollback behavior preserved or intentionally changed.
-- **Release notes**: Human-readable changelog entries (Keep a Changelog format) for affected audiences.
-- **Evidence limits**: what pipeline, staging, rollback, Helm/IaC, config, canary, and post-release evidence proves and what production, consumer, or data risks remain unproven.
-- **Residual risks**: Known risks with mitigation or acceptance rationale.
-- **Next gate/handoff**: reliability, security, data/API, docs, incident, or no-next-gate rationale.
+Return a structured release plan with actionable evidence:
+- **Mode selected:** standard rollout, migration-sensitive, progressive delivery, IaC/K8s/Helm/GitOps, incident hotfix, or regulated release, with trigger signal.
+- **Boundaries inspected:** pipeline, artifact, config, secrets, migrations, flags, Helm/K8s/IaC, cloud/network, dashboards, runbooks, consumers, audit boundaries, and skipped areas with reason.
+- **Release judgment:** rollout strategy, rollback boundary, migration/config compatibility, canary criteria, incident/compliance decision, risks ruled out, and risks retained.
+- **Execution plan:** deployment strategy, pre-deploy checklist, cloud governance, Helm plan, migration sequence, feature flag plan, rollback steps, communication plan, and post-release watch.
+- **Evidence package:** pipeline/staging/rollback/Helm/IaC/config/canary/post-release checks, artifact digest, SBOM/scan, deploy audit event, command status, failed-attempt ledger, and evidence limits.
+- **Tool permission/sandbox evidence:** deploy/migration/IaC/Helm/Kubernetes/cloud/secret action class, permission state, sandbox boundary, dry-run/rendered diff, rollback/revert path, and redaction rule.
+- **Reuse / placement rationale:** why migration, config, flag, Helm/IaC, pipeline, watch, and rollback responsibilities sit in the selected release boundary.
+- **Behavior preservation:** old/new version compatibility, config defaults, feature flag off-state, public contract, rollback behavior, residual risk, and next gate.
+
+For the full output field list, quality gate, and handoff table, load `references/delivery-output-and-gates.md`.
 
 ## Evidence Contract
 Close a release plan only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
@@ -240,30 +226,16 @@ Close a release plan only when all five canonical answers are concrete (answer s
 - **Residual risk**: rollback trigger, post-release watch signal, config parity, migration compatibility, IaC rollback, or unverified consumer path that remains, with the named owner.
 
 ## Quality Gate
-1. Every deployment artifact is immutably tagged — no `latest` tags in production.
-2. All environment variables required by the new version are verified to exist in the target environment.
-3. All secrets are retrieved from an audited secret management service — none hardcoded or in plaintext logs.
-4. The database migration is backward-compatible with the current application version during the rollout window.
-5. The rollback procedure is documented and has been executed in staging.
-6. Feature flags can be disabled without a code deploy.
-7. Staging has been validated with production-equivalent configuration and integration surface.
-8. A named owner with a defined watch window and monitoring dashboard is assigned for post-release observation.
-9. External consumers, partners, and on-call engineers are notified per the communication plan.
-10. Release notes are accurate, human-readable, and audience-appropriate.
-11. IaC/cloud governance changes have reviewed plan evidence, blast-radius boundary, IAM/network/KMS/DNS impact review, and rollback procedure.
-12. Regulated releases retain approval, audit event, artifact digest, SBOM/vulnerability scan evidence, owner, and retention period.
-13. Incident hotfixes distinguish mitigation from resolution and identify incident commander, technical lead, communications owner, and validation signal.
-14. Agent-assisted release work includes evidence inventory, route repair after repeated failure, residual risks, and handoff target.
-15. Release-affecting tools have permission/sandbox evidence before execution, including dry-run/rendered diff when available, rollback/revert path, and redaction rules for secrets and command output.
+- Deployment artifacts are immutable; target environment config, audited secrets, staging parity, and production-equivalent integration surfaces are verified.
+- Migration, feature flag, cloud/IaC, Helm/K8s, consumer coordination, and rollback paths are compatible with old/new versions and tested proportionally to risk.
+- Post-release watch has named owner, dashboard, duration, SLO/error/latency signals, and rollback trigger.
+- Release notes, regulated evidence, incident role split, deploy audit event, artifact digest, SBOM/scan evidence, owner, and retention are present when applicable.
+- Agent-assisted release work includes evidence inventory, route repair after repeated failure, residual risks, handoff target, and tool permission/sandbox evidence.
 
 ## Handoff
-- **reliability-observability-gate** — for SLO burn rate targets, canary metric baselines, and post-release alert thresholds.
-- **security-privacy-gate** — when secrets management, container image security, or compliance evidence is required.
-- **data-api-contract-changer** — when migration rollback safety or API contract versioning must be confirmed before release.
-- **change-documentation-gate** — for release notes, runbook updates, and consumer migration guide publishing.
-- **quality-test-gate** — when release gate criteria require test evidence that has not yet been produced.
-- **failure-diagnosis** — when a release is part of incident mitigation or root-cause confirmation.
-- **agent-execution-discipline** — when release closure lacks evidence, route repair, risk boundary, or validation results.
+- Hand SLO burn, canary metrics, post-release alerts, secrets, container image security, and compliance evidence to reliability and security gates.
+- Hand migration rollback safety, API contract versioning, release notes, runbooks, consumer migration guides, and missing test evidence to data/API, documentation, and quality gates.
+- Hand incident mitigation/root-cause confirmation or missing release evidence, route repair, risk boundary, and validation results to `failure-diagnosis` or `agent-execution-discipline`.
 
 ## Completion Criteria
 The change has an approved release plan with an immutably tagged artifact, verified environment configuration, cloud/IaC governance evidence when applicable, a backward-compatible migration sequence with tested rollback, a disableable feature flag if applicable, a tested rollback procedure, a named post-release monitoring owner, incident or compliance evidence when applicable, a communication plan executed, and release notes published before the deployment window opens.

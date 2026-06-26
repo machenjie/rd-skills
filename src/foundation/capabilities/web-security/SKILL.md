@@ -19,6 +19,10 @@ Use this capability when a change: adds or modifies web routes, REST or GraphQL 
 
 Do not use this capability to: replace `threat-modeling` for high-risk product changes that require full STRIDE analysis and adversarial scenario planning; replace `input-validation` for defining comprehensive boundary validation contracts; replace `authentication-security` for authentication lifecycle and session management design; or replace `permission-boundary-modeling` for object-level authorization enforcement design. This capability is the web exploit class review — route to those peers for deeper design.
 
+# Stage Fit
+
+Use during planning when new routes, browser controls, uploads, redirects, server-side fetches, templates, or protected object actions are introduced. Use during coding and review when exploit controls, framework defaults, middleware, headers, cookies, query construction, or file/fetch paths change. Use during testing and release when hostile payloads, IDOR cases, scan results, prior memory, repository graph-discovered entry points, or validation freshness decide whether release is blocked.
+
 # Non-Negotiable Rules
 
 - **Treat all user-controlled input as hostile until proven otherwise.** "User-controlled" includes: URL path parameters, query string values, HTTP headers (`Referer`, `X-Forwarded-For`, `Origin`, `Content-Type`), request body fields, file names, file content, cookie values, OAuth parameters, and any value that originates from a client. Sanitization or encoding is not an excuse for trusting unvalidated input — validation must occur at the system boundary before processing.
@@ -28,12 +32,13 @@ Do not use this capability to: replace `threat-modeling` for high-risk product c
 - **Parameterized queries are the only acceptable defense against SQL injection.** String concatenation into SQL queries — even with escaping — is insufficient because escaping functions have encoding edge cases and context-specific behavior. Use prepared statements with bound parameters in every database call. ORM query builders are acceptable only when verified that they emit parameterized queries and do not have raw-query escape hatches that are being used. No exceptions for "admin-only" endpoints — privilege does not change injection risk.
 - **File uploads require: type validation, size limit, storage isolation, and malware scanning.** Required controls per upload endpoint: (a) validate MIME type from file content (not from `Content-Type` header or file extension — these are attacker-controlled); (b) enforce size limits at the HTTP layer, not after reading the full body; (c) store uploaded files in isolated storage outside the web root, with no execute permissions; (d) generate server-side storage keys — never use the original filename as the storage key or path; (e) scan for malware in the background before making the file accessible.
 - **CSRF protection is required for all state-changing endpoints that use cookie-based sessions.** Modern `SameSite=Strict` or `SameSite=Lax` cookies reduce (but do not eliminate) CSRF risk. Required: `SameSite` attribute set on all session cookies; CSRF token validation for state-changing requests on endpoints with `SameSite=None` cookies; `Origin` header validation as secondary defense. APIs that use only `Authorization: Bearer` tokens (not cookies) are not CSRF-vulnerable — do not add CSRF tokens to stateless JWT APIs.
+- **Current source evidence is mandatory.** Cite affected routes, handlers, templates, middleware, headers, cookies, fetch/upload code paths, authorization predicates, tests, scan results, repository graph, project memory with dates, and validation freshness. Treat old security memory as a lead until current source and exploit evidence confirm it.
 
 # Industry Benchmarks
 
 Anchor against: **OWASP Top 10 (2021)** — A01: Broken Access Control; A02: Cryptographic Failures; A03: Injection; A05: Security Misconfiguration; A06: Vulnerable Components; A07: Identification and Authentication Failures; A10: Server-Side Request Forgery. **OWASP ASVS (Application Security Verification Standard) v4.0** — V4 (Access Control), V5 (Validation), V13 (API), V14 (Config). **CWE-79 (XSS)**, **CWE-89 (SQL Injection)**, **CWE-352 (CSRF)**, **CWE-918 (SSRF)**, **CWE-22 (Path Traversal)**, **CWE-502 (Insecure Deserialization)**, **CWE-434 (Unrestricted Upload)**. **Content Security Policy Level 3 (W3C)** — `script-src`, `object-src`, `base-uri`, `frame-ancestors` directives for XSS mitigation. **SameSite Cookie attribute (RFC 6265bis)** — CSRF mitigation via `Strict`/`Lax`. **RFC 7231 / RFC 7235** — HTTP `Origin` header; `401` vs `403` semantics. **OWASP Cheat Sheet Series** — XSS Prevention, SQL Injection Prevention, CSRF Prevention, SSRF Prevention, File Upload, Deserialization cheat sheets.
 
-### Web Exploit Class Review Matrix
+# Web Exploit Class Review Matrix
 
 | Exploit Class | Entry Vector | Server-Side Control | Client-Side / Browser Control | Test Evidence Required |
 | --- | --- | --- | --- | --- |
@@ -49,7 +54,7 @@ Anchor against: **OWASP Top 10 (2021)** — A01: Broken Access Control; A02: Cry
 | IDOR (Broken Object Auth) | Direct object reference via ID | Object-level ownership check on every read/write | N/A | Access another user's object by changing ID; verify 403/404 |
 | Broken Function Auth | Direct API call without role | Function-level role check server-side | N/A | Call admin endpoint without admin role; verify 403 |
 
-### SSRF Defense Decision Tree
+# SSRF Defense Decision Tree
 
 ```
 Does this feature accept a URL from user input?
@@ -73,6 +78,18 @@ Does this feature accept a URL from user input?
 # Selection Rules
 
 Select this capability when **the primary risk is a web exploit class (XSS, CSRF, SSRF, injection, upload abuse, access control)** for a specific change. Route to `input-validation` for comprehensive boundary validation contract design. Route to `authentication-security` for session lifecycle, token management, and MFA. Route to `threat-modeling` for full adversarial scenario analysis of high-risk features. Route to `permission-boundary-modeling` for object-level and function-level authorization enforcement design. Route to `secret-configuration-security` for secret exposure risk.
+
+# Proactive Professional Triggers
+
+- **Signal:** route, resolver, controller, template, email/PDF rendering, Markdown/HTML rendering, redirect, upload, download, or server-side fetch code changes without a web exploit review. **Hidden risk:** XSS, CSRF, SSRF, open redirect, upload abuse, or object authorization gaps can enter through a non-obvious browser or HTTP boundary. **Required professional action:** enumerate affected entry points, classify exploit classes, and require hostile-case evidence before approval. **Route to:** `web-security`, `input-validation`, `permission-boundary-modeling`, and `quality-test-gate`. **Evidence required:** affected route/template/fetch/upload paths, exploit-class checklist, denied cases, and command or manual proof.
+- **Signal:** project memory, old security review, scanner output, framework default, or generated docs claim a web control already exists. **Hidden risk:** stale memory can miss new routes, changed middleware ordering, disabled escaping, new cookie mode, or generated route drift. **Required professional action:** compare memory with current repository graph, source paths, middleware order, and test freshness before accepting the claim. **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`, and this capability. **Evidence required:** memory source/date, current graph delta, accepted/rejected claim, and stale evidence limit.
+- **Signal:** user-controlled URL, path, filename, HTML/Markdown, query fragment, redirect target, cookie, header, or object ID reaches fetch, render, query, storage, or authorization code. **Hidden risk:** canonicalization gaps, context-mismatched encoding, SSRF, traversal, injection, IDOR, or unsafe diagnostics can survive normal happy-path tests. **Required professional action:** validate before use, encode for the exact sink, enforce object ownership, redact diagnostics, and add malicious payload evidence. **Route to:** `input-validation`, `threat-modeling`, `permission-boundary-modeling`, and `security-privacy-gate`. **Evidence required:** sink map, canonicalization/encoding rule, deny-before-use proof, safe log/error sample, and residual risk.
+- **Signal:** cookie, CORS, CSP, CSRF, HSTS, frame, referrer, cache, or browser security header behavior changes. **Hidden risk:** a single misconfigured header can widen session theft, clickjacking, cross-origin access, or cached sensitive response exposure. **Required professional action:** classify browser trust boundary, preserve old protections, and test the new header/cookie behavior. **Route to:** `authentication-security`, `frontend-change-builder`, `backend-change-builder`, and this capability. **Evidence required:** before/after header or cookie diff, browser/client impact, security test, and rollback path.
+- **Signal:** security fixes change only one route, one template, one query, one upload endpoint, or one redirect path. **Hidden risk:** same-pattern vulnerabilities remain in sibling endpoints or framework helpers. **Required professional action:** run same-pattern scan and regression map before closure. **Route to:** `agent-execution-discipline`, `regression-testing`, `security-privacy-gate`, and this capability. **Evidence required:** searched patterns, related occurrences, fixed/skipped rationale, regression test, and remaining owner.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 exploit-class routing, non-negotiable controls, triggers, and output requirements. Load [references/checklist.md](references/checklist.md) when reviewing concrete routes, templates, cookies, redirects, uploads, fetches, queries, or authorization checks. Use [examples/example-output.md](examples/example-output.md) only when the expected web security review shape is unclear. Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when source reachability, stale security memory, same-pattern scans, or test freshness determine approval. Route to deeper peer capabilities only for the selected primary boundary; do not load unrelated security references for a local exploit-class review.
 
 # Risk Escalation Rules
 
@@ -111,31 +128,52 @@ Escalate to `security-privacy-gate` when: a change introduces server-side URL fe
 
 Return a web security review with:
 
+- `mode_selected` (route/API review, rendering/XSS review, browser-control review, upload/download review, server-side fetch/SSRF review, injection/deserialization review, authorization/IDOR review, or bug-fix regression)
 - `affected_routes` (endpoint paths and HTTP methods)
-- `trust_boundaries` (where user-controlled data enters the system)
+- `boundaries_inspected` (routes, handlers, templates/renderers, middleware, headers, cookies, CORS/CSP/CSRF config, redirects, uploads/downloads, fetches, queries, auth predicates, tests/scans, repository graph, project memory, and skipped boundaries with reason)
+- `trust_boundaries` (where user-controlled data enters the system and which sink it reaches)
+- `source_evidence` (current files, caller graph, framework defaults, middleware order, scanner output, prior review memory, test fixtures, and freshness)
 - `exploit_class_checklist` (per exploit: applicable yes/no; control applied; test evidence)
 - `authorization_checks` (per endpoint: authentication check; role check; object ownership check)
 - `cookie_header_controls` (session cookie attributes; CSP directive; CORS policy)
 - `upload_or_fetch_controls` (if applicable: MIME validation; size limit; storage strategy; SSRF defense)
 - `query_construction_review` (parameterized confirmation for all DB/LDAP queries)
+- `exploit_to_validation_map` (each applicable exploit class mapped to automated test, scanner, manual verification, same-pattern scan, or residual risk)
+- `graph_memory_execution_validation` (accepted/rejected project memory, graph-discovered entry points, executed commands, stale evidence, and not-verified disclosures)
 - `residual_risks` (unmitigated risks with justification)
 - `release_blockers` (critical findings that must be remediated before release)
 - `test_evidence_commands` (commands or test cases for each applicable exploit class)
+- `evidence_limits` (what tests/scans/manual review prove, what environments/browsers/routes/payloads remain unproven, and who owns the residual risk)
 
 # Quality Gate
 
 The review is complete only when:
 
-1. Every applicable exploit class has a documented control.
-2. All database queries use parameterized statements — no string concatenation in queries.
-3. Object-level ownership checks are verified for all endpoints that return or modify objects by ID.
-4. File upload endpoints have content-based MIME validation, size limits, and isolated storage paths.
-5. Server-side URL fetch endpoints have IP allowlisting and cloud metadata range blocking.
-6. Session cookies have `HttpOnly`, `Secure`, and `SameSite` attributes appropriate to the session sensitivity.
-7. CSP header does not contain `unsafe-inline` for `script-src`.
-8. Test evidence exists for every applicable exploit class (automated test or manual verification record).
-9. Residual risks are documented with explicit acceptance or escalation decision.
-10. No release blocker is left open without a remediation plan and a follow-up ticket.
+1. Mode, inspected boundaries, source evidence, graph-memory-execution validation, and evidence limits are recorded.
+2. Every applicable exploit class has a documented control.
+3. All database queries use parameterized statements — no string concatenation in queries.
+4. Object-level ownership checks are verified for all endpoints that return or modify objects by ID.
+5. File upload endpoints have content-based MIME validation, size limits, and isolated storage paths.
+6. Server-side URL fetch endpoints have IP allowlisting and cloud metadata range blocking.
+7. Session cookies have `HttpOnly`, `Secure`, and `SameSite` attributes appropriate to the session sensitivity.
+8. CSP header does not contain `unsafe-inline` for `script-src`.
+9. Test evidence exists for every applicable exploit class (automated test or manual verification record).
+10. Same-pattern scan covers sibling routes/templates/queries/uploads/fetches when a concrete vulnerability or fix is present.
+11. Security evidence is fresh after the final route, middleware, template, header, upload/fetch, query, or auth predicate change.
+12. Residual risks are documented with explicit acceptance or escalation decision.
+13. No release blocker is left open without a remediation plan and a follow-up ticket.
+
+# Evidence Contract
+
+Close a web security review only when the answer cites current source boundaries, exploit-class applicability, control placement, validation commands or manual proof, what evidence proves, what it does not prove, residual risk, and next gate. A scanner pass alone does not prove object-level authorization, context-specific encoding, SSRF redirect handling, upload lifecycle, or cookie/header behavior; missing current source inspection or stale memory blocks approval.
+
+# Benchmark Coverage
+
+OWASP, ASVS, CWE, CSP, SameSite, and cheat-sheet benchmarks calibrate risk and controls. Approval still requires route-specific evidence from the target code path: hostile payload tests, denied authorization cases, header/cookie inspection, same-pattern scan, or explicit not-verified disclosure with owner.
+
+# Routing Coverage
+
+When selected by a router, report which adjacent capabilities were loaded or intentionally skipped: `input-validation`, `authentication-security`, `permission-boundary-modeling`, `threat-modeling`, `secret-configuration-security`, `dependency-vulnerability-scanning`, `frontend-testing`, `backend-change-builder`, `frontend-change-builder`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker`.
 
 # Used By
 

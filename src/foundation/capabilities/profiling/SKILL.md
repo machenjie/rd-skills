@@ -19,6 +19,13 @@ Use this capability when: a production service, API endpoint, or background job 
 
 Do not use this capability to: justify speculative optimization of code that is not on any measured hot path ("this loop looks slow"); rewrite stable, correct code to a different algorithm without evidence that the current algorithm is the bottleneck; create microbenchmarks that do not represent production data volumes, concurrency levels, or workload shapes; or collect performance profiles that would capture sensitive user data, PII, or credentials in the profiling output.
 
+# Stage Fit
+
+- **Discovery / diagnosis** — define symptom, performance budget, affected path, and representative workload before naming the bottleneck.
+- **Implementation / repair** — require a locked baseline and bottleneck classification before optimization code is changed.
+- **Code review** — reject performance claims that lack a before/after measurement, artifact link, workload definition, or correctness guard.
+- **Testing / release** — compare the same workload and profiling method after the fix, with privacy review and rollback trigger documented.
+
 # Non-Negotiable Rules
 
 - **Measure first; the hypothesis is only a starting point.** State a hypothesis ("I believe the bottleneck is database query latency") but collect objective measurement before optimizing. The bottleneck revealed by profiling frequently differs from the initial hypothesis (e.g., CPU is high but flame graph shows serialization overhead — not business logic). Optimizing the wrong layer wastes engineering time and may introduce new defects.
@@ -27,12 +34,17 @@ Do not use this capability to: justify speculative optimization of code that is 
 - **Correctness must be preserved across every optimization step.** For each optimization: existing correctness tests must pass before and after. If optimization requires changing an algorithm (e.g., sorting strategy, aggregation approach), a behavior-equivalence test must be added. Optimizations that trade incorrect behavior for speed are defects, not improvements.
 - **Profiling artifacts must not contain sensitive data.** Request bodies, SQL query parameters, user IDs, session tokens, payment card data, or any PII must not appear in profiling traces, heap dumps, flame graphs, or allocation profiles stored or shared outside production security boundaries. Use query normalization (PostgreSQL `pg_stat_statements` — normalized query text without parameter values), request ID sampling rather than full body capture, and heap snapshot filtering tools.
 - **Identify the bottleneck category before proposing a fix.** Different bottleneck categories require different remediation strategies. Proposing "add a cache" for a problem that is actually lock contention will not fix the problem and adds complexity. Use the Bottleneck Classification Matrix before prescribing remediation.
+- **Current graph, memory, and execution evidence must agree.** Repository paths, prior profiling notes, telemetry, benchmark output, and command history must be checked for freshness; stale memory is a lead, not proof.
 
 # Industry Benchmarks
 
-Anchor against: **Brendan Gregg "Systems Performance: Enterprise and the Cloud" (2nd ed., 2020)** — USE method (Utilization, Saturation, Errors) for resource bottleneck analysis; CPU flame graphs; off-CPU flame graphs (I/O wait, lock wait); perf profiling on Linux. **Google "SRE Book" Chapter 22 (Addressing Cascading Failures)** — identify resource constraints before tuning; distinguish load-induced vs code-induced bottlenecks. **Java Flight Recorder / async-profiler** — JVM heap and CPU profiling; allocation profiling (`-e alloc`); lock contention profiling; continuous low-overhead production profiling. **Node.js `--cpu-prof` / `node --inspect` + Clinic.js** — V8 CPU profiler; `clinic flame` for flame graph visualization; `clinic bubbleprof` for async wait analysis. **Go `pprof`** — CPU profile, heap profile, goroutine blocking profile, mutex contention profile; `go tool pprof` + `flamegraph.pl`. **Python `py-spy`** — sampling profiler (no code changes required); flame graph output; production-safe (can attach to running process). **Chrome DevTools Performance tab / Lighthouse** — JS execution profile; long tasks (> 50ms); layout thrashing; paint/composite costs; `window.performance.mark()` for manual instrumentation. **EXPLAIN ANALYZE (PostgreSQL) / EXPLAIN FORMAT=JSON (MySQL)** — actual vs estimated rows; sequential scan detection; join order; index usage; sort spill to disk. **pg_stat_statements (PostgreSQL)** — query normalization; total_exec_time, mean_exec_time, calls; identifies top-N slowest queries without capturing parameter values. **Apache JMeter / k6 profiling mode** — load test with profiler attached; identifies concurrency-driven bottlenecks invisible in single-request profiling.
+- **Systems Performance / USE method** for utilization, saturation, errors, CPU flame graphs, off-CPU waits, and Linux `perf`.
+- **Google SRE** for distinguishing load-induced, dependency-induced, and code-induced resource collapse before tuning.
+- **Runtime profilers** such as Java Flight Recorder / async-profiler, Go `pprof`, Python `py-spy`, Node/V8 CPU profiler, Clinic.js, and Chrome DevTools.
+- **Data and query tools** such as `EXPLAIN ANALYZE`, MySQL JSON plans, `pg_stat_statements`, trace span counts, and warehouse dry-runs.
+- **Load and cost tools** such as k6/JMeter, billing exports, autoscaling events, egress metrics, and per-request or per-tenant unit-cost breakdowns.
 
-### Bottleneck Classification Matrix
+# Bottleneck Classification Matrix
 
 | Bottleneck Class | Symptoms | Primary Tool | Common Root Cause | First Fix Candidate |
 | --- | --- | --- | --- | --- |
@@ -46,7 +58,7 @@ Anchor against: **Brendan Gregg "Systems Performance: Enterprise and the Cloud" 
 | Allocation / memory leak | Monotonic RSS growth, OOM after hours | Heap dump diff (before vs after) | Event listener accumulation, timer not cleared, global cache growth | Fix retention; clear listeners; bound cache size |
 | Cloud cost / unit economics | Cost per request, tenant, or job rises faster than traffic | Billing export, usage metrics, trace spans, warehouse dry-run | Retry storm, full table scan, cross-region egress, over-scaling | Bound retries, partition query, cache, right-size scaling |
 
-### Profiling Workflow
+# Profiling Workflow
 
 ```
 1. Symptom → Form Hypothesis
@@ -87,6 +99,24 @@ Anchor against: **Brendan Gregg "Systems Performance: Enterprise and the Cloud" 
 
 Select this capability when the primary need is to **identify where time, resources, or cloud spend are consumed** before an optimization is chosen. Route elsewhere when: **performance-budgeting** is primary (defining target latency or cost thresholds for a new feature); **indexing-query-optimization** is primary (tuning a specific query's execution plan after profiling confirms it is the bottleneck); **concurrency-control** is primary (designing locking strategy for a new data access pattern, not diagnosing contention in existing code); **observability** is primary (configuring ongoing production monitoring signals and SLO alerts, not diagnosing a specific regression).
 
+# Proactive Professional Triggers
+
+Use this capability proactively, even when the request does not ask for profiling:
+
+- **Signal:** a change claims "faster", "optimized", "reduced cost", "lower memory", "lower latency", or "scales better" without a locked baseline. **Hidden risk:** the fix may target a cold path or change workload shape, making the performance claim unverifiable. **Required professional action:** require before/after measurements from the same workload before accepting the optimization. **Route to:** `profiling`, `performance-budgeting`, and `validation-broker`. **Evidence required:** baseline metric, workload definition, profiling artifact, after-measurement command, and residual risk.
+- **Signal:** repository graph shows a new hot path, query, cache, worker, batch job, rendering path, fan-out, object pool, or concurrency primitive. **Hidden risk:** new resource consumption can shift the bottleneck to CPU, locks, memory, DB, network, or cloud spend without visible correctness failures. **Required professional action:** map the affected path to likely bottleneck classes and require representative measurement if the path is performance-sensitive. **Route to:** `repository-graph-analysis`, `language-performance-safety`, `concurrency-control`, and this capability. **Evidence required:** changed paths, caller/route/job graph, expected traffic/concurrency, and selected profiling tool.
+- **Signal:** project memory, old benchmark notes, prior incident summaries, or generated reports are reused as performance proof. **Hidden risk:** stale memory can certify a bottleneck that disappeared, miss a new bottleneck, or reuse non-representative load data. **Required professional action:** compare memory with current telemetry, code paths, data volume, and execution trajectory before trusting it. **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `observability`, and this capability. **Evidence required:** source date, accepted/rejected memory, current telemetry or command output, graph delta, and unknowns.
+- **Signal:** a profiler, heap dump, trace, query plan, or billing export may include request bodies, SQL parameters, user IDs, tokens, payment data, tenant identifiers, or secrets. **Hidden risk:** profiling artifacts become sensitive data leaks or violate production access boundaries. **Required professional action:** define redaction, sampling, storage, and access policy before capture or sharing. **Route to:** `security-privacy-gate`, `agent-tool-permission-sandbox`, `secret-configuration-security`, and this capability. **Evidence required:** redaction rule, safe artifact location, sampling scope, access owner, and privacy review.
+- **Signal:** the bottleneck points to a schema, index, API contract, external dependency, runtime, deployment, or rollback-sensitive fix. **Hidden risk:** a performance repair can break correctness, consumers, rollout safety, or production recovery. **Required professional action:** split profiling evidence from implementation approval and route to the exact specialist gate. **Route to:** `indexing-query-optimization`, `api-contract-design`, `delivery-release-gate`, `reliability-observability-gate`, and this capability. **Evidence required:** profile-to-fix map, affected boundary, validation command, rollback trigger, and handoff owner.
+
+# Reference Loading Policy
+
+- **L1:** Use only this `SKILL.md` for routing, rejecting speculative optimization, or requesting a missing baseline.
+- **L2:** Load `references/checklist.md` when drafting or reviewing a real profiling plan, regression diagnosis, privacy-safe artifact capture, or before/after comparison.
+- **L3:** Load `examples/example-output.md` when the output contract shape is unclear or a user-facing profiling report is required.
+- **L4:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when bottleneck proof depends on changed paths, prior measurements, command output, telemetry, traces, or report freshness.
+- **L5:** Pair with performance, reliability, security, data/API, delivery, or language/runtime gates only for the selected bottleneck class; do not load unrelated references for a simple missing-baseline rejection.
+
 # Risk Escalation Rules
 
 Escalate when: profiling is performed on a production system during business hours (risk of profiling overhead degrading live traffic — use off-peak, shadow traffic, or a representative staging environment); a heap dump or memory snapshot must be captured from a live production process (memory dump may expose in-flight sensitive data); the profiling investigation reveals a correctness defect in addition to a performance issue (stop and split); a cost anomaly points to unbounded retries, data exfiltration, cross-region egress, or a full table scan on regulated data; a proposed fix changes a public API contract, database schema, or integration boundary (requires separate change management); or a memory leak is confirmed and the process must be restarted to recover — notify operations before restart.
@@ -125,17 +155,21 @@ Return a profiling report with:
 
 - `symptom` (observed metric: P99 latency, CPU %, RSS growth, error rate, GC pause duration; with measurement source)
 - `hypothesis` (initial bottleneck hypothesis; bottleneck class from matrix)
+- `boundaries_inspected` (source paths, route/job/query/rendering surfaces, dependency calls, runtime, deploy target, dashboards, traces, and prior notes inspected)
 - `workload_definition` (data volume, concurrency, access pattern; how representative of production)
 - `baseline_metrics` (locked baseline: P50/P95/P99, CPU %, heap, GC rate; profiling tool and settings)
 - `profiling_evidence` (flame graph description, EXPLAIN ANALYZE output, allocation profile top sites, trace span breakdown, or lock wait report)
+- `graph_memory_execution_validation` (current repository graph, project memory, telemetry, command output, and profile artifacts accepted or rejected with freshness limits)
 - `cost_profile` (when relevant: cost per request, cost per tenant, cost per job, query scan bytes, storage growth, egress path, autoscaling event, and billing metric source)
 - `bottleneck_classification` (confirmed class from matrix: CPU-bound / memory / I/O / lock / query / network / rendering / leak)
 - `root_cause` (specific code location, query, or pattern causing the bottleneck)
 - `proposed_fix` (specific change; why it addresses the root cause)
+- `profile_to_validation_map` (bottleneck evidence mapped to correctness tests, performance rerun, privacy check, rollout guard, and specialist handoff)
 - `expected_impact` (quantified: "expect P99 to drop from 2.4s to < 500ms based on span showing query is 85% of elapsed time")
 - `correctness_guards` (existing tests that must pass; new behavior-equivalence test if algorithm changes)
 - `after_measurement_plan` (same workload, same concurrency, same profiling tool; acceptance threshold)
 - `privacy_review` (confirms profiling artifacts do not contain PII, credentials, or sensitive fields)
+- `evidence_limits` (what was not measured, non-representative data, profiler overhead, stale memory, or unavailable production telemetry)
 - `residual_risks` (other bottlenecks that may surface after this fix; escalation conditions)
 
 # Quality Gate
@@ -153,6 +187,22 @@ The profiling report is complete only when:
 9. After-measurement plan uses identical workload and profiling settings as baseline.
 10. Profiling artifacts confirmed to contain no sensitive data.
 11. Cost anomalies are attributed to a runtime driver and unit-cost dimension before optimization is proposed.
+12. Repository graph and affected boundaries are inspected before selecting the profiling tool or fix owner.
+13. Project memory, prior benchmarks, and incident notes are accepted or rejected with source dates and freshness limits.
+14. Profile-to-validation map links each bottleneck claim to a correctness guard, rerun command, privacy check, and handoff gate.
+15. Evidence limits and residual risk state what the profiling run proves, what it does not prove, and the next gate.
+
+# Evidence Contract
+
+The report must name `boundaries_inspected`, validation commands or artifacts, what evidence proves, what evidence does not prove, residual risk, and the next handoff gate. Profiling evidence proves only the measured workload, environment, data volume, and profiler settings; it does not prove unrelated paths, future traffic shapes, or correctness of the proposed fix without tests. If repository graph, project memory, telemetry, or rerun evidence is missing, return the smallest next measurement step instead of approving an optimization.
+
+# Benchmark Coverage
+
+External benchmark posts and tool defaults are screening aids only. Approval requires workload-shaped evidence from the target system or representative harness, plus before/after comparison under identical inputs, concurrency, environment, and artifact redaction policy.
+
+# Routing Coverage
+
+When selected by a router, report which adjacent capabilities were loaded or intentionally skipped: `performance-budgeting`, `language-performance-safety`, `observability`, `indexing-query-optimization`, `concurrency-control`, `security-privacy-gate`, `delivery-release-gate`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker`.
 
 # Used By
 
@@ -161,8 +211,8 @@ The profiling report is complete only when:
 
 # Handoff
 
-Hand off to `performance-budgeting` for formalizing the validated improvement as a budget threshold; `indexing-query-optimization` if profiling confirms a database query as the bottleneck; `concurrency-control` if profiling confirms lock contention as the bottleneck; `observability` for adding ongoing production monitoring signals based on confirmed bottleneck locations.
+Hand off to `performance-budgeting` for formalizing the validated improvement as a budget threshold; `indexing-query-optimization` if profiling confirms a database query as the bottleneck; `concurrency-control` if profiling confirms lock contention as the bottleneck; `observability` for adding ongoing production monitoring signals based on confirmed bottleneck locations; `security-privacy-gate` if artifacts need sensitive-data handling; and `delivery-release-gate` if the fix changes rollout, capacity, or rollback behavior.
 
 # Completion Criteria
 
-The capability is complete when **the bottleneck is identified through objective profiling evidence at representative workload, the proposed fix is matched to the confirmed bottleneck class, and the improvement is validated by before/after measurement under identical workload conditions with correctness preserved**.
+The capability is complete when **the bottleneck is identified through objective profiling evidence at representative workload, the proposed fix is matched to the confirmed bottleneck class, the evidence is mapped to current graph/memory/execution signals, and the improvement is validated by before/after measurement under identical workload conditions with correctness preserved**.

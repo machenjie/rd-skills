@@ -9,125 +9,147 @@ changeforge_version: 0.1.0
 
 # Mission
 
-**Design frontend state ownership so that every client-side value has a single authoritative source, a defined lifecycle, a synchronization and invalidation strategy, and a reset or expiry rule** — preventing stale server data from silently drifting from source truth, authentication state from persisting after logout or permission change, optimistic updates from leaving the UI inconsistent on failure, and global state stores from becoming unmanaged dumping grounds for unrelated page concerns.
+**Design frontend state ownership so that every client-side value has a single authoritative source, a defined lifecycle, a synchronization and invalidation strategy, and a reset or expiry rule** - preventing stale server data from silently drifting from source truth, authentication state from persisting after logout or permission change, optimistic updates from leaving the UI inconsistent on failure, and global state stores from becoming unmanaged dumping grounds for unrelated page concerns.
 
 # When To Use
 
-Use this capability when: a change adds or substantially modifies how data is fetched, cached, or synchronized between the server and client; a form introduces a new draft lifecycle with validation, submission, and reset behavior; authentication or permission state needs to reflect server-side changes (logout, session expiry, role change) in real time; optimistic updates are being introduced and need rollback semantics; cross-route or cross-feature state coordination is required; or client-side persistence (localStorage, sessionStorage, IndexedDB, cookies) is being added for state that has privacy or stale-data implications.
+Use this capability when: a change adds or substantially modifies how data is fetched, cached, or synchronized between the server and client; a form introduces a new draft lifecycle with validation, submission, and reset behavior; authentication or permission state needs to reflect server-side changes such as logout, session expiry, or role change; optimistic updates are being introduced and need rollback semantics; cross-route or cross-feature state coordination is required; or client-side persistence such as localStorage, sessionStorage, IndexedDB, or cookies is being added for state that has privacy or stale-data implications.
 
 # Do Not Use When
 
 Do not use this capability for: server-side session and token management (use `authentication-authorization`); request lifecycle design including retry, error handling, and loading states at the API boundary (use `frontend-api-integration`); form field validation rules and submission behavior as the primary concern (use `form-validation-design`); purely computational derived values with no persistence or synchronization concern.
 
+# Stage Fit
+
+Use during experience-definition, implementation-planning, coding, review, and testing when frontend values need source-of-truth, lifecycle, invalidation, persistence, or reset decisions. In planning, produce the state inventory before choosing storage. In coding/review, reject stale project-memory or repository-graph claims unless current source, owners, cache keys, auth paths, and tests confirm the pattern is still valid. Hand off when the primary question is server identity/session design, request lifecycle, form validation, route guards, or executable frontend test strategy.
+
 # Non-Negotiable Rules
 
-- **Classify state before choosing storage.** The five classification categories are: (1) Server state — data owned by the backend, fetched over the network, cached client-side with freshness and invalidation rules; (2) UI state — transient view state local to a component (open/closed, selected tab, modal visibility); (3) Form state — draft input lifecycle from first keystroke to submission confirmation; (4) Authentication state — identity, session validity, role/permission set sourced from a trusted identity system; (5) Persisted client preference — user preference stored client-side (theme, locale, layout) with explicit expiry and privacy classification. Derived state is computed from one of the above — it must not be stored as a separate value unless there is a demonstrated performance reason.
-- **Server state must define freshness window, stale-while-revalidate behavior, and invalidation triggers.** A fetch result stored in React Query / TanStack Query / SWR / Apollo Client is not "local state" — it is a cached server state entry. The cache entry must have: `staleTime` (how long the cached value is considered fresh without refetching), `gcTime`/`cacheTime` (how long to retain after last use), `invalidation triggers` (which mutations or events force a refetch), and `stale data behavior` (show stale data while revalidating, show loading spinner, or block render).
-- **Authentication and permission state must come from a trusted server-side source; it must never be inferred from UI visibility alone.** A component that decides "if the user can see the admin menu, they must be an admin" is not performing authorization — it is guessing. Authentication state must be: sourced from a validated session token or identity endpoint; re-validated on route change or on a defined interval; invalidated on logout, session expiry, and unauthorized API response (HTTP 401); and cleared completely from all storage on sign-out (including localStorage, sessionStorage, and in-memory cache entries containing user data).
-- **Global state requires a concrete cross-route or cross-feature justification.** Placing state in a global store (Redux, Zustand, Jotai, Pinia, NgRx) when it is used by only one component is an abstraction that adds maintenance cost with no benefit. The rule: state belongs at the lowest level in the component tree that contains all its readers and writers. Global state is justified only when two or more distinct routes or feature areas need to share the same value with consistent synchronization semantics.
-- **Optimistic updates require explicit rollback on failure.** An optimistic update that is never rolled back on API failure leaves the UI showing a value the server has rejected. Required: (1) apply the optimistic state immediately on user action; (2) send the API request; (3) on success: replace optimistic state with server-confirmed state; (4) on failure: revert to the pre-mutation value; (5) on failure: display an error that communicates the actual state (not the optimistic state). The rollback must be deterministic — not a full page reload.
-- **Client-side persistence of sensitive state requires explicit privacy classification.** Storing a JWT, session token, CSRF token, user email, or partial payment data in localStorage means it is accessible to any JavaScript running on the same origin. For sensitive authentication tokens, prefer httpOnly cookies (inaccessible to JavaScript). For any persisted client preference that could identify a user, document the privacy classification and apply the appropriate expiry and clear-on-logout rule.
+- **Classify state before choosing storage.** The classification categories are: server state, UI state, form state, authentication/permission state, persisted client preference, and derived state. Derived state is computed from source state and must not be stored separately unless there is a measured performance reason and an invalidation rule.
+- **Server state must define freshness window, stale-while-revalidate behavior, and invalidation triggers.** A React Query, TanStack Query, SWR, Apollo, RTK Query, or Relay entry is cached server state, not local UI state. Define cache key, `staleTime`, `gcTime`/`cacheTime`, mutation invalidations, focus/reconnect revalidation, stale display behavior, and permission/session reset.
+- **Authentication and permission state must come from a trusted server-side source.** UI visibility, client-writable storage, or decoded claims without revalidation are not authorization. Auth state must be sourced from a validated session or identity endpoint, invalidated on logout/session expiry/401/role change, and cleared from in-memory stores, query caches, and sensitive browser storage.
+- **Global state requires a concrete cross-route or cross-feature justification.** Put state at the lowest owner containing all readers and writers. A global store is justified only when multiple routes or feature areas share the value with consistent synchronization semantics and a named owner.
+- **Optimistic updates require explicit rollback on failure.** Capture pre-mutation state, apply the optimistic view, replace it with server-confirmed state on success, revert deterministically on failure, show the user the actual state, and map conflict handling to tests.
+- **Client-side persistence of sensitive state requires explicit privacy classification.** Tokens, session identifiers, user identifiers, partial payment data, or sensitive drafts must not be placed in client-writable storage without a security/privacy decision, expiry, clear-on-logout behavior, and XSS exposure review. Prefer httpOnly Secure SameSite cookies for sensitive session tokens.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Server cache ownership | Query cache, generated client, loader data, stale data, mutation invalidation, or background revalidation. | Source of truth, cache key, freshness, invalidation, stale display, auth/session reset. | Current API/client/cache pattern, query keys, mutation list, staleTime/gcTime, invalidation tests. | `frontend-api-integration`, `frontend-testing` | Global store redesign unless needed. |
+| Local UI and derived state | Tabs, filters, modals, selected item, computed values, or prop drilling concern. | Lowest owner, reset on unmount/route change, no duplicate derived state, stable memoization. | Readers/writers, route/component owner, reset trigger, derivation source. | `page-component-decomposition`, `interaction-state-modeling` | Cache policy design unless server data exists. |
+| Form draft lifecycle | Draft input, autosave, wizard resume, conflict with server data, or navigation away. | Draft owner, validation timing boundary, submit/reset, conflict preservation, sensitive draft persistence. | Form owner, source record, reset/confirm behavior, conflict state, persistence/privacy decision. | `form-validation-design`, `frontend-api-integration` | Server-side validation taxonomy. |
+| Auth and permission state | Session expiry, logout, role change, route gating, 401/403, or privileged UI. | Trusted source, revalidation, cache clearing, cross-tab logout, non-client-writable permission state. | Identity endpoint/session source, clear-on-logout checklist, 401 handler, role-change behavior. | `security-privacy-gate`, `authentication-authorization`, `routing-navigation-design` | Route layout design. |
+| Optimistic and concurrent mutation | Immediate UI update, reorder/delete/edit, conflict, offline action, or duplicate click. | Pre-mutation snapshot, rollback, conflict resolution, stale server reconciliation, race handling. | Mutation list, previous state capture, rollback trigger, conflict state, test map. | `idempotency-retry-design`, `frontend-api-integration` | Silent retry. |
+| Persisted client state | localStorage/sessionStorage/IndexedDB/cookie use, theme/locale, draft resume, or cross-tab sync. | Privacy classification, expiry, clear policy, storage event/BroadcastChannel behavior, per-user keying. | Stored keys, sensitivity class, expiry, clear-on-logout, cross-tab/session behavior. | `security-privacy-gate`, `frontend-testing` | Persisting server truth by default. |
 
 # Industry Benchmarks
 
-Anchor against: **TanStack Query (React Query) documentation** — `staleTime` vs. `gcTime`; query invalidation via `queryClient.invalidateQueries`; optimistic updates via `onMutate`/`onError`/`onSettled`; query key design for fine-grained invalidation. **SWR (Vercel)** — stale-while-revalidate strategy (RFC 5861); revalidation on focus, on network reconnect; mutation and bound mutation patterns. **Redux Toolkit** — RTK Query for server state; slice design for UI state; `createSelector` for derived state; `extraReducers` for cross-slice concerns. **XState / Zustand / Jotai / Valtio** — actor model for complex form state; atomic state primitives; fine-grained subscriptions. **React RFC — Hooks rules** — `useState` for local UI state; `useContext` for narrow shared state; external stores for cross-route state. **OWASP — Session Management Cheat Sheet** — httpOnly, Secure, SameSite cookie attributes; session invalidation on logout; storage of sensitive values. **WCAG 2.2 — SC 3.3.4 (Error Prevention)** — form submissions with important transactions must be reversible or confirmation-gated; form state must support undo. **RFC 5861 (HTTP Cache-Control Extensions)** — `stale-while-revalidate` and `stale-if-error` as freshness policy primitives.
-
-### State Classification Decision Matrix
-
-| State Characteristic | Classification | Preferred Storage | Invalidation Rule |
-| --- | --- | --- | --- |
-| Owned by server; fetched over network | Server state | React Query / SWR / Apollo cache | On mutation; on staleTime expiry; on 401 response |
-| Transient view flag (open/closed, hover) | UI state | `useState` in component | On component unmount or user action |
-| User input between first key and submission | Form state | `useForm` / `useState` in form | On submit success; on explicit reset; on navigation away (with confirm dialog) |
-| User identity, roles, session validity | Auth state | Secure httpOnly cookie (token) + in-memory (decoded claims) | On logout; on 401 from any API; on session expiry timer |
-| User preference (theme, locale) | Persisted preference | localStorage with explicit key + expiry | On user change; never on logout (preference is not sensitive) |
-| Computed from server data | Derived state | Selector / `useMemo` / `createSelector` | Automatically on source state change; never stored separately |
-| Cross-route or cross-feature shared value | Global state | Global store (Redux/Zustand/Pinia) | Explicit invalidation rule required in design document |
-
-### Stale Authentication State Risk Decision Tree
-
-```
-Does the component render based on a permission or role check?
-  YES → Is the permission sourced from a validated, recently-refreshed server response?
-        NO  → RISK: UI shows incorrect permission state; enforce re-validation on route entry
-        YES → Safe; define re-validation interval (< 5 min for sensitive permissions)
-
-Did the user log out or was their session invalidated?
-  → Is in-memory auth state cleared? YES/NO
-  → Is React Query / SWR cache cleared for user-specific queries? YES/NO
-  → Is localStorage/sessionStorage cleared for user-identifying keys? YES/NO
-  → Is the in-memory auth context reset to unauthenticated state? YES/NO
-  All must be YES before the logout is complete.
-
-Did an API call return 401?
-  → Trigger auth state invalidation immediately
-  → Redirect to login
-  → Preserve returnTo for the current route
-```
+Anchor against TanStack Query/React Query, SWR and RFC 5861 stale-while-revalidate, RTK Query and Redux Toolkit selector guidance, Relay/Apollo cache normalization, XState/Zustand/Jotai/Valtio/Pinia/NgRx placement patterns, React external-store and Hooks guidance, OWASP Session Management, secure browser storage guidance, WCAG error-prevention expectations for important form submissions, and browser cross-tab primitives such as `storage` events and `BroadcastChannel`. Keep this body focused on routing, ownership, evidence, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed classification, freshness, auth, optimistic rollback, persistence, graph/memory/trajectory, and validation matrices.
 
 # Selection Rules
 
-Select this capability when **frontend state ownership and synchronization is the primary design question**. Route elsewhere when: API request lifecycle (retry, error handling, loading state) is the primary concern (use `frontend-api-integration`); form field validation and submission rules are the primary concern (use `form-validation-design`); route-level access guarding based on auth state is the primary concern (use `routing-navigation-design`); server-side session and token management need design (use `authentication-authorization`).
+Select this capability when **frontend state ownership and synchronization is the primary design question**. Route elsewhere when: API request lifecycle, retry, error handling, cancellation, or response validation is primary (use `frontend-api-integration`); form field validation and submission rules are primary (use `form-validation-design`); route-level access guarding is primary (use `routing-navigation-design`); server-side session and token management need design (use `authentication-authorization`); or full interaction status matrices are primary (use `interaction-state-modeling`).
+
+# Proactive Professional Triggers
+
+- **Signal:** Server data is copied into component state, global state, or persisted storage without freshness and invalidation rules. **Hidden risk:** UI drifts from server truth and stale data survives mutations. **Required professional action:** define server-state cache owner and invalidation map. **Route to:** `frontend-api-integration`, `frontend-testing`. **Evidence required:** source query, cache key, mutation invalidations, stale behavior, validation map.
+- **Signal:** Authentication or permission state is client-writable, inferred from UI, or stale after logout, 401, session expiry, role change, or cross-tab sign-out. **Hidden risk:** unauthorized UI disclosure, stale protected cache, or shared-device data leak. **Required professional action:** require trusted source, revalidation, cache/storage clearing, and denied-state tests. **Route to:** `security-privacy-gate`, `authentication-authorization`, `routing-navigation-design`. **Evidence required:** identity source, clear-on-logout checklist, 401 handler, cross-tab behavior.
+- **Signal:** Optimistic update, offline action, reorder, or delete has no pre-mutation snapshot, rollback, or conflict handling. **Hidden risk:** user sees a state the server rejected. **Required professional action:** require rollback and reconciliation contract. **Route to:** `frontend-api-integration`, `idempotency-retry-design`. **Evidence required:** snapshot, rollback trigger, conflict state, user notification, test.
+- **Signal:** A global store is proposed for page-local, transient, or single-consumer values. **Hidden risk:** ownership drift, unnecessary rerenders, stale cross-route state, and hard-to-test coupling. **Required professional action:** push ownership to the lowest component/route or document cross-feature justification. **Route to:** `page-component-decomposition`, `implementation-structure-design`. **Evidence required:** readers, writers, owner, reset/invalidation rule.
+- **Signal:** localStorage, sessionStorage, IndexedDB, or cookies are used for tokens, identity, user-specific server data, drafts, or sensitive preferences. **Hidden risk:** XSS exposure, stale cross-user data, privacy over-retention, or compliance issue. **Required professional action:** classify data and define storage, expiry, clear, and redaction rules. **Route to:** `security-privacy-gate`. **Evidence required:** stored keys, sensitivity class, expiry, clear-on-logout, storage threat notes.
+- **Signal:** Project memory, repository graph, generated context, or earlier execution trajectory says a store/cache/hook pattern exists. **Hidden risk:** stale pattern copied after framework, auth, cache, or test conventions changed. **Required professional action:** confirm current source before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected pattern, freshness limit, validation command or residual risk.
 
 # Risk Escalation Rules
 
-Escalate when: auth or permission state can remain stale after logout or role change and a component renders privileged UI based on stale state (security risk — unauthorized UI disclosure); an optimistic update affects a financial, irreversible, or compliance-sensitive value and has no rollback (data integrity risk); sensitive user values (JWT, session ID, partial payment data) are stored in localStorage (OWASP Session Management risk — escalate to `security-privacy-gate`); cross-tab state synchronization is required for auth state and the synchronization mechanism is undefined (logout in one tab must not leave another tab with valid session); or a global state store is being used for 20+ values with no ownership boundary (maintainability and performance risk).
+Escalate when auth or permission state can remain stale after logout or role change and render privileged UI; an optimistic update affects financial, irreversible, inventory, compliance-sensitive, or externally visible data; sensitive user values such as JWTs, session IDs, emails, payment fragments, or regulated data are stored in client-writable storage; cross-tab state synchronization is required for logout or permission refresh; a global store becomes an unowned dumping ground for unrelated pages; or project memory/graph evidence conflicts with current source.
 
 # Critical Details
 
-- **The most common server state mistake: copying server data into `useState` and forgetting to sync.** `const [user, setUser] = useState(fetchedUser)` copies the server value into a local state variable. When the server value changes, the local copy is not updated. The correct pattern: keep server data in the server state cache (React Query/SWR), read directly from the cache in components, and never copy it to a parallel `useState`. The only exception is when the component needs to display a locally-edited draft before submitting.
-- **Global auth context must handle the "permission changed while user is logged in" case.** If a user's role is changed by an admin while the user's session is active, the user's in-memory permission state will show the old role until the next page load or re-validation. For sensitive role transitions (e.g., admin access revoked), implement a polling mechanism or server-sent event that forces re-validation on role change.
-- **Form state that persists across navigation without user intent is a UX defect.** If a user starts filling out a multi-step form, navigates away accidentally, and returns to find the form pre-filled with their previous input — that is either a desirable feature (requires explicit "resume draft" UX) or an unexpected leakage of state (requires explicit reset on navigation away). The behavior must be explicit in the design.
-- **Derived state must not be stored as separate state.** `const [fullName, setFullName] = useState(firstName + ' ' + lastName)` creates a synchronization problem: if `firstName` changes, `fullName` is stale until explicitly updated. Derived values must be computed: `const fullName = useMemo(() => firstName + ' ' + lastName, [firstName, lastName])`.
+- **Do not copy server truth into a parallel local state value.** `const [user, setUser] = useState(fetchedUser)` becomes stale unless every source update is mirrored. Keep server data in the server-state cache and derive display values directly; only create a local draft when the user is intentionally editing.
+- **Auth state must survive role-change and logout edge cases.** Role revocation, 401, session expiry, and logout in another tab must invalidate protected caches and client-visible permission state. A menu hiding rule is not authorization and a stale admin flag in localStorage is not trusted evidence.
+- **Form persistence must be intentional.** Draft state that survives navigation can be a resume feature or a sensitive data leak. Define owner, reset, confirmation, conflict handling, and persistence/privacy behavior before implementation.
+- **Derived values should be computed, not stored.** Storing `fullName` alongside `firstName` and `lastName` creates a synchronization obligation. Use selectors, memoization, or state-machine guards unless measured performance requires a stored snapshot.
+- **Global state is an architectural decision.** A store introduces subscription, reset, persistence, test, and ownership obligations. If the value has one route or one component owner, default to local ownership.
 
 ### Anti-examples
 
 | Anti-pattern | Problem | Fix |
 | --- | --- | --- |
-| `const [user, setUser] = useState(apiResponse.user)` | Copy of server data never updated when server changes; stale display | Use React Query: `const { data: user } = useQuery(['user', userId], fetchUser)` |
-| `localStorage.setItem('accessToken', jwtToken)` | Token accessible to all JS on same origin; XSS can steal token | Use httpOnly Secure SameSite=Strict cookie; token never accessible to JavaScript |
-| Logout clears React state but not React Query cache | After logout, another user's data returned from query cache on re-login as same user | `queryClient.clear()` on logout; per-user query keys |
-| Optimistic UI with no rollback: list item added, API fails, item stays visible | User sees item that does not exist on server; stale UI; confusion | `onError` in mutation: `queryClient.setQueryData(['items'], previousItems)` |
-| Permission check: `if (userState.isAdmin)` where `userState` is from localStorage | Attacker modifies localStorage value; UI renders admin features | Permission sourced from validated server session only; not from client-writable storage |
-| Global store holds every page's transient filter/sort state | Filters from Page A appear on Page B after navigation; unexpected behavior | Filter/sort state is local to the page component; cleared on unmount |
+| `const [user, setUser] = useState(apiResponse.user)` | Copy of server data never updates when server changes. | Read from the server-state cache or create an explicit editable draft. |
+| `localStorage.setItem('accessToken', jwtToken)` | Token is exposed to same-origin JavaScript and XSS theft. | Prefer httpOnly Secure SameSite cookie and never expose token to JS. |
+| Logout clears React state but not query cache | User-specific data can survive sign-out or appear after re-login. | Clear protected caches and user-specific storage on logout/401. |
+| Optimistic item stays visible after API failure | UI shows a value rejected by the server. | Capture previous state and rollback on error with user-visible notice. |
+| Permission check from localStorage role | Attacker or stale data can alter privileged UI. | Source permission from validated server session/identity endpoint. |
+| Global store holds page filters and modal state | Transient values leak across routes and complicate tests. | Keep page-local state in page or component owner and reset on unmount/navigation. |
 
 # Failure Modes
 
-- Server data copied to `useState`: user profile shows stale name for 20 minutes after update.
-- Auth state not cleared on logout: next user on shared computer sees previous user's dashboard.
-- Permission state not re-validated after role change: revoked admin user continues to see admin UI for the duration of their session.
-- Optimistic update without rollback: user "deletes" a record; delete API fails; record appears gone in UI but still exists on server; user cannot re-interact with it.
-- JWT stored in localStorage: XSS attack extracts token; account takeover.
-- Stale form draft pre-fills sensitive form on return visit: user submits outdated payment details.
+- Server data copied to local state shows a stale profile or stale permission for minutes after the source changes.
+- Auth state not cleared on logout exposes previous-user data on a shared device or after a quick re-login.
+- Permission state is not revalidated after role revocation, so privileged controls remain visible.
+- Optimistic delete fails on the server but the item remains removed in the UI.
+- JWT or session token in localStorage is exfiltrated through XSS.
+- Sensitive form draft survives navigation or logout and is submitted later with outdated or wrong data.
+- Global store has no owner, so unrelated pages mutate shared state and create nondeterministic regressions.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 state ownership routing, evidence, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete state inventory, cache invalidation map, auth/logout clearing rule, form draft lifecycle, optimistic rollback, persisted client-state decision, or validation map. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed benchmark anchors, state classification, freshness/auth/persistence matrices, graph/memory/trajectory coupling, or anti-pattern review is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or minor wording changes where the inline output contract and quality gate are enough.
 
 # Output Contract
 
 Return a state ownership map with:
 
-- `state_inventory` (per value: name, classification, source of truth, owner component/store, readers, writers, lifecycle events)
-- `server_state_config` (per cached query: staleTime, gcTime, invalidation triggers, stale data behavior)
-- `auth_state_design` (source, re-validation interval, cleared-on-logout checklist, 401 handler)
-- `form_state_design` (draft ownership, validation timing, reset triggers, submit lifecycle)
-- `optimistic_update_design` (per mutation: apply optimistic state, confirm on success, rollback on failure)
-- `persistence_decisions` (per persisted value: storage mechanism, expiry, privacy classification, clear-on-logout rule)
-- `global_state_justifications` (per global value: cross-route use case, boundary)
-- `derived_state_map` (per derived value: source states, computation, `useMemo`/`createSelector` pattern)
-- `race_conditions` (concurrent update risks; resolution strategy)
+- `mode_selected` (server cache ownership / local UI and derived state / form draft lifecycle / auth and permission state / optimistic and concurrent mutation / persisted client state)
+- `state_scope` (surface, route/component/store boundary, user goal, affected values, readers, writers, and reset/invalidation owners)
+- `source_evidence` (current source files, store/hooks/cache clients, API contracts, identity/session source, tests/stories, repository graph, project memory, or execution trajectory inspected with freshness limits)
+- `graph_memory_trajectory_judgment` (accepted, rejected, or not verified for each reused store, query key, hook, selector, persistence key, auth handler, or test pattern)
+- `state_inventory` (per value: name, classification, source of truth, owner component/store, readers, writers, lifecycle events, reset/expiry rule)
+- `server_state_config` (per cached query: cache key, staleTime, gcTime/cacheTime, invalidation triggers, refetch/focus/reconnect behavior, stale display behavior, permission/session reset)
+- `auth_state_design` (trusted source, revalidation interval/event, role-change handling, 401 handler, cross-tab logout, cleared-on-logout checklist)
+- `form_state_design` (draft ownership, validation/submission boundary, conflict handling, sensitive draft persistence, submit/cancel/navigation reset)
+- `optimistic_update_design` (per mutation: pre-mutation snapshot, optimistic application, server confirmation, rollback, conflict resolution, user notification)
+- `client_persistence_privacy_model` (per persisted value: storage mechanism, per-user keying, sensitivity class, expiry, clear-on-logout, XSS/privacy exposure)
+- `global_state_justifications` (per global value: cross-route or cross-feature consumer evidence, owner, boundary, subscription/reset/performance consideration)
+- `derived_state_map` (per derived value: source states, computation, selector/memoization pattern, reason if stored)
+- `race_conditions` (concurrent read/write/update risks, cross-tab behavior, stale response risk, resolution strategy)
+- `state_to_validation_map` (each state value, cache invalidation, auth branch, persistence rule, rollback, and race condition mapped to validator/test/manual evidence or residual risk)
+- `reuse_and_placement_rationale` (why each state owner and storage location is reused, changed, or rejected)
+- `handoff_boundaries` (what belongs to API lifecycle, form validation, route guards, server auth/session, security/privacy, interaction states, or frontend testing)
+- `validation_evidence` (commands/tests/reviews run, outcome, and what they prove)
+- `evidence_limits` (source not inspected, browser behavior not verified, deployed auth/cache behavior not proven, or external framework assumption retained)
+
+# Evidence Contract
+
+Close a state-management-design output only when it names selected mode, current source evidence inspected, graph/memory/trajectory reuse judgment, every client-side value classification, source of truth, owner, lifecycle, reset/expiry/invalidation rule, auth and persistence privacy decisions, optimistic rollback and race handling, state-to-validation map, handoff boundaries, residual risk, and evidence limits. A generic "use React Query" or "put it in Zustand" statement is not sufficient evidence.
+
+# Benchmark Coverage
+
+Improved state management plans reject common weak patterns: copied server truth, stale auth after logout, client-writable permissions, unbounded localStorage, global stores for page-local values, stored derived values, optimistic updates without rollback, unowned form drafts, cache invalidation by hope, and stale repository-memory claims. Detailed framework matrices and decision trees belong in references so the main body stays efficient.
+
+# Routing Coverage
+
+Route here when frontend state ownership, source-of-truth selection, cache invalidation, global store justification, persisted client state, auth/permission state, form draft ownership, derived state, or optimistic rollback is primary. Hand off when the primary work is request lifecycle (`frontend-api-integration`), full interaction state feedback (`interaction-state-modeling`), field validation (`form-validation-design`), route guarding (`routing-navigation-design`), server auth/session design (`authentication-authorization`), security/privacy review (`security-privacy-gate`), or executable coverage (`frontend-testing` / `quality-test-gate`).
 
 # Quality Gate
 
 The state design is complete only when:
 
-1. Every state value has a classification, source of truth, owner, and lifecycle.
-2. All server state has staleTime, invalidation triggers, and stale-data behavior.
-3. Auth state has re-validation interval, 401 handler, and logout-clearing checklist.
-4. All optimistic updates have rollback on failure.
-5. Sensitive values in client storage are documented with privacy classification.
-6. Global state has a concrete cross-route justification.
-7. No derived values are stored as separate state.
-8. Form state has explicit reset behavior on navigation and submit success.
-9. Auth state cleared-on-logout checklist covers memory, cache, and storage.
-10. Race conditions for concurrent updates have a resolution strategy.
+1. Selected mode, state scope, and current source evidence are explicit.
+2. Every state value has classification, source of truth, owner, readers, writers, lifecycle, reset/expiry rule, and validation expectation.
+3. Server state has cache key, staleTime, gcTime/cacheTime, invalidation triggers, revalidation behavior, stale display behavior, and session/permission reset.
+4. Auth and permission state use a trusted source and define revalidation, 401 handling, role-change behavior, cross-tab logout, and memory/cache/storage clearing.
+5. Sensitive or user-identifying persisted state has privacy classification, storage mechanism, expiry, per-user isolation, clear-on-logout rule, and security/privacy handoff when needed.
+6. Global state has concrete cross-route or cross-feature consumer evidence, owner, boundary, reset/invalidation behavior, and performance/test impact.
+7. Derived values are computed from source state unless storage has measured justification and synchronization rule.
+8. Form state has owner, conflict handling, validation/submission boundary, sensitive draft persistence decision, and reset behavior on submit/cancel/navigation/logout.
+9. Optimistic updates capture pre-mutation state, confirm durable success, rollback on failure, handle conflicts, and notify users.
+10. Race conditions cover concurrent mutations, stale responses, cross-tab changes, route changes, and permission/session transitions.
+11. Graph, memory, and execution-trajectory reuse claims are accepted, rejected, or marked not verified with inspected paths and freshness limits.
+12. Every state, cache, auth, persistence, rollback, and race decision maps to tests, validators, review evidence, or named residual risk.
+13. Handoff boundaries are explicit so state evidence is not over-claimed as server auth, API contract, accessibility, or deployed browser proof.
+14. Evidence limits and rollback path are named before handoff.
 
 # Used By
 
@@ -135,8 +157,8 @@ The state design is complete only when:
 
 # Handoff
 
-Hand off to `frontend-api-integration` for request lifecycle and error handling; `form-validation-design` for field validation rules; `authentication-authorization` for server-side identity and session management; `routing-navigation-design` for auth-gated route behavior; `frontend-testing` for optimistic update, stale state, and race condition coverage.
+Hand off to `frontend-api-integration` for request lifecycle, response validation, retry, timeout, cancellation, and API error mapping; `form-validation-design` for field validation rules and submission authority; `authentication-authorization` for server-side identity, sessions, and token controls; `routing-navigation-design` for auth-gated route behavior; `interaction-state-modeling` for user-facing loading/error/empty/disabled state matrices; `security-privacy-gate` for sensitive client persistence, token exposure, privacy, and permission leak review; `frontend-testing` for optimistic update, stale state, auth clearing, persistence, and race-condition coverage.
 
 # Completion Criteria
 
-The capability is complete when **every client-side value has a single authoritative source, a defined lifecycle, an invalidation or reset rule, and no sensitive state leaks across user sessions or persists in client-writable storage without explicit justification**.
+The capability is complete when **every client-side value has a single authoritative source, a defined lifecycle, an invalidation or reset rule, validation evidence, and no sensitive state leaks across sessions, tabs, users, or client-writable storage without explicit justification and security/privacy review**.

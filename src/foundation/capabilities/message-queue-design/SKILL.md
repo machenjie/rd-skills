@@ -19,6 +19,10 @@ Use this capability when a change: adds a new queue, topic, exchange, or stream;
 
 Do not use this capability to design synchronous RPC patterns as queues (use `api-contract-design`), to handle queue infrastructure provisioning without also designing consumer behavior and failure handling, or to assume exactly-once delivery semantics in any general-purpose queue or broker without explicit transactional outbox + idempotency infrastructure.
 
+# Stage Fit
+
+Use during planning when queue topology, broker choice, producer durability, partition key, delivery guarantee, or retry/DLQ ownership is being decided. Use during implementation and code review when producers, consumers, ack/offset commits, visibility timeouts, outbox/relay, inbox/dedupe stores, schema validation, or message headers change. Use during testing and release when duplicate delivery, poison-message handling, replay, lag/backpressure, operator runbook, and validation freshness must prove the queue behavior is safe. Treat repository graph, project memory, runbooks, dashboards, and prior incidents as selectors until current producer/consumer code, broker config, schemas, tests, and execution results confirm or reject them.
+
 # Non-Negotiable Rules
 
 - **Consumers must be idempotent.** Every mainstream queue (RabbitMQ, Kafka, SQS, Pub/Sub, Azure Service Bus) provides at-least-once delivery. A consumer must produce the same observable side effect whether it processes a message once or ten times. Idempotency key must be carried in message attributes/headers — not just message body — so it is accessible without deserializing the payload.
@@ -32,63 +36,19 @@ Do not use this capability to design synchronous RPC patterns as queues (use `ap
 
 # Industry Benchmarks
 
-Anchor against: **Apache Kafka Documentation** — partition ordering, consumer groups, offset commit semantics, `isolation.level=read_committed` for transactional producers, `enable.auto.commit=false` (manual offset commit required for correctness). **AWS SQS/SNS Best Practices** — visibility timeout ≥ max processing time; `ApproximateReceiveCount` for retry detection; DLQ `maxReceiveCount` 3–5; SQS FIFO for ordering per group ID. **RabbitMQ Dead Letter Exchanges (DLX)** — `x-dead-letter-exchange`, `x-message-ttl`, `x-max-retries`; `nack(requeue=false)` to route to DLX. **Gregor Hohpe & Bobby Woolf "Enterprise Integration Patterns"** (2003) — Dead Letter Channel, Message Store, Idempotent Receiver, Competing Consumers, Message Expiration. **Microservices Patterns — Chris Richardson** — Transactional Outbox Pattern: write message to `outbox` table in same DB transaction as business data; relay process reads and publishes; ensures no message lost on crash; polling publisher or CDC (Debezium). **NATS JetStream** — at-least-once + exactly-once (with `MsgId` deduplication within 2-minute window). **Azure Service Bus** — `MaxDeliveryCount` per queue/topic (default 10); `ScheduledEnqueueTimeUtc` for delayed retry; sessions for FIFO ordering; `DeadLetterReason` property. **Google Cloud Pub/Sub** — `ack_deadline_seconds`; `minimum_backoff + maximum_backoff` for subscription retry; snapshot/seek for replay.
-
-### Message Delivery Guarantee Comparison
-
-| Broker | Default Guarantee | Exactly-Once? | Ordering Scope | DLQ Built-in? |
-| --- | --- | --- | --- | --- |
-| Kafka | At-least-once (manual offset commit) | Yes (transactional producer + `read_committed`) | Per partition | No (manual DLQ topic) |
-| SQS Standard | At-least-once | No | None | Yes (maxReceiveCount) |
-| SQS FIFO | At-least-once (exactly-once 5-min dedup window) | Yes (dedup ID) | Per MessageGroupId | Yes |
-| RabbitMQ | At-least-once (manual ack) | No | Per queue (single consumer) | Yes (DLX) |
-| Azure Service Bus | At-least-once | No (sessions for ordering) | Per session | Yes (MaxDeliveryCount) |
-| Google Pub/Sub | At-least-once | No | Per key (ordering key) | No (manual) |
-
-### Retry Policy Configuration Matrix
-
-| Message Class | Max Attempts | Initial Delay | Backoff Factor | Max Delay | Jitter | On Exhaustion |
-| --- | --- | --- | --- | --- | --- | --- |
-| Transient (DB timeout, 503) | 5 | 1s | 2× | 300s | ±25% | DLQ |
-| Downstream dependency (3rd-party API) | 3 | 5s | 2× | 300s | ±30% | DLQ + alert |
-| Non-retryable (schema error, 4xx) | 1 | — | — | — | — | DLQ immediately |
-| Ordering-sensitive (FIFO stream) | 3 | 2s | 2× | 60s | ±20% | DLQ (preserve order) |
-| Background / low-priority | 3 | 30s | 2× | 600s | ±50% | DLQ (no alert) |
-
-### Transactional Outbox Pattern
-
-```
-Problem: Producer publishes to queue AFTER committing to DB →
-         if queue publish fails, event is lost permanently.
-
-Solution (Transactional Outbox):
-
-  BEGIN TRANSACTION
-    UPDATE orders SET status = 'confirmed' WHERE id = :id
-    INSERT INTO outbox (id, topic, payload, status)
-      VALUES (:event_id, 'order.confirmed', :payload, 'PENDING')
-  COMMIT
-
-  Relay process (separate):
-    LOOP:
-      SELECT * FROM outbox WHERE status = 'PENDING' ORDER BY created_at LIMIT 100
-      FOR each row:
-        PUBLISH to message broker (idempotently — event_id as dedup key)
-        UPDATE outbox SET status = 'PUBLISHED' WHERE id = :row.id
-
-Guarantees:
-  - Event is NEVER lost (committed to DB before queue publish)
-  - At-least-once delivery (relay retries on broker failure)
-  - Exactly-once semantics if consumer checks idempotency key = event_id
-
-Options:
-  - Polling Relay: simple, adds DB load, ~1s latency
-  - CDC + Debezium: capture changes from DB WAL → Kafka; near-real-time; no polling
-```
+Anchor against Kafka partition ordering, consumer groups, offset commits, transactional producers, and `enable.auto.commit=false`; AWS SQS/SNS visibility timeout, FIFO message groups, `ApproximateReceiveCount`, and DLQ `maxReceiveCount`; RabbitMQ manual ack and dead-letter exchanges; Google Pub/Sub ack deadlines and seek/snapshot replay; Azure Service Bus delivery count, sessions, and dead-letter reason; NATS JetStream bounded deduplication; Enterprise Integration Patterns for Dead Letter Channel, Message Store, Idempotent Receiver, Competing Consumers, and Message Expiration; and transactional outbox/inbox patterns for dual-write safety. Load [references/broker-benchmarks.md](references/broker-benchmarks.md) when broker-specific delivery guarantees, retry defaults, outbox relay choice, or replay behavior is part of the decision.
 
 # Selection Rules
 
 Select this capability when: queue topology, delivery semantics, consumer correctness under duplicate delivery, or retry/DLQ policy is the primary concern. Route elsewhere when: **async-job-design** is primary (job lifecycle, progress tracking, status reporting); **event-driven-architecture** is primary (event schema design, event routing, publisher/subscriber topology across bounded contexts); **idempotency-retry-design** is primary (idempotency key schema and at-application-layer duplicate detection); **observability** is primary (consumer lag metrics, alerting configuration).
+
+# Proactive Professional Triggers
+
+- **Signal:** producer writes business state and publishes to a queue/topic in separate steps, or publishes from mapper/domain helper code. **Hidden risk:** dual-write loss creates committed state with no downstream message, or ghost messages with no committed source state. **Required professional action:** require transactional outbox, CDC relay, broker transaction with proven DB coupling, or explicit safe exception before approving the producer. **Route to:** `transaction-consistency`, `data-side-effect-flow-tracing`, `event-driven-architecture`. **Evidence required:** commit boundary, outbox/relay ownership, duplicate relay behavior, current producer paths, and partial-failure validation or not-verified residual risk.
+- **Signal:** consumer performs payment, inventory, entitlement, notification, webhook, ledger, or other irreversible side effects without durable dedupe. **Hidden risk:** duplicate delivery, replay, visibility timeout expiry, or consumer crash repeats a visible or financial effect. **Required professional action:** define idempotency header, inbox/dedupe store, payload hash or natural key, replay policy, and same-key conflict behavior. **Route to:** `idempotency-retry-design`, `quality-test-gate`, `security-privacy-gate` when sensitive data or money is involved. **Evidence required:** idempotency key scope, store/TTL, duplicate/replay tests, side-effect owner, and evidence limits for downstream systems.
+- **Signal:** retry, NACK, visibility timeout, max-delivery, DLQ, partition key, or consumer group setting changes. **Hidden risk:** poison messages block partitions, retry storms overload dependencies, offsets skip unprocessed work, or ordering guarantees silently change. **Required professional action:** map retryable vs terminal errors, ack/commit point, partition/message-group key, max attempts, backoff/jitter, and DLQ replay path. **Route to:** `async-job-design`, `failure-contract-design`, `integration-testing`. **Evidence required:** broker config diff, failure-class matrix, poison-message test, consumer crash test, and replay runbook owner.
+- **Signal:** consumer lag, DLQ depth, replay, or backpressure is mentioned without dashboard, alert owner, SLO threshold, or rate-limited replay plan. **Hidden risk:** queue health looks normal while business work is hours late, DLQ accumulates silently, or replay melts downstream dependencies. **Required professional action:** define lag/age/DLQ/throughput/error metrics, alert severity, owner, runbook, producer throttle or consumer scaling, and replay throttle. **Route to:** `observability`, `reliability-observability-gate`, `degradation-circuit-breaking`. **Evidence required:** metric names, thresholds, dashboard/runbook path, backpressure decision, and validation freshness.
+- **Signal:** repository graph, project memory, runbooks, generated topology docs, or prior validation claims queue behavior is already safe. **Hidden risk:** stale topology misses retired consumers, hidden fan-out, changed partitions, disabled DLQ, or validation that predates the last edit. **Required professional action:** reconcile memory and graph against current producers, consumers, topic/queue config, schemas, dashboards, and executed validations. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`. **Evidence required:** inspected paths, accepted/rejected memory, current graph delta, validation command timestamps, and unknown consumers.
 
 # Risk Escalation Rules
 
@@ -145,7 +105,7 @@ On failure:
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when designing a new producer/consumer, changing retry/DLQ/ack/offset behavior, processing irreversible side effects, or reviewing consumer lag/backpressure risk. Do not load it for a metadata-only topic rename with no delivery, schema, or consumer behavior change.
+The `SKILL.md` body carries L1/L2 routing, stage, trigger, and evidence rules. Load [references/checklist.md](references/checklist.md) when designing a new producer/consumer, changing retry/DLQ/ack/offset behavior, processing irreversible side effects, or reviewing consumer lag/backpressure risk. Load [references/broker-benchmarks.md](references/broker-benchmarks.md) when broker-specific delivery guarantees, retry defaults, partition/ordering scope, outbox relay choice, or replay behavior is part of the decision. Use [examples/example-output.md](examples/example-output.md) only when the final output shape is unclear. Do not load references for metadata-only topic renames with no delivery, schema, producer, consumer, or recovery behavior change.
 
 # Output Contract
 
@@ -162,11 +122,14 @@ Return a queue design with:
 - `backpressure` (consumer scaling policy, rate limiting, priority queue design)
 - `ordering_guarantee` (partition key, scope, tradeoffs, handling of out-of-order arrival)
 - `observability` (consumer lag metric + alert threshold, DLQ depth alert, consumer group health alert, processing latency P99 SLO)
+- `graph_memory_execution_validation` (repository graph, project memory, topology docs, dashboards, runbooks, and prior validation accepted/rejected/stale/not verified)
+- `changed_queue_to_validation_map` (each producer, consumer, ack/commit point, retry/DLQ policy, partition key, schema, replay path, metric, alert, and runbook mapped to validation or residual risk)
 - `test_strategy` (assert: duplicate message → idempotent; poison message → DLQ after N attempts; consumer crash mid-processing → no message lost; lag alert fires when threshold exceeded)
+- `evidence_limits` (untested broker outage, partition skew, large replay, downstream idempotency, unknown consumers, stale memory, or environment-specific broker config)
 
 # Evidence Contract
 
-Close queue design only when the output states delivery guarantee, idempotency boundary, ack/commit point, retry/DLQ policy, ordering key, backpressure, observability, duplicate/poison/replay validation, what evidence proves, what it does not prove under broker outage or replay, residual risk, and next gate.
+Close queue design only when the output states current producers/consumers/config inspected, delivery guarantee, idempotency boundary, ack/commit point, retry/DLQ policy, ordering key, backpressure, observability, graph/memory/execution claims accepted or rejected, duplicate/poison/replay validation, what evidence proves, what it does not prove under broker outage, partition skew, large replay, or downstream side effects, residual risk owner, and next gate.
 
 # Quality Gate
 
@@ -182,6 +145,8 @@ The design is complete only when:
 8. Transactional outbox pattern or equivalent used for producer-side exactly-once durability.
 9. Backpressure mechanism defined (consumer scaling, rate limiting, or priority queues).
 10. Consumer visibility timeout / lock duration validated against p99 processing time.
+11. Project memory, repository graph, dashboards, runbooks, and prior validations are reconciled with current source/config or marked stale/not verified.
+12. Every changed queue behavior maps to duplicate, poison, crash, replay, lag, contract, integration, or manual validation evidence.
 
 # Used By
 

@@ -19,6 +19,12 @@ Use this capability when: a change involves multi-step writes to a shared resour
 
 Do not use this capability for: read-only queries where consistency is not a concern; single-row single-table writes with no concurrency risk and no invariant to protect; designing the message broker or queue topology (use `message-queue-design`); designing idempotency keys and retry behavior (use `idempotency-retry-design`).
 
+# Stage Fit
+
+Use this capability during planning, coding, review, testing, repair, and release-readiness when a write path must preserve an invariant across concurrent requests, multiple tables, outbox/event publication, compensation, reconciliation, or external side effects. Re-run it after edits that move a transaction boundary, lock acquisition, event publish, idempotency check, retry wrapper, remote call, or validation command because memory and repository graph claims become stale when execution order changes.
+
+Do not let this capability become a general database design review. Hand off to `relational-database` for schema/constraint design, `message-queue-design` for broker delivery topology, `idempotency-retry-design` for duplicate request math, and `data-side-effect-flow-tracing` when the first problem is discovering hidden or misordered side effects.
+
 # Non-Negotiable Rules
 
 - **Start with the invariant, not the mechanism.** Every transaction boundary must be justified by a named invariant: "the account balance must never go below zero" (debit must check and update atomically); "a subscription must not exist in both ACTIVE and CANCELLED state simultaneously" (status update must be atomic with any side-effect records). A transaction that exists "because we always wrap things in transactions" with no named invariant is a transaction that creates contention without protecting anything.
@@ -30,41 +36,17 @@ Do not use this capability for: read-only queries where consistency is not a con
 
 # Industry Benchmarks
 
-Anchor against: **ACID Properties (Atomicity, Consistency, Isolation, Durability)** — the foundational transaction guarantees; isolation levels per ANSI SQL (Read Uncommitted, Read Committed, Repeatable Read, Serializable). **Martin Kleppmann — Designing Data-Intensive Applications** — isolation anomalies (dirty read, non-repeatable read, phantom read, write skew, lost update); serializable snapshot isolation; compare-and-swap. **Two-Phase Commit (2PC) / XA Transactions** — distributed atomicity; coordinator failure risk; availability coupling. **Transactional Outbox Pattern (Chris Richardson, microservices.io)** — local transaction atomicity + at-least-once message delivery without 2PC. **Saga Pattern (Hector Garcia-Molina, 1987)** — sequence of local transactions; compensating transactions for rollback; choreography vs. orchestration. **Optimistic Concurrency Control (Jim Gray)** — version column; lost update prevention; conflict detection at commit time. **Pessimistic Locking (SELECT FOR UPDATE)** — row-level lock; deadlock detection; lock timeout. **PostgreSQL documentation** — MVCC; isolation level behavior; advisory locks; `FOR UPDATE SKIP LOCKED` for queue-style processing. **Two Generals Problem / CAP Theorem (Eric Brewer)** — consistency vs. availability trade-offs in distributed systems.
+Anchor against ACID, ANSI SQL isolation, MVCC anomaly analysis, transactional outbox, saga compensation, optimistic and pessimistic locking, PostgreSQL/MySQL lock behavior, Two-Phase Commit availability trade-offs, CAP/PACELC consistency choices, and SRE-style reconciliation evidence. Keep this body focused on route selection, closure, and validation; load [references/checklist.md](references/checklist.md) for a lightweight execution checklist and [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for anomaly matrices, pattern decisions, graph/memory/execution coupling, and validation maps.
 
-### Isolation Anomaly and Level Selection Matrix
+# Mode Matrix
 
-| Anomaly | Description | Isolation Level to Prevent | Use Case Example |
-| --- | --- | --- | --- |
-| Dirty Read | Read uncommitted data from a concurrent transaction that may roll back | Read Committed | Rarely acceptable; avoid in financial systems |
-| Non-Repeatable Read | Read same row twice; concurrent UPDATE changes it between reads | Repeatable Read | Inventory check-then-reserve patterns |
-| Phantom Read | Read a range; concurrent INSERT adds a row to the range | Serializable | Unique constraint enforcement in application code |
-| Lost Update | Two concurrent updates; one overwrites the other | Optimistic lock or `SELECT FOR UPDATE` | Balance update; stock decrement |
-| Write Skew | Two concurrent transactions read a set; each updates based on what it read; combined result is invalid | Serializable | "At most one doctor on-call" constraint |
-
-### Consistency Pattern Decision Tree
-
-```
-Is the invariant local to a single database?
-  YES → Use a single local transaction with the minimum isolation level required.
-        Is there concurrent write risk (multiple actors updating same record)?
-          YES → Add optimistic lock (version column) or pessimistic lock (SELECT FOR UPDATE)
-          NO  → Read Committed isolation is sufficient
-  NO → Is the invariant across two services with independent databases?
-        YES → Can you tolerate eventual consistency (minutes of inconsistency)?
-              YES → Transactional Outbox + at-least-once delivery (preferred)
-              NO  → Saga with compensation (more complex; requires compensation design)
-                    Can you avoid the cross-service write entirely by re-modeling?
-                      YES → Preferred — redesign to move both writes to one service
-                      NO  → Saga or Outbox; document consistency window and monitoring
-
-Does the consistency boundary include an external API call (payment, email)?
-  YES → NEVER hold a DB lock during the external call
-  → Pattern: (1) write intent to DB (PENDING state); commit; release lock
-             (2) make external call
-             (3) update DB based on result (CONFIRMED or FAILED)
-             (4) if update fails after external success: compensate via Outbox/job
-```
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Local invariant transaction | Single database, multi-step write, financial/inventory/quota/state invariant. | Minimal atomic boundary, isolation level, lock strategy, rollback behavior. | Invariant statement, rows/tables touched, isolation choice, concurrency test. | `relational-database`, `repository-persistence` | Single-row write with no named invariant or concurrent writer. |
+| Concurrent writer conflict | Lost update, write skew, phantom booking, stale version, lock timeout. | Optimistic/pessimistic control, conflict response, retry budget, deadlock handling. | Conflict simulation, lock order, timeout, retry/409 behavior. | `concurrency-control`, `failure-contract-design` | Sequential-only path with DB constraint proof. |
+| Transaction plus side effect | DB write plus event, cache, search, file, webhook, email, payment, or provider call. | No remote call under lock; publish-after-commit, outbox, intent state, or compensation. | Side-effect flow map, outbox/intent decision, partial-failure test. | `data-side-effect-flow-tracing`, `async-job-design` | Pure local transaction with no observable side effect. |
+| Cross-service consistency | Independent databases, services, external systems, eventually consistent read model. | Outbox, saga, reconciliation, consistency window, idempotent consumers. | Pattern decision, compensation log, reconciliation SLA, consumer idempotency evidence. | `message-queue-design`, `idempotency-retry-design` | Same-service local transaction sufficient. |
+| Release and validation freshness | Migration, refactor, repository graph or memory claim, prior validation before final edit. | Prove current source and command order still match the consistency boundary. | Current paths inspected, accepted/rejected memory, fresh validator output, evidence limits. | `validation-broker`, `plan-execution-consistency` | No boundary, test, config, or execution-order change. |
 
 # Selection Rules
 
@@ -73,6 +55,14 @@ Select this capability when **consistency requirements, invariant protection, or
 # Risk Escalation Rules
 
 Escalate when: the invariant involves money movement, inventory, quota enforcement, or account ownership (financial/operational risk — requires peer review of the transaction boundary design); a distributed transaction (2PC) is proposed (availability risk — must evaluate Outbox/Saga alternatives first and document why they are insufficient); a remote call is proposed inside a database transaction (lock contention risk — must redesign before implementation); a Saga compensation step has no design for compensation failure (if compensation fails, the system is left in a permanently inconsistent state — must specify retry and runbook); or the lock scope covers multiple rows or tables under concurrent write load (deadlock risk — must review for lock ordering and timeout).
+
+# Proactive Professional Triggers
+
+- **Signal:** A write path says "wrap it in a transaction" without naming the business invariant, rows/tables, failure state, or concurrent writer. **Hidden risk:** broad locks reduce throughput while failing to protect the real correctness condition. **Required professional action:** name the invariant, prove the minimal atomic scope, and reject unrelated work inside the transaction. **Route to:** `transaction-consistency`, `relational-database`. **Evidence required:** invariant-to-boundary map, lock scope, isolation choice, and rejected over-broad operations.
+- **Signal:** A handler, job, repository, or workflow makes a payment, webhook, email, storage, cache, search, event, or external API call while a DB transaction or row lock is open. **Hidden risk:** lock contention, partial completion, and duplicate side effects during timeout or retry. **Required professional action:** move remote side effects outside the lock and use intent state, outbox, compensation, or reconciliation. **Route to:** `data-side-effect-flow-tracing`, `async-job-design`. **Evidence required:** transaction timeline, remote-call placement, partial-failure path, and no-lock-held proof.
+- **Signal:** Cross-service or multi-store consistency is handled by direct writes, 2PC, retry loops, or "best effort" events without an outbox, saga, or reconciliation decision. **Hidden risk:** durable state diverges after one participant succeeds and another fails. **Required professional action:** choose outbox, saga, or remodel-to-one-owner, then define consistency window and consumer idempotency. **Route to:** `message-queue-design`, `idempotency-retry-design`. **Evidence required:** pattern decision, event/inbox key, compensation or reconciliation path, and duplicate-delivery test.
+- **Signal:** Optimistic lock, serializable transaction, or deadlock retry catches conflicts but hides them, retries forever, or returns a generic 500. **Hidden risk:** users lose updates, workers amplify contention, and operators cannot distinguish retryable conflicts from system failure. **Required professional action:** define bounded retry, conflict response, lock timeout, and safe failure contract. **Route to:** `failure-contract-design`, `quality-test-gate`. **Evidence required:** retry budget, conflict/timeout response, concurrent-write test, and terminal-state assertion.
+- **Signal:** Project memory, repository graph, old migration notes, or previous test output claims the transaction path is safe after repository methods, migrations, queues, retry wrappers, or side effects changed. **Hidden risk:** stale topology hides a new lost-update, ghost-event, or compensation gap. **Required professional action:** inspect current source, compare same-pattern write paths, rerun focused validators, and disclose what remains unverified. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `validation-broker`. **Evidence required:** inspected path list, accepted/rejected prior claim, fresh command outcome, and residual consistency risk.
 
 # Critical Details
 
@@ -103,12 +93,14 @@ Escalate when: the invariant involves money movement, inventory, quota enforceme
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when the change touches multi-step writes, money/inventory/quota/account invariants, distributed consistency, saga/outbox behavior, or concurrent writers. Do not load it for a single-row write with no named invariant, no concurrency risk, and no cross-service side effect.
+Read `references/checklist.md` when the change touches multi-step writes, money/inventory/quota/account invariants, distributed consistency, saga/outbox behavior, or concurrent writers. Read `references/benchmarks-and-patterns.md` when the decision needs anomaly tables, isolation/locking choices, outbox-vs-saga tradeoffs, compensation failure paths, graph-memory-execution coupling, or validation mapping. Do not load references for a single-row write with no named invariant, no concurrency risk, no side effect, and no stale evidence concern.
 
 # Output Contract
 
 Return a consistency design with:
 
+- `mode_selected` (local invariant transaction, concurrent writer conflict, transaction plus side effect, cross-service consistency, or release/validation freshness)
+- `source_evidence` (current handlers, services, repositories, migrations, queue/event publishers, side-effect adapters, tests, graph, memory, and execution trajectory inspected)
 - `invariants` (per invariant: name, data scope, violation condition, business impact)
 - `transaction_boundaries` (per transaction: tables touched, isolation level, concurrency control, lock type, timeout)
 - `isolation_anomaly_analysis` (per anomaly type: present/absent; prevention mechanism)
@@ -119,10 +111,15 @@ Return a consistency design with:
 - `remote_call_placement` (confirmation that no remote calls are inside DB transactions)
 - `concurrency_tests` (concurrent write simulation; lost update test; deadlock stress test)
 - `reconciliation_job` (if eventual consistency: detection of inconsistencies; resolution process; SLA)
+- `graph_memory_execution_coupling` (repository graph, project memory, generated reports, previous validation, and final execution evidence accepted/rejected/stale/not verified)
+- `validation_freshness` (commands run after final material edit, stale validations rejected, and not-run obligations named)
+- `tool_permission_boundary` (read-only versus state-mutating tools, sandbox/approval context, dry-run or rollback path, and secret/output redaction rule)
+- `evidence_scope` (what concurrency, integration, migration, and validator evidence proves, plus production load/lock/replica/consumer claims left unproven)
+- `residual_consistency_risk` (remaining lost-update, deadlock, partial side-effect, replay, compensation, reconciliation, or validation risk)
 
 # Evidence Contract
 
-Close consistency design only when the output names each invariant, transaction boundary, isolation level, lock/concurrency control, remote-call placement, compensation/outbox path, validation commands, what concurrency evidence proves, what it does not prove under production load, residual consistency risk, and next gate.
+Close consistency design only when the output names each invariant, current source paths inspected, same-pattern write-path scan, transaction boundary, isolation level, lock/concurrency control, remote-call placement, compensation/outbox path, graph-memory-execution freshness, validation commands, what concurrency evidence proves, what it does not prove under production load, tool permission/sandbox boundary, residual consistency risk, rollback note, and next gate.
 
 # Quality Gate
 
@@ -138,11 +135,23 @@ The consistency design is complete only when:
 8. A reconciliation job or monitoring signal detects eventual consistency violations.
 9. Concurrency tests cover lost update, phantom read (if applicable), and deadlock scenarios.
 10. Lock scope is the minimum required to protect the invariant.
+11. Repository graph, project memory, generated reports, and prior validation claims are confirmed against current source or marked stale/not verified.
+12. Transaction/event/cache/external side-effect ordering is mapped to validation evidence or residual risk.
+13. Validation evidence is fresh for the final material path and states production-load limits.
+14. Tool output used as evidence avoids raw secrets, environment dumps, full payloads, and unbounded logs.
 
 # Used By
 
 - data-middleware-change-builder
 - backend-change-builder
+
+# Benchmark Coverage
+
+This capability covers ACID, isolation anomalies, lost-update/write-skew prevention, optimistic and pessimistic locking, 2PC availability trade-offs, transactional outbox, saga compensation, reconciliation, lock ordering, current-source graph checks, memory freshness, and validation-to-invariant mapping. Detailed matrices and decision trees live in `references/benchmarks-and-patterns.md` to keep `SKILL.md` efficient.
+
+# Routing Coverage
+
+Route here when transaction atomicity, isolation, lock scope, cross-service consistency, or side-effect ordering is the primary correctness question. Route away to `relational-database` for schema constraints, `message-queue-design` for broker topology, `idempotency-retry-design` for duplicate request guarantees, `data-side-effect-flow-tracing` for hidden effects, and `quality-test-gate` when validation depth is the unresolved issue.
 
 # Handoff
 

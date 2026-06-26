@@ -104,3 +104,29 @@ Error received from API
     └── Connection error / timeout
         └── Same as 502/503/504 → treat as transient; apply idempotency check
 ```
+
+## Graph, Memory, And Execution Coupling
+
+Error semantics are frequently reused by clients and support workflows after they leave the original service boundary. Treat repository graph, project memory, and execution trajectory as evidence inputs, not proof:
+
+- **Repository graph:** search controllers, generated OpenAPI/Protobuf/GraphQL artifacts, SDK code, frontend API handling, form error maps, tests, and docs before accepting that a code has no consumers.
+- **Project memory:** accept prior notes about a catalog, retry policy, or 403/404 posture only after current source confirms the catalog entry still exists and generated artifacts are fresh.
+- **Execution trajectory:** reject completion when the edit changed code/status/retryability after the last contract test, generated diff, or negative error-path validation.
+- **Unknown consumers:** local `rg` is useful but not sufficient for public, partner, mobile, SDK, webhook, or event error contracts. Name the unknown-consumer risk and owner.
+
+## Error-To-Validation Matrix
+
+| Changed error behavior | Validation evidence |
+| --- | --- |
+| New code/type URI | Catalog lint, API example validation, client branch test |
+| Status mapping change | Contract test for status and problem body |
+| Raw provider/internal mapping | Negative test or review proving response excludes provider body, stack trace, SQL, secrets, and policy names |
+| Authorization posture | Cross-user or cross-tenant denied-path test; 403/404 existence-leak decision |
+| Retryability change | Retry matrix, `Retry-After` assertion, idempotency or duplicate-side-effect proof |
+| Validation violation shape | Invalid-input test with field path, violation code, safe rejected value policy |
+| Localization change | Message key test; client logic still branches on code |
+| Generated SDK/API docs | Generated diff, compile check, or residual risk owner |
+
+## Catalog Governance Pattern
+
+Use a stable namespace per product or bounded context. Add codes deliberately, never from raw exception names. Retire codes through a documented compatibility path when clients may branch on them. Keep code values stable while allowing localized user messages and diagnostic log templates to evolve. A catalog entry should identify owner, consumer action, support action, retryability, idempotency requirement, and redaction rule.

@@ -19,6 +19,10 @@ Use this capability when: a change introduces or substantially modifies a multi-
 
 Do not use this capability for: single-screen, stateless interactions with no branching and no navigation (a search box that returns results on the same page with no state transitions); defining visual design, layout, or component-level interaction (use `interaction-state-modeling`); modeling domain actor goals and behavioral contracts (use `use-case-modeling`); information architecture and content organization decisions (use `information-architecture`).
 
+# Stage Fit
+
+Owns experience-definition, implementation-planning, and review when the primary concern is the ordered path through a user or actor workflow across steps, screens, redirects, async waits, permission branches, interruption, retry, and exits. In planning, it turns product intent, current routes, screens, state models, analytics or support signals, and test paths into a flow graph with explicit user and system outcomes. In review, it rejects happy-path-only journeys, dead ends, unsafe retries, ambiguous back navigation, unverified permission branches, stale deep links, and flow evidence copied from project memory or repository graph without current-source confirmation. Hand off when the primary question is page hierarchy, component state, route guard implementation, backend idempotency, or acceptance test strategy.
+
 # Non-Negotiable Rules
 
 - **Identify every entry point explicitly.** A flow without enumerated entry points cannot be tested for access control or deep link behavior. Entry points include: direct URL navigation, link from another flow, email deep link, push notification, OAuth redirect, API webhook redirect, programmatic navigation after an action. Each entry point must specify its authentication requirement, required URL parameters, and what state the user must be in to enter this flow from this entry point.
@@ -28,49 +32,19 @@ Do not use this capability for: single-screen, stateless interactions with no br
 - **Tie every branch condition to a testable assertion.** A branch labeled "if authorized" is not testable — it is a vague label. A branch labeled "if `user.role === 'admin'` AND `feature_flag.bulk_export === true`" is testable: it specifies the exact condition, enabling a permission matrix test. Every branch condition in the flow must be expressible as a boolean predicate on system state.
 - **Retry paths must specify idempotency behavior and intermediate state handling.** A retry that re-executes a payment charge without idempotency protection causes a double charge. A retry that re-submits a form that has already been partially processed may create duplicate records. The retry design must specify: is the retried action idempotent by design (same result if executed twice)? Is an idempotency key required? What is the maximum retry count? What state is the record in between the initial attempt and the retry?
 
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| New or changed journey | New multi-step task, wizard, checkout, onboarding, approval, import, export, or review path. | Complete entry-to-exit flow graph with user and system state at each node. | Actor/goal, current entry points, steps, exits, branch predicates, and changed-path-to-test map. | `information-architecture`, `prototype-description` | Visual layout or component API detail. |
+| Recovery and interruption flow | Refresh, tab close, session expiry, network loss, partial completion, abandoned draft, or resume path matters. | Preserve or intentionally discard progress with re-entry and duplicate prevention. | Draft/partial state owner, re-entry rule, warning/copy, cleanup or compensation path. | `interaction-state-modeling`, `backend-change-builder` | Silent data loss or restart-only recovery. |
+| Retry, idempotency, and side-effect flow | Submit, pay, create, import, export, or job retry can repeat a side effect. | Safe retry/cancel/refresh behavior and intermediate states. | Idempotency key, operation status, max retry, duplicate detection, and residual unknowns. | `idempotency-retry-design`, `data-side-effect-flow-tracing` | Re-POST button without idempotency evidence. |
+| Permission and deep-link branch | Role, ownership, tenant, feature flag, notification, email link, or direct URL changes reachability. | Non-leaking branch behavior and safe route recovery. | Guard condition, sensitive-resource disclosure policy, deep-link source, and denied-path test. | `permission-boundary-modeling`, `routing-navigation-design`, `security-privacy-gate` when sensitive | Revealing role/resource existence in user copy. |
+| Async wait and completion flow | Background job, payment capture, upload, processing, polling, push notification, or return-to-result path. | In-flow, away, timeout, failure, and return states. | Job status source, timeout threshold, completion signal, notification/deep-link behavior, and failure exit. | `async-job-design`, `interaction-state-modeling` | Spinner-only wait states. |
+
 # Industry Benchmarks
 
-Anchor against: **Jesse James Garrett — The Elements of User Experience** — flow as the connection between information architecture and interaction design. **Journey Mapping (Nielsen Norman Group)** — multi-step user journeys with touchpoints, emotions, and decision points. **Task Analysis (Hierarchical Task Analysis)** — decomposing tasks into subtasks; goal/operation/plan structure. **Google Material Design — Navigation patterns** — back navigation semantics; up navigation vs. back navigation; deep link handling; state preservation on navigation. **WCAG 2.2 — SC 3.3.4 (Error Prevention)** — reversible submissions; confirmation gates for irreversible or consequential actions; re-enterable forms. **WCAG 2.2 — SC 2.4.3 (Focus Order)** — navigation must be logical and predictable; branching flows must maintain keyboard navigation integrity. **HTML History API / React Router / Next.js router** — `pushState`/`replaceState` for deep link support; `beforeunload` for unsaved changes; shallow routing for state changes without navigation. **RFC 7807 (Problem Details for HTTP APIs)** — structured error response format; error detail must support user-facing error message derivation. **OAuth 2.0 / PKCE — RFC 7636** — redirect flows with `state` parameter for CSRF protection and return URL preservation after authentication redirects.
-
-### Flow Node Type Classification Matrix
-
-| Node Type | Description | Required Design Elements | Failure to Handle Risk |
-| --- | --- | --- | --- |
-| Entry point | Where the user enters the flow | Auth requirement; required params; state precondition | Unauthorized access; broken deep links |
-| Decision branch | Conditional fork based on system or user state | Boolean predicate (testable); both branch paths defined | Users routed to undefined state |
-| Action step | User submits data or triggers system action | Idempotency; loading state; error feedback; retry behavior | Duplicate submissions; silent failures |
-| Wait state | Async operation in progress (job, payment) | Progress feedback; polling or push update; timeout exit; failure exit | User abandons; status unknown |
-| Partial completion checkpoint | User has completed some steps; may re-enter | Resume path; re-entry detection; duplicate prevention | Duplicate records; user forced to restart |
-| Success exit | Flow completed successfully | Confirmation; next action suggestion; breadcrumb cleared | User has no confirmation; re-enters flow |
-| Failure exit | Flow cannot complete; error state | Error message (non-revealing); recovery options; support path | Dead end; user abandonment |
-| Cancellation exit | User abandons; flow discarded | Draft deletion or preservation; navigation target; side effect rollback | Orphaned records; data leakage |
-| Permission branch | Actor lacks authorization for a path | Non-revealing error (no data disclosure); escalation path | Privilege disclosure; unauthorized access |
-
-### Flow Interruption Decision Tree
-
-```
-User navigates away from an in-progress form / multi-step flow:
-  Has the user entered any data that is not yet submitted?
-    NO  → Allow navigation freely; no warning needed
-    YES → Is the flow re-entrant? (can the user resume from where they left off?)
-          YES → Auto-save draft; navigate; show "Resume your application" on return
-          NO  → Show unsaved changes dialog:
-                "You have unsaved changes. Leave anyway?" [Leave] [Stay]
-                If [Leave]: discard draft; cancel any created records; navigate
-                If [Stay]: return to flow; cursor restored to last input
-
-Session expires while user is mid-flow:
-  Is partial data server-side?
-    YES → Preserve server-side draft for [N] hours; redirect to login with returnTo param
-          After re-auth: redirect to returnTo; resume from last completed step
-    NO  → Form data is lost; redirect to login; show re-entry message
-          If this is unacceptable: add server-side draft persistence before session timeout
-
-Async operation completes while user has navigated away:
-  → Send push notification or in-app notification
-  → Deep link back to flow result view
-  → Do not send operation result to email as primary feedback for time-sensitive actions
-```
+Anchor against Garrett's UX structure layer, NN/g journey mapping and task analysis, Material navigation semantics, WCAG error-prevention and focus-order criteria, History API router behavior, Problem Details for recoverable errors, and OAuth/PKCE redirect-state preservation. Keep this body focused on mode selection and evidence rules; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for node classification, interruption decision trees, and detailed anti-pattern review.
 
 # Selection Rules
 
@@ -80,12 +54,24 @@ Select this capability when **ordered path and branching behavior across multipl
 
 Escalate when: a flow branch can lose user-entered data without warning (data loss risk — must add unsaved changes protection); a retry path can create duplicate financial records, duplicate orders, or duplicate account creations (idempotency risk — must design idempotency key before implementation); a permission branch can expose the existence of restricted resources through error message, count, or URL pattern (IDOR/information disclosure risk — must implement non-revealing error); a flow leaves users in a wait state with no timeout or failure exit (stuck state risk — must add timeout and failure exit); or a cancellation path does not roll back previously committed side effects (orphaned record risk — must design compensation or cleanup).
 
+# Proactive Professional Triggers
+
+- **Signal:** A requested journey describes only the happy path or final success screen. **Hidden risk:** failure, cancellation, permission, timeout, and back-navigation branches become implementation guesses. **Required professional action:** model all exits and branch predicates before implementation. **Route to:** `user-flow-modeling`, `acceptance-standard-definition`. **Evidence required:** flow graph, branch table, exit state, and verification point per branch.
+- **Signal:** Repository graph, route list, analytics, support reports, project memory, or prior execution trajectory suggests a known flow to reuse. **Hidden risk:** stale or partial flow evidence can preserve old dead ends. **Required professional action:** confirm the candidate against current routes, screens, state contracts, tests, and product constraints. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected current paths, accepted/rejected reused pattern, freshness limit, and evidence limits.
+- **Signal:** A step submits, creates, pays, imports, exports, sends, or starts a job and then offers retry, refresh, or back navigation. **Hidden risk:** duplicate side effects, orphaned records, or misleading completion. **Required professional action:** define idempotency, intermediate state, safe retry, and compensation or cleanup. **Route to:** `idempotency-retry-design`, `data-side-effect-flow-tracing`, `backend-change-builder`. **Evidence required:** idempotency key/source, operation status, rollback/compensation owner, and not-verified residual risk.
+- **Signal:** Direct URLs, notifications, email links, OAuth redirects, or permission-specific entry points can enter mid-flow. **Hidden risk:** broken deep links, unauthorized state disclosure, or lost return intent. **Required professional action:** map entry preconditions and non-leaking denied/unavailable/not-found outcomes. **Route to:** `routing-navigation-design`, `permission-boundary-modeling`, `security-privacy-gate` when sensitive. **Evidence required:** entry table, guard condition, return path, disclosure policy, and denied-path test.
+- **Signal:** Async completion can occur while the user is in-flow, away, timed out, or returning later. **Hidden risk:** user cannot tell whether work completed, failed, or is safe to retry. **Required professional action:** model in-flow progress, away notification, timeout wording, failure exit, and return-to-result path. **Route to:** `interaction-state-modeling`, `async-job-design`. **Evidence required:** status source, timeout threshold, notification/deep-link behavior, and completion verification.
+
 # Critical Details
 
 - **Back navigation behavior is the most under-specified element in multi-step flows.** "Back button takes user to previous step" sounds obvious — but: does it preserve the data the user entered on the current step? does it revert any server-side changes made on the current step? does it maintain the state of steps the user has already completed? is the behavior different for browser back button vs. in-app back button? For flows with server-side state changes at each step, back navigation must either be a server-side "undo" operation or a "view only" mode that prevents modification of completed steps.
 - **Async completion states require three distinct UI states, not one.** When a background operation is in progress, there are three possible states the user can be in: (1) in the flow, watching the progress indicator; (2) navigated away from the flow, unaware of progress; (3) returned to the flow after the operation completed (success or failure). Each of these three states must have a defined UI and a defined user action path. A flow that only handles state (1) will leave users in states (2) and (3) with no feedback.
 - **Permission branches must not reveal the existence of restricted resources.** If a user navigates to a flow that requires a permission they do not have, the error must not reveal: that the resource exists (return 404, not 403 for sensitive resources); that other users have the resource; or what additional permissions would be required. This is the OWASP A01:2021 Broken Access Control requirement applied to UX. The UX message must be "This page is not available" rather than "You don't have admin access to view this order."
 - **Idempotency keys for flow submissions must be generated client-side and submitted with the form.** A server-generated idempotency key cannot prevent double submission — if the user clicks "Submit" twice before the first response arrives, two requests reach the server without an idempotency key. The correct pattern: generate a UUID on form load (`formSessionId = uuid()`); include it in every submission of this form instance; the server treats a second submission with the same `formSessionId` as a duplicate and returns the original response.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 flow-modeling selection and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete flow, when entry/exit/retry/back/permission coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when node classification, interruption decision trees, or detailed anti-pattern review is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load these references for pure routing or trivial wording work where the output contract and quality gate are enough.
 
 ### Anti-examples
 
@@ -111,6 +97,9 @@ Escalate when: a flow branch can lose user-entered data without warning (data lo
 
 Return a flow model with:
 
+- `mode_selected` (new/changed journey, recovery/interruption, retry/idempotency, permission/deep-link, or async wait/completion)
+- `flow_scope` (actor, goal, owning product surface, current route/screen boundary, and excluded surfaces)
+- `source_evidence` (current routes, screens, state models, analytics/support signals, repository graph, project memory, execution trajectory, tests, and freshness limits)
 - `entry_points` (per entry: URL/trigger, auth requirement, required params, state precondition)
 - `flow_steps` (per step: node type, action/decision, success path, failure path)
 - `branch_conditions` (per branch: boolean predicate, both branch destinations)
@@ -124,6 +113,21 @@ Return a flow model with:
 - `partial_completion` (re-entry path, draft preservation, duplicate prevention)
 - `interruption_handling` (unsaved changes dialog trigger, draft auto-save strategy)
 - `verification_points` (testable assertions at each decision branch)
+- `changed_flow_to_validation_map` (each changed entry, step, branch, exit, retry, permission, or async state mapped to test/validator or residual risk)
+- `handoff_boundaries` (what belongs to IA, prototype, state modeling, route design, backend idempotency, security, or test gates)
+- `evidence_limits` (what was not verified: live analytics, production routes, real browser behavior, backend idempotency, permission enforcement, or E2E coverage)
+
+# Evidence Contract
+
+Close a user-flow-modeling change only when the output names selected mode, flow scope, current source evidence inspected, repository graph/project memory/execution trajectory freshness when used, actor goal, all entries, all exits, branch predicates, retry/idempotency behavior, back/cancel/interrupt behavior, async completion states, permission disclosure policy, changed-flow-to-validation map, evidence limits, residual risk, and next handoff owner. A linear happy path or "user can complete the flow" statement is not sufficient evidence.
+
+# Benchmark Coverage
+
+Behavior improvement should be validated structurally: weak flow models usually show only the success path, hide retry side effects, omit failure/cancel/timeout exits, conflate permission and not-found states, ignore browser back, or reuse stale journey memory. Improved outputs must name mode, flow scope, source evidence, entry/exit coverage, branch predicates, recovery semantics, validation mapping, and handoff boundaries while keeping detailed benchmark examples in references.
+
+# Routing Coverage
+
+Route here when ordered journey behavior across multiple steps, screens, redirects, async states, permissions, recovery paths, or partial completion is primary. Guard against over-routing by handing off when the primary concern is navigation labels and grouping (`information-architecture`), one-surface UI brief (`prototype-description`), component states (`interaction-state-modeling`), route guard/URL mechanics (`routing-navigation-design`), backend retry/idempotency (`idempotency-retry-design` / `backend-change-builder`), or acceptance/test strategy (`acceptance-standard-definition` / `quality-test-gate`).
 
 # Quality Gate
 
@@ -139,6 +143,10 @@ The flow model is complete only when:
 8. Async operations have in-flow, away, and return states.
 9. Permission branches use non-revealing error messages.
 10. Every flow step has a verification point expressible as a testable assertion.
+11. Selected mode, flow scope, current source evidence, and excluded surfaces are explicit.
+12. Repository graph, project memory, and execution trajectory evidence are source-confirmed or marked not verified.
+13. Each changed entry, branch, exit, retry, permission, async, interruption, or back-navigation path maps to a validator, test, or named residual risk.
+14. Handoff boundaries and evidence limits are named so flow evidence is not over-claimed as IA, component state, route guard, backend idempotency, security, or E2E proof.
 
 # Used By
 
@@ -147,7 +155,7 @@ The flow model is complete only when:
 
 # Handoff
 
-Hand off to `interaction-state-modeling` for per-screen component state design; `acceptance-standard-definition` for testable criteria from flow verification points; `backend-change-builder` for retry idempotency and cancellation server guarantees; `routing-navigation-design` for route guard and deep link implementation.
+Hand off to `information-architecture` for navigation grouping and labels; `prototype-description` for single-surface implementation briefs; `interaction-state-modeling` for per-screen loading, empty, error, disabled, timeout, optimistic, and accessibility states; `routing-navigation-design` for route guards, deep links, redirects, stale links, and history mechanics; `idempotency-retry-design` or `backend-change-builder` for retry, cancellation, compensation, and server guarantees; `permission-boundary-modeling` or `security-privacy-gate` for sensitive permission disclosure risk; and `acceptance-standard-definition` / `quality-test-gate` for verification points and E2E coverage.
 
 # Completion Criteria
 

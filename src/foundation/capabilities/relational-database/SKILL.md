@@ -19,6 +19,10 @@ Use this capability when: a new entity, relationship, or data domain requires SQ
 
 Do not use this capability to: default every new entity to SQL without an access-pattern analysis (do access-pattern modeling first; many high-volume, key-access-only patterns belong in NoSQL — see `nosql-database`); design a relational schema and then expose it directly as an API contract (API shape must evolve independently — see `dto-schema-design`); resolve caching, search, or event-stream requirements (use `cache-design`, `search-analytics-design`, `message-queue-design` respectively); or optimize a slow query without first confirming the schema design and index strategy (use `indexing-query-optimization` for query-level optimization).
 
+# Stage Fit
+
+Use during data-middleware planning when deciding whether SQL is the right source of truth, during implementation review when schema, constraints, transactions, indexes, ORM query shape, tenant scope, or migration scripts change, and during validation/release review when EXPLAIN output, migration dry runs, rollback proof, integration tests, repository graph, project memory, or prior execution evidence must prove the relational design is current. Hand off when the unresolved decision is conceptual domain modeling, API/DTO compatibility, live migration sequencing, slow-query tuning, cache/search/queue behavior, or production release approval.
+
 # Non-Negotiable Rules
 
 - **Encode invariants as database constraints, not only application code.** Unique constraints, foreign key constraints, check constraints, and NOT NULL are the only invariant enforcers that cannot be bypassed by a second writer, a migration script, a background job, or a direct database connection. Rule: if an invariant is critical (uniqueness of email address, non-negative account balance, valid status transitions), it must exist as a database constraint in addition to application-level validation. Application-only enforcement is a single-writer illusion.
@@ -30,78 +34,19 @@ Do not use this capability to: default every new entity to SQL without an access
 
 # Industry Benchmarks
 
-Anchor against: **PostgreSQL documentation** — MVCC model; EXPLAIN ANALYZE; index types (B-tree, GIN, GiST, BRIN); autovacuum and bloat; LISTEN/NOTIFY; pg_stat_statements for slow query identification. **MySQL/InnoDB documentation** — REPEATABLE READ default; gap locks; deadlock detection; online DDL (ALTER TABLE ALGORITHM=INPLACE/INSTANT). **C.J. Date "Database in Depth" / "An Introduction to Database Systems"** — relational integrity; referential integrity; entity integrity; domain integrity. **Martin Kleppmann "Designing Data-Intensive Applications" (2017)** — isolation levels (read committed, snapshot, serializable); lost update problem; write skew; phantom reads; optimistic vs pessimistic concurrency. **Percona / GitHub Engineering blog** — online schema migration (gh-ost for MySQL; pg_repack for PostgreSQL); zero-downtime migration practice. **OWASP SQL Injection Prevention** — parameterized queries only; never dynamic string concatenation for SQL; input validation at application boundary. **Joe Celko "SQL for Smarties"** — window functions, hierarchical queries, set-based thinking vs row-by-row loops.
-
-### Storage Technology Decision Matrix
-
-| Requirement | Relational (PostgreSQL/MySQL) | NoSQL (Document) | NoSQL (Key-Value) | Time-Series |
-| --- | --- | --- | --- | --- |
-| Multi-entity atomic transactions | ✅ ACID | ⚠️ limited (MongoDB multi-doc txn) | ❌ | ❌ |
-| Complex joins across 3+ entities | ✅ | ❌ | ❌ | ❌ |
-| Uniqueness across rows | ✅ UNIQUE constraint | ⚠️ application-enforced | ❌ | ❌ |
-| High write throughput (> 50k writes/s) | ⚠️ requires sharding | ✅ | ✅ | ✅ |
-| Key-only access (get by ID) | ✅ (with index) | ✅ | ✅ | N/A |
-| Flexible schema / nested docs | ⚠️ JSONB (PostgreSQL) | ✅ | ❌ | ❌ |
-| Time-ordered data with retention | ⚠️ partitioned tables | ❌ | ❌ | ✅ |
-| Full-text search | ⚠️ pg_trgm / tsvector | ⚠️ Atlas search | ❌ | ❌ |
-
-### Migration Risk Classification
-
-```
-Migration Risk Assessment:
-
-1. Table row count:
-   < 100k rows    → LOW: standard ALTER TABLE acceptable
-   100k–10M rows  → MEDIUM: test migration time in staging; consider batched backfill
-   > 10M rows     → HIGH: online migration tool required (gh-ost / pg_repack / Flyway batched)
-
-2. Migration operation type:
-   ADD COLUMN nullable (no DEFAULT)    → LOW: instant metadata-only in PostgreSQL
-   ADD COLUMN NOT NULL with DEFAULT    → HIGH: rewrites all rows (PostgreSQL < 11); use expand-contract
-   DROP COLUMN                         → MEDIUM: mark soft-deleted first; confirm no readers
-   RENAME COLUMN                       → HIGH: add new + backfill + drop old (never direct rename)
-   ADD INDEX (CONCURRENTLY in PG)      → LOW/MEDIUM: CONCURRENTLY avoids table lock
-   DROP INDEX                          → LOW
-   ADD FOREIGN KEY                     → MEDIUM: requires full table scan; use NOT VALID + VALIDATE CONSTRAINT
-   ADD UNIQUE CONSTRAINT               → HIGH: full table scan + lock; add as unique index CONCURRENTLY first
-
-3. Expand-Contract pattern steps:
-   Phase 1 (Expand):  Add new column/table; deploy code that writes to both old+new
-   Phase 2 (Migrate): Batch backfill existing rows (LIMIT 1000 + SLEEP 10ms between batches)
-   Phase 3 (Clean):   Deploy code that reads only new; drop old column/table
-   Each phase is a separate deployment with validation checkpoint.
-
-4. Rollback plan per phase:
-   Phase 1: Drop new column (no data loss; old code still uses old column)
-   Phase 2: Stop backfill; Phase 1 rollback still possible
-   Phase 3: Requires restore from backup if old column dropped; plan forward-fix instead
-```
-
-### Transaction Isolation Decision Tree
-
-```
-Is this write protecting a shared numeric value (balance, count, inventory)?
-  YES → Use SELECT ... FOR UPDATE (pessimistic) or SERIALIZABLE isolation
-  NO  → Continue
-
-Can two concurrent writers produce inconsistent state (write skew, double-booking)?
-  YES → SERIALIZABLE isolation (PostgreSQL SSI) or explicit advisory locks
-  NO  → Continue
-
-Do you need to read your own uncommitted writes within the transaction?
-  N/A in standard isolation → READ COMMITTED is sufficient for most reads
-
-Default recommendation by pattern:
-  Simple insert (no conflict) → READ COMMITTED (default)
-  Upsert / idempotent write   → READ COMMITTED + ON CONFLICT DO UPDATE
-  Balance / inventory update  → REPEATABLE READ + SELECT FOR UPDATE
-  Cross-table invariant check → SERIALIZABLE
-  Bulk import / batch job     → READ COMMITTED + retry on deadlock
-```
+Anchor against PostgreSQL MVCC, EXPLAIN, index, autovacuum, and pg_stat_statements practice; MySQL/InnoDB isolation, gap-lock, deadlock, and online-DDL behavior; relational integrity theory; Kleppmann isolation anomaly patterns; Percona/GitHub zero-downtime migration practice; OWASP SQL injection prevention; and set-based SQL design. Keep this body focused on routing, evidence, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when storage-selection matrices, migration risk classes, isolation examples, constraint/index patterns, or validation checklists need detail.
 
 # Selection Rules
 
 Select this capability when **transactional correctness, relational integrity, or schema migration safety is the primary concern**. Route elsewhere when: `nosql-database` is primary (the access pattern is key-lookup or document-centric with no multi-entity transactions); `transaction-consistency` is primary (designing the isolation level and locking strategy in depth for an existing schema); `indexing-query-optimization` is primary (a specific slow query needs EXPLAIN ANALYZE and index tuning — the schema design is already settled); `data-migration-design` is primary (the migration sequencing and deployment order for a complex schema change); `data-model-design` is primary (the conceptual entity model and relationship design, before SQL DDL is written).
+
+# Proactive Professional Triggers
+
+- **Signal:** a proposed SQL table lacks named invariants, constraints, source-of-truth owner, or write authority. **Hidden risk:** application-only validation is bypassed by jobs, migrations, direct SQL, or a second writer. **Required professional action:** define PK/FK/UNIQUE/CHECK/NOT NULL constraints and the owning module before accepting the schema. **Route to:** `data-model-design`, `repository-persistence`, `transaction-consistency`. **Evidence required:** invariant-to-constraint map, owner/write path, rejected application-only checks, and integration-test obligation.
+- **Signal:** SQL, ORM query, report query, or migration plan is copied from project memory, repository graph, generated docs, or prior execution without current schema/index/caller confirmation. **Hidden risk:** stale evidence misses readers, tenant filters, soft-delete filters, report consumers, migration ledgers, or changed cardinality. **Required professional action:** confirm current source, migrations, tests, telemetry, and generated clients before using the claim. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected memory, inspected paths, freshness date, and not-verified limits.
+- **Signal:** a schema or query handles tenant-owned, permissioned, PII, audit, financial, or regulated rows without tenant predicate/RLS, parameterized SQL, retention, or redaction decision. **Hidden risk:** IDOR, SQL injection, privacy leak, audit failure, or cross-tenant data exposure. **Required professional action:** route security/privacy review and require parameterization plus data classification before closure. **Route to:** `security-privacy-gate`, `input-validation`, `permission-boundary-modeling`. **Evidence required:** parameterization decision, tenant/object filter, data classification, retention/encryption note, and denied/negative test obligation.
+- **Signal:** migration changes a column, index, constraint, table, enum, partition, or large backfill without row-count, lock-class, compatibility, rollback, and validation query evidence. **Hidden risk:** hot-table locks, old/new code breakage, partial backfill, replica lag, or point-of-no-return data loss. **Required professional action:** classify migration risk and hand off sequencing to migration/release gates. **Route to:** `data-migration-design`, `release-rollback`, `quality-test-gate`. **Evidence required:** row/write volume, lock analysis, expand/migrate/contract phases, rollback tier, and validation query map.
+- **Signal:** index, join, pagination, or N+1 concern is discussed without SQL/ORM call site, expected cardinality, write cost, or EXPLAIN evidence. **Hidden risk:** blind index cost, slow query persistence, offset pagination regression, or wrong root-cause fix. **Required professional action:** separate schema design from query optimization and require representative plan evidence. **Route to:** `indexing-query-optimization`, `repository-persistence`, `performance-budgeting`. **Evidence required:** query text/caller, existing indexes, cardinality, write-cost estimate, plan evidence or residual not-verified disclosure.
 
 # Risk Escalation Rules
 
@@ -137,12 +82,14 @@ Escalate when: a migration touches a table with > 10M rows or > 50k writes/s (re
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when a relational change touches migrations, query plans, indexes, constraints, transactions, isolation levels, large tables, multi-tenant data, PII, or production rollback limits. Do not load it for a simple read-only query review with no schema, index, or data safety impact.
+The `SKILL.md` body carries L1/L2 relational routing, trigger, output, and evidence rules. Load [references/checklist.md](references/checklist.md) when a relational change touches migrations, query plans, indexes, constraints, transactions, isolation levels, large tables, multi-tenant data, PII, or production rollback limits. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when storage fit, migration risk, isolation decision, constraint/index examples, graph/memory/execution coupling, or validation checklists need depth. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for a simple read-only query review with no schema, index, or data safety impact.
 
 # Output Contract
 
 Return a relational database design with:
 
+- `mode_selected` (storage fit / schema and constraint design / transaction and isolation design / migration-sensitive relational change / query-and-index adjacency)
+- `source_evidence` (current schema, migrations, repository methods, query/report consumers, generated clients, tests, telemetry, repository graph, project memory, and execution trajectory inspected with freshness limits)
 - `entity_and_table_design` (table names, column names, types, constraints: PK, FK, UNIQUE, CHECK, NOT NULL)
 - `relationship_model` (one-to-many, many-to-many join tables, cascade rules)
 - `invariant_enforcement` (which invariants are enforced at DB level vs application level; justification)
@@ -153,17 +100,23 @@ Return a relational database design with:
 - `api_decoupling` (confirmation that internal schema is not exposed as external contract)
 - `observability` (slow query monitoring: pg_stat_statements; lock monitoring; vacuum monitoring)
 - `tests` (integration tests: constraint enforcement, transaction isolation, not-found behavior, soft-delete filter)
+- `graph_memory_execution_validation` (repository graph, project memory, generated docs, old migration claims, prior validation, and execution trajectory accepted/rejected/stale/not verified)
+- `changed_schema_to_validation_map` (each table, column, constraint, index, query, transaction, tenant/PII decision, migration phase, and rollback step mapped to validator, query, test, manual check, or residual risk)
+- `handoff_boundaries` (what belongs to data model, API/DTO, repository, transaction, indexing, migration, security/privacy, reliability, or release work)
+- `evidence_limits` (what remains unproven about production row counts, locks, replica lag, tenant isolation, report consumers, data retention, live query plans, or rollback RTO)
 
 # Evidence Contract
 
 A relational database change is complete only when the output includes:
 
 - **Data ownership**: source table, owning module/service, and write authority.
+- **Graph/memory/execution judgment**: repository graph, project memory, generated docs, prior validations, migration ledgers, reports/jobs, and old "no reader" claims accepted, rejected, stale, or not verified.
 - **Query shape**: SQL/ORM query, filter, join, pagination, sort, and expected cardinality.
 - **Index strategy**: existing index, proposed index, selectivity, write cost, and query plan evidence.
 - **Transaction/isolation**: transaction boundary, isolation level, lock behavior, deadlock risk, retry behavior, and rollback behavior.
 - **Migration safety**: online DDL, expand/contract phase, backfill, lock timeout, batch size, rollback limitation, and replica lag.
 - **Data integrity**: constraints, foreign keys, uniqueness, nullability, and validation.
+- **Security and API decoupling**: parameterized SQL, tenant/object filter, PII/retention decision, and confirmation that ORM/schema internals do not leak into API DTOs.
 - **Validation evidence**: EXPLAIN/ANALYZE, migration dry run, integration test, rollback test, or not-verified disclosure.
 - **What evidence proves**: query/migration works for the inspected path.
 - **What evidence does not prove**: production cardinality, lock contention, replica lag, long-running transaction, or long-tail query plans.
@@ -183,6 +136,10 @@ The relational design is complete only when:
 8. Soft-delete filter is applied uniformly (RLS policy or query convention).
 9. PII and regulated data fields have encryption and retention policy noted.
 10. Integration tests cover: constraint enforcement, isolation behavior, migration rollback.
+11. Repository graph, project memory, generated docs, prior validation, migration ledger, and report/job consumer claims are confirmed against current source or marked stale/not verified.
+12. Parameterized SQL, tenant/object filters, API decoupling, and sensitive-data retention/encryption decisions are explicit for protected data.
+13. Every changed schema, query, index, transaction, migration phase, and rollback step maps to fresh validation evidence or a named residual risk.
+14. Handoff boundaries and evidence limits are stated so relational design is not over-claimed as API compatibility, query-plan proof, migration execution approval, security certification, or live production readiness.
 
 # Used By
 

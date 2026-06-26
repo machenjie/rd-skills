@@ -19,6 +19,10 @@ Use this capability when a change: adds a new module, package, bounded context, 
 
 Do not use this capability to organize code by technical type alone (e.g., `controllers/`, `services/`, `models/` top-level folders — that is a `layered-architecture-design` concern). Do not use it to create arbitrary folder hierarchies without business ownership, internal object graph, or dependency direction rationale. Do not use it to enforce module boundaries so granular that every object or function lives in an isolated module (boundary cost must be justified by change isolation benefit).
 
+# Stage Fit
+
+Use during architecture planning when module ownership, public contracts, dependency direction, directory density, or split/merge shape is being decided. Use during implementation and review when imports, public exports, shared/common code, or moved files change the module graph. Use during testing and release when boundary enforcement, cycle checks, ownership review, or migration sequencing must prove the design is enforceable. Treat repository graph, project memory, and execution trajectory as discovery inputs only: current source, imports, public exports, owner files, tests, architecture checks, and validation output must confirm or reject that evidence before it supports a boundary decision.
+
 # Non-Negotiable Rules
 
 - **Module boundaries must be defined by business capability, not technical type.** A module named `OrderService` that owns the `Order` business capability (entities, use cases, API, persistence) is correct. A module named `Services` that contains all application services across all capabilities is a layer, not a boundary — it provides no isolation between capabilities.
@@ -26,6 +30,7 @@ Do not use this capability to organize code by technical type alone (e.g., `cont
 - **Circular dependencies are prohibited.** Module A → Module B → Module A creates: inability to test A without B and B without A; merge conflicts when both teams modify the shared types; infinite import resolution in some runtimes. Circular dependencies must be detected by automated tooling (Dependency Cruiser, import-linter, ArchUnit) and treated as build failures.
 - **Shared utilities must not contain business logic.** `shared/`, `common/`, `utils/` modules are dependency magnets. When they accumulate business rules, every module that imports `shared/` becomes coupled to every business rule that `shared/` contains — even unrelated ones. Rule: shared modules may contain only pure technical utilities (date formatting, crypto primitives, HTTP client wrapper). Business rules must live in the owning capability's module.
 - **Every module boundary must have a named owner.** A module without an owner has no one to approve boundary changes, no one to maintain the contract, and no one to prevent inappropriate imports. Ownership must be declared (CODEOWNERS file, team annotation, README in module root).
+- **Current evidence is mandatory.** A boundary recommendation must cite inspected current source paths, import/dependency graph output, public exports, private internals, owner files, tests, relevant project memory or ADRs with freshness, and validation status. Memory, generated summaries, or old architecture diagrams are selectors, not proof, until reconciled with current source.
 - **Dependency direction must be enforced by tooling, not convention.** Architecture decisions decay without automated enforcement. Dependency Cruiser (JavaScript/TypeScript), import-linter (Python), ArchUnit (Java), NDepend (.NET) must run in CI. A PR that introduces a forbidden import must fail CI — not pass and receive a review comment.
 - **Module public API surface must be minimal.** Export only what consumers need. Every additional exported type is a surface area that constrains the module's ability to refactor internally. The public API of a module is a commitment to all consumers.
 - **Directory size is a module-boundary signal.** A large directory is acceptable only when it still represents one owner, one capability or layer convention, one public API family, and one change rhythm.
@@ -39,96 +44,27 @@ Do not use this capability to organize code by technical type alone (e.g., `cont
 
 # Industry Benchmarks
 
-Anchor against: **Eric Evans "Domain-Driven Design"** — Bounded Context: a semantic boundary within which a domain model is consistent; each bounded context owns its language, model, and invariants; crossing a bounded context requires explicit translation (Context Map, Anti-Corruption Layer). **Robert C. Martin "Package Principles"** (in "Agile Software Development: Principles, Patterns, and Practices") — REP (Release Equivalence Principle): the granule of reuse is the granule of release; CCP (Common Closure Principle): classes that change together belong together; CRP (Common Reuse Principle): don't force users to depend on things they don't use; ADP (Acyclic Dependencies Principle): no cycles in the dependency graph. **Dependency Cruiser** (github.com/sverweij/dependency-cruiser) — JavaScript/TypeScript dependency rule enforcement; `.dependency-cruiser.js` with `forbidden` rules; runs in CI. **import-linter** (github.com/seddryck/import-linter) — Python contract: `[importlinter:contract:orders-no-payments]`; `type: layers` or `type: forbidden`; fails import if violated. **ArchUnit** (archunit.org) — Java `noClasses().that().resideIn("..orders..")...dependOn("..payments..")`. **NDepend** (.NET) — dependency matrix + dependency rule DSL. **Conway's Law** — system architecture reflects team communication structure; module boundaries should align with team ownership for effective parallel development. **Team Topologies** (Skelton & Pais) — stream-aligned team owns a value stream boundary; enabling team provides shared capability; complicated subsystem team owns complex technical modules. **Modular Monolith** (Sam Newman, Mauro Servienti) — full business capability boundary in a single deployable; modules have hard internal isolation and versioned contracts; can be extracted to microservices later if independent deployability becomes justified.
-
-### Module Boundary Classification Matrix
-
-| Boundary Type | Scope | Public API | Allowed Imports | Example |
-| --- | --- | --- | --- | --- |
-| Business Capability Module | Single bounded context | Use cases, domain events, DTOs | Shared technical utils; no other capability modules | `orders/` imports only `shared/` |
-| Shared Technical Module | Cross-cutting pure utilities | Utility functions, primitives | Only stdlib / third-party; no business modules | `shared/crypto`, `shared/date` |
-| Integration Adapter | External system boundary | Adapter interface (port) | Own capability module + external SDK | `payment-gateway-adapter/` |
-| Domain Extension | Sub-domain specialization | Extension hooks, events | Parent capability public API only | `enterprise-billing/` imports `billing/api` |
-| Orchestration / Gateway | Cross-capability coordination | Use case orchestrators | Multiple capability public APIs (read-only fan-in) | `checkout/` imports `orders/api` + `inventory/api` |
-
-### Dependency Direction Enforcement Rules
-
-```
-Allowed:
-  orders → shared/utils           (business capability → shared technical utility)
-  payment-adapter → orders/api    (adapter → capability public API)
-  checkout → orders/api           (orchestrator → capability public API)
-  checkout → inventory/api        (orchestrator → capability public API)
-
-Forbidden (examples):
-  orders → payments               (capability A → capability B: business coupling)
-  payments → orders               (capability B → capability A: bidirectional = circular risk)
-  orders → orders/internal/db     (external module → private internals: violates encapsulation)
-  shared/utils → orders           (shared utility → business capability: inversion)
-  payments → checkout             (owned capability → orchestrator: direction inversion)
-
-Dependency Cruiser rule (TypeScript):
-  {
-    "forbidden": [
-      {
-        "name": "no-cross-capability-import",
-        "from": { "path": "^src/orders" },
-        "to": { "path": "^src/payments" }
-      },
-      {
-        "name": "no-internal-access",
-        "from": { "pathNot": "^src/orders" },
-        "to": { "path": "^src/orders/internal" }
-      }
-    ]
-  }
-
-import-linter contract (Python):
-  [importlinter:contract:no-cross-capability]
-  name = No cross-capability imports
-  type = forbidden
-  source_modules = orders
-  forbidden_modules = payments
-```
-
-### Module Public API Surface Design
-
-```
-Module: orders/
-  orders/
-    api/              ← PUBLIC: everything here is the module's contract
-      __init__.py     ← exports: OrderService, CreateOrderCommand, OrderCreatedEvent
-      order_service.py
-      commands.py
-      events.py
-    internal/         ← PRIVATE: never imported from outside
-      _order_entity.py
-      _order_repository.py
-      _order_validator.py
-    tests/
-
-Rule: external modules may ONLY import from orders/api/
-Rule: orders/internal/ is unreachable from outside (enforced by import-linter)
-Rule: every new export from orders/api/ requires explicit decision (it is a commitment)
-```
-
-## Module Internal Composition
-
-A module is complete only when it has a cohesive object graph and a minimal public contract. Before adding, splitting, or merging modules, record:
-
-- public facade/API and current consumers;
-- internal domain objects, value objects, services/use cases, policies/specifications, repositories, adapters/clients, mappers/DTOs, module-local helpers, and tests;
-- object relationship graph including parent-child, sibling, collaborator, service plus policy, service plus repository, service plus adapter, value object, strategy/policy family, interface/protocol plus implementation, inheritance, composition, delegation, and module-local helper relationships;
-- internal dependency direction and cycle check;
-- public versus internal visibility and forbidden internal access;
-- module-level tests through the public facade or declared module-internal contracts;
-- next related change location for expected adjacent changes.
-
-Reject module structures that split by technical type mechanically, create one module per object, leave internal objects without an owner, expose internals through the public API, use shared/common as an ownership substitute, or group unrelated object families in one module.
+Anchor against bounded contexts, package principles, acyclic dependency rules, Team Topologies ownership, modular monolith internal isolation, and import graph enforcement tools such as Dependency Cruiser, import-linter, ArchUnit, and NDepend. Load [references/benchmarks-and-enforcement.md](references/benchmarks-and-enforcement.md) when a design needs the benchmark catalog, boundary classification matrix, dependency-rule snippets, or public API surface example.
 
 # Selection Rules
 
 Select this capability when: the primary concern is **which modules may import which other modules**, business capability isolation, or circular dependency prevention. Route elsewhere when: **layered-architecture-design** is primary (presentation / application / domain / infrastructure layer responsibilities); **microservice-splitting** is primary (the question is whether an in-process boundary should become a separate deployable service); **domain-event-modeling** is primary (inter-module communication via domain events); **extensibility-design** is primary (plugin or extension points across module boundaries).
+
+# Proactive Professional Triggers
+
+- **Signal:** A new import crosses a capability, module, internal path, or shared/common path. **Hidden risk:** import graph drift, cycle creation, or private internals becoming a contract. **Required professional action:** inspect current graph, public API, owner, and enforcement rule before accepting the import. **Route to:** `repository-graph-analysis`, `architecture-enforcement-tooling`, `quality-test-gate`, this capability. **Evidence required:** changed import paths, graph or cycle output, public API decision, enforcement command.
+- **Signal:** Code is moved, split, merged, or placed into `shared/`, `common/`, `utils/`, a feature directory, or a new module. **Hidden risk:** arbitrary directory boundary, shared business logic, or change locality degradation. **Required professional action:** classify relationship type, owner, next-change location, and rejected placements. **Route to:** `implementation-structure-design`, `code-clarity-maintainability`, this capability. **Evidence required:** moved paths, owner, relationship type, placement rationale, module tests.
+- **Signal:** Project memory, an ADR, generated context, or prior trajectory claims a boundary already exists or is safe. **Hidden risk:** stale memory hides current cycles, private imports, or unowned modules. **Required professional action:** treat memory as a hypothesis and reconcile it against current source, graph, owners, tests, and validation freshness. **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`, this capability. **Evidence required:** memory source/date, accepted and rejected claims, current graph delta.
+- **Signal:** A public API, barrel export, DTO, event, SDK contract, or module facade expands. **Hidden risk:** accidental downstream compatibility commitment. **Required professional action:** inventory current consumers, minimize the facade, add contract or boundary tests, and record rollback/deprecation impact. **Route to:** `consumer-impact-analysis`, `contract-testing`, `architecture-impact-reviewer`, this capability. **Evidence required:** consumer inventory, export diff, contract tests, rollback path.
+- **Signal:** A small requirement touches many modules, shared code, or tests outside the supposed owner. **Hidden risk:** boundary defect disguised as normal implementation spread. **Required professional action:** decide whether the spread is inherent product behavior or boundary repair. **Route to:** `repository-context-map`, `plan-execution-consistency`, this capability. **Evidence required:** changed path map, owning module, spread rationale, rejected repair or repair plan.
+
+# Reference Loading Policy
+
+- **L1 quick decision:** Use this `SKILL.md` only for ordinary routing, non-negotiable rules, output fields, and completion gates.
+- **L2 boundary review:** Load [references/checklist.md](references/checklist.md) when reviewing or drafting a concrete boundary map.
+- **L3 benchmark/enforcement depth:** Load [references/benchmarks-and-enforcement.md](references/benchmarks-and-enforcement.md) when benchmark anchors, boundary classification, import-rule snippets, or public API surface examples are needed.
+- **L4 decomposition depth:** Load [references/module-decomposition.md](references/module-decomposition.md) when splitting, merging, or validating internal object clusters and relationship types.
+- **Example shaping:** Use [examples/example-output.md](examples/example-output.md) only to shape a concise final output, not as a substitute for current repository evidence.
 
 # Risk Escalation Rules
 
@@ -136,6 +72,8 @@ Escalate when: a proposed import would create a circular dependency; a change mo
 
 # Critical Details
 
+- **Module internal composition is required before boundary change.** A module is complete only when it names its public facade/API, current consumers, private internals, internal domain/value/service/policy/repository/adapter/mapper/helper objects, cohesive object graph, internal dependency direction, cycle check, module-level tests, and next related change location.
+- **A split or merge must name the module relationship type.** Use sibling, parent-child, producer-consumer, upper-lower layer, orchestrator, adapter/port, shared technical module, or no-split. Reject splits by technical type, one-module-per-object fragmentation, and merges that expose internals or mix unrelated object families.
 - **Conway's Law means team structure should inform module boundary decisions.** If two teams must coordinate on every change to Module A, the module boundary is too large — split it along the team boundary. If one team owns a module that two other teams import heavily, dependency coupling will slow all three teams. Module boundaries should minimize the need for cross-team coordination on any single change.
 - **"Barrel exports" (index.ts) control public API without changing folder structure.** In TypeScript/JavaScript, an `index.ts` that explicitly re-exports only the public types provides a stable public API without enforcing folder conventions on internal structure. Any internal refactoring that doesn't change the `index.ts` exports is safe. This pattern should be the default for every module.
 - **Domain events decouple modules without creating direct imports.** If `orders` needs to notify `inventory` when an order is placed, `orders` publishing an `OrderPlaced` event and `inventory` subscribing to it avoids a direct import in either direction. This is preferable to an orchestrator that imports both. Events must be defined in a shared schema module (not in either business capability module) to avoid the ownership coupling.
@@ -167,6 +105,10 @@ Escalate when: a proposed import would create a circular dependency; a change mo
 
 Return a module boundary map with:
 
+- `mode_selected` (architecture planning, implementation, review, refactoring, testing/release, or repair)
+- `boundary_decision_scope` (new boundary, split, merge, import change, public API change, shared/common audit, or migration repair)
+- `source_evidence` (current source paths, import graph, public exports, private internals, owner files, tests, architecture rules, and validation output inspected with freshness limits)
+- `graph_memory_execution_validation` (repository graph, project memory/ADR, and execution trajectory claims accepted, rejected, stale, partial, or not verified)
 - `modules` (name, business capability owned, owning team, public API surface: list of exported types/functions)
 - `private_internals` (what is explicitly NOT part of the public API; access from outside is forbidden)
 - `allowed_dependencies` (module → module: permitted imports; justified by business or technical reason)
@@ -186,6 +128,8 @@ Return a module boundary map with:
 - `module_object_cluster_split_or_merge_decision` (split/merge/no-split decision for sub-clusters and object families)
 - `module_relationship_type` (sibling / parent-child / producer-consumer / upper-lower layer / orchestrator / adapter-port / shared technical module)
 - `change_locality_gate` (owning module, authoritative rule location, extension point, shared/common pressure, cross-module import delta, public API expansion, and small-change spread)
+- `boundary_to_validation_map` (each boundary rule mapped to graph check, import rule, owner review, contract test, module test, or release check)
+- `evidence_limits_and_unknowns` (uninspected modules, unavailable graph tooling, stale memory, missing owner data, generated artifact exclusions)
 - `migration_impact` (existing code that violates the new boundaries; refactoring plan with priority)
 - `test_boundary` (each module testable in isolation using only its public API + mocks for dependencies)
 
@@ -212,6 +156,23 @@ The boundary design is complete only when:
 17. A module groups cohesive objects/methods/helpers around one capability or layer; unrelated object families are split or explicitly justified.
 18. Internal policies, repositories, adapters, mappers, DTOs, helpers, and concrete child objects do not leak through the public facade unless they are real current contracts.
 19. A module split or merge declares object cluster split/merge rationale, next-change location, and dependency-direction impact.
+20. Current source, graph, owner, public API, private internals, tests, memory/ADR freshness, and validation output are cited or explicitly marked unavailable.
+21. Repository graph, project memory, and execution trajectory evidence is classified as accepted, rejected, stale, partial, or not verified.
+22. Every boundary rule has a matching validation action: graph/cycle check, import rule, public API/contract test, owner review, shared audit, module test, or release check.
+23. Public API and shared/common changes include current consumer evidence and reject speculative exports or ownership workarounds.
+24. Handoff states evidence limits, unknown modules, unavailable tooling, rollback/migration impact, and residual coupling risk.
+
+# Evidence Contract
+
+Do not approve a module boundary from names alone. The minimum evidence set is: current repository paths, current imports or dependency graph, public export surface, private internal paths, owner or review authority, tests that exercise the public facade, shared/common inventory, project memory or ADR freshness if used, and validation commands with outcomes. If graph tooling is missing, state the fallback scan, confidence limit, and the exact rule that still needs automated enforcement.
+
+# Benchmark Coverage
+
+Boundary decisions must map to at least one benchmark anchor: bounded context consistency, common closure/common reuse, acyclic dependencies, Team Topologies ownership, modular monolith isolation, or import graph enforcement. Load the benchmark reference when the decision depends on a named pattern, enforcement snippet, or classification matrix.
+
+# Routing Coverage
+
+Route to this capability whenever module ownership, public/private visibility, cross-module import direction, shared/common pressure, circular dependency risk, module split/merge, directory density, public API expansion, object-cluster cohesion, or change locality is material. Pair with `repository-graph-analysis` for graph evidence, `project-memory-governance` for stale memory claims, `execution-trajectory-analysis` for prior-action freshness, `implementation-structure-design` for placement, and `quality-test-gate` for validation mapping.
 
 # Used By
 

@@ -19,6 +19,10 @@ Use this capability when a change creates, migrates, deletes, transforms, archiv
 
 Do not use this capability to treat backup as a substitute for safe migration design (`data-migration-design`), safe rollout (`release-rollback`), idempotent operations (`idempotency-retry-design`), or correct authorization (`authentication-authorization`). Backup is the last line of defense, not the first.
 
+# Stage Fit
+
+Use during planning, implementation review, code-review, testing, release preparation, incident-readiness review, and destructive-change approval when core data or critical state could be lost, corrupted, encrypted by an attacker, made unreadable by key/config changes, or restored outside the business RTO/RPO. In planning, define protected datasets, blast radius, recovery scope, RTO/RPO, restore evidence, and ownership before relying on backup as a control. In review, reject stale project-memory or repository-graph claims such as "backups exist", "restore was tested", "RTO is 1 hour", or "keys are retained" unless current backup configuration, runbooks, drill evidence, telemetry, and validation prove them. Hand off when the primary question is migration sequencing, application rollback, observability signals, key custody, ransomware threat model, or release clearance.
+
 # Non-Negotiable Rules
 
 - Every core dataset has a **named RPO (Recovery Point Objective)** and **RTO (Recovery Time Objective)** approved by the business owner — not assumed by engineering.
@@ -32,58 +36,22 @@ Do not use this capability to treat backup as a substitute for safe migration de
 - **Backup retention** must meet legal hold, regulatory minimums, and operational discovery windows — and must explicitly delete beyond them where privacy regulation requires (GDPR right to erasure, etc.).
 - **Access to backups** follows least-privilege; access is audited; production credentials cannot grant unrestricted backup deletion.
 - **Recovery drills** measure actual RTO/RPO achieved and feed back into capacity, automation, and runbook revisions.
+- **Closure evidence** names the restore command or drill, validator, artifact/report path, exit code or explicit manual result, timestamp, data scope, and owner; stale validation cannot close a backup-recovery gate.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Core dataset recovery | Database, object store, search index, durable queue, vector store, audit log, or canonical cache can be lost/corrupted. | Dataset owner, classification, RPO/RTO, backup cadence, restore validation. | Dataset inventory, business owner approval, last drill actuals, restore scope. | `reliability-observability-gate`, `observability` | Code rollback only. |
+| Destructive change safety | DROP, DELETE, purge, archive, rekey, reindex, region decommission, or irreversible migration. | Pre-change snapshot, point-of-no-return, approval, tested restore, forward-fix relationship. | Dry-run count, backup snapshot, restore test, owner signoff, rollback tier. | `data-migration-design`, `release-rollback`, `delivery-release-gate` | Backup as migration plan. |
+| Ransomware/insider resilience | Internet-exposed, regulated, high-value, tenant-wide, backup deletion, or credential compromise threat. | Immutable/off-account backups, deletion controls, key separation, restore under compromise. | WORM/object lock, MFA delete, separate backup admin, deletion audit. | `security-privacy-gate`, `threat-modeling`, `secret-configuration-security` | Same-account snapshots only. |
+| Key/config/schema restore | Encryption key rotation, KMS migration, config repository, app version, schema version, or feature flag affects restore readability. | Atomic restore scope and compatibility window. | Key retention, config/secrets backup, compatible app version, schema rollback/bridge. | `secret-configuration-security`, `version-compatibility`, `data-migration-design` | Database-only restore proof. |
+| DR/failover readiness | Region/account/cloud failure, DR tier change, standby/cross-region replication, DNS/traffic failover. | DR strategy, failover path, actual RTO/RPO, dependency restore order. | DR topology, failover drill, DNS TTL, dependency map, cost/capacity. | `delivery-release-gate`, `reliability-observability-gate`, `kubernetes-gateway` | Snapshot-only proof. |
+| Compliance retention and erasure | Legal hold, audit trail, GDPR/CCPA erasure, PCI/HIPAA/SOX retention, e-discovery, archive lifecycle. | Retention correctness, deletion beyond retention, erasure in backups, evidence owner. | Regulatory class, retention window, crypto-shred/rewrite plan, audit evidence. | `security-privacy-gate`, `change-documentation-gate` | Cost-only retention change. |
 
 # Industry Benchmarks
 
-Anchor against: **ISO/IEC 27031** (ICT readiness for business continuity), **ISO 22301** (Business Continuity Management Systems), **NIST SP 800-34 Rev. 1** (Contingency Planning Guide for Federal Information Systems) and the BIA (Business Impact Analysis) discipline, **NIST SP 800-209** (Security Guidelines for Storage Infrastructure), **ITIL Service Continuity Management**, **AWS Well-Architected Reliability Pillar** (REL09 backup data, REL13 disaster recovery), **Google SRE Workbook — Data Integrity** (24 combinations of data loss requires layered defense; "no backup is good if it cannot be restored"), **DORA EU Regulation** (Digital Operational Resilience Act, financial sector, mandatory recovery objectives + testing), **PCI-DSS v4 §12.10** (incident response includes data restoration), **HIPAA §164.308(a)(7)** (data backup, disaster recovery, emergency mode), **SOC 2 CC7.4 / A1.2** (backup and recovery), **GDPR Art. 32** (ability to restore availability and access to personal data in a timely manner), **Veeam 3-2-1-1-0 rule** (anti-ransomware extension), **CISA Stop Ransomware guidance**, **NIST SP 800-184** (Guide for Cybersecurity Event Recovery), **OWASP CWE-1009** (Audit Trail), **DAMA-DMBOK** data lifecycle. For DR site strategies: **AWS DR patterns** (Backup & Restore → Pilot Light → Warm Standby → Multi-Site Active/Active), **Gartner DR tier model**.
-
-### RPO / RTO Tier Reference
-
-| Tier | Example workload | RPO target | RTO target | Typical strategy |
-| --- | --- | --- | --- | --- |
-| 0 — Mission-critical | Payment authorization, life-safety | ≈ 0 (synchronous replication) | < 1 min | Multi-region active-active + sync replication + automated failover |
-| 1 — Business-critical | Customer-facing transactional DB | ≤ 5 min | ≤ 1 hr | Warm standby cross-region + continuous WAL shipping |
-| 2 — Important | Internal SaaS, reporting | ≤ 1 hr | ≤ 4 hr | Hot backup hourly + pilot-light DR |
-| 3 — Standard | Analytics, dev/test | ≤ 24 hr | ≤ 24 hr | Daily snapshot, backup-and-restore |
-| 4 — Archive | Compliance archive, audit trail | ≤ 7 days | Days | Cold storage + immutable retention |
-
-RPO and RTO **must be assigned by the business owner per dataset**, not inherited generically. A 99.9% SLO with no defined RPO is incoherent.
-
-### Backup Type Selection Matrix
-
-| Backup type | Recovery point granularity | Storage cost | Restore complexity | Pick when |
-| --- | --- | --- | --- | --- |
-| **Full** | Per snapshot | Highest | Simple | Small datasets; weekly baseline for incremental chains |
-| **Incremental** | Last full + chain | Lowest | Higher (chain dependency) | Daily/hourly cadence, large datasets |
-| **Differential** | Last full + last diff | Medium | Medium | Balance between full and incremental |
-| **Continuous (CDC / WAL / oplog shipping)** | Per-transaction (seconds) | Medium-high | Requires point-in-time recovery tooling | RPO ≤ minutes; transactional databases |
-| **Snapshot (storage-level)** | Per snapshot | Low (CoW) | Fast | Same-region recovery; not a substitute for off-site backup |
-| **Logical export (`pg_dump`, `mongodump`)** | Per export | Low | Slow restore; format-portable | Schema migration safety net; cross-version moves |
-| **Object versioning + MFA delete** | Per object version | Low | Per-object | S3/GCS bucket protection against accidental delete |
-| **Immutable backup (Object Lock / WORM)** | Per backup | Higher | Same as base | Ransomware resilience, compliance retention |
-
-### Disaster Recovery Strategy Selection
-
-| Strategy | RTO | RPO | Cost | Pick when |
-| --- | --- | --- | --- | --- |
-| **Backup & Restore** | Hours–days | Hours | $ | Standard apps; can tolerate downtime |
-| **Pilot Light** | Tens of minutes | Minutes | $$ | Core stays warm; scale up on failover |
-| **Warm Standby** | Minutes | Seconds–minutes | $$$ | Reduced capacity always running |
-| **Multi-Site Active/Active** | ≈ 0 | ≈ 0 | $$$$ | Mission-critical; tolerate split-brain complexity |
-
-### Failure-Mode Coverage Matrix (the 24 combinations principle)
-
-Recovery design must defend against multiple intersecting failure modes — not one at a time. Tabulate:
-
-| Loss type \ Source of loss | Hardware | Software bug | Operator error | Malicious insider | External attack | Region failure |
-| --- | --- | --- | --- | --- | --- | --- |
-| Single record |  |  |  |  |  |  |
-| Single table / index |  |  |  |  |  |  |
-| Whole database |  |  |  |  |  |  |
-| Encryption key |  |  |  |  |  |  |
-| Backup itself |  |  |  |  |  |  |
-
-Each cell needs a defined detection + restore path. The corner case "attacker deleted both production and backups using leaked admin credentials" is the case immutable WORM backups exist to cover.
+Anchor against ISO/IEC 27031, ISO 22301, NIST SP 800-34, NIST SP 800-209, NIST SP 800-184, ITIL Service Continuity, AWS Well-Architected Reliability REL09/REL13, Google SRE data integrity practice, DORA operational resilience, PCI-DSS/HIPAA/SOC 2/GDPR recovery obligations, CISA ransomware guidance, 3-2-1-1-0 backup practice, WORM/immutable storage, PITR, and DR strategy tiers from backup-and-restore through active/active. Keep this body focused on routing, ownership, evidence, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed tier, backup-type, DR, failure-mode, graph/memory/trajectory, and validation matrices.
 
 # Selection Rules
 
@@ -95,6 +63,15 @@ Select this capability when **recovery from data loss or corruption** is primary
 - Prefer `secret-configuration-security` for key custody and rotation lifecycle.
 - Prefer `reliability-observability-gate` for SLO/SLA and DR readiness review.
 - Use **with** `delivery-release-gate` when a release demands a pre-deploy snapshot or DR exercise.
+
+# Proactive Professional Triggers
+
+- **Signal:** A destructive migration, purge, rekey, reindex, archive, or region/key decommission relies on "we have backups" without a fresh restore drill. **Hidden risk:** the recovery path fails or exceeds RTO after data is already lost. **Required professional action:** require pre-operation snapshot, restore proof, owner signoff, and rollback/forward-fix relationship. **Route to:** `data-migration-design`, `release-rollback`, `delivery-release-gate`. **Evidence required:** dry-run count, backup artifact, restore validation, RTO/RPO actuals.
+- **Signal:** Backup scope names only the database while product correctness depends on object storage, indexes, queues, offsets, keys, config, flags, or app version. **Hidden risk:** "restored" system cannot serve users. **Required professional action:** define atomic restore scope and dependency order. **Route to:** `observability`, `secret-configuration-security`, `version-compatibility`. **Evidence required:** dependency map, compatible app/schema/key set, validation query/canary.
+- **Signal:** Backups, deletion rights, and encryption keys share one account, role, region, vault, or admin credential. **Hidden risk:** ransomware/insider compromise destroys production and recovery copy together. **Required professional action:** require off-account/off-site immutable backup and separated key custody. **Route to:** `security-privacy-gate`, `threat-modeling`, `secret-configuration-security`. **Evidence required:** object lock/WORM, MFA delete, deletion audit, key-retention policy.
+- **Signal:** RTO/RPO is inherited from an SLO, guessed by engineering, or not measured at production-like scale. **Hidden risk:** business assumes a recovery level the system cannot meet. **Required professional action:** require business owner approval and drill actuals. **Route to:** `reliability-observability-gate`, `observability`. **Evidence required:** BIA owner, target, last drill, gap owner.
+- **Signal:** Compliance retention, legal hold, audit logs, or erasure obligations are affected by backup retention or restore. **Hidden risk:** audit failure, over-retention, under-retention, or impossible erasure. **Required professional action:** classify retention and erasure behavior before changing backup policy. **Route to:** `security-privacy-gate`, `change-documentation-gate`. **Evidence required:** regulatory class, retention window, deletion/crypto-shred plan, evidence owner.
+- **Signal:** Project memory, repository graph, runbook, or prior execution says restore was already tested. **Hidden risk:** stale drill evidence survives after schema, size, key, region, dependency, or runbook changes. **Required professional action:** confirm current configuration, restore artifact, data volume, runbook, and validation freshness. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected memory, freshness limit, validation command or residual risk.
 
 # Risk Escalation Rules
 
@@ -115,6 +92,7 @@ Backups matter only if restore works at scale, in time, with the right scope. Ap
 - **Compliance erasure obligations** (GDPR right to erasure, CCPA) extend into backups but with documented "next eligible deletion" windows — practical pattern is to encrypt per-subject and destroy the per-subject key on deletion request, which cryptographically erases without rewriting backups.
 - **Region failover** has data-egress, latency, and DNS-TTL considerations; failover that depends on a DNS change with TTL 1 hour cannot meet RTO ≤ 5 min.
 - **Restore validation** ≠ "the restore command succeeded". Validation must check: row counts ≈ source, key checksums match, sample queries return expected aggregates, application starts and serves canary traffic.
+- **Validation artifact quality.** A restore drill report, validator output, screenshot, or ticket is useful only when it identifies the backup artifact, command/runbook step, exit code or manual pass/fail result, dataset size, dependency scope, evidence owner, and freshness after the last schema, key, config, region, or volume change.
 - **Drill cadence.** Quarterly minimum for critical; per-release for systems with frequent schema change. Record actual RTO/RPO achieved; gap-close into runbooks.
 - **Drill realism.** Drilling restore into a sandbox proves the artifact is readable; drilling failover with synthetic production traffic proves the system works. Aim for the latter at least annually.
 - **Off-site / off-account separation.** Backups in the same AWS account as production are vulnerable to account compromise; cross-account or cross-cloud separation raises the bar.
@@ -137,6 +115,7 @@ Backups matter only if restore works at scale, in time, with the right scope. Ap
 
 # Failure Modes
 
+- **Stale validation closure**: a prior drill report or successful command is reused after schema, key, config, data volume, dependency, or region changes; evidence no longer covers the recovery risk.
 - Backup exists but restore has never been tested at production data volume → restore at incident time exceeds RTO by an order of magnitude.
 - RPO/RTO assumed by engineering but never approved by business owner; mismatch surfaces during incident.
 - Database is restored without object storage, search index, encryption keys, message-broker offsets, or compatible application version → "restored" system does not work.
@@ -152,10 +131,17 @@ Backups matter only if restore works at scale, in time, with the right scope. Ap
 - Schema migration that drops a column → backups from before migration cannot be restored to current app version.
 - Restore runbook in a wiki the on-call cannot access during incident.
 
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 backup and recovery routing, evidence, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete recovery plan, destructive-change approval, backup policy change, restore drill, RTO/RPO claim, retention decision, or release preflight. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed benchmark anchors, RTO/RPO tiers, backup-type choice, DR strategy, failure-mode coverage, ransomware controls, graph/memory/trajectory coupling, or validation matrices are needed. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for pure routing or minor wording where the inline output contract and quality gate are enough.
+
 # Output Contract
 
 Return a backup-and-recovery plan with:
 
+- `mode_selected` (core dataset recovery / destructive change safety / ransomware-insider resilience / key-config-schema restore / DR-failover readiness / compliance retention and erasure)
+- `source_evidence` (backup config, runbook, restore drill, storage topology, KMS/key policy, retention policy, monitoring, repository graph, project memory, execution trajectory, and validation freshness inspected)
+- `graph_memory_trajectory_judgment` (accepted, rejected, or not verified for each reused backup, restore, RTO/RPO, runbook, topology, key-retention, or drill claim)
 - `protected_dataset` (per dataset: name, owner, classification, storage system, regulatory class)
 - `business_impact_analysis` (per dataset: financial/legal/operational impact of loss; references BIA)
 - `rpo` / `rto` (per dataset: numeric target + approver name + last-tested actual)
@@ -168,28 +154,50 @@ Return a backup-and-recovery plan with:
 - `restore_scope` (atomic set: DB + objects + index + keys + config + broker state + compatible app version)
 - `restore_runbook` (step-by-step, executable by on-call without other docs; pre-checks; validation steps; rollback)
 - `validation_plan` (row count / checksum / sample query / canary traffic acceptance)
+- `validation_commands` (restore or drill command, validator name, artifact/report path, exit code or manual result, timestamp, dataset size, and freshness verdict)
 - `drill_schedule` and `last_drill_results` (RTO actual, RPO actual, gaps, follow-ups)
 - `monitoring_and_alerts` (backup job success, schedule miss, size anomaly, restore latency drift, deletion API)
 - `cost_model` (per-tier storage + egress + drill cost)
 - `rollback_relationship` (how this plan interacts with `release-rollback` and `data-migration-design`)
+- `changed_recovery_to_validation_map` (each dataset, backup copy, key, restore dependency, drill, monitor, retention rule, and destructive-change gate mapped to validator/test/drill/manual evidence or residual risk)
+- `handoff_boundaries` (what belongs to migration sequencing, application rollback, observability signal design, key custody, threat modeling, release gate, compliance docs, or no-next-gate rationale)
 - `residual_risks` (data loss windows still possible; ransomware exposure; compliance gaps)
+- `evidence_limits` (what was not inspected or not proven: production-scale restore, cross-region copy, key restore, object attachments, search rebuild, queue offset replay, legal hold/erasure, or live failover)
+
+# Evidence Contract
+
+Close a backup-recovery plan only when it names selected mode, boundaries inspected, current source evidence, graph/memory/trajectory reuse judgment, protected datasets, business owner, RTO/RPO target and actual drill result, atomic restore scope, storage topology, key custody, retention/erasure obligations, access/deletion controls, monitoring, runbook validation, changed-recovery-to-validation map, handoff boundaries, residual risk, and evidence limits.
+
+Validation evidence must name each command, validator, artifact/report path, exit code or manual result, data scope, owner, and freshness after the final material source/config/key/schema change. State what evidence proves, what evidence does not prove, the reuse and placement rationale for graph/memory/trajectory claims, behavior preservation for existing backup and restore controls, and the next gate or handoff owner. "Backups are enabled" or "restore from snapshot" is not sufficient evidence.
+
+# Benchmark Coverage
+
+Improved recovery plans reject common weak patterns: backup existence without restore proof, database-only restore scope, same-account backup deletion rights, keys lost before backup retention expires, unmeasured RTO/RPO, empty-schema drills, backup retention shortened by cost only, PITR not matched to corruption detection, ransomware without immutable copy, and stale memory claims about drills. Detailed tier and failure-mode matrices belong in references so the body stays efficient.
+
+# Routing Coverage
+
+Route here when recovery from data loss, corruption, ransomware, key loss, restore scope, RTO/RPO, DR/failover proof, retention, erasure, or backup integrity is primary. Hand off when the primary work is migration sequencing (`data-migration-design`), code/config rollback (`release-rollback`), observability signal design (`observability` / `reliability-observability-gate`), key custody (`secret-configuration-security`), threat modeling (`threat-modeling`), release clearance (`delivery-release-gate`), or compliance documentation (`change-documentation-gate`).
 
 # Quality Gate
 
 The plan passes only when:
 
-1. RPO and RTO are **named per dataset, approved by business owner, and within demonstrated capability** (actual drill ≤ target).
-2. A restore drill has been completed within the cadence policy (and recently for any system under schema change).
-3. Restore scope is atomic — DB + objects + keys + index + config + compatible app version — not just "the database".
-4. Backups are encrypted with keys held separately from the backup storage; key custody outlives backup retention.
-5. Off-site / off-account / immutable copy exists for ransomware-credible systems.
-6. Backup-deletion controls require MFA / cross-account separation; deletion is audited.
-7. Failure-mode matrix is filled with concrete defenses for each cell (not "trust IAM").
-8. Drill measured actual RTO/RPO; gaps are tracked.
-9. Runbook is executable by an on-call who has never restored this system before.
-10. Compliance retention obligations met; erasure obligations addressed (crypto-shred or rewrite plan).
-11. Monitoring alerts cover job failure, schedule miss, size anomaly, deletion attempt.
-12. Cost model is sustainable for the chosen tier.
+1. Selected mode, current source evidence, and graph/memory/trajectory reuse judgment are explicit.
+2. RPO and RTO are **named per dataset, approved by business owner, and within demonstrated capability** (actual drill ≤ target).
+3. A restore drill has been completed within cadence policy and recently for any system under schema/key/config change.
+4. Restore scope is atomic — DB + objects + keys + index + config + broker/offset state + compatible app version — not just "the database".
+5. Backups are encrypted with keys held separately from backup storage; key custody outlives backup retention.
+6. Off-site/off-account/immutable copy exists for ransomware-credible systems.
+7. Backup-deletion controls require MFA/cross-account separation; deletion is audited and alerted.
+8. Failure-mode matrix has concrete detection and restore paths for likely data-loss sources, including backup/key loss.
+9. Drill measured actual RTO/RPO; gaps have owners and dates.
+10. Runbook is executable by an on-call who has never restored this system before and is accessible during an incident.
+11. Compliance retention obligations are met; erasure obligations have crypto-shred or rewrite plan.
+12. Monitoring alerts cover job failure, schedule miss, size anomaly, restore latency drift, and deletion attempts.
+13. Cost model is sustainable for the chosen tier without silently weakening retention or immutability.
+14. Every dataset, backup copy, key, restore dependency, drill, monitor, retention rule, and destructive-change gate maps to validation evidence or named residual risk.
+15. Validation commands, validators, artifacts/reports, exit code or manual result, owner, and freshness are recorded for each accepted restore or drill claim.
+16. Handoff boundaries and evidence limits are explicit so recovery evidence is not over-claimed as migration safety, release rollback readiness, key-custody approval, or compliance signoff.
 
 # Used By
 

@@ -10,3 +10,6 @@
 - Identify assumptions that remain after clarification.
 - Define the acceptance signal and owner.
 - Map each requirement to test or review evidence.
+- Record repository evidence, graph surfaces, accepted/rejected memory, and execution evidence freshness.
+- Map each requirement, non-goal, constraint, and dependency to downstream owner, validation artifact, or residual risk.
+- State what the brief does not authorize: implementation choices, scope expansion, unresolved authority decisions, and unverified assumptions.

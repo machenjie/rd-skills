@@ -10,3 +10,5 @@
 - Define inputs, outputs, callbacks, and side effects for each component.
 - Cover loading, empty, error, permission, disabled, and success states where relevant.
 - Identify the component-level and flow-level tests that prove the decomposition works.
+- Name validation obligations for each changed boundary: validator command or manual artifact/report, expected proof, exit code or review status, freshness after the final map edit, and not-run residual owner.
+- State what the evidence proves and does not prove, especially when no live browser, Storybook, accessibility, or integration run was inspected.

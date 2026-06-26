@@ -9,137 +9,80 @@ changeforge_version: 0.1.0
 
 # Mission
 
-Define every domain event as a **durable, named, past-tense fact** with a precise producer, transaction boundary, payload contract, schema version, idempotency key, ordering expectation, retry policy, dead-letter strategy, and audit significance — so that asynchronous consumers can always reconstruct what happened without querying mutable state.
+Define every domain event as a **durable, named, past-tense fact** with a precise producer, transaction boundary, payload contract, schema version, idempotency key, ordering expectation, retry policy, dead-letter strategy, audit significance, and validation path, so asynchronous consumers can reconstruct what happened without querying mutable state or trusting stale project memory.
 
 # When To Use
 
-Use this capability when a change: emits a new event from a domain aggregate, bounded context, or service; changes an existing event's name, payload, or schema version; adds a new consumer to an existing event stream; defines retry or dead-letter handling for an integration event; designs an outbox-based durable event emission; implements a projection, read model, or event-sourced aggregate; designs an event-driven saga or process manager; or models audit-significant state transitions.
+Use this capability when a change emits a new event from a domain aggregate, bounded context, or service; changes an existing event name, payload, schema version, or compatibility promise; adds a producer, consumer, projection, read model, event-sourced aggregate, saga step, audit record, or integration event; defines outbox-based durable publication; or changes retry, replay, ordering, DLQ, privacy, or consumer ownership rules for a domain fact.
 
 # Do Not Use When
 
-Do not use this capability for: incidental application log messages that are not domain facts; user analytics events (click, pageview, funnel step) that have no domain state meaning; metric counters or telemetry spans; internal in-process callbacks or pub-sub with no durability; or transport infrastructure design without a business fact being communicated — use `message-queue-design` for broker topology.
+Do not use this capability for incidental logs, metrics, traces, analytics clicks, pageviews, in-process callbacks without durability, notification payload formatting without domain state meaning, broker topology alone, or background job execution alone. Use `message-queue-design` for broker mechanics, `async-job-design` for worker execution, `event-driven-architecture` for multi-service flow topology, and `state-machine-modeling` when the transition that produces the event is not yet defined.
+
+# Stage Fit
+
+Use during planning when domain facts may cross an aggregate, service, bounded context, or audit boundary. Use during coding and refactoring when producers, outbox writes, event schemas, generated contracts, consumer handlers, idempotency stores, partition keys, or DLQ policies change. Use during debugging, bug-fix, code-review, testing, and release review when duplicate delivery, out-of-order delivery, schema compatibility, replay, privacy fan-out, or lost-event rollback risk needs evidence. Hand off when queue infrastructure, transaction consistency, security review, release rollout, or observability readiness becomes the primary decision.
 
 # Non-Negotiable Rules
 
-- **Events are named as past-tense facts, not commands.** `OrderPlaced` ✓, `InvoicePaid` ✓. `PlaceOrder` ✗, `ProcessPayment` ✗. An event describes what happened, after it happened. A command names intent before the fact is confirmed.
-- **An event is published only after the originating state change commits.** Publishing before commit creates ghost events — the consumer acts on something that may be rolled back. Use the Transactional Outbox Pattern: write the event to an outbox table in the same transaction as the state change; a relay process reads the outbox and publishes. No direct publish inside `try { save(); publish(); }` blocks.
-- **Consumers must be idempotent.** Every consumer must handle duplicate delivery of the same event without corrupting state. The idempotency key must be specified in the event schema (`eventId` UUID + aggregate `type` + `aggregateId` forms a natural key). Consumers must use upsert, conditional update, or event-log deduplication.
-- **Payload carries stable identifiers and self-describing facts.** Consumers must not be forced to call back to the producer to understand what happened. Required payload fields: `eventId` (UUID), `eventType` (namespaced string), `aggregateType`, `aggregateId`, `occurredAt` (ISO 8601 UTC), `schemaVersion`, and domain-meaningful fields. Avoid payload minimalism ("only the ID") — consumers that need the previous state have no way to get it after the fact.
-- **Sensitive data is excluded or encrypted in payloads.** Events are durable and fan out to multiple consumers. PII, financial account numbers, health data, and credentials must not be in event payloads in cleartext. Tokenize or reference; include only what consumers legitimately need.
-- **Schema versioning follows additive-only evolution for minor versions.** Adding optional fields is backward-compatible. Removing fields, renaming fields, or changing field semantics is a breaking change requiring a new major version. Consumers must be designed to handle forward-compatible payloads (`additionalProperties` ignored). Use CycloneDX Schema Compatibility or **Apache Avro / Confluent Schema Registry** with compatibility mode `FORWARD`.
-- **Ordering assumptions are declared explicitly.** Per-aggregate ordering (all events for one `orderId` are ordered) can be provided by a Kafka partition key on `aggregateId`. Global ordering cannot be guaranteed at scale. If a consumer requires per-aggregate ordering, the partition key strategy must be specified. If ordering is not guaranteed, consumers must be designed to handle out-of-order delivery.
-- **Dead-letter queues are defined for every event consumer.** A consumer that fails must not drop the event and must not block the main queue forever. Define: max retry count, retry backoff policy, dead-letter queue (DLQ) destination, and alerting threshold for DLQ depth. DLQ events require manual inspection, replay tooling, and an ownership process.
+- **Events are named as past-tense facts, not commands.** `OrderPlaced` and `InvoicePaid` are facts. `PlaceOrder` and `ProcessPayment` are commands and must not be published as events.
+- **Publish only after the originating state change commits.** Direct dual-write patterns such as `save(); publish();` are rejected unless a reviewed exception proves equivalent durability. Prefer transactional outbox, CDC, or another post-commit relay.
+- **Consumers are idempotent by design.** Each consumer needs a durable idempotency key, duplicate handling rule, and validation evidence for duplicate delivery or replay.
+- **Payload carries stable identifiers and self-describing facts.** Required fields include event id, event type, aggregate type, aggregate id, occurred-at timestamp, schema version, producer, and domain-meaningful facts. Payloads that contain only an id force mutable callback reads and are incomplete.
+- **Schema evolution is explicit.** Additive compatible changes need a version bump and registry update; breaking changes need a new major version, migration window, consumer inventory, and rollback path.
+- **Ordering assumptions are declared.** Per-aggregate ordering requires a partition/message-group key aligned to the aggregate boundary. Global ordering must not be assumed.
+- **Every consumer owns retry, DLQ, replay, and alert behavior.** A failing consumer must not drop the event or block the main flow indefinitely.
+- **Sensitive payload data is minimized and authorized.** Durable fan-out can expose PII, financial, health, credential, tenant, or object identifiers to consumers that should not receive them.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+| --- | --- | --- | --- | --- | --- |
+| New domain event | New event name, producer, aggregate fact, integration event, audit event, projection trigger, or event-sourced fact. | Prove the fact meaning, producer boundary, payload contract, consumer need, and durable publication path. | Transition source, producer method/command, event name rationale, outbox/commit boundary, initial consumer inventory. | `domain-impact-modeler`, `state-machine-modeling`, `transaction-consistency` | Skip broker tuning and worker scaling until the fact contract is stable. |
+| Event schema evolution | Field added, removed, renamed, retyped, repurposed, versioned, or moved between topics/channels. | Preserve old producers, old consumers, generated contracts, replay, and rollback behavior. | Old/new schema diff, compatibility class, registry mode, consumer inventory, migration and rollback plan. | `version-compatibility`, `contract-testing`, `consumer-impact-analysis` | Skip in-place breaking edits without dual publish or new event type. |
+| Producer transaction boundary | State write plus event publish, outbox row, CDC relay, unit-of-work hook, or post-commit handler changes. | Prevent ghost events, lost events, hidden side effects, and rollback mismatch. | Transaction boundary, outbox/relay ownership, failure path, retry/duplicate behavior, lost-event recovery test. | `transaction-consistency`, `data-side-effect-flow-tracing`, `event-driven-architecture` | Skip direct publish from domain mapper, controller, or best-effort hook. |
+| Consumer safety and replay | New consumer, projection rebuild, DLQ replay, retry policy, idempotency key, partition key, or handler side effect changes. | Make duplicate, delayed, replayed, and out-of-order delivery harmless or explicitly blocked. | Consumer side-effect map, dedupe store, replay-safe classification, ordering rule, DLQ owner and runbook. | `idempotency-retry-design`, `quality-test-gate`, `message-queue-design` | Skip "consumer will handle it" claims without a durable dedupe rule. |
+| Saga or audit event | Event participates in workflow choreography, compensation, audit retention, compliance, or immutable history. | Protect compensation semantics, audit integrity, temporal ordering, and retention commitments. | Saga role, timeout/compensation event, audit fields, retention owner, reconciliation path. | `transaction-consistency`, `reliability-observability-gate`, `release-rollback` | Skip if the transition itself is still undefined; route first to `state-machine-modeling`. |
+| Sensitive event payload | Event contains tenant, object, permission, PII, financial, health, credential, or regulated audit fields. | Minimize payload, restrict consumers, preserve authorization boundaries, and state residual risk. | Data classification, allowed consumers, redaction/tokenization decision, retention, privacy validation. | `security-privacy-gate`, `permission-boundary-modeling`, `quality-test-gate` | Skip fan-out of raw sensitive fields unless every consumer is authorized and named. |
 
 # Industry Benchmarks
 
-Anchor against: **Domain-Driven Design (Evans, 2004; Vernon, 2013)** — domain events as first-class modeling artifacts; aggregate as consistency boundary for event emission. **Event Storming (Brandolini, 2013)** — collaborative workshop technique for discovering domain events, commands, policies, read models, and aggregates. **Transactional Outbox Pattern (Microservices.io)** — canonical solution for reliable event publication after database commit. **Saga Pattern** — distributed transaction coordination via event-driven choreography or orchestration; Microservices Patterns (Richardson, 2018). **Apache Kafka** — de-facto standard for high-throughput event streaming; partition-key-based ordering; consumer groups; log compaction for entity events. **Apache Pulsar** — multi-topic subscriptions, built-in geo-replication, tiered storage. **NATS JetStream** — lightweight, at-least-once persistent messaging. **CloudEvents v1.0** (CNCF) — open specification for event metadata: `id`, `source`, `type`, `specversion`, `time`, `datacontenttype`, `dataschema`. Widely adopted for event interoperability. **Apache Avro / Confluent Schema Registry** — binary event serialization with schema evolution enforcement; compatibility modes: BACKWARD, FORWARD, FULL. **AsyncAPI 3.0** — OpenAPI equivalent for event-driven APIs; documents channels, messages, bindings, and schema. **CQRS + Event Sourcing (Fowler, 2005; Young, 2010)** — complete event history as source of truth; projection rebuilds; temporal queries. **Debezium** — change data capture (CDC) for database-to-event stream conversion. **OWASP API Security Top 10** — events are APIs; A01 Broken Object Level Authorization applies to event payload access. **ISO 8601** — all event timestamps in UTC, full precision (`2024-01-15T09:30:00.000Z`).
-
-### Domain Event Type Classification
-
-| Event class | Description | Durability | Fan-out | Schema contract |
-| --- | --- | --- | --- | --- |
-| **Domain Event** | Fact within a bounded context; internal to domain | High (outbox) | Internal consumers | Versioned, stable |
-| **Integration Event** | Fact shared across bounded context boundaries | High (message broker) | External consumers | Public, versioned, backward-compatible |
-| **Notification Event** | Triggers a user or operator notification; no state change | Medium (MQ/webhook) | Notification service | Payload minimal; PII-sensitive |
-| **Audit Record** | Immutable compliance record (who did what, when, from where) | Highest (append-only store) | Audit log | Immutable; no delete |
-| **Analytics Event** | Funnel/behavioral tracking; no domain state | Low-medium | Analytics platform | Schema flexible; separate pipeline |
-| **CDC Event** | Database change captured by Debezium/binlog | Medium | Data warehouse, search | Auto-generated; schema from DB |
-| **Saga Step Event** | Intermediate saga state; compensating transaction trigger | High | Saga orchestrator/coordinator | Tied to saga schema version |
-| **Command** (not an event) | Intent before a fact is confirmed | N/A — rejected | N/A | Never publish as "event" |
-
-### Outbox Pattern Implementation
-
-```sql
--- Outbox table (co-located in the same transactional database as the domain state):
-CREATE TABLE outbox_events (
-  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  event_type   TEXT        NOT NULL,           -- e.g. 'order.placed.v1'
-  aggregate_id TEXT        NOT NULL,           -- partition key candidate
-  payload      JSONB       NOT NULL,           -- full CloudEvents-compatible body
-  occurred_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  published_at TIMESTAMPTZ,                    -- NULL = not yet published
-  attempts     INT         NOT NULL DEFAULT 0
-);
-
--- State change + event written atomically (no dual-write):
-BEGIN;
-  UPDATE orders SET status = 'PLACED', updated_at = now() WHERE id = $1;
-  INSERT INTO outbox_events (event_type, aggregate_id, payload)
-    VALUES ('order.placed.v1', $1, $payload);
-COMMIT;
-
--- Relay process (polling or WAL-based CDC):
-SELECT * FROM outbox_events WHERE published_at IS NULL ORDER BY occurred_at LIMIT 100;
--- Publish to Kafka / Pulsar / SNS → on success:
-UPDATE outbox_events SET published_at = now() WHERE id = $event_id;
-```
-
-### Idempotency Key Design
-
-| Strategy | Suitable when | Implementation |
-| --- | --- | --- |
-| `eventId` UUID (producer-assigned) | All cases; canonical key | Consumer: `INSERT ... ON CONFLICT (event_id) DO NOTHING` |
-| `aggregateId` + `eventSequenceNumber` | Event-sourced aggregates with monotonic sequence | Consumer: reject events with lower or equal sequence |
-| `aggregateId` + `eventType` + `occurredAt` | CDC / low-frequency events | Risky for high-frequency; clock skew can cause duplicates |
-| Correlation ID passed from upstream | Saga compensation events | Must be preserved through all downstream events |
-
-### Schema Evolution Rules
-
-| Change type | Compatibility | Required action |
-| --- | --- | --- |
-| Add optional field with default | ✅ Backward-compatible | Minor version bump; update schema registry |
-| Add required field | ❌ Breaking | New major version; migrate producers + consumers |
-| Remove field | ❌ Breaking | New major version; deprecation period (≥ 2 sprints) |
-| Rename field | ❌ Breaking | New major version; alias old name in transition period |
-| Change field type | ❌ Breaking | New major version |
-| Reorder fields (Avro binary) | ❌ Breaking | New major version |
-| Change field semantics (same name, new meaning) | ❌ Breaking — most dangerous | New event type name; do not reuse the name |
-
-### Retry and Dead-Letter Policy
-
-```
-Consumer retry policy (example: Kafka consumer group):
-
-Max retries: 3 (configurable per event type and criticality)
-Backoff: exponential with jitter: 1s, 4s, 16s
-After max retries:
-  → Publish to dead-letter topic: <original-topic>.DLQ
-  → Emit alert when DLQ depth > threshold (e.g. > 10 msgs, or > 5 mins age)
-  → DLQ events require:
-      - Manual inspection workflow (runbook link in event metadata)
-      - Replay tooling that re-publishes from DLQ to original topic
-      - Ownership assignment (which team owns the DLQ for this event type)
-
-Permanent failures (schema mismatch, deserialization error):
-  → Move to <topic>.POISON queue immediately (no retries)
-  → Alert immediately
-  → Do NOT retry deserialization errors — they will always fail
-```
+Anchor against Domain-Driven Design and Event Storming for fact discovery, Transactional Outbox and CDC for post-commit durability, Saga and CQRS/Event Sourcing for workflow and projection semantics, CloudEvents and AsyncAPI for event contracts, Apache Avro or schema registry compatibility for evolution, Kafka/Pulsar/NATS/SQS delivery semantics for ordering and replay, and OWASP API Security plus privacy-by-design constraints for fan-out data exposure. Keep this body focused on routing, evidence, and quality gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for event type classification, outbox SQL, schema evolution, idempotency, retry/DLQ, ordering, privacy, graph-memory-execution coupling, and validation matrices.
 
 # Selection Rules
 
-Select this capability when **domain facts cross aggregate or service boundaries, drive asynchronous behavior, or require durable publication**. Adjacent routing:
+Select this capability when **domain fact semantics and event contracts** are primary. Adjacent routing:
 
-- Prefer `state-machine-modeling` when the state transitions that produce events are not yet defined.
-- Prefer `message-queue-design` when broker topology, queue mechanics, consumer group design, and infrastructure are primary.
-- Prefer `async-job-design` when asynchronous work execution (jobs, queues, workers) is primary rather than domain fact communication.
-- Prefer `integration-change-builder` for the implementation of cross-service event consumers.
-- Prefer `transaction-consistency` when distributed transaction coordination and rollback strategies are the main concern.
+- Prefer `state-machine-modeling` when the state transition that produces the event is not defined.
+- Prefer `event-driven-architecture` when topology, asynchronous flow, replay operations, lag, or cross-service consistency is primary.
+- Prefer `message-queue-design` when broker, topic, queue, binding, consumer group, or partition infrastructure is primary.
+- Prefer `async-job-design` when the concern is background execution rather than domain fact communication.
+- Prefer `transaction-consistency` when distributed transaction coordination, outbox correctness, or saga rollback is primary.
+- Prefer `integration-change-builder` when implementing a cross-service consumer is the main work.
 
 # Risk Escalation Rules
 
-Escalate when: duplicate events can cause a payment, notification, ledger entry, or order to be processed twice; out-of-order events can produce incorrect projections or stale read models; a lost event would leave a saga stuck without a compensating transaction trigger; a schema change would break consumers with no migration path and no consumer registry; an event payload contains PII or financial data that fans out to consumers without authorization controls; DLQ depth is growing and events older than 24 hours are unprocessed; a Saga step has no compensation event defined.
+Escalate when duplicate events can cause payment, ledger, entitlement, notification, inventory, or order state to happen twice; out-of-order events can corrupt a projection or state machine; a lost event can leave a saga stuck; a schema change has unknown consumers or no migration path; an event payload fans out sensitive data without authorization; DLQ depth or event age exceeds the operational threshold; audit retention, tenant boundary, or object permission semantics are unclear.
+
+# Proactive Professional Triggers
+
+- **Signal:** event name is imperative, future-tense, or ambiguous. **Hidden risk:** consumers treat unconfirmed intent as a durable fact. **Required professional action:** rename to a past-tense fact or route to command/state modeling. **Route to:** `state-machine-modeling`, `domain-impact-modeler`. **Evidence required:** producing transition and fact semantics.
+- **Signal:** producer saves state and publishes outside the same commit boundary. **Hidden risk:** ghost event on rollback or lost event on broker failure. **Required professional action:** require outbox, CDC, post-commit relay, or documented equivalent. **Route to:** `transaction-consistency`, `data-side-effect-flow-tracing`. **Evidence required:** transaction boundary, relay owner, failure-path validation.
+- **Signal:** payload contains only an id or requires consumer callback to current state. **Hidden risk:** consumers reconstruct the wrong historical fact after state changes. **Required professional action:** make payload self-describing or document a safe exception. **Route to:** `dto-schema-design`, `contract-testing`. **Evidence required:** payload field semantics, examples, compatibility check.
+- **Signal:** schema changes or consumer additions rely on memory, diagrams, or graph assumptions without current source confirmation. **Hidden risk:** hidden consumers break or stale topology drives the wrong migration. **Required professional action:** inspect current producers, consumers, schemas, generated artifacts, tests, and registry/config. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected memory, inspected paths, unknown consumers.
+- **Signal:** consumer retry, DLQ, replay, or idempotency is described but no owner or validation exists. **Hidden risk:** permanent stuck events, repeated side effects, or unrecoverable poison messages. **Required professional action:** define durable dedupe, DLQ owner, replay runbook, and tests. **Route to:** `idempotency-retry-design`, `quality-test-gate`, `reliability-observability-gate`. **Evidence required:** duplicate/replay/DLQ validation and residual risk.
+- **Signal:** payload includes tenant, object, permission, PII, financial, audit, health, or credential data. **Hidden risk:** durable fan-out leaks data or violates authorization boundaries. **Required professional action:** classify data, minimize payload, restrict consumers, and record residual privacy risk. **Route to:** `security-privacy-gate`, `permission-boundary-modeling`. **Evidence required:** allowed consumer list, redaction/tokenization decision, retention rule.
 
 # Critical Details
 
-Domain events are not log messages, not notifications, and not commands. Precision failures:
+Domain events are not log messages, notifications, or commands. Precision failures:
 
-- **Dual-write without outbox.** `save(); publish();` — if the network call to the broker fails after the database commit, the event is lost. If the broker call succeeds but the database commit fails (rolled back), the event is a ghost. The Outbox Pattern is not optional for reliable event-driven architectures.
-- **Payload minimalism anti-pattern.** Emitting only `{ eventId, aggregateId }` and expecting consumers to fetch current state loses the historical fact. By the time the consumer fetches the state, it may have changed again. Event payloads must carry enough facts to make the event self-describing.
-- **Event as command.** `ProcessRefund` as an "event" is not a fact — it's a command disguised as an event. When published on an event bus, every subscriber treats it as a fact that happened. If the refund has not yet been processed, the event is misleading. Domain events communicate what did happen, not what should happen.
-- **Schema drift.** A producer adds a new field without incrementing `schemaVersion`. Consumers that deserialize strictly fail. Consumers that deserialize leniently silently ignore the new field. Neither is correct. Every schema change, even "just a new optional field," must be accompanied by a `schemaVersion` increment and registry update.
-- **Ordering not partition-aligned.** A Kafka producer using a non-`aggregateId` partition key sends events for the same order to different partitions. Consumers receive `OrderShipped` before `OrderPlaced`. The consumer's state machine breaks. Partition key must equal the aggregation boundary for per-entity ordering.
-- **Event sourcing without snapshot strategy.** If an aggregate has 100,000 events, replaying all 100,000 to reconstruct current state on every command is unacceptable. Snapshot after N events or periodic snapshots are required for long-lived aggregates.
+- **Dual-write without outbox.** If the database commits and broker publish fails, the event is lost; if the broker publish succeeds and the database rolls back, consumers observe a ghost fact.
+- **Payload minimalism.** `{ "orderId": "123" }` is not a complete historical fact when consumers need amount, status, actor, tenant, or previous value semantics.
+- **Schema drift.** A field added without versioning or registry compatibility can fail strict consumers or silently corrupt lenient ones.
+- **Ordering not partition-aligned.** Per-order ordering cannot hold when the partition key is a random event id or unrelated customer id.
+- **Replay without side-effect classification.** Projection rebuilds must not resend emails, recapture payment, duplicate ledger entries, or grant entitlements again.
+- **Audit event without retention/actor.** A durable audit fact without actor, subject, source, timestamp, or retention owner is not an audit record.
 
 ### Anti-examples
 
@@ -147,59 +90,99 @@ Domain events are not log messages, not notifications, and not commands. Precisi
 | --- | --- |
 | `publish(event)` inside `try { db.save(); publish(); }` without outbox | Ghost events on rollback; lost events on broker failure |
 | Event named `CreateOrder` | Command, not a fact; consumers act on unconfirmed intent |
-| Payload: `{ "orderId": "123" }` only | Consumer must call back to producer; loses historical context |
-| No idempotency key; consumer processes duplicate event | Payment processed twice; ledger corrupted |
-| Schema field renamed without version bump | Consumers silently deserialize wrong field; data corruption |
-| Notification event contains full PII: name, email, SSN | Data fan-out to all consumers; GDPR Article 5 violation |
-| DLQ not defined; consumer failure drops event silently | Saga stuck permanently; order never fulfills |
-| Avro Kafka event, partition key = random UUID | Events for same order on different partitions; out-of-order delivery |
+| Payload only contains `orderId` | Consumer must query mutable state and loses historical context |
+| No idempotency key | Duplicate delivery can charge, notify, or write twice |
+| Schema field renamed without version bump | Consumers deserialize wrong data or nulls |
+| Notification event carries full SSN or raw account number | Durable data fan-out to unauthorized consumers |
+| DLQ not defined or unowned | Saga or projection can remain stuck indefinitely |
+| Partition key unrelated to aggregate id | Events for one aggregate arrive out of order |
 
 # Failure Modes
 
-- Dual-write: broker publish succeeds, DB rollback follows — ghost event causes downstream system to allocate inventory for a non-existent order.
-- Dual-write: DB commits, broker down — event lost; saga stuck; order never ships.
-- Duplicate payment event processed twice because consumer has no idempotency check; user charged twice.
-- `OrderCancelled` arrives before `OrderPlaced` due to partition key mismatch; consumer state machine in invalid state.
-- Schema field renamed from `amount` to `totalAmount` without version bump; consumers deserialize null; calculation fails silently.
-- PII in event payload fans out to analytics event pipeline; GDPR audit finds customer SSN in data warehouse logs.
-- DLQ not monitored; 500 stuck events accumulate over 72 hours; customer orders permanently in limbo.
-- Event-sourced aggregate with 200,000 events, no snapshot; replay takes 45 seconds; system unusable under load.
-- Saga compensation event not defined; payment captured but inventory reservation failed; no rollback path; inconsistent state permanent.
-- Schema registry not enforced in CI; producer publishes schema-incompatible event; all consumers start throwing deserialization errors.
+- Duplicate `PaymentCaptured` event processed twice because the consumer has no durable idempotency record.
+- `OrderCancelled` arrives before `OrderPlaced` due to partition-key mismatch and projection state becomes invalid.
+- Producer emits `InvoiceIssued.v1` before transaction commit; rollback leaves downstream accounting with a non-existent invoice.
+- Producer commits state but broker publish fails; saga waits forever for an event that was never emitted.
+- Field `amount` is renamed to `totalAmount` without versioning; consumers calculate zero or reject the message.
+- PII in event payload reaches analytics, logs, or low-trust consumers outside the permission boundary.
+- DLQ accumulates unprocessed events for days because no owner, alert, or replay tool exists.
+- Event-sourced aggregate replay takes unacceptable time because snapshot and replay constraints were not designed.
+- Saga compensation event is missing; payment capture succeeds while inventory reservation fails permanently.
+- Previous project memory names an old consumer, but the current repository contains a new hidden consumer not included in compatibility review.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 selection, boundaries, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete event catalog, producer change, consumer addition, schema evolution, outbox path, idempotency rule, ordering policy, retry/DLQ policy, replay plan, or audit/privacy classification. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when event type classification, outbox SQL, CloudEvents/AsyncAPI shape, schema compatibility, idempotency strategy, retry/DLQ matrix, ordering/partition design, saga/audit/privacy detail, graph-memory-execution coupling, or event-to-validation mapping is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing, metadata-only edits, or event-free changes.
 
 # Output Contract
 
 Return an event catalog with:
 
-- `event_name` (past-tense, PascalCase), `event_type` (namespaced: `domain.subdomain.EventName.v1`)
-- `producer` (service/aggregate name, method/command that triggers emission)
-- `commit_boundary` (same transaction as state change via outbox? or separate publish?)
-- `payload_schema` (all fields: name, type, required/optional, semantics, example values)
-- `schema_version` (current; evolution history; registry location)
-- `consumers` (list of known consumers; subscription mechanism; DLQ owner per consumer)
-- `idempotency_key` (field(s) forming natural deduplication key)
-- `ordering_expectation` (per-aggregate via partition key? Global? None guaranteed? — with partition strategy)
-- `retry_policy` (max retries, backoff, DLQ topic, alert threshold)
-- `dead_letter_strategy` (DLQ topic, owner, replay tool, runbook)
-- `audit_impact` (immutable record required? regulatory retention period?)
-- `privacy_classification` (PII fields? tokenized? restricted consumers?)
-- `saga_role` (none / trigger / step / compensation; linked saga name)
-- `tests` (consumer idempotency test, schema compatibility test, out-of-order handling test, DLQ routing test)
+- `mode_selected`: new domain event, event schema evolution, producer transaction boundary, consumer safety and replay, saga or audit event, or sensitive event payload.
+- `boundaries_inspected`: producer paths, consumer paths, schemas, registry/config, outbox/relay, generated contracts, tests, runbooks, docs, and prior memory accepted or rejected.
+- `source_evidence`: current-source observations that prove the event topology and contract; do not rely on diagrams or memory alone.
+- `graph_memory_trajectory_judgment`: repository graph, project memory, and execution trajectory facts accepted, rejected, or left unknown with freshness limits.
+- `event_catalog`: event name, event type, aggregate, producer, consumers, owner, and lifecycle status.
+- `event_name` / `event_type`: past-tense PascalCase name and namespaced versioned type such as `billing.invoice.InvoiceIssued.v1`.
+- `fact_semantics`: what happened, when it becomes true, and which command/transition confirms it.
+- `producer`: service, aggregate, method/command, owner, and emission trigger.
+- `commit_boundary`: same transaction outbox, CDC, post-commit relay, or documented exception plus failure behavior.
+- `payload_schema`: fields, types, required/optional status, examples, semantics, stable identifiers, tenant/object identifiers, and sensitive data classification.
+- `schema_version`: current version, compatibility mode, registry location, old/new behavior, and migration or rollback path.
+- `consumer_inventory`: known consumers, subscription mechanism, side effects, owner, idempotency method, DLQ owner, and unknown consumer risk.
+- `idempotency_key`: producer event id, aggregate sequence, natural dedupe key, or consumer-specific key and storage boundary.
+- `ordering_expectation`: none, per aggregate, per partition, or stronger exception with partition/message-group key strategy.
+- `retry_policy` and `dead_letter_strategy`: max retries, backoff, poison-message handling, DLQ topic, alert threshold, replay tool, and owner.
+- `replay_safety`: replay-safe, replay-gated, or replay-blocked classification per consumer.
+- `audit_impact` and `privacy_classification`: retention, actor/source fields, regulated data, redaction/tokenization, and allowed consumers.
+- `saga_role`: none, trigger, step, compensation, timeout, reconciliation, or audit checkpoint.
+- `event_to_validation_map`: each producer, schema, consumer, idempotency rule, ordering rule, retry/DLQ policy, replay path, and privacy decision mapped to validation.
+- `reuse_and_placement_rationale`: existing event/schema/outbox/consumer reused or rejected; why no speculative event or new service was added.
+- `behavior_preservation`: old producers, old consumers, old schemas, old topics/channels, old replay behavior, and old runbooks that remain valid.
+- `validation_evidence`: commands, tests, validators, reports, fixtures, contract checks, replay checks, or explicit not-verified disclosure with exit code or artifact.
+- `handoff_boundaries`: decisions moved to queue design, event-driven architecture, transaction consistency, security/privacy, reliability, release, or human review.
+- `evidence_limits`: what evidence proves, what it does not prove, unknown consumers, untested replay scale, residual risk, owner, and next gate.
+
+# Evidence Contract
+
+Close a domain event plan only when these answers are concrete:
+
+- **Boundaries inspected:** name the producer files, consumer files, schema files, registry/config, outbox/relay, generated artifacts, tests, docs, runbooks, and project memory checked. If no implementation exists, say so.
+- **What evidence proves:** state which current-source facts prove the event meaning, commit boundary, schema, consumer inventory, idempotency, ordering, retry/DLQ, replay, audit, and privacy decisions.
+- **What evidence does not prove:** call out unknown consumers, production broker behavior, large replay, partition skew, privacy fan-out outside inspected code, generated artifact drift, or untested rollback.
+- **Validation evidence:** include command names, validator names, tests, reports, fixtures, artifacts, and exit code/result. Do not claim event readiness from design reasoning alone.
+- **Reuse / placement rationale:** identify the existing event, schema, outbox, consumer, registry, or reference reused; justify any new event type or new file placement.
+- **Behavior preservation:** state how old producers, old consumers, old schemas, old replay/DLQ procedures, and rollback behavior remain valid or are migrated.
+- **Residual risk:** name the remaining event-loss, duplicate, ordering, compatibility, privacy, audit, or operational risk and its owner.
+- **Next gate:** route unresolved broker mechanics, transaction consistency, consumer implementation, security/privacy, reliability/observability, release rollout, or human domain approval to the correct gate.
+
+# Benchmark Coverage
+
+This capability covers domain-event naming, fact semantics, producer commit boundary, outbox/CDC durability, payload contract, schema versioning, consumer inventory, idempotency, ordering, retry/DLQ, replay safety, saga/audit role, privacy fan-out, and event-to-validation mapping. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for the detailed benchmark matrix and implementation patterns.
+
+# Routing Coverage
+
+Routes from `domain-impact-modeler`, `state-machine-modeling`, `event-driven-architecture`, `data-side-effect-flow-tracing`, `version-compatibility`, `consumer-impact-analysis`, `dto-schema-design`, `nosql-database`, and `use-case-modeling` should arrive here when event fact semantics or event contract evidence is primary. Route away when infrastructure, implementation, transaction, security, reliability, release, or state-transition ownership is primary.
 
 # Quality Gate
 
 The event catalog is complete only when:
 
-1. All event names are past-tense domain facts; no commands disguised as events.
-2. Outbox pattern (or equivalent durable handoff) is specified for each emitting producer.
-3. Payload is self-describing; no payload-minimalism; PII excluded or tokenized.
-4. `schemaVersion` present; schema registered in registry; compatibility mode declared.
-5. Idempotency key defined; consumer deduplication logic specified.
-6. Ordering expectation declared with partition key strategy (or "none guaranteed" explicitly stated).
-7. Retry policy and DLQ destination defined for every consumer.
-8. DLQ ownership, alerting threshold, and replay tooling identified.
-9. Saga compensation events defined wherever an event participates in a distributed workflow.
-10. Tests cover: duplicate delivery, out-of-order delivery, schema forward-compatibility, DLQ routing.
+1. Mode selected, inspected boundaries, source evidence, graph-memory-trajectory judgment, and evidence limits are recorded.
+2. All event names are past-tense domain facts with explicit fact semantics and no command disguised as an event.
+3. Producer, owner, triggering transition, and commit boundary are identified; outbox/CDC/equivalent durability is specified.
+4. Payload is self-describing with stable identifiers, schema version, examples, and no unexplained mutable callback requirement.
+5. Schema registry or compatibility mode is declared; breaking changes have migration, dual-publish/new-type, and rollback behavior.
+6. Consumer inventory includes side effects, owners, subscription mechanism, idempotency strategy, DLQ owner, and unknown consumer risk.
+7. Idempotency key and durable dedupe behavior are specified per consumer.
+8. Ordering expectation and partition/message-group key are declared, or "none guaranteed" is explicit.
+9. Retry, backoff, poison-message, DLQ, alert, replay tool, and runbook are assigned.
+10. Replay safety is classified for every consumer, especially notifications, payments, ledgers, entitlements, webhooks, and audit sinks.
+11. Saga role, compensation event, timeout, reconciliation, and audit retention are defined where applicable.
+12. Tenant, object, permission, PII, financial, health, credential, and audit data are classified and restricted to allowed consumers.
+13. Existing producers, consumers, schemas, topics/channels, replay procedures, and rollback behavior are preserved or migrated.
+14. Event-to-validation map covers duplicate delivery, out-of-order delivery, schema compatibility, DLQ routing, replay, privacy, and rollback.
+15. Handoff boundaries and residual risk owner are explicit before release.
 
 # Used By
 
@@ -209,8 +192,8 @@ The event catalog is complete only when:
 
 # Handoff
 
-Hand off to `state-machine-modeling` when transition semantics are undefined; `integration-change-builder` for cross-service consumer implementation; `message-queue-design` for broker topology and infrastructure; `transaction-consistency` for distributed saga coordination; `data-model-design` for event store or outbox table schema.
+Hand off to `state-machine-modeling` when transition semantics are undefined; `event-driven-architecture` for cross-service topology, replay operations, lag, and eventual-consistency UX; `integration-change-builder` for consumer implementation; `message-queue-design` for broker topology and infrastructure; `transaction-consistency` for outbox/saga correctness; `security-privacy-gate` for sensitive payload and permission-boundary review; `reliability-observability-gate` for production readiness; and `release-rollback` when schema or consumer rollout needs staged release control.
 
 # Completion Criteria
 
-The capability is complete when every domain event has a **past-tense name, a self-describing schema version, a durable post-commit publication path, a defined idempotency key, an explicit ordering guarantee, a retry policy, a DLQ owner, an audit classification, and tests covering duplicate and out-of-order delivery** — with no payload-minimalism, no dual-write pattern, and no unowned DLQ.
+The capability is complete when every domain event has a past-tense name, fact semantics, current-source evidence, producer and post-commit publication path, self-describing schema version, consumer inventory, idempotency key, ordering guarantee, retry and DLQ owner, replay classification, audit/privacy classification, validation map, behavior-preservation statement, residual-risk owner, and next gate for unresolved work, with no payload minimalism, no unreviewed dual-write pattern, no unknown sensitive fan-out, and no unowned DLQ.

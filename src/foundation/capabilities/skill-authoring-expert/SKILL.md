@@ -1,6 +1,6 @@
 ---
 name: skill-authoring-expert
-description: Professional skill-authoring and governance capability for designing, writing, reviewing, slimming, splitting, and maintaining ChangeForge skills, so every SKILL.md body, reference, capability, domain extension, registry entry, and routing rule keeps a clear boundary, precise triggers, explicit non-goals, a testable output contract, a disciplined context budget, progressive reference loading, and synchronized registry, build, and validation impact. Use when authoring or auditing skills, not as a general documentation or tutorial guide.
+description: Use when authoring, auditing, slimming, splitting, or maintaining ChangeForge SKILL.md bodies, references, capabilities, domain extensions, registries, or routing rules; governs trigger precision, context budget, reference loading, registry impact, and validation evidence.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "103"
@@ -9,224 +9,173 @@ changeforge_version: 0.1.0
 
 # Mission
 
-Design, write, review, and maintain ChangeForge skills so that every SKILL.md has a clear boundary, professional content, low context waste, reliable routing, testable output, and progressive loading. The SKILL.md body owns routing, execution, boundary, and the output contract. References own deep checklists, examples, anti-examples, benchmarks, and long tables. A foundation capability is a compact engineering decision aid, not a tutorial. A professional skill is a runtime entry point and must not copy large foundation-capability bodies. This capability protects the skill mesh from over-routing, under-routing, context bloat, stale rules, missing references, and unreliable agent behavior.
+Keep ChangeForge skills professional, precise, efficient, and verifiable. A `SKILL.md` body owns boundary, trigger, selection, execution, output, and evidence rules; references own deep examples, anti-examples, pressure cases, benchmarks, and long tables. Skill authoring must couple source-of-truth files, registry graph, project memory, routing behavior, generated dist artifacts, validation broker output, and execution discipline without turning the repository into a user corpus or tutorial collection.
 
 # When To Use
 
-Use this capability when:
+Use when adding, modifying, reviewing, slimming, splitting, merging, or maintaining:
 
-- Adding or modifying a SKILL.md body.
-- Adding or modifying a foundation capability.
-- Adding or modifying a professional skill.
-- Adding or modifying a domain extension.
-- Editing `references` content.
-- Editing `skills.yaml`, `capabilities.yaml`, `domain-extensions.yaml`, or `routing-rules.yaml`.
-- Running a skill content audit.
-- Performing skill slimming.
-- Splitting an over-weight SKILL into a smaller body plus references.
-- Merging duplicate capabilities.
-- Deciding whether content belongs in the SKILL.md body or in references.
-- Judging whether a skill over-routes or has an unclear boundary.
-- Judging whether a skill is insufficiently professional or has drifted into tutorial content.
+- `SKILL.md` bodies, foundation capabilities, professional skills, domain extensions, or references.
+- `skills.yaml`, `capabilities.yaml`, `domain-extensions.yaml`, routing rules, stage model, hook/runtime support artifacts, evals, or benchmark fixtures.
+- Skill content audits, professionalism regressions, routing coverage, reference loading policy, output contracts, pressure behavior, or context budget decisions.
+- Source-vs-dist, recommended/full/dev profile, build/install, generated report, or registry synchronization behavior.
 
 # Do Not Use When
 
-- Do not use for ordinary README or general documentation writing.
-- Do not use for product requirement document writing.
-- Do not use for ordinary source-code comments.
-- Do not use as a replacement for `change-forge-router`.
-- Do not use as a replacement for a specific domain capability.
-- Do not use to compress every skill into a vague summary.
-- Do not delete necessary professional detail just to make a body shorter; move it into references first.
-
-# Non-Negotiable Rules
-
-1. **Skill boundary first.** Define the capability boundary before writing any content.
-2. **Trigger precision.** When To Use must be specific; avoid catch-all triggers that match everything.
-3. **Non-goal clarity.** Do Not Use When must actively prevent mis-triggering.
-4. **Context budget discipline.** The body holds only high-frequency, decision-critical, executable content.
-5. **Progressive disclosure.** Low-frequency content, long tables, examples, and deep checklists move to references.
-6. **No tutorial drift.** A foundation capability is a decision aid, not a tutorial.
-7. **No duplicated bodies.** Do not copy the same capability body into multiple professional skills; reference it through `used_by`.
-8. **Registry consistency.** Any new or renamed skill must synchronize the registry, validators, and build/install impact.
-9. **Runtime profile safety.** The recommended and full profiles must not promote a foundation capability into a top-level skill.
-10. **Output contract must be testable.** Every skill must declare a verifiable output.
-11. **Route impact must be stated.** Any content change must state which routing signals it affects.
-12. **References must have a loading policy.** Any new reference must state when it is loaded.
-13. **No dumping-ground references.** References must have an owner and a purpose; they are not a junk drawer.
-14. **Preserve professional vocabulary.** Do not flatten professional rules into generic advice.
-15. **No skill rule change without behavior evidence.** A skill or reference change must show the behavior it changes, not only the prose it edits. A new or edited skill includes a baseline failure scenario, or an explicit reason a baseline is impossible plus the expected-behavior case the change must pass.
-16. **Discipline rules are pressure-tested.** A skill that enforces discipline must hold under a plausible excuse to skip it, not only on the cooperative path.
-17. **Name the rationalizations.** A skill change names the rationalizations an agent may use to skip the rule, and the rule and its eval must reject each one.
-18. **Trigger changes carry an over-routing guard.** A new or widened routing trigger ships with a guard case proving a trivial change does not pull it in.
-19. **Professionalism gates are evidence gates.** Use the professionalism baseline, benchmark eval, agent-sample eval, and regression validator to prove behavior; do not add keywords, copied Evidence Contracts, or section-only prose to raise scores.
-
-# Industry Benchmarks
-
-- Progressive disclosure.
-- Task-oriented agent skills.
-- Prompt and program separation.
-- Technical-writing information architecture.
-- Decision-record discipline.
-- Risk-based quality gates.
-- Reusable capability design.
-- Semantic versioning for skill contracts.
-- Context engineering and retrieval precision.
-
-# Selection Rules
-
-- Pair with `change-forge-router` when deciding how a new or changed skill should be routed and whether it over-routes or under-routes.
-- Pair with `change-documentation-gate` when skill bodies, references, or registry documentation must stay consistent.
-- Pair with `ai-code-review-refactor` when AI-generated or AI-modified skill content must be reviewed for professionalism, redundancy, and boundary drift.
-- Pair with `quality-test-gate` when a skill change must be verified through eval, fixtures, build, and install.
-- Pair with `implementation-structure-design` when new directories, files, references, or registry structure need a placement rationale.
-- Pair with `agent-execution-discipline` when an agent must attach evidence, a same-pattern scan, and a validation handoff after editing skills.
+- The task is ordinary README writing, product requirements, source-code comments, or general documentation with no skill-system behavior.
+- A specialist capability already owns the substantive domain and no skill body, reference, registry, routing, eval, hook, or generated artifact changes.
+- The proposed action is to compress every skill into vague summaries, remove professional detail instead of moving it to references, or promote source authoring content directly into runtime install locations.
 
 # Stage Fit
 
-Use during skill-authoring stage work and keep the active artifact type explicit: skill body edit, registry edit, routing rule edit, hook/runtime edit, benchmark/eval edit, or generated report/doc sync. Inspect the matching source-of-truth files, generated artifacts, validators, routing impact, and claim boundary; update generated artifacts only through their generator and record the source command.
+- **skill-authoring stage:** body/reference/registry/routing/eval/hook edits during coding, refactoring, testing, release, or documentation handoff; inspect source-of-truth files before plan.
+- **read / plan:** repository context, registry graph, project memory, source-vs-dist boundary, reuse candidates, validation signal.
+- **edit / review:** body-vs-reference placement, trigger precision, Mode Matrix, proactive triggers, Evidence Contract, output contract, and reviewer split.
+- **test / build:** professionalism evals, routing/agent/pressure benchmarks, content audit, build profiles, runtime reference and installation validation.
+- **handoff:** route manifest, changed source files, generated artifacts, validation freshness, evidence limits, residual risk, next gate.
+
+# Mode Matrix
+
+| Stage mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+| --- | --- | --- | --- | --- | --- |
+| Body authoring | `SKILL.md` boundary, trigger, non-goal, output, or evidence rule changes | Keep decision-critical rules in body and deep material in references | Target body, source-of-truth paths, body-vs-reference decision, line/context budget | `skill-authoring-expert`, `code-clarity-maintainability` | Skip new references when existing references already own the detail |
+| Reference split | Long examples, benchmark catalogs, pressure cases, anti-examples, or tables exceed body budget | Preserve rigor while moving low-frequency detail to targeted references | Moved content, loading hint, link validation, dev build output | `implementation-structure-design`, `repository-context-map` | Do not delete detail solely to reduce line count |
+| Registry/routing | Capability used_by, route trigger, stage model, registry, or generated catalog changes | Preserve source graph, route precision, and over-routing guard | Registry diff, routing case, guard case, stage consistency, build/install result | `change-forge-router`, `skill-efficacy-benchmark` | Skip registry edits for prose-only body tightening |
+| Discipline rule | Evidence, validation, pressure behavior, no-completion, or execution rule changes | Prove behavior under realistic rationalizations, not only cooperative path | Baseline or expected-behavior case, pressure scenario, forbidden behavior, validation output | `agent-execution-discipline`, `quality-test-gate` | Do not accept keyword-only score gains |
+| Generated artifacts | Reports, marketplace catalog, dist, zips, or hook runtime output change after source edit | Regenerate from source and prove freshness | Generator command, exit code, generated paths, what evidence proves and does not prove | `validation-broker`, `plan-execution-consistency` | Never hand-edit `dist/` or install `src/` |
+
+# Non-Negotiable Rules
+
+1. **Boundary first:** define skill layer, owner, non-goals, selected users, and adjacent handoff before changing content.
+2. **Trigger precision:** frontmatter description and When To Use state scope and trigger signals; body owns workflow, gates, and output contract.
+3. **Context budget discipline:** keep high-frequency executable decisions in body; move low-frequency lists, examples, benchmarks, and pressure catalogs to references with loading hints.
+4. **No tutorial drift:** foundation capabilities are compact decision aids; professional skills are runtime entry points; references are targeted support, not dumping grounds.
+5. **Registry and source graph consistency:** name, directory, frontmatter, registry entry, `used_by`, routing rules, stage model, build counts, and generated catalogs stay aligned.
+6. **Runtime profile safety:** recommended/full compile foundation capabilities into professional references; dev may expose top-level capabilities; no source authoring directory is installed directly.
+7. **Behavior evidence over prose:** skill rule changes name baseline failure or expected behavior, pressure rationalization, over-routing guard when triggers widen, and validation command.
+8. **No score gaming:** adding headings, copied Evidence Contracts, generic keywords, or checklist-only triggers is rejected unless behavior evidence and routing precision improve.
+9. **Memory / graph / execution coupling:** compare project memory, repository graph, selected skills, validation broker output, generated artifacts, and final diff before handoff.
+10. **No personal corpus behavior:** do not add user archive ingestion, scanning, mapping, packaging, private runtime content, or source install behavior.
+
+# Industry Benchmarks
+
+Use progressive disclosure, task-oriented skill design, prompt/program separation, information architecture, decision records, risk-based quality gates, semantic versioning, context engineering, retrieval precision, and evidence-based AI code review as authoring benchmarks.
+
+# Selection Rules
+
+Select this capability when:
+
+- A skill body, reference, capability, domain extension, registry entry, routing rule, stage model, eval, benchmark, hook runtime artifact, generated report, build/install profile, or professionalism baseline is changed or audited.
+- Trigger behavior, context budget, reference loading, route precision, output contract, evidence contract, pressure behavior, or skill efficacy is the review surface.
+- A proposed skill change risks over-routing, under-routing, duplicated bodies, tutorial drift, stale references, registry mismatch, generated artifact drift, or unverified agent behavior.
+
+Pair with `change-forge-router` for routing impact, `quality-test-gate` for eval/build/install evidence, `ai-code-review-refactor` for AI-generated content quality, `implementation-structure-design` for new files or placement, `repository-context-map` / `repository-graph-analysis` for source graph, `project-memory-governance` for prior-run signals, and `agent-execution-discipline` for closure.
+
+# Proactive Professional Triggers
+
+- **Signal:** A skill body edit widens When To Use or frontmatter description without an over-routing guard.
+  **Hidden risk:** catch-all routing pulls trivial README, comment, or product docs work into ChangeForge skill authoring.
+  **Required professional action:** require a routing case and an L1 guard case before accepting the trigger change.
+  **Route to:** `change-forge-router`, `skill-efficacy-benchmark`, `quality-test-gate`.
+  **Evidence required:** routing fixture output, forbidden over-route behavior, selected capabilities, and residual risk.
+- **Signal:** A SKILL.md body grows past context budget because examples, benchmark catalogs, anti-examples, or pressure cases stay inline.
+  **Hidden risk:** context bloat hides decision rules and slows every downstream professional skill.
+  **Required professional action:** split low-frequency material into targeted references with loading policy and link validation.
+  **Route to:** `implementation-structure-design`, `code-clarity-maintainability`.
+  **Evidence required:** body line count, moved-content map, reference links, validation output, and what evidence does not prove.
+- **Signal:** A rule is strengthened with no baseline failure, pressure rationalization, or expected behavior case.
+  **Hidden risk:** prose-only discipline looks professional but does not change agent behavior under pressure.
+  **Required professional action:** define behavior-first test decision or explicit not-applicable rationale before handoff.
+  **Route to:** `skill-efficacy-benchmark`, `agent-execution-discipline`.
+  **Evidence required:** baseline/expected behavior case, rationalizations rejected, pressure scenario, and validator command.
+- **Signal:** Registry, used_by, stage model, or routing-rule changes are proposed without generated artifact and install validation.
+  **Hidden risk:** recommended/full/dev profiles compile the wrong capability set or ship stale runtime references.
+  **Required professional action:** inspect registry graph, rebuild profiles, validate runtime links, and reconcile generated reports.
+  **Route to:** `repository-graph-analysis`, `validation-broker`, `plan-execution-consistency`.
+  **Evidence required:** registry diff, build output, dist/reference link validation, installation validation, and next gate.
+- **Signal:** Final handoff claims a skill change is complete after only reading the prose diff or a partial validator.
+  **Hidden risk:** stale report, unbuilt dist, missing pressure behavior, or source-vs-dist drift remains hidden.
+  **Required professional action:** block completion language until fresh validation covers changed source and generated artifacts.
+  **Route to:** `agent-execution-discipline`, `quality-test-gate`, `validation-broker`.
+  **Evidence required:** command, working directory, exit code, reports, generated paths, what evidence proves and does not prove.
 
 # Risk Escalation Rules
 
-- When a change touches the router, registry, or runtime profiles, escalate to `architecture-impact-reviewer`.
-- When a change touches build, install, or doctor behavior, escalate to `delivery-release-gate`.
-- When a change touches hooks, escalate to `reliability-observability-gate` and `quality-test-gate`.
-- When a change touches a security, privacy, or secret-handling skill, escalate to `security-privacy-gate`.
-- When deleting or merging a capability, require eval-routing and validate-installation to pass before handoff.
-- When a SKILL body exceeds the context budget or the same content is duplicated across multiple skills, require a skill-slimming plan.
-- When introducing a new top-level skill, require an explicit justification for why it cannot be a foundation capability or a reference.
+- Escalate router, registry, stage model, runtime profile, or source-vs-dist changes to `architecture-impact-reviewer` and `quality-test-gate`.
+- Escalate build, install, doctor, zip, or release checklist behavior to `delivery-release-gate`.
+- Escalate hook/runtime support changes to `reliability-observability-gate`, `agent-tool-permission-sandbox`, and `quality-test-gate`.
+- Escalate security/privacy/secret-handling skills or secret-bearing validation output to `security-privacy-gate`.
+- Escalate deleted, merged, renamed, or newly top-level skills to full routing, professionalism regression, build, and install validation.
 
 # Critical Details
 
-1. **Body versus references.** The `SKILL.md` body carries boundary, triggers, non-goals, decision rules, and output contract; `references` carries deep checklists, examples, anti-examples, benchmarks, and long tables.
-2. **Layer responsibilities.** A professional skill is a runtime entry point; a foundation capability is a compact decision aid compiled into professional `references`; a domain extension adds domain-specific product rules.
-3. **Registry alignment.** Registry entries, routing rules, `used_by`, and expected counts must stay mutually consistent; `used_by` drives which professional skills compile a capability.
-4. **Reference loading policy.** Source/dev-only authoring note: new professional-skill references must align with the L1–L5 Reference Loading Policy and state when each reference loads, anchored on the compiled professional-skill `references/capabilities/index.md` and per-capability files.
-5. **Move, do not delete.** Large anti-examples, benchmarks, and deep checklists move into references rather than being deleted from the system.
-6. **Content is decisions, not keywords.** A skill must carry decision rules, failure modes, and an output contract, not just trigger keywords.
-7. **Naming consistency.** A new skill name is kebab-case, and the directory name, frontmatter name, and registry name must match exactly.
-8. **Compact capability.** A new capability stays compact and must not become an introductory tutorial.
-9. **Adjacency and handoff.** Every capability states its adjacent capabilities and its handoff targets.
-10. **Slimming preserves rigor.** No slimming action may reduce professional rigor; detail moves to references instead.
-11. **Description is a trigger, not a workflow.** The frontmatter description states when to use the skill and its scope; the workflow, gates, and output contract live in the body, and deep detail in references. A description that summarizes the workflow lets an agent act from the description without reading the body, and an over-broad description causes catch-all routing.
-12. **Release professionalism artifacts.** `config/professionalism-baseline.yaml`, `eval-skill-professionalism.py`, `eval-professional-benchmarks.py`, `eval-professional-agent-samples.py`, `validate-professionalism-regression.py`, and `docs/PROFESSIONALISM_RELEASE_CHECKLIST.md` define the current pre-release quality loop.
-
-# Professional Skill Authoring Requirements
-
-- Include a Mode Matrix with trigger signals, professional focus, required evidence, companion capabilities/gates, and skip guidance.
-- Include Proactive Professional Triggers that name signal, hidden risk, required action, route, and evidence; ordinary checklist items do not qualify.
-- Include an Evidence Contract, Failure Modes, Quality Gate, Reference Loading Policy, Benchmark Coverage expectation, and Routing Coverage expectation.
-- Keep SKILL.md decision-critical. Move long examples, benchmark catalogs, anti-examples, and tables to references with a loading hint.
-- Benchmark or agent-sample promotion requires concrete hidden risks, forbidden behaviors, validation evidence or not-verified disclosure, residual risk, and next gate.
-
-# Capability Authoring Requirements
-
-- Keep the body compact, decision-critical, and non-tutorial; do not write beginner explanations or language primers.
-- Include concrete failure modes, a quality gate, adjacent handoff targets, and output evidence.
-- Keep `used_by` correct so selected capabilities compile into the professional skills that can own them.
-- Do not dump nested references or deep checklists into capability bodies; references must be targeted and loadable.
-
-# Anti-Patterns
-
-- Section-only fake professionalism: adding headings without decision rules, hidden risks, evidence, or failure modes.
-- Checklist-only triggers: ordinary "run tests" or "check security" bullets presented as proactive hidden-risk triggers.
-- Copied Evidence Contract: repeated generic evidence language without domain-specific proof and limits.
-- Body bloat: keeping low-frequency detail in SKILL.md instead of references with loading hints.
-- Benchmark empty shell: fixtures without concrete hidden risks, evidence, forbidden behaviors, and negative baseline output.
-- Route without `forbidden.*`: routing cases that only say what to select and never guard against over-routing.
-- Professionalism score gaming: adding keywords, copied Evidence Contract text, or empty sections instead of behavior evidence.
-
-# Failure Modes
-
-- A skill becomes a catch-all that triggers on everything.
-- A skill drifts into tutorial form, explaining background but giving no execution rules.
-- A skill body grows too long and wastes context.
-- A reference becomes a dumping ground with no loading policy.
-- Multiple professional skills copy the same capability body instead of referencing it.
-- `used_by` is not synchronized, so a capability is not compiled into the relevant professional skill.
-- The registry is not synchronized, so build or validation fails.
-- A routing trigger is too broad, causing over-routing.
-- Do Not Use When is too weak, causing mis-triggering.
-- Detail is deleted instead of moved to references, lowering professional rigor.
-- A new capability overlaps the boundary of an existing capability.
-
-# Output Contract
-
-Return a Skill Authoring Review:
-
-- Target skill/capability:
-- Change type:
-- Skill layer:
-- Boundary:
-- Trigger signals:
-- Non-goals:
-- Main body decision:
-- Reference split decision:
-- Registry impact:
-- Routing impact:
-- Runtime profile impact:
-- Validation impact:
-- Context budget risk:
-- Adjacent capabilities:
-- Required tests:
-- Baseline failure scenario:
-- Pressure scenario:
-- Expected failure without change:
-- Expected behavior after change:
-- Rationalizations blocked:
-- Eval/fixture impact:
-- Before/after behavior evidence:
-- Reference loading impact:
-- Boundaries inspected:
-- Validation evidence:
-- Evidence limits:
-- Residual risk:
-- Next gate:
-- Handoff:
-
-Also return a Skill Behavior Test Decision:
-
-- Test type: routing / pressure / reference retrieval / output contract / hook fixture / agent behavior sample
-- Required files:
-- Expected pass/fail criteria:
-- Validation command:
-
-When slimming or restructuring, also return a Skill Slimming Decision:
-
-- Keep in SKILL.md:
-- Move to references:
-- Split capability:
-- Merge duplicate:
-- Defer:
-- Rationale:
+- **Body versus references:** body = boundary, triggers, selection, skip guidance, output, evidence, quality gate; references = deep TDD, pressure cases, anti-examples, benchmarks, and long tables.
+- **Layer responsibility:** professional skills are runtime entry points; foundation capabilities are compact compiled decision aids; domain extensions add domain-specific product rules.
+- **Generated artifact boundary:** reports, catalogs, marketplace docs, dist skills, zips, and hook runtime files are generated from source; edit source and run generators.
+- **Skill efficacy plan:** behavior case, expected treatment, overhead signal, over/under-routing guard, regression fixture, and validator command.
+- **Forbidden edits:** personal archive ingestion, source install, runtime registry-source content, user corpus mapping, copied body duplication, and references with no loading purpose.
 
 # Evidence Contract
 
-Close a skill-authoring change only when the output names selected authoring mode, active artifact type, source-of-truth files inspected, body-vs-reference placement rationale, reuse of existing skill patterns, routing impact, runtime profile impact, generated artifacts impacted, validator impacted, validation commands run, what each proves and does not prove, skill-efficacy fixture decision, residual weak spots, and the next gate. A skill prose diff without fixture/eval evidence or explicit not-verified disclosure is not sufficient.
+Close only when these answers are concrete:
 
-# Quality Gate
+- **Basis:** authoring mode, artifact type, requirement, repository convention, registry rule, or professionalism benchmark driving the change.
+- **Boundaries inspected:** target source, references, registry entries, stage/routing rules, generated artifacts, reports, validators, source-vs-dist boundary, and not-inspected areas.
+- **Reuse / placement rationale:** existing skill/reference/registry pattern reused, body-vs-reference decision, owner boundary, rejected locations, and dependency direction for generated artifacts.
+- **Behavior preservation:** existing trigger scope, runtime profile behavior, registry identity, reference loading, build/install contract, and old expected behavior preserved or intentionally changed.
+- **Validation evidence:** literal commands, working directory, exit codes, updated reports, build outputs, runtime link/install checks, and validation broker freshness after latest edit.
+- **What evidence proves:** route precision, content size, link integrity, generated artifact freshness, build profile compilation, installation shape, or professionalism score movement.
+- **What evidence does not prove:** real-world adoption, every possible prompt, external runtime installation, untested pressure cases, or future routing changes.
+- **Residual risk:** skipped fixture, unrun extended comparison, accepted partial evidence, untracked adjacent file, release-readiness warning, or owner decision.
+- **Next gate:** reviewer skill, validator, build/install command, routing fixture, pressure behavior case, or human decision required before broader closure.
 
-1. Name, directory, and registry entry are consistent.
-2. Frontmatter is complete.
-3. All required sections are present.
-4. `used_by` is reasonable and references real skills.
-5. Triggers are precise rather than catch-all.
-6. Risk notes are specific.
-7. Expected outputs are verifiable.
-8. The body shows no obvious tutorial drift.
-9. The body holds no large, low-frequency content that belongs in references.
-10. New references declare a loading policy.
-11. validate-skills, validate-capabilities, validate-registry, and validate-installation pass.
-12. A skill rule change carries a baseline failure scenario, or an explicit reason a baseline is impossible plus an expected-behavior case.
-13. A discipline-rule change names the rationalizations it blocks and has a pressure case that applies them.
-14. A new or widened routing trigger has an over-routing guard case.
+# Output Contract
+
+Return a Skill Authoring Review with:
+
+- **Mode selected:** body authoring, reference split, registry/routing, discipline rule, generated artifact sync, or not-applicable with reason.
+- **Decision:** approved, blocked, partial, not verified, split required, registry update required, or handoff required.
+- **Target and layer:** skill/capability/domain/reference/registry/eval/hook artifact, owner, boundary, adjacent capabilities, and non-goals.
+- **Boundaries inspected:** source paths, references, registry, stage/routing rules, docs, generated artifacts, reports, memory/graph signals, and skipped areas.
+- **Body/reference decision:** keep, move, split, merge, defer, and context budget rationale.
+- **Routing impact:** trigger signals, over/under-routing risk, guard cases, `used_by`, runtime profile impact, and generated catalog impact.
+- **Behavior test decision:** baseline failure or expected-behavior case, pressure scenario, rationalizations blocked, fixture/eval impact, and validation command.
+- **Generated artifact decision:** reports, docs, dist, zips, hooks, and install outputs to regenerate or explicitly leave unchanged.
+- **Validation evidence:** commands, exit codes, reports, build/install outputs, what evidence proves, what evidence does not prove, freshness, and residual risk.
+- **Handoff:** next gate, owner, exact command or question, route manifest, and generated artifact boundary.
+
+When slimming or restructuring, also include keep-in-body, move-to-references, split, merge, defer, and rationale decisions.
 
 # Reference Loading Policy
 
-The body carries the decision-critical authoring rules and is the part compiled into the professional-skill references that use this capability. Deep authoring material loads only when authoring or auditing a skill change:
+The body carries decision-critical authoring rules compiled into professional-skill references. Load deep material only when authoring or auditing a skill change:
 
-- [references/tdd-for-skills.md](references/tdd-for-skills.md) — the behavior-first loop, baseline failure template, and test-type selection.
-- [references/pressure-scenarios.md](references/pressure-scenarios.md) — the pressure scenario catalog, rationalizations to reject, and pressure case fields.
+- [references/tdd-for-skills.md](references/tdd-for-skills.md) - behavior-first loop, baseline failure template, and test-type selection.
+- [references/pressure-scenarios.md](references/pressure-scenarios.md) - pressure scenario catalog, rationalizations to reject, and pressure case fields.
+
+# Failure Modes
+
+- **Catch-all trigger:** skill fires for ordinary docs or comments.
+- **Tutorial drift:** body gives background but no execution rule.
+- **Body bloat:** decision rules are hidden beside material that belongs in references.
+- **Reference dumping:** reference has no loading policy, owner, or purpose.
+- **Copied body:** professional skills copy capability bodies instead of compiling references through `used_by`.
+- **Stale graph:** registry, stage model, routing rules, build counts, generated reports, or dist output drift from source.
+- **Over-routing trigger:** routing widens with no guard case.
+- **Copied evidence:** Evidence Contract is generic and does not name behavior proof or limits.
+- **Deleted rigor:** detail is deleted instead of moved.
+- **Silent handoff:** completion is claimed without fresh validation, generated artifact check, residual risk, and next gate.
+
+# Quality Gate
+
+1. Name, directory, frontmatter, registry entry, `used_by`, and layer remain consistent.
+2. Boundary, triggers, non-goals, Mode Matrix, proactive triggers, Evidence Contract, Output Contract, Failure Modes, Quality Gate, Reference Loading Policy, Handoff, and Completion Criteria are present when required.
+3. Body stays decision-critical and within context budget; low-frequency detail has targeted reference links and loading hints.
+4. Trigger changes include route evidence and over-routing guard; discipline rules include baseline/expected behavior and pressure rationalization.
+5. Registry, stage, routing, profile, generated artifact, and documentation impacts are stated or explicitly not applicable.
+6. Validation commands are fresh after the final edit and state what they prove and do not prove.
+7. No source install, private corpus mapping, user archive ingestion, or direct `dist/` hand edit is introduced.
+8. Final handoff includes route manifest, changed boundary, validation results, residual risk, rollback note, and next gate.
 
 # Used By
 
@@ -237,14 +186,13 @@ The body carries the decision-critical authoring rules and is the part compiled 
 
 # Handoff
 
-- Routing-boundary and over/under-routing questions: hand to `change-forge-router`.
-- Documentation and reference consistency questions: hand to `change-documentation-gate`.
-- AI-generated skill quality, redundancy, and boundary questions: hand to `ai-code-review-refactor`.
-- Validation, eval, fixture, build, and install strategy questions: hand to `quality-test-gate`.
-- File, directory, reference, and registry placement questions: hand to `implementation-structure-design`.
-- Execution evidence, same-pattern scan, and validation handoff: hand to `agent-execution-discipline`.
-- Professionalism regression handoff: run `eval-skill-professionalism.py`, `eval-professional-benchmarks.py`, `eval-professional-agent-samples.py`, `validate-professionalism-regression.py`, and `eval-routing.py`; use `docs/PROFESSIONALISM_RELEASE_CHECKLIST.md` before release.
+- `change-forge-router` - routing boundary, over-routing, under-routing, or stage route question.
+- `change-documentation-gate` - docs, checklist, catalog, or reference consistency question.
+- `ai-code-review-refactor` - AI-generated skill quality, redundancy, or boundary drift question.
+- `quality-test-gate` - eval, fixture, build, install, and validation strategy question.
+- `implementation-structure-design` - file, directory, reference, registry, or generated artifact placement question.
+- `agent-execution-discipline` - evidence inventory, same-pattern scan, route repair, and closure handoff.
 
 # Completion Criteria
 
-This capability is complete when it lets an agent add, modify, review, slim, or split a ChangeForge skill while producing a clear boundary, precise triggers, an explicit context budget, a reference split, registry impact, routing impact, and validation impact, and while preventing tutorial drift, catch-all triggers, duplicated bodies, and body bloat.
+This capability is complete when it lets an agent author, audit, slim, split, or maintain ChangeForge skill artifacts while preserving boundary, trigger precision, context efficiency, body/reference placement, registry graph, route behavior, runtime profile safety, generated artifact freshness, validation evidence, residual risk, and handoff clarity.

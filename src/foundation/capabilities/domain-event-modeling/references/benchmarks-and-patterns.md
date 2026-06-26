@@ -1,0 +1,204 @@
+# Domain Event Benchmarks And Patterns
+
+Use this reference after `SKILL.md` selects domain-event modeling and the task needs implementation-level detail. Keep the main skill body concise; load only the sections needed for the current event catalog, schema evolution, producer/consumer review, or validation plan.
+
+# Benchmark Anchors
+
+- **Domain-Driven Design:** model events as facts emitted by aggregates or bounded contexts after a meaningful state transition.
+- **Event Storming:** discover commands, policies, read models, aggregates, and domain events collaboratively before choosing infrastructure.
+- **Transactional Outbox:** persist the event in the same transaction as the domain state change, then relay to the broker after commit.
+- **CDC/Debezium:** publish committed database changes when outbox relay ownership belongs to the data platform or integration layer.
+- **CloudEvents v1.0:** use stable event metadata such as `id`, `source`, `type`, `specversion`, `time`, `datacontenttype`, and `dataschema`.
+- **AsyncAPI:** document channels, messages, bindings, and schema for event APIs that cross service boundaries.
+- **Avro / schema registry:** enforce compatibility modes and generated contract checks for event schemas.
+- **Kafka / Pulsar / NATS / SQS:** align ordering and replay assumptions to broker-specific delivery semantics.
+- **Saga and CQRS/Event Sourcing:** make compensation, projection rebuild, temporal query, and replay behavior explicit.
+- **OWASP API Security / privacy by design:** treat durable event payloads as APIs that can leak object, tenant, or personal data.
+
+# Event Type Classification
+
+| Event class | Description | Durability | Fan-out | Schema contract |
+| --- | --- | --- | --- | --- |
+| Domain event | Fact inside a bounded context or aggregate model | High, usually outbox | Internal consumers | Versioned and stable |
+| Integration event | Fact shared across bounded-context boundaries | High, broker or event API | External/service consumers | Public, versioned, compatibility reviewed |
+| Notification event | Fact that triggers user/operator communication | Medium to high | Notification consumers | Payload-minimized and privacy-sensitive |
+| Audit record | Immutable compliance record of actor/action/subject/time | Highest, append-only | Audit/compliance | Immutable, retention-defined |
+| Analytics event | Behavioral measurement without domain state meaning | Low to medium | Analytics pipeline | Separate flexible pipeline |
+| CDC event | Database change captured from log/binlog/WAL | Medium | Data warehouse/search/integration | Derived from database schema |
+| Saga step event | Workflow fact or compensation trigger | High | Saga coordinator/choreography participants | Tied to saga schema version |
+| Command | Intent before fact is true | Not an event | Not applicable | Reject or route to command/state modeling |
+
+# Naming And Fact Semantics
+
+- Name the event after the fact that became true: `OrderPlaced`, `InvoiceIssued`, `PaymentCaptured`, `InventoryReserved`.
+- Include bounded-context namespace in event type names: `commerce.order.OrderPlaced.v1`, `billing.invoice.InvoiceIssued.v2`.
+- Document when the fact becomes true: after aggregate transition, after payment processor confirmation, after file metadata commit, or after approval workflow completion.
+- Reject events that describe desired work: `CreateOrder`, `SendInvoice`, `ReserveInventory`, `ProcessRefund`.
+- When the event is a derived fact, identify its source fact and transformation owner.
+
+# Producer Commit Boundary And Outbox
+
+Prefer an outbox table or equivalent durable handoff when a database write and event publish must both happen.
+
+```sql
+CREATE TABLE outbox_events (
+  id UUID PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  aggregate_type TEXT NOT NULL,
+  aggregate_id TEXT NOT NULL,
+  schema_version INTEGER NOT NULL,
+  payload JSONB NOT NULL,
+  occurred_at TIMESTAMPTZ NOT NULL,
+  published_at TIMESTAMPTZ,
+  attempts INTEGER NOT NULL DEFAULT 0
+);
+
+BEGIN;
+  UPDATE orders
+     SET status = 'PLACED', updated_at = now()
+   WHERE id = $1;
+
+  INSERT INTO outbox_events (
+    id, event_type, aggregate_type, aggregate_id, schema_version, payload, occurred_at
+  ) VALUES (
+    $event_id, 'commerce.order.OrderPlaced.v1', 'Order', $1, 1, $payload, now()
+  );
+COMMIT;
+```
+
+Relay requirements:
+
+- Select unpublished rows deterministically and mark them published only after broker acknowledgement.
+- Retry relay publish idempotently; publishing the same event id twice must be safe for consumers.
+- Surface relay lag, failure count, oldest unpublished event age, and poison rows.
+- Document owner and runbook for republishing, skipping, or quarantining stuck outbox rows.
+- If CDC is used, document connector offsets, schema mapping, tombstone behavior, and replay boundary.
+
+# Payload Contract
+
+A domain event payload should contain:
+
+- `id`: globally unique event id generated by the producer.
+- `source`: producer service or bounded context.
+- `type`: versioned event type.
+- `specversion`: CloudEvents spec version when using CloudEvents.
+- `time` / `occurredAt`: ISO 8601 UTC timestamp from the fact boundary.
+- `aggregateType` and `aggregateId`: stable subject of the event.
+- `tenantId` / object identifiers when authorization or routing depends on them.
+- `schemaVersion` and `dataschema`: registry pointer or documented schema path.
+- Domain facts needed by consumers without callback to mutable producer state.
+- Correlation/causation ids for saga, trace, or audit reconstruction.
+
+Avoid embedding:
+
+- Raw credentials, tokens, secrets, or private keys.
+- Full PII, health, financial account, or regulated data unless every consumer is authorized.
+- Large blobs or unbounded arrays; publish references with scoped access instead.
+- Current-state snapshots that obscure the exact fact that changed.
+
+# Idempotency Key Design
+
+| Strategy | Suitable when | Consumer implementation |
+| --- | --- | --- |
+| Producer event id | Default for all domain and integration events | Persist processed event ids; ignore duplicates |
+| Aggregate id plus sequence | Event-sourced aggregates with monotonic sequence | Reject sequence lower than or equal to last applied |
+| Aggregate id plus event type plus version | Low-frequency deterministic facts | Use only when one fact of that type can occur per aggregate/version |
+| Correlation id plus step id | Saga compensation or workflow steps | Preserve correlation through every derived event |
+| Natural business key | Ledger, invoice, entitlement, or unique external operation | Enforce unique constraint at side-effect boundary |
+
+Consumers that call external systems still need application-level dedupe. Broker exactly-once semantics does not make a payment capture, email send, webhook POST, or ledger write exactly once.
+
+# Schema Evolution Rules
+
+| Change type | Compatibility | Required action |
+| --- | --- | --- |
+| Add optional field with default | Backward-compatible | Minor version bump; registry update; consumer tolerance check |
+| Add required field | Breaking | New major version or dual publish with migration |
+| Remove field | Breaking | Deprecation period, consumer migration, then new major version |
+| Rename field | Breaking | New field plus old alias during migration or new major version |
+| Change type | Breaking | New major version and generated contract update |
+| Change semantic meaning | Breaking even if type unchanged | New event type or explicitly named semantic version |
+| Reorder Avro fields | Potentially breaking | Verify serializer compatibility before release |
+
+Compatibility evidence should include old producer behavior, old consumer behavior, generated code/contracts, registry compatibility result, replay/backfill behavior, and rollback plan.
+
+# Retry, DLQ, And Replay Matrix
+
+| Failure class | Retry behavior | DLQ behavior | Validation |
+| --- | --- | --- | --- |
+| Transient dependency failure | Retry with exponential backoff and jitter | DLQ after bounded attempts | Simulate timeout/error and assert retry/DLQ |
+| Poison schema/deserialization error | Do not keep retrying identical payload | Quarantine/poison topic immediately | Contract mismatch fixture |
+| Duplicate delivery | No retry needed if dedupe succeeds | None unless dedupe store unavailable | Duplicate event fixture |
+| Out-of-order delivery | Buffer, reject, or reconcile per aggregate | DLQ when invalid and unrecoverable | Reordered event fixture |
+| Replay of projection-safe consumer | Reprocess with dedupe | DLQ only on unrecoverable failure | Replay fixture over sample stream |
+| Replay of irreversible consumer | Block or run only behind dedupe gate | DLQ if replay attempts unsafe side effect | Replay safety test or manual gate |
+
+DLQ ownership must include topic/queue, alert threshold, runbook, replay procedure, data retention, owner team, and incident escalation path.
+
+# Ordering And Partition Strategy
+
+| Requirement | Partition/message-group key | Notes |
+| --- | --- | --- |
+| Per aggregate ordering | `aggregateId` | Most common domain event ordering boundary |
+| Per tenant ordering | `tenantId` | Can create hot partitions for large tenants |
+| Per saga ordering | `correlationId` or `sagaId` | Use when workflow steps must serialize |
+| No ordering guarantee | None or throughput-oriented key | Consumers must tolerate out-of-order arrival |
+| Global ordering | Avoid at scale | Requires special infrastructure and throughput tradeoff |
+
+Ordering evidence should connect the aggregate/state-machine boundary to the broker key and consumer concurrency setting.
+
+# Saga, Audit, And Privacy
+
+| Concern | Required fields | Required decision |
+| --- | --- | --- |
+| Saga trigger | Correlation id, causation id, saga id, step name | Orchestration vs choreography, timeout, compensation |
+| Compensation | Original event id, failed step, compensating action id | Idempotent compensation and reconciliation owner |
+| Audit | Actor, subject, action, source, timestamp, tenant, object id | Append-only storage, retention, access policy |
+| Privacy | Data category, allowed consumers, minimization rule | Redaction, tokenization, encryption, retention |
+| Permission boundary | Tenant id, object id, actor context when needed | Consumer authorization or event access control |
+
+# Graph, Memory, And Execution Coupling
+
+| Evidence source | Use | Required guardrail |
+| --- | --- | --- |
+| Repository graph | Locate producers, consumers, schemas, generated contracts, configs, and tests. | Verify with current source before relying on inferred topology. |
+| Project memory | Recall prior event names, ownership, migration decisions, incidents, or diagrams. | Mark accepted, rejected, or stale; never use memory as sole proof. |
+| Execution trajectory | Connect planned change, files touched, validators run, failures observed, and reroutes. | Avoid repeated same-path retry after two failures; update validation map after failures. |
+| Runtime telemetry | Confirm production lag, DLQ depth, replay, throughput, and error behavior. | Distinguish production evidence from local tests and state freshness. |
+
+# Event-To-Validation Matrix
+
+| Event concern | Example validation |
+| --- | --- |
+| Event naming | Unit or review check rejects command-like event names |
+| Outbox durability | Transaction test confirms state and outbox row commit/rollback together |
+| Schema compatibility | Registry compatibility check or generated consumer contract test |
+| Consumer idempotency | Duplicate event fixture leaves one side effect |
+| Ordering | Reordered event fixture is buffered, rejected, or reconciled correctly |
+| Retry/DLQ | Forced dependency failure reaches retry and DLQ path with alert metadata |
+| Replay | Replay fixture rebuilds projection without irreversible side effects |
+| Privacy | Payload fixture excludes or tokenizes restricted fields |
+| Saga compensation | Failure-path test emits compensation or reconciliation event |
+| Rollback | Old producer/consumer/schema behavior remains valid or has migration guard |
+
+# Review Checklist
+
+- Is the event a fact that is true after commit?
+- Is the producer and transaction boundary named?
+- Is outbox/CDC/equivalent durability present for state-plus-event changes?
+- Can each consumer understand the fact without a mutable callback?
+- Are old consumers and generated contracts compatible?
+- Are duplicate, replayed, delayed, and out-of-order events safe?
+- Is every DLQ owned, monitored, replayable, and documented?
+- Are sensitive fields minimized and restricted to authorized consumers?
+- Does the validation map cover every changed producer, schema, consumer, and policy?
+- Are residual risk and next gate stated before release?
+
+# Handoff Boundaries
+
+- Use `state-machine-modeling` for undefined transitions or invalid state paths.
+- Use `event-driven-architecture` for topology, lag/backpressure, replay operations, and eventual-consistency UX.
+- Use `message-queue-design` for broker, topic, queue, partition, subscription, and consumer group mechanics.
+- Use `transaction-consistency` for outbox, saga, compensation, rollback, and reconciliation invariants.
+- Use `security-privacy-gate` for sensitive payload, consumer authorization, tenant/object boundaries, and retention.
+- Use `reliability-observability-gate` for production metrics, alerting, runbooks, and incident readiness.

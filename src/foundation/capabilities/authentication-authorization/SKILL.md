@@ -15,9 +15,18 @@ Implement authentication and authorization so that **identity proof and action p
 
 Use this capability when a change touches: sign-in state, sessions, tokens (access/refresh/id), service accounts, machine-to-machine identity, API keys, OAuth 2.0 / OIDC flows, SAML federation, roles, groups, scopes, claims, policies (RBAC/ABAC/ReBAC), tenant scoping, object-level access (owner/sharee/admin), delegation, impersonation, denial behavior, rate-limited-by-identity, sudo/step-up, or audit logging of access decisions.
 
+Also use it when repository graph, project memory, or execution traces show a new read/write path, job worker, support tool, export, list query, cache layer, or downstream integration that can bypass the normal user-facing authorization route.
+
 # Do Not Use When
 
 Do not use this capability to treat authentication as authorization (the most common breach class), to enforce protected actions only through hidden UI controls, to add a single role check at the controller and call it complete, or to replace `authentication-security` (token/session/credential lifecycle hardening) and `permission-boundary-modeling` (policy matrix design before code).
+
+# Stage Fit
+
+- **Planning / design:** map subjects, actions, resources, tenants, privileged paths, and deny semantics before APIs or data access are finalized.
+- **Implementation / repair:** place enforcement at every entry point and keep policy evaluation centralized enough to review, test, and audit.
+- **Review:** reject changes that add a protected operation without object-level rules, negative permission tests, and audit evidence.
+- **Release / migration:** verify rollout keeps existing denials, invalidates stale claims/caches, and preserves audit continuity across old and new paths.
 
 # Non-Negotiable Rules
 
@@ -32,10 +41,11 @@ Do not use this capability to treat authentication as authorization (the most co
 - Authorization cache must be **bounded in TTL** (seconds-to-minutes) and **invalidated on**: role change, membership change, resource ownership change, tenant suspension, token revocation, policy update.
 - Tokens / sessions carry **only the minimum claims**; sensitive attributes are fetched on demand from the authoritative source (avoid stale role embedded for 24h).
 - Every protected operation has a **permission test** that asserts both the positive (allowed actor succeeds) and at least three negative cases (unauthenticated, insufficient scope, wrong tenant/owner). Untested policy is unenforced policy.
+- Authorization claims must be backed by **repository graph evidence** (all entry points found), **memory evidence** (known policy decisions and constraints reused or updated), **execution evidence** (commands/tests proving enforcement paths), and **validation evidence** (permission tests or explicit gaps).
 
 # Industry Benchmarks
 
-Anchor against: **OWASP API Security Top 10 (2023)** — especially **API1:2023 Broken Object Level Authorization** and **API5:2023 Broken Function Level Authorization**; **OWASP ASVS v4** chapters V1 (Architecture), V4 (Access Control), V8 (Data Protection); **OAuth 2.0 / 2.1 (RFC 6749 + drafts)**, **OAuth 2.0 Security Best Current Practice (RFC 9700)**, **PKCE (RFC 7636)** mandatory for all public clients, **OIDC Core 1.0**, **Token Exchange (RFC 8693)**, **JWT (RFC 7519)** with **JWT Best Current Practice (RFC 8725)** and **JWS/JWE (RFC 7515/7516)**, **SAML 2.0** where federation requires; **NIST SP 800-63B** (authentication assurance levels) and **NIST SP 800-162** (ABAC); **XACML 3.0** conceptual model (PEP/PDP/PIP/PAP separation) — even if you do not use XACML, the separation is the point; **Open Policy Agent (OPA) + Rego** or **Cedar (AWS)** for externalized policy; **Google Zanzibar** model (ReBAC) for fine-grained relationship-based access (also: **SpiceDB / OpenFGA / Permify** implementations); **AWS IAM** least-privilege patterns; **GDPR Art. 32** (security of processing) for audit and access controls on personal data; **SOC 2 CC6** controls for logical access; **ISO/IEC 27001 A.9** access control.
+Anchor against OWASP API Security Top 10 2023 (BOLA/BFLA), OWASP ASVS V1/V4/V8, OAuth/OIDC/JWT/SAML security BCPs, NIST 800-63B and 800-162, XACML PEP/PDP concepts, OPA/Rego or Cedar policy-as-code, Zanzibar-style ReBAC systems, AWS IAM least privilege, GDPR Art. 32, SOC 2 CC6, and ISO/IEC 27001 A.9. Use these as review anchors, not as a requirement to reproduce every standard in the skill body.
 
 ### Access Control Model Selection
 
@@ -45,38 +55,19 @@ Anchor against: **OWASP API Security Top 10 (2023)** — especially **API1:2023 
 | **ABAC** (attributes + rules) | Decisions depend on subject/resource/env attributes (department, classification, time, location) | Simple role checks are sufficient; policy author skill is limited | NIST SP 800-162, XACML |
 | **ReBAC** (relationship graph) | Per-object sharing, hierarchies (folders, orgs, teams), invite/share flows like Google Drive / GitHub | No relationship semantics; flat role world | Google Zanzibar; OpenFGA |
 | **PBAC / Policy-as-code** | Cross-cutting compliance rules; auditable policy authored separately from code | Tiny app; OPA/Cedar operational cost not justified | OPA, Cedar |
-| **Capability-based** | Distributed services where bearer of token = holder of capability (unforgeable refs) | Centralized revocation matters more than decentralization | Tahoe-LAFS, macaroons |
+| **Capability-based** | Distributed services where possession of an unforgeable reference grants the capability | Centralized revocation matters more than decentralization | Tahoe-LAFS, macaroons |
 
 Most real systems combine: **RBAC for coarse roles + ReBAC for object sharing + ABAC for context guards**. The pure form is rarely sufficient.
 
-### Decision Tree: Where to Place the Authorization Check
+# Mode Matrix
 
-```
-Is this an object-specific action (CRUD on a resource, transition, share, export)?
-├─ Yes → REQUIRES object-level check (subject can act on THIS resource):
-│        1. Load resource (or its id) with tenant scope in the query (defense in depth).
-│        2. Resolve subject's relationship to resource (owner / member / sharee / admin).
-│        3. Evaluate policy(subject, action, resource, context) at PDP.
-│        4. Audit decision regardless of outcome.
-│
-└─ No → Function-level action (e.g., "create new project", "view billing")?
-         1. Check scope/role at controller.
-         2. Audit decision.
-
-Is this a list/search endpoint?
-└─ Yes → Filter at query time by tenant + visibility predicate (NEVER list-then-filter-in-app).
-         Pagination must be deterministic within the visible set.
-```
-
-### Tenant Isolation Defense-in-Depth
-
-| Layer | Control |
+| Mode | Minimum professional output |
 | --- | --- |
-| Identity token | `tenant_id` claim issued at login; signed; short-lived |
-| Request context | Resolved from token, never from request body/header alone |
-| Repository / query | Mandatory `WHERE tenant_id = :ctx` filter; enforced by repository base class or row-level security |
-| Database | Postgres Row-Level Security (RLS) policies; or schema-per-tenant where regulated |
-| Audit | Every read/write logs tenant_id; cross-tenant access alerts |
+| Plan | subject/action/resource matrix, tenant boundary, policy model, privileged paths, and known bypass paths |
+| Implement | PDP/PEP placement, repository filters, object checks, denial taxonomy, audit event schema, and negative tests |
+| Review | diff-to-entry-point map, stale claim/cache risk, missing object checks, mass-assignment checks, and denied-path evidence |
+| Repair | verified failed enforcement path, root cause, same-pattern scan, regression test, and rollback note |
+| Release | compatibility of existing policies, cache/token invalidation plan, audit continuity, and migration/backfill safety |
 
 # Selection Rules
 
@@ -88,32 +79,40 @@ Select this capability when **identity-to-action enforcement** is primary. Adjac
 - Prefer `secret-configuration-security` for API keys, service credentials, signing keys storage.
 - Prefer `threat-modeling` when the question is broader account/privilege threat surface.
 - Use **with** `logging-error-handling` for audit-safe denial logging.
+- Use **with** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the work must prove all entry points, prior decisions, executed checks, and validation evidence are coupled.
+
+# Proactive Professional Triggers
+
+- **Signal:** A new endpoint, resolver, worker, webhook, scheduled job, admin/support script, export, import, or bulk action reads or mutates protected data. **Hidden risk:** alternate entry point bypasses object-level authorization and becomes privilege escalation or cross-tenant leak. **Required professional action:** map every entry point, subject/action/resource/tenant context, PDP/PEP check, and allow/deny tests. **Route to:** `authentication-authorization`, `repository-graph-analysis`, `permission-boundary-modeling`. **Evidence required:** entry-point graph, changed-operation-to-policy map, and positive/negative permission test output.
+- **Signal:** Resource, tenant, owner, account, document, or asset id moves through a path, query, body, event, queue message, cache key, or downstream service call. **Hidden risk:** BOLA/IDOR or tenant confusion lets a caller guess, replay, or reuse identifiers. **Required professional action:** verify ownership and tenant scope at repository/query boundary and policy decision. **Route to:** `authentication-authorization`, `data-side-effect-flow-tracing`, `repository-persistence`. **Evidence required:** same-pattern identifier scan and denied cross-tenant/wrong-owner regression output.
+- **Signal:** Roles, groups, scopes, policy files, sharing links, invites, impersonation, delegation, service accounts, or machine-to-machine calls change. **Hidden risk:** authentication claim is mistaken for authorization, stale privilege survives demotion, or delegated actor loses audit accountability. **Required professional action:** separate identity proof from authorization decision, bound claim/cache freshness, and record real actor plus effective subject. **Route to:** `authentication-authorization`, `authentication-security`, `logging-error-handling`. **Evidence required:** policy matrix, invalidation rule, actor/effective-subject audit schema, and denied stale-claim test.
+- **Signal:** A list, search, report, aggregation, pagination, cache, or export path returns protected rows. **Hidden risk:** filtering after fetch, pagination, aggregation, serialization, or cache reuse leaks invisible records through rows, counts, timing, or exports. **Required professional action:** enforce tenant/visibility predicates before pagination, aggregation, export, or cache write. **Route to:** `authentication-authorization`, `indexing-query-optimization`, `search-analytics-design`. **Evidence required:** query predicate, list/export fixture, and denied invisible-row regression result.
+- **Signal:** Denial behavior, audit events, policy cache, tenant suspension, role demotion, support override, or privileged step-up changes. **Hidden risk:** denials reveal resource existence, privileged actions lack accountability, or revoked authority remains usable. **Required professional action:** define denial taxonomy, immutable audit fields, privileged re-auth/dual-control rules, and cache invalidation triggers. **Route to:** `authentication-authorization`, `security-privacy-gate`, `validation-broker`. **Evidence required:** denial contract, audit sample, invalidation test, and residual-risk owner.
 
 # Risk Escalation Rules
 
 Escalate when access decisions affect: sensitive personal data (PII/PHI/financial), cross-tenant boundaries (the highest-impact bug class in multi-tenant SaaS), administrative actions, service account scope expansion, exports (data exfiltration risk), billing/payments, destructive operations (bulk delete, account close), public APIs, OAuth scope additions to existing clients, impersonation/support-as-user flows, third-party app authorization, or any access path that bypasses normal flow (admin SQL console, support scripts, batch jobs). Escalate any deviation from deny-by-default. Escalate any caching of authorization decisions beyond 5 minutes for mutable membership.
 
+# Reference Loading Policy
+
+- **L1:** Read this `SKILL.md` only for ordinary route, plan, review, or small implementation work.
+- **L2:** Read `references/checklist.md` when producing a concrete implementation/review checklist or checking denial, audit, cache, tenant, and test completeness.
+- **L3:** Read `examples/example-output.md` when the user needs a structured auth plan or when output shape is underspecified.
+- **Do not load adjacent skills by default.** Load `permission-boundary-modeling`, `authentication-security`, `threat-modeling`, or `secret-configuration-security` only when the task crosses into policy design, credential lifecycle, broader abuse analysis, or key/secret handling.
+
 # Critical Details
 
 Role checks are rarely enough for resource-specific operations. A user with role `editor` may still lack access to **this** specific document, folder, project, or tenant. Apply these refinements:
 
-- **BOLA / IDOR is the #1 API bug.** Every endpoint that takes a resource id in the path, query, or body must verify the subject's relationship to that resource — not just that they are authenticated and have a role.
-- **Mass assignment companion.** Even with correct OLA, allowing the client to mutate fields like `owner_id`, `tenant_id`, `role`, `is_admin` via PATCH defeats the policy. Allowlist mutable fields per action.
-- **Object existence leak.** Returning `403` for forbidden and `404` for non-existent leaks resource existence. Either return `404` uniformly for "not visible to you" (common) or accept the leak knowingly.
-- **List endpoints leak via differential timing or count.** Filter at the database layer; never fetch then filter in app code.
-- **N+1 authorization.** Bulk endpoints (return list of N items) must batch policy evaluation; per-item PDP calls become a DoS surface.
-- **Centralize the PDP, distribute the PEP.** Code calls a policy module (`canUserDo(subject, action, resource, context)`) at the action site. The module is auditable in one file. Inline `if user.role == "admin"` scattered across controllers becomes ungovernable.
-- **Sudo / step-up authentication.** Sensitive actions (delete account, change MFA, view full SSN, payment) require recent strong authentication (e.g., MFA within last 5–15 min). GitHub, AWS, Stripe all do this.
-- **Impersonation / support-as-user.** Must be: explicitly opt-in (or contractual), time-boxed, scope-limited, banner-visible, audit-logged with the impersonator's identity, and never used to perform destructive actions without dual control.
-- **Token claims staleness.** Roles in a JWT are frozen at issue time. If a user is demoted, their token remains until expiry. Solutions: short-lived tokens (≤ 15 min) with refresh, token revocation list, or claim-on-demand from a fast cache invalidated by membership changes.
-- **Service-to-service identity.** Service accounts must not have human-level scopes. Use OAuth 2.0 client credentials or mTLS / SPIFFE/SPIRE workload identity. Rotate. Audit.
-- **Delegation chains.** When service A calls service B on behalf of user U, B must see U's identity (token exchange RFC 8693) — not A's service identity — otherwise audit and authorization are broken at B.
-- **Background jobs and webhooks.** They lack a user context; they must run with **system identity** scoped to the minimum necessary. Never reuse a user's token at job time.
-- **Bulk operations.** "Delete all matching" endpoints must verify authorization on each item — not just on the query predicate — because the predicate may include items the subject cannot delete individually.
-- **Public endpoint with optional auth.** When the same endpoint serves anonymous and authenticated users with different data, the **default** must be the anonymous view; authentication enriches, never relaxes.
-- **Authorization in GraphQL.** Field-level authorization at resolvers; never at the gateway alone. Query depth + complexity limits are part of authorization (DoS).
-- **Authorization in event consumers.** Events from one tenant must not be processed in another tenant's scope by mistake (consumer group misconfiguration → cross-tenant breach).
-- **Audit log integrity.** Audit records of authorization decisions must be append-only, tamper-evident, retained per compliance (often ≥ 1 year), and accessible without containing the authorization check itself (chicken-and-egg).
+- **Boundary placement:** record controller/resolver, service, repository/query, worker, consumer, and support/admin enforcement points; absence in the current graph is a finding.
+- **Object and tenant scope:** every resource id in a path, query, body, event, cache key, or downstream call needs subject-resource relationship and tenant predicate proof.
+- **Mutable field allowlist:** correct OLA still fails if PATCH accepts `owner_id`, `tenant_id`, `role`, or `is_admin`; allowlist mutable fields per action.
+- **Safe denial:** pick and apply a consistent 403/404 existence-leak policy with client-safe messages and audit-safe reason codes.
+- **List, search, export, and bulk:** filter at data source before pagination, aggregation, serialization, cache write, or export; authorize each object in bulk operations.
+- **PDP/PEP split:** centralize policy decisions in one auditable PDP while distributing enforcement at every entry point; reject scattered inline role checks.
+- **Privileged and support paths:** step-up, impersonation, support-as-user, service accounts, delegation chains, and background jobs need scoped identity, real actor, time box, and immutable audit.
+- **Freshness and invalidation:** token claims, permission caches, tenant suspension, role demotion, and ownership changes need bounded TTL and invalidation proof.
+- **GraphQL and event consumers:** enforce field-level and tenant-scope checks inside resolvers/consumers, not only at gateway or producer.
 
 ### Anti-examples (BOLA family)
 
@@ -146,8 +145,10 @@ Role checks are rarely enough for resource-specific operations. A user with role
 
 # Output Contract
 
-Return an authentication-and-authorization implementation plan with:
+Return an `authentication_authorization_plan` with:
 
+- `mode_selected` (plan, implement, review, repair, or release)
+- `authorization_decision` (approved, approved with conditions, blocked, or requires policy owner)
 - `identity_sources` (IdPs, OAuth providers, SAML, internal credential store, service-account issuer)
 - `subject_types` (end user, service account, support agent acting as user, anonymous, system)
 - `actions_catalog` (named verbs per resource type, e.g., `order.read`, `order.refund`)
@@ -161,8 +162,35 @@ Return an authentication-and-authorization implementation plan with:
 - `step_up_rules` (which actions require recent strong auth)
 - `cache_rules` (what is cached, TTL, invalidation triggers)
 - `session_or_token_rules` (handoff to `authentication-security` for lifecycle)
+- `graph_memory_execution_validation` (entry points inspected, prior decisions reused/updated, commands/tests run, explicit evidence gaps)
+- `changed_authz_to_validation_map` (each changed protected operation mapped to object rule, deny behavior, audit event, and positive/negative tests)
+- `evidence_limits` (uninspected entry points, stale memory, missing generated clients, unrun permission tests, unsupported policy assumptions)
 - `tests` (positive + at least: unauthenticated, insufficient scope, wrong tenant, wrong owner, expired credential, mass-assignment attempt, list-endpoint cross-tenant)
 - `residual_risks` and `owner`
+
+# Evidence Contract
+
+An acceptable answer names:
+
+- **Basis:** selected mode, protected subject/action/resource/tenant set, policy model, denial decision, and security benchmark or incident class.
+- **Repository evidence:** files, routes, resolvers, workers, consumers, repositories, support/admin tools, exports, caches, policy files, tests, and generated contracts inspected or explicitly unavailable.
+- **Memory evidence:** prior policy decisions, tenant rules, deny semantics, exceptions, migration constraints, incident notes, and stale claims accepted, rejected, or marked not verified.
+- **Graph evidence:** upstream callers, downstream services, resource ownership paths, query filters, list/export/cache paths, event/job paths, and bypass-capable entry points.
+- **Execution evidence:** validation commands, permission tests, same-pattern scans, failing reproduction when repairing, audit samples, and any unrun checks with reason.
+- **Authorization proof:** object rule, server-derived tenant/owner source, PDP/PEP placement, denial semantics, audit event, cache invalidation, and positive/negative validation for each protected action.
+- **What evidence does not prove:** uninspected entry points, production policy state, generated clients not rebuilt, stale tokens already issued, privileged manual controls, third-party IdP behavior, or future policy changes.
+- **Handoff evidence:** adjacent capability needed next, owner of unresolved policy decisions, rollback/kill-switch path, residual risk, and validation freshness limit.
+
+# Benchmark Coverage
+
+- **Security:** OWASP API1/API5, OWASP ASVS access-control requirements, least privilege, auditability, and abuse-resistant denial behavior.
+- **Architecture:** explicit PDP/PEP split, policy source of truth, tenant-aware data access, and bounded cache/claim freshness.
+- **Testing:** positive and negative permission tests across object, tenant, list/search/export, privileged, background, and support paths.
+- **Operations:** immutable audit events, alertable suspicious patterns, cache/token invalidation, rollout compatibility, and rollback notes.
+
+# Routing Coverage
+
+This capability should route from prompts involving authentication, authorization, object-level access, roles, scopes, tenant isolation, denial behavior, service accounts, impersonation, exports, bulk operations, admin/support tools, background jobs, GraphQL resolvers, list/search filtering, and access-decision audits. Pair it with `permission-boundary-modeling`, `authentication-security`, `threat-modeling`, `secret-configuration-security`, or `logging-error-handling` only when their owned concern is explicitly present.
 
 # Quality Gate
 
@@ -179,6 +207,10 @@ The auth design passes only when:
 9. Audit events exist for every allow and every deny on sensitive actions; logs are tamper-evident and retained per compliance.
 10. Permission tests include negative cases (≥ 3 classes per protected action).
 11. Service accounts and background jobs have scoped identities — no human-superuser sharing.
+12. List/search/report/export paths filter by tenant and visibility before pagination, aggregation, caching, or serialization.
+13. Admin/support/impersonation paths name the real actor, scoped authority, time box, user-visible indication where applicable, and dual-control requirement.
+14. Cache and claim freshness are bounded and invalidated on membership, ownership, role, tenant, and policy changes.
+15. Repository graph, memory, execution, and validation evidence are present or explicitly marked as gaps with an owner.
 
 # Used By
 

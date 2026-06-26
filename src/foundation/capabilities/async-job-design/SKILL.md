@@ -1,6 +1,6 @@
 ---
 name: async-job-design
-description: Designs asynchronous jobs with idempotency, retry, timeout, failure handling, observability, cancellation, and compensation where relevant.
+description: Designs durable asynchronous jobs with enqueue-after-commit, idempotency, bounded retry, timeout, status visibility, cancellation, compensation, observability, and recovery.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "43"
@@ -9,211 +9,172 @@ changeforge_version: 0.1.0
 
 # Mission
 
-Design asynchronous jobs that execute safely under duplicate delivery, retries, timeouts, cancellation, partial failure, poison messages, operator intervention, and version skew — with bounded resource use, visible status, and recoverable outcomes.
+Design asynchronous jobs that execute safely after the initiating request returns: duplicate delivery, retries, timeouts, cancellation, partial failure, poison messages, deploy skew, operator replay, and tenant/resource contention must have bounded, visible, recoverable outcomes.
 
 # When To Use
 
-Use this capability when a change adds or modifies: background jobs, queue workers, scheduled/cron jobs, delayed tasks, batch processors, fan-out/fan-in jobs, long-running workflows (Saga / Temporal / Step Functions / Airflow), event consumers with business side effects, data backfills, bulk imports/exports, async webhook senders, periodic cleanup, or compensating transactions.
+Use this capability when a change adds or modifies background jobs, queue workers, scheduled/cron jobs, delayed tasks, batch processors, fan-out/fan-in jobs, long-running workflows, async user flows, durable job status, data imports/exports, async webhook senders, reconciliation jobs, cleanup jobs, or compensation workers. Use it when a request returns `202 Accepted`, "queued", or "processing" while meaningful work finishes later.
 
 # Do Not Use When
 
-Do not use this capability to move work out of the request path "to make it fast" without defining ownership, idempotency, retry policy, status visibility, and failure handling — that creates invisible failure. Do not use it to design queue topology (`message-queue-design`), broker selection (`event-driven-architecture`), retry math alone (`idempotency-retry-design`), or schema migration jobs (`data-migration-design`); use those alongside this capability.
+Do not use this capability to move work out of the request path "to make it fast" without defining durable enqueue, ownership, idempotency, retry policy, status visibility, failure handling, and recovery. Do not use it as the primary owner for queue topology (`message-queue-design`), event fact contracts (`domain-event-modeling`), broker selection (`event-driven-architecture`), retry math alone (`idempotency-retry-design`), or schema migration plans (`data-migration-design`); use those alongside this capability when their boundary dominates.
+
+# Boundary And Source Truth
+
+This capability owns the job lifecycle: trigger, durable enqueue, payload, worker execution, status model, retry/DLQ/replay, cancellation, compensation, observability, ownership, and validation. It does not own broker infrastructure, domain-event semantics, queue partition topology, API response contracts, or data migration sequencing except as handoff boundaries.
+
+Source truth is current job/worker code, enqueue call sites, scheduler or broker config, status schema, idempotency store, runbooks, dashboards, tests, validation output, and current registry/routing entries. Repository graph, project memory, generated reports, old runbooks, and prior validations are selectors only until current source inspection and post-edit validation confirm them. Do not edit generated `dist/` or installed runtime copies as source.
+
+# Stage Fit
+
+- **Planning:** decide whether async work is needed, name the durable job boundary, and reject fire-and-forget or "queued equals done" designs.
+- **Coding / review:** verify enqueue-after-commit, payload versioning, idempotency, ack/nack, cancellation checks, compensation, and worker version compatibility.
+- **Testing:** map duplicate delivery, timeout, retry exhaustion, poison message, cancellation, replay, and deploy-skew paths to executable or explicitly not-run evidence.
+- **Release / operations:** require queue depth, lag, DLQ, oldest job age, heartbeat, alert owner, runbook, replay throttle, and rollback or drain strategy.
 
 # Non-Negotiable Rules
 
-- Jobs must explicitly define: **idempotency key, retry policy with bounded attempts, retry backoff with jitter, per-attempt and total timeout, failure classification (transient vs permanent), dead-letter handling, status model, observability, cancellation, and compensation** where side effects span steps.
-- Payloads must contain **stable identifiers** (entity ids, correlation id), **not stale snapshots** unless snapshot semantics are explicit and the snapshot expiry is documented.
-- Workers must tolerate **at-least-once delivery, duplicate execution, out-of-order execution, and concurrent execution** unless the queue + worker design provably prevents each.
-- Retries must distinguish **transient (retryable)**, **permanent (do-not-retry)**, and **rate-limited (retry with longer backoff)**. Blind retry of permanent failures wastes capacity and hides the bug.
-- Operators or users must have visibility into job state when outcomes matter to a human. Silent failure is the worst failure.
-- Long-running or externally visible jobs require **cancellation semantics** (cooperative cancellation tokens) and **compensation** for already-committed side effects.
-- All side-effecting external calls inside a job must be **idempotent** (via key, conditional write, or natural idempotence) — or the job must guarantee single execution per unit of work.
-- Every job emits structured logs with `job_name`, `job_id`, `attempt`, `idempotency_key`, `correlation_id`, plus the metrics: enqueue rate, in-flight, success rate, failure rate by class, latency (queue + execution), retry count, DLQ size, age of oldest in-flight job.
-- Each job has a documented **owner**, **runbook**, and **alert** before go-live.
-- Jobs that touch money, identity, notifications to users, inventory, or external partners require additional double-check (idempotency + reconciliation).
+- Jobs define `job_name`, trigger, owner, payload schema/version, idempotency key, retry policy, timeout/deadline, failure classes, DLQ/quarantine, status model, cancellation, compensation, observability, and replay procedure.
+- A request is not accepted as durable until the job is durably enqueued. If business state and enqueue are not atomic, use transactional outbox, CDC, or a recovery scan with an explicit residual risk.
+- Payloads carry stable identifiers, tenant/resource scope, correlation/trace id, and schema version. Snapshots require `snapshot_taken_at`, expiry semantics, and compatibility handling.
+- Workers tolerate at-least-once delivery, duplicate execution, out-of-order execution, concurrent execution, deploy skew, and replay unless the selected infrastructure and validation prove a narrower guarantee.
+- Side effects inside jobs are idempotent by natural key, conditional write, idempotency store, or downstream idempotency key. Otherwise the design must block retry/replay for that side effect.
+- Retries are bounded by max attempts, max wall-clock, exponential backoff with jitter, retryable vs non-retryable classification, and an owned terminal state.
+- Per-attempt timeout, total deadline, and visibility/lease timeout are ordered explicitly. A worker must not run longer than the lease without renewal.
+- Status is queryable by the actor who needs it: user, support, operator, dependent system, or all of them. Silent terminal failure is not allowed.
+- Cancellation is cooperative and checked at safe points. The design states what cancellation does and does not undo.
+- Compensation is a design output for committed multi-step side effects; non-compensatable effects are escalated before shipping.
+- DLQ or quarantine is an owned recovery surface: alert, runbook, retention, triage fields, and rate-limited replay are required.
+- Structured logs and metrics include job name/id, attempt, idempotency key, correlation/trace id, status transition, failure class, queue age, execution duration, retry count, DLQ depth, and oldest in-flight age with bounded label cardinality.
+- Jobs touching money, identity, notifications, inventory, tenant-wide data, user data bulk changes, external partners, or irreversible side effects require reconciliation and stronger validation.
 
 # Industry Benchmarks
 
-Anchor against: **At-least-once delivery semantics** (Kafka, SQS, RabbitMQ standard mode), **Exactly-once illusion via idempotent consumers** (Kafka transactions are not end-to-end exactly-once across external systems), **Dead-Letter Queue (DLQ)** pattern, **Outbox / Inbox patterns** for transactional messaging (Chris Richardson, microservices.io), **Saga pattern** for distributed transactions (orchestration via Temporal/Cadence/AWS Step Functions, or choreography), **Compensating Transaction** pattern (Garcia-Molina/Salem), **Circuit Breaker** (Nygard, *Release It!*) for downstream protection, **Bulkhead** pattern, **Token Bucket / Leaky Bucket** for rate-limiting downstream, **AWS Well-Architected Reliability Pillar**, **Google SRE Workbook** for error budgets on async work, **CloudEvents 1.0** for event envelope schema, **OpenTelemetry** for distributed tracing across producer→broker→consumer, **Exponential backoff with full jitter** (AWS Architecture Blog, "Exponential Backoff and Jitter"), **Poison message handling**, **Outbox table + CDC** (Debezium) for transactional event emission, **Two-phase / message-relay** alternatives. For workflow engines: **Temporal**, **Cadence**, **Airflow**, **Step Functions**, **Camunda** — pick by replay/versioning needs.
+Anchor against at-least-once delivery, idempotent consumers, transactional outbox/inbox, DLQ and poison-message handling, Saga and compensating transactions, workflow-engine replay/versioning, OpenTelemetry trace propagation, full-jitter retry, SRE error budgets, Little's Law for worker capacity, and runbook-backed recovery. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for runtime selection, retry/failure matrices, idempotency decision trees, scheduling/backfill patterns, graph-memory-execution coupling, validation matrices, and anti-pattern review.
 
-### Runtime Selection Matrix
+# Mode Matrix
 
-| Runtime | Pick when | Avoid when | Idempotency burden |
-| --- | --- | --- | --- |
-| **In-process background task** (e.g., asyncio task, goroutine, thread pool) | Best-effort, OK to lose on restart, short, low value | Loss is unacceptable; observability needed; > seconds | All on the developer |
-| **Cron / scheduled job** | Periodic, idempotent-by-design (e.g., reconciliation) | Need to react to events; sub-minute cadence | Per-tick guard |
-| **Queue worker** (SQS, RabbitMQ, Redis stream, NATS JetStream) | Decouple producer/consumer; fan-out; back-pressure | Need ordered workflows with branching/compensation | Per-message idempotency key |
-| **Event broker** (Kafka, Pulsar, Kinesis) | Replayable log; multiple consumer groups; high throughput | Workflow orchestration; per-item retries; small scale | Per-key idempotency + offset management |
-| **Workflow engine** (Temporal, Cadence, Step Functions, Camunda) | Long-running (minutes→months), branching, compensation, retries, versioning, durable timers | Tiny jobs; engine operational cost not justified | Engine handles retries; activities must still be idempotent |
-| **Lambda / FaaS triggered by queue/topic** | Spiky, ops-offload, simple jobs | Sustained high volume (cost), > 15 min runtime, cold-start sensitive | Per-invocation idempotency key |
-
-### Retry Policy Selection
-
-| Failure class | Action | Backoff | Max attempts | Termination |
-| --- | --- | --- | --- | --- |
-| Transient network / 5xx / timeout | Retry | Exponential + **full jitter**: `delay = random(0, min(cap, base * 2^attempt))` | 3–7 typical | Move to DLQ with diagnostic |
-| Rate-limited (429 / quota) | Retry with longer backoff or respect `Retry-After` | Honor server hint; otherwise exponential with higher base | 3–10 | DLQ + alert |
-| Permanent (4xx validation, business rule violation) | **Do not retry** | n/a | 0 | DLQ immediately with reason |
-| Poison message (cannot parse, malformed payload) | Do not retry; quarantine | n/a | 0 | Quarantine queue + alert; **never block the main queue** |
-| Downstream circuit open | Pause / requeue with delay | Up to circuit close | Bounded by SLO | DLQ if circuit stays open beyond threshold |
-| Optimistic-concurrency conflict (412/409) | Retry after re-read | Short, bounded | 3 typical | Surface as conflict, not silent loss |
-
-### Decision Tree: Idempotency Strategy
-
-```
-Does the job have side effects that must occur exactly once per logical unit of work?
-├─ No (read-only / naturally idempotent) → No key needed; document why.
-└─ Yes →
-    Can the side effect be expressed as a conditional write
-    (e.g., INSERT with unique key, UPDATE WHERE version=?, PUT-If-None-Match)?
-    ├─ Yes → Use natural idempotence; idempotency_key = business unique id; record outcome.
-    └─ No  →
-        Maintain an idempotency record:
-          { idempotency_key, job_name, status, result, expires_at }
-          - Lock-then-execute: SELECT FOR UPDATE / INSERT-or-conflict on key
-          - On retry with same key → return stored result; do not re-execute side effect
-          - Retention ≥ longest possible retry/replay window (≥ 24h; ≥ 7d for money)
-          - Different payload + same key → reject with conflict
-```
-
-### Saga / Long-Running Workflow Patterns
-
-| Pattern | When | Compensation responsibility |
-| --- | --- | --- |
-| **Orchestration** (Temporal, Step Functions, Camunda) | Branching, long timers, visible state, versioning of in-flight workflows | Orchestrator records committed steps; calls compensators in reverse order on failure |
-| **Choreography** (events trigger next step) | Loose coupling, simple flows, ≤ 3-4 steps | Each step emits compensating event on failure; harder to reason end-to-end |
-| **Process Manager** (stateful coordinator inside a service) | Mid-complexity flows scoped to one bounded context | Coordinator persists state and rollbacks |
-
-For workflow engines: pin the workflow **version**; in-flight workflows must complete on the version they started; new versions only for new workflows. Otherwise replay corruption.
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Best-effort in-process task | Short, low-value, loss acceptable, no external side effect. | Make loss explicit and keep it off critical outcomes. | Loss acceptance, shutdown behavior, no-user-impact proof. | `language-performance-safety` | Durable queue/workflow engine. |
+| Durable queue worker | Broker/queue worker, webhook sender, notification, import/export, side-effecting consumer. | Durable enqueue, idempotency, ack/nack, retry, DLQ, replay, status. | Enqueue boundary, payload schema, ack point, duplicate/retry/DLQ tests. | `message-queue-design`, `idempotency-retry-design` | Exactly-once claims without dedupe proof. |
+| Scheduled/reconciliation job | Cron, periodic cleanup, reconciliation, delayed task, report job. | Overlap prevention, drift, missed tick recovery, idempotent range processing. | Scheduler lock, checkpoint/window, rerun behavior, last-success heartbeat. | `performance-budgeting`, `observability` | `concurrencyPolicy: Allow` for side-effecting ticks. |
+| Long-running workflow / saga | Durable timers, branching, external steps, months-long execution, compensation. | Version pinning, step state, cancellation, compensation, replay safety. | Workflow version plan, step log, compensators, replay/drain strategy. | `transaction-consistency`, `release-rollback` | Latest-code replay for in-flight workflows. |
+| Bulk/backfill/import/export job | High volume, tenant-wide data, file generation, warehouse/ETL, replay/retry after fix. | Chunking, checkpoints, tenant isolation, resource budget, rate-limited replay. | Volume, checkpoint, per-tenant cap, CPU/RSS/queue budget, recovery test. | `data-migration-design`, `performance-budgeting` | Load-all or unbounded fan-out. |
+| Async UX/status flow | `202 Accepted`, polling, progress screen, completion notification, support status. | Separate accepted, running, durable success, timeout, failed, cancelled, replayed. | Status source, visible terminal states, retry safety, user/support messaging. | `interaction-state-modeling`, `frontend-api-integration` | Success toast before durable completion. |
 
 # Selection Rules
 
-Select this capability when **background execution lifecycle** (when, where, how, what-if-it-fails) is primary. Adjacent routing:
+Select this capability when background execution lifecycle is primary: when, where, how, who owns it, what happens when it fails, and how recovery is proven. Prefer `idempotency-retry-design` when key/retry math is the headline. Prefer `message-queue-design` when broker topology, ordering, partitioning, or queue config dominates. Prefer `domain-event-modeling` when durable fact semantics and schema contract dominate. Prefer `data-migration-design` for migration/backfill sequencing. Prefer `degradation-circuit-breaking` when downstream protection patterns dominate. Pair with `reliability-observability-gate` for production SLO and alert acceptance.
 
-- Prefer `idempotency-retry-design` when the headline question is duplicate-side-effect math and key design alone.
-- Prefer `message-queue-design` when topology, ordering, partitioning, or queue infra selection dominates.
-- Prefer `event-driven-architecture` when broker topology + event schema + consumer fan-out dominate.
-- Prefer `data-migration-design` for backfills/schema migrations specifically.
-- Prefer `degradation-circuit-breaking` for downstream protection patterns specifically.
-- Use **with** `logging-error-handling` and `observability` for diagnostics; `reliability-observability-gate` for SLO acceptance.
+# Proactive Professional Triggers
+
+- **Signal:** a request handler starts `fire_and_forget`, goroutine/task/thread, or local timer for meaningful work. **Hidden risk:** process restart or deploy loses work with no retry or status. **Required professional action:** require durable enqueue or explicit best-effort acceptance. **Route to:** `async-job-design`, `reliability-observability-gate`. **Evidence required:** enqueue boundary, loss acceptance or durable handoff, shutdown behavior.
+- **Signal:** API returns `202`, "queued", "processing", or success before durable completion. **Hidden risk:** users and clients treat accepted work as done and retry unsafely. **Required professional action:** define status model, completion signal, timeout/cancel behavior, and idempotent retry. **Route to:** `interaction-state-modeling`, `idempotency-retry-design`. **Evidence required:** status source, visible terminal states, duplicate-submit test.
+- **Signal:** business state is saved and job enqueue/publish happens in a separate step. **Hidden risk:** committed state with no job, or job for rolled-back state. **Required professional action:** require outbox/CDC/equivalent or recovery scan. **Route to:** `transaction-consistency`, `data-side-effect-flow-tracing`. **Evidence required:** transaction boundary, outbox/relay owner, lost-enqueue validation.
+- **Signal:** visibility timeout, lock lease, cron interval, or scheduler concurrency is shorter than worst-case execution. **Hidden risk:** same job runs concurrently or scheduled ticks overlap. **Required professional action:** set lease renewal, concurrency policy, checkpoint, and overlap handling. **Route to:** `concurrency-control`, `message-queue-design`. **Evidence required:** timeout inequality, lease renewal, overlap test.
+- **Signal:** retry, DLQ, replay, or poison handling exists without owner, alert, retention, triage fields, or replay throttle. **Hidden risk:** failure becomes silent backlog or replay storm. **Required professional action:** make DLQ a runbook-backed recovery surface. **Route to:** `observability`, `reliability-observability-gate`. **Evidence required:** DLQ metrics, oldest age, alert owner, replay procedure.
+- **Signal:** job payload is a stale snapshot, unversioned JSON blob, or raw domain object. **Hidden risk:** delayed execution commits obsolete facts or crashes after schema deploy. **Required professional action:** use stable ids or declare snapshot/version expiry. **Route to:** `dto-schema-design`, `version-compatibility`. **Evidence required:** payload schema version, expiry, compatibility test.
+- **Signal:** long-running workflow or workflow engine code changes while in-flight work exists. **Hidden risk:** replay corruption or activity signature mismatch. **Required professional action:** pin workflow versions, patch replay, drain old runs, or document compatibility. **Route to:** `release-rollback`, `transaction-consistency`. **Evidence required:** versioning plan, replay/drain evidence, rollback limit.
+- **Signal:** repository graph, project memory, runbook, or previous validation says the job is safe without current source and command-order confirmation. **Hidden risk:** stale topology, hidden consumer, or validation before final edit. **Required professional action:** reconcile graph/memory/trajectory against current source and validators. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`. **Evidence required:** inspected paths, accepted/rejected memory, validation freshness.
 
 # Risk Escalation Rules
 
-Escalate when jobs affect: **money** (charges, payouts, refunds), **inventory** (over-sell, under-sell), **customer notifications** (emails, SMS, push — duplicate sends are very visible), **data migrations**, **bulk updates** to user data, **external systems** without their own idempotency, **tenant-wide changes**, **irreversible side effects** (deletes, public posts, third-party API calls), runtimes **> 15 min**, **high fan-out** (one job → thousands of effects), **per-tenant billing**, or workflows that span **regulatory boundaries**. Escalate any job whose failure SLO is unknown.
+Escalate when jobs affect money, inventory, identity, customer notifications, tenant-wide data, regulated records, external systems without their own idempotency, irreversible side effects, workflows longer than one deploy window, high fan-out, per-tenant billing, or unknown failure SLOs. Escalate when no owner can be named for DLQ, replay, status, runbook, or compensation.
 
 # Critical Details
 
-Async work fundamentally changes the failure model: **the request may succeed while the job later fails, retries, duplicates, is cancelled, or executes after a code change**. Apply these refinements:
+Async work changes the failure model: the initiating request can succeed while the job later fails, duplicates, times out, is cancelled, or runs after code changes. Apply these checks:
 
-- **Payloads should be durable and minimal.** Pass entity ids + version, not full snapshots, unless snapshot semantics are deliberate. Reason: snapshots go stale; ids re-fetch current state.
-- **Snapshot semantics, when used, must include `snapshot_taken_at` and `payload_schema_version`.** Workers must validate and reject expired or unknown versions explicitly.
-- **The job is not the request.** Acknowledge the request only after the work is **durably enqueued** (in DB outbox or broker with ack). Otherwise you have lost-update bugs on producer-side failure.
-- **Outbox pattern** is the safest producer pattern: write business state + outbox row in one DB transaction; a relay publishes outbox rows to the broker. Avoids dual-write inconsistency.
-- **Status model.** Each business-meaningful job has at least: `pending → running → succeeded | failed | cancelled | timed_out | dead_lettered`. Status is queryable by users/operators where outcomes matter to them.
-- **Cancellation is cooperative.** Workers must check a cancellation signal at safe points; abrupt termination leaves partial state. Define what cancellation guarantees (e.g., "no new external calls after cancel", "in-flight HTTP call completes").
-- **Compensation is a design output, not a runtime hope.** If step 3 of 5 fails, what runs to undo steps 1–2? If it cannot be undone, that is a finding — escalate before shipping.
-- **Poison messages.** A single malformed message must not block the queue. Move to a quarantine queue after N attempts and alert.
-- **DLQ is not a feature; it is a debugging surface.** A DLQ that no one watches is silent failure. Alert on DLQ size > 0 and on age of oldest message.
-- **Bounded concurrency.** Workers must respect downstream concurrency limits (DB connections, external API rate). Unbounded fan-out melts databases and triggers rate-limiting cascades.
-- **Backpressure.** Producers must slow down when queue depth > threshold. Otherwise an outage of consumers becomes a producer-side memory/disk crisis.
-- **Timeouts everywhere.** Per-attempt timeout < total timeout < lease/visibility timeout (the queue's "in-flight" window). If execution exceeds visibility timeout, the queue redelivers and you have concurrent execution of the same job.
-- **Clock skew & scheduling drift.** Cron jobs miss/double-fire across leader elections. Use a distributed scheduler (e.g., quartz with DB lock, K8s CronJob with concurrencyPolicy=Forbid, Temporal schedules).
-- **Versioning of in-flight work.** Code changes during the lifetime of a long-running workflow. Either pin workflows to versions (Temporal patches), or design payloads to be forward-compatible, or drain before deploy.
-- **Replay storms.** A bug that DLQs many messages followed by a fix causing mass replay can melt downstream systems. Replay at rate-limited speed.
-- **Observability minimums.** Tracing across producer → broker → consumer (propagate `traceparent` in message headers). Without it, debugging is hours instead of minutes.
-- **Test for failure, not for happy path.** The acceptance test must simulate duplicate delivery, timeout, cancellation, and downstream failure. Otherwise the failure handling is untested code.
-- **Tenant isolation.** A single noisy tenant must not starve others. Use per-tenant queues, weighted fair-queueing, or per-tenant concurrency caps.
-- **Cost of retries.** Exponential retry of expensive operations (LLM calls, third-party API calls at $0.01/req) can multiply cost during incidents. Budget retry cost.
-
-### Anti-examples
-
-| Anti-pattern | Failure |
-| --- | --- |
-| `fire_and_forget(send_email(user))` from request handler | Lost on restart; no retry; no visibility |
-| Retry without idempotency key on `POST /charge` | Duplicate charges |
-| Retry permanent 4xx | Wastes capacity; hides the bug |
-| Snapshot payload + 3-day retry window + no schema version | Stale data committed days later |
-| One queue handling all jobs of all priorities | Bulk import starves transactional jobs |
-| DLQ with no alert | Silent failure |
-| Worker reads from DB without `SELECT FOR UPDATE` then writes | Lost update under concurrent delivery |
-| Cancellation = `process.kill(pid)` | Partial external effects, no compensation |
-| Workflow versioned by "latest deploy" with in-flight workflows | Replay corruption |
-| Cron with `concurrencyPolicy: Allow` and long-running tick | Drift → 2x concurrent runs → double effects |
+- Durable enqueue is a consistency boundary; "save then publish" without outbox or recovery is a dual-write risk.
+- Ack/commit happens after durable side effects, not before. Otherwise crashes create lost work.
+- Idempotency records must retain results beyond the retry/replay window and reject same key with incompatible payload.
+- Backpressure protects dependencies; producer throttle, per-tenant caps, and bounded worker concurrency are part of correctness.
+- Replays are operational releases. They need rate limits, tenant scoping, idempotency, and observability.
+- Cron needs overlap policy, missed-run policy, time-zone/clock-skew treatment, and last-success heartbeat.
+- Workflow engines reduce orchestration burden but do not make activities, external calls, or compensation automatically idempotent.
+- Cost is a reliability signal: retry storms and backlog drains can multiply paid API, LLM, warehouse, storage, and egress costs.
 
 # Failure Modes
 
-- Worker retries a non-idempotent side effect (charge, email, webhook) and produces duplicate effects visible to customers.
-- Job status is invisible; users keep clicking "submit"; operators cannot answer "did it run?".
-- Payload snapshots become stale; the job commits a decision based on data that has since changed.
-- Permanent validation failure (4xx from downstream) loops through max retries without useful diagnostics; DLQ piles up with the same error.
-- Cancellation stops the worker mid-step; partial external effects remain (e.g., charged but no order, sent webhook but no DB write).
-- DLQ accumulates silently; no alert; failures discovered weeks later from customer complaints.
-- Poison message blocks the entire queue because retry loops forever on parse failure.
-- Worker concurrency unbounded; on incident recovery, queue drains too fast and melts the database.
-- Visibility/lease timeout < actual execution time → same job executed twice concurrently.
-- Schema change to payload + in-flight jobs of old shape → workers crash on deserialization → DLQ flood.
-- Workflow code deployed mid-run; existing workflow replay fails because activity signatures changed.
-- One tenant's bulk operation starves all other tenants' jobs.
-- Saga step succeeds, compensation step fails on rollback → permanent inconsistency, no alarm.
+- Worker retries a non-idempotent charge, email, webhook, or inventory update and creates duplicate customer-visible effects.
+- Request returns success before durable enqueue; producer crashes and the job never exists.
+- Job status is invisible; users retry repeatedly and support cannot answer whether work ran.
+- Payload snapshot is stale after a multi-day retry and commits obsolete data.
+- Permanent validation failure loops through max retries and floods the DLQ with the same defect.
+- Cancellation stops the process mid-step; partial external effects remain with no compensation.
+- DLQ accumulates silently because no alert, triage owner, or oldest-age metric exists.
+- Visibility timeout expires during execution and a second worker runs the same job concurrently.
+- Rolling deploy changes payload or activity code while old work is in flight and replay fails.
+- One tenant's bulk job starves all other tenants or melts a shared dependency during replay.
 
 # Reference Loading Policy
 
-Read `references/checklist.md` only when the change touches queue workers, scheduled jobs, workflow engines, transactional enqueue, duplicate delivery, retries, DLQ/replay, cancellation, compensation, deploy skew, or production job observability. Do not load it for an isolated in-process best-effort task where loss is acceptable and no external side effect exists.
+The `SKILL.md` body carries L1/L2 routing, boundaries, mode selection, output shape, and quality gates. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete job design, worker change, scheduled job, transactional enqueue, retry/DLQ/replay policy, cancellation, compensation, deploy skew, or production observability. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed runtime selection, retry/failure matrices, idempotency trees, scheduling/backfill patterns, observability/runbook matrices, graph-memory-execution coupling, or validation matrices are needed. Use [examples/example-output.md](examples/example-output.md) only when the output shape is unclear. Do not load deep references for isolated best-effort tasks where loss is accepted and no external side effect exists.
 
 # Output Contract
 
 Return an async job design containing:
 
-- `job_name` (stable, unique)
-- `trigger` (event topic / API endpoint / schedule / manual)
-- `runtime` (queue worker / workflow engine / cron / FaaS) with justification vs alternatives
-- `payload_schema` (with `payload_schema_version`, identifiers vs snapshot decision, expiry semantics if snapshot)
-- `idempotency`: key derivation, scope, storage, retention window, replay semantics, conflict behavior
-- `concurrency`: max concurrent attempts, per-tenant cap, downstream rate-limit budget
-- `timeouts`: per-attempt timeout, total deadline, queue visibility timeout (must satisfy per-attempt < visibility)
-- `retry_policy`: classification (transient/permanent/rate-limited/poison), backoff formula (exponential + full jitter), max attempts, max wall-clock
-- `failure_handling`: DLQ destination, quarantine for poison, alert thresholds, runbook link
-- `cancellation`: signal mechanism, safe-point contract, guarantees on partial effects
-- `compensation`: per-step compensators (for multi-step / saga), ordering, idempotency of compensators
-- `status_model`: states, transitions, visibility to users vs operators, query API
-- `observability`: metrics (queue depth, in-flight, success/failure by class, latency p50/p95/p99, retry count, DLQ size, oldest-in-flight age), structured log fields, traces with propagated context
-- `ownership`: owning team, on-call, runbook
-- `tests`: unit (handler logic), integration (queue → handler → side effect), failure-injection (duplicate, timeout, cancellation, downstream fault), load (sustained + spike + backlog drain)
-- `versioning`: payload schema evolution rules, in-flight workflow versioning, deploy/drain strategy
-- `cost_model`: cost per execution × projected volume; retry cost cap
+- `mode_selected` with trigger signal.
+- `boundaries_inspected`: enqueue source, worker code, scheduler/broker config, status store, idempotency store, tests, runbooks, dashboards, registry/routing, and skipped boundaries.
+- `source_evidence`: current source, repository graph, project memory, runbook, dashboard, prior validation, and execution trajectory accepted, rejected, stale, or not verified.
+- `job_name`, `trigger`, `owner`, `runtime`, and alternatives rejected.
+- `payload_schema` with schema version, stable identifiers, tenant/resource scope, snapshot decision, expiry, and compatibility rule.
+- `durable_enqueue`: transaction boundary, outbox/CDC/recovery scan, and request acknowledgement point.
+- `delivery_semantics`: at-most-once, at-least-once, or exactly-once claim plus the idempotency compensation that makes it true.
+- `ack_nack_boundary`: acknowledgement/offset/delete point, crash-before/after behavior, visibility/lease renewal, and poison-message path.
+- `idempotency`: key derivation, scope, storage, TTL/retention, payload conflict behavior, replay semantics, and downstream idempotency proof or residual risk.
+- `concurrency`: max worker concurrency, per-tenant cap, ordering or partition key, downstream rate limit, backpressure, and noisy-tenant isolation.
+- `timeouts`: per-attempt timeout, total deadline, visibility/lease timeout, scheduler interval, cancellation deadline, and renewal behavior.
+- `retry_policy`: failure classes, backoff formula, jitter, max attempts, max wall-clock, terminal state, and retry cost cap.
+- `failure_handling`: DLQ/quarantine, triage fields, alert thresholds, runbook, replay throttle, retention, and owner.
+- `cancellation` and `compensation`: signal mechanism, safe points, guarantees, compensator ordering, and idempotency of compensators.
+- `status_model`: states, transitions, visibility to users/support/operators/dependent systems, and query/API contract.
+- `observability`: metrics, structured log fields, traces, label cardinality, dashboard, alert owner, and last-success heartbeat.
+- `versioning_release`: payload evolution, workflow versioning, rolling deploy/drain strategy, rollback limits, and in-flight compatibility.
+- `cost_capacity_model`: volume, wall-clock window, CPU/RSS, queue/backlog bounds, worker count, replay cost, and retry-storm cost.
+- `job_to_validation_map`: duplicate, transactional enqueue, ack crash, retry, DLQ, replay, cancellation, compensation, deploy skew, status, and observability validation or residual risk.
+- `evidence_limits`: what the evidence proves, what remains unproven, residual owner, and next gate.
 
 # Evidence Contract
 
-An async job design is complete only when the output includes:
+Close an async job design only when these answers are concrete:
 
-- **Job boundary**: enqueue source, worker owner, payload schema, payload version, idempotency key, and tenant/resource scope.
-- **Transactional enqueue**: whether database write and job enqueue are atomic; if not, whether transactional outbox or recovery scan is required.
-- **Delivery semantics**: at-most-once / at-least-once / exactly-once claim and why the implementation actually satisfies it.
-- **Ack/Nack boundary**: when the message is acknowledged and what happens after worker failure before and after ack.
-- **Retry and DLQ policy**: retryable errors, non-retryable errors, backoff, max attempts, poison handling, and DLQ ownership.
-- **Replay procedure**: how failed jobs are safely replayed without duplicate side effects or tenant-boundary violations.
-- **Ordering and concurrency**: partitioning key, ordering guarantees, lock/concurrency assumptions, cancellation behavior.
-- **Deploy skew**: worker version compatibility with old/new payload schema during rolling deploy.
-- **Observability**: job duration, success/failure count, retry count, DLQ depth, last-success heartbeat, and alert owner.
-- **Validation evidence**: duplicate-delivery test, transactional enqueue/outbox test, retry test, DLQ test, replay test, cancellation test, or explicit not-verified disclosure.
-- **What evidence proves**: the inspected job has bounded retries, visible terminal states, owned failure handling, and no silent loss under the tested failure paths.
-- **What evidence does not prove**: unproven concurrency, production queue behavior, clock skew, ordering, or downstream idempotency.
-- **Residual risk**: untested failure mode, owner, and next gate.
+- **Basis:** mode selected, job boundary, trigger, owner, side effects, tenant/resource scope, and why async execution is required instead of synchronous completion.
+- **Current evidence:** source paths, config, status schema, idempotency store, runbooks, dashboards, graph slice, memory signals, and validation trajectory inspected with freshness status.
+- **Lifecycle judgment:** durable enqueue, delivery semantics, ack/nack, retry/DLQ, replay, ordering/concurrency, cancellation, compensation, deploy skew, observability, and cost/capacity decisions.
+- **Validation evidence:** commands, tests, fixtures, reports, or explicit not-run disclosures mapped to duplicate delivery, enqueue atomicity, retry exhaustion, DLQ, replay, cancellation, compensation, status visibility, and stale-validation repair.
+- **What evidence proves / does not prove:** bounded retries, visible terminal states, owned recovery, and tested failure paths; plus unproven production broker behavior, clock skew, ordering, downstream idempotency, replay scale, or tenant skew.
+- **Handoff and residual risk:** unresolved queue topology, retry math, transaction consistency, security/privacy, performance budget, release rollback, or observability readiness assigned to the next gate with owner.
 
 # Quality Gate
 
 The job design passes only when:
 
-1. Duplicate delivery, retry exhaustion, timeout, cancellation, partial failure, and poison message **each have defined outcomes** with diagnostics.
-2. Idempotency is proven (natural idempotence demonstrated, or key + storage + replay semantics specified and tested).
-3. Visibility/lease timeout > per-attempt timeout + safety margin; lease renewal is documented for long jobs.
-4. DLQ has an owner, an alert, and a triage runbook.
-5. Status is queryable by anyone who needs to know (users, support, operators).
-6. Tracing context propagates producer → broker → consumer.
-7. Cost-at-scale modeled, including retry-storm cost.
-8. Failure-injection tests exist and pass.
-9. Compensation, where required, is implemented and tested — not deferred.
-10. Concurrency caps protect downstream dependencies.
+1. Duplicate delivery, retry exhaustion, timeout, cancellation, partial failure, poison message, replay, and deploy skew each have defined outcomes with diagnostics.
+2. Durable enqueue is atomic with source state or has an explicit outbox/CDC/recovery scan and residual risk.
+3. Idempotency is proven by natural idempotence, conditional write, key/store/replay semantics, or explicit non-retryable restriction.
+4. Ack/commit/delete happens after durable side effects, and crash-before/after behavior is stated.
+5. Visibility/lease timeout exceeds per-attempt timeout with safety margin, or renewal is implemented for long jobs.
+6. Retry policy is bounded, jittered, failure-classified, and cost-aware.
+7. DLQ/quarantine has owner, alert, triage fields, retention, runbook, and replay throttle.
+8. Status is queryable by the humans or systems that need it.
+9. Cancellation and compensation are implemented and tested where side effects can partially commit.
+10. Concurrency caps, backpressure, and tenant/resource isolation protect downstream dependencies.
+11. Trace context propagates producer -> broker/scheduler -> worker, with bounded metric labels.
+12. Payload schema/version and deploy strategy protect in-flight work during rolling releases.
+13. Cost and capacity are modeled for projected volume, backlog drain, and retry storm.
+14. Job-to-validation map covers success plus failure-injection paths or names not-verified residual risk.
+15. Graph, memory, runbook, generated report, and prior validation claims are reconciled against current source and post-edit command order.
+
+# Benchmark Coverage
+
+This capability covers async job lifecycle, durable enqueue, idempotency, retry/DLQ/replay, ack/nack, status visibility, cancellation, compensation, workflow versioning, cron/backfill/reconciliation safety, production observability, cost/capacity, graph-memory-trajectory freshness, and validation mapping. It does not by itself prove broker provisioning, event schema compatibility, API UX, migration rollout, or production readiness without the companion gates selected above.
+
+# Routing Coverage
+
+Routes from `backend-change-builder`, `data-middleware-change-builder`, `reliability-observability-gate`, `service-business-logic`, `interaction-state-modeling`, `user-flow-modeling`, `concurrency-control`, `transaction-consistency`, and `change-forge-router` should arrive here when background execution lifecycle and recovery behavior are primary. Route away when queue topology, event fact contract, duplicate-key math, API transport, migration sequencing, performance budget, or release rollout is the primary decision.
 
 # Used By
 
@@ -223,8 +184,8 @@ The job design passes only when:
 
 # Handoff
 
-Hand off to `idempotency-retry-design` for repeated side-effect math; `message-queue-design` for queue topology and broker specifics; `event-driven-architecture` for broker/event-flow design; `logging-error-handling` for diagnostic context standards; `data-migration-design` for backfill jobs; `degradation-circuit-breaking` for downstream protection; `observability` and `reliability-observability-gate` for SLO and alerting acceptance; `security-privacy-gate` when payloads contain sensitive data.
+Hand off to `idempotency-retry-design` for repeated side-effect math; `message-queue-design` for queue topology, partitioning, ack/offset configuration, and broker specifics; `domain-event-modeling` for durable fact semantics; `event-driven-architecture` for multi-service event flow; `logging-error-handling` for diagnostic context standards; `data-migration-design` for migration/backfill sequencing; `transaction-consistency` for outbox and saga consistency; `performance-budgeting` for wall-clock, CPU/RSS, queue, and cost budgets; `observability` and `reliability-observability-gate` for SLO and alerting acceptance; `security-privacy-gate` when payloads contain sensitive data or broad machine identity.
 
 # Completion Criteria
 
-The capability is complete when the job can run asynchronously with **safe retries, visible status, bounded failure behavior, recoverable partial failure, tested cancellation/compensation, propagated tracing, owned DLQ, and bounded cost at projected volume** — and when an on-call engineer can diagnose and recover from a failure at 02:00 using only the runbook and the emitted observability.
+The capability is complete when the job can run asynchronously with durable enqueue, safe retries, visible status, bounded failure behavior, recoverable partial failure, tested cancellation/compensation, deploy-skew compatibility, propagated tracing, owned DLQ/replay, and bounded cost at projected volume - and when an on-call engineer can diagnose and recover from a failure using the runbook and emitted observability.

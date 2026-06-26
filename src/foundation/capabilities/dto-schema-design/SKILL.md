@@ -9,180 +9,177 @@ changeforge_version: 0.1.0
 
 # Mission
 
-Design DTO (Data Transfer Object) schemas that serve as **explicit, versioned, stable transfer contracts** — decoupling external API, event, and integration surface shapes from internal domain models and persistence layers — with precisely specified field types, nullability semantics, validation rules, default values, serialization formats, mapping strategies, and forward-backward compatibility rules.
+Design DTO schemas as explicit, versioned, stable transfer contracts that decouple external API, event, form, SDK, view-model, and integration shapes from internal domain and persistence models. A DTO contract must define field types, nullability, absent/default semantics, validation, serialization, mapping ownership, compatibility, security/privacy filtering, and validation evidence without leaking ORM, database, generated-client, or domain internals.
 
 # When To Use
 
-Use this capability when a change: adds or modifies request body or response body schemas for HTTP or gRPC endpoints; designs Protobuf message types or Avro schemas for event payloads; defines form submission models or query parameter DTOs; creates view models or projection DTOs for read-side CQRS queries; establishes DTO-to-domain-object mapping logic (assemblers, converters, mappers); updates field names, types, required/optional status, validation constraints, or nullability; plans schema evolution for a DTO that has existing consumers; designs error response DTOs per RFC 7807 / RFC 9457.
+Use this capability when a change adds or modifies request bodies, response bodies, query parameter objects, form submission models, SDK/public types, Protobuf messages, Avro/JSON schemas, event payload fields, view models, projection DTOs, error response payloads, generated client models, DTO-to-domain mappers, null/default behavior, field names, field types, enum values, validation constraints, or schema evolution for existing consumers.
 
 # Do Not Use When
 
-Do not use this capability to expose internal ORM entities, database row objects, Hibernate/ActiveRecord models, SQLAlchemy models, or JPA entities as API response types. Internal models have different lifecycles, contain persistence metadata, and leak schema details. Do not use it to design the domain object itself — domain invariants, business rules, and aggregate identity belong in domain model design, not DTO design.
+Do not use this capability to design the domain object, source-of-truth persistence model, endpoint operation semantics, transport retry behavior, or error taxonomy by itself. Do not expose ORM entities, database rows, ActiveRecord/Hibernate/JPA/SQLAlchemy models, generated provider models, or internal aggregate objects as DTOs. Route to `data-model-design` for stored data shape, `api-contract-design` for endpoint behavior, `error-code-design` for error taxonomy, `domain-event-modeling` for durable event facts, and `model-boundary-mapping` when DTO/domain/persistence ownership is unclear.
+
+# Stage Fit
+
+Use during planning when a DTO, schema, field, null/default rule, generated model, or consumer contract is being introduced or changed. Use during coding and refactoring review when mappers, assemblers, serializers, request validators, generated clients, SDK exports, or DTO/domain/persistence boundaries change. Use during bug-fix, debugging, testing, code-review, and release when mass assignment, null-vs-absent behavior, enum compatibility, sensitive-field exposure, or rollback/client skew needs evidence. Hand off when operation semantics, stored data, release sequencing, security review, or consumer contract tests become the primary decision.
 
 # Non-Negotiable Rules
 
-- **DTOs decouple external contract from internal model.** A DTO change must never be forced by a database migration alone. A domain model rename must never automatically propagate to the public API. The DTO is the stability boundary between the outside world and internal implementation.
-- **Request DTOs must validate and block before reaching domain logic.** Input validation on request DTOs is a security boundary. Allowlist all expected fields. Reject unknown fields with 400. Prevent mass assignment: never auto-bind all incoming fields to domain commands without explicit field allowlisting. OWASP API3:2023 Broken Object Property Level Authorization is directly caused by mass-assignment in request binding.
-- **`additionalProperties: false` on request schemas; `additionalProperties: true` on response schemas.** Strict input: reject unexpected properties. Permissive output: consumers must ignore unknown fields for forward compatibility (Postel's Law applied at schema level).
-- **Four null states are distinct contract states; all must be specified.** For every field: (1) **Present with value** — field included with a non-null value; (2) **Present as `null`** — field included explicitly as JSON `null`; (3) **Absent** — field not included in the object at all; (4) **Present as empty** (`""`, `[]`, `{}`) — field present but empty. Each state means something different to clients. Ambiguity causes bugs. Document all four states or prove they are equivalent for the field.
-- **Required and optional are semantic, not technical, distinctions.** Required = the meaning of the DTO cannot be determined without this field. Optional = the field provides additional context but the DTO is valid without it. Do not mark fields optional to avoid validation; optional fields still need a documented absence semantic.
-- **Field names follow one consistent convention per serialization format.** JSON → `camelCase` (per JS convention; confirmed by majority of public APIs). Protobuf 3 → `snake_case` (per Language Guide). Avro → `camelCase` (per convention). GraphQL → `camelCase`. SOAP/XML → `PascalCase`. Never mix conventions within one DTO schema. Rename requires a versioning plan, not an ad hoc change.
-- **Schema versioning is additive-only for minor versions.** Allowed without a new version: add optional fields with default values; add new enum members (consumers must handle unknown enum values). Not allowed without a version bump: remove fields; rename fields; change a field's type; change a field from optional to required; change enum member meaning. Breaking changes require a new versioned DTO class or a new API version, not an in-place mutation.
-- **Derived and computed display values belong in response DTOs, not domain objects.** A response DTO may include `displayName`, `formattedTotal`, `statusLabel` — values computed from domain data for UI consumption. These are DTO concerns, not domain concerns. Domain objects return raw facts; DTOs format for consumers.
+- **DTOs are contract boundaries, not internal models.** A database migration, ORM rename, or domain refactor must not automatically rename or expose DTO fields.
+- **Request DTOs validate before domain logic.** Allowlist every accepted field, reject unknown request fields, and never spread/autobind request bodies into commands or domain objects.
+- **Null, absent, empty, and defaulted are different states.** For each nullable or optional field, specify whether `null`, missing, empty string/list/object, and default value mean clear, no-op, unknown, not-applicable, or zero-content.
+- **Required and optional are semantic decisions.** Required means the DTO cannot be interpreted without the field. Optional fields still need absence semantics, examples, and compatibility rules.
+- **Serialization format drives field conventions.** JSON and GraphQL normally use `camelCase`; Protobuf uses `snake_case`; XML/SOAP may use `PascalCase`. Mixed conventions in one DTO require a migration rationale.
+- **Field types must be exact enough for the risk.** Money uses decimal string or minor-unit integer plus ISO 4217 currency, datetimes use RFC 3339/ISO 8601 UTC, identifiers use stable opaque ids, and enums document unknown handling.
+- **Schema evolution is compatibility-first.** Add optional fields safely; treat removal, rename, type change, optional-to-required, validation tightening, and semantic change as breaking until proven otherwise.
+- **Sensitive and permission-dependent fields are explicit.** Tenant, object, role, permission, PII, financial, health, token, or audit fields need allowed consumers, redaction/filtering, and denied-case validation.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+| --- | --- | --- | --- | --- | --- |
+| New DTO contract | New request, response, event payload, form, SDK type, generated model, or view model. | Define field semantics, validation, mapping owner, examples, compatibility, and contract tests before implementation. | Schema convention, consumer/use case, field table, mapper owner, examples, validation command. | `api-contract-design`, `input-validation`, `contract-testing` | Storage schema and endpoint semantics unless they are changing. |
+| Existing DTO evolution | Field added, removed, renamed, retyped, made required, defaulted, deprecated, or semantically changed. | Preserve old clients, generated clients, validation behavior, rollback, and mixed-version safety. | Old/new schema diff, consumer inventory, compatibility class, migration/deprecation plan. | `version-compatibility`, `consumer-impact-analysis`, `quality-test-gate` | In-place breaking edit without bridge/version. |
+| Boundary separation repair | ORM/domain/generated/provider model leaks into request, response, SDK, or view model. | Reassert DTO/domain/persistence/event boundaries and mapping ownership. | Source/target model map, internal/public field split, mapper/assembler placement, behavior preservation. | `model-boundary-mapping`, `data-model-design`, `implementation-structure-design` | Returning entity rows as DTOs. |
+| Validation and error payload | Request validation, field constraints, RFC 7807/9457 problem details, or invalid-shape handling changes. | Make validation enforceable and client-actionable without leaking internals. | Constraint table, unknown-field behavior, error DTO, negative examples, validator output. | `error-code-design`, `input-validation`, `security-privacy-gate` | Generic string errors. |
+| Sensitive or permissioned DTO | Tenant, object, role, scope, PII, financial, health, audit, credential, or privileged fields appear. | Minimize fields, protect object authorization, and prove denied exposure paths. | Data classification, allowed consumers, redaction/filtering rule, denied test or not-verified risk. | `security-privacy-gate`, `permission-boundary-modeling` | Convenience exposure of internal fields. |
+| Generated schema or SDK surface | OpenAPI, Protobuf, Avro, GraphQL, JSON Schema, SDK, or public export is generated or diffed. | Keep source schema, generated artifacts, and downstream compile/contract checks aligned. | Schema path, generator command, generated diff, reserved fields/numbers, contract test. | `sdk-library-contract-design`, `contract-testing`, `version-compatibility` | Manual DTO edits that drift from generated source. |
 
 # Industry Benchmarks
 
-Anchor against: **OpenAPI 3.1.0** — `requestBody.content.application/json.schema` (request DTOs) and `responses.200.content.application/json.schema` (response DTOs); `required` array for required fields; `nullable: true` for nullable; `additionalProperties: false` for strict input. **JSON Schema Draft 2020-12** — `$schema`, `properties`, `required`, `additionalProperties`, `type`, `format`, `examples`, `$ref`. **Protobuf 3** — `message`, `field` labels (`optional`, `repeated`); `google.protobuf.Timestamp` for datetime; field number stability is a binary contract; do not reuse field numbers. **Apache Avro** — `"type": ["null", "string"]` union for nullable; `"default": null` for optional fields; schema fingerprint for registry lookup. **RFC 7807 / RFC 9457** — Problem Details for HTTP APIs: `type` (URI), `title`, `status`, `detail`, `instance`; JSON media type `application/problem+json`; error DTOs must follow this standard. **gRPC / google.rpc.Status** — `code`, `message`, `details[]`; error detail types per `google.rpc.ErrorInfo`, `BadRequest`, `QuotaFailure`. **Zalando RESTful API Guidelines** — must-have: `required` fields array explicit; nullable fields explicit; `additionalProperties` declared. **Google AIP-140** — field naming guidelines: use plain names, not type suffixes (`order` not `orderObject`); avoid abbreviations. **OWASP API3:2023** — Broken Object Property Level Authorization; mass assignment must be blocked by explicit field allowlist in request DTOs. **OWASP API8:2023** — Security Misconfiguration; avoid exposing internal stack traces or model details in error DTOs. **Consumer-Driven Contract Testing (Pact v4)** — consumer tests define what fields they use from a response DTO; producer must satisfy all registered consumer expectations. **Postel's Law** — "be conservative in what you send, be liberal in what you accept" — applies to schema strictness direction.
-
-### Four Null States Decision Table
-
-| State | JSON representation | When to use | Consumer behavior |
-| --- | --- | --- | --- |
-| Present with value | `"field": "value"` | Normal case | Use the value |
-| Present as `null` | `"field": null` | Explicit absence / cleared value | Treat as cleared; distinct from not-set |
-| Absent (missing) | (field not in object) | Unknown / not applicable | Use default or treat as not-set |
-| Present as empty | `"field": ""` or `"field": []` | Empty collection or empty string | Treat as zero-content; distinct from null |
-
-### Field Type Selection Matrix (JSON/OpenAPI)
-
-| Data type | OpenAPI type + format | Notes |
-| --- | --- | --- |
-| Integer (64-bit) | `type: integer, format: int64` | Use `int64`; `int32` for known-small values |
-| Decimal money | `type: string, format: decimal` or `type: number` | String preferred for exactness; avoid float for money |
-| Boolean | `type: boolean` | Never `0`/`1` or `"true"`/`"false"` string |
-| ISO 8601 datetime (UTC) | `type: string, format: date-time` | `2024-01-15T09:30:00Z`; include timezone |
-| Date only | `type: string, format: date` | `2024-01-15`; no time component |
-| UUID identifier | `type: string, format: uuid` | `"3fa85f64-5717-4562-b3fc-2c963f66afa6"` |
-| Enum | `type: string, enum: [...]` | Add `x-extensible-enum` note for forward-compat |
-| Binary/file | `type: string, format: byte` (base64) | For small payloads; prefer multipart for large |
-| Nested object | `$ref: '#/components/schemas/...'` | Named schema; reusable; avoid inline anonymous |
-| Array | `type: array, items: {$ref: ...}` | Declare `minItems`/`maxItems` where bounded |
-
-### DTO-to-Domain Mapping Rules
-
-```
-Request DTO → Command (or Use Case Input):
-  1. Validate request DTO (input validation — BEFORE mapping)
-  2. Explicitly allowlist fields for mapping; reject all others
-  3. Apply DTO-level defaults (not domain defaults)
-  4. Map: RequestDTO → Command/UseCase input (pure data transfer; no logic)
-  5. Invoke domain: domainService.handle(command)
-  NO: commandHandler.handle(requestDTO)   ← DTO leaks into domain
-
-Domain Object → Response DTO:
-  1. Extract domain facts needed by consumer
-  2. Compute display values (format, localize, derive) in assembler
-  3. Apply response DTO field selection (projection) based on consumer needs
-  4. Return ResponseDTO with all fields explicitly assigned
-  NO: return entity;   ← domain object leaks to API layer
-
-Anti-pattern (mass assignment):
-  const command = { ...requestDTO };   // ← assigns ALL fields including hidden ones
-  
-Correct pattern (explicit allowlist):
-  const command = {
-    userId: requestDTO.userId,
-    amount: requestDTO.amount,
-    currency: requestDTO.currency,
-  };  // ← only declared fields; nothing else reaches domain
-```
-
-### Schema Compatibility Classification
-
-| Change | Compatible? | Version action required |
-| --- | --- | --- |
-| Add optional field with default | ✅ Backward-compatible | None (existing consumers unaffected) |
-| Add new enum value | ✅ Forward-compatible | Consumers must handle unknown enum |
-| Remove optional field | ❌ Breaking | New major version; deprecation period |
-| Remove required field | ❌ Breaking | New major version |
-| Rename field | ❌ Breaking | New major version; alias old name in transition |
-| Change field type (e.g., `int` → `string`) | ❌ Breaking | New major version |
-| Make optional field required | ❌ Breaking | New major version |
-| Change field semantics (same name, new meaning) | ❌ Breaking — most dangerous | New field name; do not reuse |
-| Add new `required` field to request DTO | ❌ Breaking for existing clients | New version or feature-flag |
-| Change validation constraint (min/max length) | ⚠️ Potentially breaking | Coordinate with consumers |
+Anchor against OpenAPI 3.1 and JSON Schema 2020-12 for request/response schemas, RFC 7807/9457 for error DTOs, Protobuf 3 field-number stability, Avro unions/defaults and schema registry compatibility, GraphQL SDL and generated clients, Google AIP field guidance, OWASP API3/API8 for mass assignment and internal-detail exposure, consumer-driven contract testing, and Postel-style forward compatibility for response readers. Keep this body focused on selection, evidence, output, and quality gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed null-state, type, mapping, compatibility, generated-artifact, privacy, graph-memory-trajectory, and validation matrices.
 
 # Selection Rules
 
-Select this capability when **field-level transfer schema design** is the primary concern. Adjacent routing:
+Select this capability when **field-level transfer schema design** is primary. Adjacent routing:
 
-- Prefer `api-contract-design` when endpoint semantics, HTTP methods, status codes, or operation behavior are primary.
-- Prefer `data-model-design` when the source-of-truth storage schema (tables, collections, indexes) is primary.
-- Prefer `domain-event-modeling` when the DTO is an event payload that crosses service boundaries with durability requirements.
-- Prefer `error-code-design` when validation error response shape and error code taxonomy are primary.
-- Prefer `version-compatibility` when schema evolution across multiple producers and consumers over time is the main concern.
-- Prefer `contract-testing` when consumer-driven contract enforcement for existing DTOs is the focus.
+- Prefer `api-contract-design` when endpoint behavior, HTTP/gRPC operation semantics, status codes, pagination, idempotency, or auth requirements are primary.
+- Prefer `data-model-design` when the source-of-truth persistence model, invariants, relationships, or lifecycle states are primary.
+- Prefer `domain-event-modeling` when the DTO is a durable domain or integration event fact.
+- Prefer `error-code-design` when client-facing error taxonomy and remediation are primary.
+- Prefer `version-compatibility` when mixed-version rollout, rollback, deprecation, generated-client impact, or unknown consumers dominate.
+- Prefer `contract-testing` when executable provider/consumer verification is the main work.
 
 # Risk Escalation Rules
 
-Escalate when: a DTO field change is in a public API consumed by mobile apps (long upgrade cycle — breaking changes stranded in production for months); a DTO exposes sensitive fields that authorization logic should filter; a field changes meaning but keeps its name (semantic drift — silent corruption risk); a shared DTO is consumed by both external clients and internal services with different schema evolution windows; a response DTO computed value (derived field) depends on business logic that belongs in the domain.
+Escalate when a DTO is public, partner-facing, mobile-facing, generated into SDKs, event-carried, permission-sensitive, tenant-scoped, PII/financial/health-bearing, used for mutating commands, or consumed by unknown clients. Escalate when null/absent behavior changes PATCH semantics, an enum expands without unknown handling, a required field is added, a field meaning changes without rename/versioning, an internal persistence field leaks, a generated artifact is stale, or prior memory claims consumers are absent without current source and telemetry evidence.
+
+# Proactive Professional Triggers
+
+- **Signal:** controller, handler, mapper, or client returns an entity, row, provider model, or generated internal type. **Hidden risk:** persistence or provider internals become a public contract. **Required professional action:** define DTO boundary and explicit mapper. **Route to:** `model-boundary-mapping`, `data-model-design`. **Evidence required:** source/target field map and rejected direct exposure.
+- **Signal:** request binding spreads or auto-binds all incoming fields. **Hidden risk:** mass assignment, object-property authorization bypass, and unvalidated domain mutation. **Required professional action:** require allowlisted mapping and strict unknown-field handling. **Route to:** `input-validation`, `security-privacy-gate`. **Evidence required:** request schema, mapper snippet or test, denied unknown-field case.
+- **Signal:** nullable/optional/defaulted field lacks null, absent, empty, and default semantics. **Hidden risk:** PATCH, form, mobile, and generated-client behavior diverge silently. **Required professional action:** write the four-state semantic table. **Route to:** `version-compatibility`, `quality-test-gate`. **Evidence required:** examples and validation/mapping cases.
+- **Signal:** field is renamed, removed, retyped, made required, validation-tightened, or given new meaning. **Hidden risk:** old clients, SDKs, and stored fixtures break even if local code passes. **Required professional action:** classify compatibility and choose version, bridge, or deprecation. **Route to:** `consumer-impact-analysis`, `contract-testing`. **Evidence required:** old/new diff, consumer inventory, contract proof or residual risk.
+- **Signal:** schema or generated client is referenced from project memory, repository graph, or prior trajectory without current source check. **Hidden risk:** stale generated artifacts or hidden consumers make the DTO contract wrong. **Required professional action:** confirm current schema, generated files, callers, tests, and reports. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected memory, freshness limits.
+- **Signal:** DTO includes tenant, object, role, permission, PII, financial, health, token, or audit fields. **Hidden risk:** over-exposure, IDOR, or privacy breach through a stable contract. **Required professional action:** classify data, minimize fields, and require object/consumer authorization. **Route to:** `security-privacy-gate`, `permission-boundary-modeling`. **Evidence required:** allowed consumers, redaction/filtering rule, denied-case validation.
 
 # Critical Details
 
 DTO stability is a client contract commitment. Precision failures:
 
-- **Mass assignment vulnerability.** Auto-binding all request fields to a domain command without an allowlist allows an attacker to supply `isAdmin: true`, `role: "superuser"`, or `price: 0.01` in a request body and have it accepted. OpenAPI `additionalProperties: false` + explicit mapping per field is the defense. Never use spread-assignment from request DTO to command.
-- **Null vs. absent semantic confusion.** A mobile client sends `"address": null` to clear a user's address. A web client omits `"address"` entirely to "not change" it. If the backend treats both as "clear address," the web client inadvertently clears it on every update. The PATCH semantics must be documented: null = clear; absent = no-op. This must be in the DTO schema contract, not just developer knowledge.
-- **Decimal precision loss.** `"amount": 10.35` in JSON is a floating-point literal. IEEE 754 double precision cannot represent 10.35 exactly. For currency, prices, or financial calculations, use `type: string, format: decimal` (`"amount": "10.35"`) or integer minor units (`"amountCents": 1035`). Never use `number` for money.
-- **Enum forward-compatibility.** A consumer that switches on enum values and throws on unknown will break when the producer adds a new enum member. All consumers must have a default/fallback case for unknown enum values. Response DTOs using enums must document this requirement explicitly.
-- **Circular reference in nested DTOs.** A DTO that contains itself (directly or indirectly) causes infinite serialization recursion. Schemas with circular references need explicit depth limits or reference-by-ID instead of full nesting at depth > 2.
-- **Protobuf field number reuse.** In Protobuf 3, each field is identified by its number, not its name. If field `3` was `string email`, removing it and later adding `int64 userId` as field `3` causes binary deserialization corruption for consumers holding old messages. **Never reuse Protobuf field numbers.** Reserve removed field numbers: `reserved 3;`.
+- **Mass assignment vulnerability.** `const cmd = { ...req.body }` lets an attacker send fields such as `isAdmin`, `role`, or `price` unless every field is allowlisted and unknown fields are rejected.
+- **Null vs absent confusion.** In PATCH, `null` may mean clear, while absent may mean no change. Treating both the same can erase data or block valid updates.
+- **Decimal precision loss.** JSON `number` is unsafe for money. Use decimal string or integer minor units plus currency.
+- **Enum forward compatibility.** Consumers that exhaustively switch without default handling can fail when a response adds a valid enum value.
+- **Generated contract drift.** Editing DTO code while OpenAPI/proto/GraphQL sources or generated clients stay stale makes validation lie.
+- **Business logic in assemblers.** Response DTOs can format or select fields, but tax, permission, lifecycle, and pricing decisions belong in domain/service policy.
+- **Circular DTO nesting.** Recursive DTO graphs need depth limits or id references; otherwise serializers can recurse indefinitely.
+- **Protobuf field number reuse.** Removed field numbers must be reserved. Reusing a number corrupts binary compatibility.
 
 ### Anti-examples
 
 | Anti-pattern | Failure |
 | --- | --- |
-| `return entity` from controller | Internal model exposed; DB column changes break API |
-| `const cmd = { ...req.body }` | Mass assignment; attacker supplies `isAdmin: true` |
-| `"amount": 10.35` (float) for money | `10.34999999999999929` in some parsers; financial calculation error |
-| Nullable field undocumented: is `null` same as absent? | Client guesses; PATCH semantics broken |
-| Enum `status: "ACTIVE"` — new value `"PENDING"` added without versioning note | Consumer `switch` falls to no-op; feature silently broken |
-| Response DTO computed field containing business rule | Domain logic in DTO layer; calculation drifts between API and domain |
-| Protobuf field number 5 removed, then reused for new field | Binary deserialization corruption for message consumers with stale schema |
-| `additionalProperties` not declared on request DTO | Unknown fields silently passed through; OWASP API3 mass-assignment risk |
+| `return entity` from controller | Internal model exposed; storage rename breaks clients |
+| `{ ...req.body }` into command | Mass assignment and object-property authorization bypass |
+| Money as `number` | Rounding error and reconciliation drift |
+| Nullable field with no absent/null semantics | PATCH behavior differs across clients |
+| New enum value with no unknown handling | Strict clients reject or ignore valid responses |
+| Response assembler owns tax or permission calculation | Domain rule drift between display and execution |
+| Protobuf field number removed then reused | Old messages deserialize as the wrong field |
+| Request DTO accepts undeclared fields | Hidden fields pass through validation boundary |
 
 # Failure Modes
 
-- Mass assignment: attacker sends `role: "admin"` in profile update request; backend auto-binds it; privilege escalation.
-- Internal DB column `created_by_user_id` exposed in response DTO; frontend accidentally uses it for authorization; internal ID becomes a client dependency.
-- `amount` serialized as float; `19.99` becomes `19.989999999999998`; invoice total displays incorrectly; customer dispute.
-- PATCH endpoint: omitting a field treated as "clear" instead of "no change"; user updates phone number and loses address because it was not included in PATCH body.
-- New enum value `SUSPENDED` added without consumer notification; consumer switch-statement has no default; account status silently ignored; suspended users retain access.
-- Protobuf field 7 removed and reused; consumers that stored old binary messages deserialize wrong data type; crash on read.
-- Required field `currency` added to payment request DTO without version bump; existing clients stop working; 422 errors in production.
-- Response DTO assembler contains tax calculation logic; tax rate logic differs from domain service; inconsistency between display total and processed total.
-- Circular DTO nesting: `Order → LineItems → Order`; serializer stack overflow in production on large orders.
+- Profile update accepts `role: "admin"` because request DTO is auto-bound to a domain command.
+- ORM field `created_by_user_id` leaks into response and becomes a client dependency.
+- `amount: 19.99` is parsed imprecisely and invoice totals differ across systems.
+- Mobile client sends missing address to mean no-op, but server treats missing as clear.
+- Enum value `SUSPENDED` is added and old generated client throws on unknown.
+- Required `currency` is added to a payment request without a new version; deployed clients receive 422.
+- OpenAPI schema is updated but generated TypeScript SDK is stale; consumers compile against the old shape.
+- Response DTO includes internal tenant/object ids without permission filtering.
+- Protobuf field number is reused and old stored binary messages deserialize incorrectly.
+- Project memory says no consumers, but current repository contains a generated SDK and a dashboard fixture using the field.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 DTO selection, boundary, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete DTO schema, field change, mapper, validation rule, generated artifact, or consumer contract. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when null/default semantics, type selection, DTO-to-domain mapping, compatibility classification, Protobuf/Avro/OpenAPI/GraphQL details, privacy filtering, graph-memory-trajectory coupling, or validation matrices are needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or metadata-only edits with no DTO contract decision.
 
 # Output Contract
 
 Return a DTO schema contract with:
 
-- `dto_name` and `purpose` (request / response / event payload / error / view model)
-- `fields` table: name, type (OpenAPI type + format), required/optional, nullable Y/N, default value, validation constraints, serialization format, semantics description
-- `null_vs_absent_semantics` (documented per nullable/optional field)
-- `additionalProperties` policy (request: `false`; response: `true`)
-- `validation_rules` (per-field: minLength, maxLength, pattern, enum values, format, cross-field constraints)
-- `mapping_spec` (DTO → domain command or domain object → DTO; explicit field allowlist)
-- `compatibility_classification` (for each field change: backward-compatible / breaking / requires-version-bump)
-- `schema_version` (current; OpenAPI version indicator or Avro/Protobuf schema registry entry)
-- `derived_fields` (computed values in response DTO; computation rule documented)
-- `examples` (at least: happy path, null fields, empty collections, validation error, boundary values)
-- `consumer_contract_tests` (Pact / buf breaking / oasdiff reference)
+- `mode_selected` (new DTO contract, existing DTO evolution, boundary separation repair, validation and error payload, sensitive/permissioned DTO, generated schema or SDK surface)
+- `boundaries_inspected` (schema files, generated artifacts, DTO classes, mappers, validators, API docs, consumers, tests, registry/config, and prior memory accepted or rejected)
+- `source_evidence` (current-source observations that prove the DTO shape, consumers, generated artifacts, and mapper behavior)
+- `graph_memory_trajectory_judgment` (accepted, rejected, or not verified claims about consumers, field semantics, generated artifacts, prior validation, or ownership)
+- `dto_name`, `direction`, `purpose`, `owner`, and `contract_surface` (request, response, event payload, error, form, SDK type, view model)
+- `fields` (name, type/format, required/optional, nullable, absent semantics, empty semantics, default, validation, example, sensitivity, read/write mode, semantics)
+- `additional_properties_policy` (request strictness, response forward-compatibility, and unknown-field behavior)
+- `validation_rules` (field and cross-field constraints, unknown field handling, validation error mapping)
+- `mapping_spec` (DTO to command/domain/persistence/view/event mapping with allowlisted fields and mapper owner)
+- `compatibility_classification` (per field and per DTO: additive, conditional, breaking, bridge/version/deprecation needed)
+- `schema_version_and_source` (OpenAPI/JSON Schema/proto/Avro/GraphQL location, registry/generator, generated-client impact)
+- `examples` (happy path, null, absent, empty, default, boundary, invalid, sensitive-field-filtered, old/new compatibility)
+- `consumer_contract_tests` (Pact, OpenAPI validator, Schemathesis, buf breaking, schema registry, generated-client compile, fixture replay, or residual risk)
+- `changed_dto_to_validation_map` (each field, mapper, validation rule, generated artifact, consumer class, privacy rule, and compatibility path mapped to validation)
+- `reuse_and_placement_rationale` (existing schema/DTO/mapper/generator reused or rejected; why no internal model or new shared abstraction was exposed)
+- `behavior_preservation` (old DTO shape, old clients, old generated artifacts, old validators, old mappers, and rollback behavior preserved or migrated)
+- `validation_evidence` (commands, validators, reports, fixtures, artifacts, exit codes, or not-verified disclosure)
+- `handoff_boundaries` (API operation, data model, error taxonomy, compatibility, security, contract testing, release, docs)
+- `evidence_limits` (unknown consumers, stale generated clients, unqueried telemetry, untested rollback, unverified privacy filtering, and residual risk owner)
+
+# Evidence Contract
+
+Close a DTO schema design only when these answers are concrete:
+
+- **Boundaries inspected:** name schema files, DTO classes, mappers, validators, generated clients, API docs, consumers, tests, registry/config, and prior memory checked. If no implementation exists, say so.
+- **What evidence proves:** state which current-source facts prove field semantics, null/default behavior, validation, mapping, compatibility, generated artifacts, consumers, and sensitive-field filtering.
+- **What evidence does not prove:** call out unknown consumers, untested generated-client languages, production telemetry gaps, stale project memory, mobile/partner skew, rollback, or privacy paths not inspected.
+- **Validation evidence:** include command names, validators, reports, fixture names, artifacts, exit code/result, and freshness after the final edit.
+- **Reuse / placement rationale:** identify the existing schema, DTO, mapper, generator, or contract reference reused and the rejected internal-model exposure or speculative shared abstraction.
+- **Behavior preservation:** state how old DTO fields, old clients, old generated artifacts, old validators, old mappers, and rollback behavior remain valid or are migrated.
+- **Residual risk:** name remaining compatibility, privacy, validation, generated-client, consumer, or mapping risk and owner.
+- **Next gate:** route unresolved operation behavior, storage model, error taxonomy, compatibility rollout, security/privacy, contract tests, release, or docs to the correct gate.
+
+# Benchmark Coverage
+
+This capability covers field-level contract design, serialization formats, four-state null/default semantics, request strictness, response forward compatibility, DTO/domain/persistence/event boundary separation, validation and error mapping, generated schema alignment, sensitive-field filtering, consumer compatibility, and DTO-to-validation mapping. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed matrices and implementation patterns.
+
+# Routing Coverage
+
+Routes from `data-api-contract-changer`, `api-contract-design`, `data-model-design`, `model-boundary-mapping`, `version-compatibility`, `consumer-impact-analysis`, `input-validation`, `frontend-api-integration`, `form-validation-design`, `domain-event-modeling`, and `contract-testing` should arrive here when field-level DTO schema evidence is primary. Route away when endpoint behavior, storage source of truth, error taxonomy, migration execution, release approval, or consumer inventory is primary.
 
 # Quality Gate
 
 The DTO schema is complete only when:
 
-1. All four null states (present-with-value, present-null, absent, empty) are documented for every nullable/optional field.
-2. `additionalProperties: false` on all request DTOs; explicit allowlist in mapping code.
-3. All field types use format specifiers; no bare `number` for money or datetime.
-4. Breaking vs. non-breaking classification documented for every field change.
-5. Schema version present; registry entry created for Avro/Protobuf schemas.
-6. DTO-to-domain mapping is explicit (no spread/auto-bind); no domain model leaked to API layer.
-7. Derived/computed response fields documented with computation rules.
-8. Examples include happy path, null fields, empty collections, and edge cases.
-9. Validation constraints (required, min/max, pattern, enum) are enforced at DTO layer before domain invocation.
-10. Consumer-driven contract test exists or is planned for public-facing or cross-service DTOs.
+1. Mode, inspected boundaries, source evidence, graph-memory-trajectory judgment, and evidence limits are recorded.
+2. DTO direction, owner, consumer class, contract surface, schema source, and generated artifacts are named.
+3. Every field has type/format, required/optional status, nullable flag, absent/empty/default semantics, validation, example, sensitivity, and read/write mode.
+4. Request DTOs reject unknown fields and map through an explicit allowlist before domain/service invocation.
+5. Response DTOs avoid persistence/domain leakage and define forward-compatible unknown-field behavior for consumers.
+6. Money, time, identifiers, enums, arrays, nested objects, and binary/file fields use risk-appropriate formats.
+7. Null, absent, empty, and default states are documented for every nullable or optional field.
+8. Validation constraints and error mapping are enforceable before domain mutation.
+9. Breaking vs compatible classification is documented for every field and semantic change.
+10. Schema version, registry/generator source, generated-client impact, reserved Protobuf fields/numbers, and rollback behavior are handled.
+11. Sensitive and permission-dependent fields have allowed consumers, redaction/filtering, and denied exposure validation or residual risk.
+12. DTO-to-domain/persistence/event/view mapping has a named owner and no mapper-owned business rule drift.
+13. Examples include happy, null, absent, empty, default, boundary, invalid, and old/new compatibility cases where applicable.
+14. Contract or schema validation evidence is recorded for public, cross-service, generated, mobile, partner, or event DTOs.
+15. Changed DTO-to-validation map, behavior preservation, handoff boundaries, and residual risk owner are explicit.
 
 # Used By
 
@@ -192,8 +189,8 @@ The DTO schema is complete only when:
 
 # Handoff
 
-Hand off to `api-contract-design` for operation-level behavior; `data-model-design` for source-of-truth storage shape; `error-code-design` for validation error DTOs; `contract-testing` for consumer contract enforcement; `version-compatibility` for multi-consumer schema evolution planning.
+Hand off to `api-contract-design` for operation-level behavior; `data-model-design` for source-of-truth storage shape; `error-code-design` for validation error DTOs; `contract-testing` for consumer contract enforcement; `version-compatibility` for multi-consumer schema evolution; `model-boundary-mapping` for DTO/domain/persistence/event boundary ownership; `security-privacy-gate` for sensitive payload exposure; and `delivery-release-gate` when rollout, generated-client release, or rollback approval is needed.
 
 # Completion Criteria
 
-The capability is complete when every DTO has **an explicit schema with typed fields, documented null semantics, validation rules, an allowlisted mapping strategy, a compatibility classification for all changes, and consumer-compatible versioning** — with no internal model exposure, no mass-assignment risk, and no ambiguous null/absent semantics.
+The capability is complete when every DTO has an explicit field schema, four-state null/default semantics, validation rules, allowlisted mapping, schema source/version, generated-artifact alignment, compatibility classification, behavior-preservation evidence, consumer contract validation, security/privacy filtering, handoff boundaries, and residual-risk owner, with no internal model exposure, mass-assignment risk, ambiguous null/absent behavior, stale generated clients, or unversioned breaking changes.

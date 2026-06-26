@@ -13,7 +13,7 @@ Enforce professional TypeScript usage for frontend (React / Vue / Svelte / Solid
 
 # Pinned Tooling Baseline (TypeScript)
 
-Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+Pinned versions are review baselines. If a baseline is EOL, unsupported, superseded, or conflicts with the target project's platform policy, update the capability before using it for new product work.
 
 - **TypeScript**: ≥ 5.4 (5.5+ preferred). `tsconfig.json` `"strict": true` + `"noUncheckedIndexedAccess": true` + `"noImplicitOverride": true` + `"exactOptionalPropertyTypes": true` + `"verbatimModuleSyntax": true`.
 - **Node.js**: Node.js must be an active or maintenance LTS version. EOL Node versions are rejected. The target project must pin the exact supported major and update this capability when the organization’s Node.js LTS policy changes.
@@ -36,13 +36,17 @@ Do not use to teach TypeScript syntax. Do not use to bless `any` as a shortcut. 
 
 # Stage Fit
 
-Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+Use during coding, bug-fix, code-review, refactoring, and testing. Focus by stage: coding covers strict types, `unknown` over `any`, runtime validation, async errors, and state modeling; debugging covers null/undefined, unhandled rejection, stale closure, and schema mismatch; review/refactoring covers unsafe casts, public type compatibility, bundle impact, and type-narrowing preservation; testing covers component behavior, API contracts, and runtime schema checks.
 
-- **coding**: strict types, `unknown` over `any`, runtime validation at boundaries, async error handling, state modeling.
-- **debugging-diagnosis**: undefined/null boundary, unhandled promise rejection, stale closure, API schema mismatch.
-- **code-review**: unsafe cast, public type breakage, bundle impact.
-- **refactoring**: discriminated-union extraction, type-narrowing preservation, public API compatibility.
-- **testing**: component behavior, API contract, runtime schema tests.
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Type/runtime boundary | `any`, `unknown`, `as`, API/storage/message/env input, generated client, DTO/schema. | Keep static types honest by validating external data and separating wire/domain models. | Boundary inventory, schema owner, DTO map, typecheck or validation test. | `data-api-contract-changer`, `model-boundary-mapping` | Compile success as runtime proof. |
+| Async and state model | Promise, fetch, abort, loading/error flags, discriminated union, React/Vue/Svelte state. | Preserve cancellation, error states, and impossible-state prevention. | Promise-handling scan, state union, negative behavior test. | `failure-contract-design`, `frontend-change-builder` | Happy-path component snapshot. |
+| Frontend bundle/a11y | UI component, route, client/server boundary, dependency import, HTML rendering, focus/aria. | Keep user behavior, WCAG, and bundle budget visible. | axe/keyboard or not-run reason, bundle diff, sanitizer decision. | `frontend-change-builder`, `security-privacy-gate` | CSS/private hook assertions. |
+| SDK/package/public types | Public export, `.d.ts`, semver, package manager, lockfile, generated type, dependency script. | Preserve consumer compatibility and supply-chain posture. | api-extractor/tsd, lock/audit diff, consumer impact note. | `sdk-library-contract-design`, `package-dependency-management` | Dependency by convenience. |
+| Graph/memory/validation closure | Repository graph, project memory, previous validation, or prior agent output claims TS path is safe. | Reconfirm current source, generated artifacts, lockfiles, and validator freshness before handoff. | Inspected paths, accepted/rejected memory, fresh command/report, residual unknowns. | `repository-graph-analysis`, `project-memory-governance`, `validation-broker` | Stale memory as proof. |
 
 # Non-Negotiable Rules
 
@@ -70,6 +74,15 @@ Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage fo
 # Selection Rules
 
 Select when TypeScript, frontend state, Node.js services, SDKs, generated types, bundling, or public API types appear. Pair with `frontend-change-builder`, `data-api-contract-changer` (for public APIs), `language-idiom-enforcement`, `language-testing-strategy`, `package-dependency-management`.
+
+# Proactive Professional Triggers
+
+- **Signal:** `any`, `as any`, `unknown` without narrowing, `@ts-ignore`, non-null assertion, or generated type trust appears at an external boundary. **Hidden risk:** compile-time silence hides malformed runtime data, null drift, or generated contract skew. **Required professional action:** require schema validation and escape-hatch owner before accepting the path. **Route to:** `data-api-contract-changer`, `model-boundary-mapping`, `quality-test-gate`. **Evidence required:** boundary file, schema or rejected-schema reason, typecheck/test command, accepted exception owner.
+- **Signal:** fetch/SDK response, Promise, abort/cancel path, event handler, effect, or loading/error state changes without explicit failure-state handling. **Hidden risk:** `fetch` status, unhandled rejection, stale closure, or impossible UI state survives happy-path tests. **Required professional action:** model async states and test negative behavior. **Route to:** `failure-contract-design`, `frontend-change-builder`, `quality-test-gate`. **Evidence required:** state union, `res.ok` or error map, behavior test output, residual browser/API unknowns.
+- **Signal:** `dangerouslySetInnerHTML`, `innerHTML`, `v-html`, `eval`, `new Function`, template expression execution, or object merge from parsed JSON appears. **Hidden risk:** XSS, RCE, or prototype pollution bypasses TypeScript entirely. **Required professional action:** route trust-boundary review and require sanitizer/schema evidence. **Route to:** `security-privacy-gate`, `input-validation`, `web-security`. **Evidence required:** sanitizer or rejection decision, schema/pollution test, security review note.
+- **Signal:** public export, SDK type, generated client, package entrypoint, dependency, or lockfile changes without compatibility and provenance evidence. **Hidden risk:** downstream consumers fail compilation or supply-chain risk enters through convenience dependency. **Required professional action:** prove API compatibility and dependency value before handoff. **Route to:** `sdk-library-contract-design`, `consumer-impact-analysis`, `package-dependency-management`. **Evidence required:** api-extractor/tsd or not-run owner, lock/audit diff, consumer compatibility note.
+- **Signal:** route/component/server-client boundary, package import, or state refactor changes bundle, hydration, focus, or accessibility behavior without runtime evidence. **Hidden risk:** LCP/INP/CLS, keyboard navigation, or hydration failure regresses while unit tests stay green. **Required professional action:** require bundle and accessible behavior proof proportional to the change. **Route to:** `frontend-change-builder`, `frontend-testing`, `reliability-observability-gate`. **Evidence required:** bundle report, axe/keyboard output or not-run reason, browser/hydration residual risk.
+- **Signal:** repository graph, project memory, old validation, generated artifact, or another agent says TypeScript code is safe, typed, unused, or already tested after later source/lock/generated edits. **Hidden risk:** stale context misses changed call paths, schema generation, test selection, or lockfile risk. **Required professional action:** downgrade stale memory to selector-only, reread current files, and rerun stale validators. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `validation-broker`. **Evidence required:** inspected paths, accepted/rejected memory, fresh command/report path, remaining unknowns.
 
 # Risk Escalation Rules
 
@@ -112,7 +125,7 @@ Select when TypeScript, frontend state, Node.js services, SDKs, generated types,
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when TypeScript changes touch API/storage/message boundaries, `any`/`unknown`, generated clients, async error paths, state modeling, public type exports, runtime validation, or browser/server bundle boundaries. Do not load it for copy-only text or test-name changes.
+Load [references/checklist.md](references/checklist.md) when TypeScript changes touch API/storage/message boundaries, `any`/`unknown`, generated clients, async error paths, state modeling, public type exports, runtime validation, package boundaries, or browser/server bundle boundaries. Use [examples/example-output.md](examples/example-output.md) only when review shape is unclear. Do not load references for copy-only text or test-name changes.
 
 # Output Contract
 
@@ -129,7 +142,7 @@ Return a **TypeScript Usage Review** containing:
 - **Public SDK compatibility** — api-extractor + tsd snapshot status; semver verdict
 - **Security** — XSS / prototype-pollution / `eval` / unsafe deserialization audited
 - **Tests** — vitest/jest coverage; testing-library behavior + axe; Playwright E2E for critical flows
-- **Accepted exceptions** with owner / scope / expiration
+- **Accepted TypeScript deviations** with owner, scope, expiration, and cleanup trigger
 
 # Evidence Contract
 
@@ -140,10 +153,10 @@ A TypeScript change is professionally complete only when the output includes:
 - **Async error path**: rejected promises, abort/cancellation, loading/error states, and no unhandled promise.
 - **State model**: impossible states eliminated or explicitly represented.
 - **Bundle/API boundary**: public type exports, generated client impact, and bundle/runtime compatibility.
-- **Test evidence**: typecheck, unit/component test, runtime validation test, or not-verified disclosure.
+- **Validation evidence**: typecheck, unit/component test, runtime validation test, validator command with exit code, artifact/report path, or not-verified disclosure.
 - **What evidence proves**: the inspected TypeScript type/runtime boundary is covered.
 - **What evidence does not prove**: production data distribution, browser matrix, external API correctness, or downstream consumer behavior.
-- **Residual risk**: untested runtime behavior, owner, and next gate.
+- **TypeScript residual risk**: untested runtime behavior, owner, and next gate.
 
 # Quality Gate
 

@@ -9,166 +9,141 @@ changeforge_version: 0.1.0
 
 # Mission
 
-**Design and implement application services that orchestrate meaningful use cases** — coordinating authorization policy checks, transaction boundaries, domain model operations, repository interactions, event emission, and external effect sequencing — without becoming pass-through wrappers that add no value, or god services that accumulate unrelated workflow responsibility and create hidden coupling between domain areas.
+**Design application services as precise use-case orchestrators** that coordinate authorization, transaction scope, domain operations, repository calls, events, external effects, retries, and compensation without becoming pass-through wrappers, god services, duplicate domain-rule engines, or hidden infrastructure adapters.
 
 # When To Use
 
-Use this capability when: a change adds or substantially modifies an application service or use-case handler; the business logic requires orchestrating multiple repositories, a domain aggregate, a policy check, and an external effect in a defined transaction scope; a service is growing into a god service and needs to be decomposed by use case or domain boundary; or a service currently lives in a controller, a repository, or a domain entity and needs to be extracted to the correct architectural layer.
+Use this capability when a change adds or modifies an application service, command/query handler, workflow service, use-case object, or backend orchestration path; when logic is split across controller, service, repository, domain, event, or external integration layers; when authorization order, transaction ownership, event timing, idempotency, retry, or compensation is unclear; when a service is growing into a god service; or when repository graph, project memory, or prior execution suggests an existing service pattern that must be source-confirmed before reuse.
 
 # Do Not Use When
 
-Do not use this capability to: design or implement domain invariants that belong in a domain model or domain service (use `domain-logic-implementation`); design the API/transport layer mapping between HTTP and application layer (use `controller-api-implementation`); design repository access patterns and persistence contracts (use `repository-persistence`); design transaction coordination across distributed services (use `idempotency-retry-design` and `async-job-design`).
+Do not use this capability to define domain invariants themselves (use `domain-logic-implementation`), transport/API mapping (use `controller-api-implementation`), persistence contracts (use `repository-persistence`), distributed workflow/job design (use `async-job-design`), or retry/saga mechanics in depth (use `idempotency-retry-design` and `transaction-consistency`). Do not add a service layer around simple CRUD unless it protects a real use-case boundary, policy, transaction, test seam, or future extraction that is explicitly justified.
+
+# Stage Fit
+
+Use during backend implementation planning, coding, review, and repair when application-layer orchestration is the primary decision. In planning, name the use case, actor, authorization order, transaction boundary, domain authority, repository participation, side-effect sequencing, idempotency, compensation, and validation evidence before code shape is accepted. In review, reject pass-through wrappers, god services, data access before authorization, domain rule duplication, framework-coupled services, external calls inside transactions, pre-commit event publishing, and stale graph/memory claims not confirmed against current source and tests.
 
 # Non-Negotiable Rules
 
-- **Each service must represent a single coherent use case or workflow responsibility.** A service named `OrderService` that contains `placeOrder`, `cancelOrder`, `shipOrder`, `returnOrder`, `updateOrderMetadata`, `applyPromoCode`, and `generateInvoice` is a god service. Each of these is a distinct use case with different actors, different authorization requirements, different transaction boundaries, and different external effects. They must be separated into cohesive services or use-case handlers (e.g., `PlaceOrderService`, `CancelOrderService`, `ReturnOrderService`).
-- **Authorization policy checks occur at the service layer, before any domain or repository operation.** A service method must not read data from the repository and then check if the caller is authorized to see it. The authorization check must happen first: if the caller is not authorized, the service returns 403 before touching the database. This prevents timing side channels and unauthorized data reads that are then discarded.
-- **Transaction boundaries must be explicit and represent a single consistency unit.** Every service method must declare its transaction scope: which operations are in the same database transaction, which operations are outside the transaction (external HTTP calls, event emission, cache invalidation), and what the rollback behavior is if the transaction fails after an external call has already been made. "I'll figure out the transaction boundary at implementation time" is not a design decision.
-- **External effects outside the transaction scope require explicit compensation design.** A service that calls an external payment gateway inside a database transaction creates a distributed consistency problem: if the database transaction rolls back after the payment API call succeeded, the user was charged but no order exists. External calls must be placed outside the transaction, with a compensating action defined for failure. Pattern: begin transaction → validate → commit → external call → on external call failure → compensating action (e.g., refund request, retry with idempotency key).
-- **Domain invariants must not be duplicated in services.** A domain invariant like "an order can only be cancelled if it is in PENDING or PROCESSING status" belongs in the domain model or domain service, not in the application service. If the service checks this condition itself (e.g., `if order.status !== 'PENDING' throw new Error`), it diverges from the domain model over time as business rules evolve. Services must delegate invariant enforcement to the domain, and trust the domain to throw when invariants are violated.
-- **Pass-through services must not exist without an architectural boundary justification.** A service method that does nothing except call one repository method and return the result adds no orchestration value and adds a layer of indirection with no benefit. It is acceptable only when the service creates an architectural boundary (e.g., between the application layer and a bounded context that will be extracted) and that boundary is explicitly documented.
+- **One service owns one coherent use case or workflow.** A generic `OrderService` with unrelated place/cancel/ship/return/invoice methods is a god service. Split by use case when actors, policies, transaction boundaries, or side effects differ.
+- **Authorization happens before protected data access.** The service must establish actor/resource scope before fetching sensitive records, or explicitly document the non-leaking lookup pattern.
+- **Transaction boundaries are explicit.** State which repository/domain operations run inside the transaction, which effects are outside it, and what rolls back or compensates on failure.
+- **External effects do not hide inside database transactions.** Payment, email, webhook, file, queue, cache, and third-party calls need idempotency, timeout, retry, and compensation decisions outside or alongside the consistency boundary.
+- **Domain invariants stay in the domain authority.** Services orchestrate calls such as `order.cancel()`; they do not duplicate lifecycle, price, entitlement, terminal-state, or ownership rules as service `if` branches.
+- **Events publish after consistency is established.** Use after-commit publication or an outbox when consumers depend on source state. Never publish integration events before the write they describe is durable.
+- **Pass-through services need a boundary reason.** If a service only calls a repository, collapse it or document the architectural boundary, current consumers, expected extraction, and test seam.
+- **Services stay framework and infrastructure neutral.** Constructor-injected ports are acceptable; HTTP request objects, ORM sessions, framework containers, raw DB exceptions, and vendor clients in the service interface are boundary leaks unless explicitly justified as local convention.
+- **Read services stay side-effect-free unless the side effect is named and routed.** Query handlers should not mutate state, emit domain events, or acquire write dependencies without explicit command/query boundary review.
+- **Graph, memory, and trajectory evidence are inputs, not proof.** Reuse existing service patterns only after current callers, imports, tests, transaction owners, and validation freshness are inspected.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Command use case | State-changing request, domain transition, write repository, event, external effect. | Authorization-first orchestration, transaction scope, domain operation, event/effect timing. | Actor/resource/action, domain authority, repositories, transaction map, failure and idempotency plan. | `domain-logic-implementation`, `transaction-consistency`, `idempotency-retry-design` | Controller-owned business logic. |
+| Query use case | Read path, details page, report lookup, list/search service. | Permission-aware read scope, bounded query, mapping, no write side effects. | Access scope, repository/query method, DTO/projection owner, pagination/ordering, no side-effect proof. | `repository-persistence`, `dto-schema-design` | Hidden write in read path. |
+| Workflow orchestrator | Multi-step process, async handoff, outbox, event, job, external provider. | Durable step boundaries, retry/compensation, status source, operator visibility. | Step map, consistency boundary, idempotency key, compensation, event/job timing. | `async-job-design`, `data-side-effect-flow-tracing`, `reliability-observability-gate` | Long-running sync transaction. |
+| Service decomposition | God service, unrelated methods, too many dependencies, merge conflicts. | Split by use case/domain boundary while preserving behavior and callers. | Method inventory, actor/policy/transaction differences, caller map, migration/test plan. | `implementation-structure-design`, `refactoring`, `module-boundary-design` | Cosmetic split without behavior seam. |
+| Boundary exception | Pass-through service, transaction script, framework-first convention, legacy bridge. | Decide whether the shortcut is simpler and contained or hides missing orchestration. | Local convention, boundary reason, consumer list, expiry/review trigger, residual risk. | `minimal-correct-implementation`, `architecture-impact-reviewer` | Abstract service for every repository. |
+| Existing pattern reuse | Repository graph, project memory, or prior trajectory suggests a service pattern. | Confirm freshness before reuse and reject stale or unsafe patterns. | Current source/tests/docs inspected, accepted/rejected pattern, validation freshness, changed-service delta. | `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis` | Copying old service shape blindly. |
 
 # Industry Benchmarks
 
-Anchor against: **Domain-Driven Design (Evans)** — Application Service layer: thin orchestrator; coordinates domain objects; does not contain business logic; manages transaction boundaries. **Clean Architecture (Martin)** — Use Case Interactor: represents one business use case; depends on entity / domain layer; must not depend on framework-specific types. **Patterns of Enterprise Application Architecture (Fowler)** — Transaction Script: appropriate for simple workflows; Application Service pattern: appropriate for complex domain coordination. **Command Query Responsibility Segregation (CQRS)** — separate command handlers (write-side use cases) from query handlers (read-side use cases); command handlers modify state; query handlers return data without side effects. **Hexagonal Architecture (Alistair Cockburn / "Ports and Adapters")** — application core is independent of frameworks, databases, and external services; services are part of the application core; adapters implement ports. **Spring @Service / NestJS @Injectable / Django service layer** — framework conventions for service lifecycle management; singleton scope; constructor injection of dependencies. **Google SRE — Service-Level Objectives** — a service that initiates external effects (payment, email, webhook) must have an SLO for the operation and a defined behavior when the SLO is not met.
-
-### Service Responsibility Classification Matrix
-
-| Service Type | Example | Responsibility | What It Must NOT Do |
-| --- | --- | --- | --- |
-| Command use-case handler | `PlaceOrderService` | Auth check → validate → domain op → persist → emit event | Contain domain invariants; call multiple external systems in one transaction |
-| Query use-case handler | `GetOrderDetailsService` | Auth check → fetch → transform → return | Modify state; emit events; execute transactions |
-| Workflow orchestrator | `OrderFulfillmentService` | Coordinate multi-step async workflow; manage compensation | Run long-running sync work inside a transaction |
-| Policy enforcement service | `PricingPolicyService` | Apply pricing rules from domain policy; return result | Persist state; emit events |
-| Anti-corruption layer service | `LegacyOrderAdapter` | Translate legacy model to bounded context model | Contain business logic; call domain operations directly |
-| Pass-through (justified boundary only) | `TenantConfigService` | Facade over config service for bounded context isolation | Exist without documented boundary justification |
-
-### Service Method Template (TypeScript)
-
-```typescript
-// PlaceOrderService — single use case, explicit transaction and effect boundaries
-class PlaceOrderService {
-  constructor(
-    private readonly authPolicy: OrderAuthorizationPolicy,
-    private readonly orderRepository: OrderRepository,
-    private readonly inventoryService: InventoryService,
-    private readonly paymentGateway: PaymentGateway,
-    private readonly eventBus: EventBus,
-    private readonly db: TransactionManager,
-  ) {}
-
-  async execute(command: PlaceOrderCommand): Promise<PlaceOrderResult> {
-    // 1. Authorization first — before any data access
-    await this.authPolicy.assertCanPlaceOrder(command.customerId);
-
-    // 2. Validate inputs at application boundary
-    const validated = PlaceOrderCommand.validate(command); // throws on invalid
-
-    // 3. Transaction scope: domain operations + persistence only
-    const { order, reservationId } = await this.db.runInTransaction(async (tx) => {
-      const inventory = await this.inventoryService.reserveItems(validated.items, tx);
-      const order = Order.place(validated, inventory.reservationId); // domain throws on invariant violation
-      await this.orderRepository.save(order, tx);
-      return { order, reservationId: inventory.reservationId };
-    });
-    // Transaction committed. Order exists. Inventory reserved.
-
-    // 4. External effect OUTSIDE transaction — with compensation on failure
-    let paymentResult;
-    try {
-      paymentResult = await this.paymentGateway.charge({
-        idempotencyKey: order.id,         // prevents duplicate charge on retry
-        amount: order.total,
-        customerId: order.customerId,
-      });
-    } catch (paymentError) {
-      // Compensating action: cancel order and release inventory reservation
-      await this.orderRepository.cancel(order.id, 'PAYMENT_FAILED');
-      await this.inventoryService.releaseReservation(reservationId);
-      throw new PaymentFailedException(paymentError);
-    }
-
-    // 5. Confirm payment on order domain object
-    await this.db.runInTransaction(async (tx) => {
-      const o = await this.orderRepository.findById(order.id, tx);
-      o.confirmPayment(paymentResult.transactionId); // domain operation
-      await this.orderRepository.save(o, tx);
-    });
-
-    // 6. Emit integration event AFTER all state is consistent
-    await this.eventBus.publish(new OrderPlacedEvent(order.id, order.customerId));
-
-    return PlaceOrderResult.success(order.id);
-  }
-}
-```
+Anchor against DDD Application Service, Clean Architecture Use Case Interactor, Fowler Service Layer and Transaction Script, CQRS command/query separation, Hexagonal Ports and Adapters, Unit of Work, Transactional Outbox, SRE failure/timeout readiness, and framework service conventions that keep lifecycle management separate from business orchestration. Keep this body focused on routing, evidence, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed matrices, sequencing patterns, compensation examples, graph/memory/trajectory coupling, and anti-pattern review.
 
 # Selection Rules
 
-Select this capability when **application-layer orchestration — coordinating auth, domain operations, persistence, and external effects — is the primary design concern**. Route elsewhere when: domain invariants and business rules need design (use `domain-logic-implementation`); the transport/HTTP layer mapping needs design (use `controller-api-implementation`); repository and persistence contracts need design (use `repository-persistence`); async workflow orchestration across services needs design (use `async-job-design`); distributed transaction coordination needs design (use `idempotency-retry-design`).
+Select this capability when application-layer orchestration is primary: authorization order, transaction scope, domain operation sequencing, repository coordination, event publication, external effect timing, idempotency, retry, or compensation. Route elsewhere when rule authority is primary (`domain-logic-implementation`), persistence interface is primary (`repository-persistence`), transport mapping is primary (`controller-api-implementation`), distributed workflow mechanics are primary (`async-job-design` / `idempotency-retry-design`), or macro layer assignment is primary (`layered-architecture-design`).
+
+# Proactive Professional Triggers
+
+- **Signal:** Service reads a protected record before authorization. **Hidden risk:** existence leak, timing side channel, or object-level permission bypass. **Required professional action:** move to scope-first authorization or document non-leaking lookup. **Route to:** `authentication-authorization`, `security-privacy-gate` when sensitive. **Evidence required:** actor/resource/action scope, query order, denied test.
+- **Signal:** External API, payment, email, file, webhook, queue, or cache effect occurs inside a DB transaction. **Hidden risk:** rollback cannot undo external side effect. **Required professional action:** move effect boundary, add outbox/idempotency/compensation. **Route to:** `transaction-consistency`, `idempotency-retry-design`, `data-side-effect-flow-tracing`. **Evidence required:** transaction map, effect timing, retry and compensation path.
+- **Signal:** Service checks lifecycle, price, entitlement, or status invariant directly. **Hidden risk:** duplicated business rule drifts from domain authority. **Required professional action:** call domain operation/policy and map typed outcome. **Route to:** `domain-logic-implementation`, `state-machine-modeling`. **Evidence required:** rule owner, rejected service branch, domain denied-case test.
+- **Signal:** Service has many unrelated public methods or constructor dependencies. **Hidden risk:** god service with hidden coupling and broad regression blast radius. **Required professional action:** inventory use cases and split by actor/policy/transaction boundary. **Route to:** `implementation-structure-design`, `refactoring`. **Evidence required:** method/caller map, preserved behavior tests, rollout path.
+- **Signal:** Repository graph or project memory is used to justify service placement. **Hidden risk:** stale convention, removed policy, or old transaction behavior copied forward. **Required professional action:** confirm current callers/imports/tests and mark stale evidence. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected reuse judgment and freshness limit.
+- **Signal:** Service test starts full web framework or real infrastructure for local orchestration logic. **Hidden risk:** application layer is coupled to delivery/infrastructure and tests become slow or skipped. **Required professional action:** define constructor-injected ports and service-level tests. **Route to:** `test-strategy`, `quality-test-gate`. **Evidence required:** unit seam, mock/fake boundary, integration proof for real adapters.
 
 # Risk Escalation Rules
 
-Escalate when: a service method initiates a financial transaction or subscription charge (must have compensation design and idempotency key before implementation begins); a service coordinates writes to multiple independent data stores (distributed consistency problem — requires explicit saga or outbox pattern design); a service makes external API calls inside a database transaction (rollback-after-external-call inconsistency — requires restructuring before implementation); a service has more than 5 unrelated use cases (god service — requires decomposition before adding new use cases); or a service accesses resources it creates authorization decisions for (potential privilege escalation — requires `authentication-authorization` review).
+Escalate when a service orchestrates payments, subscriptions, billing, inventory, entitlements, tenant/object permissions, irreversible writes, external providers, multi-repository transactions, queues, file operations, customer notifications, audit trails, or operational recovery. Escalate when a command is retryable without idempotency, a read path can leak existence, a service emits events before commit, or a pass-through wrapper hides missing domain/repository ownership.
 
 # Critical Details
 
-- **Authorization order is non-negotiable: check before read.** A service that fetches an order by ID and then checks whether the caller owns the order has read a record from the database before establishing that the caller is allowed to know it exists. For sensitive resources, this is an information disclosure risk. The authorization check must happen before the query: check that the caller has access to order IDs in this scope, then fetch.
-- **Event emission sequence matters for consistency.** Emitting an integration event before the database transaction commits creates a race condition: a consumer receives the event and acts on it before the order record exists. Events must be emitted after the transaction commits. For strict at-least-once delivery guarantees, use the Transactional Outbox pattern (event record written inside the same transaction; separate publisher reads and emits from the outbox).
-- **CQRS command/query separation prevents read-side services from acquiring write-side dependencies.** A read service that also calls a write repository "just to update a view counter" has crossed the CQRS boundary and created a hidden write dependency in a read path. Read-side services must be side-effect-free. Updates triggered by reads must be handled via events or background jobs.
-- **Service tests must not require the web framework to run.** A service whose tests start a full HTTP server or require a Spring/NestJS application context to initialize violates the Clean Architecture dependency rule: the application layer must be testable independently of the framework. Services must be instantiable with constructor-injected mock dependencies and tested in pure unit or narrow integration tests.
+- **Application service is orchestration, not rule ownership.** It translates a use-case command into authorization, domain method calls, repository persistence, event capture, and effect sequencing.
+- **Authorization-first means more than a method call.** The policy must be able to decide safely before sensitive data is fetched, or the service must use a scoped query that cannot reveal inaccessible records.
+- **Transaction map is a design artifact.** Name participating repositories, domain operations, outbox/event writes, external effects, rollback behavior, and which failures are retryable or terminal.
+- **Outbox is often the safer event boundary.** If consumers depend on source state, write the event record in the same transaction and publish asynchronously after commit.
+- **Query handlers need service discipline too.** A read service still needs permission scope, bounded repository query, projection owner, pagination, and evidence that no hidden write side effects occur.
+- **Framework annotations do not define a service boundary.** `@Service`, `@Injectable`, or equivalent lifecycle metadata is not proof of use-case cohesion, dependency direction, or testability.
 
-### Anti-examples
+# Reference Loading Policy
 
-| Anti-pattern | Problem | Fix |
-| --- | --- | --- |
-| `OrderService` with 8 unrelated methods | God service; cross-cutting changes; merge conflicts; shared state between unrelated workflows | Decompose: `PlaceOrderService`, `CancelOrderService`, `ShipOrderService` per use case |
-| Repository call before authorization check | Reads data from DB before establishing caller has access; timing side channel; information disclosure | Auth check first: `await policy.assertCanAccess(resource, caller)` before any query |
-| `paymentGateway.charge()` inside `db.runInTransaction()` | Payment succeeds; DB transaction rolls back; user charged with no order | External call outside transaction; compensating action (cancel + release) on payment failure |
-| Domain invariant duplicated in service: `if (order.status !== 'PENDING') throw` | Service and domain drift over time; new state added to domain breaks service silently | Delegate to domain: `order.cancel()` throws `OrderNotCancellableError` internally |
-| Integration event published before transaction commit | Consumer receives event before DB record exists; 404 on lookup; inconsistent state | Emit after commit; use Transactional Outbox for at-least-once delivery |
-| Service test requires HTTP server startup | Application layer coupled to framework; slow test; cannot test in isolation | Constructor injection of all dependencies; mock in unit test; no framework required |
+The `SKILL.md` body carries normal L1/L2 selection, stage fit, routing, evidence, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete service plan, command/query handler, transaction map, service decomposition, or side-effect sequence. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed service-type matrices, sequencing examples, compensation patterns, graph/memory/trajectory coupling, review questions, or anti-pattern analysis is needed. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for pure routing or trivial wording changes where the inline output contract and quality gate are enough.
 
 # Failure Modes
 
-- God service with 12 methods; developer adds a 13th for unrelated workflow; one team's change breaks another team's unrelated workflow in the same file.
-- Payment gateway called inside transaction; 0.1% of transactions roll back after successful charge; users charged but order not created; requires manual refund investigation.
-- Authorization check occurs after repository fetch; attacker guesses resource ID; even though they cannot act, the timing difference reveals resource existence.
-- Domain invariant duplicated in service; 6 months later domain adds new valid state; service continues to reject the new state; production regression.
-- Integration event emitted before commit; consumer processes event; source record does not exist yet; consumer error rate spikes.
-- Service test requires full Spring context; 45-second startup per test run; developers skip service tests to save time; service layer has no coverage.
+- God service grows unrelated methods and every change risks unrelated workflows.
+- Authorization check happens after repository fetch, leaking existence or timing.
+- Payment/webhook/email effect succeeds while the DB transaction rolls back.
+- Service duplicates a domain lifecycle guard and diverges when new states are added.
+- Integration event is emitted before commit and consumers observe missing source data.
+- Query handler performs a hidden write such as view-count mutation or audit update without command semantics.
+- Service tests require full framework startup, so orchestration logic is slow to verify and easy to skip.
+- Project memory copies an old transaction pattern after repositories or event timing changed.
 
 # Output Contract
 
 Return a service logic plan with:
 
-- `use_case_name` (specific use case being orchestrated)
-- `service_responsibility` (what this service coordinates; what it must not do)
-- `inputs` (command object or query object with validation rules)
-- `authorization_checks` (policy/permission checks; must precede all data access)
-- `transaction_boundary` (which operations are in the transaction; which are outside)
-- `domain_operations` (which domain methods are called; expected domain exceptions)
-- `repository_operations` (which repositories are used; read vs. write; within/outside transaction)
-- `external_effects` (external calls; idempotency keys; compensation design on failure)
-- `emitted_events` (event name, timing: after-commit, transport: eventbus/outbox)
-- `failure_handling` (per failure type: compensation, retry, error propagation)
-- `idempotency_requirements` (can this command be safely retried?)
-- `service_level_tests` (unit tests with mock dependencies; narrow integration tests)
+- `mode_selected` (command use case / query use case / workflow orchestrator / service decomposition / boundary exception / existing pattern reuse)
+- `service_scope` (use case name, actor, command/query, owning module, included workflow, excluded responsibilities, and local convention)
+- `source_evidence` (current controllers/handlers/jobs, services, repositories, domain objects, policies, events, tests, repository graph, project memory, execution trajectory, and freshness limits)
+- `graph_memory_trajectory_judgment` (accepted, rejected, or not verified for each reused service pattern, transaction pattern, policy order, event timing, test seam, or validation result)
+- `service_responsibility` (what the service coordinates and what it must not own)
+- `inputs_outputs` (command/query object, validation boundary, result type, typed failures)
+- `authorization_order` (policy or scoped-query decision; proof it precedes protected data access or non-leaking rationale)
+- `transaction_boundary` (operations inside transaction, outside transaction, rollback behavior, isolation/lock concern, Unit of Work owner)
+- `domain_operations` (domain methods/policies called, invariant owner, expected domain exceptions/results)
+- `repository_operations` (repositories used, read/write role, transaction participation, not-found/filtered semantics)
+- `external_effects` (provider/file/cache/queue/email/payment calls, timing, timeout, idempotency key, retry, compensation)
+- `emitted_events` (domain/integration event, outbox or after-commit timing, consumer consistency assumption)
+- `failure_handling` (validation, denial, not found, conflict, timeout, duplicate, partial failure, retry exhaustion, compensation)
+- `service_level_tests` (unit with ports/mocks/fakes, narrow integration tests, denied/invalid/partial failure/idempotency cases)
+- `changed_service_to_validation_map` (each service method, policy order, transaction boundary, domain call, repository call, event/effect, failure path, and test seam mapped to validator/test or residual risk)
+- `handoff_boundaries` (what belongs to domain logic, repository persistence, controller/API, transaction consistency, idempotency/retry, async job, security, reliability, or quality gate)
+- `evidence_limits` (what was not inspected or run: full call graph, real DB, external provider, production permissions, concurrency, generated clients, framework startup, or CI tests)
+
+# Evidence Contract
+
+Close a service-business-logic output only when it names selected mode, service scope, current source evidence, graph/memory/trajectory reuse judgment, service responsibility, input/output contract, authorization order, transaction boundary, domain and repository operations, external effects, emitted events, failure handling, service-level tests, changed-service-to-validation map, handoff boundaries, residual risk, and evidence limits. A generic "put logic in a service" or "use clean architecture" statement is not sufficient evidence.
+
+# Benchmark Coverage
+
+Improved service outputs reject common weak patterns: god service buckets, pass-through wrappers without boundary reason, data access before authorization, service-owned domain invariants, external effects inside transactions, pre-commit event emission, query-side writes, framework-coupled services, mocked-only confidence for persistence effects, and stale graph/memory reuse. Detailed benchmark anchors, sequencing examples, compensation patterns, and anti-pattern matrices belong in references so the body stays efficient.
+
+# Routing Coverage
+
+Route here when concrete application-service orchestration, command/query handler responsibility, service decomposition, transaction sequencing, authorization-first order, repository/domain coordination, event timing, or external side-effect handling is primary. Hand off when the primary concern is layer assignment (`layered-architecture-design`), domain invariant implementation (`domain-logic-implementation`), repository contract (`repository-persistence`), API/controller mapping (`controller-api-implementation`), distributed retry/saga (`idempotency-retry-design` / `transaction-consistency`), async jobs (`async-job-design`), security policy (`authentication-authorization`), reliability operations (`reliability-observability-gate`), or executable tests (`quality-test-gate`).
 
 # Quality Gate
 
 The service design is complete only when:
 
-1. Each service represents exactly one coherent use case or workflow.
-2. Authorization check precedes all data access.
-3. Transaction boundary is explicit (in vs. outside transaction).
-4. External effects are outside the transaction with compensation design.
-5. Domain invariants are delegated to domain model; not duplicated in service.
-6. Pass-through services have documented boundary justification.
-7. Integration events are emitted after transaction commit.
-8. Service tests do not require web framework initialization.
-9. Idempotency is designed for all commands that trigger external effects.
-10. No god service accumulates more than one distinct use-case responsibility.
+1. Selected mode, service scope, source evidence, and graph/memory/trajectory reuse judgment are explicit.
+2. Each service represents one coherent use case, query, workflow, or justified boundary exception.
+3. Authorization or scoped lookup precedes protected data access.
+4. Transaction boundary, Unit of Work owner, rollback behavior, and outside-transaction effects are explicit.
+5. External effects have timing, timeout, idempotency, retry, and compensation decisions.
+6. Domain invariants are delegated to domain entities, value objects, policies, or domain services.
+7. Repository calls use repository contracts and do not leak ORM/query/session mechanics into service interfaces.
+8. Events are emitted after commit or via outbox when consumer consistency matters.
+9. Query services remain side-effect-free or explicitly route side effects as commands/jobs.
+10. Pass-through services have a documented boundary reason, owner, consumers, and review trigger.
+11. Service tests run without full web framework startup for pure orchestration behavior.
+12. Denial, invalid state, not-found/filtered, partial failure, retry/idempotency, and compensation paths have tests or residual risk.
+13. Each changed service method, policy order, transaction boundary, domain call, repository call, event/effect, and failure path maps to validation evidence or named residual risk.
+14. Handoff boundaries and evidence limits are explicit so service evidence is not over-claimed as domain, repository, API, transaction, security, reliability, or full integration proof.
 
 # Used By
 
@@ -177,8 +152,8 @@ The service design is complete only when:
 
 # Handoff
 
-Hand off to `domain-logic-implementation` for invariant placement; `repository-persistence` for data access patterns; `authentication-authorization` for authorization policy design; `idempotency-retry-design` for retry and compensation patterns; `async-job-design` for long-running or distributed workflow design.
+Hand off to `domain-logic-implementation` for invariant placement; `repository-persistence` for data access contracts and persistence proof; `authentication-authorization` for policy and object-scope decisions; `transaction-consistency` and `idempotency-retry-design` for retry, locking, outbox, compensation, and distributed consistency; `async-job-design` for long-running or event-driven workflows; `quality-test-gate` for executable service validation; and `reliability-observability-gate` when operator visibility, SLOs, or recovery are part of the workflow.
 
 # Completion Criteria
 
-The capability is complete when **each service represents a bounded use case with correct authorization-first ordering, explicit transaction scope, external effects outside the transaction with compensation design, domain invariants delegated to the domain layer, and tests that run without the web framework**.
+The capability is complete when **each service has a bounded use-case or query responsibility, authorization-safe data access, explicit transaction and side-effect sequencing, domain-invariant delegation, repository-boundary discipline, idempotency/compensation decisions for retryable effects, service-level validation mapping, and evidence limits that prevent orchestration guidance from being over-claimed as full integration proof**.

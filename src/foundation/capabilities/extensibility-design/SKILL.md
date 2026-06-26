@@ -15,9 +15,19 @@ Design extension points **only where proven variation, explicit ownership, defin
 
 Use this capability when a change introduces: plugin interfaces or plugin registries; hook systems (pre/post hooks, middleware chains); strategy pattern implementations for interchangeable algorithms; configuration-driven behavior selection (feature flags, provider selection, policy injection); template or protocol extension points for third-party customization; provider abstractions over interchangeable integrations; custom field or metadata extension schemas; or webhook/callback systems for external party integrations.
 
+Also use this capability when repository graph evidence, project memory, execution traces, tests, generated code, configuration, or prior design notes show speculative abstractions, unmanaged variation, stale extension contracts, unclear owners, or compatibility/security obligations that are not validated.
+
 # Do Not Use When
 
 Do not use this capability to generalize a single concrete implementation in hopes that a second use case will emerge later. Generalization without proven variation is speculative abstraction — it adds indirection without reducing real duplication, makes code harder to read, and creates support obligations without delivering value. Do not use it when a direct product decision (choose this provider, implement this algorithm) is simpler and just as maintainable for the known scope.
+
+# Stage Fit
+
+- **Planning:** prove real variation, owner, contract, lifecycle, invariant boundary, compatibility class, security boundary, and rejected simpler alternative before accepting an extension point.
+- **Read/review:** inspect current implementations, callers, generated artifacts, config schemas, tests, docs, existing extension users, and prior compatibility decisions before judging extensibility need.
+- **Edit/implementation:** keep the contract narrow, versioned, validated, observable, and unable to bypass invariants; avoid generic managers or strategy bags without concrete variation.
+- **Test/release:** require compatibility tests, malformed input tests, invariant-bypass tests, failure isolation, performance budget, migration/deprecation evidence, and owner acceptance.
+- **Cleanup/repair:** remove speculative extension points when variation did not materialize, or route breaking contract changes through versioning and deprecation rather than silent mutation.
 
 # Non-Negotiable Rules
 
@@ -28,68 +38,18 @@ Do not use this capability to generalize a single concrete implementation in hop
 - **Validation of extension-supplied data is mandatory.** Configuration provided by extension implementers, tenant-supplied plugin parameters, and webhook payloads must be validated against a strict schema before use. Never pass raw extension-supplied data to database queries, template engines, or shell commands.
 - **Every extension point has an owner and lifecycle.** Who maintains the interface? Who approves new implementers? Who is on-call when an extension causes a production incident? Who decides when the extension point is deprecated? These must be answered before the extension point is implemented.
 - **Observability per extension.** When an extension executes, its execution must be traceable: which extension ran, how long it took, whether it succeeded or failed, and what the input/output was (with PII redacted). Without this, extension-caused failures are undiagnosable in production.
+- **No extensibility claim is valid without current evidence.** Prior memory, roadmap notes, or generated plans can motivate discovery, but the final design must cite current graph reachability, concrete implementers, contract surface, tests, compatibility/deprecation evidence, and security validation or mark the gap as not verified.
 
 # Industry Benchmarks
 
-Anchor against: **Open-Closed Principle** (SOLID, Martin) — software entities should be open for extension, closed for modification; but OCP must be applied only where variation is real, not preemptively. **Strategy Pattern** (GoF, 1994) — encapsulate interchangeable algorithms; select at runtime via injection; interface defines the contract. **Template Method Pattern** (GoF) — fixed algorithm skeleton with extension points for variable steps; subclasses override steps, not the skeleton. **Plugin Architecture** — Java `ServiceLoader` (JDK 6+): `META-INF/services/` registration for interface implementations; Python entry points (`importlib.metadata`): `[project.entry-points."my.plugin"]` in `pyproject.toml`; VS Code Extension API: contribution points in `package.json`. **OSGi** — modular Java component framework; dynamic plugin lifecycle; used in Eclipse, Jenkins. **Webhook Design (Stripe, GitHub)** — HTTPS POST to consumer-defined URL; HMAC-SHA256 signature for payload verification; retry with exponential backoff; event payload versioned; consumer must return 2xx within 5 seconds. **Feature Flag Systems** — LaunchDarkly, Unleash, GrowthBook; flag types: release toggle, experiment flag, ops flag, permission flag; flag evaluation must not require network call in hot path; stale flag cleanup governance. **Extension Registry Pattern** — central registry of extension implementations; registry validates extension metadata at registration; registry enforces security policy at extension load time. **Configuration Schema Governance** — JSON Schema Draft 2020-12 for configuration validation; Avro/Protobuf for binary config schemas; configuration changes must not break existing installations silently. **OWASP API Security Top 10 — A07:2023 Server-Side Request Forgery (SSRF)** — a webhook/callback URL provided by extension/tenant must be validated against an allowlist; SSRF allows attackers to call internal services. **CWE-20** — Improper Input Validation; extension-supplied data must be validated before use. **Event-Driven Extension Pattern** — extensions subscribe to platform events; platform does not call extensions synchronously in critical paths; decoupled via broker. **Strangler Fig Pattern** — progressively extend a system by routing specific behaviors to new implementations; original behavior remains until extension is fully proven.
+Anchor against Open-Closed Principle only when variation is proven, GoF Strategy/Template Method when the contract is narrow, plugin registry patterns for implementer discovery and lifecycle, webhook design for signed/retried external callbacks, JSON Schema/Avro/Protobuf for extension configuration contracts, OWASP SSRF and CWE-20 for extension-supplied input, and event-driven or strangler patterns when extension paths must be isolated from critical flows.
 
-### Extension Point Justification Matrix
+Use these benchmarks as gates, not decoration:
 
-| Criterion | Required | Evidence format |
-| --- | --- | --- |
-| ≥ 2 concrete known variations exist now | Yes | List the 2+ concrete cases |
-| Variation owned by different teams/tenants/parties | Yes (for multi-tenant/plugin) | Named owners per variation |
-| Roadmap commitment for variation | Yes (if not current) | Linked roadmap item with date |
-| Invariant safety confirmed | Yes | List invariants that extension cannot bypass |
-| Security sandbox defined | Yes | Access policy: filesystem, network, DB |
-| Owner assigned | Yes | Named team and on-call |
-| Deprecation policy defined | Yes | Notice period; migration guide |
-| Observable: trace, log, metrics per invocation | Yes | Instrumentation spec |
-| Approved alternative considered and rejected | Yes | Why simpler direct implementation rejected |
-
-### Extension Contract Versioning
-
-| Change type | Compatible? | Required action |
-| --- | --- | --- |
-| Add optional method to interface with default | ✅ Backward-compatible (if language supports) | Minor version bump; document |
-| Add optional config field with default | ✅ Backward-compatible | Minor version bump; update schema |
-| Remove interface method | ❌ Breaking | New major version; deprecation period |
-| Change method signature | ❌ Breaking | New major version; migration guide |
-| Change config field type | ❌ Breaking | New major version |
-| Change config field semantics | ❌ Breaking — silent corruption risk | New field name; deprecate old |
-| Remove config field | ❌ Breaking | New major version; migration |
-| Add required config field | ❌ Breaking for existing implementers | New major version |
-
-### Security Boundary Rules per Extension Type
-
-| Extension type | Network access | FS access | DB access | External API | Sandbox |
-| --- | --- | --- | --- | --- | --- |
-| Configuration-driven behavior | None | None | Via service API only | Allowlisted only | Policy enforcement |
-| In-process plugin (same JVM/process) | Restricted | None | Via repository interface only | None by default | Interface contract |
-| Out-of-process plugin (subprocess) | Allowlisted hosts | Read-only temp dir | None (no direct DB) | Allowlisted only | Process isolation |
-| Webhook to external party | N/A (outbound) | N/A | N/A | External party receives event | SSRF validation on URL |
-| Tenant-supplied script (low-code) | None | None | None | None | Sandboxed interpreter (Lua, Deno, Wasm) |
-| Third-party integration (OAuth app) | Via API only | None | None | API rate-limited | OAuth scopes |
-
-### Feature Flag Governance
-
-```
-Flag types and intended lifecycle:
-  Release flag:     temporary; feature development; remove within 1 sprint of full rollout
-  Experiment flag:  temporary; A/B test; remove after statistical significance reached
-  Ops flag:         long-lived; kill switch or config control; requires regular review
-  Permission flag:  long-lived; user/tenant entitlement; managed via permission system
-
-Flag lifecycle rules:
-  1. Flag created with: owner, purpose, type, target rollout date, removal date (estimate)
-  2. Flag evaluation: must not require network call in hot code path (cache flag state)
-  3. Stale flag cleanup: flags unused for > 90 days → auto-alert to owner
-  4. Flag removal: merged code; deleted from flag system; tests updated
-
-Anti-pattern — permanent flags:
-  Never use feature flags as permanent configuration. Configuration belongs in config files.
-  A flag that lives for > 6 months without type = ops flag is a config file in disguise.
-```
+- **Justification:** prove two current variations or a dated roadmap commitment; name owner, on-call, lifecycle, rejected direct implementation, invariants, sandbox, observability, and deprecation policy.
+- **Compatibility:** optional methods/config with defaults can be minor-version changes; removed methods, signature changes, type/semantic changes, removed config, or new required config are breaking and need migration/deprecation.
+- **Boundary governance:** config needs a bounded schema; in-process plugins get interface-limited access; out-of-process plugins require process isolation and no direct DB/FS access; webhooks require SSRF denial, signatures, retries, versioned payloads, and reconciliation.
+- **Flag governance:** release/experiment flags need owner, rollout target, cleanup date, cached evaluation, and tests; long-lived ops/permission flags require explicit configuration governance.
 
 # Selection Rules
 
@@ -100,6 +60,25 @@ Select this capability when a **variation mechanism is being introduced or modif
 - Prefer `version-compatibility` when managing breaking changes to existing extension contracts.
 - Prefer `security-privacy-gate` when the extension could execute privileged code, handle PII, or affect tenant isolation.
 - Prefer `delivery-release-gate` when runtime configuration governance (not code extension) is the primary concern.
+- Use **with** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the decision depends on current caller graph, prior compatibility memory, generated artifacts, test evidence, or stale validation.
+
+# Proactive Professional Triggers
+
+Use this capability proactively, even when the request does not ask for extensibility design:
+
+- **Signal:** a new interface, strategy, plugin, hook, provider registry, callback, config switch, metadata schema, or "generic" manager appears with only one known implementation. **Hidden risk:** speculative abstraction creates permanent compatibility and support burden without reducing real variation. **Required professional action:** demand proven variation, owner, rejected simpler path, and deletion/cleanup decision. **Route to:** `extensibility-design`, `implementation-structure-design`, and `minimal-correct-implementation`. **Evidence required:** known variation list, roadmap/date if applicable, rejected direct implementation, and residual risk.
+- **Signal:** extension code can influence authorization, tenant data, pricing, financial calculations, validation, audit, retries, or state transitions. **Hidden risk:** extensions bypass invariants or mutate core domain state. **Required professional action:** define read-only views, invariant guardrails, sandbox/access policy, and invariant-bypass tests. **Route to:** this capability plus `security-privacy-gate`, `business-rule-extraction`, and `quality-test-gate`. **Evidence required:** invariant list, access boundary, bypass test, and owner acceptance.
+- **Signal:** extension contracts, plugin APIs, config schemas, generated extension artifacts, or callback payloads change. **Hidden risk:** existing implementers or generated clients break silently. **Required professional action:** classify compatibility, version contract, migration/deprecation path, and consumer validation. **Route to:** `version-compatibility`, `api-contract-design`, `consumer-impact-analysis`, and this capability. **Evidence required:** contract diff, implementer inventory, migration guide, compatibility tests, and not-verified consumers.
+- **Signal:** extension-supplied URLs, config values, templates, scripts, payloads, or metadata reach HTTP clients, parsers, renderers, SQL, shell, queues, or external APIs. **Hidden risk:** SSRF, injection, resource abuse, or exfiltration through extension input. **Required professional action:** require schema validation, allowlists, sandboxing, redaction, and failure isolation. **Route to:** `input-validation`, `agent-tool-permission-sandbox`, `secret-configuration-security`, and this capability. **Evidence required:** validation schema, deny tests, sandbox policy, redaction fields, and failure mode tests.
+- **Signal:** project memory, old roadmap promises, prior plugin users, previous tests, or generated docs are reused to justify extension support. **Hidden risk:** stale memory can preserve an unused extension point or miss active implementers. **Required professional action:** verify current graph and execution evidence before preserving or changing the extension contract. **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`, and this capability. **Evidence required:** accepted/rejected memory, caller/implementer graph, validation freshness, and explicit unknowns.
+
+# Reference Loading Policy
+
+- **L1:** Use only this `SKILL.md` for routing or rejecting a simple speculative abstraction when no concrete extension contract is being designed.
+- **L2:** Load `references/checklist.md` for any actual extension point, plugin/hook/provider registry, webhook/callback, config-driven variation, feature flag governance, or compatibility review.
+- **L3:** Load `examples/example-output.md` when producing a user-facing extensibility plan, evaluation fixture, or structured review table.
+- **L4:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the design depends on current graph reachability, existing implementers, prior compatibility decisions, generated artifacts, command output, or test freshness.
+- **L5:** Pair with security, reliability, delivery, API/contract, or domain gates only when the extension executes privileged behavior, exposes external contracts, affects release rollout, or crosses regulated/tenant boundaries.
 
 # Risk Escalation Rules
 
@@ -130,19 +109,23 @@ Every extension point is a product and operations commitment that outlasts its a
 
 # Failure Modes
 
-- Speculative `NotificationProvider` interface implemented for only Twilio; second provider never materializes; interface maintained for 3 years; removed in v2 breaking all internal tests.
-- Pre-checkout hook modifies price field without authorization; tenant exploits to set price to $0.01; financial loss.
-- Tenant-supplied webhook URL `http://192.168.1.1/admin`; platform calls it; exposes internal admin panel.
-- Plugin config schema not enforced; implementer passes `{"command": "DROP TABLE orders"}` in a template field; SQL injection in template renderer.
-- Extension interface `v1.processPayment(amount)` changed to `v1.processPayment(amount, currency)` without version bump; all existing plugins throw `ArgumentError`; production down.
-- Feature flag `show_old_nav` never removed; 2 years later, no one knows if removing it is safe; both code paths maintained indefinitely; dead code accumulates.
-- Extension invocation not traced; tenant plugin causes 200ms latency spike on every request; found only after 3-week performance investigation.
-- Out-of-process plugin granted filesystem read; reads `/etc/secrets/db.password`; exfiltrates credentials via allowed outbound network call.
+- **Speculative provider:** `NotificationProvider` has one Twilio implementation; the second provider never arrives, but the interface constrains tests and removals for years.
+- **Invariant bypass:** pre-checkout hook mutates price before tax; tenant can alter financial records outside core validation.
+- **Webhook SSRF:** tenant URL points at a private admin or metadata address; platform calls it from a trusted network.
+- **Untyped config:** plugin config accepts arbitrary expressions or SQL-like strings; validation, audit, and static review are bypassed.
+- **Silent breaking change:** extension interface changes signature or field semantics without version bump, migration, or implementer notification.
+- **Permanent flag:** release flag becomes long-lived configuration with no owner, cleanup date, or not-present validation.
+- **No extension trace:** plugin latency or failure cannot be attributed to extension ID, version, tenant, or invocation path.
+- **Over-privileged sandbox:** out-of-process extension can read sensitive local files or call broad outbound networks.
+- **Stale memory proof:** old roadmap or generated docs claim variation exists, but current graph has one implementer.
+- **Stale validation proof:** compatibility evidence predates generated contract or config schema changes.
 
 # Output Contract
 
-Return an extensibility plan with:
+Return `extensibility_design_plan` with:
 
+- `mode_selected` (create extension point, modify contract, reject abstraction, deprecate/cleanup, or preserve existing extension)
+- `extension_decision` (approved, approved with conditions, rejected as speculative, or requires owner/validation before implementation)
 - `known_variation_cases` (list ≥ 2 concrete cases; or roadmap reference)
 - `invariants` (list of invariants the extension must not bypass; enforcement mechanism)
 - `extension_contract` (interface definition, method signatures, config schema, data types)
@@ -156,6 +139,41 @@ Return an extensibility plan with:
 - `test_matrix` (invariant bypass attempt, malformed extension input, extension failure isolation, perf impact)
 - `rejected_alternatives` (simpler direct implementations considered; why extension point chosen)
 - `owner` (team, on-call rotation, decision authority for new implementers)
+- `graph_memory_execution_validation` (callers/implementers/generated artifacts inspected, project-memory claims accepted or rejected, execution evidence, validation freshness, and unknowns)
+- `extension_to_validation_map` (extension point -> variation proof, contract compatibility test, invariant/security test, failure/performance test, owner, and next gate)
+- `evidence_limits` (uninspected implementers, stale roadmap claims, missing consumers, unavailable sandbox evidence, and residual uncertainty owner/date)
+
+# Evidence Contract
+
+Acceptable evidence names:
+
+- **Basis:** selected mode, extension decision, variation mechanism, invariants, compatibility class, security boundary, and rejected simpler alternative.
+- **Source evidence:** current source paths, config schemas, generated artifacts, package/API docs, contract diffs, tests, docs, and owner files inspected or explicitly unavailable.
+- **Graph evidence:** current callers, implementers, dependency edges, generated consumers, feature flags, webhook consumers, and excluded graph surfaces with reason.
+- **Memory evidence:** roadmap notes, prior plugin users, ADRs, incident notes, old validations, and generated summaries accepted, rejected, stale, or not verified with date/scope.
+- **Execution evidence:** compatibility tests, schema validation tests, invariant-bypass tests, sandbox/SSRF denial tests, failure-isolation tests, performance evidence, observability checks, or owner approvals with freshness.
+- **What evidence proves:** variation is real, the contract is narrow/versioned, invariants remain core-owned, extension input is bounded, and each extension point has owner and lifecycle.
+- **What evidence does not prove:** uninspected implementers, production traffic, third-party behavior, future roadmap adoption, unavailable sandbox proof, or compatibility after later generated-artifact changes.
+- **Handoff evidence:** next capability/gate, validation artifact, residual unknown, owner, and date for every extension point in the `extension_to_validation_map`.
+
+# Validation Obligations
+
+- Variation proof must be backed by caller/implementer graph, generated artifacts, docs, tests, or a dated roadmap owner; unsupported variation routes to reject/cleanup mode.
+- Contract changes require compatibility classification and old/new implementer validation before approval.
+- Trust-boundary extensions require schema, sandbox, SSRF/injection denial, redaction, and failure-isolation evidence.
+- Final handoff must state stale/not-run validations and what later source, graph, generated, or config changes would invalidate the evidence.
+
+# Benchmark Coverage
+
+Use OCP only to justify closed-for-modification behavior after variation is proven; use Strategy/Template Method for narrow interchangeable behavior; use plugin registry patterns for discovery/lifecycle; use webhook benchmarks for signed, retried, versioned callbacks; use schema governance for extension input; use OWASP/CWE only when extension input crosses trust boundaries. Benchmark references must change the chosen extension shape, validation depth, compatibility class, or rejection of an abstraction.
+
+# Routing Coverage
+
+- Pair with `architecture-tradeoff-analysis`, `architecture-style-selection`, and `module-boundary-design` when choosing between direct implementation, configuration, plugin, hook, service split, or provider abstraction.
+- Pair with `version-compatibility`, `api-contract-design`, and `consumer-impact-analysis` when extension contracts, generated clients, payloads, or external implementers can break.
+- Pair with `security-privacy-gate`, `input-validation`, `secret-configuration-security`, and `agent-tool-permission-sandbox` when extensions cross trust boundaries, execute code, receive tenant input, or call external systems.
+- Pair with `quality-test-gate`, `validation-broker`, and `reliability-observability-gate` when invariant-bypass, malformed input, failure isolation, performance, or per-extension observability evidence is required.
+- Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `plan-execution-consistency` whenever current graph reachability, prior decisions, command evidence, or plan-to-validation alignment determines whether the extension point should exist.
 
 # Quality Gate
 
@@ -171,6 +189,10 @@ The extensibility design is complete only when:
 8. Per-invocation observability (trace, log, metrics) specified.
 9. Simpler alternatives considered and rejection rationale documented.
 10. Test matrix covers: invariant bypass attempt, malformed input, extension failure isolation, performance impact.
+11. Repository graph coverage identifies current callers, implementers, generated artifacts, config schemas, docs, and tests or explicitly marks each unavailable.
+12. Project memory, roadmap notes, previous implementer lists, and old validation are dated, scope-checked, and rejected as proof when stale.
+13. Every extension point appears in `extension_to_validation_map` with variation proof, compatibility test, invariant/security test, failure/performance test, owner, and next gate.
+14. Breaking contract, deprecation, or cleanup decisions include migration, support window, rollback/yank or removal path, and consumer notification evidence.
 
 # Used By
 

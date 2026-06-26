@@ -21,7 +21,7 @@ Do not use this capability to: write general happy-path tests unrelated to a spe
 
 # Stage Fit
 
-Launched in bug-fix and testing; also gates refactoring. Per-stage focus:
+Use during bug-fix, testing, code-review, refactoring, and final validation. Per-stage focus:
 
 - **bug-fix**: a test that reproduces the defect before the fix and passes after it; same-pattern coverage.
 - **testing**: protect existing behavior while adding new coverage.
@@ -38,80 +38,25 @@ Launched in bug-fix and testing; also gates refactoring. Per-stage focus:
 
 # Industry Benchmarks
 
-Anchor against: **Kent Beck "Test-Driven Development By Example" (2002)** — write a failing test that reproduces the defect first; fix until green; no regression-first discipline means no confidence the test actually protects against recurrence. **Michael Feathers "Working Effectively with Legacy Code" (2004)** — characterization tests as a regression safety net for risky changes in untested code. **Google Testing Blog — "Testing on the Toilet"** — test pyramid; flaky tests are technical debt; test at the lowest effective level. **OWASP Testing Guide** — security fixes require non-regression evidence; regression tests for injection, authentication bypass, IDOR, and broken access control must cover the specific attack vector. **DORA State of DevOps Report** — change failure rate (CFR) and mean time to restore (MTTR) improve when regression coverage is linked to defect tracking; high-performing teams have significantly lower defect recurrence. **IEEE Std 829 (Software and System Test Documentation)** — test case traceability to defect/requirement; required for regulated industries (medical device, avionics, financial). **SonarQube / CodeClimate** — coverage drift detection; new bugs reported in uncovered code; regression coverage enforcement at PR gate. **Mutation testing (Stryker / PITest)** — validates that regression tests actually fail when the bug is reintroduced; a regression test that passes even with the mutation is too weak.
+Anchor against TDD red-green repair discipline, Feathers-style characterization tests for legacy change, test-pyramid level selection, OWASP non-regression evidence for fixed vulnerabilities, traceability standards for regulated work, DORA change-failure reduction, and mutation testing that proves the guard fails when the defect is reintroduced. Keep detailed templates in [references/checklist.md](references/checklist.md) so the loaded body stays focused on routing, evidence, and gates.
 
-### Regression Test Level Selection Matrix
+# Mode Matrix
 
-| Defect Characteristics | Required Test Level | Justification |
-| --- | --- | --- |
-| Defect in a single function with deterministic input → output | Unit test | Fastest; most isolated; clearest failure attribution |
-| Defect requires correct data state (DB query, cache, ORM) | Integration test (real or in-memory DB) | Unit mocks would hide the actual data layer behavior that caused the defect |
-| Defect requires correct interaction of 2+ services | Integration / component test | Reproduce the service interaction that failed |
-| Defect is an authorization bypass (wrong role gets access) | Integration test (security layer + handler) | Must cover the full auth decision path, not just mock it |
-| Defect requires browser rendering or JS event | E2E test | No other level can reproduce DOM event or rendering condition |
-| Defect is a timing/concurrency race condition | Deterministic replay test or chaos experiment | If non-deterministic, document as untestable; add monitoring |
-| Defect is in external third-party integration | Integration test with recorded response fixture | Reproduce the exact error response the third-party returned |
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Bug-fix regression | Confirmed defect, failing user scenario, incident, QA finding, or exploit fix. | Prove the exact recurrence path is red before fix and green after. | Defect reference, trigger input/state, pre-fix failure, post-fix command. | `quality-test-gate`, `failure-diagnosis` | Generic happy-path tests. |
+| Security regression | IDOR, auth bypass, injection, XSS, CSRF, SSRF, secret leak, or permission bug. | Preserve the abuse case and denied behavior without unsafe live attack side effects. | Attack vector, denied-case test, same-pattern scan, security review note. | `security-privacy-gate`, `permission-boundary-modeling` | Absence-only authorization checks. |
+| Refactor characterization | Risky cleanup, extraction, compatibility branch removal, or historical defect zone. | Lock existing observable behavior before structure changes. | Characterization cases, current behavior command, changed-path map. | `refactoring`, `code-review`, `validation-broker` | Testing private helpers. |
+| Hard-to-reproduce defect | Flaky race, timing, hardware, external provider, production-only data, or disputed repro. | Choose deterministic replay, synthetic fixture, monitoring, or documented impossibility. | Feasibility decision, residual risk, compensating control, owner. | `testability-seam-design`, `observability`, `test-data-management` | Flaky CI test as proof. |
+| Existing evidence reuse | Repository graph, project memory, prior red/green run, bug tracker, or old test report says covered. | Confirm current source, tests, fixtures, generated inputs, and validation freshness. | Inspected paths, accepted/rejected memory, command exit code, stale limits. | `repository-graph-analysis`, `project-memory-governance`, `plan-execution-consistency` | Stale green output as closure. |
 
-### Regression Test Anatomy Template
+# Proactive Professional Triggers
 
-```
-describe("OrderService.calculateTotal", () => {
-  /**
-   * Regression: BUG-1234 — Payment total rounds incorrectly for USD amounts
-   * with 3 decimal places (e.g., 10.005 rounds to 10.00 instead of 10.01)
-   * Fixed in PR #567 by replacing Math.round with Decimal.ROUND_HALF_UP
-   * Reported: 2024-03-15 | Fixed: 2024-03-18
-   */
-  it("rounds USD amounts with 3 decimal places using ROUND_HALF_UP", () => {
-    // Arrange: exact input that triggered the defect (from production data)
-    const order = {
-      items: [{ price: 3.335, quantity: 3 }] // 3 × 3.335 = 10.005
-    };
-    // Act
-    const total = calculateTotal(order, "USD");
-    // Assert: expected behavior after fix; this test was RED before the fix
-    expect(total).toBe(10.01);  // not 10.00 (pre-fix result)
-  });
-});
-
-// Integration-level regression (auth bypass example):
-describe("GET /api/orders/:id — authorization", () => {
-  /**
-   * Regression: SEC-089 — IDOR vulnerability: unauthenticated user could access
-   * any order by guessing order ID.
-   * Fixed: ownership check added before data fetch.
-   * OWASP A01:2021 Broken Access Control
-   */
-  it("returns 403 when authenticated user requests another user's order", async () => {
-    const order = await createOrderForUser(userA);
-    const response = await request(app)
-      .get(`/api/orders/${order.id}`)
-      .set("Authorization", bearerToken(userB)); // different user
-    expect(response.status).toBe(403);
-    expect(response.body.data).toBeUndefined(); // no data leak
-  });
-});
-```
-
-### Untestable Defect Documentation Template
-
-```yaml
-defect_id: "BUG-5678"
-description: "WebSocket message ordering race condition under high load"
-fix_description: "Added sequence numbers; client re-orders by sequence"
-regression_test_feasibility: INFEASIBLE
-reason: "Race condition is non-deterministic; cannot reliably reproduce in test
-  environment without hardware-level timing control. Test would be flaky > 20%."
-residual_risk:
-  likelihood: LOW
-  impact: MEDIUM
-compensating_controls:
-  - Production monitoring alert: out-of-sequence message events > 0.1% rate
-  - Chaos experiment: quarterly test under synthetic high load
-  - Manual regression checklist item in release runbook
-reviewed_by: "Engineering Lead + QA Lead"
-date: "2024-03-20"
-```
+- **Signal:** a fix lands with no test that was observed failing before the fix. **Hidden risk:** the new test may describe correct behavior but never reproduce the defect. **Required professional action:** require red-before-fix evidence or document why it cannot be produced. **Route to:** `quality-test-gate`, `agent-execution-discipline`. **Evidence required:** command, commit/branch state, failure output, and matching-failure rationale.
+- **Signal:** defect report includes exact input, role, tenant, state, feature flag, provider response, or timing sequence but the proposed fixture simplifies it. **Hidden risk:** recurrence path remains uncovered while a weaker test passes. **Required professional action:** capture the original trigger or a justified minimized equivalent. **Route to:** `test-data-management`, `unit-testing`, `integration-testing`. **Evidence required:** trigger map, fixture owner, equivalence rationale, and green-after-fix command.
+- **Signal:** security, permission, data exposure, or injection bug is fixed without attack-vector regression coverage. **Hidden risk:** surrounding code can reintroduce the vulnerability under the same abuse path. **Required professional action:** add denied/abuse test and same-pattern scan without hitting live systems. **Route to:** `security-privacy-gate`, `permission-boundary-modeling`, `web-security`. **Evidence required:** malicious/denied test output, scanned paths, and residual untested vectors.
+- **Signal:** race, flake, external dependency, hardware, production-only data, or performance-sensitive defect is labeled untestable. **Hidden risk:** "untestable" hides missing determinism work or lack of compensating controls. **Required professional action:** evaluate replay/fake/stub/contract/chaos/monitoring options and record residual risk. **Route to:** `testability-seam-design`, `observability`, `reliability-observability-gate`. **Evidence required:** infeasibility reason, rejected test options, alert/manual/chaos control, owner, and expiry.
+- **Signal:** repository graph, project memory, bug tracker, old CI output, or previous agent report says regression coverage exists. **Hidden risk:** stale tests, changed fixtures, renamed paths, or final edits invalidate the claim. **Required professional action:** confirm current source and validation freshness before closure. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `validation-broker`. **Evidence required:** inspected files, accepted/rejected prior claim, fresh command/report path, and evidence limits.
 
 # Selection Rules
 
@@ -141,21 +86,23 @@ Escalate when: a defect cannot be regression-tested and the residual risk is HIG
 
 # Failure Modes
 
-- Regression test written after fix without red-before-fix verification — passes on both versions; defect recurs; test is useless.
-- Fixture oversimplified — does not reproduce exact triggering condition — original defect not protected.
-- Security regression test skipped — authorization bypass reintroduced in refactoring 8 months later — discovered in penetration test.
-- Regression test has no defect link — deleted during cleanup — defect recurs.
-- Timing-sensitive test added to CI — intermittent failures — disabled — defect recurs.
-- Integration test connects to shared development database — mutates data — breaks other tests — removed rather than fixed.
+- **Post-fix-only test** — passes on both versions; defect recurs; test is useless.
+- **Oversimplified fixture** — does not reproduce exact triggering condition; original defect is not protected.
+- **Skipped security regression** — authorization bypass is reintroduced during refactoring and discovered in penetration testing.
+- **Missing defect link** — test is deleted during cleanup because its purpose is unclear; defect recurs.
+- **Timing-sensitive CI test** — intermittent failures lead to disablement; defect recurs without signal.
+- **Shared database integration test** — mutates shared data, breaks other tests, and is removed instead of repaired.
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when the defect is security-sensitive, concurrency-sensitive, production incident driven, difficult to reproduce, or disputed in review. Do not load it for a simple deterministic bug when the defect report, failing test command, and red/green evidence are already sufficient.
+Load [references/checklist.md](references/checklist.md) when the defect is security-sensitive, concurrency-sensitive, production incident driven, difficult to reproduce, disputed in review, or when level selection / untestable documentation templates are needed. Use [examples/example-output.md](examples/example-output.md) when the required output shape is unclear. Do not load references for a simple deterministic bug when the defect report, failing test command, and red/green evidence are already sufficient.
 
 # Output Contract
 
 Return regression test coverage with:
 
+- `mode_selected` (bug-fix regression, security regression, refactor characterization, hard-to-reproduce defect, or existing-evidence reuse)
+- `boundaries_inspected` (changed source, existing tests, fixtures, generated inputs, bug report, incident notes, same-pattern paths, CI gate, and skipped boundaries with reason)
 - `defect_reference` (defect ID, incident reference, or PR/review link)
 - `failure_reproduction` (exact triggering conditions: input, state, role, timing, dependencies)
 - `test_level` (Unit / Integration / E2E — justified per level selection matrix)
@@ -163,6 +110,9 @@ Return regression test coverage with:
 - `test_code` (test file, test name, arrange/act/assert; defect link in comment)
 - `fixture_design` (mirrors production data patterns; covers exact triggering conditions)
 - `test_link` (CI integration; PR gate requirement)
+- `graph_memory_execution_freshness` (repository graph, project memory, old CI/test report, and prior agent claims accepted, rejected, stale, or not verified)
+- `validation_freshness` (literal command, working directory, exit code, artifact/report path, latest edit coverage, and stale/not-run scope)
+- `tool_permission_boundary` (shell/test runner/CI/connector action class, sandbox/approval state, write scope, and secret-output redaction rule)
 - `untestable_documentation` (if applicable: defect reference, impossibility reason, residual risk, compensating controls, reviewer sign-off)
 - `mutation_test_validation` (optional: mutation testing result confirming test fails when defect mutation applied)
 
@@ -174,6 +124,7 @@ A regression test is accepted only when the output includes:
 - **Red-before-fix evidence**: command, commit/branch state, failure output, and why the failure matches the original defect.
 - **Green-after-fix evidence**: command, output, changed assertion path, and confirmation that the same test now passes.
 - **Triggering condition**: exact input, state, role, timing, dependency response, feature flag, or data shape that originally caused the bug.
+- **Source freshness**: current source, tests, fixtures, generated inputs, repository graph, project memory, prior CI output, and old agent reports accepted, rejected, stale, or not verified.
 - **What evidence proves**: the specific recurrence path is blocked.
 - **What evidence does not prove**: adjacent variants, concurrency paths, production-only dependencies, load behavior, or untested clients.
 - **Residual risk**: untested variants, flaky or non-deterministic paths, impossible automated test rationale, owner, and compensating control.
@@ -192,6 +143,8 @@ The regression test coverage is complete only when:
 8. Security defects: test reproduces the specific attack vector (not just the absence of authorization).
 9. Test is integrated into CI and required as a merge gate.
 10. Mutation testing (if run) confirms the test fails when the defect mutation is applied.
+11. Current source, fixtures, generated inputs, repository graph, project memory, and old CI/agent claims are reconciled before closure.
+12. Validation report names command, exit code, artifact path, freshness after final edit, and what the evidence does not prove.
 
 # Used By
 

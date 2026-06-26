@@ -28,9 +28,18 @@ Pinned versions are review baselines, not permanent recommendations. If a pinned
 
 Use this capability when a change adds, removes, publishes, regenerates, versions, or changes an SDK, client library, shared package, framework adapter, plugin API, generated client, public type surface, internal reusable library, sample project, or consumer-facing package documentation.
 
+Also use it when repository graph, project memory, or execution traces show that exported types, generated output, package metadata, examples, deprecations, runtime floors, or consumer fixtures changed without matching compatibility and validation evidence.
+
 # Do Not Use When
 
 Do not use this capability for application-only code with no reusable contract. Do not use it instead of `api-contract-design` for server behavior, `version-compatibility` for mixed-version rollout, `package-dependency-management` for dependency graph risk, or language professional usage capabilities for runtime-specific idioms.
+
+# Stage Fit
+
+- **Planning / design:** define the contract surface, compatibility promise, version class, consumer inventory, generator source, runtime floors, and deprecation/migration path before implementation.
+- **Implementation / repair:** update exported APIs, generated clients, package metadata, docs, examples, and compatibility tests together.
+- **Review:** reject changes that alter public surface, runtime floor, package metadata, generated output, or error taxonomy without diff evidence and consumer validation.
+- **Release:** verify artifact packaging, signatures/provenance, SBOM, changelog, migration guide, examples, downstream smoke tests, and rollback/yank path before publish.
 
 # Non-Negotiable Rules
 
@@ -46,6 +55,7 @@ Do not use this capability for application-only code with no reusable contract. 
 - Public types are part of the contract: changing a parameter from required to optional, narrowing a union, removing a generic constraint, or adding an abstract method is a breaking change.
 - Error types and exception hierarchies are part of the contract; renaming an exception class is breaking.
 - Default values are part of the contract; flipping a default behavior is breaking.
+- SDK/library claims must cite **repository evidence** (exports, package metadata, generated files, examples, docs, consumers), **memory evidence** (prior compatibility and deprecation decisions accepted or updated), **graph evidence** (downstream consumer and package dependency edges), and **execution evidence** (API diff, fixture build, packed-artifact example run, contract/smoke tests).
 
 # Industry Benchmarks
 
@@ -65,6 +75,43 @@ Do not use this capability for application-only code with no reusable contract. 
 # Selection Rules
 
 Select this capability when the primary risk is a reusable client or library contract that other code depends on. Pair with `api-contract-design` when the SDK mirrors a service API, `typescript-professional-usage` or another language capability when exported types or idioms matter, `package-dependency-management` when publication changes dependency risk, and `change-documentation-gate` when examples or migration docs are part of the release.
+
+Use **with** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the work must prove consumer graph reach, prior compatibility decisions, executed validators, and validation freshness.
+
+# Proactive Professional Triggers
+
+- **Signal:** Exported symbols, public types, config keys, generated operations, error classes, callbacks, extension points, defaults, or peer dependencies change.
+  **Hidden risk:** a local compile pass hides a breaking SDK/library contract change for downstream consumers.
+  **Required professional action:** classify the change class, run public-surface diffing, map consumers, and add compatibility or snapshot tests.
+  **Route to:** `sdk-library-contract-design`, `api-contract-design`, `version-compatibility`.
+  **Evidence required:** contract surface diff, change-class rationale, consumer inventory, and compatibility test output.
+- **Signal:** OpenAPI/AsyncAPI/Protobuf/source spec, generator version, template, generated tree, package metadata, lockfile, or runtime floor changes.
+  **Hidden risk:** nondeterministic generation or a silent runtime/dependency floor bump breaks installs and generated clients.
+  **Required professional action:** pin source hash/generator digest/config, review generated diff, verify runtime matrix, and classify dependency risk.
+  **Route to:** `sdk-library-contract-design`, `package-dependency-management`, `quality-test-gate`.
+  **Evidence required:** source spec hash, generator pin, generated diff review, matrix result, and package/dependency compatibility note.
+- **Signal:** README, docs, examples, migration guide, changelog, deprecation marker, warning, or removal version changes near an SDK/library release.
+  **Hidden risk:** docs and examples promise a contract that the packed artifact does not provide, or consumers miss a migration window.
+  **Required professional action:** run examples against the packed/installed artifact and align changelog, migration, deprecation, and removal policy.
+  **Route to:** `sdk-library-contract-design`, `change-documentation-gate`, `quality-test-gate`.
+  **Evidence required:** packed-artifact example run, changelog entry, migration/deprecation map, and docs/versioned reference output.
+- **Signal:** Package publishing, registry metadata, signature, provenance, SBOM, yanking, rollback, license, or security contact changes.
+  **Hidden risk:** artifact provenance or rollback is unverifiable after publication, especially for immutable registries.
+  **Required professional action:** record release artifact evidence, registry policy, provenance/SBOM/signature checks, and yank/hotfix plan.
+  **Route to:** `sdk-library-contract-design`, `delivery-release-gate`, `package-dependency-management`.
+  **Evidence required:** artifact digest/version, signature/provenance/SBOM verification, registry rollback/yank path, and release owner.
+- **Signal:** Project memory, prior migration policy, consumer fixture, previous validation, or downstream smoke matrix is reused for a new SDK/library change.
+  **Hidden risk:** stale consumer assumptions or old validation results are treated as current compatibility proof.
+  **Required professional action:** confirm reused evidence against current source, current generated output, package graph, and consumer fixtures.
+  **Route to:** `sdk-library-contract-design`, `project-memory-governance`, `execution-trajectory-analysis`.
+  **Evidence required:** accepted/rejected memory table, freshness limit, changed-consumer delta, and re-run or not-verified disclosure.
+
+# Reference Loading Policy
+
+- **L1:** Read this `SKILL.md` only for routing, small reviews, or compact SDK/library plans.
+- **L2:** Read `references/checklist.md` when drafting/reviewing a concrete SDK/library contract plan, release checklist, consumer-compatibility review, or generated-client review.
+- **L3:** Read `examples/example-output.md` when output shape is unclear or the user needs a filled SDK contract plan.
+- **Do not load adjacent skills by default.** Load `api-contract-design`, `version-compatibility`, `package-dependency-management`, `quality-test-gate`, or language professional usage only when server API semantics, rollout sequencing, dependency graph risk, validation strategy, or language-specific exported API idioms are the primary concern.
 
 # Risk Escalation Rules
 
@@ -127,7 +174,7 @@ Select this capability when the primary risk is a reusable client or library con
 
 # Output Contract
 
-Return an SDK/library contract plan with:
+Return an `sdk_library_contract_plan` with:
 
 - `contract_surface`: exported symbols, public types, error hierarchy, config keys, commands, generated operations, extension points, default values, peer dependencies
 - `change_class`: patch / minor / major / internal-only with written justification and API-diff tool output reference
@@ -138,7 +185,31 @@ Return an SDK/library contract plan with:
 - `consumer_tests`: API-diff, snapshot tests, Pact (or equivalent) contracts, fixture-consumer build, downstream smoke matrix list
 - `deprecation_migration`: deprecated symbols, replacements, first-deprecated version, planned-removal version, migration steps, runtime warning mechanism
 - `documentation_updates`: reference docs (generated), README, API docs versioned, migration guide, examples
+- `graph_memory_execution_validation`: exports/package/generated/docs/consumer graph inspected, prior compatibility decisions reused or updated, commands run, evidence gaps
+- `contract_to_validation_map`: each public-surface/generated/package/docs/release change mapped to diff, fixture, contract, example, package, provenance, or smoke validation
+- `evidence_limits`: what local checks do not prove about downstream adoption, registry behavior, unpublished consumers, or future runtime/package-manager behavior
 - `handoff`: owners for API, language runtime, docs, release engineering, security review
+
+# Evidence Contract
+
+An acceptable answer names:
+
+- Repository evidence: export files, package metadata, generated output, source specs, examples, docs, changelog, deprecation markers, tests, fixtures, and release scripts inspected.
+- Memory evidence: previous semver decisions, migration/deprecation windows, supported runtime floors, consumer commitments, and known compatibility exceptions accepted or changed.
+- Graph evidence: package dependency graph, generated-client source graph, top consumers, fixture projects, downstream smoke matrix, and public/private export boundaries.
+- Execution evidence: API-diff, generated diff review, packed-artifact install/example run, consumer fixture build, contract/smoke tests, SBOM/signature/provenance checks, and freshness after final edit.
+- Handoff evidence: next owner for API semantics, language idioms, docs, release, dependency/security review, residual risk, and rollback/yank/hotfix path.
+
+# Benchmark Coverage
+
+- **Compatibility:** semver/change-class discipline, public-surface diff, runtime floor stability, error taxonomy, default values, and deprecation-before-removal.
+- **Generation:** pinned source spec, generator version/digest/config, reviewed generated diff, deterministic output, and source-vs-generated authority.
+- **Consumer proof:** fixture-consumer builds, contract tests, downstream smoke matrix, packed-artifact examples, and old/new version compatibility checks.
+- **Release integrity:** package metadata, changelog, migration guide, signatures/provenance, SBOM, registry policy, and rollback/yank behavior.
+
+# Routing Coverage
+
+This capability should route from prompts involving SDKs, generated clients, public libraries, published packages, reusable internal packages, exported APIs, public types, semver, package metadata, runtime floors, deprecations, examples, fixture consumers, downstream smoke tests, changelogs, and migration guarantees. Route away when the primary question is server API behavior, general dependency selection, language idiom review, release mechanics without SDK surface change, or application-only code with no reusable contract.
 
 # Quality Gate
 
@@ -152,6 +223,9 @@ Return an SDK/library contract plan with:
 8. Release artifacts are signed and have SLSA build provenance + SBOM attached; verification step runs after publish.
 9. Yank / rollback procedure is documented per registry and rehearsed at least once.
 10. Downstream consumer smoke matrix (or Pact contract suite) passes against the release candidate before publish.
+11. Repository graph evidence covers exports, generated files, package metadata, docs/examples, release scripts, and consumer fixtures in scope.
+12. Every public-surface, generated-output, package, docs/example, and release-artifact change maps to a concrete validator or residual-risk owner.
+13. Reused project memory, prior validation, and consumer fixtures are current or explicitly marked stale/not verified with follow-up owner.
 
 # Used By
 

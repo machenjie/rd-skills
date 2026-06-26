@@ -33,6 +33,30 @@ Do not use this capability for read-only GET operations — reads are naturally 
 
 Anchor this capability on idempotent API operation design, bounded retry with jitter, circuit breaker/retry budget, durable dedupe stores, and DLQ/reconciliation discipline. Load [references/industry-benchmarks.md](references/industry-benchmarks.md) only when release evidence, audit, or high-risk payment/webhook/queue retry behavior needs named benchmark support.
 
+# Boundary And Source Truth
+
+This capability owns application-level duplicate-effect prevention: idempotency key scope, request fingerprint, dedupe state, replay semantics, retry policy, timeout/unknown-outcome recovery, terminal failure, DLQ/replay ownership, and validation evidence. It does not own broker topology, job lifecycle, transaction isolation, public API schema, or provider-specific protocol details except as handoff boundaries.
+
+Source truth is current handlers, services, consumers, external-write adapters, idempotency stores, queue/job config, retry wrappers, tests, runbooks, dashboards, registry/routing entries, and final validation output. Repository graph, project memory, generated reports, previous incidents, and earlier validation are selectors only until current source inspection and post-edit validation confirm them.
+
+# Stage Fit
+
+- **Planning:** use when a write, submit, external call, webhook, queue consumer, or replay path can execute more than once and the safe duplicate behavior is not yet explicit.
+- **Implementation / review:** verify key generation point, caller binding, payload hash, in-flight state, atomic dedupe/side-effect ordering, retry classification, circuit interaction, and terminal state.
+- **Testing / validation:** map duplicate request, same-key payload mismatch, in-flight duplicate, timeout recovery, retry exhaustion, DLQ/replay, and cross-caller replay to executable or explicitly not-run evidence.
+- **Release / operations:** require retry-rate, duplicate-detected, idempotency-store-error, DLQ depth, replay, reconciliation, and circuit-state signals with owners and rollback or stop criteria.
+- **Graph / memory / execution coupling:** treat graph, memory, runbook, incident, and old report claims as leads; reconcile them against current source, final command order, and validation freshness before closure.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+| --- | --- | --- | --- | --- | --- |
+| Synchronous command/write | POST/PATCH/create/submit/pay/refund/order with client retry or timeout. | Operation key, fingerprint, in-flight and committed replay, unknown outcome. | Header/key source, payload hash, dedupe store, duplicate and timeout tests. | `api-contract-design`, `controller-api-implementation` | Skip for read-only GET or naturally idempotent PUT with no side effect. |
+| External write/reconciliation | Payment, email/SMS, CRM, fulfillment, provider write, or non-idempotent SDK call. | Provider reference, retry budget, reconciliation-before-retry, terminal recovery. | Provider idempotency support, reference lookup, retryable errors, reconciliation test. | `integration-change-builder`, `reliability-observability-gate` | Skip provider depth when no external side effect exists. |
+| Queue/webhook consumer | At-least-once delivery, webhook replay, DLQ replay, visibility timeout, redelivery. | Inbox/dedupe, message id/key, ack/commit timing, replay safety. | Dedupe store, ack point, duplicate delivery test, DLQ/replay runbook. | `message-queue-design`, `async-job-design` | Skip broker topology unless partitions, offsets, or DLQ config changed. |
+| Retry policy safety | Timeout, 429, 503, SDK retry, circuit breaker, cancellation, partial failure. | Bounded attempts, full jitter, retryable/non-retryable split, circuit interaction. | Max attempts/deadline, backoff formula, retry budget, terminal-state proof. | `degradation-circuit-breaking`, `failure-contract-design` | Skip retries for permanent validation/authz errors. |
+| Evidence freshness | Prior graph, memory, report, incident note, or validation claims this path is safe. | Confirm current source and final validation rather than reusing stale proof. | Inspected paths, accepted/rejected memory, command order, freshness verdict. | `repository-graph-analysis`, `project-memory-governance`, `validation-broker` | Skip only for wording-only edits with no safety claim. |
+
 # Selection Rules
 
 Select this capability when **duplicate effect prevention and bounded retry policy** are the primary design concern. Adjacent routing:
@@ -42,6 +66,14 @@ Select this capability when **duplicate effect prevention and bounded retry poli
 - Prefer `form-validation-design` when the primary concern is client-side duplicate-submit protection (button disable + idempotency key generation).
 - Prefer `integration-change-builder` when the primary concern is third-party API protocol and error handling.
 - Prefer `transaction-consistency` when the primary concern is distributed transaction coordination and compensation.
+
+# Proactive Professional Triggers
+
+- **Signal:** A POST/PATCH/create/pay/refund/submit path allows caller retry or browser refresh without a stable operation-level key. **Hidden risk:** the retry creates a second committed side effect while appearing like normal recovery. **Required professional action:** require key generation at operation initiation, caller/tenant binding, payload hash, and duplicate replay behavior. **Route to:** `api-contract-design`, `quality-test-gate`. **Evidence required:** key source, scope, duplicate request test, same-key-different-payload test.
+- **Signal:** Timeout, cancellation, or network failure is treated as ordinary failure and retried automatically. **Hidden risk:** the first attempt may have committed while the response was lost. **Required professional action:** classify unknown outcome, reconcile by idempotency key or provider reference before retry, and define the safe user/operator response. **Route to:** `failure-contract-design`, `integration-change-builder`. **Evidence required:** timeout state, reconciliation query, retry/no-retry decision, unknown-outcome test.
+- **Signal:** Queue, webhook, scheduled job, or DLQ replay handler performs payment, notification, inventory, entitlement, ledger, or external writes without durable dedupe. **Hidden risk:** redelivery or replay repeats irreversible work. **Required professional action:** define message/operation id, inbox or idempotency store, ack timing, replay policy, and terminal owner. **Route to:** `message-queue-design`, `async-job-design`. **Evidence required:** dedupe key, ack/commit point, duplicate-delivery test, DLQ replay proof or residual risk.
+- **Signal:** Retry policy says "retry 5xx" or uses SDK defaults without max elapsed time, jitter, retry budget, circuit interaction, or non-retryable errors. **Hidden risk:** retry storms overload a degraded dependency and duplicate unsafe writes. **Required professional action:** bound attempts, total deadline, full jitter, retryable list, non-retryable list, circuit state, and terminal path. **Route to:** `degradation-circuit-breaking`, `reliability-observability-gate`. **Evidence required:** retry matrix, backoff formula, load amplification limit, terminal-state validation.
+- **Signal:** Project memory, repository graph, old incident notes, generated report, or previous validation says idempotency is already handled. **Hidden risk:** stale topology hides a new caller, adapter, retry wrapper, consumer, or validation gap. **Required professional action:** inspect current source, compare same-pattern side-effect paths, rerun mapped validators, and state what remains unverified. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`. **Evidence required:** inspected paths, accepted/rejected prior claim, command freshness, residual duplicate-effect risk.
 
 # Risk Escalation Rules
 
@@ -83,29 +115,35 @@ The most dangerous failure in idempotency design is quiet: a duplicate operation
 
 # Reference Loading Policy
 
-Read `references/checklist.md` only when the change touches payments, subscriptions, orders, webhooks, queue consumers, retries, redelivery, scheduled jobs, external writes, or operations where duplicate side effects are harmful. Do not load deep references for read-only retry wrappers or local-only retries with no external side effect.
+Use the `SKILL.md` body for L1/L2 routing, stage fit, mode selection, triggers, output contract, evidence, and quality gates. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete idempotency/retry design for payments, subscriptions, orders, webhooks, queue consumers, retries, redelivery, scheduled jobs, external writes, or harmful duplicate side effects. Load [references/industry-benchmarks.md](references/industry-benchmarks.md) when release evidence, audit, high-risk provider behavior, retry-budget math, outbox/inbox, or named benchmark support is required. Use [examples/example-output.md](examples/example-output.md) only when the final output shape is unclear. Do not load deep references for read-only retry wrappers or local-only retries with no external side effect.
 
 # Output Contract
 
 Return an idempotency and retry contract with:
 
+- `mode_selected` with trigger signal and skipped adjacent capabilities.
+- `source_evidence` (current handlers, services, consumers, adapters, stores, tests, runbooks, dashboards, graph/memory/report claims accepted or rejected).
 - `operations` (name, operation type, side effects, idempotency required?)
 - `idempotency_key` (generation point, scope: key+caller+operation+payload_hash, retention window)
-- `key_storage` (database table or Redis; schema; TTL; persistence guarantee)
+- `key_storage` (database table, inbox table, Redis, or provider key; schema; TTL; persistence guarantee; unique index)
 - `payload_mismatch` (detection method; response: 422; logging)
-- `on_duplicate` (key found committed: return cached response; key found in-flight: 409 + Retry-After)
+- `state_machine` (processing, committed, failed, expired, replayed, terminal, and safe transitions)
+- `on_duplicate` (key found committed: return cached response; key found in-flight: 409 + Retry-After; expired key behavior)
 - `retry_policy` (max attempts, deadline, backoff algorithm, jitter config, retryable errors, non-retryable errors)
 - `circuit_breaker` (failure threshold, open duration, half-open probe, retry budget)
 - `terminal_state` (DLQ destination, alert threshold, operator runbook, reconciliation procedure)
 - `reconciliation` (for timeout scenarios: lookup by idempotency key or reference ID before retry)
-- `observability` (metrics: attempt count, retry rate, DLQ depth, duplicate detection rate, circuit state)
-- `tests` (duplicate key test, payload mismatch test, timeout recovery test, cross-caller replay test, DLQ routing test, circuit breaker test)
+- `observability` (metrics: attempt count, retry rate, duplicate detection rate, idempotency-store errors, DLQ depth, replay count, circuit state)
+- `graph_memory_execution_coupling` (current graph/memory/trajectory/report facts used, rejected, stale, not verified, and final validation order)
+- `tool_permission_boundary` (read-only vs state-mutating validation/replay/provider actions, sandbox, rollback, redaction)
+- `tests` (duplicate key, payload mismatch, in-flight duplicate, timeout recovery, cross-caller replay, expired key, retry exhaustion, DLQ/replay, circuit breaker)
 
 # Evidence Contract
 
 An idempotency/retry design is complete only when the output includes:
 
 - **Operation identity**: operation name, side effect, resource boundary, tenant/user scope, and external dependency.
+- **Current evidence**: source paths, registry/routing entries, graph slice, memory signals, tests, runbooks, dashboards, and validation order inspected or explicitly skipped.
 - **Idempotency key source**: client key, server-generated key, message ID, natural key, or composite key.
 - **Request fingerprint**: behavior when the same idempotency key is reused with a different payload.
 - **In-flight behavior**: behavior when the same key arrives while the first request is still processing.
@@ -115,6 +153,8 @@ An idempotency/retry design is complete only when the output includes:
 - **Replay behavior**: original response replay, in-progress response, expired-key behavior, and conflict response.
 - **Retry policy**: retryable errors, non-retryable errors, backoff, jitter, max attempts, and timeout.
 - **Poison message / DLQ policy**: when retry stops, where the message goes, and how operators replay safely.
+- **Graph / memory / execution freshness**: prior claims accepted, rejected, stale, or not verified, and validators run after the final material edit.
+- **Tool boundary**: whether replay, provider, queue, database, cache, validation, or diagnostic actions are read-only or state-mutating, with rollback and redaction.
 - **Validation evidence**: duplicate request test, same-key-different-payload test, in-flight request test, expired key test, retry exhaustion test, and DLQ/replay test.
 - **What evidence proves**: the protected duplicate/retry path.
 - **What evidence does not prove**: untested downstream idempotency, production race, external system behavior, or clock skew.
@@ -134,6 +174,18 @@ The idempotency and retry design is complete only when:
 8. Terminal state: DLQ with alert, operator runbook, and reconciliation procedure.
 9. Timeout scenario handled: reconciliation query before retry for unknown-outcome mutations.
 10. Tests cover: duplicate submission, payload mismatch, cross-caller replay, circuit breaker open, DLQ routing.
+11. In-flight duplicate, expired key, retry exhaustion, and replay behavior are defined or marked non-applicable with evidence.
+12. Current source, graph, memory, reports, and prior validation are reconciled; stale evidence cannot support closure.
+13. Validation freshness is stated after the final material edit, with not-run or partial checks labeled honestly.
+14. Tool permission/sandbox boundary is recorded for replay, provider, queue, database, cache, validation, build, install, or diagnostic actions.
+
+# Benchmark Coverage
+
+This capability covers HTTP/API idempotency keys, caller-bound request fingerprints, durable dedupe stores, inbox/outbox retry safety, bounded retry with full jitter, retry budget and circuit interaction, timeout unknown-outcome reconciliation, DLQ/replay terminal states, duplicate-delivery validation, graph-memory-execution freshness, and tool-boundary evidence. It does not prove broker topology, provider-side guarantees, job lifecycle, transaction isolation, or production readiness without the companion gates selected above.
+
+# Routing Coverage
+
+Routes from `backend-change-builder`, `integration-change-builder`, `reliability-observability-gate`, `api-contract-design`, `message-queue-design`, `async-job-design`, `transaction-consistency`, `degradation-circuit-breaking`, `failure-contract-design`, and `change-forge-router` should arrive here when duplicate side effects and bounded retries are the primary decision. Route away when the primary issue is broker partitioning, durable job status, transaction boundary, provider-specific authentication, public error taxonomy, release rollout, or observability implementation.
 
 # Used By
 

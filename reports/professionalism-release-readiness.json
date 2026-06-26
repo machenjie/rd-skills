@@ -46,7 +46,7 @@
       "blocking": true,
       "evidence_source": "config/skill-content-exceptions.yaml and reports/skill-content-audit.json",
       "item": "content bloat exceptions",
-      "notes": "- classifications: {'KEEP_AS_IS': 144, 'MOVE_SECTIONS_TO_REFERENCES': 2, 'TIGHTEN_BODY': 9}; - domain_extensions: 7; - foundation_capabilities: 127; - heavy_domain: 0; - heavy_foundation: 1; - heavy_professional: 1; - low_professionalism: 0; - move_to_reference: 2; - professional_skills: 21; - split_candidates: 0",
+      "notes": "- classifications: {'KEEP_AS_IS': 155}; - domain_extensions: 7; - foundation_capabilities: 127; - heavy_domain: 0; - heavy_foundation: 0; - heavy_professional: 0; - low_professionalism: 0; - move_to_reference: 0; - professional_skills: 21; - split_candidates: 0",
       "status": "pass"
     },
     {
@@ -66,19 +66,18 @@
   ],
   "content_bloat_status": {
     "heavy_domain": 0,
-    "heavy_foundation": 1,
-    "heavy_professional": 1,
+    "heavy_foundation": 0,
+    "heavy_professional": 0,
     "low_professionalism": 0,
     "split_candidates": 0
   },
   "default_regression_status": "pass",
-  "generated_at": "2026-06-25T13:02:58.548945+00:00",
+  "generated_at": "2026-06-26T15:00:28.773378+00:00",
   "key_foundation_capability_coverage_summary": {
     "count": 40,
     "statuses": {
-      "acceptable": 29,
-      "needs-review": 10,
-      "sample-grade": 1
+      "acceptable": 1,
+      "sample-grade": 39
     }
   },
   "known_accepted_warnings": [],
@@ -90,135 +89,17 @@
     "promoted_agent_sample_strict_warnings": 0,
     "promoted_agent_samples_strict_checked": 5,
     "release_blocking_professionalism_warnings": 0,
-    "skill_professionalism_average_score": 41.86,
-    "skill_professionalism_warnings": 2
+    "skill_professionalism_average_score": 55.62,
+    "skill_professionalism_warnings": 0
   },
-  "non_blocking_followups": [
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/algorithm-data-structure-selection/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/cleanup-deletion-governance/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/configuration-runtime-policy/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/consumer-impact-analysis/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/data-side-effect-flow-tracing/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/dependency-wiring-lifecycle/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/failure-contract-design/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/model-boundary-mapping/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/testability-seam-design/SKILL.md"
-    }
-  ],
+  "non_blocking_followups": [],
   "out_of_scope_non_key_skill_eval_warnings": {
-    "non_key_capability_advisory_warnings": 2,
+    "non_key_capability_advisory_warnings": 0,
     "other_untracked_skill_eval_warnings": 0,
     "policy": "Professional skill warnings block release. Enhanced foundation warnings require release review. Key foundation warnings are follow-up unless evidence or reference precision is weak. Non-key foundation warnings are advisory-only.",
-    "total_skill_professionalism_warnings": 2,
+    "total_skill_professionalism_warnings": 0,
     "tracked_release_warnings": 0,
-    "warnings": [
-      {
-        "accepted_warning": false,
-        "follow_up": "Track as advisory cleanup; no release action required.",
-        "item": "api-contract-design",
-        "item_kind": "foundation-capability",
-        "kind": "foundation-capability",
-        "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
-        "name": "api-contract-design",
-        "path": "src/foundation/capabilities/api-contract-design/SKILL.md",
-        "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
-        "release_blocking": false,
-        "release_relevance": "advisory-only",
-        "scope": "non-key-foundation-capability",
-        "target": "src/foundation/capabilities/api-contract-design/SKILL.md",
-        "tracked_release_warning": false,
-        "type": "body_bloat_exception",
-        "warning_type": "body_bloat_exception"
-      },
-      {
-        "accepted_warning": false,
-        "follow_up": "Track as advisory cleanup; no release action required.",
-        "item": "design-pattern-selection",
-        "item_kind": "foundation-capability",
-        "kind": "foundation-capability",
-        "message": "long Markdown table in SKILL.md body (37 rows); consider moving deep table to references",
-        "name": "design-pattern-selection",
-        "path": "src/foundation/capabilities/design-pattern-selection/SKILL.md",
-        "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
-        "release_blocking": false,
-        "release_relevance": "advisory-only",
-        "scope": "non-key-foundation-capability",
-        "target": "src/foundation/capabilities/design-pattern-selection/SKILL.md",
-        "tracked_release_warning": false,
-        "type": "body_bloat_exception",
-        "warning_type": "body_bloat_exception"
-      }
-    ]
+    "warnings": []
   },
   "professional_skill_coverage_summary": {
     "count": 21,
@@ -269,49 +150,12 @@
     "enhanced_foundation_review_warnings": 0,
     "key_foundation_follow_up_warnings": 0,
     "new_unaccepted_release_warnings": 0,
-    "non_key_foundation_advisory_warnings": 2,
+    "non_key_foundation_advisory_warnings": 0,
     "policy": "Professional skill warnings block release. Enhanced foundation warnings require release review. Key foundation warnings are follow-up unless evidence or reference precision is weak. Non-key foundation warnings are advisory-only.",
     "release_blocking_warnings": 0,
     "release_review_required_warnings": 0,
-    "total_skill_professionalism_warnings": 2,
+    "total_skill_professionalism_warnings": 0,
     "tracked_release_warnings": 0,
-    "warnings": [
-      {
-        "accepted_warning": false,
-        "follow_up": "Track as advisory cleanup; no release action required.",
-        "item": "api-contract-design",
-        "item_kind": "foundation-capability",
-        "kind": "foundation-capability",
-        "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
-        "name": "api-contract-design",
-        "path": "src/foundation/capabilities/api-contract-design/SKILL.md",
-        "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
-        "release_blocking": false,
-        "release_relevance": "advisory-only",
-        "scope": "non-key-foundation-capability",
-        "target": "src/foundation/capabilities/api-contract-design/SKILL.md",
-        "tracked_release_warning": false,
-        "type": "body_bloat_exception",
-        "warning_type": "body_bloat_exception"
-      },
-      {
-        "accepted_warning": false,
-        "follow_up": "Track as advisory cleanup; no release action required.",
-        "item": "design-pattern-selection",
-        "item_kind": "foundation-capability",
-        "kind": "foundation-capability",
-        "message": "long Markdown table in SKILL.md body (37 rows); consider moving deep table to references",
-        "name": "design-pattern-selection",
-        "path": "src/foundation/capabilities/design-pattern-selection/SKILL.md",
-        "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
-        "release_blocking": false,
-        "release_relevance": "advisory-only",
-        "scope": "non-key-foundation-capability",
-        "target": "src/foundation/capabilities/design-pattern-selection/SKILL.md",
-        "tracked_release_warning": false,
-        "type": "body_bloat_exception",
-        "warning_type": "body_bloat_exception"
-      }
-    ]
+    "warnings": []
   }
 }

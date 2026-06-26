@@ -45,82 +45,26 @@ Owns debugging-diagnosis; also supports release-delivery and incident triage. Pe
 - **Incident command roles must be explicit during customer-impacting incidents.** A SEV0/SEV1/SEV2 incident without an incident commander, technical lead, communications lead, mitigation owner, and customer communication cadence will drift into parallel, conflicting work.
 - **Agent diagnosis must carry execution discipline.** A diagnosis produced by an agent must identify inspected evidence, tested hypotheses, verified cause, counter-evidence, and validation result before it can drive a fix.
 
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Local test or CI failure | Failing unit, integration, E2E, benchmark, linter, build, or pipeline step. | Smallest reproduction, command-path freshness, fixture/input diff, dependency and config changes. | Failing command, exit code, stack trace, current source, fixture/input, and first passing/failing boundary. | `quality-test-gate`, `repository-context-map`, `validation-broker` | Incident roles and customer comms unless user impact exists. |
+| Production incident | Alert, customer report, SLO burn, rollback signal, data anomaly, or release regression. | Severity, timeline, change correlation, mitigation vs resolution, verified root cause. | Logs/metrics/traces, deploy/config/data timeline, affected users, rollback/mitigation signal, incident roles. | `reliability-observability-gate`, `delivery-release-gate`, `security-privacy-gate` when sensitive | Deep refactor before impact mitigation. |
+| Repeated agent or repair failure | Same command, patch shape, diagnosis, or hypothesis failed twice. | Route repair, counter-evidence, learned facts, new diagnostic path, no third same-path retry. | Attempt ledger, shared failure signature, inspected output, changed route, next command or owner. | `agent-execution-discipline`, `execution-trajectory-analysis`, `project-memory-governance` | Retrying unchanged command or patch. |
+| Data, security, or permission anomaly | Missing/corrupt records, auth failure, unexpected access, tenant leak, or privacy incident. | Trust boundary, same-pattern scan, blast radius, regulatory/security escalation, regression proof. | Sample records/events, authorization or data-flow path, denied cases, scope scan, fix validation and residual risk. | `security-privacy-gate`, `data-api-contract-changer`, `regression-testing` | Local-only closure without same-pattern scan. |
+
+# Proactive Professional Triggers
+
+- **Signal:** Diagnosis asserts root cause before the symptom is reproduced or tied to a current evidence chain. **Hidden risk:** plausible explanation drives the fix while a stale log, old memory note, or unrelated metric hides the real cause. **Required professional action:** stop the fix path and build symptom -> trigger -> root-cause evidence with counter-evidence. **Route to:** `failure-diagnosis`, `repository-context-map`, `validation-broker`. **Evidence required:** current failing command or incident signal, inspected files/logs/metrics, confirmed/refuted hypotheses, and not-reproducible rationale if applicable.
+- **Signal:** The same command, hypothesis, patch shape, or incident query has failed twice. **Hidden risk:** a third same-path retry consumes context and may overwrite the useful failure signature. **Required professional action:** record route repair and choose a different diagnostic route before continuing. **Route to:** `agent-execution-discipline`, `execution-trajectory-analysis`, `project-memory-governance`. **Evidence required:** attempt ledger, shared signature, output inspected, new route, and next diagnostic command or owner.
+- **Signal:** A local fix is proposed before scanning sibling call sites, tests, configs, routes, generated artifacts, or registry edges for the same failure pattern. **Hidden risk:** the visible occurrence is fixed while the same defect remains in another boundary. **Required professional action:** classify the same-pattern taxonomy and decide all-instance, subset, or local-only treatment. **Route to:** `repository-graph-analysis`, `change-impact-analyzer`, `regression-testing`. **Evidence required:** pattern signature, search scope, hits found, coverage decision, and regression command.
+- **Signal:** Project memory, repository graph, generated report, or prior validation is used as proof after source, config, fixture, dependency, or command path changed. **Hidden risk:** stale context becomes current evidence and closes the wrong diagnosis. **Required professional action:** downgrade prior context to selector-only until current source and post-edit validation are reconciled. **Route to:** `project-memory-governance`, `repository-context-map`, `validation-broker`. **Evidence required:** freshness comparison, current-source read, accepted/rejected memory or graph claims, and validation freshness result.
+- **Signal:** Handoff says fixed, verified, green, or ready without command, exit code, artifact/report path, and what the evidence proves or does not prove. **Hidden risk:** partial validation is inflated into closure and the next owner cannot reproduce the confidence claim. **Required professional action:** build an evidence inventory or mark the diagnosis partial/not verified. **Route to:** `validation-broker`, `quality-test-gate`, `plan-execution-consistency`. **Evidence required:** command, working directory, exit code or validator outcome, covered paths, uncovered paths, residual risk, and next gate.
+
 # Industry Benchmarks
 
-Anchor against: **Five Whys Technique** (Toyota Production System, Ohno, 1978) — ask "why" recursively up to 5 times to trace from symptom to root cause; limit to 5 iterations to prevent over-analysis; document each Why/Because pair. **Fault Tree Analysis (FTA)** — top-down deductive reasoning; models how combinations of conditions (AND/OR gates) lead to a top-level failure event; suited for complex multi-cause failures; IEC 61025 standard. **Fishbone Diagram (Ishikawa, 1968)** — 6M categories: Machine, Method, Material, Measurement, Man, Mother Nature; visual organization of contributing factors; useful for brainstorming in group post-mortems. **STAMP/STPA** (Systems-Theoretic Accident Model and Processes; Leveson, MIT) — constraint-based safety analysis; models inadequate control actions; suited for safety-critical and complex emergent failures. **Google SRE Book** (Beyer et al., O'Reilly) — Ch. 15 Postmortem Culture: blameless post-mortem; 5-day draft review window; action items with owners and due dates; avoid "human error" as root cause. **DORA Metrics** (Forsgren et al., Accelerate) — change failure rate and mean time to recovery (MTTR) as key signals; high-performing teams: MTTR < 1 hour, change failure rate < 5%. **OpenTelemetry** (CNCF) — distributed trace context: `traceparent` W3C header; `traceId` (128-bit), `spanId` (64-bit); Jaeger, Zipkin, Honeycomb, Grafana Tempo for trace visualization. **P50/P95/P99 Latency Analysis** — percentile histograms distinguish outlier failures from systemic degradation; P99 spike with flat P50 = outlier; P50 degrading = systemic. **SLO Burn Rate Alerts** (Google SRE Workbook, Ch. 5) — multi-window burn rate: fast burn (2% budget in 1h = page), slow burn (10% budget in 6h = ticket); burn rate as leading severity indicator. **Structured Logging** — JSON-formatted logs with `traceId`, `spanId`, `level`, `timestamp`, `service`, `message`; correlation by `traceId` across services; avoid string concatenation logs. **Paging War Room Protocol** — incident commander role; separate investigation and communication tracks; status updates every 15 minutes during active P0. **AIR (Action Item Review)** — monthly review of post-mortem action items; verify completion and effectiveness; close items with test evidence.
-
-### Five Whys Documented Chain
-
-```
-Template — complete all fields:
-
-Symptom:          What did users or monitors observe? (specific, with timestamps)
-Trigger:          What event immediately preceded the failure? (deployment, config, upstream change)
-
-Why #1: [Symptom] occurred because [immediate cause]
-  Evidence:       [log line, metric, trace, or error message]
-Why #2: [Immediate cause] occurred because [deeper cause]
-  Evidence:       [specific evidence]
-Why #3: [Deeper cause] occurred because [systemic condition]
-  Evidence:       [specific evidence]
-Why #4: [Systemic condition] exists because [process/design gap]
-  Evidence:       [specific evidence]
-Why #5 (if applicable): [Process/design gap] exists because [root cause]
-  Evidence:       [specific evidence]
-
-Root cause:       [Final Why answer — specific enough to guide prevention]
-Contributing:     [Conditions that amplified or accelerated impact]
-Fix:              [Minimal change that eliminates root cause]
-Prevention:       [Specific, verifiable action item with owner and due date]
-```
-
-### Timeline Reconstruction Checklist
-
-```
-Collect and correlate:
-  □ Deployment timestamps (git commit, CI/CD pipeline completion)
-  □ Configuration changes (feature flags, env vars, infrastructure as code)
-  □ Infrastructure changes (scaling events, restarts, node replacements)
-  □ Dependency upgrades (lock file changes, package updates)
-  □ Database migrations (schema changes, index operations)
-  □ Upstream/downstream service changes (API version, response shape)
-  □ Alert firing times (first alert, escalation times)
-  □ Customer report times (first report, volume increase)
-  □ Metric inflection points (when did error rate / latency / lag start changing?)
-  □ Traffic pattern changes (increased load, traffic shift, bot activity)
-
-Timeline format:
-  HH:MM:SS UTC | Event type | Description | Source (log/metric/deploy)
-  14:00:00 UTC | Deploy     | v2.3.1 deployed to prod | GitHub Actions run #1234
-  14:03:15 UTC | Alert      | DB connection pool > 90% | PagerDuty alert #5678
-  14:05:22 UTC | Metric     | Error rate crosses 5%   | Datadog dashboard
-  14:08:45 UTC | Report     | First customer complaint | Zendesk ticket #9012
-```
-
-### Hypothesis Validation Matrix
-
-| Hypothesis | Prediction (if true) | Confirming evidence | Refuting evidence | Status |
-| --- | --- | --- | --- | --- |
-| DB connection pool exhausted | DB pool wait time > 0; queries queued | `db.pool.wait_time` spike at 14:03 | Pool metrics show < 50% utilization | ✅ CONFIRMED |
-| Config change reduced pool size | Pool `max_connections` = 5 in config | `app.config.db.pool.max` = 5 post-deploy | Config unchanged from pre-deploy | (fill in) |
-| Memory leak causing OOM | Heap/RSS growing monotonically pre-failure | Memory graph trending up 2h before alert | Memory stable; sudden spike at event | (fill in) |
-| Upstream service degraded | Upstream latency increase precedes errors | `http.client.duration` upstream spike | Upstream health check green | (fill in) |
-
-For agent-assisted failures, extend this into an elimination table with `next_diagnostic_command`, `freshness`, and `decision` columns. Evidence older than the latest code, config, fixture, dependency, or command-path change is stale unless re-validated or explicitly scoped.
-
-## Incident Response Protocol
-
-Use this protocol for customer-impacting or production-critical incidents before deep root-cause work:
-
-- **Severity classification**: declare SEV0, SEV1, SEV2, or lower severity with customer impact, data impact, financial impact, and duration criteria.
-- **Incident commander**: owns coordination, decision log, role assignment, escalation, and cadence.
-- **Technical lead**: owns diagnosis, mitigation options, rollback recommendation, and resolution confirmation.
-- **Communications lead**: owns internal updates, customer-facing updates, support handoff, and executive summary.
-- **Mitigation decision**: distinguish immediate impact reduction from final resolution; record rollback, disable flag, capacity add, traffic shift, or manual workaround decisions.
-- **Customer communication cadence**: define update frequency, approved wording owner, affected audience, and support channel.
-- **Status page update**: declare when public or private status page entry is required and who updates it.
-- **Resolution confirmation**: name the metrics, customer signal, or validation that proves impact has ended.
-- **Postmortem publication**: define draft owner, review meeting, publication audience, CAPA tracking, and due dates.
+Anchor against evidence-first root cause methods (Five Whys, Fault Tree Analysis, Fishbone, STAMP/STPA), incident discipline from Google SRE and DORA, and observability evidence from OpenTelemetry, percentile latency analysis, SLO burn alerts, and structured logs. Keep `SKILL.md` focused on routing, triggers, evidence, and handoff; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed diagnostic templates, timeline reconstruction, hypothesis matrices, and incident response protocol.
 
 # Selection Rules
 
@@ -178,7 +122,7 @@ Most incorrect diagnoses come from stopping at the trigger rather than the root 
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when the diagnosis is production-impacting, repeated after a failed hypothesis, customer/security/data relevant, or being used to justify a code change. Do not load it for a single local test failure when the evidence chain, reproduction, and regression test are already obvious.
+The `SKILL.md` body carries normal routing, trigger, evidence, and closure rules. Read [references/checklist.md](references/checklist.md) when the diagnosis is production-impacting, repeated after a failed hypothesis, customer/security/data relevant, or being used to justify a code change. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when a formal Five Whys chain, timeline, hypothesis matrix, incident command protocol, or postmortem structure is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected report shape is unclear. Do not load references for a single local test failure when the evidence chain, reproduction, and regression test are already obvious.
 
 # Output Contract
 

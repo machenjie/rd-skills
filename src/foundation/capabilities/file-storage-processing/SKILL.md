@@ -11,20 +11,9 @@ changeforge_version: 0.1.0
 
 Design safe file and object-storage flows that handle uploads, downloads, streaming, scanning, metadata, access control, lifecycle, retention, media processing, and cleanup without exposing users, infrastructure, or data integrity to avoidable risk.
 
-# Pinned Tooling Baseline
+# Tooling Baseline
 
-Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
-
-- Object storage SDKs: AWS SDK v3 (`@aws-sdk/client-s3` ≥ 3.600, `boto3` ≥ 1.34, `aws-sdk-go-v2` ≥ 1.30); Google Cloud Storage client ≥ 2.x; Azure SDK `@azure/storage-blob` ≥ 12.x.
-- Multipart thresholds (S3): part size minimum 5 MiB, maximum 5 GiB, max 10 000 parts, max object 5 TiB; abort incomplete uploads with `AbortIncompleteMultipartUpload` lifecycle rule (recommended 7 days).
-- Presigned URL TTL: ≤ 15 min for write, ≤ 60 min for read by default; never > 7 days (SigV4 hard limit).
-- Content sniffing: `libmagic` (`file --mime-type`), `mime-types` npm or Python `python-magic`; never trust `Content-Type` header alone.
-- Malware scanning: ClamAV ≥ 1.x with `freshclam` daily; or AWS GuardDuty Malware Protection / Cloudmersive / Sophos managed scan.
-- Image / media processing: `sharp` (libvips) for Node, `Pillow` ≥ 10 for Python (with `PIL.Image.MAX_IMAGE_PIXELS` set), `ImageMagick` ≥ 7 with policy.xml hardened, `ffmpeg` ≥ 6 run under seccomp / firejail / gVisor for untrusted media.
-- Archive safety: `python-zipfile38` or `libarchive` with explicit max entries, max ratio, max output size; reject path entries containing `..`, absolute paths, or symlinks (zip-slip).
-- Hashing: SHA-256 for integrity; xxHash for non-security dedup.
-- Encryption: SSE-KMS (S3), CMEK (GCS), CMK (Azure); TLS 1.2+ in transit.
-- Lifecycle / cost tier: Intelligent-Tiering or Standard-IA / Coldline after 30-90 days; Glacier / Archive after 180+; deletion via lifecycle, not application loop.
+Use current, project-approved storage SDKs, content sniffers, malware scanners, image/media processors, archive readers, hashing, encryption, lifecycle, and cleanup mechanisms. Treat pinned versions and provider limits as review baselines, not permanent recommendations; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed SDK, multipart, signed-URL, media-processing, archive, encryption, and lifecycle baselines when drafting or reviewing a concrete design.
 
 # When To Use
 
@@ -33,6 +22,10 @@ Use this capability when a change touches file uploads, object storage buckets, 
 # Do Not Use When
 
 Do not use this capability for database-only binary fields with no file lifecycle or access-control behavior. Do not use it instead of `web-security` for broad browser threats, `input-validation` for generic request validation, `backup-recovery` for disaster recovery, or `data-middleware-change-builder` for implementation ownership.
+
+# Stage Fit
+
+Use during experience-definition, implementation-planning, coding, review, and release-readiness when files cross trust, tenant, storage, processing, or lifecycle boundaries. In planning, define the file classes, state machine, storage layout, access-control path, scanning path, transfer strategy, and cleanup ownership before implementation. In coding/review, reject stale assumptions from project memory or repository graph unless current source, storage policy, tests, and validation output confirm them. Hand off when the primary question is generic validation, browser exploit class, service implementation, storage pipeline implementation, production observability, or disaster recovery.
 
 # Non-Negotiable Rules
 
@@ -47,20 +40,32 @@ Do not use this capability for database-only binary fields with no file lifecycl
 - Never let object keys derive directly from user input without sanitization; namespace by tenant ID and use a server-generated UUID or content hash.
 - Use bucket policies that deny public access by default (`BlockPublicAcls`, `IgnorePublicAcls`, `BlockPublicPolicy`, `RestrictPublicBuckets` for S3).
 
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Upload intake | New or changed user upload, direct-to-storage upload, import, attachment, or object metadata path. | File class, trust boundary, validation, scan-before-available, tenant ownership. | Source route, file limits, MIME/magic/scan gates, authz matrix. | `security-privacy-gate`, `input-validation` | Media transforms unless present. |
+| Signed URL and download access | Presigned URL, CDN, range download, export, private media, or object metadata read. | Scope URLs by key/method/TTL/content bounds and preserve tenant access checks. | URL policy, actor/object matrix, cache headers, revocation/containment. | `web-security`, `permission-boundary-modeling` | Public bucket access. |
+| Large file or streaming transfer | Multipart, resumable, range, > configured memory budget, high throughput, or client retry. | Streaming, backpressure, cancellation, retry, memory ceiling, partial cleanup. | Size/throughput budget, memory ceiling, multipart/resume state, load test or not-verified limit. | `language-performance-safety`, `reliability-observability-gate` | Buffer-all handlers. |
+| Media/archive processing | Image/video/document transform, archive unpack, OCR, thumbnail, transcoding, or metadata strip. | Sandbox untrusted parsers, cap resources, block zip-slip/bombs, strip sensitive metadata. | Processor sandbox, no-network rule, caps, malicious fixture tests. | `threat-modeling`, `quality-test-gate` | In-process parser trust. |
+| Lifecycle, retention, and cleanup | Retention, legal hold, deletion, quarantine, abandoned multipart, orphan derivatives, or CDN purge. | Own every terminal state and cleanup path with audit and observability. | State owner, retention policy, cleanup job, deletion SLA, metric/alert. | `backup-recovery`, `delivery-release-gate` when release-bound | Application loop deletion without lifecycle policy. |
+| Storage policy or encryption | Bucket policy, KMS/CMEK/CMK, object lock/versioning, account public access, or cross-account grants. | Least privilege, encryption, effective policy, rollback/containment. | Policy diff, key owner, public-access proof, rollback path. | `security-privacy-gate`, `delivery-release-gate` | Treating provider defaults as proof. |
+
 # Industry Benchmarks
 
-- OWASP File Upload Cheat Sheet (2024) and OWASP ASVS v4.0.3 V12 File and Resources.
-- CWE-434 Unrestricted Upload, CWE-22 Path Traversal, CWE-409 Decompression Bomb, CWE-918 SSRF (signed URL fetch).
-- AWS S3 Security Best Practices, GCS Bucket Lock and Object Versioning, Azure Blob Immutable Storage.
-- RFC 7233 Range requests for resumable downloads; tus.io v1 resumable upload protocol for resumable client uploads.
-- ImageMagick `policy.xml` hardening guidance (CVE-2016-3714 ImageTragick).
-- ClamAV daemon (`clamd`) production deployment; signature freshness via `freshclam`.
-- Common Crawl / Wayback file-type distribution as realistic fuzz corpus.
-- ISO/IEC 27040 Storage Security, NIST SP 800-209 Storage Infrastructure Security.
+Anchor against OWASP File Upload Cheat Sheet, OWASP ASVS V12, CWE-434, CWE-22, CWE-409, CWE-918, cloud object-storage security guidance, RFC 7233 range requests, tus.io resumable uploads, hardened media processor guidance, malware-scanning operations, storage security standards, and provider lifecycle controls. Keep this body focused on routing, evidence, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed tooling baselines, threat matrices, resource budgets, malicious fixture catalog, and provider policy patterns.
 
 # Selection Rules
 
 Select this capability when the primary risk is file lifecycle, object storage, signed URL access, or media processing. Pair with `security-privacy-gate` for upload abuse and data exposure, `backend-change-builder` for service logic, `frontend-change-builder` for client upload UX, `data-middleware-change-builder` for storage and processing pipelines, and `reliability-observability-gate` for large-file performance and cleanup observability.
+
+# Proactive Professional Triggers
+
+- **Signal:** upload or import path trusts extension, browser `Content-Type`, filename, object key, archive path, or client-declared size. **Hidden risk:** malware, type confusion, path traversal, decompression bomb, or tenant collision reaches storage. **Required professional action:** require server-side size, magic-byte, allowlist, archive-structure, and scan-before-publish gates. **Route to:** `input-validation`, `threat-modeling`. **Evidence required:** malicious fixture test, rejected mismatch, state transition proof.
+- **Signal:** signed URL, CDN URL, public bucket, or object key is generated without actor/object authorization evidence. **Hidden risk:** cross-tenant read/write, unrevocable broad access, or private content caching. **Required professional action:** scope URL and cache policy to actor, object, method, TTL, content bounds, and containment path. **Route to:** `security-privacy-gate`, `web-security`. **Evidence required:** denied tenant test, TTL/scope assertion, cache-header proof.
+- **Signal:** handler buffers whole files, processes media inline, extracts archives without caps, or runs converters with network/credential access. **Hidden risk:** OOM, RCE, disk exhaustion, credential exfiltration, or shared pool starvation. **Required professional action:** require streaming, sandbox, resource caps, timeout, cancellation, and no-network execution. **Route to:** `language-performance-safety`, `reliability-observability-gate`. **Evidence required:** memory ceiling, timeout kill, malicious fixture/fuzz result.
+- **Signal:** quarantine, failed transform, deleted owner, expired export, or abandoned multipart cleanup is unspecified. **Hidden risk:** stale private data, legal erasure failure, storage cost leak, or user-visible deleted content. **Required professional action:** define lifecycle states and cleanup owner with metrics. **Route to:** `backup-recovery`, `observability`. **Evidence required:** retention/deletion matrix, cleanup command/job, metric, residual backup/CDN limit.
+- **Signal:** repository graph or project memory says a bucket, processor, scanner, or cleanup job already exists. **Hidden risk:** stale storage topology or old validator path hides changed tenancy, policy, or SDK behavior. **Required professional action:** current-source-confirm storage policy, call sites, tests, and validation freshness before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`. **Evidence required:** inspected paths, accepted/rejected pattern, freshness limit.
 
 # Risk Escalation Rules
 
@@ -82,6 +87,10 @@ Select this capability when the primary risk is file lifecycle, object storage, 
 - Downloads must set `Content-Disposition: attachment; filename*=UTF-8''<encoded>` for untrusted file names, `X-Content-Type-Options: nosniff`, `Cache-Control: private, no-store` for tenant content, and never `Access-Control-Allow-Origin: *` for credentialed responses.
 - Object keys: namespace as `<tenant>/<resource>/<uuid-or-sha256>` to prevent enumeration and cross-tenant collision; do not include user-controlled filename in the key.
 - CDN caching: key on auth context or use signed cookies / signed URLs; never cache private content keyed only on URL.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 file-storage selection, risk, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete upload, download, storage layout, scanning, processing, retention, cleanup, or signed-URL design. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed tool baselines, provider limits, malicious fixture patterns, sandbox/resource caps, URL/cache policy, lifecycle matrices, or graph/memory/trajectory checks are needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are enough.
 
 # Failure Modes
 
@@ -122,6 +131,9 @@ Select this capability when the primary risk is file lifecycle, object storage, 
 
 Return a file storage and processing design with:
 
+- `mode_selected` (upload intake / signed URL and download access / large file or streaming transfer / media-archive processing / lifecycle-retention-cleanup / storage policy-encryption)
+- `source_evidence` (current upload/download routes, object storage policy, bucket/container config, processors, scanners, cleanup jobs, tests, repository graph, project memory, or execution trajectory inspected with freshness limits)
+- `graph_memory_trajectory_judgment` (accepted, rejected, or not verified for each reused storage, processor, scanner, cleanup, or policy assumption)
 - `file_classes`: allowed extensions, max size, declared business purpose, retention class, privacy class, virus-scan requirement
 - `state_machine`: requested → uploading → uploaded → scanning → quarantined / scanned → processing → processed → available → expired → deleted, with transition owners
 - `storage_layout`: buckets/containers per environment, prefix scheme, raw / processed / quarantine separation, encryption (SSE-KMS / CMEK / CMK), versioning, object-lock
@@ -131,7 +143,24 @@ Return a file storage and processing design with:
 - `processing_pipeline`: transforms, sandbox technology, resource caps, idempotency key, retry policy, dead-letter destination, max processing latency
 - `lifecycle_cleanup`: retention by class, legal-hold rules, soft vs hard delete, abandoned-multipart cleanup, orphan-derivative cleanup, audit log
 - `observability`: scan latency, scan failure rate, processing failure rate, storage growth by tenant, presigned-URL issuance rate, 4xx/5xx by operation, access anomalies
+- `performance_safety`: streaming memory ceiling, temp disk cap, worker/pool/concurrency bounds, cancellation, timeout, and backpressure behavior
+- `security_threats`: abuse cases for malware, traversal, polyglot, metadata leakage, public exposure, cross-tenant access, and signed-URL compromise
+- `changed_file_storage_to_validation_map`: each file class, state transition, storage policy, URL scope, scan gate, processor, lifecycle rule, and cleanup path mapped to validator/test or residual risk
+- `handoff_boundaries`: what belongs to input validation, web security, backend implementation, storage pipeline, reliability, backup/recovery, delivery, or legal/compliance review
 - `tests`: authorization matrix, presigned-URL scope tests, malicious fixtures (EICAR, zip bomb, polyglot, oversized, traversal), streaming memory ceiling, cleanup verification, EXIF stripping verification
+- `evidence_limits`: what was not inspected or not run: real buckets, IAM/KMS effective policy, CDN invalidation, scanner signatures, large-file load, physical media corpus, or legal retention approval
+
+# Evidence Contract
+
+Close a file-storage-processing design only when the output names selected mode, current source evidence inspected, graph/memory/trajectory reuse judgment, file classes, state machine, access controls, scan gates, transfer strategy, processor sandbox, lifecycle cleanup, observability, changed-file-storage-to-validation map, handoff boundaries, residual risk, and evidence limits. A generic "validate uploads" or "store in S3" statement is not sufficient evidence.
+
+# Benchmark Coverage
+
+Improved file-storage designs reject common weak patterns: extension-only allowlists, public buckets, broad signed URLs, buffer-all handlers, scan-after-publish, in-process media parsers with credentials, archive extraction without caps, user-derived object keys, no orphan cleanup, CDN deletion gaps, and stale graph/memory claims about buckets or scanners. Detailed provider limits, tooling baselines, malicious fixture catalog, and resource matrices belong in references so this body stays efficient.
+
+# Routing Coverage
+
+Route here when file lifecycle, object storage, upload/download access, scanning, signed URLs, media/archive processing, retention, or cleanup is primary. Hand off when the primary concern is generic request validation (`input-validation`), browser exploit class (`web-security`), service implementation (`backend-change-builder`), storage/queue/search implementation (`data-middleware-change-builder`), production SLO/telemetry (`reliability-observability-gate`), or disaster recovery (`backup-recovery`).
 
 # Quality Gate
 
@@ -145,6 +174,10 @@ Return a file storage and processing design with:
 8. Lifecycle rules abort incomplete multipart uploads within 7 days; orphan cleanup job runs and emits a metric.
 9. Bucket public access is blocked at the account level; CI fails if a bucket lacks block-public-access settings.
 10. Deletion propagates to CDN within the documented SLA, asserted by integration test.
+11. Selected mode, source evidence, and graph/memory/trajectory reuse judgment are explicit.
+12. Every file class, state transition, URL scope, scan gate, processor, lifecycle rule, cleanup path, and storage policy maps to validation evidence or named residual risk.
+13. Streaming, temp disk, worker/pool, timeout, cancellation, and backpressure limits are defined for large files or processing pipelines.
+14. Handoff boundaries and evidence limits are explicit so design evidence is not over-claimed as implementation, real cloud policy proof, legal retention approval, or production load validation.
 
 # Used By
 

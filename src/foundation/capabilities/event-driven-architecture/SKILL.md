@@ -19,6 +19,10 @@ Use this capability when a change: introduces pub-sub, stream processing, or mes
 
 Do not convert a synchronous dependency to asynchronous without a clear reason: user-visible latency reduction, fault isolation from downstream failure, throughput decoupling, or explicit eventual consistency acceptance by the product. Asynchrony that is added for convenience without these reasons introduces operational complexity with no return. Do not use this capability for in-process event bus (e.g., Spring ApplicationEventPublisher scoped to a single service transaction) — that is a domain-event modeling concern, not an architecture concern.
 
+# Stage Fit
+
+Use during architecture planning when a change introduces cross-bounded-context events, asynchronous fan-out, choreography, projection rebuild, CDC, webhook-to-event flow, or product-visible eventual consistency. Use during implementation review when producers, consumers, outbox/relay, partition keys, schema evolution, replay, DLQ ownership, lag/backpressure, or event observability change. Use during testing when duplicate delivery, out-of-order arrival, poison message routing, replay safety, lag alerting, and stale projection behavior need evidence. Hand off to `domain-event-modeling` for payload semantics, `message-queue-design` for broker mechanics, `transaction-consistency` for outbox/saga invariants, and `reliability-observability-gate` for production SLO readiness.
+
 # Non-Negotiable Rules
 
 - **Every consumer side effect must be idempotent.** At-least-once delivery (the default for Kafka, RabbitMQ, SQS, Pulsar) guarantees duplicates. Every operation a consumer performs — database write, external API call, email send, ledger debit — must be safe to execute more than once. Idempotency key strategy must be defined per consumer.
@@ -29,79 +33,19 @@ Do not convert a synchronous dependency to asynchronous without a clear reason: 
 - **Schema evolution follows compatibility contracts.** Event schemas consumed by multiple consumers cannot be changed without compatibility analysis. Backward-compatible changes (add optional field) require only a schema version bump. Breaking changes (remove field, rename, type change) require a new topic/channel and a migration period with dual-publishing.
 - **Observability is not optional.** Every event flow must emit: event throughput (events/second per topic/partition), consumer processing rate, consumer lag, DLQ depth, error rate per consumer group, and end-to-end event latency (from produce time to consumer commit time). Without these signals, operational diagnosis is guesswork.
 
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| New event flow | New producer, consumer, topic, stream, projection, CDC flow, webhook bridge, or async fan-out. | Decide whether async is justified and define source-of-truth, flow topology, delivery semantics, consistency window, and owners. | Sync alternative rejected, producer/consumer map, event contract owner, transaction boundary, stale-read product decision. | `architecture-impact-reviewer`, `domain-event-modeling`, `message-queue-design` | Broker tuning before architecture fit. |
+| Existing flow evolution | Producer/consumer, schema, partition key, consumer group, DLQ, replay, or lag behavior changes. | Preserve old consumers and operational recovery while evolving the flow. | Consumer inventory, compatibility class, old/new schema behavior, replay impact, rollback/cutover plan. | `version-compatibility`, `contract-testing`, `quality-test-gate` | Breaking schema edit in-place. |
+| Consistency and side-effect design | DB write plus event publish, saga choreography, external side effect, projection rebuild, or outbox/relay path. | Prevent dual-write loss, ghost events, irreversible replay effects, and partial saga state. | Outbox/commit boundary, side-effect order, idempotency key, compensation/reconciliation path, non-replayable consumers. | `transaction-consistency`, `idempotency-retry-design`, `data-side-effect-flow-tracing` | Event-before-commit publish. |
+| Operational readiness | Consumer lag, DLQ depth, poison messages, replay drills, backpressure, autoscaling, or incident recovery. | Make event behavior observable, alertable, replayable, and bounded under failure. | Lag/DLQ metrics, alert owner, replay runbook, backpressure threshold, recovery validation. | `reliability-observability-gate`, `observability`, `degradation-circuit-breaking` | Metrics without owner/runbook. |
+| Sensitive or regulated eventing | Events include PII, financial, authorization, audit, ledger, notification, or compliance-relevant data. | Minimize payload, restrict consumers, protect audit integrity, and prove duplicate/replay safety. | Data classification, allowed consumers, privacy decision, audit retention, duplicate/replay tests. | `security-privacy-gate`, `permission-boundary-modeling`, `quality-test-gate` | Payload fan-out with sensitive data. |
+
 # Industry Benchmarks
 
-Anchor against: **Apache Kafka** — dominant distributed event streaming platform; partition-based ordering; consumer groups; log compaction; exactly-once semantics (EOS) via idempotent producer + transactional API (Kafka 0.11+); Kafka Streams for stateful stream processing. **Apache Pulsar** — multi-tenancy; built-in geo-replication; tiered storage; subscription types (exclusive, shared, failover, key-shared for per-key ordering). **AWS SQS / SNS / EventBridge** — managed cloud messaging; SQS FIFO for ordering; EventBridge for event routing and schema registry; SQS visibility timeout as implicit retry. **RabbitMQ** — AMQP 0-9-1; exchanges (direct, fanout, topic, headers); dead-letter exchanges; quorum queues for HA. **NATS JetStream** — lightweight at-least-once persistent messaging; consumer groups; stream replay. **Google Pub/Sub** — managed GCP messaging; at-least-once; ordering keys for per-key ordering; dead-letter topics. **CloudEvents v1.0** (CNCF) — portable event metadata standard: `id`, `source`, `type`, `specversion`, `time`; supported by EventBridge, Azure Event Grid, Knative Eventing. **AsyncAPI 3.0** — event-driven API specification; documents channels, messages, bindings, servers; OpenAPI equivalent for async systems. **Saga Pattern** (Richardson, 2018; Microservices Patterns) — distributed long-running transaction coordination; Choreography Saga (events trigger compensating events) vs Orchestration Saga (central coordinator). **Outbox Pattern** — Transactional Outbox for reliable post-commit event publication; inbox pattern for at-least-once consumer deduplication. **CQRS + Event Sourcing** (Fowler, Young) — command and query model separation; events as source of truth; projection rebuild via replay. **Debezium** — CDC (Change Data Capture) via database WAL; Kafka connector for DB-to-topic CDC. **KEDA** (Kubernetes Event-Driven Autoscaler) — Kafka consumer lag–driven pod autoscaling. **OpenTelemetry** — distributed trace context propagation across event producer/consumer; `traceparent` in CloudEvents extensions. **Google SRE Book** (ch. 26) — on-call for distributed event systems; runbook requirements for DLQ and replay. **Confluent Schema Registry** — Avro/JSON/Protobuf schema management; compatibility enforcement (BACKWARD, FORWARD, FULL); schema fingerprint lookup.
-
-### Delivery Guarantee Comparison
-
-| Broker / config | Delivery guarantee | Ordering | Idempotency required? | Use when |
-| --- | --- | --- | --- | --- |
-| Kafka (default consumer) | At-least-once | Per-partition | Yes, always | High-throughput event streaming |
-| Kafka EOS (idempotent producer + transactions) | Exactly-once (within Kafka) | Per-partition | No for broker; yes for external side effects | Kafka-to-Kafka stream processing |
-| RabbitMQ quorum queue | At-least-once | Per consumer (not guaranteed parallel) | Yes | Task queues; routing by type |
-| SQS Standard | At-least-once | Not guaranteed | Yes, always | High-throughput; order not critical |
-| SQS FIFO | Exactly-once (dedup window) | Per message group | No (within window) | Order-sensitive; < 300 msg/s per group |
-| AWS EventBridge | At-least-once | Not guaranteed | Yes | Event routing; multi-target fan-out |
-| Google Pub/Sub | At-least-once | Per ordering key | Yes (without ordering key) | GCP-native fan-out |
-| NATS JetStream | At-least-once | Per stream | Yes | Low-latency; lightweight |
-| HTTP Webhook | At-least-once (with retry) | Not guaranteed | Yes | External integrations; notifications |
-
-### Saga Pattern Selection
-
-| Criterion | Choreography Saga | Orchestration Saga |
-| --- | --- | --- |
-| Coupling | Low — no central coordinator | Higher — orchestrator knows all steps |
-| Visibility | Hard — flow distributed across events | Clear — orchestrator holds full state |
-| Debugging | Difficult — trace across many services | Easier — one place for saga state |
-| Compensation | Each service handles its own rollback events | Orchestrator emits compensation commands |
-| Suitable for | Simple, stable flows (≤ 3 steps) | Complex flows; multi-step; long-running |
-| Risk | Cyclic event loops; missing compensation | Orchestrator becomes bottleneck; SPOF |
-| Examples | OrderPlaced → ReserveInventory → CapturePayment | Temporal.io, AWS Step Functions, Conductor |
-
-### Consumer Lag Management
-
-```
-Consumer Lag = (Latest Offset in Topic) - (Consumer Group Committed Offset)
-
-Thresholds (configurable per use case):
-  Warning:  lag > 1,000 messages  OR  lag age > 1 minute
-  Alert:    lag > 10,000 messages OR  lag age > 5 minutes
-  Critical: lag > 100,000 messages OR lag age > 15 minutes → trigger scale-out
-
-Monitoring (Kafka):
-  kafka.consumer_group.lag (per group, topic, partition)
-  via: Prometheus JMX exporter, Confluent Control Center, Datadog Kafka integration
-
-Auto-scaling trigger (KEDA example):
-  triggers:
-    - type: kafka
-      metadata:
-        bootstrapServers: kafka:9092
-        consumerGroup: order-processor-group
-        topic: orders
-        lagThreshold: "1000"
-
-Backpressure options (when auto-scaling insufficient):
-  1. Slow down producer (send-side rate limiting)
-  2. Apply credit-based flow control at broker
-  3. Activate circuit breaker: stop accepting new inbound requests until lag clears
-  4. Shed load: move to DLQ immediately when lag > critical threshold (last resort)
-```
-
-### Replay Safety Classification
-
-| Consumer operation | Replay-safe without deduplication? | Required protection |
-| --- | --- | --- |
-| Database upsert (update-or-insert by ID) | ✅ Yes | Use `ON CONFLICT DO UPDATE` or equivalent |
-| Database insert (append-only) | ❌ No | Idempotency key; check before insert |
-| Payment capture / charge | ❌ Never | Idempotency key mandatory; per-payment-intent |
-| Email send / notification | ❌ No | Dedup window; check sent log by event ID |
-| Webhook POST to external service | ❌ No | Idempotency key in header; check sent log |
-| Ledger / accounting entry | ❌ Never | Idempotency key; double-entry check |
-| Read model / projection update | ✅ Yes (if idempotent upsert) | Use event sequence number as version guard |
-| Cache invalidation | ✅ Yes | Multiple invalidations are safe |
-| Analytics event write | ✅ Usually | Deduplicate by event ID in analytics store |
+Anchor against Kafka/Pulsar/Pub/Sub/SQS/RabbitMQ delivery semantics, CloudEvents and AsyncAPI event contracts, transactional outbox and inbox patterns, CQRS projections, saga choreography/orchestration, CDC/Debezium, schema registry compatibility, KEDA lag-based autoscaling, and OpenTelemetry trace propagation. Keep this body focused on routing, evidence, output, and quality gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for delivery guarantees, saga selection, lag/backpressure patterns, replay-safety classification, outbox/inbox flow, and operational anti-patterns.
 
 # Selection Rules
 
@@ -116,6 +60,15 @@ Select this capability when **asynchronous multi-service event flow design** is 
 # Risk Escalation Rules
 
 Escalate when: event loss, duplication, or replay would cause a financial debit, customer notification, or inventory change to happen twice; an out-of-order event would corrupt a state machine (e.g., `OrderCancelled` before `OrderPlaced`); consumer lag is growing in production and no auto-scaling policy is defined; a schema change would break active consumers with no migration window; a DLQ has been accumulating events for > 1 hour with no acknowledged owner; a saga has no compensation events defined for any failure path.
+
+# Proactive Professional Triggers
+
+- **Signal:** async flow is proposed mainly to "decouple" services, avoid waiting for a dependency, or replace a simple synchronous call. **Hidden risk:** temporal coupling and eventual consistency are introduced without product acceptance or operational recovery. **Required professional action:** compare synchronous call, local module, outbox event, queue command, and choreography alternatives before approval. **Route to:** `architecture-impact-reviewer`, `architecture-tradeoff-analysis`. **Evidence required:** rejected synchronous alternative, product consistency decision, owner map, and failure blast radius.
+- **Signal:** producer writes state and publishes an event in separate steps or from mapper/domain code. **Hidden risk:** lost events, ghost events, and hidden side effects. **Required professional action:** define transactional outbox, publish-after-commit, CDC, or explicit safe exception. **Route to:** `transaction-consistency`, `data-side-effect-flow-tracing`. **Evidence required:** transaction boundary, outbox/relay owner, idempotent relay behavior, and partial-failure test or review artifact.
+- **Signal:** consumer performs irreversible side effects such as payment capture, email/SMS, webhook POST, ledger entry, entitlement grant, or inventory mutation. **Hidden risk:** duplicate delivery or replay repeats the side effect. **Required professional action:** classify replay safety and require durable dedupe before enabling retry or replay. **Route to:** `idempotency-retry-design`, `quality-test-gate`, `security-privacy-gate` when sensitive. **Evidence required:** idempotency key scope, dedupe store, replay procedure, duplicate/replay validation, residual risk owner.
+- **Signal:** event schema changes or a new consumer is added without consumer inventory, schema compatibility mode, generated contract check, or migration window. **Hidden risk:** active consumers deserialize wrong data or silently corrupt calculations. **Required professional action:** run consumer impact and compatibility review before changing the event contract. **Route to:** `domain-event-modeling`, `version-compatibility`, `contract-testing`. **Evidence required:** consumer inventory, old/new schema diff, compatibility result, rollout/rollback plan.
+- **Signal:** consumer lag, DLQ depth, poison messages, replay, or backpressure is described but no alert owner, runbook, or recovery drill is named. **Hidden risk:** event system appears healthy while work is delayed or lost. **Required professional action:** require operational readiness evidence before handoff. **Route to:** `reliability-observability-gate`, `observability`, `degradation-circuit-breaking`. **Evidence required:** lag/DLQ metrics, thresholds, dashboard/runbook owner, replay drill or not-verified disclosure.
+- **Signal:** prior project memory or repository graph suggests event topology, but current producers, consumers, schemas, topics, or generated artifacts were not inspected. **Hidden risk:** stale topology misses hidden consumers or retired flows. **Required professional action:** confirm memory/graph with current source and generated contracts. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected memory, freshness limit, unknown consumers.
 
 # Critical Details
 
@@ -152,10 +105,17 @@ Event-driven systems trade synchronous coupling for temporal complexity. Precisi
 - Schema field renamed: `price` → `unitPrice`; consumers read null; order total = $0.00; passed validation; financial loss.
 - `acks=0` on critical payment event topic; broker restart during peak; 200 events lost; payment status unknown.
 
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 selection, boundary, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete event-flow plan, adding a producer or consumer, changing delivery/order/retry/DLQ/replay behavior, or accepting eventual consistency. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when delivery guarantee comparison, saga pattern choice, lag/backpressure thresholds, replay-safety classification, outbox/inbox design, or operational anti-pattern detail is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected plan shape is unclear. Do not load references for pure routing or metadata-only edits with no event topology, schema, or recovery behavior change.
+
 # Output Contract
 
 Return an event architecture plan with:
 
+- `mode_selected` (new event flow, existing flow evolution, consistency/side-effect design, operational readiness, sensitive/regulated eventing)
+- `boundaries_inspected` (producers, consumers, topics/channels, schemas, registry/config, outbox/relay, generated contracts, tests, dashboards, runbooks, and prior memory accepted or rejected)
+- `source_evidence` (current-source observations that prove the topology, not inferred architecture memory)
 - `producers` (service, event name, emission trigger, transaction boundary, outbox mechanism)
 - `consumers` (service, event name, processing logic, idempotency key, DLQ destination, owner)
 - `event_schemas` (CloudEvents-compatible; schema version; registry location; compatibility mode)
@@ -170,6 +130,25 @@ Return an event architecture plan with:
 - `observability` (metrics: throughput, lag, DLQ depth, error rate, end-to-end latency)
 - `schema_evolution_plan` (compatibility matrix; breaking change migration procedure)
 - `tests` (idempotency test, out-of-order test, DLQ routing test, replay dedup test, lag alarm test)
+- `changed_flow_to_validation_map` (each producer, consumer, schema, partition key, retry/DLQ policy, replay path, or observability change mapped to validation)
+- `reuse_and_placement_rationale` (existing event/broker/reference reused, rejected alternatives, and why no speculative queue/service abstraction was added)
+- `behavior_preservation` (old producers, old consumers, old schemas, old replay procedure, old dashboards, and old runbooks that remain valid)
+- `validation_evidence` (commands, reports, fixtures, contract checks, replay drills, dashboard/alert checks, or not-verified disclosure)
+- `handoff_boundaries` (which decisions move to domain event, queue design, transaction consistency, idempotency, security, reliability, or release gates)
+- `evidence_limits` (what was not inspected, unknown consumers, untested replay/lag scale, and residual risk owner)
+
+# Evidence Contract
+
+Close an event-driven architecture plan only when these answers are concrete:
+
+- **Current topology inspected:** name the producer paths, consumer paths, event schemas, topic/channel config, outbox/relay, generated artifacts, tests, dashboards, runbooks, docs, and prior memory that were checked. If no implementation exists, say so explicitly.
+- **Async justification:** state the concrete reason async is preferred over synchronous call, local module, or simpler queue/job design, plus the product-visible eventual-consistency decision.
+- **Consistency and side-effect proof:** identify the commit point, outbox/inbox or CDC mechanism, consumer idempotency boundary, replay-safe and replay-unsafe consumers, and compensation/reconciliation path.
+- **Compatibility proof:** state how old producers, old consumers, schema registry compatibility, generated clients/contracts, and replay/backfill procedures behave after the change.
+- **Operational proof:** name lag, DLQ, error, throughput, replay, and end-to-end latency signals, plus alert/runbook owner or explicit not-verified residual risk.
+- **Validation result:** include command names and pass/fail status. Do not claim event architecture readiness from design reasoning alone.
+- **What evidence does not prove:** call out untested broker outage, partition skew, large replay, high-cardinality metrics, unknown consumers, privacy fan-out, or production lag assumptions.
+- **Next gate:** name the next capability or human review required when queue mechanics, event payloads, transaction consistency, privacy, reliability, or release readiness is outside this capability.
 
 # Quality Gate
 

@@ -19,11 +19,18 @@ Use active vendor or community support policies as the runtime-selection baselin
 
 # When To Use
 
-Use when language is not yet chosen, a new language is proposed in an existing system, runtime behavior materially affects correctness or latency, or a workload must be classified against CPU-bound, IO-bound, latency-sensitive, memory-sensitive, batch, interactive, embedded, edge, or contract-heavy constraints. Use whenever the choice will commit ≥ 1 team to operate the runtime for ≥ 1 year.
+Use when language is not yet chosen, a new language is proposed in an existing system, runtime behavior materially affects correctness or latency, or a workload must be classified against CPU-bound, IO-bound, latency-sensitive, memory-sensitive, batch, interactive, embedded, edge, or contract-heavy constraints. Use whenever the choice will commit ≥ 1 team to operate the runtime for ≥ 1 year. Also use when repository graph, project memory, or execution traces show runtime drift, unsupported versions, stale benchmark assumptions, or unverified workload claims.
 
 # Do Not Use When
 
 Do not use for language lessons, syntax preference debates, religious wars, or migration enthusiasm absent workload evidence and operational ownership. Do not use for like-for-like minor version upgrades (use `package-dependency-management`).
+
+# Stage Fit
+
+- **Discovery / intake** — classify workload, ownership, existing approved runtimes, and hard constraints before candidate preference is accepted.
+- **Design / architecture** — compare candidates using repo graph, project memory, runtime lifecycle, and workload evidence before stack selection is frozen.
+- **Implementation / review** — verify selected language-specific rules, toolchain pins, tests, and runtime failure modes before code expands.
+- **Release / operation** — re-check lifecycle, deployment shape, observability, and rollback cost before production commitment.
 
 # Non-Negotiable Rules
 
@@ -34,6 +41,7 @@ Do not use for language lessons, syntax preference debates, religious wars, or m
 - **Hiring-market check is mandatory.** ≥ 100 addressable candidates locally, or in-house upskilling plan with named timeline. Esoteric / academic / single-vendor languages require explicit acceptance.
 - **Boundary validation is not replaced by compile-time types.** Type systems prevent internal mistakes; external inputs (HTTP, queue, file, FFI) still require runtime validation regardless of language.
 - **Runtime lifecycle horizon ≥ 3 years.** Vendor or community support roadmap, LTS schedule, breaking-change cadence must be published and credible. Pre-1.0 runtimes for production-critical work require explicit risk acceptance and exit plan.
+- **Current evidence is mandatory.** Cite repository graph signals, project memory or prior decision records with dates, workload measurements or SLOs, runtime support policy, and executable validation; missing evidence blocks approval.
 
 # Industry Benchmarks
 
@@ -42,46 +50,28 @@ Do not use for language lessons, syntax preference debates, religious wars, or m
 - **Google SRE Workbook — Production Readiness** for runtime observability and debugging requirements.
 - **NIST SSDF (SP 800-218)**, **OWASP SAMM**, **OpenSSF Scorecard**, **SLSA** for ecosystem/supply-chain posture.
 - **Amdahl's Law** and **Little's Law** for concurrency-model selection under measured workload.
-- **Language LTS schedules**: Node.js (even-numbered LTS, 30-month support), Python (5-year support per PEP 602), Java (Oracle/OpenJDK LTS cadence: 21 current LTS through 2031), Go (last 2 minor versions supported), Rust (6-week stable cadence, no LTS — pin to specific stable + MSRV policy), .NET (even-numbered LTS, 3-year support).
+- **Language LTS schedules**: use current official vendor/community support policies for Node.js, Python, Java/OpenJDK, Go, Rust MSRV/stable cadence, .NET, and any proposed runtime; do not rely on stale embedded version claims.
 - **Production incident learnings**: GC pause incidents (JVM/Go/.NET), event-loop blocking (Node.js/Python asyncio), GIL contention (CPython), cold-start incidents (JVM/AWS Lambda), thread-leak / fd-leak / coroutine-leak.
 
 # Selection Rules
 
 Select when language or runtime is an open decision. Pair with `technology-stack-selection` for the broader stack, with the matching `<lang>-professional-usage` capability once a language is named, and with `language-performance-safety` when the workload is latency- or memory-critical.
 
-### Workload → Runtime Fit Matrix (starting point, not destiny)
+# Proactive Professional Triggers
 
-```
-Workload axis              | Strong fits                              | Risk fits
----------------------------|------------------------------------------|---------------------------
-CPU-bound (numeric, ML)    | C++20/23, Rust 2021, Go 1.22, Java 21    | Python (needs C extensions, GIL)
-IO-bound (high-fanout RPC) | Go 1.22, Rust+tokio, Java 21 (virtual    | Node.js (single-thread CPU
-                           | threads), Node.js 20 LTS                 | risk for mixed workloads)
-Latency-sensitive (p99 ms) | Rust, C++, Go (with GC tuning), Java     | Node.js (event-loop block),
-  hard <10ms                | with ZGC, no-GC runtimes                 | Python (GIL+GC)
-Memory-sensitive / embedded| Rust, C++, Zig                           | GC runtimes (heap floor)
-Batch / data pipeline      | Python 3.12+, Scala/Java 21, Go, Rust    | Node.js (lib gap for ETL)
-Interactive (web frontend) | TypeScript 5.4+ strict                   | Plain JS (loss of safety)
-Contract-heavy (SDK/IDL)   | TypeScript, Rust, Go, Java               | Dynamic languages (drift risk)
-Scripts / glue / CI        | Bash ≥4 + ShellCheck, Python 3.11+       | Compiled languages (overhead)
-Systems / kernel / driver  | C, C++23, Rust 2021                      | GC languages (latency/footprint)
-Edge / cold-start critical | Go, Rust, JS (V8 isolate)                | JVM, .NET (cold start)
-```
+Use this capability proactively, even when the request does not ask for runtime selection:
 
-### Decision Rubric
+- **Signal:** a new language, runtime, package manager, build lane, or deploy artifact appears in the repository graph. **Hidden risk:** polyglot drift adds support burden, scanner gaps, deploy inconsistency, and incident tooling nobody owns. **Required professional action:** compare against approved runtimes, quantify operational tax, name owner, and reject novelty without workload proof. **Route to:** `language-runtime-selection`, `technology-stack-selection`, `package-dependency-management`, and `delivery-release-gate`. **Evidence required:** graph paths, existing runtime inventory, owner, deploy/build lane diff, and rejected simpler path.
+- **Signal:** project memory, old ADRs, generated summaries, or benchmark notes are reused to justify a runtime decision. **Hidden risk:** stale memory can preserve unsupported versions or workload assumptions that no longer match current traffic, SLOs, or deployment topology. **Required professional action:** treat memory as a lead only, compare with current repository graph and execution evidence, and record accepted/rejected assumptions. **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`, and this capability. **Evidence required:** memory source date, current support policy, graph delta, benchmark freshness, and explicit unknowns.
+- **Signal:** SLOs mention p95/p99 latency, cold start, memory ceiling, throughput, concurrency, streaming, embedded, edge, FFI, GC, event-loop, or unsafe/native behavior. **Hidden risk:** runtime reputation can hide scheduler, GC, event-loop, allocator, or FFI failure modes until production load. **Required professional action:** classify workload, map each candidate to runtime behavior, and require workload-shaped validation before approval. **Route to:** `language-performance-safety`, `reliability-observability-gate`, `validation-broker`, and this capability. **Evidence required:** SLO, measured or planned harness, runtime behavior table, profiling command, and residual risk.
+- **Signal:** a candidate depends on weak ownership, scarce hiring availability, unsupported versions, supply-chain exceptions, or unfamiliar incident tooling. **Hidden risk:** the team may ship a runtime it cannot patch, debug, observe, or staff during incidents. **Required professional action:** block or defer until ownership, lifecycle horizon, supply-chain posture, and incident tooling are proven. **Route to:** `security-privacy-gate`, `reliability-observability-gate`, `package-dependency-management`, and this capability. **Evidence required:** owner acceptance, hiring/upskilling plan, official support policy, package integrity evidence, and on-call debug procedure.
+- **Signal:** generated clients, SDKs, public APIs, FFI, queues, file formats, or cross-language boundaries are part of the runtime decision. **Hidden risk:** compile-time types in one language can mask runtime boundary validation, serialization drift, or consumer breakage. **Required professional action:** require boundary validation, contract tests, selected language-specific usage rules, and migration/rollback evidence. **Route to:** `language-testing-strategy`, `contract-testing`, `sdk-library-contract-design`, and the matching `<lang>-professional-usage`. **Evidence required:** boundary inventory, schema/runtime validation location, contract test command, consumer impact, and rollback path.
 
-```
-1. Workload classified on dominant axis (above matrix).
-2. Existing approved runtime sufficient? (preferred unless workload fit is poor or hard
-   constraint forces change).
-3. Runtime behavior enumerated (GC, concurrency, exceptions, FFI, startup, binary size,
-   observability) — answer each before approval.
-4. Operational ownership named and accepted.
-5. Hiring market ≥ 100 candidates or in-house upskilling plan with timeline.
-6. Lifecycle horizon ≥ 3 years with published roadmap / LTS.
-7. Supply-chain posture verified (OpenSSF Scorecard ≥ 5 for the runtime + standard ecosystem).
-8. Exit cost (rewrite to alternative) estimated.
-```
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal routing, trigger, evidence, and closure rules. Load [references/checklist.md](references/checklist.md) when selecting, reviewing, or rejecting a runtime. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when a workload-fit matrix, runtime behavior comparison, decision rubric, validation map, or anti-pattern review is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected decision-record shape is unclear.
+
+Do not load references for pure routing or when the language is already mandated and no runtime fit, lifecycle, or validation question remains. Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` only when runtime fit depends on current codebase signals, prior decisions, or executable proof. Pair with the selected `<lang>-professional-usage`, `language-testing-strategy`, `language-performance-safety`, and relevant domain extension only when code, tests, or domain runtime constraints will change.
 
 # Risk Escalation Rules
 
@@ -114,7 +104,7 @@ Edge / cold-start critical | Go, Rust, JS (V8 isolate)                | JVM, .NE
 
 # Output Contract
 
-Return a **Language/Runtime Decision Record** containing:
+Return a **`language_runtime_decision_record`** containing:
 - **Workload classification** on dominant axis (and secondary axes)
 - **Hard constraints** (latency SLO, memory budget, cold-start budget, deployment target, regulatory)
 - **Candidate runtimes** (≥ 2) with workload-fit-matrix mapping
@@ -122,11 +112,14 @@ Return a **Language/Runtime Decision Record** containing:
 - **Lifecycle horizon** per candidate: LTS schedule, breaking-change cadence, EOL date
 - **Supply-chain posture**: OpenSSF Scorecard for standard ecosystem, package-manager integrity, license
 - **Hiring market** estimate and upskilling plan if needed
+- **Graph / memory / execution validation**: repository runtimes, toolchains, deploy targets, and prior decisions inspected; workload evidence and executable checks identified
+- **Runtime-to-validation map**: each candidate mapped to required build, test, benchmark, security, and observability checks
 - **Selected runtime** with rubric trace
 - **Rejected alternatives** each with specific disqualifying constraint
 - **Operational ownership** (named team, on-call coverage)
 - **Exit cost** estimate (engineer-quarters to migrate away)
 - **Open risks** with named owners and re-evaluation triggers
+- **Evidence limits**: missing measurements, stale support assumptions, unsupported tooling, or owner gaps
 
 # Quality Gate
 
@@ -138,6 +131,44 @@ Return a **Language/Runtime Decision Record** containing:
 6. Lifecycle horizon ≥ 3 years with published roadmap.
 7. Supply-chain posture verified (Scorecard ≥ 5).
 8. Cold-start, GC pause, and concurrency-model fit are answered against product SLOs, not stated as generic reputation.
+9. Repository graph inspected for existing runtimes, toolchains, build lanes, deploy targets, generated clients, and cross-language boundaries.
+10. Project memory or prior decision records checked for owner, date, workload match, and stale assumptions.
+11. Runtime-to-validation map includes executable build/test/benchmark/security/observability checks for the selected runtime and major rejected alternatives.
+12. Matching language-specific usage and testing capabilities selected when implementation will follow the decision.
+13. EOL, migration, rollback, and exit-cost evidence recorded for any new or unsupported runtime.
+
+# Evidence Contract
+
+Close a runtime decision only when these answers are concrete and current:
+
+- **Basis:** workload axis, hard constraints, approved-runtime inventory, official support policy, and why runtime choice is open or being reviewed.
+- **Boundaries inspected:** repository runtime graph, package managers, build lanes, deploy artifacts, generated clients, cross-language boundaries, docs/ADRs, project memory dates, execution traces, and skipped boundaries with reasons.
+- **Professional judgment:** selected runtime, rejected alternatives, existing-runtime sufficiency, operational owner, lifecycle horizon, supply-chain posture, hiring/upskilling plan, exit cost, and why novelty or familiarity is not deciding the outcome.
+- **Validation evidence:** command, test, validator, benchmark, profile, security scan, observability check, report, or artifact path; working directory; exit code or explicit not-run status; freshness after final source/config/report edits.
+- **What evidence proves:** workload fit, lifecycle support, build/test/toolchain viability, benchmark or profile coverage, security/supply-chain posture, or deployment compatibility for the inspected scope.
+- **What evidence does not prove:** unmeasured production tail latency, uninspected downstream consumers, future hiring market, unsupported platforms, stale benchmark assumptions, or unrelated runtime behavior.
+- **Residual risk and handoff:** remaining unknowns, owner, re-evaluation trigger, rollback or exit path, and next gate (`language-performance-safety`, `language-testing-strategy`, `package-dependency-management`, `security-privacy-gate`, or `reliability-observability-gate`).
+
+Do not approve a runtime decision from preference, reputation, or old benchmark memory. If evidence is unavailable, return a deferred decision with the smallest next proof step.
+
+# Validation Evidence Requirements
+
+For every accepted runtime decision, map the decision to executable evidence:
+
+- **Repository graph validation:** command or report proving current runtimes, package managers, toolchains, build lanes, deploy artifacts, generated clients, and cross-language boundaries inspected.
+- **Lifecycle validation:** official support-policy source and date checked; EOL, LTS, MSRV/stable cadence, or vendor support horizon recorded.
+- **Workload validation:** benchmark, profile, load test, representative harness, or explicit measurement plan tied to latency, throughput, memory, cold start, GC pause, concurrency, FFI, or boundary-validation risk.
+- **Security and supply-chain validation:** package-manager integrity, OpenSSF/SLSA/Scorecard or equivalent review, dependency scan, license posture, and install-script side-effect risk when ecosystem choice matters.
+- **Operational validation:** owner acceptance, on-call debug procedure, observability tooling, incident diagnostic command, and rollback/exit-cost estimate.
+- **Freshness validation:** validation command or report must run after the final material source, registry, generated report, or build-profile edit; stale evidence is partial, not approval.
+
+# Benchmark Coverage
+
+Treat public surveys, maturity radars, and benchmark posts as weak signals. They may screen candidates, but approval requires workload-shaped evidence from the target system or a representative harness, plus lifecycle and operability checks.
+
+# Routing Coverage
+
+When selected by a router, report which adjacent capabilities were loaded or intentionally skipped: `technology-stack-selection`, matching `<lang>-professional-usage`, `language-testing-strategy`, `language-performance-safety`, `package-dependency-management`, `reliability-observability-gate`, and domain extensions for low-level, AI/data, mobile, payment, or edge constraints.
 
 # Used By
 

@@ -19,6 +19,10 @@ Use this capability when: a change adds or modifies domain logic, calculation al
 
 Do not use this capability when: correctness depends on real database queries, real HTTP connections, real message broker behavior, or real ORM behavior (use `integration-testing`); the primary concern is API contract compatibility across service versions (use `contract-testing`); the primary concern is an end-to-end user journey across multiple services (use `e2e-testing`).
 
+# Stage Fit
+
+Use during planning, implementation, bug-fix repair, refactoring, code review, and final validation when the risky claim can be proven through fast isolated behavior checks. In planning, identify the smallest behavior boundary and the input classes that can fail. In implementation, keep tests deterministic and close to the changed rule. In review, reject private-method, call-order, or mock-only assertions that do not prove behavior. In final handoff, map current source, repository graph, project memory, and execution trajectory to fresh test evidence and state what unit tests do not prove.
+
 # Non-Negotiable Rules
 
 - **Test observable behavior and business rules, not private implementation mechanics.** A test that asserts "the private method `_buildQuery` was called with these arguments" is testing implementation — if the private method is renamed or inlined, the test breaks for zero safety benefit. Tests must assert: what value was returned, what state was changed, what error was thrown, or what event was emitted. If the correct behavior can be observed only through private state, the design has an encapsulation problem.
@@ -30,59 +34,18 @@ Do not use this capability when: correctness depends on real database queries, r
 
 # Industry Benchmarks
 
-Anchor against: **Kent Beck — Test-Driven Development** — red-green-refactor; test list before implementation; one failing test at a time. **Robert C. Martin (Uncle Bob) — Clean Code / The Clean Coder** — test per behavior; FIRST principles (Fast, Isolated/Independent, Repeatable, Self-Validating, Timely). **Gerard Meszaros — xUnit Test Patterns** — test doubles (stub, mock, fake, spy); fixture strategies; assertion patterns. **Boundary Value Analysis and Equivalence Partitioning (ISTQB)** — systematic derivation of test inputs that maximize defect detection with minimal test count. **Mutation Testing (PIT Mutation Testing, Stryker)** — mutant operators (change `>` to `>=`; negate condition; remove statement); survived mutants reveal tests that pass even when the code is wrong. **Property-Based Testing (Hypothesis, fast-check, QuickCheck)** — automatically generate hundreds of inputs to find edge cases; specify invariants that must hold for all valid inputs. **Google Testing Blog** — "Testing on the Toilet" series; prefer testing behavior over implementation; avoid testing private methods; test size definitions (small, medium, large). **Jest / Vitest / pytest / JUnit 5 / RSpec** — parametrize decorators (`@pytest.mark.parametrize`, `test.each`, `where:`); `describe`/`it` hierarchy for behavior organization.
+Anchor against TDD red-green-refactor, FIRST test principles, xUnit Test Patterns, Boundary Value Analysis, Equivalence Partitioning, mutation testing, property-based testing, behavior-focused Google testing guidance, and framework-native parameterization in pytest, JUnit, Jest, Vitest, RSpec, and similar runners. Use [references/checklist.md](references/checklist.md) for quick planning and [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for case matrices, test-double choices, determinism controls, mutation/property triggers, and validation freshness patterns.
 
-### Unit Test Case Design Matrix
+# Mode Matrix
 
-```
-Business Rule: "Order discount is applied as follows:
-  - Cart total < $50: no discount
-  - $50 ≤ total < $100: 5% discount
-  - $100 ≤ total < $200: 10% discount
-  - total ≥ $200: 15% discount
-  - Discount never exceeds the cart total"
-
-Test Matrix:
-Test Case ID | Input (total) | Expected Discount | Category
--------------|---------------|-------------------|-----------------------------
-TC-01        | $0.00         | $0.00             | Boundary: empty cart
-TC-02        | $49.99        | $0.00             | Boundary: just below 5% tier
-TC-03        | $50.00        | $2.50             | Boundary: exact 5% tier entry
-TC-04        | $75.00        | $3.75             | Representative: middle of 5% tier
-TC-05        | $99.99        | $4.99             | Boundary: just below 10% tier
-TC-06        | $100.00       | $10.00            | Boundary: exact 10% tier entry
-TC-07        | $199.99       | $19.99            | Boundary: just below 15% tier
-TC-08        | $200.00       | $30.00            | Boundary: exact 15% tier entry
-TC-09        | $1000.00      | $150.00           | Representative: large order
-TC-10        | -$10.00       | IllegalArgumentException | Edge: negative total
-TC-11        | null          | NullPointerException / 400 | Edge: null input
-```
-
-### Dependency Control Strategy
-
-```typescript
-// What to mock: external boundary (HTTP client, email sender, repository)
-// What NOT to mock: internal logic collaborators
-
-// GOOD: mock at the repository boundary (DB call is the nondeterminism)
-describe('OrderService.placeOrder', () => {
-  it('raises InsufficientFundsError when balance is below order total', () => {
-    const mockAccountRepo = { findById: jest.fn().mockResolvedValue({ balance: 10 }) };
-    const service = new OrderService(mockAccountRepo);
-    await expect(service.placeOrder({ accountId: '1', total: 50 }))
-      .rejects.toThrow(InsufficientFundsError);
-  });
-});
-
-// BAD: mock the internal calculation — tests nothing about the rule
-describe('OrderService.placeOrder', () => {
-  it('calls _calculateDiscount', () => {
-    const spy = jest.spyOn(service as any, '_calculateDiscount');
-    await service.placeOrder({ total: 100 });
-    expect(spy).toHaveBeenCalled(); // proves choreography, not correctness
-  });
-});
-```
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Pure rule or calculation | Algorithm, pricing, eligibility, validation, parser, mapper, formatter, or state guard with no real I/O. | Prove behavior through representative, boundary, invalid, and error cases. | Current source rule, table or property cases, expected outputs/errors. | `business-rule-extraction`, `failure-contract-design` | Integration setup for pure logic. |
+| Bug-fix regression unit | Confirmed defect reproducible through one function/class/module boundary. | Preserve the exact failure trigger at the narrowest test level. | Red-before-fix or not-run reason, defect link, exact input/state, green-after-fix command. | `regression-testing`, `execution-trajectory-analysis` | Generic happy-path confirmation. |
+| Refactor characterization | Untested code is being moved, extracted, renamed, or simplified. | Lock current observable behavior before changing structure. | Public behavior boundary, characterization cases, command before/after movement. | `testability-seam-design`, `plan-execution-consistency` | Private-helper export. |
+| Determinism and seam repair | Clock, random, UUID, locale, timezone, env, globals, singleton, async timing, or generated input affects assertions. | Add explicit seams or controls without changing production semantics. | Deterministic control map, setup/teardown, reset or seed proof. | `testability-seam-design`, `test-data-management` | Real sleeps or order-dependent tests. |
+| Assertion strength review | Tests assert call order, private fields, snapshots, or mocks while behavior remains unproved. | Replace choreography assertions with outcome assertions. | Behavior assertion, rejected implementation assertion, residual risk. | `ai-code-review-refactor`, `code-clarity-maintainability` | Snapshot/call-count-only evidence. |
+| Validation freshness mapping | Reports, memory, graph, or prior run claims unit coverage after source/test/fixture/double changes. | Reconcile changed paths with current tests and rerun or downgrade evidence. | Changed-path-to-test map, command outcome, stale/not-run scope. | `validation-broker`, `repository-graph-analysis`, `project-memory-governance` | Trusting old green reports. |
 
 # Selection Rules
 
@@ -91,6 +54,15 @@ Select this capability when **the risk is localized to a domain logic function, 
 # Risk Escalation Rules
 
 Escalate when: unit tests are the only test level for a change that involves a database state transition, external API call, or cross-service interaction (integration test is also required); a business rule enforces money movement, permission decisions, stock or quota limits, or state machine transitions and has zero boundary or negative test coverage (unacceptable coverage gap — must add); or a bug fix is applied without a regression test (the bug will likely reappear in the next refactor).
+
+# Proactive Professional Triggers
+
+- **Signal:** A changed business rule, calculation, validator, parser, mapper, or state transition has only a happy-path test. **Hidden risk:** boundary, invalid-input, and failure defects ship while coverage looks present. **Required professional action:** derive equivalence classes, boundary values, negative cases, and expected failures. **Route to:** `unit-testing`, `failure-contract-design`. **Evidence required:** case matrix, current source rule, assertion target, and command outcome or not-run reason.
+- **Signal:** A unit test asserts a private helper, private field, mock call order, snapshot text, or internal choreography. **Hidden risk:** refactors break tests while wrong behavior can still pass. **Required professional action:** move proof to an observable public/module boundary or record why no boundary exists. **Route to:** `testability-seam-design`, `ai-code-review-refactor`. **Evidence required:** behavior assertion, rejected implementation assertion, and residual limitation.
+- **Signal:** Clock, randomness, UUID, locale, timezone, global mutable state, singleton, scheduler, or async timing influences the result. **Hidden risk:** a flaky or environment-dependent unit test becomes noise and loses protection value. **Required professional action:** freeze, seed, inject, reset, or isolate the nondeterministic source. **Route to:** `testability-seam-design`, `test-data-management`. **Evidence required:** deterministic control map, setup/teardown, replay command, and flake residual risk.
+- **Signal:** A bug fix is unit-testable but no test is shown red before the fix or linked to the defect. **Hidden risk:** the test may never have reproduced the recurrence path. **Required professional action:** capture the exact trigger and verify red/green evidence or document why red-before-fix cannot be produced. **Route to:** `regression-testing`, `execution-trajectory-analysis`. **Evidence required:** defect reference, input/state, pre-fix failure or limitation, final green command.
+- **Signal:** A mock replaces the collaborator that carries the risk, such as persistence constraints, auth, queue semantics, provider payloads, or generated clients. **Hidden risk:** the unit test proves only the fake behavior and overclaims integration or contract safety. **Required professional action:** narrow the unit claim and add integration or contract proof for the real seam. **Route to:** `integration-testing`, `contract-testing`. **Evidence required:** mocked boundary, what the mock proves, what remains unverified, and next gate.
+- **Signal:** Repository graph, project memory, prior validation, or generated reports say unit coverage exists after source, fixtures, doubles, generated inputs, or test commands changed. **Hidden risk:** stale evidence is reused for a different execution graph. **Required professional action:** reconcile current source and changed paths with fresh validation before closure. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `validation-broker`. **Evidence required:** accepted/rejected prior claim, changed-path-to-test map, command result, freshness verdict.
 
 # Critical Details
 
@@ -121,20 +93,28 @@ Escalate when: unit tests are the only test level for a change that involves a d
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when the unit test touches business rules, boundary matrices, fixture ownership, mocks around risk boundaries, mutation testing, or regression evidence. Do not load it for a trivial pure-function assertion with obvious inputs and no mock, fixture, or defect context.
+The `SKILL.md` body carries L1/L2 routing, mode selection, output, and gates. Read [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete unit test plan. Read [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when selecting case matrices, comparing test-double choices, designing deterministic controls, deciding mutation/property triggers, reconciling graph-memory-execution evidence, or documenting validation freshness. Do not load deep references for a trivial pure-function assertion with obvious inputs, no fixture, no mock, no defect context, and no stale-validation dispute.
 
 # Output Contract
 
 Return a unit test plan with:
 
+- `mode_selected` (pure rule/calculation, bug-fix regression unit, refactor characterization, determinism/seam repair, assertion strength review, or validation freshness mapping)
 - `behaviors_under_test` (per changed rule/function: description, acceptance criterion trace)
+- `source_evidence` (current source, existing tests, fixtures, repository graph, project memory, execution trajectory, and skipped evidence with reason)
 - `test_case_matrix` (per behavior: input classes, boundary values, edge cases, error paths, expected outputs)
 - `dependency_controls` (per external dependency: mock/stub/fake strategy; what is not mocked)
 - `determinism_controls` (clock mock, random seed, global state reset strategy)
+- `assertion_quality` (observable behavior asserted, rejected private/choreography assertions, and snapshot limits)
+- `testability_seams` (public boundary, private-helper non-export decision, fixture owner, and deterministic seam owner)
 - `naming_convention` (template applied: `[unit]__[condition]__[expected]`)
 - `parametrize_strategy` (which cases use table-driven tests; table format)
 - `mutation_test_plan` (if applicable: mutation tool, threshold, CI gate)
-- `evidence_command` (command to run the test suite and output coverage or pass/fail)
+- `graph_memory_execution_coupling` (graph/memory/prior-run claims accepted, rejected, stale, partial, or not verified)
+- `validation_freshness` (commands, exit codes, changed inputs covered, last material edit, stale/not-run status)
+- `tool_permission_boundary` (shell/test runner/sandbox action class, permission state, local write or report outputs, and redaction rule)
+- `evidence_scope` (what the unit run proves, what it explicitly does not prove, and any overclaim risk)
+- `residual_unit_test_risk` (uncovered integration, contract, concurrency, data, security, performance, or production-runtime behavior and next gate)
 
 # Evidence Contract
 
@@ -142,12 +122,15 @@ A unit test is accepted only when the output includes:
 
 - **Unit boundary**: function/class/module under test and dependencies excluded.
 - **Behavior under test**: observable input/output, state transition, error, or side effect.
+- **Source basis**: current source/test/fixture paths, repository graph or memory leads accepted/rejected, and stale context limitations.
 - **Mock boundary**: which collaborators are mocked and why mocking does not hide the defect or risk boundary.
 - **Assertions**: behavior-oriented assertions, not private implementation assertions.
 - **Negative path**: invalid input, denied case, exception, or edge case when relevant.
 - **Fixture ownership**: test data owner, setup/teardown, and isolation.
-- **What evidence proves**: the isolated behavior is correct.
-- **What evidence does not prove**: integration wiring, persistence, network, browser, concurrency, production config, or external contract.
+- **Validation evidence**: command, exit code, output artifact or not-run reason, changed inputs covered, and freshness after final material edit.
+- **What evidence proves**: the named isolated behavior, branch, invariant, failure path, or regression trigger is protected.
+- **What evidence does not prove**: integration wiring, persistence, network, browser, concurrency, production config, external contract, load behavior, or unrelated release readiness.
+- **Tool boundary**: test runner or shell action class, sandbox/permission status, generated-output scope, and sensitive-output redaction.
 - **Residual risk**: untested integration or runtime behavior and next gate.
 
 # Quality Gate
@@ -163,7 +146,19 @@ The unit test plan is complete only when:
 7. Every bug fix has a regression test written before the fix is applied.
 8. Test suite runs in < 30 seconds (if it exceeds this, identify slow tests and convert to integration tests or use in-memory fakes).
 9. No test depends on shared mutable state or execution order.
-10. Mutation testing score (if run) is above the agreed threshold.
+10. Graph, memory, and prior validation claims are confirmed against current source or downgraded before handoff.
+11. Validation evidence names command, exit code, changed inputs covered, freshness after final edit, and not-run/stale scope.
+12. Unit-test evidence does not overclaim integration, contract, security, concurrency, performance, production configuration, or external-provider proof.
+13. Tool permission/sandbox boundaries are recorded when shell commands, generated reports, build artifacts, or secret-sensitive output are involved.
+14. Mutation testing score (if run) is above the agreed threshold.
+
+# Benchmark Coverage
+
+This capability covers behavior-oriented unit tests, TDD red-green-refactor, FIRST principles, xUnit test doubles, boundary-value and equivalence-class design, table-driven and parameterized tests, deterministic clock/random/UUID/global controls, mutation and property-based trigger decisions, private-helper non-export, regression unit evidence, assertion-strength review, graph-memory-execution reconciliation, validation freshness, and evidence-limited handoff.
+
+# Routing Coverage
+
+Route here when the primary risk is local behavior inside a pure function, module, service method, validator, parser, mapper, formatter, policy, algorithm, or state guard. Route away when the primary proof requires real persistence, framework wiring, queue/cache/provider behavior, auth filter execution, consumer-visible compatibility, browser/user journey, fixture privacy/cleanup strategy, or broad test-level selection.
 
 # Used By
 
@@ -173,7 +168,7 @@ The unit test plan is complete only when:
 
 # Handoff
 
-Hand off to `test-strategy` for broader verification level decisions; `integration-testing` for real boundary behavior; `regression-testing` for locking defect-fix behavior; `test-data-management` for fixture and factory design.
+Hand off to `test-strategy` for broader verification level decisions; `integration-testing` for real boundary behavior; `contract-testing` for consumer-visible compatibility; `regression-testing` for locking defect-fix behavior; `testability-seam-design` for private-helper, mock, deterministic input, or public-boundary conflicts; `test-data-management` for fixture and factory design; and `validation-broker` for changed-path-to-test freshness.
 
 # Completion Criteria
 

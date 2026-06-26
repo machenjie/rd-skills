@@ -1,12 +1,22 @@
 # User Role Identification Checklist
 
+- Select the mode before writing the inventory.
+- State the role inventory scope, affected surfaces, protected resources, tenants, and excluded actors.
+- Inspect current source, docs, tests, routes, jobs, policy files, registry, repository graph, project memory, and execution trajectory when available.
+- Mark graph, memory, and execution evidence as accepted, rejected, stale, or unknown.
 - List primary actors who initiate the change.
 - List secondary actors affected by the outcome.
-- Include support, admin, operator, and auditor roles.
-- Include system users, service accounts, scheduled jobs, and workers.
-- Include external systems, identity providers, webhooks, and API consumers.
-- Separate persona context from authorization role.
-- Record role goals, responsibilities, authority, and denied actions.
-- Record data visibility, tenant scope, object ownership, and audit needs.
-- Identify role-specific abuse, failure, and support risks.
-- Flag roles requiring permission-boundary modeling.
+- Include support, admin, privileged operator, auditor, incident responder, and data admin roles.
+- Include system users, service accounts, scheduled jobs, workers, migrations, and event consumers.
+- Include external systems, identity providers, webhooks, API consumers, file consumers, and partner systems.
+- Separate behavioral persona context from authorization role.
+- Record actor goals, responsibilities, authority, trust level, authentication mechanism, and denied actions.
+- Record visible data, hidden data, field limits, export limits, tenant scope, object ownership, and audit needs.
+- Identify support/admin diagnostic access separately from mutation, override, impersonation, export, delete, refund, or role-grant authority.
+- Record service-account owner, purpose, scope, credential lifecycle, audit, and review cadence.
+- Record external actor trust contract, accepted claims, rejected claims, replay/idempotency needs, and failure behavior.
+- Identify role-specific security, abuse, operational, support, data exposure, financial, compliance, and tenant-isolation risks.
+- Flag actors requiring permission-boundary modeling with subject/resource/action/scope hints.
+- Map role variants to scenario validation coverage for valid, denied, abuse, recovery, operational, and support paths.
+- Name downstream capability handoffs.
+- State evidence limits and uninspected actor surfaces.

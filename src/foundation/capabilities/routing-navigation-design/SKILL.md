@@ -19,6 +19,10 @@ Use this capability when: a change adds, removes, or renames routes; route param
 
 Do not use this capability for: purely visual navigation styling changes with no route behavior impact (use a frontend component design); server-side authorization policy design where the routing outcome is a side effect (use `authentication-authorization`); information architecture and content labeling where URL behavior is not the primary concern (use `information-architecture`); or API routing/path parameter design (use `api-contract-design`).
 
+# Stage Fit
+
+Use during experience planning when a route, redirect, deep link, breadcrumb, wizard step, stale link, or back-button behavior becomes part of the product contract. Use during frontend implementation review when route guards, loaders, route-level error boundaries, URL/search state, parameter validation, lazy route modules, or navigation side effects are added or changed. Use during testing when direct entry, bookmark, refresh, browser back, unauthenticated, unauthorized, unavailable, not-found, deleted/stale, invalid-parameter, and redirect-loop cases need proof. Repository graph, project memory, analytics, support reports, and previous route decisions may suggest candidate route behavior, but current routes, router config, tests, generated links, notification/email templates, and backend authorization contracts must confirm active behavior before route evidence is treated as current.
+
 # Non-Negotiable Rules
 
 - **Every route must have an explicit guard classification covering all four distinct outcomes:** (1) Unauthenticated — user has no session; redirect to login with `returnTo` preserved. (2) Unauthorized — user is authenticated but lacks permission to the resource; show 403-equivalent without confirming the resource exists (do not leak resource existence to unauthorized users). (3) Unavailable — feature is disabled, tenant does not have access, or maintenance mode; show explicit unavailable state (not a 404). (4) Not-found — resource genuinely does not exist; show 404 without leaking existence for sensitive resources.
@@ -28,42 +32,19 @@ Do not use this capability for: purely visual navigation styling changes with no
 - **Path parameters must be validated at route entry.** A malformed `:orderId` (non-UUID, negative integer, SQL fragment) must be rejected at the routing layer before any data fetch begins. Validation rules must be documented in the route table.
 - **Browser history behavior must be explicit for destructive and wizard flows.** A user who completes a purchase and presses back must not re-submit the form. A user who abandons a multi-step wizard must land on a safe page, not a broken intermediate step. Use `history.replace()` for post-submission states; use `history.push()` for navigable steps.
 
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- |
+| New or changed route contract | Route added, removed, renamed, nested, lazy-loaded, or given new path/search params. | Define path, owner, params, loader/data dependencies, guard order, deep-link states, titles, breadcrumbs, and tests. | Current route config, generated links, route owner, parameter schema, deep-link state table. | `page-component-decomposition`, `interaction-state-modeling`, `frontend-testing` | Visual-only navigation styling. |
+| Guard or redirect revision | Login redirect, `returnTo`, permission gate, feature/tenant gate, canonical redirect, or stale-link redirect changes. | Preserve intent without open redirects, loops, or existence disclosure. | Guard classification, same-origin return validation, redirect map, loop-depth proof, backend-auth boundary. | `permission-boundary-modeling`, `security-privacy-gate`, `api-contract-design` | Client guard as security proof. |
+| Deep-link and stale-link recovery | Email/notification/bookmark/search result opens a route directly, or deleted/archived resources remain linked. | Model loading, allowed, denied, unavailable, deleted/archived, never-existed, invalid-param, and recovery states. | Entry source, route params, data dependency, stale-resource policy, parent/search recovery path. | `user-flow-modeling`, `information-architecture`, `interaction-state-modeling` | Generic 404 for every failure. |
+| Wizard/destructive/history flow | Checkout, submit, delete, archive, import/export, multi-step wizard, or post-action confirmation changes browser history. | Prevent back-button resubmission and define refresh, back, cancel, and re-entry behavior. | Push/replace decision, side-effecting step map, idempotency/retry handoff, browser-back tests. | `user-flow-modeling`, `idempotency-retry-design`, `frontend-testing` | Browser default as an implicit contract. |
+| Route migration or public URL compatibility | Public/bookmarked URLs, SEO paths, external partner links, emails, notifications, or generated clients change. | Preserve compatibility or define redirect/deprecation strategy and consumer impact. | Old/new route map, caller inventory, redirect status, telemetry, rollback path. | `consumer-impact-analysis`, `version-compatibility`, `quality-test-gate` | Breaking links without explicit migration. |
+
 # Industry Benchmarks
 
-Anchor against: **RFC 3986 (URI Generic Syntax)** — path parameter encoding, reserved characters, percent-encoding; `+` vs `%20` in path vs. query. **OWASP Open Redirect Prevention** — validate `returnTo` is same-origin before redirect; do not trust `returnTo` query parameter from untrusted input. **WCAG 2.2 — Success Criterion 2.4.4 (Link Purpose)** and **2.4.5 (Multiple Ways)** — navigation must convey destination purpose; routes must be discoverable via multiple paths. **HTML Living Standard — History API** (`pushState`, `replaceState`, `popstate`) — controls browser history stack entries; `replace` vs. `push` semantics matter for back-button UX. **React Router v6 / Vue Router 4 / Angular Router** — file-based and programmatic routing conventions; `loader` / `beforeEach` guard lifecycle; `errorElement` / error boundary for route-level error containment. **Next.js App Router** — layouts, parallel routes, intercepting routes, and `not-found.tsx` placement. **Nielsen's Heuristics #9 (Error Prevention)** — destructive actions (delete, submit) must not be reachable via browser back; use `replace` to remove them from history.
-
-### Route Guard Classification Matrix
-
-| Condition | HTTP Equivalent | UI Behavior | Resource Existence Disclosed? | `returnTo` Preserved? |
-| --- | --- | --- | --- | --- |
-| No session (unauthenticated) | 401 | Redirect to login | N/A | Yes |
-| Authenticated, no permission | 403 | Show 403 page (no resource name for sensitive) | No (for sensitive) | No |
-| Feature disabled / tenant locked | 503 | Show feature-unavailable screen | N/A | No |
-| Resource does not exist | 404 | Show 404 with recovery path | No (for sensitive) | No |
-| Route parameter invalid | 400 | Reject at routing layer, show 400/invalid-link | N/A | No |
-| Resource exists, user has access | 200 | Render normally | Yes | N/A |
-
-### Route Table Template
-
-```
-Route: /orders/:orderId/items/:itemId
-Method: GET (client navigation)
-Parameters:
-  orderId: UUID v4, required — validate regex /^[0-9a-f-]{36}$/i
-  itemId:  UUID v4, required — validate regex /^[0-9a-f-]{36}$/i
-Guards:
-  1. Session exists? → NO: redirect /login?returnTo=/orders/:orderId/items/:itemId
-  2. User owns order OR user is admin? → NO: 403 (do not confirm order exists)
-  3. Order exists? → NO: 404 with parent link /orders/:orderId
-  4. Item exists in order? → NO: 404 with parent link /orders/:orderId
-Data dependencies:
-  - GET /api/orders/:orderId (auth required)
-  - GET /api/orders/:orderId/items/:itemId (auth required)
-Loading state: skeleton overlay
-Deleted/stale: "This item has been removed. View order ›"
-History behavior: push (navigable; back returns to order detail)
-Breadcrumbs: Home > Orders > Order #:orderId > Item #:itemId
-```
+Anchor against RFC 3986 URI syntax, OWASP open-redirect prevention, WCAG 2.2 link purpose/multiple-ways/focus-order requirements, HTML History API semantics, React Router/Vue Router/Angular Router guard and error-boundary conventions, Next.js App Router not-found/error/layout patterns, and error-prevention heuristics for destructive flows. Keep this body focused on routing, evidence, and quality gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for guard matrices, route-table templates, deep-link states, redirect/history rules, framework placement notes, graph/memory/trajectory coupling, and anti-pattern review.
 
 # Selection Rules
 
@@ -72,6 +53,15 @@ Select this capability when **URL behavior, navigation guard logic, or route sta
 # Risk Escalation Rules
 
 Escalate immediately when: a route change affects a public or bookmarked URL that is referenced by external systems, search engines, or partner integrations (changing it without a redirect is a breaking change); a guard classification could disclose resource existence to unauthorized users for a sensitive resource (e.g., confirming a private user profile exists before checking permission); a `returnTo` redirect parameter is taken from user input without same-origin validation (open redirect vulnerability — OWASP A10); a route's data dependency requires elevated privileges that the frontend cannot express (coordinate with backend authorization design); or removing a named route would break existing deep links in email, notifications, or external integrations.
+
+# Proactive Professional Triggers
+
+- **Signal:** a route accepts `returnTo`, `redirect`, `next`, `continue`, or `callbackUrl` from user input. **Hidden risk:** open redirect, login-loop, or intent loss after authentication. **Required professional action:** require same-origin allowlist, safe fallback, loop-depth limit, and tests. **Route to:** `security-privacy-gate`, `web-security`, `frontend-testing`. **Evidence required:** rejected external URL case, valid return case, invalid return fallback, and no token/PII in URL.
+- **Signal:** route guard checks role, tenant, feature flag, or ownership in the client but backend/API evidence is not named. **Hidden risk:** client-side permission illusion and resource-existence leak. **Required professional action:** model the client guard as UX only and hand off server enforcement. **Route to:** `permission-boundary-modeling`, `authentication-authorization`, `security-privacy-gate`. **Evidence required:** backend policy/API denial path or explicit not-verified residual risk.
+- **Signal:** deep link comes from email, notification, external partner, search index, QR code, or saved bookmark. **Hidden risk:** stale resource, wrong tenant, invalid params, or broken recovery path. **Required professional action:** define direct-entry loading and recovery states before implementation. **Route to:** `user-flow-modeling`, `information-architecture`, `frontend-testing`. **Evidence required:** entry source, param validation, deleted/archived/never-existed branch, recovery destination.
+- **Signal:** destructive, payment, import/export, approval, or multi-step wizard route uses default browser history. **Hidden risk:** duplicate side effect, resubmission, unsafe retry, or partial-state confusion. **Required professional action:** define push/replace/re-entry/cancel behavior and hand off idempotency when needed. **Route to:** `user-flow-modeling`, `idempotency-retry-design`, `quality-test-gate`. **Evidence required:** history strategy, side-effecting step map, back/refresh test or residual risk.
+- **Signal:** old route is removed or renamed and generated links, email templates, docs, sitemap, analytics, or partner URLs were not searched. **Hidden risk:** public URL break and unmeasured dead links. **Required professional action:** inventory callers and define redirect/deprecation/telemetry. **Route to:** `consumer-impact-analysis`, `version-compatibility`, `change-documentation-gate`. **Evidence required:** searched sources, old/new map, redirect or deprecation policy.
+- **Signal:** repository graph or project memory says a route pattern exists, but current router config, tests, generated links, and templates were not inspected. **Hidden risk:** stale memory preserves dead links or obsolete guards. **Required professional action:** confirm with current source and mark unsupported memory as a hint only. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`. **Evidence required:** inspected paths, accepted/rejected memory, unknown route surfaces, validation gap.
 
 # Critical Details
 
@@ -102,10 +92,17 @@ Escalate immediately when: a route change affects a public or bookmarked URL tha
 - Wizard back-navigation re-triggers idempotent-but-not-safe action (e.g., send email confirmation on every visit to step 2).
 - Breadcrumb links navigate to parent routes that themselves require parameters not available in the breadcrumb context.
 
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 route-selection, guard, output, and quality-gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete route table, redirect map, guard classification, stale-link plan, deep-link recovery, or browser-history contract. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when guard matrices, route-table templates, redirect/history semantics, framework placement, route migration, or graph/memory/trajectory evidence need more depth. Use [examples/example-output.md](examples/example-output.md) only when expected output shape is unclear. Do not load references for pure routing or metadata-only edits with no route contract output.
+
 # Output Contract
 
 Return a routing design with:
 
+- `mode_selected` (new/changed route contract, guard/redirect revision, deep-link/stale-link recovery, wizard/destructive/history flow, or route migration/public URL compatibility)
+- `route_scope` (owning product surface, changed routes, current route tree, old/new paths, excluded screens, and public/bookmarked URL status)
+- `source_evidence` (current router config, page files, loaders/actions, generated link builders, email/notification templates, breadcrumbs, sitemap/docs, backend authorization contract, tests, repository graph, project memory, execution trajectory, and freshness limits)
 - `route_table` (per route: path, parameters with validation rules, guards per outcome type, data dependencies, loading state, deleted/stale state, history behavior, breadcrumbs)
 - `redirect_map` (from → to, trigger condition, `returnTo` preservation, loop prevention)
 - `guard_classification` (per route: unauthenticated / unauthorized / unavailable / not-found behavior; resource existence disclosure policy)
@@ -114,6 +111,23 @@ Return a routing design with:
 - `parameter_validation` (regex/type constraints per path parameter)
 - `error_boundary_scope` (which route subtrees have isolated error boundaries)
 - `route_level_tests` (per route: guard tests, deep-link tests, redirect loop tests, parameter rejection tests)
+- `route_change_to_validation_map` (each changed route, param, guard, redirect, deep-link state, error boundary, breadcrumb, generated link, public URL, or history behavior mapped to test/validator/manual review or residual risk)
+- `reuse_and_placement_rationale` (existing route modules, loaders, link builders, error boundaries, guards, layout slots, and test harnesses reused; rejected duplicate route/guard/helper locations)
+- `behavior_preservation` (old valid links, return intent, back/refresh behavior, route titles, breadcrumbs, analytics, permission-denied behavior, and stale-link recovery preserved or intentionally changed)
+- `handoff_boundaries` (what belongs to information architecture, user flow, interaction state, permission/backend auth, API contract, frontend implementation, documentation, or release)
+- `validation_evidence` (commands, route tests, browser checks, link crawler, screenshot/manual evidence, freshness, or not-verified disclosure)
+- `evidence_limits` (what was not inspected: production links, partner URLs, email archives, SEO index, generated clients, backend auth, browser matrix, or live analytics)
+
+# Evidence Contract
+
+Close routing-navigation design only when these answers are concrete:
+
+- **Boundary basis:** selected mode, current route surface, old/new route contract, security/UX benchmark, and route owner.
+- **Current boundaries inspected:** router config, page/layout/loader/action files, generated links, breadcrumbs, docs/templates, tests, backend authorization/API contract, repository graph, project memory, and execution trajectory accepted or rejected for freshness.
+- **Placement rationale:** why route guard, loader, redirect, error boundary, breadcrumb, and link generation belong at the selected router/page/layout/helper boundary and why duplicate or frontend-only security placement is rejected.
+- **Navigation proof:** guard classification, non-leaking denial, direct-entry state, stale/deleted recovery, invalid-param branch, redirect loop control, push/replace choice, and public URL compatibility named for every changed route.
+- **Validation proof:** each route, param, guard, redirect, stale/deep-link state, history behavior, and generated link maps to route-level tests, browser/manual checks, crawler/link validation, or named residual risk.
+- **Behavior preservation and residual risk:** old valid links and safe denials are preserved or intentionally changed; uninspected partner links, templates, SEO surfaces, browser behavior, or backend auth evidence have owner and next gate.
 
 # Quality Gate
 
@@ -129,6 +143,10 @@ The routing design is complete only when:
 8. Resource existence disclosure policy is explicit for sensitive resources.
 9. Route-level error boundaries are scoped appropriately.
 10. Route-level tests cover guard, deep-link, redirect, and parameter-validation behaviors.
+11. Current-source, repository graph, project memory, and execution trajectory evidence are freshness-scoped; inferred route coverage is marked not verified.
+12. Every changed public/bookmarked/generated route has caller inventory, redirect/deprecation decision, or named residual risk.
+13. Breadcrumbs, titles, generated links, email/notification templates, sitemap/docs, and analytics paths are inspected or explicitly out of scope.
+14. Every changed route behavior maps to validation evidence or a named residual risk with next owner.
 
 # Used By
 

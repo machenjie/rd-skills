@@ -41,6 +41,14 @@ Do not use to enforce personal taste over project convention, produce syntax wal
 
 Select when implementation quality depends on language-specific idioms. Always pair with the matching `<lang>-professional-usage` capability when Python, Go, TypeScript, Java/JVM, Rust, C/C++, Shell, or SQL is named. Pair with `ai-code-review-refactor` when AI-generated code is in scope.
 
+# Proactive Professional Triggers
+
+- **Signal:** public API, export, package/module boundary, SDK surface, CLI flag, or generated type is added or renamed without checking local naming, visibility, doc-comment, nullability, and error-result conventions. **Hidden risk:** consumers get a stable-looking API that is non-idiomatic, hard to evolve, or semver-breaking in that language. **Required professional action:** inspect existing public surfaces before accepting the name or signature. **Route to:** `implementation-structure-design`, `sdk-library-contract-design`, matching `<lang>-professional-usage`. **Evidence required:** local convention examples, rejected naming/signature options, consumer impact, and formatter/linter/typecheck output or not-verified disclosure.
+- **Signal:** HTTP body, queue message, file, env var, CLI arg, generated client type, database row, FFI input, or deserialized payload is trusted because the chosen language has static types or type hints. **Hidden risk:** runtime boundary drift bypasses the type system and turns an idiom decision into validation, data corruption, or security failure. **Required professional action:** require language-native boundary validation and negative fixtures. **Route to:** `input-validation`, `contract-testing`, `security-privacy-gate`, matching `<lang>-professional-usage`. **Evidence required:** validator location, malformed fixture, denied/invalid test output, and what static typing does not prove.
+- **Signal:** resource, cancellation, concurrency, transaction, stream, cursor, timer, lock, or worker lifecycle uses a pattern copied from another language instead of the target runtime idiom. **Hidden risk:** leaks, deadlocks, blocked event loops, unclosed handles, or lost cancellation survive formatter and happy-path tests. **Required professional action:** map ownership and cleanup at the acquisition boundary. **Route to:** `language-performance-safety`, `concurrency-control`, `quality-test-gate`. **Evidence required:** lifecycle owner, cleanup path on success/error/cancel, race/leak/cancellation command, exit code, and residual interleaving risk.
+- **Signal:** a dependency, framework wrapper, helper, factory, adapter, or abstraction is introduced for behavior the standard library or local convention already covers. **Hidden risk:** supply-chain cost, API hallucination, and shared utility pollution are disguised as idiomatic code. **Required professional action:** scan local reuse candidates and compare the standard-library path before accepting the abstraction. **Route to:** `package-dependency-management`, `implementation-structure-design`, `minimal-correct-implementation`. **Evidence required:** reuse scan output, standard-library alternative, dependency/license/security report, placement rationale, and rejected over-abstraction.
+- **Signal:** AI-generated or migrated code mixes sync/async styles, exception/result models, casing, package layout, test helper exports, or library calls across languages. **Hidden risk:** code passes superficial review while maintainers must mentally translate foreign idioms and hallucinated APIs. **Required professional action:** verify symbols against installed versions and rewrite to the target-language idiom before merge. **Route to:** `ai-code-review-refactor`, `code-review`, `language-testing-strategy`. **Evidence required:** symbol/import search, compiler/typecheck/lint output, public behavior test, and remaining convention uncertainty.
+
 # Risk Escalation Rules
 
 - Escalate to `ai-code-review-refactor` for AI-generated or heavily refactored code blocks.
@@ -93,56 +101,16 @@ Select when implementation quality depends on language-specific idioms. Always p
 
 ## Comment Quality Discipline
 
-Comments are part of professional language idiom. They must explain contract, intent, invariants, edge cases, and non-obvious reasoning. They must not restate obvious code.
+Comments are part of language idiom when they define a contract, invariant, edge case, or risk. They are noise when they narrate obvious syntax. Use the detailed checklist only when the review touches exported APIs, object lifecycle, test fixtures, or complex inline reasoning.
 
-Required comments:
+Required comment surfaces:
+- **Exported/public APIs:** use the language-standard doc format and state behavior, parameters, return value, error/exception/result contract, side effects, concurrency expectations, and examples when non-trivial.
+- **Stateful classes/objects:** explain responsibility, lifecycle owner, invariant, external resource, transaction, concurrency, or domain rule; do not list fields mechanically.
+- **Non-exported functions:** comment only when reused across files, business-critical, compatibility-sensitive, retrying, concurrent, persistent-state-mutating, or surprising.
+- **Tests and fixtures:** test names express behavior; comments explain regression reason, edge case, production bug, or fixture/golden contract.
+- **Inline comments:** reserve for business rule authority, compatibility branch, state transition, lock/concurrency reason, idempotency/retry decision, transaction boundary, performance tradeoff, external API quirk, security validation, fallback, or non-obvious algorithm step.
 
-1. Public / exported API comments
-   - Every exported class, struct, interface, function, method, constant, variable, component, hook, module API, SDK API, and public type must have a language-standard doc comment.
-   - The comment must follow the language convention:
-     - Go: godoc starts with the exported identifier.
-     - Rust: rustdoc `///`.
-     - TypeScript: JSDoc for exported APIs.
-     - Java/Kotlin: Javadoc/KDoc for public APIs.
-     - Python: docstring for public modules/classes/functions.
-     - C++: project-standard Doxygen or local convention.
-   - The comment must describe behavior, contract, important parameters, return value, error/exception behavior, side effects, concurrency expectations, and non-trivial examples when appropriate.
-
-2. Class / object comments
-   - Required when the class/object owns state, lifecycle, invariants, external resources, concurrency, transactions, or domain rules.
-   - The comment should explain responsibility and invariant, not list fields mechanically.
-
-3. Function / method comments
-   - Required for exported functions and methods.
-   - Required for non-exported functions when behavior is non-trivial, reused across files, encodes a business rule, handles compatibility, performs retries, has concurrency behavior, mutates persistent state, or has surprising edge cases.
-   - Not required for tiny private helpers when the name and local context are sufficient.
-
-4. Test comments
-   - Test names must express behavior.
-   - Complex tests must explain the scenario, regression reason, edge case, or production bug being protected.
-   - Fixtures and golden files must explain what contract they represent.
-   - Do not add comments that merely repeat `Arrange / Act / Assert` unless the project convention requires it.
-
-5. Inline comments inside function bodies
-   - Use comments for critical logic only:
-     - business rule authority;
-     - compatibility branch;
-     - state transition;
-     - concurrency or locking reason;
-     - idempotency or retry decision;
-     - transaction boundary;
-     - performance tradeoff;
-     - external API quirk;
-     - security-sensitive validation;
-     - fallback behavior;
-     - non-obvious algorithm step.
-   - Avoid comments for obvious assignments, simple conditionals, basic loops, and direct function calls.
-
-6. Comment minimalism
-   - Prefer better naming and extraction over explanatory comments.
-   - If a comment explains confusing code, first try to simplify or rename the code.
-   - Delete stale, redundant, misleading, or decorative comments.
-   - Do not generate banner comments, noise comments, or comments that narrate every line.
+Reject stale, redundant, decorative, banner, line-by-line, and "Arrange / Act / Assert" comments unless the repository convention explicitly requires them. Prefer renaming or simplifying code before adding explanatory comments.
 
 # Failure Modes
 
@@ -178,6 +146,8 @@ Return an **Idiom Review Report** containing:
 - **Accepted exceptions** with documented reason, scope, owner, expiration
 - **Tool-check status**: formatter pass/fail, linter pass/fail, type-checker pass/fail, security-static-analysis pass/fail — with command lines
 - **AI-generated blocks**: identified, audited, verdict (accept / rewrite / reject)
+- **Validation freshness**: final material edit, command timestamp, stale/not-run checks, and what the tool output does not prove
+- **Gate decision**: approved / blocked / conditionally approved, with required next gate
 - **Residual concerns** with owner and re-evaluation trigger
 
 # Quality Gate

@@ -19,6 +19,10 @@ Use this capability when: a structured requirement brief exists but scenario cov
 
 Do not use this capability to: enumerate every possible combinatorial permutation of inputs (it is not exhaustive mutation testing — focus on distinct risk categories); substitute for `acceptance-standard-definition` (scenario decomposition maps coverage, acceptance standards define done signals); replace threat modeling for adversarial scenarios (abuse scenarios identified here should be handed off to `threat-modeling` for depth analysis); or expand scope beyond the approved requirement (non-goals in the requirement brief bound the scenario space).
 
+# Stage Fit
+
+Owns scenario coverage during requirement intake, implementation planning, and review when a confirmed requirement, use case, or change brief needs complete path coverage before task sequencing or coding begins. In planning, it turns current requirements, source evidence, tests, repository graph, project memory, and prior execution trajectory into a bounded scenario matrix. In review, it rejects happy-path-only coverage, stale memory reuse, missing operational paths, unverified recovery assumptions, and scenario sets that cannot be mapped to validation evidence. Hand off when the primary question is done-standard wording, detailed threat modeling, UI flow order, state-machine legality, implementation sequencing, or test execution strategy.
+
 # Non-Negotiable Rules
 
 - **Scenario categories are not optional.** Every scenario matrix must contain at minimum: (1) Normal / happy path; (2) Alternate valid path (valid input, different branch — e.g., admin vs. regular user, different payment method); (3) Edge condition (boundary values, empty collections, first/last record, maximum limit, zero-balance); (4) Failure / fault scenario (dependency timeout, validation rejection, permission denied, concurrency conflict, partial write); (5) Abuse / misuse scenario (intentional invalid input, replay, enumeration, rate-limit probing — not just accidental wrong input); (6) Recovery scenario (retry, idempotent re-submission, undo, rollback, compensating action); (7) Operational scenario (support diagnosis, monitoring trigger, manual correction, backfill, rollback, incident response visibility).
@@ -28,9 +32,21 @@ Do not use this capability to: enumerate every possible combinatorial permutatio
 - **Abuse scenarios are intentional misuse, not just invalid input.** An invalid email address in a form field is an edge condition. A bot submitting 10,000 invalid email addresses per second to enumerate valid accounts is an abuse scenario. The distinction matters: edge conditions are handled by validation; abuse scenarios require rate limiting, CAPTCHA, account lockout, or monitoring alerts. Confusing the two leads to validation-only defenses against adversarial behavior.
 - **Non-goals from the requirement brief bound the scenario space.** A non-goal of "Does NOT handle subscription cancellation" means no scenario for subscription cancellation should appear in this matrix. If a scenario appears to be required but is listed as a non-goal, escalate to the requirement owner before including it.
 
+# Mode Matrix
+
+Select one primary scenario mode before writing the matrix.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| New behavior coverage | Confirmed brief, use case, API, workflow, job, or state change lacks path coverage. | Cover normal, alternate, edge, failure, abuse, recovery, and operational paths without expanding scope. | Requirement or use case ID, non-goals, actor/surface boundary, and scenario-to-validation map. | `requirement-structuring`, `use-case-modeling`, `acceptance-standard-definition` | Implementation tasks or acceptance wording until scenarios are stable. |
+| Bug or regression coverage | Incident, defect, missed edge case, production failure, or same-pattern repair. | Reproduce the failed scenario, add preservation/regression paths, and scan for omitted sibling scenarios. | Failure scenario, prior behavior, fixed outcome, same-pattern search scope, regression validator. | `failure-diagnosis`, `regression-testing`, `quality-test-gate` | Root-cause claims without verified cause. |
+| Permission or abuse coverage | Role, tenant, object ownership, rate limit, replay, enumeration, or hostile input appears in scope. | Separate valid alternate paths from intentional misuse and denied paths. | Actor/resource/action/scope, denied outcome, abuse scenario, audit or security test expectation. | `permission-boundary-modeling`, `security-privacy-gate`, `threat-modeling` | Treating invalid input as full abuse coverage. |
+| Async, integration, or operational coverage | Queue, webhook, import/export, payment, external dependency, retry, backfill, or runbook concern. | Model partial completion, dependency failure, safe retry, operator diagnosis, rollback, and support visibility. | Dependency contract, status source, retry/exhaustion rule, operator evidence, rollback or compensation path. | `idempotency-retry-design`, `integration-change-builder`, `reliability-observability-gate` | Spinner-only or "support handles it" recovery. |
+| Existing behavior reuse | Repository graph, project memory, previous scenario matrix, tests, or execution trajectory suggests an existing pattern. | Reuse only source-confirmed current behavior and mark stale or unverified evidence. | Current source/tests/docs inspected, accepted/rejected memory or graph evidence, freshness limit, changed scenario delta. | `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis` | Copying old scenario sets without current-source confirmation. |
+
 # Industry Benchmarks
 
-Anchor against: **ISTQB Test Design Techniques** — equivalence partitioning (group inputs with same expected behavior), boundary value analysis (test at and near boundaries), decision table testing (all input combinations for multi-condition logic), state transition testing (every state and transition in a state machine). **BDD / Gherkin** (Cucumber, SpecFlow) — Given/When/Then format maps directly to precondition/stimulus/expected outcome; scenario outlines for parametric coverage. **OWASP Testing Guide (WSTG)** — misuse and abuse scenarios for authentication, authorization, input validation, session management. **Google Site Reliability Engineering** — operational scenarios including toil identification, runbook coverage, alert firing, and rollback verification. **DORA Research** — change failure rate is reduced when pre-deployment scenario coverage explicitly includes rollback and recovery paths. **IEEE Std 829 (Software Test Documentation)** — test design specification; traceability from requirement to test case. **Chaos Engineering principles (Chaos Monkey, Gremlin)** — fault injection scenarios: dependency failure, resource exhaustion, clock skew, network partition. **Martin Fowler — Feature Envy / Shotgun Surgery smells** — when scenario decomposition reveals that a single change requires modifications to many unrelated modules, escalate as an architecture smell.
+Anchor against ISTQB equivalence partitioning, boundary value analysis, decision tables, and state transition testing; BDD/Gherkin; OWASP WSTG misuse cases; SRE operational readiness; DORA recovery-oriented change quality; IEEE test design traceability; chaos engineering fault-injection practice; and architecture-smell escalation when one requirement creates scattered scenario ownership. Keep this body focused on selection, evidence, output, and quality gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for deeper scenario discovery inputs, recovery decision trees, graph/memory/trajectory coupling, and anti-pattern review.
 
 ### Scenario Category Classification Matrix
 
@@ -70,12 +86,24 @@ Select this capability when **a requirement needs path coverage across behavior 
 
 Escalate when: any scenario exposes an irreversible side effect without a defined rollback or compensation path (MUST-HANDLE by default); an abuse scenario indicates that the feature can be weaponized against other users (rate limiting, enumeration, SSRF — escalate to `security-privacy-gate`); a failure scenario reveals that partial writes can occur across multiple data stores without a compensating transaction (escalate to `data-model-design` and `idempotency-retry-design`); a recovery scenario requires manual operator intervention with no runbook (escalate to `reliability-observability-gate`); or the operational scenario matrix is entirely empty for a workflow that can fail after initiating external side effects.
 
+# Proactive Professional Triggers
+
+- **Signal:** A brief, use case, PR, issue, or review only describes the normal success path. **Hidden risk:** implementation and tests silently omit negative, edge, abuse, recovery, and operational behavior. **Required professional action:** produce a seven-category scenario matrix before task planning. **Route to:** `scenario-decomposition`, then `acceptance-standard-definition` or `quality-test-gate`. **Evidence required:** scenario IDs mapped to requirement IDs, validation methods, and release criticality.
+- **Signal:** Repository graph, project memory, a previous scenario set, or execution trajectory appears reusable. **Hidden risk:** stale behavior, renamed surfaces, changed permission models, or old tests are treated as current truth. **Required professional action:** confirm reuse against current source, tests, docs, or registry evidence and mark unverified evidence as a limit. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected reuse decision, freshness limit, and changed-scenario delta.
+- **Signal:** A scenario includes retry, refresh, duplicate webhook delivery, queue reprocessing, import/export rerun, payment attempt, or side-effecting submit. **Hidden risk:** recovery creates duplicate records, double charges, repeated notifications, or inconsistent state. **Required professional action:** classify recovery as MUST-HANDLE unless idempotency or compensation is explicit. **Route to:** `idempotency-retry-design`, `transaction-consistency`, `quality-test-gate`. **Evidence required:** idempotency key/source, duplicate detection rule, partial-state outcome, and validator.
+- **Signal:** Actor, role, tenant, object owner, admin, support user, service account, or external caller varies by scenario. **Hidden risk:** alternate valid paths and denied/abuse paths are collapsed, hiding authorization defects. **Required professional action:** split valid alternate paths from permission-denied and abuse scenarios. **Route to:** `user-role-identification`, `permission-boundary-modeling`, `security-privacy-gate`. **Evidence required:** actor/resource/action/scope rows, allowed and denied outcomes, abuse validator or residual risk.
+- **Signal:** Operational handling is described as "monitor it", "support fixes it", "manual cleanup", or absent for a failing workflow. **Hidden risk:** incidents are unobservable or unrecoverable after release. **Required professional action:** add diagnosis, alert, runbook, backfill, rollback, and manual-correction scenarios. **Route to:** `reliability-observability-gate`, `delivery-release-gate`, `change-documentation-gate`. **Evidence required:** operator action, observable signal, recovery owner, and release-blocking decision.
+
 # Critical Details
 
 - **The operational scenario category is consistently the most omitted.** Teams focus on happy path, alternate paths, and edge conditions during development — and discover operational scenarios (how do I diagnose this in production? how do I backfill records that were missed during the outage? how do I trigger a rollback for just this tenant?) only after a production incident. Writing operational scenarios before implementation forces runbook and observability planning while the engineer who built the feature is still available.
 - **Recovery scenarios expose idempotency requirements.** If a retry of the same stimulus must produce the same outcome as the first attempt (idempotent behavior), that is a design constraint that must be identified in the scenario matrix and handed to `idempotency-retry-design` before implementation. If recovery scenarios reveal that the workflow is not idempotent and cannot be made idempotent, that is a MUST-HANDLE architectural constraint.
 - **Abuse scenarios are not the same as validation edge cases.** A 10,001-character string in a name field is an edge condition: the correct response is a 400 validation error. A bot systematically submitting 10,001-character strings against every text field to probe for injection vulnerabilities is an abuse scenario: the correct response involves rate limiting, IP banning, WAF rules, and anomaly detection — not just input validation.
 - **Scenario decomposition is the boundary check for the requirement brief.** If decomposition produces scenarios that conflict with non-goals in the brief, or requires behavior not described in the desired behavior, the brief has an unresolved scope question. Stop decomposition and escalate to `requirement-clarification`.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 selection, trigger, output, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete scenario matrix, when category coverage is uncertain, or before implementation planning depends on the matrix. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when fault/recovery depth, graph/memory/trajectory reuse, operational coverage, or detailed anti-pattern review is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load these references for pure routing decisions or trivial wording work where the output contract and quality gate are enough.
 
 ### Anti-examples
 
@@ -99,17 +127,32 @@ Escalate when: any scenario exposes an irreversible side effect without a define
 
 # Output Contract
 
-Return a scenario matrix with per scenario:
+Return a scenario decomposition artifact with:
 
-- `scenario_id` (unique identifier)
-- `category` (Normal / Alternate / Edge / Failure / Abuse / Recovery / Operational)
-- `actor` (who or what initiates)
-- `precondition` (system state before)
-- `stimulus` (specific input or event)
-- `expected_outcome` (response, state change, emitted event, side effects)
-- `verification_method` (test type and test ID/description)
-- `release_criticality` (MUST-HANDLE / SHOULD-HANDLE / DEFERRED)
-- `design_handoff` (which capability needs to receive this scenario for depth design)
+- `mode_selected` (new behavior, bug/regression, permission/abuse, async/integration/operational, or existing behavior reuse)
+- `scenario_scope` (requirement/use-case IDs, actors, affected surfaces, non-goals, excluded surfaces, and release boundary)
+- `source_evidence` (brief, use case, current source/tests/docs, incidents, support signals, repository graph, project memory, execution trajectory, and freshness limits)
+- `scenario_catalog` (per scenario: `scenario_id`, category, actor, precondition, stimulus, expected outcome, verification method, release criticality, and design handoff)
+- `category_coverage_summary` (Normal, Alternate, Edge, Failure, Abuse, Recovery, Operational covered or explicitly deferred with owner)
+- `actor_role_matrix` (valid actor paths, denied paths, support/operator paths, external/system actors)
+- `fault_recovery_matrix` (dependency timeout, unexpected schema, validation rejection, permission denial, concurrency conflict, partial write, retry exhaustion, and downstream rejection when applicable)
+- `scenario_to_acceptance_map` (scenario IDs mapped to acceptance standards or criteria still needed)
+- `scenario_to_validation_map` (scenario IDs mapped to unit, integration, contract, E2E, security, observability, runbook, or manual evidence)
+- `handoff_boundaries` (what belongs to acceptance, quality, security, reliability, data, integration, state-machine, or architecture gates)
+- `reuse_and_freshness_judgment` (accepted/rejected graph, memory, or execution-trajectory evidence and why)
+- `evidence_limits` (what was not verified: production data, live external systems, current permissions, operational dashboards, or real failure injection)
+
+# Evidence Contract
+
+Close a scenario-decomposition change only when the output names the selected mode, scenario scope, current source evidence inspected, graph/memory/execution reuse judgment, seven-category coverage, actor and role boundaries, failure and recovery assumptions, operational paths, scenario-to-acceptance map, scenario-to-validation map, handoff boundaries, release criticality, residual risk, and evidence limits. A scenario matrix that lists only examples or lacks validation mapping is not sufficient evidence.
+
+# Benchmark Coverage
+
+Behavior improvement should be validated structurally: weak decomposition usually covers success plus "invalid input", collapses abuse into validation, omits recovery and operations, reuses stale project memory without source checks, or fails to classify release criticality. Improved outputs must name mode, scope, source evidence, full category coverage, fault/recovery depth, validation mapping, and handoff boundaries while keeping detailed benchmark examples in references.
+
+# Routing Coverage
+
+Route here when the primary work is scenario coverage across normal, alternate, edge, failure, abuse, recovery, and operational paths. Guard against over-routing by handing off when the primary concern is requirement readiness (`requirement-clarification` / `requirement-structuring`), actor-goal contract (`use-case-modeling`), done standard wording (`acceptance-standard-definition`), ordered UI journey (`user-flow-modeling`), detailed threat model (`security-privacy-gate` / `threat-modeling`), lifecycle legality (`state-machine-modeling`), or executable test strategy (`quality-test-gate`).
 
 # Quality Gate
 
@@ -125,6 +168,10 @@ The scenario matrix is complete only when:
 8. Non-goals from the requirement brief are not violated by any scenario.
 9. MUST-HANDLE scenarios that lack implementation plans are escalated before sprint planning.
 10. Design handoff targets are named for scenarios requiring depth analysis.
+11. Selected mode, scenario scope, and source evidence are explicit.
+12. Repository graph, project memory, and execution trajectory evidence are source-confirmed or marked not verified.
+13. Every scenario maps to acceptance or validation evidence, or has a named owner for the gap.
+14. Handoff boundaries and evidence limits are explicit so scenario decomposition is not over-claimed as acceptance, threat modeling, detailed design, or test execution proof.
 
 # Used By
 

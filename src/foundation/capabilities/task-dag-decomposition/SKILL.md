@@ -9,7 +9,7 @@ changeforge_version: 0.1.0
 
 # Mission
 
-**Decompose a software change into a directed acyclic graph (DAG) of small, dependency-ordered, independently reviewable, testable, and rollback-aware tasks** — making dependency chains visible before execution so that parallel-safe work is identified, merge conflicts are prevented through file-scope reservation, safety-critical tasks (migrations, compatibility shims, feature flags, secrets rotation) are scheduled before their dependents, and each task produces a verifiable output that an AI agent or human developer can review and confirm before the next task begins.
+Decompose a software change into a directed acyclic graph (DAG) of small, dependency-ordered, independently reviewable, testable, rollback-aware, and agent-executable tasks. The DAG makes dependency chains, source boundaries, repository graph leads, project-memory limits, execution trajectory constraints, validation gates, and parallel-safe file scopes visible before execution so that agents or humans can work in safe increments without hidden ordering, stale context, or false completion claims.
 
 # When To Use
 
@@ -18,6 +18,10 @@ Use this capability when: a change spans multiple files, services, layers, or de
 # Do Not Use When
 
 Do not use this capability for: single-file changes with no cross-cutting dependencies; trivial bug fixes where the fix is already isolated to one function or one test; exploratory prototypes that will be discarded; changes where the entire plan fits on one task (no decomposition benefit).
+
+# Stage Fit
+
+Use during planning after requirement and repository context are sufficient, before implementation or multi-agent handoff. Use again before handoff when the actual changed files, validation commands, repairs, or skipped work must be reconciled against the accepted DAG. Do not let this capability replace `repository-context-map`, `quality-test-gate`, or `release-rollback`; it consumes their evidence and turns it into executable task nodes and dependency edges.
 
 # Non-Negotiable Rules
 
@@ -28,66 +32,50 @@ Do not use this capability for: single-file changes with no cross-cutting depend
 - **Every task that modifies runtime behavior must include a rollback or recovery note.** A rollback note is not "revert the commit." It must specify: what operation in the task is irreversible (schema migration with data transformation, external API call, message queue write), what the rollback sequence is (migration down script, feature flag disable, API gateway rule revert), and who owns the rollback trigger. If a task is irreversible, that must be explicit in the task record so the reviewer can apply additional scrutiny before approval.
 - **Task size target: completable in under 2 hours of focused work, reviewable in under 15 minutes.** Tasks that exceed this size are not "one task" — they are multiple tasks with an implicit grouping. A task that edits 15 files, introduces 3 new modules, and changes 2 database tables is four or five tasks. Large tasks reduce review quality, prevent parallel execution, increase rollback blast radius, and are the primary cause of "works on my machine, broken in staging" integration failures.
 - **Code-change tasks bind structure and test decisions, and use no placeholders.** A task that adds or changes code records the reuse candidates considered and the placement and visibility decision (schema from `implementation-structure-design`); a task that adds tests records the test level, data, regression target, and deterministic evidence (schema from `quality-test-gate`). Reject placeholder steps — "TODO", "write tests", "handle edge cases", "similar to above" — that name no files, targets, or behavior.
+- **Repository graph, project memory, and prior trajectory are selectors, not source truth.** Accept them only after current source, registry, tests, generated artifacts, reports, or owner evidence confirm them; otherwise mark them stale, rejected, or not verified.
+- **Every executable task names an independent reviewer and repair route.** The task owner cannot close its own review, and any repair that changes files requires re-review before downstream nodes unblock.
 
 # Industry Benchmarks
 
-Anchor against: **PMI PMBOK — Work Breakdown Structure (WBS)** — hierarchical decomposition of project scope into smaller components; work package definition; 100% rule (WBS must represent the total scope). **Trunk-Based Development (Google/Thoughtworks)** — short-lived branches; incremental changes; feature flags to decouple deploy from release; branch-by-abstraction for large refactors. **Progressive Delivery / Feature Flags (LaunchDarkly, Unleash)** — decouple code deployment from feature activation; enable rollback without code revert; canary traffic routing. **Gitflow / GitHub Flow / Trunk branching strategies** — merge conflict prevention through small branches; task scope limiting to one concern. **DORA Research** — small batch size is one of the four key metrics correlated with high delivery performance; large batch sizes correlate with high change failure rate and low deployment frequency. **OpenAI Evals / LLM agent task design** — task clarity, bounded context, verifiable output, and tool restriction are key to reliable AI agent execution. **Dependency Graph (DAG) formalisms** — topological sort for execution order; cycle detection (cyclic dependencies cannot be executed); critical path analysis for identifying the serialized minimum duration path.
+Anchor against WBS work packages, trunk-based small batches, progressive delivery, DORA small-batch evidence, dependency-graph formalisms, and LLM agent task design. Keep this body focused on selection, rules, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for task record templates, dependency matrices, graph-memory-trajectory coupling, sequencing decision trees, and anti-pattern examples.
 
-### Task Record Template
+# Mode Matrix
 
-```yaml
-task_id: "T-012"
-title: "Add user_tier column to accounts table"
-goal: >
-  Add nullable user_tier VARCHAR(20) column to the accounts table via a
-  backward-compatible migration. Column must be addable without downtime
-  (no NOT NULL without DEFAULT on live table).
-inputs:
-  - accounts table schema (current)
-  - data model spec (user_tier values: 'free', 'pro', 'enterprise')
-allowed_files:
-  - db/migrations/20240801_add_user_tier_to_accounts.sql
-  - db/schema.rb  # or equivalent ORM schema file
-dependencies:
-  - T-010  # data model spec must be finalized before migration is written
-parallel_group: null  # cannot parallelize with T-013 (ORM model update)
-verification:
-  - Migration runs cleanly on a copy of the production schema (no errors)
-  - Migration is backward-compatible: existing queries that do not reference user_tier still pass
-  - Column is nullable with no NOT NULL constraint in this migration step
-  - `rails db:rollback` (or `migrate down`) succeeds cleanly
-done_condition: >
-  Migration file created, reviewed, run against staging schema snapshot,
-  and rollback tested. Schema dump shows user_tier column as nullable VARCHAR(20).
-rollback_notes: >
-  Rollback: run the down migration to DROP COLUMN. The column has no NOT NULL
-  constraint and no foreign key, so dropping it is safe. If this migration was
-  deployed in production and user_tier values were written, the down migration
-  must be confirmed with data team before execution (data loss check).
-review_evidence:
-  - Migration reviewed for: backward compatibility, NULL safety, index plan
-  - Staging schema diff attached
-safety_flag: false  # no irreversible data transformation in this migration step
-```
-
-### Dependency Classification Matrix
-
-| Dependency Type | Serialization Requirement | Common Failure if Ignored |
-| --- | --- | --- |
-| Data dependency | Task B after Task A (A produces input B needs) | B fails at runtime because expected output does not exist |
-| File-scope conflict | Cannot parallelize; one task completes before other starts | Merge conflict; one task overwrites the other's changes |
-| Deployment dependency | Service B deploys after Service A (B calls A's new endpoint) | Service B startup fails: endpoint not found |
-| Test dependency | Integration tests run after migration + seed data tasks | Tests fail: table/column not yet present in test DB |
-| Migration ordering (forward) | Schema migration before ORM code using new schema | ORM query fails: column does not exist |
-| Migration ordering (rollback) | ORM backward-compat code before schema migration reversal | Rollback breaks live traffic reading dropped column |
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities |
+| --- | --- | --- | --- | --- |
+| Plan handoff | L1/L2 change has several steps but one owner and low release risk. | Keep a compact task list with validation and stop condition. | Files to inspect/change, validation command, residual risk. | `context-packaging`, `quality-test-gate` |
+| Multi-surface DAG | Change crosses frontend/backend/API/data/docs/tests or multiple owners. | Split by independently reviewable artifact, dependency edge, and owner surface. | Nodes, edges, file scopes, critical path, review gates. | `repository-context-map`, `change-impact-analyzer` |
+| Safety sequencing | Migration, feature flag, secret, compatibility shim, rollout, or rollback is in scope. | Put safety prerequisites and recovery nodes before dependents. | Forward/rollback ordering, approval gates, verification artifacts. | `release-rollback`, `data-migration-design` |
+| Parallelization review | Multiple agents/teams can work concurrently or shared files are likely. | Allow parallel work only after shared mutable resources are ruled out. | Shared-resource scan, non-overlap proof, serialization edges. | `architecture-impact-reviewer`, `implementation-structure-design` |
+| Execution recovery | Prior attempt failed, validation is stale, repair changed files, or stop condition is unclear. | Add route-repair, re-review, and validation freshness nodes. | Trajectory summary, failed command, repair route, next validator. | `agent-execution-discipline`, `execution-trajectory-analysis` |
 
 # Selection Rules
 
-Select this capability when **a change has multiple steps that must be sequenced or can be parallelized and the execution order has consequences**. Route to `test-strategy` for deciding which tests each task requires. Route to `context-packaging` for assembling the file and specification context an agent needs for a specific task. Route to `release-rollback` for designing the deployment sequence and rollback triggers at the release level. Route to `code-review` for the review criteria applied to individual task outputs.
+Select this capability when **a change has multiple steps that must be sequenced or can be parallelized and the execution order has consequences**.
+
+- Route to `repository-context-map` before planning when ownership, callers, tests, configs, docs, generated artifacts, or source-vs-dist boundaries are not already inspected.
+- Route to `repository-graph-analysis` when graph slices can identify source-of-truth, dependents, generated artifacts, or validation candidates; keep graph output bounded.
+- Route to `project-memory-governance` when prior failures, fragile files, stale memory, or previous validation affect task ordering or review depth.
+- Route to `execution-trajectory-analysis` when validation freshness, repair/re-review, or repeated-failure history affects closure.
+- Route to `test-strategy` for deciding which test evidence each task requires.
+- Route to `context-packaging` for assembling the file and specification context an agent needs for a specific task.
+- Route to `release-rollback` for deployment sequence and rollback triggers.
+- Route to `code-review` for per-task review criteria.
+
+# Technical Selection Criteria
+
+Evaluate the DAG against task size, owner surface, dependency type, shared file/resource conflict, safety prerequisite, validation freshness, rollback cost, graph/source freshness, memory reliability, and repair/re-review state. A candidate task is valid only when a different reviewer can verify its artifact without relying on hidden context from adjacent tasks.
+
+# Proactive Professional Triggers
+
+- **Signal:** A task title bundles migration, API contract, authorization, implementation, tests, and deployment. **Hidden risk:** separate risk domains are hidden inside one review unit. **Required professional action:** split by independently reviewable artifact and edge. **Route to:** `task-dag-decomposition`, `quality-test-gate`. **Evidence required:** before/after node split, dependency edge, validation artifact per node, and reviewer for each node.
+- **Signal:** Parallel tasks share a router, generated file, migration chain, config file, fixture, queue/topic, database table, feature flag, or public contract. **Hidden risk:** parallel execution creates merge conflict, stale generated output, or inconsistent contract ownership. **Required professional action:** add a serialization edge or split shared-surface ownership before execution. **Route to:** `repository-context-map`, `architecture-impact-reviewer`. **Evidence required:** shared-resource scan, allowed_files comparison, blocked/unblocked parallelism rationale.
+- **Signal:** A migration, rollout, secret rotation, or feature flag node lacks forward order, rollback order, owner approval, or old/new coexistence. **Hidden risk:** release cannot roll forward or back without data loss, outage, or secret exposure. **Required professional action:** add safety prerequisite, rollback/recovery node, and validation gate. **Route to:** `release-rollback`, `delivery-release-gate`. **Evidence required:** forward/rollback sequence, validation command, rollback owner, and irreversible-operation flag.
+- **Signal:** DAG depends on stale project memory, unrefreshed repository graph, prior validation, or a repair made after review. **Hidden risk:** execution follows stale context or starts downstream work from unreviewed changes. **Required professional action:** require current source confirmation, validation freshness, and repair re-review before unblocking downstream nodes. **Route to:** `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected graph-memory-trajectory judgment, freshness timestamp or direct-source fallback, repair ledger, and re-review result.
 
 # Risk Escalation Rules
 
-Escalate when: a task modifies data that cannot be rolled back without data loss (must flag as irreversible and require explicit stakeholder sign-off before execution); a task modifies a live-traffic API contract without a backward-compatibility shim preceding it (causes immediate production failure); a task modifies credentials, secrets, or cryptographic keys without rotation sequencing (security incident risk); two tasks have a cyclic dependency that makes ordering impossible (architectural conflict that must be resolved before decomposition can proceed); or the total task count exceeds 30 without a phased release plan (integration risk — escalate to `architecture-impact-reviewer`).
+Escalate when: a task modifies data that cannot be rolled back without data loss; a task modifies a live-traffic API contract without a backward-compatibility shim preceding it; a task modifies credentials, secrets, or cryptographic keys without rotation sequencing; two tasks have a cyclic dependency; graph or memory evidence conflicts with current source; validation passed before later material edits; a repair changed files without re-review; or the total task count exceeds 30 without a phased release plan.
 
 # Critical Details
 
@@ -95,6 +83,8 @@ Escalate when: a task modifies data that cannot be rolled back without data loss
 - **File-scope reservation prevents merge conflicts in multi-agent execution.** When two agents both edit the same file (e.g., a constants file, an API router, an ORM model) without reservation, the second merge always produces conflicts. The decomposition must ensure that at most one agent "owns" any given file at any point in the execution graph.
 - **Verification criteria must be checkable by a different agent than the one that executed the task.** A verification criterion of "looks good" is not a criterion — it is a deferral. Verification must be: executable (run the migration and check the schema diff), observable (the endpoint returns the expected response), or measurable (the test suite passes with 0 failures). This allows a review agent or human reviewer to independently confirm completion.
 - **Rollback notes for database migrations must distinguish between schema-safe and data-destructive rollbacks.** Adding a nullable column is safe to roll back (DROP COLUMN, no data to preserve). Dropping a column, transforming existing data, or denormalizing data are irreversible without a prior backup or snapshot. The task record must categorize which rollback type applies and gate the irreversible ones with an explicit approval requirement.
+- **Graph-memory-trajectory coupling changes planning depth, not source truth.** A prior memory of a fragile file may add a review or validation node, a graph edge may add a source inspection node, and a stale trajectory may add re-validation, but none of them can prove behavior without current evidence.
+- **Changed task to validation mapping prevents false completion.** Every node, edge, safety flag, skipped scope, and parallelism decision maps to a command, review check, owner response, or residual risk.
 
 ### Anti-examples
 
@@ -116,19 +106,49 @@ Escalate when: a task modifies data that cannot be rolled back without data loss
 - Cyclic task dependency: Task A depends on B, B depends on A; neither can start; deadlock.
 - Task scope too large: 15-file task reviewed in 2 minutes; defect missed in review; escapes to production.
 - Verification deferred to post-merge integration test: defect discovered after merge; rollback required.
+- Project memory says a dependent file is irrelevant, but current graph/source inspection would have shown it changed.
+- Repair updates a task node after review and downstream work starts without re-review.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 selection, rules, output, and gates. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete DAG. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when task templates, dependency classification, graph-memory-trajectory coupling, migration/API/feature-flag sequencing, parallelism review, or validation mapping needs more depth. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear.
 
 # Output Contract
 
 Return a task DAG with:
 
-- `tasks` (per task: id, title, goal, inputs, allowed_files, reuse_and_placement, dependencies, parallel_group, verification, validation_command, done_condition, completion_evidence, rollback_notes, review_evidence, safety_flag)
-- `dependency_graph` (edges: task_id → task_id with dependency type)
-- `parallel_groups` (named groups of tasks with no inter-dependency and non-overlapping file scopes)
-- `critical_path` (minimum serialized execution sequence; total estimated time)
-- `safety_flags` (list of tasks with irreversible operations; approval requirements)
-- `migration_ordering` (explicit forward and rollback ordering for all schema and data migrations)
-- `phased_release_plan` (if applicable: deploy phase 1, validate, deploy phase 2…)
-- `cycle_check` (confirmation that the DAG is acyclic; or list of cycles to resolve)
+- `mode_selected` (plan handoff, multi-surface DAG, safety sequencing, parallelization review, or execution recovery)
+- `boundaries_inspected` (repository source, callers/callees, tests, configs, docs, registry/generated artifacts, graph slice, memory signals, prior trajectory, and skipped boundaries with reason)
+- `source_evidence` (current facts that support task nodes and edges, with not-verified markers for missing evidence)
+- `graph_memory_trajectory_judgment` (accepted, rejected, stale, or not verified claims and their effect on DAG scope)
+- `tasks` (per task: id, title, goal, owner_surface, inputs, files_to_inspect, allowed_files, reuse_and_placement, dependencies, parallel_group, validation_command, expected_output, done_condition, completion_evidence, rollback_notes, review_gate, repair_route, safety_flag)
+- `dependency_graph` (edges: task_id -> task_id with dependency type and reason)
+- `parallel_groups` (named groups with no inter-dependency and non-overlapping file/resource scopes)
+- `critical_path` (minimum serialized execution sequence and estimated duration)
+- `safety_flags` (irreversible operations, approval requirements, rollback owner)
+- `migration_ordering` and `phased_release_plan` when applicable
+- `cycle_check` (acyclic confirmation or cycles to resolve)
+- `changed_task_to_validation_map` (each node, edge, safety flag, parallelism decision, skipped scope, and repair route mapped to validator, review, owner response, or residual risk)
+- `plan_execution_consistency` (accepted DAG vs actual changed files, validation freshness, skipped work, unplanned changes, and residual risk before handoff)
+- `evidence_limits` and `next_gate`
+
+# Evidence Contract
+
+Close a task DAG only when these answers are concrete:
+
+- **Basis:** request, requirement facts, repository evidence, dependency facts, and risk class that justify each task and edge.
+- **Current evidence inspected:** source files, registry/config/docs, tests, generated artifacts, graph slice, memory signals, and execution trajectory accepted or rejected.
+- **Placement and parallelism rationale:** why each node is a single reviewable unit, why new structure is placed there, and why parallel groups cannot collide.
+- **Validation and repair:** command/check/review evidence for each task, freshness after edits, what evidence proves and does not prove, rollback path, repair owner, and re-review rule.
+- **Handoff and residual risk:** changed-task-to-validation map, evidence limits, unresolved owner decisions, next gate, and closure boundary.
+
+# Benchmark Coverage
+
+This capability covers work-package decomposition, DAG dependency modeling, critical path, merge-conflict prevention, migration/API/feature-flag sequencing, rollback-aware task design, agent-executable task contracts, graph/memory/trajectory freshness, and plan-execution consistency. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for deeper templates and matrices.
+
+# Routing Coverage
+
+Routes from `task-dag-planner`, `change-forge-router`, `change-impact-analyzer`, and execution/review gates should arrive here when task ordering, parallelism, validation placement, or rollback sequencing is the core problem. Route away when the primary need is requirement clarification, context packaging for one node, detailed test strategy, release rollout mechanics, or code review of completed artifacts.
 
 # Quality Gate
 
@@ -146,6 +166,9 @@ The task DAG is complete only when:
 10. A phased release plan is present for multi-deployment changes.
 11. Code-change tasks record reuse candidates and a placement decision; test tasks record level, data, regression target, and evidence.
 12. No task uses a placeholder (TODO, "write tests", "handle edge cases", "similar to above") in place of named files, targets, or behavior.
+13. Graph, memory, and trajectory claims are accepted, rejected, stale, or not verified against current evidence.
+14. Every node, edge, safety flag, parallelism decision, skipped scope, and repair route maps to validation, review, owner response, or residual risk.
+15. Plan-execution consistency is checked before final handoff, including validation freshness after final material edits.
 
 # Used By
 
@@ -153,8 +176,8 @@ The task DAG is complete only when:
 
 # Handoff
 
-Hand off to `context-packaging` for assembling task execution context; `test-strategy` for per-task test requirements; `release-rollback` for deployment sequence and rollback design; `code-review` for per-task review criteria.
+Hand off to `context-packaging` for assembling task execution context; `test-strategy` for per-task test requirements; `release-rollback` for deployment sequence and rollback design; `code-review` for per-task review criteria; `agent-execution-discipline` when trajectory, evidence, repair/re-review, or closure discipline is incomplete; and `plan-execution-consistency` before final handoff.
 
 # Completion Criteria
 
-The capability is complete when **the dependency graph is explicit, parallelizable work is identified, file scopes do not conflict across parallel tasks, all safety tasks precede dependents, and every task has an independently verifiable done condition and a rollback or recovery path**.
+The capability is complete when the dependency graph is explicit, source evidence is fresh enough for the plan, graph/memory/trajectory claims are scoped, parallelizable work has non-conflicting files/resources, safety tasks precede dependents, every task has independent verification and rollback or recovery, and the downstream path can execute without guessing task order, validation evidence, or closure boundaries.

@@ -1,6 +1,6 @@
 ---
 name: use-case-modeling
-description: Models use cases with actor, precondition, trigger, main path, alternate path, and postcondition for product-domain behavior.
+description: Models actor-goal use cases with source-confirmed preconditions, triggers, paths, guarantees, postconditions, acceptance trace, graph/memory/execution evidence, validation handoff, and boundary rules for product-domain behavior.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "15"
@@ -19,6 +19,10 @@ Use this capability when: a change introduces a new user-facing or system-to-sys
 
 Do not use this capability for: low-level code execution sequences (method A calls method B calls method C — this is a sequence diagram, not a use case); minor UI interactions that are entirely contained within a single screen and have no domain side effect (hover tooltip, accordion expand — use `interaction-state-modeling`); when the complete behavioral design is already captured in acceptance criteria and the use case would be a verbatim restatement.
 
+# Stage Fit
+
+Owns product-domain behavior-contract discovery before acceptance criteria, implementation placement, state-machine design, API contract design, and test scenario decomposition. In review, it checks whether a diff changed an actor goal, entry gate, trigger, path, external actor, durable outcome, side effect, or recovery promise without updating the use case and acceptance trace. Repository search, graph, project memory, and execution trajectory can locate existing behavior, but current source, tests, docs, or registry evidence must confirm the use case before the output treats it as authoritative.
+
 # Non-Negotiable Rules
 
 - **Name exactly one primary actor and one goal per use case.** A use case with two actors and two goals is two use cases. The primary actor is the one whose goal drives the interaction — the one whose goal is satisfied or frustrated at the end. System actors (external services, scheduled jobs, webhooks) are valid primary actors. "The user" is not a precise actor name — the actor must be named by role: "Customer," "Support Agent," "Payment Webhook," "Scheduled Report Job."
@@ -27,87 +31,21 @@ Do not use this capability for: low-level code execution sequences (method A cal
 - **Every alternate path must resolve to a defined outcome — either achieving the primary actor's goal through a different path, or explicitly exiting with a named error state.** An alternate path that ends with "the user sees an error" is incomplete — it must specify: what state the system is left in, what data is preserved, whether the actor can retry, and what the recovery path is. Unspecified alternate path outcomes become the source of "the system is in an unexpected state" production incidents.
 - **External systems that trigger behavior must be modeled as actors.** A payment webhook that triggers an order confirmation is an actor. A scheduled job that expires stale sessions is an actor. A CI/CD pipeline that triggers a deployment is an actor. Treating all triggers as implicit background behavior hides the trust boundary (does the payment webhook require authentication?), the precondition (must the order exist in PENDING state?), and the failure path (what if the webhook delivers duplicate events?).
 - **Business rules referenced in the main path or alternate paths must be named and linked.** A use case that says "the system validates the order" is incomplete — it must name which business rules govern the validation: "validate per OrderValidationRule-001 (minimum order value $10), StockAvailabilityRule-003 (all items in stock), FraudCheckRule-007 (order score < 80)." This linkage enables traceability from use case to business rule to unit test.
+- **Guarantee level must be explicit.** State the minimal guarantee when the actor goal is not achieved, the success guarantee when it is achieved, and the owner of any recovery path. A use case without guarantees is only a story outline.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| New actor-goal contract | Feature or requirement names an actor goal but not the behavior contract. | Turn goal language into one actor, one trigger, enforced entry gates, paths, and durable guarantees. | Actor/goal boundary, scope, preconditions, trigger, main and alternate paths, success and minimal guarantees. | `requirement-structuring`, `acceptance-standard-definition` | UI navigation or component states until the behavior contract is stable. |
+| Existing behavior extension | A change adds an alternate path, new actor, new side effect, or changed postcondition to an existing use case. | Preserve existing guarantees while making the changed path explicit and testable. | Current source/test/doc evidence, execution trajectory or diff evidence, changed path, compatibility and regression risk. | `repository-context-map`, `scenario-decomposition`, `quality-test-gate` | Treating project memory or prior output as current behavior without source confirmation. |
+| System/external actor | Webhook, scheduled job, queue consumer, integration, or automation starts behavior. | Model trust boundary, idempotency, duplicate delivery, availability, and recovery as actor-facing behavior. | Actor identity, authentication/precondition, idempotency rule, retry/duplicate outcome, durable state or event. | `permission-boundary-modeling`, `domain-event-modeling`, `integration-change-builder` | Hiding background work inside the main path as "system does X." |
+| Failure or partial-commit path | Payment, inventory, export, import, legal record, or async work can partially succeed. | Name preserved state, compensation, retry window, support/audit visibility, and terminal outcome. | Failure-state table, recovery owner, irreversible side effects, audit/event impact, acceptance trace. | `state-machine-modeling`, `transaction-consistency`, `domain-event-modeling` | Generic "show error" exits. |
+| Cross-context or authorization-sensitive | Use case crosses modules, tenants, roles, bounded contexts, or ownership scopes. | Keep actor permissions, object ownership, and context boundaries visible in the behavior contract. | Subject/resource/action/scope, context owner, handoff boundary, denied path, audit expectation. | `permission-boundary-modeling`, `architecture-impact-reviewer`, `domain-object-identification` | Collapsing multiple roles or bounded contexts into "user." |
 
 # Industry Benchmarks
 
-Anchor against: **Ivar Jacobson — Object-Oriented Software Engineering (1992)** — the originator of use case modeling; actor-goal abstraction; use case as behavioral contract; include/extend relationships. **Alistair Cockburn — Writing Effective Use Cases** — goal levels (sea level, kite, fish); fully-dressed use case template; primary/secondary actors; stakeholder interests; minimal guarantees. **UML Use Case Diagrams (ISO/IEC 19501)** — notation for actors, use cases, system boundary, include/extend/generalization relationships. **BDD (Behavior-Driven Development) — Gherkin (Cucumber)** — Given/When/Then structure maps directly to use case precondition/trigger/postcondition; scenarios derived from alternate paths. **IEEE Std 830 (SRS)** — use cases as functional requirements; traceability from requirement to test. **BABOK (Business Analysis Body of Knowledge)** — use case as a business analysis artifact; stakeholder identification; scope modeling. **Domain-Driven Design (Eric Evans)** — ubiquitous language; bounded context boundary maps to use case system boundary; domain events as postconditions.
-
-### Fully-Dressed Use Case Template
-
-```
-Use Case ID: UC-014
-Use Case Name: Customer Subscribes to Pro Plan
-Primary Actor: Customer (authenticated)
-Secondary Actors: Payment Gateway (Stripe), Email Service
-Goal: Customer pays for and activates a Pro subscription that gives access to Pro features
-Scope: Subscription Management bounded context
-
-Stakeholder Interests:
-  - Customer: wants to pay once and gain access immediately
-  - Business: wants payment confirmed before granting access
-  - Compliance: wants payment record retained for 7 years
-
-Preconditions:
-  - Customer is authenticated and email-verified
-  - Customer does not already have an active Pro subscription
-  - Pro plan exists and is available for purchase (not discontinued)
-  - Payment method is on file OR customer provides one during the flow
-
-Trigger: Customer clicks "Upgrade to Pro" and confirms the purchase
-
-Main Success Path:
-  1. System presents the Pro plan with price, features, and billing cycle
-  2. Customer confirms payment with existing payment method (or adds new one)
-  3. System creates a pending subscription record (state: PENDING)
-  4. System charges the customer's payment method via Payment Gateway
-  5. Payment Gateway returns success with transaction ID
-  6. System transitions subscription to ACTIVE state; grants Pro entitlements
-  7. System publishes subscription.activated event
-  8. Email Service sends activation confirmation to customer
-
-Alternate Paths:
-  A. Customer adds a new payment method (at step 2):
-     A1. Customer enters card details; system tokenizes via Payment Gateway
-     A2. Token stored; flow continues at step 3
-  B. Customer applies a discount coupon (at step 2):
-     B1. System validates coupon (CouponValidationRule-009)
-     B2. Price adjusted; customer confirms adjusted price; flow continues at step 3
-
-Failure Paths:
-  F1. Payment gateway returns DECLINED:
-      - Subscription record moved to FAILED state
-      - Customer notified with decline reason (per PaymentDeclineMessageRule-003)
-      - Customer offered option to update payment method and retry
-      - Retry allowed up to 3 times within 24 hours
-  F2. Payment gateway timeout (> 10s):
-      - Subscription record remains in PENDING state
-      - Background job polls transaction status every 60s for up to 30min
-      - If resolved: proceed as main path step 5–8
-      - If unresolved after 30min: subscription moved to FAILED; support alert triggered
-  F3. Email service unavailable:
-      - Subscription activation completes; entitlements granted (not blocked by email)
-      - Email delivery retried by Email Service with exponential backoff
-      - Not a failure exit; email is a best-effort side effect
-
-Postconditions (Success):
-  - Subscription record exists in ACTIVE state for customer/plan combination
-  - Pro entitlements are active (checked on every authenticated request)
-  - Payment record exists with transaction ID and amount
-  - subscription.activated event is published to billing topic
-  - Activation email delivered or queued for delivery
-
-Postconditions (Failure F1):
-  - Subscription record exists in FAILED state
-  - No payment charge has been applied
-  - Customer can retry with new payment method
-
-Business Rules Referenced:
-  - CouponValidationRule-009
-  - PaymentDeclineMessageRule-003
-  - SubscriptionUniquenessRule-001 (only one active Pro subscription per customer)
-
-Acceptance Trace: AC-042, AC-043, AC-044, AC-045 (failure paths)
-```
+Anchor against: **Ivar Jacobson — Object-Oriented Software Engineering (1992)** for actor-goal abstraction and use case as behavioral contract; **Alistair Cockburn — Writing Effective Use Cases** for goal levels, fully dressed use cases, stakeholder interests, and minimal guarantees; **UML Use Case Diagrams (ISO/IEC 19501)** for actor/system-boundary notation; **BDD/Gherkin** for Given/When/Then scenario traceability; **IEEE Std 830** and **BABOK** for requirement/test traceability and stakeholder analysis; and **Domain-Driven Design** for ubiquitous language, bounded context boundaries, and domain events as postconditions. Load the fully dressed template reference only when drafting a complete use case or reviewing whether an output has enough professional detail.
 
 # Selection Rules
 
@@ -117,12 +55,24 @@ Select this capability when **the primary question is actor-goal interaction des
 
 Escalate when: an alternate path affects authorization (a different actor can reach a normally-restricted postcondition through the alternate path — potential privilege escalation); a failure path leaves the system in a partially committed state (payment charged but subscription not activated — requires idempotency and recovery design); a postcondition involves irreversible financial, legal, or compliance-relevant record creation (must verify that audit and retention requirements are met); a precondition references an external system availability check (what happens if that system is unavailable?); or a use case spans multiple bounded contexts (domain boundaries may conflict — escalate to `architecture-impact-reviewer`).
 
+# Proactive Professional Triggers
+
+- **Signal:** A request says an actor "can," "should be able to," or "needs to" do something but omits enforced preconditions and durable postconditions. **Hidden risk:** acceptance criteria validate UI reachability while the domain guarantee remains undefined. **Required professional action:** produce a use case contract before implementation or tests. **Route to:** `use-case-modeling`, `acceptance-standard-definition`. **Evidence required:** actor/goal boundary, entry gates, trigger, success guarantee, minimal guarantee, and acceptance trace.
+- **Signal:** One story contains multiple roles, system actors, or actor goals. **Hidden risk:** alternate paths become unrelated use cases and permissions or tests miss role-specific outcomes. **Required professional action:** split by primary actor and goal, then link shared included behavior explicitly. **Route to:** `user-role-identification`, `permission-boundary-modeling`. **Evidence required:** decomposed use case list, shared behavior, rejected combined scope, and role-specific denied paths.
+- **Signal:** A webhook, scheduled job, queue consumer, import, or integration initiates the behavior. **Hidden risk:** trust boundary, idempotency, duplicate delivery, timeout, and replay behavior are absent from the product contract. **Required professional action:** model the external or system actor and name authentication, duplicate, retry, and terminal outcomes. **Route to:** `domain-event-modeling`, `integration-change-builder`. **Evidence required:** actor identity, precondition, idempotency key or duplicate rule, failure state, and recovery owner.
+- **Signal:** An alternate or failure path ends with "show error," "retry later," or "support will handle it." **Hidden risk:** partial state, lost input, audit gaps, or unrecoverable stuck records are left unspecified. **Required professional action:** define state preservation, retry window, recovery owner, audit visibility, and terminal postcondition. **Route to:** `state-machine-modeling`, `quality-test-gate`. **Evidence required:** failure postcondition, preserved data, retry/compensation rule, support or operator visibility, and test case.
+- **Signal:** A prior project memory note, repository graph edge, or execution trajectory suggests the use case already exists. **Hidden risk:** stale memory or graph proximity is treated as semantic proof and the changed behavior is under-specified. **Required professional action:** confirm with current source, tests, docs, or registry entries before reusing the use case. **Route to:** `repository-context-map`, `repository-graph-analysis`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, freshness, matching behavior, mismatches, and evidence limits.
+
 # Critical Details
 
 - **Postconditions that describe UI state instead of durable system state produce untestable acceptance criteria.** "The user sees a success screen" cannot be verified by an automated integration test, a monitoring alert, or a business analyst reviewing the system state. "A ACTIVE subscription record exists in the database with the customer ID and plan ID" can be verified by every stakeholder. Always formulate postconditions as system state, emitted events, or external-system side effects — not as UI rendering outcomes.
 - **Alternate paths are where most production incidents originate.** The main success path is typically well-tested. The alternate paths (coupon applied, payment method changed, plan downgraded, concurrent subscription attempts) are typically undertested. Each alternate path must be treated as a first-class path with its own postconditions, not as an exception handler.
 - **Failure paths must specify state preservation.** A use case that says "if payment fails, show an error" has not specified: is the form data preserved so the customer does not have to re-enter it? Is the subscription record in FAILED or deleted? Can the customer retry immediately? Can support view the failed attempt? These questions become production support tickets if not answered in the design.
 - **"Include" and "extend" relationships in use case diagrams must not hide business rules.** A use case that "includes" an authentication check without specifying what the authentication precondition is hides the rule. Every included use case must have its own preconditions, postconditions, and failure paths that are visible to the parent use case designer.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 actor-goal modeling rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete use case, when path coverage or guarantees are uncertain, or before implementation/test planning depends on the use case. Load [references/fully-dressed-template.md](references/fully-dressed-template.md) when a complete Cockburn-style template is needed or when reviewing whether a use case has enough professional detail. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load these references for pure routing decisions or trivial wording work where the output contract and quality gate are enough.
 
 ### Anti-examples
 
@@ -137,19 +87,27 @@ Escalate when: an alternate path affects authorization (a different actor can re
 
 # Failure Modes
 
-- Precondition for "no active subscription" not enforced: concurrent requests create duplicate subscriptions; customer charged twice.
-- Alternate path for payment gateway timeout not modeled: subscriptions stuck in PENDING indefinitely; manual database fixes required.
-- Postcondition specifies UI instead of system state: automated acceptance tests cannot verify the postcondition; bugs ship.
-- External webhook actor not modeled: webhook endpoint has no authentication; malicious replay attack confirms fraudulent subscriptions.
-- Failure path state preservation not specified: customer's cart is cleared on payment decline; customer must re-select items; high abandonment rate.
+- **Missing enforced precondition:** "no active subscription" is listed but not enforced; concurrent requests create duplicate subscriptions and the customer is charged twice.
+- **Unmodeled timeout alternate path:** payment gateway timeout leaves subscriptions in PENDING indefinitely; manual database fixes become the recovery path.
+- **UI-only postcondition:** postcondition says "success screen shown" instead of durable system state; automated acceptance tests cannot verify the guarantee and bugs ship.
+- **Implicit external actor:** payment webhook is treated as background work; authentication, duplicate delivery, replay, and terminal state are never designed.
+- **No state preservation rule:** payment decline clears the customer's cart; the actor cannot retry without re-entering data, causing avoidable abandonment.
+- **Merged actor goals:** customer purchase, support override, and scheduled expiry are modeled as one use case; permission denial and audit outcomes disappear.
+- **Stale memory accepted as proof:** an old project note or graph edge says a use case exists, but current source or tests changed the precondition and acceptance trace is wrong.
+- **No minimal guarantee:** a partial failure creates an order, sends email, and then fails payment; nobody can tell what the system promises after the actor goal is not achieved.
 
 # Output Contract
 
 Return a use case set with:
 
+- `mode_selected` (new actor-goal contract / existing behavior extension / system-external actor / failure-partial-commit / cross-context-authorization-sensitive)
+- `actor_goal_boundary` (one primary actor, one actor goal, rejected actors/goals, and decomposition decision)
+- `source_evidence` (current source/tests/docs/registry inspected; memory/graph/execution trajectory evidence used and freshness limits)
+- `boundaries_inspected` (actor, system boundary, context owner, permissions, external actors, durable state, emitted events, side effects, tests, docs, and skipped boundaries with reason)
 - `use_case_id` and `name`
 - `primary_actor`, `secondary_actors`, `goal`, `scope`
 - `stakeholder_interests`
+- `guarantee_level` (minimal guarantee, success guarantee, recovery owner, and unsupported guarantee)
 - `preconditions` (enumerated and enforced gates)
 - `trigger`
 - `main_success_path` (numbered steps)
@@ -158,7 +116,28 @@ Return a use case set with:
 - `postconditions` (success and failure — system state, events, side effects)
 - `business_rules_referenced` (linked by rule ID)
 - `acceptance_trace` (acceptance criteria IDs derived from this use case)
+- `validation_evidence` (test, validator, command, exit code, report, or artifact that will prove the use case contract before implementation handoff)
 - `risk_flags` (authorization, irreversibility, cross-context, availability)
+- `handoff_boundaries` (rules, permissions, lifecycle states, events, API contracts, UI flow, or tests that require another capability)
+- `unresolved_decisions` (owner, blocking status, and validation needed)
+
+# Evidence Contract
+
+Close a use-case-modeling change only when the output names:
+
+- **Boundaries inspected:** actor/goal, system boundary, bounded context, permission or tenant scope, external actors, durable state, emitted events, side effects, current source/tests/docs, and skipped boundaries with reason.
+- **Validation evidence:** test, validator, command, exit code, report, artifact, or explicit not-verified disclosure that proves the use case contract is ready for acceptance or implementation handoff.
+- **What evidence proves:** the selected actor-goal boundary, enforced entry gates, current-source confirmation for memory/graph/execution evidence, success guarantee, minimal guarantee, and acceptance/test trace.
+- **What evidence does not prove:** uninspected production behavior, unavailable stakeholders, downstream consumer acceptance, live external-system behavior, or implementation correctness before the next gate runs.
+- **Residual risk and handoff:** unresolved decision, owner, blocking status, validation needed, evidence limits, and next gate owner. A generic feature narrative or UI-only scenario is not sufficient evidence.
+
+# Benchmark Coverage
+
+Behavior improvement should be validated structurally: baseline weak use cases usually merge actors, omit entry gates, treat UI messages as postconditions, hide external actors, or leave failure paths as generic errors; improved outputs must name mode, actor goal, enforced preconditions, durable path outcomes, guarantees, risk flags, acceptance trace, and handoff boundaries. Token overhead is acceptable only while this capability stays narrower than full scenario decomposition, UI flow modeling, or implementation design.
+
+# Routing Coverage
+
+Route here when the primary work is actor-goal behavior specification. Guard against over-routing by handing off when the primary work is UI navigation (`user-flow-modeling`), exhaustive test matrix generation (`scenario-decomposition`), already-defined acceptance wording (`acceptance-standard-definition`), lifecycle legality (`state-machine-modeling`), rule authority (`business-rule-extraction`), permission matrix design (`permission-boundary-modeling`), durable event contract (`domain-event-modeling`), or implementation placement (`implementation-structure-design`).
 
 # Quality Gate
 
@@ -174,6 +153,12 @@ The use case set is complete only when:
 8. Acceptance criteria can be derived directly from postconditions.
 9. Risk flags are raised for authorization, irreversibility, cross-context, and availability concerns.
 10. The use case is precise enough that a developer can implement it and a tester can verify it without additional clarification.
+11. Selected mode, actor-goal boundary, and rejected combined scopes are explicit.
+12. Memory, repository graph, and execution trajectory evidence are source-confirmed or clearly marked as not verified.
+13. Handoff boundaries are named for rules, permissions, states, events, API contracts, UI flow, and tests instead of being fully modeled here.
+14. Unresolved decisions have owners, blocking status, and validation evidence needed before implementation.
+15. The output states what validation evidence, validator, command, report, or artifact will prove the use case contract before acceptance or implementation work claims readiness.
+16. Residual risk, evidence limits, and next gate are explicit when current source, stakeholder input, external-system behavior, or test evidence is missing.
 
 # Used By
 

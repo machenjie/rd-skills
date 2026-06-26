@@ -19,6 +19,10 @@ Use when creating or changing object relationships; multiple algorithms, states,
 
 Do not use to justify speculative abstraction, one current implementation, simple if/else that is clearer, code reuse alone, file-length reduction, testing private helpers, or a pattern that hides side effects, global state, lifecycle, dependency direction, domain invariants, IO, lock scope, allocation, or runtime cost.
 
+# Stage Fit
+
+Use during planning when a proposed object relationship, abstraction, interface, factory, strategy, state object, observer, worker, pool, pipeline, or adapter changes ownership or variation. Use during coding and review when AI-generated or human code introduces pattern names, inheritance, registries, providers, managers, hidden IO, or lifecycle boundaries. Use during testing and release when public behavior, contract compatibility, runtime cost, cleanup, rollback, or graph-memory evidence decides whether the pattern is accepted.
+
 # Non-Negotiable Rules
 
 - Pattern follows problem, not aesthetics; prefer boring direct code when variation is not current.
@@ -27,6 +31,7 @@ Do not use to justify speculative abstraction, one current implementation, simpl
 - Every selected pattern declares object relationships, method placement, module/file impact, public API impact, lifecycle/ownership, side-effect visibility, invariant protection, and tests.
 - Every selected pattern declares performance, concurrency, IO, resource, cancellation, backpressure, and teardown impact, then routes to `language-performance-safety`, `concurrency-control`, `profiling`, `async-job-design`, `idempotency-retry-design`, `cache-design`, or `reliability-observability-gate` when those concerns are present.
 - Patterns must not bypass domain invariants, hide side effects, expand public API without current consumers, or create global mutable state without explicit lifecycle, synchronization, test reset, and shutdown cleanup.
+- Current evidence is mandatory: cite repository graph, existing same-pattern usage, current variants or absence, project memory with dates, runtime/IO/concurrency evidence, public consumers, tests, and validation freshness before selecting a pattern.
 
 # Industry Benchmarks
 
@@ -36,57 +41,42 @@ Anchor against Gang of Four pattern intent, Fowler refactoring and enterprise pa
 
 Start with direct code. Escalate only when a current force makes direct code worse than the pattern cost. Use `implementation-structure-design` first when object, method, module, split, or merge placement is part of the decision. Use `language-performance-safety` for hot path, allocation, GC, async, blocking/non-blocking IO, client/pool lifecycle, fan-out, backpressure, cancellation, or resource cleanup. Use `concurrency-control` for locks, races, deadlocks, shared mutable state, worker concurrency, and lock scope. Use `profiling` for object pool, allocation, contention, latency, or performance claims.
 
+# Mode Matrix
+
+| Mode | Trigger signals | Decision focus | Required evidence | Companion capabilities | Skip guidance |
+| --- | --- | --- | --- | --- | --- |
+| Direct-code rejection | One implementation, simple branch, local construction, or pattern name with no current variants. | Prove the pattern is unnecessary and keep behavior visible. | Current force absent, same-pattern scan, direct-code alternative, deletion path, tests or not-verified limit. | `minimal-correct-implementation`, `code-clarity-maintainability` | Skip deep pattern matrix when no public API, lifecycle, IO, or concurrency risk exists. |
+| Pattern acceptance | Current variants, protocol translation, state machine, fan-out, queue, lifecycle owner, or public contract exists now. | Select one pattern and reject cheaper patterns with object and module ownership. | Variant/consumer inventory, object relationship map, method placement, public contract impact, validation command. | `implementation-structure-design`, `quality-test-gate` | Skip future-proof abstractions and one-implementation interfaces. |
+| Runtime/lifecycle pattern | Factory, singleton, proxy, observer, pool, worker, pipeline, decorator, or repository changes allocation, IO, locks, cleanup, or backpressure. | Keep runtime costs and side effects visible at the owning boundary. | Lifecycle owner, timeout/retry/cancellation rule, cleanup path, profile/stress/load validator or residual risk. | `language-performance-safety`, `concurrency-control`, `reliability-observability-gate` | Skip runtime redesign when direct code keeps lifecycle simpler. |
+| Contract/testability seam | Pattern changes public API, generated client, inheritance hierarchy, extension point, or test seam. | Preserve consumer compatibility and public-behavior testing. | API/boundary diff, consumer inventory, contract/public-behavior test output, migration or rollback path. | `consumer-impact-analysis`, `contract-testing`, `testability-seam-design` | Skip private-helper exports and mock-internal patterns. |
+
+# Proactive Professional Triggers
+
+- **Signal:** a diff adds an interface, abstract class, base class, factory, builder, strategy, provider, registry, manager, singleton, facade, adapter, decorator, observer, worker pool, object pool, or pattern name. **Hidden risk:** speculative abstraction creates public API, hidden lifecycle, and harder deletion without solving a current force. **Required professional action:** require current variants, rejected direct-code alternative, ownership, deletion path, and tests before accepting the pattern. **Route to:** `design-pattern-selection`, `minimal-correct-implementation`, `implementation-structure-design`, and `quality-test-gate`. **Evidence required:** graph paths, current variants or collapse decision, simpler alternative, public behavior tests, and deletion path.
+- **Signal:** project memory, prior pattern usage, framework convention, generated code, or AI rationale recommends a pattern. **Hidden risk:** stale or copied pattern memory can import another module's forces, side effects, or lifecycle assumptions into the wrong boundary. **Required professional action:** treat memory as a hypothesis, compare with current repository graph, local naming/placement conventions, and execution evidence. **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`, and this capability. **Evidence required:** source/date, local same-pattern scan, accepted/rejected assumptions, and stale evidence limit.
+- **Signal:** pattern hides network, database, cache, filesystem, queue, clock, randomness, process, thread, task, stream, subscription, or external API behavior behind a simple method call. **Hidden risk:** side-effect opacity causes timeout, retry, cleanup, cancellation, backpressure, lock, or observability gaps. **Required professional action:** expose side-effect boundary and route runtime/reliability capabilities before approval. **Route to:** `language-performance-safety`, `concurrency-control`, `reliability-observability-gate`, and `integration-change-builder` when external IO is present. **Evidence required:** side-effect map, lifecycle/cleanup owner, timeout/cancellation/backpressure rule, and validation command.
+- **Signal:** pattern changes public API, inheritance hierarchy, module boundary, dependency direction, generated client, SDK contract, or framework extension point. **Hidden risk:** local structure choice becomes downstream compatibility or architecture drift. **Required professional action:** require contract impact, substitutability, dependency-direction check, and migration/reversal plan. **Route to:** `architecture-impact-reviewer`, `contract-testing`, `consumer-impact-analysis`, and this capability. **Evidence required:** API/boundary diff, consumer inventory, compatibility tests, and rollback/deletion path.
+- **Signal:** pattern is introduced to make tests easier by exporting private helpers, mocking internals, or injecting a test-only abstraction. **Hidden risk:** tests freeze implementation details and miss public behavior. **Required professional action:** select public-behavior seam or reject the pattern. **Route to:** `testability-seam-design`, `quality-test-gate`, `code-clarity-maintainability`, and this capability. **Evidence required:** public behavior boundary, rejected private-helper access, seam map, and assertion that fails if the behavior branch is removed.
+
 # Risk Escalation Rules
 
 Escalate to `architecture-impact-reviewer` when the pattern changes module boundaries, dependency direction, public API, inheritance hierarchy, port/adapter boundary, or cross-service contract. Escalate to `quality-test-gate` when contract tests, public behavior tests, stress tests, or lifecycle cleanup tests are missing. Escalate to `reliability-observability-gate` when observer fan-out, worker pools, backpressure, circuit breaker, bulkhead, hidden IO, or production latency/SLO risk is present. Escalate to `integration-change-builder` when adapter, proxy, repository, or anti-corruption layer hides network/storage IO.
 
 # Reference Loading Policy
 
-Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active decision rules. If deep references are added later, load them only for L3+ work, multiple pattern candidates, public interfaces/base classes/registries/providers, lifecycle/concurrency/IO/runtime risk, or AI-generated pattern usage without evidence.
+Default mode is inline-only: this `SKILL.md` contains the active decision rules and output contract. Treat [references/pattern-matrix.md](references/pattern-matrix.md) as a deep reference and load it only for L3+ work, multiple pattern candidates, public interfaces/base classes/registries/providers, lifecycle/concurrency/IO/runtime risk, or AI-generated pattern usage without evidence.
 
 Do not load deep references for L1/L2 direct-code decisions where the inline output contract can name one local rule, one owner, no selected pattern, and no public API, lifecycle, concurrency, IO, or runtime risk.
 
 # Critical Details
 
-## Pattern Matrix
+## Pattern Selection Shortcuts
 
-| Pattern | Use when | Reject when | Object relationship | Performance risk | Test boundary |
-| --- | --- | --- | --- | --- | --- |
-| Factory Method | one product family has current variants or construction policy | simple constructor is enough | creator owns construction policy | per-call heavy construction | constructor contract and variant creation |
-| Abstract Factory | families of related objects must vary together | one family or speculative provider | factory family plus products | object graph churn | family compatibility contract |
-| Builder | construction has many validated steps or immutable aggregate setup | trivial DTO | builder owns construction state | allocation and validation cost | invalid/complete build behavior |
-| Prototype | cloning configured objects is cheaper or preserves setup | copy semantics unclear | source prototype to clone | stale mutable state | deep/shallow copy contract |
-| Singleton | one lifecycle-owned process resource is required | hidden global mutable state | global owner plus consumers | lock contention, test reset | lifecycle, sync, teardown tests |
-| Object Pool | measured allocation/connection cost dominates | no profile evidence | pool owns reusable objects | contention, stale reset | profile, reset, leak tests |
-| Adapter | external protocol or legacy shape differs from domain contract | same contract or only naming | port plus adapter | hidden IO or mapping cost | contract plus resource cleanup |
-| Facade | simplify a stable subsystem API | god object or policy dumping ground | facade to cohesive subsystem | latency aggregation | public facade behavior |
-| Decorator | add ordered cross-cutting behavior to same contract | side effects/order hidden | wrapper chain | allocation, latency, order | contract and ordering tests |
-| Proxy | control remote/lazy/access behavior through same contract | network IO hidden | proxy to subject | hidden latency, timeout | IO timeout and cleanup tests |
-| Composite | tree of uniform parts and whole operations exists | no real tree | parent/child tree | traversal cost | tree invariants and traversal |
-| Bridge | abstraction and implementation axes vary independently | one axis only | abstraction delegates to implementor | dispatch and allocation | each axis contract |
-| Strategy | multiple current algorithms behind stable interface | one implementation | context plus strategy family | dispatch/allocation overhead | shared contract tests |
-| State | object has real state machine with state-specific behavior | flags are simple | context plus state objects | object churn | transition/invalid path tests |
-| Command | actions need queue, undo, audit, retry, or scheduling | direct call is enough | command plus handler | allocation, idempotency/retry | command contract and retry tests |
-| Observer/PubSub | event fan-out has independent subscribers | no unsubscribe/lifecycle | publisher to subscribers | unbounded fan-out | unsubscribe, backpressure, isolation |
-| Mediator | peer objects need coordinated interaction | mediator becomes god object | peers through mediator | bottleneck | interaction contract |
-| Chain of Responsibility | ordered handlers may accept/pass work | fixed if/else clearer | linked handlers | hidden order, latency | order and fallback tests |
-| Template Method | stable algorithm skeleton with variant hooks | base class only for reuse | base skeleton plus subclass hooks | inheritance cost | base/subclass contract |
-| Visitor | many operations traverse stable object structure | breaks encapsulation | visitor to elements | traversal and coupling | operation/element matrix |
-| Specification | reusable predicates combine domain policies | one local predicate | policy object/value | allocation and query translation | predicate and composition tests |
-| Null Object | default no-op preserves contract safely | hides missing data/error | concrete no-op implementation | silent behavior | explicit no-op contract |
-| Repository | domain needs persistence boundary | business policy in repository | domain/service to repository | storage IO hidden | persistence contract and transactions |
-| Unit of Work | changes must commit atomically across repositories | one simple write | UoW owns transaction | long transactions/locks | commit/rollback tests |
-| Dependency Injection | dependencies vary by environment/test/runtime | service locator hides deps | constructor/config ownership | lifecycle churn | wiring and contract tests |
-| Domain Event | committed domain change fans out asynchronously | event before invariant commit | aggregate emits event | duplicate/fan-out cost | outbox/idempotency tests |
-| Port/Adapter | domain must not depend on external protocol | adapter leaks domain policy | port contract plus adapter | IO lifecycle | provider contract tests |
-| Anti-Corruption Layer | external model conflicts with domain language | simple mapping is enough | translation boundary | mapping/latency cost | translation contract |
-| Producer-Consumer | producer and consumer rates differ | synchronous flow is enough | queue boundary | queue growth | bounded queue tests |
-| Worker Pool | bounded parallel workers process work | unbounded tasks or no load | pool owns workers | saturation | pool, cancellation tests |
-| Pipeline | staged transforms have independent rates | stages are trivial | stage chain | buffering/backpressure | stage and end-to-end tests |
-| Reactor/Proactor | IO multiplexing or async completion is central | blocking thread model is simpler | event loop plus handlers | event-loop blocking | non-blocking tests |
-| Bounded Fan-out | async tasks fan out today | unbounded gather/all | coordinator plus semaphore | queue/task growth | timeout/cancellation tests |
-| Backpressure | downstream cannot accept unlimited work | caller can fail fast simply | producer to bounded consumer | latency and drops | overload behavior tests |
-| Circuit Breaker/Bulkhead | dependency failure isolation is needed | local direct call only | boundary guard | state/metric cost | reliability gate contract |
+- Construction patterns need current variants, validated setup, lifecycle ownership, or measured allocation cost; otherwise prefer constructors and direct composition.
+- Structural patterns need a real protocol, subsystem, tree, abstraction axis, or translation boundary; otherwise they hide coupling behind names.
+- Behavioral patterns need current algorithm variation, state-machine behavior, command history, fan-out, traversal, or policy composition; otherwise direct code is cheaper.
+- Runtime patterns need measured contention, IO multiplexing, bounded concurrency, overload control, or dependency isolation; otherwise they add invisible lifecycle and cleanup obligations.
+- Load `references/pattern-matrix.md` when a detailed pattern-by-pattern use/reject/test comparison is needed.
 
 ## Pattern Anti-Patterns
 
@@ -98,44 +88,61 @@ Pattern selection is a structure decision and a runtime decision. Factory, build
 
 # Failure Modes
 
-- Pattern overengineering: strategy, factory, interface, registry, or abstract base for one implementation.
-- Side-effect opacity: proxy, decorator, repository, observer, or facade hides network/storage IO, retries, events, or mutation.
-- Lifecycle leak: singleton, observer, worker pool, task fan-out, subscription, stream, file descriptor, or client/pool is not shut down.
-- Invariant bypass: repository, command, visitor, or adapter moves policy away from the domain owner.
-- Runtime regression: pattern adds hot-path allocation, lock contention, event-loop blocking, unbounded fan-out, missing backpressure, or per-operation client construction.
+- **Speculative abstraction:** strategy, factory, interface, registry, provider, or abstract base is accepted for one implementation and becomes hard to delete.
+- **Wrong current force:** a pattern solves copied memory, framework fashion, or AI rationale instead of a current repository variant, lifecycle, contract, or runtime pressure.
+- **Side-effect opacity:** proxy, decorator, repository, observer, facade, or adapter hides network/storage IO, retries, events, mutation, or partial failure from the call site.
+- **Lifecycle leak:** singleton, observer, worker pool, task fan-out, subscription, stream, file descriptor, response body, or client/pool lacks teardown on success, error, timeout, cancellation, or shutdown.
+- **Invariant bypass:** repository, command, visitor, adapter, or service moves domain policy away from the owner that protects state, permissions, transaction boundaries, or business rules.
+- **Runtime regression:** pattern adds hot-path allocation, lock contention, event-loop blocking, unbounded queue/fan-out, missing backpressure, or per-operation client construction.
+- **Contract drift:** public API, SDK, generated client, extension point, or inheritance hierarchy changes without consumer inventory, compatibility test, migration path, or rollback note.
+- **Test seam distortion:** private helpers are exported, internals are mocked, or a test-only abstraction is added while public behavior remains unverified.
+- **Stale evidence closure:** repository graph, project memory, benchmark, validator report, or same-pattern scan predates the final structure edit and is still used as completion evidence.
 
 # Output Contract
 
 Return a Design Pattern Decision Record:
 
-- problem/force
-- pattern candidates
-- selected pattern or direct-code decision
-- rejected patterns and reasons
-- simpler alternative considered
-- object relationship map
-- method placement impact
-- module/file placement impact
-- public API impact
-- lifecycle/ownership impact
-- performance/concurrency/IO risk
-- side-effect visibility
-- invariant protection
-- tests/contract tests
-- deletion/reversal path
-- residual risk
+- `mode_selected` (direct-code rejection, construction, structural, behavioral, runtime/concurrency, adapter/integration, public-contract, or testability-seam decision)
+- `boundaries_inspected` (same file/module, sibling modules, existing patterns, public APIs, tests, runtime/IO/concurrency surfaces, project memory, and skipped boundaries with reason)
+- `source_evidence` (current files, repository graph, same-pattern scan, current variants/consumers, benchmark/profile traces, tests, and memory date)
+- `problem_force` (current force; why direct code is insufficient or why direct code is selected)
+- `pattern_candidates` (selected pattern or direct-code decision, rejected patterns, rejected simpler alternative, and deletion/reversal path)
+- `object_relationship_map` (roles, ownership, collaborator direction, inheritance/composition, method placement, module/file placement, and dependency direction)
+- `public_contract_impact` (public API, SDK/client, generated code, extension point, serialization, and compatibility impact)
+- `lifecycle_runtime_impact` (ownership, setup/teardown, side-effect visibility, IO, timeout, retry, cancellation, backpressure, concurrency, allocation, profiling need, and cleanup)
+- `invariant_protection` (domain/business invariants preserved, bypass risks, and owner boundary)
+- `pattern_to_validation_map` (public behavior, contract, stress, lifecycle cleanup, concurrency, performance, and regression evidence per selected or rejected pattern)
+- `graph_memory_execution_validation` (accepted/rejected memory, same-pattern scan, execution/profiling evidence, stale validation, and not-verified disclosures)
+- `validation_evidence` (command or test/validator, working directory, exit code, relevant output, report or artifact path, freshness after final edit, and what the evidence proves or does not prove)
+- `residual_risk` and `evidence_limits` (what evidence proves, what it does not prove, remaining owner, and next gate)
 
 # Quality Gate
 
 1. No pattern without current force and rejected simpler alternative.
 2. No speculative abstraction, public API, registry, interface, inheritance, factory, or provider without current consumers or variants.
-3. Object relationships, method ownership, module/file placement, lifecycle, and side effects are explicit.
-4. Performance, concurrency, IO, cancellation, backpressure, cleanup, and pool/client lifecycle are explicit and routed to adjacent capabilities when present.
-5. Object Pool has profile evidence; Singleton/global state has lifecycle, thread-safety, test reset, and shutdown cleanup.
-6. Observer/PubSub has unsubscribe, backpressure, bounded fan-out, and error isolation.
-7. Proxy/Adapter/Repository declare IO, timeout, retry, resource cleanup, and visibility at the call site.
-8. Command/Worker/Queue declare idempotency, retry, backpressure, cancellation, and partial failure.
-9. Public behavior or contract tests prove the selected pattern and the rejected direct-code alternative remains cheaper to delete.
+3. Boundaries inspected, source evidence, graph-memory-execution validation, and evidence limits are recorded.
+4. Object relationships, method ownership, module/file placement, lifecycle, side effects, dependency direction, and public contract impact are explicit.
+5. Performance, concurrency, IO, cancellation, backpressure, cleanup, and pool/client lifecycle are explicit and routed to adjacent capabilities when present.
+6. Object Pool has profile evidence; Singleton/global state has lifecycle, thread-safety, test reset, and shutdown cleanup.
+7. Observer/PubSub has unsubscribe, backpressure, bounded fan-out, and error isolation.
+8. Proxy/Adapter/Repository declare IO, timeout, retry, resource cleanup, and visibility at the call site.
+9. Command/Worker/Queue declare idempotency, retry, backpressure, cancellation, and partial failure.
+10. Public behavior or contract tests prove the selected pattern, and validation is fresh after the final structure edit.
+11. Same-pattern scan records sibling occurrences and why they were reused, updated, or skipped.
+12. Direct-code remains the accepted outcome when current-force, variant, lifecycle, or validation evidence is missing.
+13. Validation command, test or validator name, output, exit code, report or artifact path, and stale/not-run evidence are recorded before handoff.
+
+# Evidence Contract
+
+Close a pattern decision only when the answer cites current source boundaries, boundaries inspected and skipped, same-pattern scan, current force, rejected direct-code alternative, object relationship map, lifecycle/runtime/side-effect impact, validation evidence from a command, test, validator, output, exit code, report, or artifact, what evidence proves, what evidence does not prove, residual risk, handoff owner, and next gate. Project memory, pattern names, or framework convention alone are not evidence.
+
+# Benchmark Coverage
+
+Pattern catalogs and architecture texts calibrate intent, but approval requires repository-local evidence: current variants, caller graph, object ownership, side-effect map, public consumers, lifecycle and runtime obligations, and tests at the observable behavior boundary.
+
+# Routing Coverage
+
+When selected by a router, report which adjacent capabilities were loaded or intentionally skipped: `minimal-correct-implementation`, `implementation-structure-design`, `code-clarity-maintainability`, `language-performance-safety`, `concurrency-control`, `profiling`, `async-job-design`, `idempotency-retry-design`, `cache-design`, `reliability-observability-gate`, `contract-testing`, `consumer-impact-analysis`, `testability-seam-design`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker`.
 
 # Used By
 

@@ -76,6 +76,14 @@ Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage fo
 
 Select when shell, CLI, scripts, CI commands, release commands, destructive operations, stdout/stderr contracts, or rerun safety appear. Pair with `delivery-release-gate` (release / rollback scripts), `security-privacy-gate` (secrets, injection), `quality-test-gate` (bats tests), `cli-daemon-interface-design` (broader CLI contract design).
 
+# Proactive Professional Triggers
+
+- **Signal:** a shell command, flag, pipeline, release helper, or CI step is copied from project memory, old docs, terminal history, or prior execution without reading the current script/help/tests/callers. **Hidden risk:** stale command shape, deprecated flag, wrong working directory, or changed output contract is encoded into automation. **Required professional action:** inspect current source and consumers before accepting the command. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, command/help output, accepted/rejected memory, consumer list, and freshness limit.
+- **Signal:** `rm`, `find -delete`, `kubectl delete`, `aws * delete`, `DROP`, `terraform apply`, migration, release, rollback, or production-target command lacks default dry-run, scoped selector, confirmation token, and rollback note. **Hidden risk:** one mistyped environment, glob, context, or rerun mutates or deletes the wrong target. **Required professional action:** require dry-run proof, target validation, explicit apply flag, and rerun/rollback behavior before closure. **Route to:** `delivery-release-gate`, `agent-tool-permission-sandbox`, `quality-test-gate`. **Evidence required:** dry-run output, target guard test, command exit code, rollback path, and residual destructive risk.
+- **Signal:** command output is piped, parsed by CI, consumed by another script, or documented as machine-readable while progress, warnings, prompts, or logs may reach stdout. **Hidden risk:** automation silently parses human text, drops records, or treats diagnostics as data. **Required professional action:** define stdout/stderr contract and add parse/golden-output validation. **Route to:** `cli-daemon-interface-design`, `contract-testing`, `consumer-impact-analysis`. **Evidence required:** stdout schema, stderr diagnostic sample, pipe test command, golden output diff, and compatibility window.
+- **Signal:** secret, token, password, kube context, cloud profile, SSH key, private URL, or bearer credential appears in argv, shell history, `set -x`, logs, temp files, or generated reports. **Hidden risk:** credentials leak through process lists, CI logs, terminal transcripts, or retained evidence. **Required professional action:** move secrets to env/file/stdin, disable tracing around secret scope, redact output, and classify tool permission/sandbox. **Route to:** `security-privacy-gate`, `secret-configuration-security`, `agent-tool-permission-sandbox`. **Evidence required:** no-secret-in-argv review, redacted log sample, secret-scan output, and retention boundary.
+- **Signal:** filenames, paths, globs, `find`/`xargs`, temp files, locks, loops, or rerun state depend on external input without null delimiters, quoting, `mktemp`, `trap`, `flock`, or idempotency checks. **Hidden risk:** whitespace/newline names, TOCTOU, parallel runs, or partial failures corrupt data even when ShellCheck is green. **Required professional action:** validate path handling, cleanup, locking, and rerun semantics with hostile fixtures. **Route to:** `quality-test-gate`, `input-validation`, `concurrency-control`. **Evidence required:** hostile filename fixture, cleanup/trap proof, lock/rerun test, ShellCheck output, and untested OS/filesystem limit.
+
 # Risk Escalation Rules
 
 - Escalate to `delivery-release-gate` for any script run as part of release / rollback / production operations.
@@ -122,7 +130,7 @@ Select when shell, CLI, scripts, CI commands, release commands, destructive oper
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when shell/CLI changes touch file deletion, quoting, globbing, `eval`, secrets, temp files, idempotent reruns, dry-run behavior, portability, traps, stdout/stderr, or exit-code contract. Do not load it for comment-only script edits.
+Read `references/checklist.md` when shell/CLI changes touch file deletion, quoting, globbing, `eval`, secrets, temp files, idempotent reruns, dry-run behavior, portability, traps, stdout/stderr, or exit-code contract. Use `examples/example-output.md` only when the expected Shell / CLI Usage Review shape is unclear. Do not load either file for comment-only script edits.
 
 # Output Contract
 

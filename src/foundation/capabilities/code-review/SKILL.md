@@ -57,6 +57,24 @@ Select this capability when **assessing a concrete code change** is primary. Adj
 - Prefer `dependency-vulnerability-scanning` when the question is SCA supply-chain risk across a release.
 - Use **with** `security-privacy-gate` for security-sensitive findings requiring formal sign-off.
 
+# Proactive Professional Triggers
+
+- **Signal:** AI-generated or modified code adds an API call, import, config key, CLI flag, dependency, generated client method, or provider feature that is not verified against local source, docs, or lockfiles.
+  **Hidden risk:** hallucinated API, version mismatch, or wrong dependency silently ships behind plausible code.
+  **Required professional action:** verify symbol and dependency existence before approval, then classify any unverified call as a blocking finding.
+  **Route to:** `code-review`, `ai-code-review-refactor`, `validation-broker`.
+  **Evidence required:** search/typecheck/build output, dependency version, affected file/line, finding severity, and residual unverified scope.
+- **Signal:** review approval lacks requirement, accepted plan, final diff, changed-code-to-test map, validation freshness, or explicit non-findings on high-risk surfaces.
+  **Hidden risk:** stale evidence or final-diff-only review can approve code that misses the requested behavior, skips security surfaces, or hides test gaps.
+  **Required professional action:** run spec-compliance review before quality approval and block closure until validation evidence is current.
+  **Route to:** `plan-execution-consistency`, `quality-test-gate`, `agent-execution-discipline`.
+  **Evidence required:** requirement/plan match, changed files, command with exit code, high-risk non-findings, approval scope, and residual risk.
+- **Signal:** a diff adds helpers, shared utilities, public exports, feature flags, compatibility branches, side effects, or branch-heavy flow without reuse and clarity evidence.
+  **Hidden risk:** boundary pollution, unreadable main flow, stale cleanup debt, or change-locality loss spreads from one review into future changes.
+  **Required professional action:** require structure and clarity review before approval, with owner, deletion path, and behavior-preservation evidence.
+  **Route to:** `implementation-structure-design`, `code-clarity-maintainability`, `cleanup-deletion-governance`.
+  **Evidence required:** reuse search, owner boundary, rejected locations, tests or validator output, cleanup owner/expiry, and re-review result.
+
 # Risk Escalation Rules
 
 Escalate when code touches: authentication or session management, authorization checks (any IDOR or missing boundary), payment processing or financial state mutation, cryptographic key generation or handling, data migration (schema or data transform), external integrations (new OAuth flow, new outbound call, new webhook receiver), production configuration or feature flags, AI-generated code with unverified APIs in a critical path, concurrency primitives with money/inventory invariants, or personally identifiable or regulated data flows. Escalate to `security-privacy-gate` when a Critical or High security finding cannot be resolved within the PR.

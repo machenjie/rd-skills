@@ -19,6 +19,10 @@ Use this capability when a frontend change: fetches or mutates data from any API
 
 Do not use this capability to define the server-side endpoint contract (use `api-contract-design`), to design form submission lifecycle (use `form-validation-design`), or to design client-side state ownership and invalidation strategy (use `state-management-design`).
 
+# Stage Fit
+
+Use during experience-definition, implementation-planning, coding, review, and testing when a frontend surface depends on API data, request cancellation, cache freshness, response validation, auth expiry, retries, pagination, optimistic updates, or user-visible API error recovery. In planning, define the operation lifecycle, source evidence, stale-response controls, error mapping, and tests before implementation. In coding/review, reject stale project-memory or repository-graph claims unless current source, API contracts, mocks, and validation output confirm the integration behavior. Hand off when the primary question is server contract design, form submission authority, state ownership, or full frontend test strategy.
+
 # Non-Negotiable Rules
 
 - **Every request must have a defined cancellation point.** When a user navigates away from a view while a request is in flight, the request must be cancelled using `AbortController`. Without cancellation: stale responses can overwrite newer state; memory leaks occur in SPA frameworks when state is updated after component unmount; multiple in-flight requests for the same resource create race conditions.
@@ -29,83 +33,20 @@ Do not use this capability to define the server-side endpoint contract (use `api
 - **Error messages must be user-actionable.** Map API error responses to user-facing messages before display. Never expose: HTTP status codes as user messages; internal error codes, stack traces, or exception class names; SQL or schema details. User message must identify what went wrong and what the user can do next (retry, contact support, check inputs).
 - **Pagination must handle instability.** Cursor-based pagination is preferred over offset for any list that can be mutated. Offset pagination on mutable data: newly inserted records shift pages (records duplicated across pages); deleted records collapse pages (records skipped). When offset pagination is required for legacy reasons, document the instability and add a "new items may not appear immediately" UX disclosure.
 
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Read lifecycle | Page/view/query fetch, search, refresh, or background revalidation. | Cancellation, timeout, stale response rejection, cache key, and recovery. | Operation list, current API client/cache pattern, AbortController or ignore policy, stale test obligation. | `interaction-state-modeling`, `frontend-testing` | Mutation idempotency design unless writes exist. |
+| Mutation lifecycle | Create/update/delete/import/export action, optimistic UI, duplicate-submit risk, or unknown timeout outcome. | Idempotency, rollback, conflict mapping, durable confirmation, and unsafe retry prevention. | Operation side effect, idempotency key requirement, rollback state, timeout language, retry stop condition. | `idempotency-retry-design`, `state-management-design` | Silent retry on timeout. |
+| Auth and permission API state | 401, refresh token, session expiry, permission change, 403/404 posture, or sign-in redirect. | Refresh-once, cache clearing, no loops, non-leaking denied state. | Auth source, refresh max attempts, redirect target, protected cache invalidation, denied-path map. | `security-privacy-gate`, `error-code-design` | Raw 401/403 display. |
+| Response contract and errors | DTO/schema change, problem details, violations, malformed data, provider errors, or client crash risk. | Shape validation, stable error taxonomy, safe user recovery, diagnostic separation. | Schema source, field/error map, invalid-shape behavior, safe telemetry rule. | `api-contract-design`, `error-code-design`, `dto-schema-design` | Destructuring unvalidated JSON. |
+| Pagination and cache freshness | Cursor/offset/keyset list, infinite scroll, stale data, mutation invalidation, or focus/reconnect refresh. | Stable ordering, cache ownership, invalidation triggers, empty/end states, stale presentation. | Pagination contract, sort/tiebreaker, cache key, invalidation map, stale/empty behavior. | `state-management-design`, `frontend-testing` | Offset instability without disclosure. |
+| Third-party or browser trust boundary | Browser calls external API, token-bearing requests, PII/error telemetry, CSP/connect-src, or untrusted response. | Exposed credential prevention, allowed destinations, response validation, redaction. | Destination allowlist, token location, log redaction, CSP/connect-src or equivalent control. | `security-privacy-gate`, `threat-modeling` | Shipping provider credentials to browser. |
+
 # Industry Benchmarks
 
-Anchor against: **Fetch API + AbortController** (WHATWG) — `AbortController.abort()` cancels in-flight `fetch()`; `AbortSignal.timeout(ms)` for request timeout (Node.js 17.3+, all modern browsers); `signal` parameter on `fetch()`. **React Query / TanStack Query** — `queryKey` deduplication; `staleTime` / `gcTime` cache config; `invalidateQueries()` for post-mutation invalidation; `useMutation` with `onMutate` (optimistic update) and `onError` (rollback); automatic retry with `retry` and `retryDelay` config. **SWR (Vercel)** — stale-while-revalidate RFC 5861; `revalidateOnFocus`, `revalidateOnReconnect`; `mutate()` for cache update. **Axios** — `CancelToken` (deprecated); `AbortController` since Axios 0.22; `interceptors.response` for global 401 handling; `timeout` config. **Zod** (TypeScript) — `z.object({}).parse(data)` throws `ZodError` with structured error details; `safeParse()` for non-throwing variant; use to validate API response shape before use. **RFC 7807 / RFC 9457** — Problem Details; parse `type`, `title`, `status`, `detail`, `instance`; map `violations[]` to field errors. **RFC 5861** — stale-while-revalidate; allows serving stale cached content while revalidating in background. **IETF draft-ietf-httpapi-idempotency-key-header** — `Idempotency-Key: <UUID v4>` header for mutation retry safety. **Exponential backoff with jitter** (AWS Architecture Blog, 2015: "Exponential Backoff And Jitter") — `delay = min(cap, base * 2^attempt) + random_between(0, jitter_factor * delay)`; prevents thundering herd on retry. **Cursor pagination** (Relay Cursor Connections Specification; GraphQL Foundation) — stable page results regardless of insertions/deletions; `pageInfo.hasNextPage`, `endCursor`, `startCursor`. **OpenTelemetry** (CNCF) — propagate `traceparent` / `baggage` headers from frontend fetch to backend; enables end-to-end trace across browser and server. **Content Security Policy** (CSP, RFC 9239) — `connect-src` directive restricts fetch destinations; API base URLs must be allowlisted. **OWASP Secure Headers Project** — frontend API clients must not log auth tokens or response bodies containing PII to browser console in production builds.
-
-### Request Lifecycle State Machine
-
-```
-States: idle | loading | success | error | cancelled | stale
-
-idle:      No request pending; data not yet fetched
-loading:   Request in flight; AbortController registered; timeout timer running
-success:   Response received; shape validated; data committed to state/cache
-error:     Response error (4xx/5xx) OR network error OR validation failure
-  → 401:   Attempt token refresh → if success: replay request → if fail: redirect to /login?next=...
-  → 429/503 with Retry-After: bounded retry with delay from header (max 3 attempts)
-  → 5xx:   Bounded exponential retry for read operations only (max 3 attempts)
-  → 4xx (non-401): No retry; map to user-facing error message; show recovery action
-cancelled: AbortController.abort() called (navigation, user cancel, superseded request)
-  → No state update after cancel; discard response if received after abort
-stale:     Cached data displayed; background revalidation in flight (stale-while-revalidate)
-
-Timeout:
-  Per request class:
-    Page data (SSR/CSR):      5,000ms default
-    User-initiated mutation:  10,000ms default
-    Background revalidation:  30,000ms default
-  On timeout: treat as unknown outcome; do NOT retry a mutation on timeout without idempotency key
-```
-
-### Retry Policy by Operation Class
-
-| Operation | HTTP method | Retry on network error | Retry on 429/503 | Retry on 5xx | Retry on timeout | Condition |
-| --- | --- | --- | --- | --- | --- | --- |
-| Read (list, detail) | GET | ✅ max 3 | ✅ max 3 + Retry-After | ✅ max 3 | ✅ max 3 | No condition needed |
-| Mutation (create) | POST | ❌ | ✅ if Idempotency-Key | ✅ if Idempotency-Key | ❌ unknown outcome | Idempotency-Key required |
-| Mutation (update) | PUT/PATCH | ❌ | ✅ if Idempotency-Key | ✅ if Idempotency-Key | ❌ unknown outcome | Idempotency-Key required |
-| Mutation (delete) | DELETE | ❌ | ✅ max 1 | ✅ max 1 | ❌ | May already be deleted |
-| File upload | POST/PUT | ❌ (multipart) | ✅ if resumable | ❌ | ❌ | Use resumable upload protocol |
-| Auth token refresh | POST | ✅ max 1 | ❌ | ❌ | ✅ max 1 | Exactly once; fail → logout |
-
-### Response Validation Pattern
-
-```typescript
-// Define shape with Zod at module boundary
-import { z } from "zod";
-
-const UserSchema = z.object({
-  id: z.string().uuid(),
-  email: z.string().email(),
-  role: z.enum(["admin", "member", "viewer"]),
-  createdAt: z.string().datetime(),
-});
-
-type User = z.infer<typeof UserSchema>;
-
-async function fetchUser(id: string, signal: AbortSignal): Promise<User> {
-  const response = await fetch(`/api/users/${id}`, { signal });
-  if (!response.ok) {
-    throw new ApiError(response.status, await response.json());
-  }
-  const raw = await response.json();
-  // Validate shape — throws ZodError on unexpected response
-  return UserSchema.parse(raw);
-}
-// ZodError is caught by error boundary → renders "unexpected response" state
-// NOT: const data = await response.json(); return data.user.role; // crashes on missing field
-```
-
-### Pagination Selection
-
-| Criterion | Cursor-based | Offset-based | Keyset (seek method) |
-| --- | --- | --- | --- |
-| Data stability | ✅ Stable across inserts/deletes | ❌ Unstable; records skip/dup | ✅ Stable |
-| Random page access | ❌ No | ✅ Yes | ❌ No |
-| Performance at depth | ✅ O(1) cursor lookup | ❌ O(N) for large OFFSET | ✅ O(log N) with index |
-| Suitable for | Infinite scroll, feeds, timelines | Static reports, page numbers | Large tables, audit logs |
-| UX disclosure needed | No | ✅ "New items may not appear" | No |
+Anchor against Fetch API and AbortController, TanStack Query, SWR, Axios AbortController support, RFC 7807/RFC 9457 Problem Details, RFC 5861 stale-while-revalidate, idempotency-key practice, exponential backoff with jitter, Relay cursor pagination, OpenTelemetry TraceContext, CSP `connect-src`, OWASP API security guidance, and contract-aligned network mocking. Keep this body focused on routing, lifecycle decisions, evidence, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed benchmark anchors, lifecycle/retry/error/pagination/cache matrices, race/freshness controls, graph/memory/trajectory coupling, and anti-pattern review.
 
 # Selection Rules
 
@@ -115,6 +56,14 @@ Select this capability when **frontend data fetching and request lifecycle** are
 - Prefer `api-contract-design` when the primary concern is the server-side API contract (endpoint definitions, request/response schemas).
 - Prefer `state-management-design` when the primary concern is client-side state ownership, derived state, and cross-component cache invalidation.
 - Prefer `idempotency-retry-design` when the primary concern is server-side deduplication implementation for retried mutations.
+
+# Proactive Professional Triggers
+
+- **Signal:** a request lifecycle is described as "fetch data and show errors" without operation list, cancellation trigger, timeout, or stale-response rule. **Hidden risk:** implementers create inconsistent loading/error behavior and stale responses overwrite current state. **Required professional action:** require operation-level lifecycle and stale-response controls. **Route to:** `interaction-state-modeling`, `frontend-testing`. **Evidence required:** operation list, current input/cache key, cancellation or ignore rule, and stale-response test.
+- **Signal:** a mutation has retry, timeout, optimistic update, or duplicate-submit behavior but no idempotency key or rollback contract. **Hidden risk:** duplicate side effects, false success, or permanent UI/server divergence. **Required professional action:** require mutation retry/idempotency and rollback map. **Route to:** `idempotency-retry-design`, `state-management-design`. **Evidence required:** idempotency requirement, timeout unknown-outcome language, pre-mutation state, conflict/rollback test.
+- **Signal:** 401, token refresh, role change, or permission-denied behavior is handled by a generic error state. **Hidden risk:** refresh loop, stale protected cache, leaking resource existence, or broken login recovery. **Required professional action:** define refresh-once, cache clear, sign-in redirect, 403/404 posture, and denied UI state. **Route to:** `security-privacy-gate`, `error-code-design`. **Evidence required:** auth flow, max refresh attempts, protected cache invalidation, denied-path test.
+- **Signal:** API responses are trusted because TypeScript types, generated clients, or prior mocks exist. **Hidden risk:** malformed or version-skewed JSON crashes the render tree. **Required professional action:** validate at the runtime boundary and test malformed responses. **Route to:** `api-contract-design`, `frontend-testing`. **Evidence required:** schema source, runtime parse/guard behavior, invalid-shape state, mock/fixture contract alignment.
+- **Signal:** project memory, repository graph, or earlier trajectory says an API client, cache key, or mock pattern already exists. **Hidden risk:** stale integration pattern is copied after API schema, auth, cache, or test conventions changed. **Required professional action:** confirm current source, schema, mocks, tests, and validation freshness before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected pattern, freshness limit, and validation command or residual risk.
 
 # Risk Escalation Rules
 
@@ -127,7 +76,7 @@ Frontend API integration fails silently when assumptions about network condition
 - **Race condition: last-write-wins on concurrent fetches.** User types in a search box; request A fires for "ali", request B fires for "alice". Response B arrives first (faster query), response A arrives second. UI renders results for "ali" instead of "alice". Fix: cancel request A when request B fires using AbortController; accept only the response matching the current input value.
 - **Token refresh loop.** A 401 triggers a token refresh. The refresh also fails with 401. The code retries the refresh. Infinite loop. Token refresh must be attempted exactly once. On refresh failure: stop, clear session, redirect to login. Never retry a failed refresh.
 - **Optimistic update not rolled back.** User marks a task complete (optimistic UI: task immediately disappears from list). Server returns 500. The task is gone from the UI but not from the database. User thinks the task is complete. Fix: store pre-mutation state; on error, revert and show error toast.
-- **Undefined field access on unexpected response.** API temporarily returns `{"items": null}` instead of `{"items": []}`. Frontend renders `items.map(...)` → `TypeError: Cannot read properties of null`. Zod validation at the boundary converts this to an explicit "unexpected response" error state before the render tree sees the data.
+- **Undefined field access on unexpected response.** API temporarily returns `{"items": null}` instead of `{"items": []}`. Frontend renders `items.map(...)`, causing `TypeError: Cannot read properties of null`. Zod validation at the boundary converts this to an explicit "unexpected response" error state before the render tree sees the data.
 - **Exposing auth token in error log.** Request fails; error handler logs `console.error("Request failed", config)`. `config` includes `Authorization: Bearer <token>`. Token is now in browser console history and any error monitoring tool that collects console logs. Sanitize request config before logging; never log Authorization headers.
 
 ### Anti-examples
@@ -154,36 +103,65 @@ Frontend API integration fails silently when assumptions about network condition
 - Offset pagination on mutating list: user pages through 200-item list; 10 items inserted during session; items 190-200 duplicated on page 20 and page 21.
 - No timeout on third-party API: payment gateway goes down; frontend request hangs for 60+ seconds; entire checkout flow blocked.
 
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 frontend API integration routing, lifecycle, evidence, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete API-backed UI operation, request lifecycle, retry policy, auth expiry behavior, cache invalidation rule, error mapping, pagination behavior, optimistic update, or test obligation. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed benchmark anchors, lifecycle/retry/cache/error matrices, race/freshness controls, graph/memory/trajectory coupling, or anti-pattern review is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or minor wording work where the inline output contract and quality gate are enough.
+
 # Output Contract
 
 Return a frontend API integration plan with:
 
+- `mode_selected` (read lifecycle / mutation lifecycle / auth and permission API state / response contract and errors / pagination and cache freshness / third-party or browser trust boundary)
+- `source_evidence` (current API client, hooks, route/component source, generated client, OpenAPI/DTO/schema, mocks, stories, tests, repository graph, project memory, or execution trajectory inspected with freshness limits)
+- `graph_memory_trajectory_judgment` (accepted, rejected, or not verified for each reused API client, cache key, mock fixture, retry wrapper, auth handler, pagination pattern, or test pattern)
 - `operations` (name, HTTP method, endpoint, purpose, mutating/read, optimistic update?)
-- `request_lifecycle` (per operation: AbortController usage, timeout, cancellation trigger)
+- `request_lifecycle` (per operation: AbortController or equivalent, timeout, cancellation trigger, stale-response discard rule, navigation/filter/current-input binding)
 - `retry_policy` (per operation class: retryable? max attempts, backoff, conditions, idempotency key required?)
-- `auth_expiry` (401 handling: refresh token flow, max refresh attempts, failure behavior, redirect target)
-- `response_validation` (schema library, schema definition, invalid shape behavior)
+- `auth_expiry` (401 handling: refresh token flow, max refresh attempts, protected cache clearing, failure behavior, redirect target, no refresh loop)
+- `response_validation` (runtime schema/guard library, schema source, invalid shape behavior, malformed-response state)
 - `pagination` (type: cursor/offset/keyset; stability disclosure; empty page behavior; end-of-list signal)
-- `cache_strategy` (staleTime, gcTime, invalidation triggers, stale-while-revalidate behavior)
+- `cache_strategy` (cache key, staleTime, gcTime, invalidation triggers, stale-while-revalidate behavior, permission/session reset)
 - `optimistic_updates` (pre-mutation state capture, rollback on error, conflict resolution)
-- `error_mapping` (status code → user-facing message → recovery action; no internal details exposed)
+- `error_mapping` (HTTP/problem code -> frontend state -> user-facing message -> recovery action; no internal details exposed)
+- `response_contract_alignment` (fields consumed, optional/null/default handling, problem-details/violations mapping, version-skew or generated-client limit)
+- `race_and_freshness_controls` (request identity, latest-input guard, current cursor/filter binding, stale cache behavior, background revalidation state)
+- `security_privacy_controls` (tokens not logged, PII redaction, browser-exposed credential rule, connect-src or destination allowlist when relevant)
 - `telemetry` (trace propagation headers; what is logged; what is NOT logged: tokens, PII)
-- `tests` (race condition test, retry dedup test, auth expiry flow test, shape validation failure test, optimistic rollback test)
+- `changed_frontend_api_to_validation_map` (each operation, lifecycle state, retry/idempotency rule, auth expiry branch, response schema, cache invalidation, pagination edge, optimistic update, error mapping, and telemetry rule mapped to validator/test or residual risk)
+- `handoff_boundaries` (what belongs to API contract, DTO/schema, error taxonomy, idempotency/retry, state management, security/privacy, frontend testing, or product copy review)
+- `tests` (race/stale response, timeout, cancellation, retry dedup, auth expiry, permission/denied state, shape validation failure, pagination stability, cache invalidation, optimistic rollback)
+- `evidence_limits` (what was not inspected or not run: server contract, real browser, deployed auth, production cache behavior, third-party API, full E2E, or accessibility behavior)
+
+# Evidence Contract
+
+Close a frontend API integration output only when it names selected mode, current source evidence inspected, graph/memory/trajectory reuse judgment, every operation lifecycle, cancellation and timeout policy, retry/idempotency decision, auth expiry behavior, runtime response validation, cache and pagination freshness, error mapping, security/privacy controls, changed-frontend-api-to-validation map, handoff boundaries, residual risk, and evidence limits. A generic "fetch with loading/error handling" or "use React Query" statement is not sufficient evidence.
+
+# Benchmark Coverage
+
+Improved frontend API integration plans reject common weak patterns: fetches without cancellation, last-response-wins search, mutation retry without idempotency, refresh loops, unvalidated response destructuring, raw error display, auth token logging, offset pagination without instability disclosure, stale cache after logout, optimistic update without rollback, contract-drifting mocks, and stale repository-memory claims about API clients. Detailed lifecycle, retry, cache, pagination, and race matrices belong in references so the body stays efficient.
+
+# Routing Coverage
+
+Route here when frontend HTTP/request lifecycle, response handling, cache freshness, retry, cancellation, auth expiry, pagination, optimistic update, or API-backed UI state is primary. Hand off when the primary concern is server operation contract (`api-contract-design`), DTO/field serialization (`dto-schema-design`), error taxonomy (`error-code-design`), state ownership and cache invalidation strategy (`state-management-design`), form submission authority (`form-validation-design`), test implementation (`frontend-testing`), or security review (`security-privacy-gate`).
 
 # Quality Gate
 
 The integration plan is complete only when:
 
 1. Every request has AbortController cancellation with a defined trigger.
-2. Retry policy declared per operation class; mutations not retried without idempotency key.
-3. Response shape validated with schema library before any field access.
-4. 401 auth expiry handled: refresh-once pattern with failure redirect.
-5. Timeout defined per request class; mutation timeout does not trigger retry.
-6. All optimistic updates have a captured pre-mutation state and rollback on error.
-7. All error codes mapped to user-facing messages with no internal details.
-8. Pagination type declared; offset pagination has UX stability disclosure.
-9. No auth tokens or PII logged in error handlers or telemetry.
-10. Tests cover: race condition, retry dedup, auth expiry, shape validation failure, optimistic rollback.
+2. Stale responses are discarded or ignored when route, filter, cursor, or current input changes.
+3. Retry policy declared per operation class; mutations not retried without idempotency key and safe server semantics.
+4. Response shape validated with runtime schema or explicit guard before any field access.
+5. 401 auth expiry handled with refresh-once pattern, protected cache reset, and failure redirect.
+6. Timeout defined per request class; mutation timeout is treated as unknown outcome and does not trigger unsafe retry.
+7. All optimistic updates have captured pre-mutation state, rollback, conflict handling, and user-visible error notification.
+8. All error codes map to frontend states and user-facing recovery messages with no internal details.
+9. Pagination type declared; offset pagination has UX stability disclosure and deterministic sort/tiebreaker when possible.
+10. Cache keys, staleTime/gcTime, stale-while-revalidate state, invalidation triggers, and auth/session reset are explicit.
+11. No auth tokens, secrets, provider credentials, raw response bodies with PII, or internal error details are logged or exposed.
+12. Selected mode, source evidence, and graph/memory/trajectory reuse judgment are explicit.
+13. Every operation, lifecycle state, retry/idempotency rule, auth branch, response schema, cache invalidation, pagination edge, optimistic update, error mapping, and telemetry rule maps to validation evidence or named residual risk.
+14. Handoff boundaries and evidence limits are explicit so integration evidence is not over-claimed as server contract, deployed auth behavior, real-browser E2E coverage, or production third-party behavior.
 
 # Used By
 

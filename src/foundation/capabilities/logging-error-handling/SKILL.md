@@ -19,6 +19,12 @@ Use this capability when a change: adds or modifies exception handling, error re
 
 Do not use this capability to log raw request or response payloads, credentials, tokens, session cookies, passwords, encryption keys, or internal stack traces into client-facing responses. Do not use it as an alternative to proper secret management (secrets must never appear in log sinks at all — not redacted, not masked — they must be excluded at the source).
 
+# Stage Fit
+
+Use this capability during planning, implementation, review, testing, and release when the change modifies error taxonomy, log fields, client-visible error behavior, correlation propagation, audit events, or sensitive diagnostic handling. It is especially relevant when memory, graph context, or prior execution notes claim logging is already safe: those signals may identify patterns, but current source, tests, logger configuration, and sink behavior must provide the closing evidence.
+
+Do not expand it into general observability, alerting, or dashboard design unless log-derived signals are the primary decision. Pair it with `observability` only when log events feed alerts, SLOs, dashboards, or incident response workflows.
+
 # Non-Negotiable Rules
 
 - **Correlation IDs must propagate across every boundary.** Every inbound HTTP request, queue message, scheduled job, and outbound external call must carry a `correlationId` (or W3C `traceparent`) in all log statements. Without correlation, an error in a downstream job is disconnected from the originating request, making root-cause analysis impossible in distributed systems.
@@ -32,72 +38,17 @@ Do not use this capability to log raw request or response payloads, credentials,
 
 # Industry Benchmarks
 
-Anchor against: **OWASP Logging Cheat Sheet** (owasp.org) — logging what not to log, log levels, correlation, security events, output encoding. **NIST SP 800-92 "Guide to Computer Security Log Management"** — log collection, retention (90 days online / 1 year archive baseline), protection, review. **W3C Trace Context (traceparent)** — distributed tracing header standard; `00-{traceId}-{spanId}-{flags}`; propagate on all outbound HTTP calls and queue message headers. **OpenTelemetry Logs Data Model** — `SeverityNumber`, `TraceId`, `SpanId`, `Body`, `Attributes`, `Resource`; bridges logs, metrics, and traces into unified observability. **RFC 7807 Problem Details for HTTP APIs** — structured error response format; `type`, `title`, `status`, `detail`, `instance`. **PCI DSS Requirement 3.4** — never log full PAN; **Requirement 10** — audit log for all privileged access. **SOC 2 CC7.2** — detection of security events; audit log integrity. **ELK Stack / Grafana Loki best practices** — structured field indexing, log retention policies, query performance. **Sentry / Datadog APM error grouping** — stack trace fingerprinting, error rate alerting, deployment markers. **Elastic Common Schema (ECS)** — standardized field names (`error.message`, `http.request.method`, `user.id`).
+Anchor against OWASP Logging Cheat Sheet, NIST SP 800-92, W3C Trace Context, OpenTelemetry Logs Data Model, RFC 7807 Problem Details, PCI DSS logging requirements, SOC 2 security-event evidence, Elastic Common Schema, and APM error grouping practices. Keep the main skill focused on routing and closure; use [references/checklist.md](references/checklist.md) for the lightweight execution checklist and [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed matrices, schemas, trace propagation, redaction, and audit examples.
 
-### Error Taxonomy and Log Level Matrix
+# Mode Matrix
 
-| Error Class | HTTP Status | Log Level | Stack Trace | Audit Log | Client Response |
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capability | Skip by default |
 | --- | --- | --- | --- | --- | --- |
-| User / Validation | 400 | INFO/DEBUG | No | No | Field errors with remediation |
-| User / Not Found | 404 | INFO | No | No | Stable error code + message |
-| User / Conflict | 409 | INFO | No | No | Conflict details |
-| User / Rate Limit | 429 | INFO | No | No | Retry-After header |
-| AuthN Failure | 401 | WARN → Security Audit | No | Yes | Generic "unauthorized" |
-| AuthZ Denial | 403 | WARN → Security Audit | No | Yes | Generic "forbidden" |
-| System / Unexpected | 500 | ERROR | Yes (internal) | No | Opaque error + correlation ID |
-| System / Timeout | 503 | ERROR | No | No | Retry-After hint |
-| ThirdParty Failure | 502/503 | WARN/ERROR | No | No | Opaque dependency error |
-| Security / Suspicious | 400/403 | WARN → Security Audit | No | Yes | Generic — no detail leaked |
-
-### Structured Log Field Schema
-
-```json
-{
-  "timestamp": "2026-01-15T14:23:05.123Z",
-  "level": "ERROR",
-  "service": "orders-api",
-  "version": "3.2.1",
-  "environment": "production",
-  "correlationId": "req-abc123",
-  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
-  "spanId": "00f067aa0ba902b7",
-  "message": "Failed to persist order — database constraint violation",
-  "error": {
-    "type": "DuplicateOrderException",
-    "message": "Order with idempotency key 'key-xyz' already exists",
-    "stacktrace": "..."   // ← SYSTEM ERRORS ONLY; never in client response
-  },
-  "userId": "u:sha256:a3f8...",  // ← pseudonymized/hashed; never raw user ID in GDPR scope
-  "requestId": "req-abc123",
-  "http": {
-    "method": "POST",
-    "route": "/orders",
-    "status_code": 409
-  }
-  // NEVER INCLUDE: password, token, card_number, ssn, api_key, session_id, full_payload
-}
-```
-
-### W3C Trace Context Propagation
-
-```
-Inbound HTTP request:
-  traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
-               └─ version-traceId(32hex)-parentSpanId(16hex)-flags
-
-Rules:
-  1. Parse traceparent from inbound HTTP request headers
-  2. If absent, generate a new traceId (UUID v4) and spanId
-  3. Pass traceparent on ALL outbound HTTP calls (upstream + downstream)
-  4. Inject traceId into ALL log statements within the request scope
-  5. Inject correlationId header into queue messages (as message attribute/header)
-  6. Inject into async jobs as job metadata (not job payload)
-
-Never:
-  - Generate a new traceId mid-request
-  - Silently drop traceparent when calling internal services
-  - Log without traceId in distributed request paths
-```
+| Error taxonomy and client response | Exception mapping, status codes, error bodies, user-facing failures | Stable user/system/third-party/security classification with opaque RFC 7807 responses | Exception mapper, API response tests, sample failure responses | `error-code-design` | No client-visible error semantics changed |
+| Structured diagnostic logging | New logger fields, severity changes, stack traces, request context | Parseable schema, level discipline, support diagnosis, no alert noise | Log output fixture, logger configuration, severity assertions | `observability` | Copy-only message change preserving fields and level |
+| Correlation and async context | HTTP boundaries, queues, jobs, outbound calls, workflow fan-out | `traceparent` or `correlationId` propagation through every execution boundary | Middleware, job headers, outbound client tests, log assertions | `async-job-design` | Single-process path with existing verified context binding |
+| Audit and security logging | AuthN/AuthZ, permission changes, sensitive access, admin override | Append-only audit sink, actor/action/resource/outcome, no protected detail leakage | Audit event tests, sink configuration, retention or immutability evidence | `authentication-security` | Non-security diagnostic path |
+| Regression and release evidence | Refactor, config change, log pipeline change, prior-memory claim | Prove current behavior rather than trusting previous notes or generated summaries | Fresh validation commands, source paths, what evidence proves and does not prove | `quality-test-gate` | No behavior, schema, sink, or permission change |
 
 # Selection Rules
 
@@ -106,6 +57,14 @@ Select this capability when: error handling semantics, log field design, correla
 # Risk Escalation Rules
 
 Escalate when: any log statement may contain PII, PAN, password, token, or private key; an error response may leak internal exception messages or SQL; audit events are required for a regulated workflow (PCI, SOC 2, HIPAA, GDPR); a third-party failure causes silent data loss (no dead letter, no alert); a security denial event is not being written to the audit log; or the error taxonomy conflates user errors with system errors (causing alert storms on normal traffic).
+
+# Proactive Professional Triggers
+
+- **Signal:** A handler returns `str(error)`, raw exception messages, stack frames, SQL fragments, or provider responses to clients. **Hidden risk:** an implementation detail becomes an enumeration or exploit aid. **Required professional action:** separate internal diagnostics from RFC 7807 client output, map to stable error codes, and prove no internal detail leaves the boundary. **Route to:** `error-code-design`, `security-privacy-gate`. **Evidence required:** response fixture plus negative assertion for stack, SQL, class names, and provider internals.
+- **Signal:** A log statement includes raw payloads, request bodies, query strings, cookies, tokens, credentials, payment data, or unnecessary personal data. **Hidden risk:** secret or privacy exposure persists in replicated log sinks. **Required professional action:** replace field capture with allow-listed diagnostic fields and test forbidden-field absence at the log call site. **Route to:** `secret-configuration-security`, `security-privacy-gate`. **Evidence required:** logger call diff, captured log fixture, and explicit forbidden-field assertion.
+- **Signal:** An async job, queue consumer, scheduler, worker, or outbound dependency logs without `traceparent`, `traceId`, or `correlationId`. **Hidden risk:** incidents cannot be connected across execution boundaries. **Required professional action:** bind context before the first log statement and inject correlation into headers or metadata rather than domain payloads. **Route to:** `async-job-design`, `integration-change-builder`. **Evidence required:** middleware or consumer binding, message-header assertion, and cross-boundary log sample.
+- **Signal:** Expected validation, not-found, conflict, denial, or rate-limit paths are logged at `ERROR` or alert directly. **Hidden risk:** on-call loses trust in error signals and real incidents are buried. **Required professional action:** reclassify expected outcomes to `INFO` or `DEBUG`, reserve `WARN` and `ERROR` for unexpected or degraded conditions, and document alert eligibility. **Route to:** `observability`, `quality-test-gate`. **Evidence required:** level-policy table, log fixture, and alert rule or non-alert statement.
+- **Signal:** Memory, graph context, previous validation output, or generated summaries state that logging is safe after fields, adapters, middleware, or sink configuration changed. **Hidden risk:** stale evidence masks a privacy or diagnosis regression. **Required professional action:** re-open the current source path, compare against same-pattern implementations, rerun focused assertions, and disclose what remains unverified. **Route to:** `plan-execution-consistency`, `validation-broker`. **Evidence required:** inspected file list, command results, and residual-risk note.
 
 # Critical Details
 
@@ -142,12 +101,13 @@ Escalate when: any log statement may contain PII, PAN, password, token, or priva
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when the change touches client-visible errors, audit events, third-party failure handling, async/queue correlation, or sensitive-data logging risk. Do not load it for a pure log-message copy change that preserves fields, levels, and correlation behavior.
+Read `references/checklist.md` when the change touches client-visible errors, audit events, third-party failure handling, async/queue correlation, or sensitive-data logging risk. Read `references/benchmarks-and-patterns.md` when the decision needs benchmark mapping, taxonomy tables, structured schema, trace propagation, redaction boundaries, audit/diagnostic split, or graph-memory-execution coupling rules. Do not load references for a pure log-message copy change that preserves fields, levels, correlation behavior, sink configuration, and client output.
 
 # Output Contract
 
 Return a logging and error handling design with:
 
+- `mode_selected` (taxonomy, structured logging, correlation, audit/security, or regression/release evidence)
 - `error_taxonomy` (User / System / ThirdParty / Security; with HTTP status and log level for each)
 - `client_error_response` (RFC 7807 fields; stable codes; no internal detail)
 - `exception_mapping` (infrastructure exception → domain exception → HTTP response: table)
@@ -159,10 +119,16 @@ Return a logging and error handling design with:
 - `log_level_policy` (DEBUG/INFO/WARN/ERROR criteria; expected error paths at INFO; only unexpected at ERROR)
 - `alert_relevance` (which log events trigger alerts; error rate thresholds; dependency failure signals)
 - `test_strategy` (assert: correlation ID present in all log statements; no sensitive fields in log output; RFC 7807 shape for error responses; audit events written to audit sink on security-relevant paths)
+- `source_evidence` (current source paths, logger configuration, middleware/adapters, tests, and fixtures inspected)
+- `graph_memory_execution_coupling` (how prior memory, repository graph, and actual execution evidence agreed or conflicted)
+- `validation_freshness` (commands run now, timestamp or run context, and stale evidence explicitly rejected)
+- `tool_permission_boundary` (read-only versus state-mutating tools used, sandbox/approval context, and any secret-bearing output avoided)
+- `evidence_scope` (what the current log fixtures, response assertions, audit checks, and propagation tests prove, plus the sink/runtime behavior left outside scope)
+- `residual_risk` (privacy, diagnosis, audit, alerting, and untested sink behavior)
 
 # Evidence Contract
 
-Close logging/error design only when the output states the error taxonomy boundary, inspected log/error/audit paths, sensitive-field exclusion evidence, correlation propagation, client-visible behavior preservation, validation command or not-verified disclosure, what evidence proves, what it does not prove, residual privacy/diagnosis risk, and handoff to observability or security when needed.
+Close logging/error design only when the output states the error taxonomy boundary, inspected log/error/audit paths, same-pattern scan, sensitive-field exclusion evidence, correlation propagation, client-visible behavior preservation, audit sink boundary, validation command or not-verified disclosure, graph-memory-execution consistency, tool permission/sandbox record, what evidence proves, what it does not prove, residual privacy/diagnosis risk, and handoff to observability or security when needed.
 
 # Quality Gate
 
@@ -178,12 +144,23 @@ The design is complete only when:
 8. Async jobs bind correlation context before first log statement in job processing.
 9. Infrastructure exceptions mapped to domain exceptions at adapter boundary; no infrastructure imports in application or domain layers.
 10. Audit log sink is append-only; separate from application log rotation policy.
+11. Current source, tests, and configuration confirm any memory or graph claim about logging behavior.
+12. Validation evidence is fresh for this change and states its limits.
+13. Tool use avoids printing or storing raw secrets, environment dumps, full payloads, or private diagnostic output.
 
 # Used By
 
 - backend-change-builder
 - reliability-observability-gate
-- security-privacy-gate
+- logging-design-gate
+
+# Benchmark Coverage
+
+This capability covers industry anchors for safe log content, structured event schema, distributed trace correlation, client-safe HTTP error details, security audit evidence, and operational log search. Detailed mappings live in `references/benchmarks-and-patterns.md` so the router can keep `SKILL.md` small while still supporting deep review when selected.
+
+# Routing Coverage
+
+Route here for logging/error coupling across Skill + Memory + Graph + Execution when the user asks for professional diagnosis, privacy-safe logging, safe error responses, or evidence-backed closure. Route away to `observability` for metrics and alert design, `error-code-design` for central API error registries, `authentication-security` for authentication-specific audit semantics, and `secret-configuration-security` when the primary issue is secret source control or configuration handling.
 
 # Handoff
 

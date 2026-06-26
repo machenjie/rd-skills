@@ -9,7 +9,7 @@ changeforge_version: 0.1.0
 
 # Mission
 
-**Prevent premature lock-in on suboptimal design by requiring every significant implementation decision to pass a structured self-challenge before it is accepted.** This capability enforces three questions before any approach is finalized — *Why this way? Is this optimal? What is the better alternative?* — and then validates the answer across ten performance dimensions, four code-quality dimensions, and five system-property dimensions. It does not mandate a single "correct" answer; it mandates that the question is asked and that the chosen answer is justified with evidence, not assumed correct by default.
+Prevent premature lock-in on suboptimal design by requiring every significant implementation decision to pass a structured self-challenge before it is accepted. This capability enforces three questions before any approach is finalized: Why this way? Is this the simplest sufficient design? What is the strongest better alternative and why is it rejected? The answer must be backed by current evidence across algorithm complexity, resource use, maintainability, reversibility, graph/memory freshness, and validation trajectory.
 
 # When To Use
 
@@ -18,6 +18,17 @@ Use this capability when: a new algorithm, data structure, or processing strateg
 # Do Not Use When
 
 Do not use this capability for: trivial one-liner mechanical fixes with no design decision surface; pure cosmetic formatting or style changes; documentation edits; configuration values specified by an external requirement; or early throw-away prototypes explicitly scoped to prove feasibility only (must be re-evaluated before any prototype enters production code paths).
+
+# Boundary And Source Truth
+
+This capability owns decision challenge evidence, not implementation ownership for every specialist domain. It decides whether a proposed approach is justified enough to proceed, whether a simpler/reused/deleted approach should replace it, and which specialist gate must supply missing evidence. Source truth is the current code, current registry/config, representative benchmark/profile/load output, current repository graph slice, current project memory reconciliation, and validation that ran after the final material edit. Memory, generated reports, historical benchmarks, context packs, and prior summaries are selectors only until current source and validation confirm them.
+
+# Stage Fit
+
+- **Requirement / intake**: restate the decision question as a problem, not a proposed solution; name non-goals, constraints, and production-scale input assumptions before candidate generation.
+- **Architecture / design**: compare candidate boundaries, data structures, dependency choices, reversibility, and deletion/reuse options before topology or API shape is locked.
+- **Implementation / review**: challenge AI-generated or first-working code for over-engineering, algorithm downgrade, hidden I/O, allocation, concurrency, and cognitive complexity before approval.
+- **Testing / release**: verify benchmark/profile/load evidence, validation freshness, deferral thresholds, owner, rollback, and residual risk before the choice is treated as production-ready.
 
 # Non-Negotiable Rules
 
@@ -30,132 +41,55 @@ Do not use this capability for: trivial one-liner mechanical fixes with no desig
 - **All ten performance dimensions must be explicitly evaluated or declared N/A with a one-line rationale for every builder skill output**: Skipping a dimension is not an option. A dimension marked N/A without rationale is treated as skipped and the output is incomplete.
 - **Cognitive complexity is a first-class engineering constraint**: Code that requires 30 minutes to understand on first read will be misread under incident pressure. If an implementation is clever, it must be justified against a simpler alternative. Cognitive complexity ≤ 15 per function is the professional standard (SonarSource definition); functions above 25 must be decomposed.
 - **Reversibility must be stated explicitly**: Is this decision reversible without data migration, customer impact, or downtime? Irreversible decisions require explicit acknowledgment and a higher bar of justification evidence.
+- **Graph, memory, and execution evidence are never proof by themselves**: repository graph, project memory, prior validation, generated reports, and old benchmark notes can widen the review scope, but current source inspection and post-edit validation must confirm every behavior-critical claim.
 
 # Industry Benchmarks
 
-- **Knuth, "The Art of Computer Programming"**: Algorithm analysis foundations — time complexity, space complexity, amortized analysis, average-case vs. worst-case. The full Knuth quote: "We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil. Yet we should not pass up our opportunities in that critical 3%." The 3% hot path must be optimized; the 97% cold path must be readable.
-- **Brendan Gregg, "Systems Performance" (2nd ed., 2020)**: USE method (Utilization, Saturation, Errors) for every resource dimension; CPU flame graphs; off-CPU flame graphs (I/O wait, lock wait); bottleneck classification methodology.
-- **Google SRE Book — Chapters 20–22**: Cascading failure prevention; distinguish load-induced vs. code-induced bottlenecks; identify resource constraints before tuning. Amdahl's Law applied to service-level parallelism.
-- **DORA "Accelerate" (Forsgren et al.)**: Technical practices of elite teams: testability, deployability, loosely coupled architecture, trunk-based development. System properties of high-performing engineering organizations.
-- **Martin Fowler, "Refactoring" (2nd ed.)**: Code smells and cognitive complexity. "Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
-- **C. A. R. Hoare, 1980 Turing Award Lecture**: "There are two ways of constructing a software design: one way is to make it so simple that there are obviously no deficiencies, and the other way is to make it so complicated that there are no obvious deficiencies." Simplicity is a correctness property.
-- **Amdahl's Law**: Maximum speedup from parallelization = 1 / ((1 − p) + p/n), where p = parallel fraction, n = number of processors. If 20% of work is sequential, no amount of parallelization exceeds 5× speedup regardless of hardware.
-- **Little's Law**: L = λW. Average concurrency (L) = arrival rate (λ) × average service time (W). Directly predicts required connection pool size, thread pool size, and queue depth from first principles.
+Use [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when the main body is not enough. The reference carries the deeper benchmark anchors, self-challenge framework, ten-dimension matrix, data-locality notes, back-pressure patterns, fan-out tail-latency math, cache-stampede review, hot-key detection, pool sizing, GC/allocation checks, cognitive complexity thresholds, reversibility classes, testability, security-surface, and cost-awareness details.
 
-### Self-Challenge Decision Framework
+# Mode Matrix
 
-```
-Step 1 — State the problem precisely (not the solution)
-  Correct:  "We need to find all users inactive for 90 days from a 10M-row table."
-  Incorrect: "We need to loop over all users and filter on last_login."
-
-Step 2 — Generate at least 3 candidate approaches
-  Candidate A: [approach] — O(?) time, O(?) space — key tradeoff: [...]
-  Candidate B: [approach] — O(?) time, O(?) space — key tradeoff: [...]
-  Candidate C: [approach] — O(?) time, O(?) space — key tradeoff: [...]
-
-Step 3 — Eliminate with specific reasons (not "B is worse")
-  A chosen because: [concrete evidence — benchmark, calculation, or structural argument]
-  B rejected because: [specific cost — adds 40ms P99 latency, requires schema migration, etc.]
-  C rejected because: [specific cost — O(n²) at production data volume, etc.]
-
-Step 4 — Validate chosen approach against all 10 performance dimensions.
-
-Step 5 — Check system properties (maintainability, extensibility, robustness, reversibility, testability).
-
-Step 6 — Cognitive complexity check: can the next engineer understand this in < 10 minutes
-          without reading the commit history?
-```
-
-### Ten Performance Dimensions — Evaluation Checklist
-
-Every builder skill output must evaluate each dimension or explicitly declare it N/A with a one-line rationale:
-
-| # | Dimension | Key Questions | Common Failure Mode |
-|---|---|---|---|
-| 1 | **CPU** | What is the algorithmic time complexity (O notation)? Are there hot loops with unnecessary work? Is serialization/deserialization on the critical path? Are regexes precompiled? Is reflection or dynamic dispatch used in a hot path? | O(n²) algorithm on a user-supplied list; uncompiled regex evaluated per request; JSON re-serialized inside a tight loop |
-| 2 | **Memory** | What is the space complexity? Are large objects allocated per-request when they could be pooled? Is GC pressure acceptable (allocation rate per RPS in garbage-collected runtimes)? Are there potential memory leaks — event listeners not removed, timers not cleared, growing caches without eviction bounds? | Unbounded in-memory accumulation; per-request large allocation at 5k RPS triggers GC pause spikes; global cache grows without TTL or max-size |
-| 3 | **Network** | How many network round trips does this trigger per user action? Is the payload size bounded? Are connections reused (keep-alive, connection pooling)? Is there an N+1 HTTP fan-out or N+1 database query pattern? | N+1 HTTP calls in a loop; large unbounded response payload; synchronous external call on hot path with no timeout |
-| 4 | **Disk** | What is the read/write pattern (sequential vs. random)? Is fsync necessary on every write or can it be batched? Is write amplification acceptable for the storage engine (LSM tree WAL, PostgreSQL WAL, log flush)? Are log volumes bounded? | Synchronous fsync per record write; unbounded log verbosity; random I/O on large index without SSD |
-| 5 | **Locks / Contention** | What shared mutable state is accessed? Is lock scope minimized (lock held only while accessing shared state, not across I/O)? Is optimistic locking preferred over pessimistic for low-conflict cases? Is lock ordering consistent across code paths (deadlock prevention)? Is false sharing possible (two fields on the same CPU cache line accessed by different threads)? | Pessimistic lock held across a remote API call; inconsistent lock acquisition order in two code paths causes deadlock at high concurrency; false sharing in a concurrent counter struct |
-| 6 | **TPS / QPS** | What is the throughput ceiling of this design? Is it calculated (Little's Law: required pool ≥ target RPS × avg service time)? Does the design scale linearly with traffic? Where is the first bottleneck resource? | Connection pool sized at default (10) while target RPS requires 50; no throughput ceiling defined; sequential bottleneck in an otherwise parallel processing pipeline |
-| 7 | **Parallelism** | Can work be safely partitioned and executed in parallel? What is the maximum achievable speedup (Amdahl's Law: 1/(1−p))? Is the sequential fraction quantified? Is the parallel coordination overhead justified for the expected input sizes? | Parallelizing a job where 70% of work is sequential — maximum speedup is 3.3× regardless of thread count; parallel overhead exceeds benefit for small batches |
-| 8 | **Concurrency** | Are all shared state accesses thread-safe? Is a time-of-check-to-time-of-use (TOCTOU) race possible? Is a thundering herd or cache stampede risk addressed for cache-backed or connection-backed paths? Is there a goroutine / thread / coroutine leak? | Race condition on shared counter; thundering herd when cache item expires simultaneously for 500 concurrent users; connection leak when error path skips pool.release() |
-| 9 | **Response Latency** | Are P50/P95/P99 targets defined and validated at expected concurrency? Is tail latency amplification considered for fan-out (P99_aggregate worsens as N parallel calls increase)? Does the chosen approach meet the SLO under load, not just in development? | P99 target undefined; fan-out to 8 downstream services at P99=50ms each raises aggregate latency significantly; SLO only validated at P50 or on a single-threaded local test |
-| 10 | **Rendering Speed** | (Frontend only) Is main thread work bounded to < 50ms per task (Long Tasks API)? Are INP/LCP/CLS within Core Web Vitals budget? Are expensive re-renders memoized? Is layout thrashing (read-style then write-style in a loop) prevented? | Synchronous heavy computation on main thread during user interaction; unnecessary full subtree re-render cascade; forced synchronous layout from mixing DOM reads and writes |
-
-### Additional Professional-Level Engineering Considerations
-
-These considerations are frequently missed but regularly cause production incidents in mature systems:
-
-**Data Locality and CPU Cache Efficiency**
-- L1 cache hit latency ≈ 4 cycles; L2 ≈ 12 cycles; L3 ≈ 40 cycles; main memory ≈ 200 cycles. A cache-unfriendly access pattern (random pointer chasing through linked structures) can be 50× slower than a cache-friendly sequential scan even with the same asymptotic complexity.
-- Array-of-Structs (AoS) vs. Struct-of-Arrays (SoA): for code that iterates over all objects processing one field, SoA packs that field contiguously in memory (cache-friendly); AoS interleaves all fields (cache-unfriendly for single-field scans).
-- Hot data and cold data should be separated so the working set fits in L3 cache.
-
-**Back-Pressure and Graceful Degradation**
-- When upstream producers generate load faster than downstream consumers can process, three outcomes are possible: (a) unbounded queue → OOM; (b) no queue → immediate rejection; (c) bounded queue with back-pressure → graceful degradation (preferred). Design for (c) explicitly.
-- Return `503 Service Unavailable` with `Retry-After` rather than allowing the system to degrade silently into timeout storms.
-- Identify the concurrency level at which the system transitions from "slow but functional" to "non-functional." This threshold must be above expected peak load or load-shedding must activate before it.
-
-**Tail Latency Amplification in Fan-Out**
-- When a request fans out to N parallel dependencies, the probability of the aggregate response exceeding P99_single is approximately 1 − (1 − 0.01)^N. At N=10, ~10% of aggregate requests experience at least one tail dependency. At N=69, the median (P50) aggregate latency equals P99_single.
-- Mitigation: hedged requests (send a second request to a replica if the first is slow), reduced fan-out via caching or aggregation, or explicit tail latency SLO that accounts for the fan-out factor.
-
-**Thundering Herd and Cache Stampede**
-- When a popular cached item expires and hundreds of concurrent requests simultaneously miss the cache, all requests hit the backing store at once. Mitigations: probabilistic early expiration (XFetch / PER algorithm), mutex-on-refill (only one request rebuilds the cache; others wait), or background async refresh before expiry.
-- Service restart thundering herd: when a service restarts after a cold start, all cache misses arrive at the backing store simultaneously. Mitigation: staggered warm-up, request coalescing, read-through with single-flight pattern.
-
-**Hot Key / Hot Partition Problem**
-- In sharded or partitioned systems (consistent hash ring, Kafka partitions, Redis Cluster, DynamoDB), a key that receives disproportionate traffic becomes a hot spot that limits overall system throughput to the throughput of that single partition.
-- Detection: per-partition traffic metrics, p99 latency divergence across partitions.
-- Mitigation: key salting (append random suffix, fan-out reads), local replica caching, explicit hot-key detection and routing.
-
-**Connection Pool Sizing — Little's Law**
-- Required pool size ≥ (target RPS) × (average service time in seconds). Example: a database with 20ms average query time serving 500 RPS requires ≥ 500 × 0.02 = 10 connections at steady state. Add headroom for burst: multiply by 1.5–2×. Under-sized pools cause request queue buildup; over-sized pools exhaust the server's connection limit.
-- Validate pool size against production workload, not local test assumptions.
-
-**GC Pressure and Allocation Rate**
-- In garbage-collected runtimes (JVM, Go, Node.js, .NET), high per-request object allocation causes GC pause spikes that directly translate to P99 latency spikes visible only under load — invisible in developer testing.
-- Profile allocation rate per endpoint using JVM Flight Recorder, Go pprof heap, or Node.js `--heap-prof`. Reduce per-request allocation in hot paths: use object pooling, pre-allocated buffers, avoid string concatenation in loops (use builders / StringBuilder / bytes.Buffer).
-- Long-lived objects promoted to old generation (JVM tenured / Go non-escapable heap) increase full-GC frequency. The allocation site that fills the old gen is often surprising — measure it.
-
-**False Sharing in Concurrent Code**
-- Two fields accessed by different CPU cores but residing on the same 64-byte CPU cache line cause cache invalidation on every write to either field, effectively serializing access. Symptom: unexpectedly high contention on variables that are independently updated.
-- Mitigation: cache-line padding, separating hot per-thread state into distinct cache-line-aligned structures, or use of lock-free primitives that avoid the shared line.
-
-**Cognitive Complexity (Beyond Cyclomatic Complexity)**
-- Cyclomatic complexity counts decision branches. Cognitive complexity (SonarSource metric) adds a penalty for nesting depth, non-linear flow breaks (`break`, `continue`, `goto`, early return from deep nesting), and recursive calls. A function with cyclomatic complexity 10 in a flat structure is far easier to maintain than one with cyclomatic complexity 5 but triple-nested conditionals.
-- Professional standard: cognitive complexity ≤ 15 per function. Functions > 25 must be decomposed before handoff. Functions > 40 are an on-call incident risk, not a code review note.
-
-**Reversibility Classification**
-- **Reversible**: configuration changes, feature flags, additive schema changes — can be undone with a deploy or toggle within minutes.
-- **Conditionally reversible**: database migrations with backward-compatible changes — can be rolled back within the migration window before the old code is retired.
-- **Irreversible**: destructive schema changes (`DROP COLUMN`), cryptographic key rotation without old-key retention, event stream schema changes without upcasters, data deletion, published breaking API changes — require explicit sign-off, rollback simulation, and sunset planning.
-
-**Testability as a Design Property**
-- Code that requires global state, singletons, or hardcoded external dependencies cannot be unit-tested in isolation. If a function cannot be tested without a running database, message queue, or external HTTP service, the design has testability debt that accumulates interest with every copy-paste of the pattern.
-- Observable design: every significant decision should produce a measurable side effect (metric emitted, structured log written, state transitioned) that can be asserted in tests and diagnosed in production.
-
-**Security Surface Expansion**
-- Every new endpoint, parameter, file path, command argument, or code branch is a potential attack vector. Does the new code increase the set of inputs an attacker can influence? Are all new inputs validated at trust boundaries? Does the new code path require new authorization checks that the existing path does not have?
-- Every dependency added expands the supply chain attack surface. Evaluate transitive dependency depth and recent CVE history before accepting a new dependency, regardless of how small the dependency appears.
-
-**Operational Cost Awareness**
-- In cloud-hosted systems, algorithm choices and data access patterns have direct cost implications: N+1 queries translate to N× database read units (DynamoDB RCUs, Aurora ACUs, BigQuery bytes scanned); large object scans translate to GB transferred and billed; unnecessary recomputation translates to CPU billing per millisecond.
-- Cost-per-request and latency-per-request are both engineering constraints in production. Algorithms that are fast but wasteful are not free.
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities |
+| --- | --- | --- | --- | --- |
+| Algorithm / data structure decision | New scan, join, rank, dedupe, graph traversal, search, cache, index, or collection strategy. | Choose by input size, distribution, complexity, memory, and simplest sufficient structure. | Candidate set, O-time/space, N/M bounds, rejected alternatives, benchmark/profile need. | `algorithm-data-structure-selection`, `profiling` |
+| Architecture / abstraction decision | New service, adapter, plugin point, framework, dependency, or reusable abstraction. | Prevent speculative generality and irreversible boundary cost. | Current use cases, deleted/reused option, dependency direction, reversibility, owner. | `architecture-impact-reviewer`, `implementation-structure-design` |
+| Performance / resource decision | Hot path, batch, rendering path, worker, pool, queue, fan-out, or resource budget changes. | Bind design to latency, throughput, memory, cost, and saturation evidence. | Budget, workload shape, representative measurement or planned gate, residual unknowns. | `performance-budgeting`, `reliability-observability-gate` |
+| AI review / refactor decision | AI-generated code, automated refactor, or "cleaner" rewrite changes structure or complexity. | Detect plausibility bias, algorithm downgrade, over-abstraction, hidden I/O, and stale tests. | Before/after behavior, complexity delta, strongest simpler alternative, changed-path validation. | `ai-code-review-refactor`, `quality-test-gate` |
+| Evidence freshness decision | Graph, memory, old benchmark, prior summary, or validation pass influences approval. | Reconcile selector evidence with current source and command order. | Accepted/rejected memory, graph freshness, validation-after-final-edit status. | `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis` |
+| Skill / evaluation decision | Capability, skill, reference, routing, or benchmark changes claim better professionalism or efficiency. | Preserve depth while controlling reference budget and structural-only claims. | Baseline score/audit, treatment diff, selected/skipped references, validation limits. | `skill-efficacy-benchmark`, `skill-authoring-expert` |
 
 # Selection Rules
 
-Apply this capability when an implementation choice is non-trivial (more than one reasonable approach exists) and the stakes are non-trivial (production traffic, data integrity, security, or multi-year maintainability). The three-challenge rule applies to all builder skill outputs. The ten-dimension checklist applies to every change that touches a performance-sensitive path, resource allocation, or concurrency model. It is not optional.
+Apply this capability when an implementation choice is non-trivial and the stakes are non-trivial: production traffic, data integrity, security, cost, user experience, operational load, or multi-year maintainability. The three-challenge rule applies to builder and reviewer outputs. The ten-dimension checklist applies when the change touches performance-sensitive paths, resource allocation, external I/O, concurrency, rendering, or high-volume data. Use it as a precision gate: broad enough to catch hidden design debt, narrow enough to avoid turning every small edit into an architecture review.
+
+# Proactive Professional Triggers
+
+- **Signal:** the first working solution is accepted without candidates, scale assumptions, or rejected alternatives. **Hidden risk:** plausible code becomes production policy before the tradeoff is understood. **Required professional action:** require a decision question, at least two viable approaches, and a specific rejection reason. **Route to:** `solution-optimality-evaluation`, `ai-code-review-refactor`. **Evidence required:** candidate set, chosen rationale, rejected option, validation plan.
+- **Signal:** code scans, joins, sorts, groups, caches, ranks, paginates, fans out, or traverses data without expected input distribution. **Hidden risk:** tests pass on tiny fixtures while production hits O(n squared), OOM, hot-key, or tail-latency failure. **Required professional action:** establish N/M bounds, complexity, memory, and representative benchmark/profile need. **Route to:** `algorithm-data-structure-selection`, `performance-budgeting`. **Evidence required:** production-shape input, complexity report, budget, benchmark/profile command or not-run limit.
+- **Signal:** AI-generated code introduces abstractions, helpers, generic handlers, memoization, concurrency, or error wrappers. **Hidden risk:** AI optimizes for plausibility and symmetry, not the minimum safe structure. **Required professional action:** apply the three-challenge rule and deletion/reuse challenge before approving the generated shape. **Route to:** `ai-code-review-refactor`, `code-clarity-maintainability`. **Evidence required:** before/after complexity, simpler sufficient implementation, hallucinated API scan, tests.
+- **Signal:** a design is defended by "fast enough", "best practice", "standard pattern", "we can optimize later", or historical memory. **Hidden risk:** authority, reputation, or stale memory replaces current evidence. **Required professional action:** require current graph/source confirmation, measurement or budget, and a deferral threshold with owner. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `validation-broker`. **Evidence required:** source/read scope, accepted/rejected memory, validation freshness, owner.
+- **Signal:** a new dependency, service boundary, queue, cache, plugin layer, or data migration is introduced for one concrete use case. **Hidden risk:** reversibility and operational cost are hidden by local elegance. **Required professional action:** compare delete/reuse/local direct implementation, classify reversibility, and name rollback or exit cost. **Route to:** `architecture-impact-reviewer`, `technology-stack-selection`, `release-rollback`. **Evidence required:** current use cases, cheaper alternative, reversibility class, owner.
+- **Signal:** validation, benchmark output, generated report, or review approval predates a later implementation edit. **Hidden risk:** closure certifies a version that is no longer the shipped content. **Required professional action:** rerun mapped validators or mark evidence stale/partial. **Route to:** `execution-trajectory-analysis`, `quality-test-gate`. **Evidence required:** command order, changed files, covered paths, rerun result or residual risk.
+
+# Reference Loading Policy
+
+- **L1 default:** use this `SKILL.md` for trigger selection, three-challenge framing, output shape, and quality gates.
+- **L2 decision work:** load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when drafting the ten-dimension matrix, evaluating performance/resource tradeoffs, or checking advanced failure patterns.
+- **L3 specialist coupling:** pair only the selected specialist capabilities: `algorithm-data-structure-selection`, `performance-budgeting`, `profiling`, `language-performance-safety`, `concurrency-control`, `reliability-observability-gate`, `architecture-impact-reviewer`, `security-privacy-gate`, or `quality-test-gate`.
+- **L4 evidence coupling:** pair with `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when graph, memory, generated reports, old benchmarks, or validation order influence approval.
+- **Anti-bloat rule:** do not load every performance, language, database, reliability, or architecture reference. Select only references required to answer the current decision and state skipped high-cost references with a reason.
 
 # Risk Escalation Rules
 
+- Escalate to `algorithm-data-structure-selection` when the core decision is data shape, complexity class, lookup/join strategy, indexing, caching structure, traversal, or streaming/chunking.
 - Escalate to `profiling` when a performance dimension evaluation identifies an unknown bottleneck that cannot be assessed without measurement data from representative load.
 - Escalate to `performance-budgeting` when no latency, throughput, or resource budget exists for the component being designed, and one must be established before the evaluation can be completed.
+- Escalate to `language-performance-safety` when allocation, GC, event loop blocking, FFI/native boundary, runtime pool, lock behavior, or language-specific resource lifecycle decides the choice.
 - Escalate to `architecture-impact-reviewer` when the optimality evaluation reveals that the best approach requires a structural change to the system architecture (new boundary, new service, dependency direction change).
 - Escalate to `data-middleware-change-builder` when database query patterns, indexing strategies, lock contention, or storage engine behavior require expert evaluation.
 - Escalate to `reliability-observability-gate` when the evaluated change affects SLI/SLO-bound production paths.
+- Escalate to `security-privacy-gate` when the chosen approach expands input, output, dependency, command, file, prompt, data, authorization, or secret surface.
+- Escalate to `validation-broker` or `quality-test-gate` when the decision cannot be closed without a changed-path-to-validator map, representative benchmark, load/profile command, or stale-validation repair.
 - Escalate when cognitive complexity analysis reveals code that cannot be safely maintained — refactoring is required before handoff.
 
 # Critical Details
@@ -165,6 +99,8 @@ Apply this capability when an implementation choice is non-trivial (more than on
 - The ten performance dimensions are not independent. Optimizing for CPU may increase memory (memoization trades memory for CPU cycles). Optimizing for throughput may increase latency variance (batching reduces per-unit CPU at the cost of higher average latency). Explicitly document the tradeoff accepted.
 - Fan-out tail latency is the most consistently underestimated production problem. Engineers test a single downstream call, measure P99=50ms, and declare performance acceptable — without modeling that 10 parallel calls at P99=50ms each creates an aggregate tail latency problem affecting a significant percentage of all requests.
 - Deferred optimizations accumulate interest. Each "we'll fix it later" increases the cost of the fix as surrounding code grows, tests multiply, and the pattern is copied. Professional discipline: fix it now or document the threshold at which it must be fixed with a named owner.
+- The strongest rejected alternative must be specific enough that a reviewer can disagree with it. "Existing helper", "database join", "streaming iterator", "feature flag", or "delete the abstraction" is useful; "other approach" is not.
+- A benchmark that uses dev data, a single local run, or stale generated reports can identify a risk, but it cannot prove production readiness without scope and evidence limits.
 
 # Failure Modes
 
@@ -178,17 +114,35 @@ Apply this capability when an implementation choice is non-trivial (more than on
 - **Irreversible decision without acknowledgment**: A destructive schema migration was applied; a rollback was triggered for an unrelated reason; the dropped column data was permanently lost.
 - **Hot key undetected**: A new feature hashed all new users to the same Kafka partition; one partition's consumer was the bottleneck for the entire pipeline.
 - **False sharing in concurrent counter**: Two independent counters placed adjacently in a struct caused cache-line thrashing at 200 concurrent threads — performance degraded worse than a single-threaded baseline.
+- **Selector overclaim**: project memory, old graph output, or a prior benchmark is reported as proof even though source and validation changed later.
+- **Over-engineered abstraction accepted**: a generic plugin/factory/adapter layer is added for one use case; the future use case never arrives, but every maintainer pays the complexity cost.
 
 # Output Contract
 
 Return an optimality evaluation that includes:
+- **Mode selected**: algorithm/data structure, architecture/abstraction, performance/resource, AI review/refactor, evidence freshness, or skill/evaluation decision, with trigger signal.
+- **Decision boundary**: problem statement, non-goals, constraints, source-of-truth files, affected path, hot/cold path classification, and skipped boundaries with reasons.
+- **Graph / memory / execution coupling**: current graph evidence, accepted/rejected project memory, validation order, stale evidence, and direct-source fallback.
 - **Three-challenge answers**: (1) Why this approach — specific evidence. (2) Is it the simplest sufficient design — yes/no with rationale. (3) Strongest alternative rejected — name it, state the specific cost.
 - **Deletion/reuse answer**: delete, reuse, stdlib/native, existing dependency, local direct code, or new implementation decision, with the specific reason the simpler option is accepted or rejected.
+- **Candidate comparison**: at least two viable approaches, ideally three for material decisions, with complexity, memory, I/O, reversibility, and ownership tradeoffs.
 - **Ten-dimension assessment**: For each dimension: rating (✓ Satisfactory / ⚠ Risk / ✗ Unacceptable / N/A with one-line rationale), key evidence, and any required action.
 - **Additional considerations applied**: Which (if any) of the additional professional considerations apply and the finding.
+- **Budget and measurement status**: latency, throughput, memory, cost, query, rendering, queue, pool, or worker budget used; benchmark/profile/load evidence run or planned.
 - **Cognitive complexity assessment**: ≤ 15 per function (pass) / > 15 and ≤ 25 (note decomposition opportunity) / > 25 (decomposition required before handoff).
 - **Reversibility classification**: Reversible / Conditionally reversible / Irreversible — with one-line rationale.
 - **Optimization deferral log**: If any dimension is accepted as "not optimal but currently acceptable," document the threshold condition and named owner for revisit.
+- **Validation map and evidence limits**: validator, benchmark, profile, load, review, or build evidence tied to changed paths; what each proves and what remains unproven.
+- **Handoff**: next specialist gate, owner, rollback clue, residual risk, and the condition that would reopen the decision.
+
+# Evidence Contract
+
+Close an optimality evaluation only when these answers are concrete:
+- **Basis**: the selected mode, decision question, stakes, constraints, candidate set, and why optimality review is required.
+- **Current evidence**: source files, registry/config/docs, graph slice, memory signals, prior benchmark/report, validation output, and skipped boundaries inspected with freshness status.
+- **Challenge and tradeoff**: three-challenge answers, deletion/reuse decision, strongest rejected alternative, complexity/resource tradeoff, cognitive complexity, and reversibility.
+- **Validation and measurement**: commands, benchmarks, profiles, load checks, static analysis, tests, or explicit not-run limits, each tied to changed paths and run after final material edits when used for closure.
+- **Judgment and handoff**: accepted design, rejected design, deferral threshold and owner, evidence limits, rollback note, residual risk, and next gate.
 
 # Quality Gate
 
@@ -198,6 +152,21 @@ Return an optimality evaluation that includes:
 4. Cognitive complexity of the chosen implementation is ≤ 15 per function, or a decomposition plan is specified for functions exceeding 25.
 5. Reversibility classification is stated.
 6. Any accepted "deferred optimization" has a documented threshold condition and a named owner for revisit.
+7. Delete/reuse/standard-library/native-platform/local-direct implementation was considered before adding abstraction, dependency, cache, queue, service, plugin, or framework structure.
+8. Production-scale input, workload, or data distribution is stated, or the missing scale evidence blocks/defers approval.
+9. Graph, memory, generated reports, old benchmarks, and prior validation are reconciled with current source and command order before they influence approval.
+10. Validation evidence covers the final material diff, or stale/partial/not-run status is explicit with residual risk.
+11. Performance, reliability, security, data, architecture, and language specialist gates are selected or intentionally skipped with reasons.
+12. Reference loading is bounded to selected risks and does not dump unrelated performance or language material into context.
+13. Evidence limits prevent broad claims such as live production readiness, universal agent behavior improvement, or real-world performance gain without representative evidence.
+
+# Benchmark Coverage
+
+This capability covers algorithmic complexity, resource budgets, candidate comparison, AI-generated design review, cognitive complexity, reversibility, system properties, graph/memory/trajectory freshness, and validation-after-final-edit discipline. It does not by itself prove live production performance, user productivity, or long-term maintainability without representative runtime, review, and ownership evidence.
+
+# Routing Coverage
+
+Routes from `backend-change-builder`, `frontend-change-builder`, `data-api-contract-changer`, `data-middleware-change-builder`, `integration-change-builder`, `architecture-impact-reviewer`, `reliability-observability-gate`, `change-impact-analyzer`, `ai-code-review-refactor`, `quality-test-gate`, and `change-forge-router` should arrive here when implementation choices, alternatives, complexity, performance dimensions, simplicity, reversibility, or stale evidence decide whether a design is acceptable.
 
 # Used By
 

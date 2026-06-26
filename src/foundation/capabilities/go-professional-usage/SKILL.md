@@ -1,6 +1,6 @@
 ---
 name: go-professional-usage
-description: Use when writing or reviewing professional Go for services, CLIs, libraries, workers, or infrastructure tools, with focus on context propagation, errors, goroutine lifecycle, interfaces, table tests, race testing, package boundaries, and deployment simplicity.
+description: Use when Go services, CLIs, libraries, workers, infrastructure tools, goroutines, channels, context propagation, errors, interfaces, table tests, race detection, package boundaries, modules, HTTP/DB resources, or deployment artifacts need professional review.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "89"
@@ -13,7 +13,7 @@ Enforce professional Go usage for services, CLIs, libraries, workers, and infras
 
 # Pinned Tooling Baseline (Go)
 
-Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+For Go, treat pinned versions as minimum review baselines. If the Go toolchain, linter, scanner, module rule, or deployment flag is EOL, superseded, unsupported, or conflicts with the target project's platform policy, record the project rule and update this capability before using the pin for new work.
 
 - **Toolchain**: Go ≥ 1.22 (1.23 preferred). Go 1.21 acceptable only with documented reason. **Go 1.20 and below are unsupported by the Go team — rejected.**
 - **Module mode**: required; `GOPATH` mode is forbidden for new work.
@@ -28,7 +28,7 @@ Pinned versions are review baselines, not permanent recommendations. If a pinned
 
 # When To Use
 
-Use when Go code is added, reviewed, refactored, AI-generated, or tested. Use whenever a goroutine, channel, context, interface, error, or third-party module is introduced or changed.
+Use when Go code is added, reviewed, refactored, AI-generated, or tested. Trigger this capability when a goroutine, channel, context, interface, error, `go.mod`, HTTP server, DB client, worker, CLI, package boundary, or third-party module is introduced or changed. Route by the specific boundary and risk: cancellation, leak, race, error semantics, interface ownership, dependency, deploy artifact, or validation freshness.
 
 # Do Not Use When
 
@@ -36,13 +36,22 @@ Do not use to teach Go syntax. Do not use to force Go where the workload (CPU-he
 
 # Stage Fit
 
-Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+Use during Go implementation planning, coding, bug-fix, code-review, refactoring, testing, and release-readiness review. Per-stage focus:
 
 - **coding**: context propagation, error wrapping, defer/resource cleanup, goroutine lifecycle, small interfaces, package boundary.
 - **debugging-diagnosis**: race, goroutine leak, context cancellation, wrapped-error loss, deadlock.
 - **code-review**: premature interfaces, hidden shared state, ignored errors, context misuse.
 - **refactoring**: package cycle, exported API drift, table-driven test coverage.
 - **testing**: race detector, table tests, integration seam.
+
+# Mode Matrix
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Context and resource review | Handler/service/repository/client path, DB/HTTP/RPC call, body/rows/timer/ticker cleanup. | Preserve cancellation, deadlines, and cleanup across boundaries. | Context-flow map, cleanup owner, `noctx`/`bodyclose` or test output. | `language-idiom-enforcement`, `quality-test-gate` | Local helper-only review. |
+| Goroutine and channel review | `go func`, channel, worker pool, fan-out, callback, `errgroup`, timer loop. | Bound lifetime, cancellation, backpressure, and error propagation. | Owner/cancel map, race/stress command, goroutine leak check or not-run reason. | `concurrency-control`, `language-performance-safety` | Sequential-only proof. |
+| Error and API boundary review | `%w`, sentinel/type error, handler mapping, CLI exit, package export, public interface. | Keep caller-visible error behavior and package contracts stable. | Error chain examples, `errors.Is/As` test, public package boundary scan. | `failure-contract-design`, `code-review` | String-only error assertions. |
+| Dependency and module review | `go.mod`, `go.sum`, new module, generated client, version bump, `go mod tidy`. | Keep MVS, provenance, and vulnerability posture explicit. | `go mod why`, `govulncheck`, tidy diff, accepted-risk owner. | `package-dependency-management`, `security-privacy-gate` | Dependency by convenience. |
+| Build and deployment review | Binary flags, container image, service timeouts, graceful shutdown, pprof/metrics. | Keep artifact reproducible and runtime behavior observable. | Build command, timeout/shutdown evidence, pprof/metric or residual risk. | `reliability-observability-gate`, `validation-broker` | One local `go test` as release proof. |
 
 # Non-Negotiable Rules
 
@@ -68,7 +77,15 @@ Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage fo
 
 # Selection Rules
 
-Select when Go is present or proposed. Pair with `language-idiom-enforcement`, `language-testing-strategy`, `language-performance-safety`, `concurrency-control`, and `package-dependency-management`.
+Select when Go is present or proposed. Pair with `language-idiom-enforcement`, `language-testing-strategy`, `language-performance-safety`, `concurrency-control`, `package-dependency-management`, and `validation-broker` when commands or reports must be mapped to changed paths. Skip only for gofmt-only, comment-only, or generated-output refreshes with no Go behavior, public package, module, race, resource, or deployment change.
+
+# Proactive Professional Triggers
+- **Signal:** request-scoped work calls DB, HTTP, RPC, queue, filesystem, subprocess, or worker code without passing `context.Context`. **Hidden risk:** cancelled requests keep consuming resources and hide connection-pool exhaustion. **Required professional action:** map context flow and reject `context.TODO` or mid-request `context.Background`. **Route to:** `language-idiom-enforcement`, `quality-test-gate`. **Evidence required:** inspected call path, lint or test command, exit code, and skipped boundary disclosure.
+- **Signal:** a `go func`, channel, worker pool, timer loop, callback, or `errgroup` is added without owner, cancellation, bound, and error propagation. **Hidden risk:** goroutine leak, deadlock, unbounded fan-out, or lost error appears only under load. **Required professional action:** require lifecycle and backpressure proof before acceptance. **Route to:** `concurrency-control`, `language-performance-safety`. **Evidence required:** owner/cancel map, `go test -race` or stress output, pprof/leak evidence or not-run owner.
+- **Signal:** error wrapping, sentinel errors, handler mapping, or CLI exit behavior changes without caller-visible examples. **Hidden risk:** `errors.Is/As` branches silently stop working or clients receive unsafe retry semantics. **Required professional action:** preserve the error chain and test boundary mapping. **Route to:** `failure-contract-design`, `code-review`. **Evidence required:** `%w` path, negative tests, public mapping table, and residual risk.
+- **Signal:** interface, package export, internal package, generated mock, or shared helper is introduced before caller ownership is clear. **Hidden risk:** producer-owned mega-interface or shared utility pollution freezes implementation details. **Required professional action:** prove consumer-defined interface need and package placement. **Route to:** `implementation-structure-design`, `code-clarity-maintainability`. **Evidence required:** caller inventory, method count, rejected concrete-type alternative, test boundary.
+- **Signal:** `go.mod`, `go.sum`, module replacement, generated client, or dependency version changes without module graph and vulnerability evidence. **Hidden risk:** Go MVS pulls unsafe transitive code or a convenience dependency becomes permanent. **Required professional action:** review module graph, provenance, and cleanup path. **Route to:** `package-dependency-management`, `security-privacy-gate`. **Evidence required:** `go mod why`, `go mod tidy` diff, `govulncheck` report, accepted-risk owner.
+- **Signal:** repository graph, project memory, old incident note, or prior agent output claims a Go path is safe, unused, race-free, or already tested without current source confirmation. **Hidden risk:** stale memory misses generated clients, new call paths, or changed CI commands. **Required professional action:** confirm current files, tests, configs, generated artifacts, and validation freshness. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `agent-execution-discipline`. **Evidence required:** inspected paths, accepted/rejected memory, fresh command, remaining unknowns.
 
 # Risk Escalation Rules
 
@@ -77,6 +94,7 @@ Select when Go is present or proposed. Pair with `language-idiom-enforcement`, `
 - Escalate to `package-dependency-management` for module changes and `govulncheck` advisories.
 - Escalate to `language-performance-safety` for hot-path allocation, pprof analysis, GC pressure.
 - Escalate to `security-privacy-gate` for `gosec` findings, command/SQL injection, secrets handling.
+- Escalate to `agent-tool-permission-sandbox` when Go test, race, build, module, vuln-scan, generated-client, or artifact commands write outputs, fetch modules, or expose secret-bearing logs.
 
 # Critical Details
 
@@ -109,11 +127,13 @@ Select when Go is present or proposed. Pair with `language-idiom-enforcement`, `
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when Go changes touch goroutines, context propagation, shared state, DB/HTTP resources, module dependencies, public package APIs, race-detector evidence, or production service settings. Do not load it for a trivial gofmt-only edit or local test name change.
+Load [references/checklist.md](references/checklist.md) when Go changes touch goroutines, context propagation, shared state, DB/HTTP resources, module dependencies, public package APIs, race-detector evidence, or production service settings. Use [examples/example-output.md](examples/example-output.md) only when review shape is unclear. Do not load references for a trivial gofmt-only edit or local test name change.
 
 # Output Contract
 
 Return a **Go Usage Review** containing:
+- **Mode selected**: context/resource, goroutine/channel, error/API, dependency/module, or build/deployment, with trigger signal
+- **Boundaries inspected**: Go packages, exported APIs, handlers, workers, DB/HTTP clients, tests, configs, generated artifacts, module files, and skipped boundaries with reason
 - **Toolchain**: Go version, `go.mod` `go` directive, `go.sum` integrity
 - **Tooling pins**: golangci-lint version + enabled linters; govulncheck status; race-detector CI command
 - **Context flow**: every external call site receives and honors context; no `context.TODO` outside main/tests
@@ -127,7 +147,10 @@ Return a **Go Usage Review** containing:
 - **DB config**: connection pool sized per Little's Law; context on all queries; `defer Close()` on rows
 - **Logging**: `slog` structured; no secrets; correlation/trace IDs propagated
 - **Build & deploy**: reproducible flags; static binary; image size
-- **Accepted exceptions** with owner / scope / expiration
+- **Graph/memory/execution coupling**: repository graph and project-memory claims accepted, rejected, stale, or not verified; prior validation freshness after final edit
+- **Validation evidence**: literal command, exit code, validator/report/artifact path, and what the output proves or does not prove
+- **Tool permission boundary**: test/race/build/module/vuln-scan/generated-artifact command class, sandbox/approval state, write scope, and secret-output redaction rule
+- **Accepted Go deviations** with owner, scope, expiration, and cleanup trigger
 
 # Evidence Contract
 
@@ -138,10 +161,11 @@ A Go change is professionally complete only when the output includes:
 - **Error model**: wrapping with `%w`, sentinel/type errors when needed, and caller-visible behavior.
 - **Concurrency proof**: race-prone state, locks/channels/errgroup, and `go test -race` when applicable.
 - **Resource cleanup**: `defer Close`, connection/body handling, timer/ticker cleanup.
-- **Validation evidence**: `go test`, `go test -race`, lint/staticcheck, or not-verified disclosure.
+- **Validation evidence**: `go test`, `go test -race`, lint/staticcheck, `govulncheck`, build, benchmark, validator, or not-verified disclosure with command, exit code, output summary, and report/artifact path.
 - **What evidence proves**: the inspected Go runtime and idiom risks are covered.
 - **What evidence does not prove**: production traffic, all scheduler interleavings, external dependency behavior, or platform-specific runtime behavior.
-- **Residual risk**: untested runtime behavior, owner, and next gate.
+- **Graph and memory freshness**: current source, generated artifacts, module files, configs, and prior project-memory claims confirmed or rejected before closure.
+- **Go residual risk**: untested scheduler/runtime/platform/dependency path, owner, and next gate.
 
 # Quality Gate
 
@@ -155,6 +179,8 @@ A Go change is professionally complete only when the output includes:
 8. HTTP server has timeouts; DB pool sized; resources `defer Close()`'d.
 9. Tests are table-driven where applicable; `t.Parallel()` used where safe; coverage ≥ 80% line on critical packages.
 10. Logging structured via `slog`; secrets never logged.
+11. Validation report maps each changed Go path to command, exit code, covered risk, stale/not-run targets, and residual owner.
+12. Tool permission/sandbox record exists for test, race, build, module, vuln-scan, generated-client, or artifact-writing commands.
 
 # Used By
 
@@ -170,4 +196,4 @@ backend-change-builder, integration-change-builder, data-middleware-change-build
 
 # Completion Criteria
 
-Review is complete when: toolchain + linter + vuln-scan + race-detector are green; context propagation is end-to-end; every goroutine has a bounded lifetime and cancellation; errors are wrapped and chainable; interfaces are small and consumer-defined; HTTP / DB resources are timed-out and bounded; tests are table-driven and race-checked; and any accepted exception has owner, scope, and expiration.
+Review is complete when: toolchain + linter + vuln-scan + race-detector are green with commands and exit codes recorded; context propagation is end-to-end; every goroutine has a bounded lifetime and cancellation; errors are wrapped and chainable; interfaces are small and consumer-defined; graph/memory claims are current-source confirmed; HTTP / DB resources are timed-out and bounded; tests are table-driven and race-checked; and any accepted exception has owner, scope, and expiration.

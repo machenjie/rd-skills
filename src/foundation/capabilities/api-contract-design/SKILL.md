@@ -19,6 +19,10 @@ Use this capability when a change adds, removes, renames, versions, splits, merg
 
 Do not use this capability to expose internal functions, ORM entities, database tables, or domain aggregates directly without a stable contract boundary. Do not use it as a substitute for `dto-schema-design` (field-level validation), `error-code-design` (error taxonomy), `version-compatibility` (rollout across clients), or `authentication-authorization` (policy implementation).
 
+# Stage Fit
+
+Use during planning when a client-visible operation, method, endpoint, RPC, event callback, webhook, pagination model, idempotency behavior, error surface, auth requirement, or versioning path is introduced or changed. Use during implementation and review when controllers, specs, generated clients, SDKs, examples, docs, route handlers, or compatibility bridges must stay aligned. Use during testing and release when contract validation, consumer compatibility, generated artifact freshness, deprecation, security posture, or rollback behavior needs proof. Treat repository graph, project memory, generated docs, and prior validation as selectors only until current source/spec files, consumers, generated artifacts, and validation outcomes confirm or reject them.
+
 # Non-Negotiable Rules
 
 - Define request shape, response shape, status codes, error model, and auth/authorization requirements explicitly — defaults are not a contract.
@@ -28,6 +32,7 @@ Do not use this capability to expose internal functions, ORM entities, database 
 - HTTP APIs must be describable through OpenAPI ≥ 3.0 (or AsyncAPI for event APIs, gRPC `.proto` for gRPC, GraphQL SDL for GraphQL). Contract-first, not code-first reverse-derivation.
 - Use stable, language-agnostic identifiers (UUID/ULID/opaque cursor), never database row ids in public contracts unless the resource is the database row by design.
 - Return resource representations, not actions on internals; commands map to resources or RPC-style verbs explicitly chosen.
+- Current-source evidence is required: spec files, handlers/controllers, generated clients, docs/examples, known consumers, tests, project memory or ADR freshness, and validation status must be cited or explicitly marked unavailable.
 - Time values are RFC 3339 UTC with explicit offset; monetary values use ISO 4217 currency + minor-unit integer (never floats).
 - Rate-limit responses (`429`) and authentication failures (`401`/`403`) must distinguish "missing", "invalid", "expired", "insufficient scope", and "rate limited" — never collapse.
 - Webhooks/callbacks require signed payloads, replay protection, retry policy, and timeout contract.
@@ -36,47 +41,7 @@ Do not use this capability to expose internal functions, ORM entities, database 
 
 Anchor against: **OpenAPI 3.1 / JSON Schema 2020-12**, **AsyncAPI 2.6+** for event APIs, **gRPC + Protobuf 3** for low-latency internal RPC, **GraphQL** spec (October 2021) + Relay cursor connection spec, **RFC 9110/9111/9112** (HTTP semantics, caching, syntax), **RFC 7807 / 9457 Problem Details for HTTP APIs** (error model), **RFC 5988 / 8288 Web Linking** (HATEOAS where applicable), **RFC 7234** caching, **RFC 6585** additional status codes (`429`), **RFC 7231 §4.2** safe/idempotent methods, **RFC 6749 / 6750 OAuth 2.0**, **RFC 7519 JWT** (when chosen), **OWASP API Security Top 10 (2023)**, **Google AIPs (aip.dev)**, **Microsoft REST API Guidelines**, **Zalando RESTful API Guidelines**, **PayPal API Style Guide**, **Stripe API design** (resource modeling, idempotency-key header, expandable fields, pagination), **Consumer-Driven Contracts (Pact)**, **JSON:API** spec where applicable. For SLO/error budgets follow Google SRE Workbook.
 
-### API Style Selection Matrix
-
-| Style | Pick when | Avoid when | Pagination | Versioning idiom |
-| --- | --- | --- | --- | --- |
-| **REST + JSON over HTTP** | Public, partner, mobile, browser-facing; CRUD-shaped resources; cacheable reads | High-frequency RPC inside one trust zone; strict schema evolution | Cursor (preferred) or page/limit | URL prefix `/v1/` or `Accept: application/vnd.x+json;v=1` |
-| **gRPC** | Internal east-west, low-latency, polyglot services, streaming | Browser clients without proxy; debuggability matters more than throughput | Cursor in request message | Package versioning `pkg.v1`, never break wire format |
-| **GraphQL** | Aggregated read-heavy clients, mobile bandwidth-sensitive, many small resources | Side-effecting batch operations; cache-by-URL needs; n+1 cost is uncontrolled | Relay connections (`first`/`after`) | Field-level deprecation `@deprecated`; no version bumps |
-| **AsyncAPI / events** | Producer/consumer decoupling, fan-out, audit, eventual consistency | Synchronous user-blocking flows where consistency must be immediate | Offset/sequence per partition | Schema registry + compatibility mode (BACKWARD/FORWARD) |
-| **Webhooks** | Notify external systems of events you own | When you need a response from the receiver synchronously | N/A (event-per-call) | Versioned event type + schema |
-| **Long-running operations** | Work > a request timeout budget | Sub-second operations | Operation resource + polling or callback | `operations/{id}` resource per Google AIP-151 |
-
-### Idempotency & Method Semantics
-
-| Method | Safe | Idempotent | Body | Cacheable | Notes |
-| --- | --- | --- | --- | --- | --- |
-| GET | ✓ | ✓ | no | ✓ | Never carry side effects |
-| HEAD | ✓ | ✓ | no | ✓ | Identical to GET headers |
-| OPTIONS | ✓ | ✓ | no | conditionally | CORS preflight |
-| PUT | ✗ | ✓ | yes | no | Full replacement; must be idempotent by definition |
-| DELETE | ✗ | ✓ | conditionally | no | Repeating must return `204`/`404` deterministically |
-| POST | ✗ | ✗ by default | yes | conditionally | Require `Idempotency-Key` header for create/retryable |
-| PATCH | ✗ | ✗ by default | yes | no | Use JSON Patch RFC 6902 or JSON Merge Patch RFC 7396 — pick one and declare it |
-
-### Status Code Discipline (must-knows, not exhaustive)
-
-| Code | Meaning | Common misuse |
-| --- | --- | --- |
-| 200 | Success with body | Used for created resources (should be 201) |
-| 201 | Created — include `Location` header and body | Returned without `Location` |
-| 202 | Accepted, async — include polling URL | Used for sync success |
-| 204 | Success, no body | Returned with a body (illegal per RFC 9110) |
-| 400 | Client malformed | Used for business-rule failures (should be 422) |
-| 401 | Not authenticated | Conflated with 403 |
-| 403 | Authenticated, not authorized | Returned to hide existence (use 404 instead per policy) |
-| 404 | Not found | Returned for forbidden, leaking ambiguity |
-| 409 | State conflict | Used for any validation failure |
-| 410 | Gone — permanently removed | Forgotten when deprecating endpoints |
-| 422 | Semantic validation failure | Used for transport-level parse errors (should be 400) |
-| 428 | Precondition required (e.g., `If-Match`) | Skipped when optimistic concurrency is needed |
-| 429 | Rate limited — include `Retry-After` | Returned without `Retry-After` |
-| 5xx | Server fault | Used for client errors |
+Keep the default body focused on contract decisions. For detailed style, method, status-code, and versioning matrices, load the API style and semantics deep reference when style choice, retry semantics, status-code discipline, or compatibility class is part of the work.
 
 # Selection Rules
 
@@ -90,9 +55,26 @@ Select this capability when **client-visible API behavior** is the primary decis
 - Prefer `idempotency-retry-design` when duplicate side effects are the headline risk.
 - Use **with** `frontend-api-integration` to ensure the contract is consumable, not just specifiable.
 
+# Proactive Professional Triggers
+
+- **Signal:** An existing endpoint, method, path, status code, error shape, auth requirement, pagination behavior, idempotency rule, filter, sort, or response semantics changes. **Hidden risk:** deployed clients, generated SDKs, caches, retries, and observability depend on the old behavior. **Required professional action:** classify compatibility, identify consumers, and choose version/bridge/deprecation or prove additive safety. **Route to:** `consumer-impact-analysis`, `version-compatibility`, `contract-testing`. **Evidence required:** old/new contract diff, consumer inventory, generated-client impact, contract/validator result.
+- **Signal:** A request/response payload field, enum, null/default rule, validation constraint, example, or generated model changes. **Hidden risk:** field-level schema drift is hidden inside operation design. **Required professional action:** hand field semantics to DTO/schema design and map generated artifacts. **Route to:** `dto-schema-design`, `input-validation`, `quality-test-gate`. **Evidence required:** schema diff, examples, validation behavior, generated-client freshness.
+- **Signal:** Error behavior uses raw strings, `200` with an error body, collapsed 401/403/404 posture, retry ambiguity, or inconsistent RFC 7807/9457 problem detail. **Hidden risk:** clients branch incorrectly, sensitive details leak, and retry behavior becomes unsafe. **Required professional action:** define stable error taxonomy, auth posture, retryability, and negative contract tests. **Route to:** `error-code-design`, `security-privacy-gate`, `failure-contract-design`. **Evidence required:** error matrix, denied-path policy, negative examples, contract proof.
+- **Signal:** A write, create, webhook, callback, async operation, retryable POST/PATCH, or queue-facing API lacks idempotency and replay semantics. **Hidden risk:** duplicate side effects or lost work under retry and partial failure. **Required professional action:** define idempotency key scope, retention, replay, conflict, timeout, retry, and DLQ/callback behavior. **Route to:** `idempotency-retry-design`, `message-queue-design`, `integration-change-builder`. **Evidence required:** key scope, retention window, replay/conflict examples, duplicate-delivery validation.
+- **Signal:** Repository graph, project memory, generated docs, prior context, or old validation claims the API contract or consumer list is current. **Hidden risk:** stale generated specs, hidden consumers, or validation predating edits become false completion evidence. **Required professional action:** reconcile against current source/specs, consumers, generated artifacts, and execution order. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected claims, freshness limit, rerun or not-verified status.
+- **Signal:** Contract is public, partner/mobile-facing, permission-sensitive, PII/financial/regulated, high-volume, or changes auth scopes. **Hidden risk:** compatibility, privacy, abuse, traffic, and rollback obligations exceed local API shape. **Required professional action:** escalate security, release, reliability, and documentation gates with explicit skipped-surface rationale. **Route to:** `security-privacy-gate`, `delivery-release-gate`, `reliability-observability-gate`, `change-documentation-gate`. **Evidence required:** data classification, auth scope matrix, rollout/rollback plan, SLO/rate-limit impact.
+
 # Risk Escalation Rules
 
 Escalate when the API is: public, partner-facing, mobile-client-facing (long client upgrade tail), high-volume (> 100 RPS sustained), payment / money-movement, permission-sensitive, PII-bearing, regulated (PCI/HIPAA/PSD2/GDPR), incompatible with deployed clients, or when a deprecation window shorter than 6 months is proposed for an external API. Escalate to architecture for cross-service contracts, to security for auth/scope changes, to product for breaking changes affecting paying customers, to SRE when the contract change shifts traffic patterns (e.g., chatty → batch).
+
+# Reference Loading Policy
+
+Load [references/api-style-and-semantics.md](references/api-style-and-semantics.md) only for L3+ API design, public/partner/mobile contracts, ambiguous REST/gRPC/GraphQL/event choices, retry/idempotency/status-code disputes, long-running operations, or versioning/deprecation decisions.
+
+Source/dev-only authoring path: `references/api-style-and-semantics.md`; compiled runtime profiles place the same deep reference under the selected capability reference bundle.
+
+Use [references/checklist.md](references/checklist.md) for compact review passes. Use [examples/example-output.md](examples/example-output.md) only when the final output shape is unclear. Do not load deep references for L1/L2 local contract edits when the inline output contract already determines request, response, error, auth, pagination, idempotency, and compatibility expectations.
 
 # Critical Details
 
@@ -152,6 +134,10 @@ Is the change additive-optional (new optional field, new endpoint)?
 
 Return an API contract specification containing, for each operation:
 
+- `mode_selected` (new operation, existing contract evolution, compatibility repair, error/auth repair, idempotency/retry contract, async/webhook contract, or generated-spec alignment)
+- `boundaries_inspected` (spec files, handlers/controllers, DTOs, error catalogs, auth policy, generated clients, SDKs, docs/examples, consumers, tests, telemetry, and skipped surfaces with reason)
+- `source_evidence` (current source/spec/generated artifacts that prove operation behavior, consumers, compatibility, and validation freshness)
+- `graph_memory_trajectory_judgment` (accepted, rejected, stale, partial, or not verified claims from repository graph, project memory, ADRs, generated docs, prior summaries, or validation order)
 - `operation_id` (stable, unique)
 - `method`, `path` (or RPC service.method)
 - `summary`, `description`, `tags`
@@ -170,6 +156,10 @@ Return an API contract specification containing, for each operation:
 - `contract_tests`: Pact/OpenAPI-Examples/Schemathesis test ids that prove the contract
 - `observability`: emitted metrics (latency, error rate by code), trace span name, log correlation fields
 - `security_notes`: input validation rules, sensitive-field redaction in logs, scope-vs-data checks
+- `consumer_inventory`: known clients, generated SDKs, mobile/partner/public clients, internal services, dashboards/jobs, and unknown-consumer risk
+- `changed_contract_to_validation_map`: each changed method/path/status/error/schema/auth/idempotency/pagination/version/generated artifact/consumer class mapped to a validator, contract test, generated-client check, rollout gate, or residual risk
+- `reuse_and_placement_rationale`: existing spec, route, controller, DTO, error catalog, generated source, or versioning path reused or rejected; no internal model exposure
+- `evidence_limits`: unknown consumers, stale generated artifacts, telemetry not queried, untested SDK languages, unproven rollback, security paths not inspected, and residual risk owner
 
 Deliverable artifact: an OpenAPI 3.1 / AsyncAPI / `.proto` / GraphQL SDL document **plus** a human-readable change summary classifying each operation as new / additive / breaking / removed.
 
@@ -183,6 +173,21 @@ The contract passes only when:
 4. Every breaking change has an explicit migration path, a deprecation window, and a named owner.
 5. Contract tests (consumer-driven where there is a known consumer; provider tests otherwise) exist and run in CI.
 6. Auth scopes match `authentication-authorization` outputs; error codes match `error-code-design`; DTOs match `dto-schema-design`.
+7. Current source/spec, generated clients, docs/examples, consumers, tests, graph/memory/trajectory claims, and validation freshness are cited or explicitly marked unavailable.
+8. Each changed client-visible behavior maps to contract validation, generated-client verification, consumer compatibility evidence, rollout gate, or accepted residual risk.
+9. Public/partner/mobile, sensitive, high-volume, async/webhook, or auth-scope changes include security, reliability, release, and documentation gate outcomes or skipped-surface rationale.
+
+# Evidence Contract
+
+Close an API contract design only when these answers are concrete: selected mode, standards/style chosen, current source/spec/generated artifacts inspected, consumers and unknown-consumer risk, old/new compatibility class, auth/error/DTO/idempotency/pagination/version boundaries, graph-memory-trajectory freshness judgment, changed-contract-to-validation map, reuse and placement rationale, behavior preservation for existing clients, evidence limits, residual risk owner, and validation results or explicit not-verified disclosure. A generic "OpenAPI updated" or "no callers found" claim is not sufficient evidence.
+
+# Benchmark Coverage
+
+This capability covers operation-level API behavior, OpenAPI/AsyncAPI/gRPC/GraphQL contract shape, HTTP semantics, idempotency and retry safety, pagination/filtering/sorting, auth and scope declaration, RFC 7807/9457 errors, compatibility/versioning, generated-spec alignment, consumer impact, graph-memory-trajectory freshness, and contract-to-validation mapping while keeping deep style matrices in references.
+
+# Routing Coverage
+
+Routes from `data-api-contract-changer`, `integration-change-builder`, `backend-change-builder`, `frontend-api-integration`, `dto-schema-design`, `error-code-design`, `version-compatibility`, `consumer-impact-analysis`, `contract-testing`, `idempotency-retry-design`, `security-privacy-gate`, and `reliability-observability-gate` should arrive here when operation-level client-visible behavior is primary. Route away when field schema, error taxonomy, stored data model, release approval, implementation wiring, or executable contract testing is primary.
 
 # Used By
 

@@ -19,6 +19,10 @@ Use this capability when: preparing a task for an AI coding agent (initial hando
 
 Do not use this capability to dump an entire repository or codebase into context — **select and cite**, never broadcast. Do not use it to paraphrase source files when direct file references (path + line range) would be more accurate. Do not use it to preserve obsolete assumptions that contradict current source. Do not embed secrets, credentials, tokens, API keys, or personally identifying production data in context packages. Do not use it as a substitute for running the code, tests, or static analysis that prove behavior.
 
+# Stage Fit
+
+Use during planning, review handoff, repair handoff, validation freshness review, compaction recovery, and cross-agent coordination when the next agent needs bounded source evidence and execution constraints. Re-enter after source, contract, schema, generated artifact, registry, report, validation output, or route changes that can make a prior package stale. Skip when a small direct-source read already answers the question and no handoff, planning, or validation claim depends on packaged context.
+
 # Non-Negotiable Rules
 
 - **Source-grounded, not paraphrased.** Every factual claim in the context package must cite a specific file path, line range, ADR number, specification section, or test name. "The service uses JWT" is only acceptable if followed by `(src/auth/middleware.ts:12–28)`. Uncited claims are inferences, not facts; mark them as such.
@@ -36,7 +40,17 @@ Do not use this capability to dump an entire repository or codebase into context
 
 # Industry Benchmarks
 
-Anchor context packaging on minimal sufficient context, source-grounded facts, freshness markers, explicit exclusions, and verifiable completion criteria. Load [references/context-package-checklist.md](references/context-package-checklist.md) only when preparing large multi-file handoff context, cross-agent review packets, or L4/L5 change packages.
+Anchor context packaging on minimal sufficient context, source-grounded facts, freshness markers, explicit exclusions, and verifiable completion criteria. Use [references/checklist.md](references/checklist.md) as the quick checklist; load [references/context-package-checklist.md](references/context-package-checklist.md) only when preparing large multi-file handoff context, cross-agent review packets, or L4/L5 change packages.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+| --- | --- | --- | --- | --- | --- |
+| Initial coding handoff | New bounded implementation, bug-fix, or refactoring task. | Give the next agent enough current source truth to plan and edit. | Goal, non-goals, inspected files, contracts, owners, affected tests, validation commands. | `repository-context-map`, `acceptance-standard-definition` | Skip project-wide background and unrelated modules. |
+| Stale context refresh | Requirements, schema, report, generated artifact, branch, or validation output changed after prior context. | Replace stale claims with current evidence before planning or closure. | Changed sources, freshness comparison, rejected old facts, direct-source reread, residual risk. | `project-memory-governance`, `execution-trajectory-analysis` | Skip claims that cannot be refreshed or downgrade them to assumptions. |
+| Graph-built package | RepositoryGraph, TaskContextPack, caller/test graph, or generated-artifact graph is available. | Use graph evidence as a selector without copying the graph. | Selected nodes, omitted nodes, graph freshness, source-of-truth decision, validation candidates. | `repository-graph-analysis`, `validation-broker` | Skip whole-repository graph dumps. |
+| Memory-informed package | Repeat failure, fragile file, stale context, or prior review memory affects scope. | Let memory widen inspection or validation without becoming source fact. | Memory signal, accepted/rejected/stale verdict, current-source confirmation, privacy boundary. | `project-memory-governance`, `security-privacy-gate` | Skip raw prompts, full logs, secrets, and personal archives. |
+| Review or compaction handoff | Context-window overflow, session transfer, repair after review, or parallel-agent boundary. | Preserve decisions, constraints, and verification state without hidden assumptions. | Decision ledger, changed files, validation freshness, remaining open questions, next gate. | `ai-code-review-refactor`, `quality-test-gate` | Skip obsolete reasoning that is not tied to current evidence. |
 
 # Selection Rules
 
@@ -54,6 +68,14 @@ Select this capability when **task context transfer to an AI coding agent** is p
 # Risk Escalation Rules
 
 Escalate when the context package: includes security-sensitive details (auth flows, privilege escalation paths, injection surfaces) that require a threat model review before implementation; contains contradictory requirements from different owners (contract ambiguity → implementation risk); is based on stale architecture that was superseded without the agent's knowledge; includes unverified generated claims from a prior agent that are being used as facts; references contracts that are in active draft (implementation against an unstable contract); covers a scope large enough that agent failure could cause data loss, security regression, or production incident; or cannot be produced without resolving an open question that blocks all sensible implementations.
+
+# Proactive Professional Triggers
+
+- **Signal:** A handoff names files or decisions but omits searched paths, files read, source-of-truth status, or owners. **Hidden risk:** the next agent treats prompt memory as repository evidence. **Required professional action:** rebuild a bounded context package from current source and mark omitted areas. **Route to:** `repository-context-map`, `repository-graph-analysis`. **Evidence required:** inspected paths, searches run, accepted/rejected claims, owner or unknown-owner note.
+- **Signal:** A prior summary, graph, report, validation pass, or compaction note is reused after later edits. **Hidden risk:** stale context drives planning, review, or completion. **Required professional action:** compare freshness, downgrade stale claims, and rerun or map validators after the final material edit. **Route to:** `execution-trajectory-analysis`, `validation-broker`. **Evidence required:** event order, changed paths, validation command, exit code or not-run status, residual risk.
+- **Signal:** Project memory says a file is fragile, a path failed before, or context is stale. **Hidden risk:** memory either overrules source truth or is ignored when it should widen validation. **Required professional action:** classify memory as experience input, confirm or reject it against current source, and map any accepted signal to tests or review. **Route to:** `project-memory-governance`, `quality-test-gate`. **Evidence required:** memory signal, current-source check, accepted/rejected/stale verdict, affected test or review gate.
+- **Signal:** A package includes raw repository graph, full command output, environment values, production examples, or broad private data. **Hidden risk:** context bloat and sensitive data leak into logs, memory, or downstream agents. **Required professional action:** redact, summarize as bounded facts, and keep graph output as selected nodes plus omissions. **Route to:** `security-privacy-gate`, `agent-tool-permission-sandbox`. **Evidence required:** retained fields, excluded sensitive fields, graph slice, telemetry boundary.
+- **Signal:** Parallel agents, generated clients, contracts, or shared boundaries are involved but no conflict protocol is stated. **Hidden risk:** agents make incompatible edits or regenerate hand-written code. **Required professional action:** package producer/consumer ownership, contract version, permitted change zones, and merge/conflict protocol. **Route to:** `task-dag-decomposition`, `code-review`. **Evidence required:** boundary contract, owner, permitted files, do-not-touch zones, next handoff gate.
 
 # Critical Details
 
@@ -88,11 +110,20 @@ A context package is both a **knowledge transfer artifact and a commitment about
 - Context package for AI agent reused 3 sprints later without refreshing; freshness dates not checked; stale.
 - Completion criterion references a test file that was renamed; agent cannot verify completion; declares done anyway.
 
+# Reference Loading Policy
+
+- **L1 quick package:** Use this `SKILL.md` plus [references/checklist.md](references/checklist.md) for ordinary single-task handoff, compaction recovery, or review transfer.
+- **L2 deep package:** Load [references/context-package-checklist.md](references/context-package-checklist.md) for large multi-file packages, cross-agent packets, high-risk boundary work, or L4/L5 changes.
+- **L3 coupling:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `agent-tool-permission-sandbox` when graph freshness, memory projection, validation order, or tool-output sensitivity affects package trust.
+- **Anti-bloat rule:** Do not load unrelated references, copy whole graphs, include personal corpora, or package user-specific archives; cite only task-relevant sources, omissions, validators, and residual risk.
+
 # Output Contract
 
 Return a context package with:
 
+- `mode_selected` (initial coding handoff, stale context refresh, graph-built package, memory-informed package, or review/compaction handoff)
 - `task_goal` (one sentence; objective; citable against requirement)
+- `stage_and_handoff` (current stage, receiving owner/skill, next gate, and what the package enables or blocks)
 - `repository_graph_evidence` (graph path or artifact id, repo hash, indexed commit or fallback mtime, indexed_at, and stale/re-index status)
 - `source_evidence` (per item: source type, path/url, cited section/line, date/commit, fact_class: FACT/INFERENCE/ASSUMPTION)
 - `relevant_files` (per file: path, purpose, permitted changes: read-only / modify / create)
@@ -106,10 +137,21 @@ Return a context package with:
 - `quality_gates` (per gate: objective check, pass criterion, verification method)
 - `freshness_markers` (per major element: commit SHA, date, source snapshot)
 - `memory_experience_inputs` (optional repeat-failure, fragile-file, or stale-context signals, clearly labeled as non-source facts)
+- `graph_memory_execution_coupling` (graph, memory, prior summary, and trajectory claims accepted, rejected, stale, partial, or not verified)
+- `validation_freshness` (commands, tests, validators, reports, artifacts, exit code or not-run status, covered paths, and whether each ran after final material edits)
+- `tool_permission_boundary` (read/write command classes, sandbox and approval status, sensitive output boundary, and excluded raw logs or secrets)
 - `drift_triggers` (specific events that invalidate this package)
 - `excluded_context` (what was deliberately omitted + reason)
+- `what_evidence_proves` and `what_evidence_does_not_prove`
+- `reuse_and_placement_rationale` (why included files, contracts, and references are sufficient; why excluded locations are out of scope)
+- `behavior_preservation` (unchanged behaviors, contracts, tests, and do-not-regress boundaries)
+- `residual_risk` (unknown owners, stale or low-confidence evidence, missing validators, and next professional gate)
 - `owner` (task owner; contract owners; boundary owners)
 - `package_version` and `created_at`
+
+# Evidence Contract
+
+Close a context package only when these answers are concrete: **boundaries inspected**; direct source, graph, memory, and trajectory claims accepted or rejected; **validation evidence** including command, validator, test, report, artifact, and exit code or not-run status; **what evidence proves** and **what evidence does not prove**; reuse / placement rationale for included and excluded files; behavior preservation and do-not-regress boundaries; residual risk; handoff owner; and next gate.
 
 # Quality Gate
 
@@ -129,6 +171,18 @@ The context package passes only when:
 12. Generated graph/context-pack facts are separated from agent inferences, assumptions, and open questions.
 13. RepositoryGraph content is pruned by task relevance and graph distance; it is never copied as an all-files dump.
 14. Memory summaries are labeled as experience inputs and never used as source facts without current-source confirmation.
+15. Validation evidence names command/test/validator/report/artifact results, exit code or not-run status, covered paths, and whether proof is current after final material edits.
+16. Graph, memory, prior-summary, and execution-trajectory claims are reconciled before they influence package trust, validation depth, or closure.
+17. Tool output boundaries exclude raw prompts, secrets, environment values, credentials, personal data, full command output, personal archives, and private mapping artifacts.
+18. Residual risk and next professional gate are explicit when evidence is stale, partial, unsupported, or outside the inspected boundary.
+
+# Benchmark Coverage
+
+This capability covers minimal-context AI coding handoff, source-grounded fact classification, graph-selected context packs, memory-as-experience governance, validation freshness, tool-output redaction, contract citation, non-goal enforcement, and anti-bloat exclusion discipline.
+
+# Routing Coverage
+
+Route here when task context must be transferred, compacted, refreshed, de-bloated, graph-selected, memory-informed, or made reviewable before implementation or handoff. Pair with `repository-context-map` for inspected-source mapping, `repository-graph-analysis` for graph slices, `project-memory-governance` for memory signals, `execution-trajectory-analysis` for validation order, `agent-tool-permission-sandbox` for tool-output boundaries, and `quality-test-gate` for proof mapping.
 
 # Used By
 

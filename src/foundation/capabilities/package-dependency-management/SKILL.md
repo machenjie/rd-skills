@@ -19,6 +19,13 @@ Use when adding, removing, upgrading, downgrading, vendoring, pinning, auditing,
 
 Do not use to approve packages "for convenience" when the standard library, an existing approved dependency, or 20-50 lines of local code would solve the problem with lower risk. Do not use for runtime selection (use `language-runtime-selection`).
 
+# Stage Fit
+
+- **Discovery / intake** - state the need, ecosystem, package manager, current dependency graph, alternatives, and affected runtime/deploy targets before package selection.
+- **Implementation / review** - inspect lockfile diff, transitive graph, install scripts, license, vulnerability status, generated outputs, and compatibility tests before merge.
+- **Release / operations** - verify SBOM, provenance, advisory SLA, rollout/rollback impact, and exception ownership before production exposure.
+- **Maintenance / cleanup** - reassess stale dependencies, vendored forks, EOL runtimes, hoisting drift, generated-client drift, and accepted exceptions on a schedule.
+
 # Non-Negotiable Rules
 
 - **New dependencies require justification against alternatives.** Standard library first, language/runtime/native platform feature second, existing repository utility third, already-installed dependency fourth, small local code fifth, and a new dependency only when measurably better with maintenance and supply-chain cost accepted.
@@ -33,6 +40,7 @@ Do not use to approve packages "for convenience" when the standard library, an e
 - **Vendoring is a deliberate choice with rationale** (regulatory air-gap, reproducibility, supply-chain isolation), not the default.
 - **Monorepo dependency graphs must preserve module boundaries.** Workspace ranges, hoisting, peer dependencies, generated packages, and shared tooling must not allow packages to import across forbidden boundaries or bypass affected-test selection.
 - **Generated package outputs need a version and drift policy.** Generated clients, protobufs, OpenAPI SDKs, ORM clients, or codegen artifacts must declare whether source or output is authoritative and how CI detects stale generation.
+- **Current graph, memory, and execution evidence are mandatory.** Dependency decisions must cite current package graph, lockfile diff, package-manager command output, project memory or prior exceptions with dates, and validation freshness.
 
 # Industry Benchmarks
 
@@ -92,6 +100,24 @@ Containers     | image digest (sha256:...)      | docker pull <image>@sha256:...
 8. SBOM regenerated; vulnerability scan green or triaged.
 ```
 
+# Proactive Professional Triggers
+
+Use this capability proactively, even when the request does not ask for dependency governance:
+
+- **Signal:** a diff changes a package manifest, lockfile, package manager config, workspace config, generated package, container base image, or dependency resolution rule. **Hidden risk:** a small manifest edit can alter transitive code, licenses, install scripts, runtime compatibility, and affected-test selection. **Required professional action:** inspect the dependency graph and lockfile delta before accepting the change. **Route to:** `package-dependency-management`, `dependency-vulnerability-scanning`, `quality-test-gate`, and `validation-broker`. **Evidence required:** manifest diff, lockfile diff, tree command output, affected packages, and validation command.
+- **Signal:** a new direct dependency is proposed for convenience, speed, parsing, formatting, SDK access, build tooling, or one small helper. **Hidden risk:** convenience packages add permanent CVE, license, provenance, install-script, and maintenance obligations. **Required professional action:** run the alternatives ladder and reject the dependency unless it beats stdlib/native/existing/local-code options. **Route to:** `minimal-correct-implementation`, `package-dependency-management`, and the matching `<lang>-professional-usage`. **Evidence required:** alternatives considered, candidate comparison, transitive count, maintainer/release health, and owner acceptance.
+- **Signal:** project memory, prior exception, old audit output, generated dependency report, or previous Renovate/Dependabot decision is reused. **Hidden risk:** stale memory can preserve expired exceptions, unsupported runtime constraints, or already-fixed advisories. **Required professional action:** compare memory against current graph, advisories, lockfile, and CI execution. **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`, and this capability. **Evidence required:** source date, accepted/rejected memory, current scan output, lockfile freshness, and explicit unknowns.
+- **Signal:** dependency change includes native extension, install script, code generation, SDK/client generation, package publishing, peer dependency, hoisting, or container image digest. **Hidden risk:** build behavior, deploy target, generated contract, or runtime artifact can diverge from local tests. **Required professional action:** require target-platform build evidence, generated-file policy, isolated package install/build, and rollback or repin path. **Route to:** `language-runtime-selection`, `sdk-library-contract-design`, `containerization`, `delivery-release-gate`, and this capability. **Evidence required:** target runtime, build output, generated drift check, isolated install/build command, and rollback plan.
+- **Signal:** vulnerability, malicious package, license incident, provenance gap, EOL runtime, or high-severity advisory affects the graph. **Hidden risk:** patch urgency can hide exploitability, compatibility, release, or compensating-control gaps. **Required professional action:** separate advisory triage from dependency update mechanics, document exploit path and SLA, and route security/release gates when needed. **Route to:** `dependency-vulnerability-scanning`, `security-privacy-gate`, `delivery-release-gate`, and this capability. **Evidence required:** advisory IDs, exploitability, patched version, scan output, compensating control, owner, and expiration.
+
+# Reference Loading Policy
+
+- **L1:** Use only this `SKILL.md` for routing, rejecting convenience dependencies, or requesting missing lockfile/supply-chain evidence.
+- **L2:** Load `references/checklist.md` when drafting or reviewing a real dependency add, removal, upgrade, vendoring decision, generated package policy, lockfile delta, or accepted exception.
+- **L3:** Load `examples/example-output.md` when the output contract shape is unclear or a concise dependency decision record is needed.
+- **L4:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when graph reachability, prior exceptions, command output, generated artifacts, affected tests, or validation freshness determine approval.
+- **L5:** Pair only selected specialist gates: `dependency-vulnerability-scanning`, matching `<lang>-professional-usage`, `language-runtime-selection`, `sdk-library-contract-design`, `security-privacy-gate`, `delivery-release-gate`, `containerization`, or `quality-test-gate`.
+
 # Risk Escalation Rules
 
 - Escalate to `security-privacy-gate` for High/Critical CVE without trivial upgrade path, suspected malicious package, credential exposure in dependency, license incident, or SLSA-level regression.
@@ -134,6 +160,8 @@ Containers     | image digest (sha256:...)      | docker pull <image>@sha256:...
 
 Return a **Dependency Decision Record** containing:
 - **Change type** (add / upgrade-major / upgrade-minor / upgrade-patch / remove / replace / vendor)
+- **Boundaries inspected** (package manifests, lockfiles, workspace graph, generated outputs, build/deploy target, CI install mode, prior exceptions, and skipped boundaries)
+- **Graph / memory / execution validation** (current dependency graph, project memory, advisory/source dates, package-manager command output, scan output, and validation freshness)
 - **Need statement** and **alternatives considered** (stdlib / native platform feature / existing repository utility / existing dependency / local code / candidate packages ≥ 2)
 - **Selected package(s)** with version pin
 - **Justification** against the rubric (rubric steps 1-5 explicitly answered)
@@ -149,6 +177,8 @@ Return a **Dependency Decision Record** containing:
 - **Generated file policy** — source vs generated authority, drift check command, committed/ignored outputs, cache invalidation inputs
 - **Rollout risk** — coordinated upgrade required? release gate involved?
 - **Accepted exceptions** with owner, scope, expiration
+- **Dependency-to-validation map** — each graph/license/security/runtime/generation/compatibility risk mapped to command, test, scan, or specialist gate
+- **Evidence limits** — not-inspected transitive paths, stale advisories, unsupported tooling, skipped platform matrix, or unresolved owner
 
 # Quality Gate
 
@@ -164,6 +194,21 @@ Return a **Dependency Decision Record** containing:
 10. Renovate / Dependabot grouping & auto-merge policy in place; high-severity advisory SLA defined.
 11. Monorepo workspace changes update module graph, affected tests, cache inputs, and isolated package install/build checks.
 12. Generated package outputs have drift checks and an explicit committed/ignored policy.
+13. Current repository dependency graph and project memory/prior exceptions are inspected with dates and freshness limits.
+14. Dependency-to-validation map covers lockfile, graph, license, vulnerability, install script, runtime compatibility, generated output, and behavior tests.
+15. Evidence limits state what the dependency evidence proves, what it does not prove, and which gate owns residual risk.
+
+# Evidence Contract
+
+The decision must cite `boundaries_inspected`, validation commands or artifacts, what evidence proves, what evidence does not prove, residual risk, and next handoff gate. Dependency evidence proves only the inspected package graph, lockfile state, package-manager behavior, scans, licenses, and validation commands at that point in time; it does not prove future advisories, every deploy target, downstream consumers, or production behavior unless those gates were selected and verified. Missing current graph, lockfile diff, scan output, or validation freshness blocks approval.
+
+# Benchmark Coverage
+
+Supply-chain frameworks and incident history calibrate risk. Approval requires local graph evidence, package-manager command output, lockfile and generated-output policy, license/vulnerability/provenance checks, and compatibility validation for the target runtime and deployment surface.
+
+# Routing Coverage
+
+When selected by a router, report which adjacent capabilities were loaded or intentionally skipped: `dependency-vulnerability-scanning`, matching `<lang>-professional-usage`, `language-runtime-selection`, `sdk-library-contract-design`, `security-privacy-gate`, `delivery-release-gate`, `containerization`, `quality-test-gate`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker`.
 
 # Used By
 
@@ -181,4 +226,4 @@ security-privacy-gate, delivery-release-gate, project-initialization, ai-code-re
 
 # Completion Criteria
 
-The dependency change is complete when: it is reproducible (lockfile + CI install command); justified against the rubric; transitive / license / vulnerability / scorecard / install-script / SBOM checks are documented; compatibility tests cover affected behavior; rollout risk is named; and any accepted exception has owner, scope, and expiration. Convenience is not a justification.
+The dependency change is complete when: it is reproducible (lockfile + CI install command); justified against the rubric; current graph/memory/execution evidence is fresh; transitive / license / vulnerability / scorecard / install-script / SBOM checks are documented; compatibility tests cover affected behavior; rollout risk is named; and any accepted exception has owner, scope, and expiration. Convenience is not a justification.

@@ -198,81 +198,42 @@ Examples:
 - `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
 
 ## Output Contract
-Return a backend implementation plan or review with:
-- **Mode selected**: New-build / modify-existing / bug-fix / debugging-diagnosis / code-review / refactoring / performance-reliability / release-delivery, with the trigger signal that selected it.
-- **Professional judgment**: backend decision made, plausible auth/consistency/idempotency/contract risks ruled out, and risks still possible.
-- **Validation model**: Inputs, types, constraints, injection prevention — at trust boundary.
-- **Authentication mechanism**: Token type, expiry, verification method.
-- **Authorization model**: Role/permission check, object-level check per operation.
-- **Trust boundary analysis**: HTTP/message/webhook/CLI boundary, caller identity source, tenant boundary, and untrusted fields rejected.
-- **Authorization/tenant/object ownership analysis**: resource access path, ownership filter or policy check, denied cases, and same-pattern scan result.
-- **Transaction boundaries**: Explicit commit/rollback scope, isolation level, compensating actions.
-- **Transaction/partial-success analysis**: atomicity requirement, partial failure point, compensation or saga path, and rollback limitation.
-- **Dependency wiring and lifecycle**: composition root, dependency graph, lifecycle scope, construction/shutdown owner, reusable client/pool policy, test override, and circular dependency check.
-- **Failure contract**: typed failure taxonomy, controller/service/repository/adapter translation, retryability, fallback/degradation, safe user message, cause preservation, and negative-path tests.
-- **Data and side-effect flow**: validation, mapping, policy, mutation, transaction, persistence, cache, event, external IO, ordering, publish-after-commit, idempotency, and compensation.
-- **Algorithm/data-structure decision**: input size/distribution, complexity, memory budget, streaming/chunking, rejected alternatives, and benchmark/profile evidence when backend scale is material.
-- **Configuration runtime policy**: typed config, safe defaults, validation/fail-fast behavior, feature flag lifecycle, mode/kind governance, rollout/rollback, and cleanup owner.
-- **Idempotency design**: Key source, scope, deduplication window, expired-key behavior.
-- **Idempotency/retry analysis**: retry source, duplicate-delivery behavior, dedupe storage, backoff, DLQ/replay plan when async.
-- **Error model**: Error code taxonomy, HTTP status mapping, client-visible vs. server-log distinction.
-- **Error/logging/observability analysis**: typed errors, structured logs, correlation ID, metric/trace signal, and alert/runbook implication.
-- **Observability plan**: Log fields with correlation ID, metrics emitted, alert thresholds.
-- **Concurrency analysis**: Race condition risk, locking strategy, ordering assumptions.
-- **Boundaries inspected**: controllers, services, repositories, validators, jobs, mappers, configs, callers, API contracts, data boundaries, permission boundaries, and release boundaries inspected or explicitly skipped with reason.
-- **Reuse and placement rationale**: Existing services/repositories/helpers inspected; reuse vs. new decision; function/class/file placement; public/private boundary; ownership; new imports and dependency direction.
-- **Minimal Correctness Decision**: simplicity ladder result, deleted or rejected backend machinery, accepted direct/local implementation, and any shortcut ceiling with upgrade trigger.
-- **Behavior preservation statement**: old behavior, public contract, error semantics, auth semantics, transaction semantics, and side effects preserved or intentionally changed.
-- **Code clarity and maintainability**: main-flow readability, side-effect boundary, signature clarity, next-change location, and cleanup/deprecation plan.
-- **Validation evidence**: commands run, outputs, same-pattern scan, regression/contract/integration coverage, and manual checks when tests are not possible.
-- **Evidence limits**: what each backend check proves and what it does not prove about tenants, concurrency, async replay, rollback, load, or consumers.
-- **Residual risk**: unverified concurrency, partial-write, DLQ, rollback, load, or consumer risk with owner.
-- **Next gate/handoff**: next professional skill, capability, release gate, or explicit no-next-gate rationale.
-- **Test obligations**: Unit tests for auth, validation, error paths; integration tests for transactions.
+Return a backend implementation plan or review with actionable evidence:
+- **Mode selected:** new-build, modify-existing, bug-fix, debugging-diagnosis, code-review, refactoring, performance-reliability, or release-delivery, with trigger.
+- **Backend judgment:** auth, consistency, idempotency, contract, reliability, and compatibility risks ruled out or retained.
+- **Trust/auth model:** validation, authentication, authorization, object ownership, tenant boundary, untrusted fields rejected, and denied cases.
+- **Consistency controls:** transaction boundary, partial-success/compensation, idempotency/retry/DLQ behavior, concurrency/locking, and side-effect ordering.
+- **Failure and observability:** error taxonomy, HTTP status, safe client message, structured logs, correlation ID, metrics/traces, and alert/runbook implication.
+- **Reuse / placement rationale:** controllers, services, repositories, validators, jobs, mappers, configs, callers, API contracts, and release boundaries inspected; reuse vs new decision; public/private boundary; dependency direction.
+- **Validation evidence:** same-pattern scan, unit/integration/regression/contract coverage, commands run, what evidence proves, what evidence does not prove, and freshness limits.
+- **Residual risk and next gate:** unverified tenant, concurrency, async replay, rollback, load, or consumer risk with owner and handoff.
+
+For the full output field list, quality gate, and handoff table, load `references/backend-output-and-gates.md`.
 
 ## Evidence Contract
 Close a backend change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
 - **Basis**: the selected mode, the authorization, consistency, idempotency, compatibility, or reliability rule the change rests on, and the OWASP API/RFC 7807/SRE benchmark it satisfies.
 - **Files and boundaries inspected**: controllers, services, repositories, validators, jobs, mappers, configs, callers, API contracts, data boundaries, permission boundaries, trust boundaries, and release boundaries inspected or explicitly ruled out.
-- **Placement rationale**: why each new service method, repository call, validator, mapper, job, adapter, or helper lives where it does, with dependency direction, ownership, shared/utils audit, and reuse ladder result (via `implementation-structure-design`).
+- **Reuse / placement rationale**: why each new service method, repository call, validator, mapper, job, adapter, or helper lives where it does, with dependency direction, ownership, shared/utils audit, and reuse ladder result (via `implementation-structure-design`).
 - **Validation commands**: the literal unit, integration, regression, contract, migration, or validator commands run for auth, transaction, idempotency, error, retry, async, compatibility, and behavior-preservation paths, each with its outcome.
-- **Backend judgment and evidence limits**: mode selected, professional decision, old behavior preserved or intentionally changed, what evidence proves, what it does not prove, and next gate/handoff.
+- **Backend judgment and evidence limits**: mode selected, professional decision, behavior preservation or intentional behavior change, what evidence proves, what it does not prove, and next gate/handoff.
 - **Residual risk**: the concurrency, partial-write, DLQ, rollback, load, contract, or tenant-boundary path that remains untested or assumed, the owner, and the next gate or explicit acceptance.
 
 ## Quality Gate
-1. Every trust boundary has explicit input validation covering type, range, presence, and injection prevention.
-2. Object-level authorization is enforced server-side for every resource operation — IDOR prevention verified.
-3. All multi-step write operations have explicit transaction boundaries and compensation plans.
-4. All mutating operations that can be retried have idempotency design.
-5. Error responses are machine-readable, use generic client messages, and include correlation IDs.
-6. Logs are structured, contain correlation IDs, and contain no plaintext secrets or PII.
-7. Background jobs have DLQ routing and failure alerting.
-8. Unit tests cover authorization logic, validation logic, and error paths.
-9. Concurrency race conditions are analyzed and mitigated for shared-state operations.
-10. No hardcoded secrets, API keys, or connection strings in source code.
-11. Existing backend functions, classes, services, repositories, validators, mappers, helpers, and adapters were checked before new code was added.
-12. Every new backend function, class, or file has placement rationale and ownership.
-13. No backend business logic is added to shared, common, or utils.
-14. New imports respect module and layer dependency direction.
-15. Agent-assisted backend changes include evidence, same-pattern scan for local fixes, and closure package.
-16. Backend use-case flow remains readable; large services/functions, boolean traps, weak parameter bags, side-effect pollution, and stale compatibility branches are split or justified.
+- Trust boundaries validate input; server-side object authorization and tenant filters are enforced for every resource operation.
+- Multi-step writes have transaction, compensation, idempotency, retry, DLQ, concurrency, and ordering evidence when relevant.
+- Error responses are machine-readable and non-leaking; logs are structured, correlated, and free of plaintext secrets/PII.
+- Existing backend services/repositories/validators/mappers/helpers/adapters were checked before adding code.
+- New backend functions/classes/files have placement rationale, ownership, public/private boundary, and valid dependency direction.
+- No backend business logic is added to shared/common/utils without ownership proof.
+- Unit/integration/regression/contract tests cover authorization, validation, error, transaction, retry, and concurrency paths proportionally to risk.
+- Agent-assisted backend changes include evidence inventory, same-pattern scan for local fixes, behavior preservation, and closure package.
 
 ## Handoff
-- **security-privacy-gate** — when authorization logic, PII handling, or sensitive data access requires adversarial review.
-- **data-api-contract-changer** — when API response shapes, error codes, or pagination contracts are affected.
-- **data-middleware-change-builder** — when schema, index, or query performance impact is significant.
-- **reliability-observability-gate** — when SLO-affecting paths, async job reliability, or saturation risks are identified.
-- **quality-test-gate** — when test coverage gaps for authorization, transactions, or concurrency are found.
-- **domain-impact-modeler** — when business rule invariants, state machine transitions, or domain event emissions are affected.
-- **testability-seam-design** — when backend tests need seams for time/randomness/external IO or risk private-helper coupling.
-- **failure-contract-design** — when backend error states, retryability, fallback, or partial failure semantics are unclear.
-- **dependency-wiring-lifecycle** — when dependency graph, reusable client lifecycle, service locator, or shutdown cleanup is unclear.
-- **data-side-effect-flow-tracing** — when side effects may be hidden in mappers, policies, domain objects, getters, helpers, or repositories.
-- **configuration-runtime-policy** — when runtime config, feature flags, mode/kind switches, or kill switches alter backend behavior.
-- **model-boundary-mapping** — when DTOs, domain objects, persistence models, events, or mappers risk semantic leakage.
-- **consumer-impact-analysis** — when backend public contracts, SDK types, events, exports, or response fields can affect downstream consumers.
-- **architecture-enforcement-tooling** — when backend import, layer, export, generated-code, or forbidden-dependency rules need CI enforcement.
-- **agent-execution-discipline** — when backend implementation evidence, verified cause, same-pattern scan, or handoff boundary is missing.
+- Hand auth/PII/sensitive data to `security-privacy-gate`; API/error/pagination contracts to `data-api-contract-changer`; schema/index/query concerns to `data-middleware-change-builder`.
+- Hand SLO, async reliability, saturation, and observability risks to `reliability-observability-gate`; missing tests to `quality-test-gate`; domain invariant changes to `domain-impact-modeler`.
+- Hand test seams, failure contracts, dependency lifecycle, side-effect flow, runtime config, model boundaries, consumer impact, or architecture enforcement to the matching capability owner.
+- Hand missing implementation evidence, verified cause, same-pattern scan, or handoff boundary to `agent-execution-discipline`.
 
 ## Completion Criteria
 Backend changes are safe to review and deploy when: all trust boundaries have validated input; all resource operations have server-enforced object-level authorization; all multi-step mutations have explicit transaction and compensation design; all retry paths are idempotent; error responses are machine-readable and non-leaking; structured logs carry correlation IDs; tests cover authorization, validation, error, and concurrency paths; and the implementation structure plan confirms reuse candidates, placement rationale, ownership, private/public boundary, shared utility audit, dependency direction, and test placement.

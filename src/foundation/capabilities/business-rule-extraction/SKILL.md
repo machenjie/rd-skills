@@ -15,9 +15,19 @@ Identify authoritative business rules, policies, calculations, invariants, and e
 
 Use this capability when a change affects: eligibility, pricing, discounts, fees, taxes, commissions, refunds, credit limits, KYC/AML rules, age/region gating, license/feature entitlements, role-based or attribute-based permissions, lifecycle guards (state-machine transitions, cancellation windows, freeze rules), domain validation (uniqueness, mandatory combinations, mutually-exclusive sets), capacity limits, expiration rules, retention rules, compliance behavior, fraud rules, throttling business policy, SLAs and SLOs that materialize as customer-facing rules, or any logic where the regulator, finance, legal, product, or risk owner expects a stable, traceable answer.
 
+Also use this capability when repository graph evidence, project memory, execution traces, tests, SQL, scripts, jobs, support macros, spreadsheets, or generated artifacts show the same domain decision being copied, hidden, disputed, stale, or enforced inconsistently across entry points.
+
 # Do Not Use When
 
 Do not use this capability to collect every implementation conditional without domain meaning. Defensive coding (`if user is None`), transport-format checks (`is_valid_email`), UI affordances (`disable button`), and storage constraints (`NOT NULL`) are not business rules unless they encode domain policy. Do not use it to force every small validation through a heavy domain abstraction or rule engine.
+
+# Stage Fit
+
+- **Planning:** extract candidate rules, owners, entry points, historical meaning, exceptions, and evidence before implementation chooses a placement.
+- **Read/review:** inspect current code, SQL, tests, jobs, scripts, docs, support flows, spreadsheets, and prior decisions before declaring the authoritative rule.
+- **Edit/implementation:** keep one enforcement layer authoritative while allowing UI hints, DB constraints, audit logs, and API pre-checks to reference the same source.
+- **Test/release:** require rule-id-based unit/tabular tests, entry-point coverage, historical replay evidence, audit fields, and owner acceptance for release-blocking rules.
+- **Repair/regression:** turn the verified inconsistent decision into a named rule, scan same-pattern branches, and add regression evidence that the decision is now consistent.
 
 # Non-Negotiable Rules
 
@@ -33,10 +43,11 @@ Do not use this capability to collect every implementation conditional without d
 - **No silent rules in SQL.** A `WHERE status NOT IN (...)` filter that determines who can be billed is a business rule; lift it to the named catalog and reference from the query.
 - **No silent rules in tests.** A test that asserts "`charge=8.50`" without naming the pricing rule encodes the rule by accident; tests reference the rule id.
 - **No copy-paste of policy across services**; share via a domain library, a rules service, or a generated decision artifact (DMN, JSON), with a single source.
+- **No rule authority claim is valid without current evidence.** Prior memory, old diagrams, support knowledge, or historical tickets are leads only until current repository graph, execution evidence, rule owners, tests, audit fields, or authoritative external artifacts confirm the rule and its enforcement.
 
 # Industry Benchmarks
 
-Anchor against: **DDD (Eric Evans, Vaughn Vernon)** — Policy, Specification, and Invariant patterns; aggregate-bounded invariants; ubiquitous language for rule names. **GoF Specification pattern** for composable predicates returning reasons. **DMN 1.4 (Decision Model and Notation, OMG)** — formal decision-table standard with hit policies (Unique, First, Priority, Collect) and FEEL expression language. **Camunda DMN, OpenRules, Drools, IBM ODM, GoRules** for rule-engine implementations. **Business Rules Group — Business Rules Manifesto** (rules are first-class, declarative, and motivated by business). **OMG SBVR** for natural-language semantic specification of rules. **Clean Architecture (Uncle Bob)** — entities and use cases hold enterprise/application policy; frameworks and DBs are details. **Hexagonal / Ports & Adapters** — domain rules live in the domain hexagon, adapters do not own policy. **Anti-Corruption Layer (ACL)** for translating external systems into domain language so rules are not contaminated. **Open Policy Agent (OPA / Rego)** and **Cedar (AWS)** for policy-as-code where the rule is authorization. **Event Sourcing + Decider pattern (Jérémie Chassaing)** for reproducible historical decisions. **Regulatory traceability matrix** practices from **ISO 9001 / IEC 62304 / FDA 21 CFR Part 11 / SOX ITGC** — every regulated rule traces to clause, control, and evidence. **NIST SP 800-53 control mapping** for security rules. **Decision-Centric Architecture / Decision Intelligence** literature.
+Anchor against DDD policy/specification/invariant patterns, DMN 1.4 decision tables and hit policies, Business Rules Manifesto/SBVR semantic rule discipline, Clean/Hexagonal Architecture for policy placement, OPA/Rego and Cedar when the rule is authorization policy, event sourcing/decider patterns for reproducible history, and regulated traceability matrices where clauses, controls, tests, audit fields, and owners must align.
 
 ### Rule-Type Classification
 
@@ -51,33 +62,12 @@ Anchor against: **DDD (Eric Evans, Vaughn Vernon)** — Policy, Specification, a
 | **Constraint** | Structural requirement | DB constraint **plus** domain enforcement | `Email unique per tenant` |
 | **Compliance / Regulatory** | Mandated by external rule with traceability | Decision table + audit + retention | `KYC tier 2 required for transfers > €1000` (AMLD) |
 
-### Rule Placement Decision Tree
+### Placement And Implementation Decision
 
-```
-Is the rule a domain decision (eligibility / policy / pricing / lifecycle)?
-├─ Yes → Owns: domain layer.
-│    Is it expressible as a decision table?
-│    ├─ Yes → DMN table or equivalent (versioned, owned by business analyst). Tested by unit + tabular tests.
-│    └─ No  → Domain object / Policy class returning a reasoned result.
-│    Mirror in: UI (hint only), API (validation pre-check returning the same reasons), audit log.
-│
-├─ No, it's authorization who-may-do-what → routing to authentication-authorization (PEP/PDP).
-├─ No, it's input shape / format → routing to input-validation.
-├─ No, it's a structural data invariant → DB constraint **plus** domain enforcement (defense in depth).
-└─ No, it's UI affordance only → component layer; do not call it a business rule.
-```
-
-### Rule-Engine vs Code Decision Matrix
-
-| Factor | Code (domain objects) | Decision table (DMN/JSON) | Full rules engine (Drools/ODM) |
-| --- | --- | --- | --- |
-| Change frequency | Low–medium | Medium–high | High, business-authored |
-| Authored by | Engineers | Analysts + engineers | Business analysts |
-| Combinatorial complexity | Low–medium | High (tabular) | Very high (forward chaining) |
-| Testability | Excellent | Excellent (tabular cases) | Harder (rule interaction) |
-| Performance predictability | Excellent | Excellent | Variable |
-| Auditability | Good (with reason objects) | Excellent (table + version) | Excellent if disciplined |
-| Pick when | Stable policy, deep domain logic | Tabular eligibility / pricing matrices | Insurance underwriting, claims adjudication, broker logic |
+- Domain eligibility, pricing, lifecycle, and calculation rules belong in the domain model, policy object, decision table, or rule service that owns the decision; UI/API/DB/audit layers reference that source.
+- Authorization rules route to `authentication-authorization` for PEP/PDP separation; input shape routes to `input-validation`; structural invariants pair domain enforcement with DB constraints; UI affordances stay in UI and are not business rules.
+- Prefer code/domain objects for stable policy, decision tables for tabular policy with analyst review, and a full rules engine only for genuinely high-volume/high-change rule interaction where engine governance is worth the overhead.
+- External system facts must be translated through an anti-corruption layer before rule evaluation; historical decisions must snapshot the decision or resolve the rule version effective at event time.
 
 # Selection Rules
 
@@ -89,6 +79,25 @@ Select this capability when the primary risk is **rule authority, consistency ac
 - Prefer `input-validation` for transport and shape validation.
 - Prefer `data-model-design` / DB constraints for structural invariants — but **always pair with** domain enforcement for non-trivial rules.
 - Use **with** `acceptance-standard-definition` so each rule has verifiable acceptance evidence.
+- Use **with** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when rule extraction depends on current graph reachability, stale prior decisions, command output, or validation freshness.
+
+# Proactive Professional Triggers
+
+Use this capability proactively, even when the request does not ask for business-rule extraction:
+
+- **Signal:** the same eligibility, pricing, lifecycle, entitlement, compliance, fraud, retention, capacity, refund, or calculation decision appears in multiple UI/controller/service/SQL/job/script/test/support paths. **Hidden risk:** identical facts produce different business decisions by entry point. **Required professional action:** name the rule, owner, authoritative enforcement layer, previews/defenses, and entry-point coverage. **Route to:** `business-rule-extraction`, `repository-graph-analysis`, and `quality-test-gate`. **Evidence required:** graph paths, duplicate decision sites, selected authority, and rule-id-based validation.
+- **Signal:** a rule is hidden in SQL filters, stored procedures, spreadsheets, feature flags, support macros, test fixtures, import scripts, or admin tools. **Hidden risk:** the real policy can drift outside the rule catalog and evade review. **Required professional action:** lift the rule into the catalog, preserve provenance, and define migration or synchronization evidence. **Route to:** this capability plus `project-memory-governance` and `validation-broker`. **Evidence required:** source artifact, owner confirmation, freshness, migration plan, and not-verified gaps.
+- **Signal:** a rule affects money, regulated eligibility, audit history, contractual SLA, legal retention, entitlement, fraud/risk, state transition, or irreversible operation. **Hidden risk:** unversioned or ownerless decisions become unreproducible during audit, dispute, or incident review. **Required professional action:** require effective dating, reason codes, audit fields, test cases, owner acceptance, and residual-risk sign-off. **Route to:** `domain-impact-modeler`, `security-privacy-gate` when regulated, and this capability. **Evidence required:** rule version, regulation/contract trace, audit field, test, owner, and release blocker.
+- **Signal:** exceptions, overrides, precedence, or temporary rollout behavior are mentioned without expiry, audit, priority, or rule id. **Hidden risk:** exceptions become the actual hidden rule and precedence changes through branch order. **Required professional action:** catalog the exception as a rule, define precedence/hit policy, expiry, and audit. **Route to:** `state-machine-modeling`, `acceptance-standard-definition`, and this capability. **Evidence required:** exception owner, precedence table, override evidence, expiry, and regression case.
+- **Signal:** project memory, old requirements, generated summaries, or previous tests are reused to assert the rule. **Hidden risk:** stale memory can certify a rule that current code, data, or operations no longer enforce. **Required professional action:** compare memory against current graph and execution evidence, then record accepted/rejected assumptions. **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `plan-execution-consistency`, and this capability. **Evidence required:** source date, graph delta, current validation, and explicit unknowns.
+
+# Reference Loading Policy
+
+- **L1:** Use only this `SKILL.md` for routing or a quick rule-authority review when no concrete rule catalog or implementation handoff is needed.
+- **L2:** Load `references/checklist.md` for any real rule catalog, domain review, bug repair, audit preparation, or implementation plan involving rule authority, owner, entry point, exception, or evidence.
+- **L3:** Load `examples/example-output.md` when producing a user-facing rule catalog, evaluation fixture, or structured handoff table.
+- **L4:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the rule source depends on current code reachability, prior decisions, external artifacts, command output, tests, or audit evidence.
+- **L5:** Pair with security, payment/trading, big-data, reliability, delivery, or compliance gates only when the selected rules touch those domain surfaces; do not load unrelated domain references for ordinary domain policy extraction.
 
 # Risk Escalation Rules
 
@@ -146,7 +155,7 @@ Rules have scope, authority, exceptions, precedence, and enforcement timing. Mis
 
 # Output Contract
 
-Return a business rule catalog with, per rule:
+Return `business_rule_catalog` with, per rule:
 
 - `rule_id` (stable, namespaced, e.g. `RULE.BILLING.LATE-FEE-WAIVER`)
 - `statement` (one declarative sentence in business language)
@@ -166,6 +175,25 @@ Return a business rule catalog with, per rule:
 - `audit_log_fields` (rule_id, version, inputs hash, decision, reason)
 - `examples` (positive, negative, edge, override)
 - `deprecation_plan` (when applicable)
+- `graph_memory_execution_validation` (rule source paths/artifacts inspected, project-memory claims accepted or rejected, command/test evidence, validation freshness, and unknowns)
+- `rule_to_validation_map` (rule id -> owner approval, implementation/enforcement location, entry-point checks, test/audit evidence, release blocker, and next gate)
+- `evidence_limits` (uninspected entry points, stale external artifacts, unavailable rule owners, missing historical data, and residual uncertainty owner/date)
+
+# Evidence Contract
+
+Acceptable evidence includes current source paths, SQL/stored procedures, route/job/import/admin/script inventories, tests, generated artifacts, support macros, spreadsheets or external rule sources, owner confirmation, audit/log schemas, rule-version data, replay evidence, and validation command output. Project memory and old requirements may guide discovery, but they cannot close a rule unless their date, source, and unchanged graph boundary are stated. Every cataloged rule must state what the evidence proves, what it does not prove, and which owner accepts any remaining ambiguity.
+
+# Benchmark Coverage
+
+Use DDD policy/specification/invariant patterns for owner and placement, DMN/SBVR for tabular or semantic rule expression, Clean/Hexagonal Architecture for adapter-vs-domain separation, OPA/Cedar for authorization policy routing, event-sourced decider practice for historical reproducibility, and regulated traceability matrices for audit-critical rules. Benchmark references must change placement, expression format, evidence, traceability, or validation depth; do not cite a framework as decoration.
+
+# Routing Coverage
+
+- Pair with `domain-object-identification`, `state-machine-modeling`, and `use-case-modeling` when the rule owner, aggregate boundary, lifecycle guard, or actor scenario is unclear.
+- Pair with `authentication-authorization`, `input-validation`, and `data-model-design` when a candidate rule is actually authorization, input shape, or structural data enforcement.
+- Pair with `acceptance-standard-definition`, `quality-test-gate`, and `validation-broker` when rule acceptance, entry-point coverage, tabular tests, replay tests, or validation freshness are needed.
+- Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `plan-execution-consistency` whenever the rule catalog depends on current graph reachability, prior decisions, command evidence, or plan-to-evidence alignment.
+- Pair with specialist domain gates only for selected rules that touch payments, regulated data, analytics/backfill, reliability, release, or security review surfaces.
 
 # Quality Gate
 
@@ -181,6 +209,10 @@ The catalog passes only when:
 8. Tests cover positive, negative, edge, override, and historical-replay scenarios — and reference rule ids.
 9. Audit log captures rule id + version + inputs + decision + reason for every regulated/financial decision.
 10. No rule is encoded only in SQL filters, UI components, test fixtures, support macros, or spreadsheets without being lifted to the catalog.
+11. Repository graph coverage includes every touched UI/API/service/domain/SQL/job/import/admin/script/test/support path or explicitly marks the path unavailable.
+12. Project memory, prior tickets, generated summaries, spreadsheets, and external rule sources are dated, scope-checked, and rejected as proof when stale.
+13. Every material rule appears in `rule_to_validation_map` with owner approval, implementation location, entry-point evidence, test/audit evidence, and release-blocking status.
+14. Rule deprecation or precedence changes include historical decision compatibility and rollback or audit-retention evidence.
 
 # Used By
 

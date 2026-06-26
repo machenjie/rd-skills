@@ -1,6 +1,6 @@
 ---
 name: refactoring
-description: Guides behavior-preserving code reshaping with characterization tests for risky changes and explicit handling of boundaries, contracts, and rollback.
+description: Guides behavior-preserving code reshaping with characterization tests for risky changes and explicit handling of boundaries, contracts, rollback, graph/memory freshness, validation evidence, split/merge safety, and cleanup exits.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "79"
@@ -21,11 +21,22 @@ Do not use this capability to: change observable behavior and label it as a refa
 
 # Stage Fit
 
-Owns refactoring; also supports structural change during bug-fix. Per-stage focus:
+Use during refactoring planning, implementation, bug-fix repair, code-review, validation, and handoff when structure changes but behavior should remain stable. Per-stage focus:
 
 - **refactoring**: behavior-preserving extract/move/inline/merge/split; characterization tests; rollback path.
 - **bug-fix**: apply structural change only when the verified root cause requires it.
 - **code-review**: confirm the refactor preserved public behavior with test evidence.
+- **validation/handoff**: reconcile graph, memory, changed paths, validation freshness, rollback, and residual risk.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Extract/move/inline local structure | Function, method, class, helper, or file movement with no intended behavior change. | Preserve observable behavior while improving ownership and readability. | Behavior boundary, owner decision, before/after tests, rollback step. | `implementation-structure-design`, `code-review` | Public API redesign. |
+| Split or merge files/modules | Large file/object split, small-file merge, module move, import/export reshaping. | Keep public contracts, dependency direction, side effects, and tests visible. | Import/export diff, dependency-rule check, behavior tests before/after. | `module-boundary-design`, `architecture-enforcement-tooling` | File-count preference as rationale. |
+| Risky behavior seam refactor | Untested, complex, auth, money, data integrity, concurrency, or external side-effect code. | Add characterization tests before movement and preserve failure semantics. | Characterization cases, negative/denied paths, mutation-like assertion quality. | `quality-test-gate`, `regression-testing` | Refactor first, test later. |
+| Cleanup inside refactor | Dead code, stale abstraction, deprecated branch, feature flag, compatibility shim. | Separate deletion safety from movement and give cleanup an owner/expiry. | Caller search, removal condition, cleanup issue, old/new tests, rollback. | `cleanup-deletion-governance`, `minimal-correct-implementation` | Silent deletion as cleanup. |
+| Graph/memory/evidence review | Prior incident note, stale memory, generated reference, reflection, dynamic caller, validation drift. | Confirm current source and generated/runtime graph before accepting equivalence. | Accepted/rejected memory, graph search scope, changed-path validator map. | `repository-graph-analysis`, `validation-broker` | Trusting old context. |
 
 # Non-Negotiable Rules
 
@@ -45,74 +56,20 @@ Owns refactoring; also supports structural change during bug-fix. Per-stage focu
 
 # Industry Benchmarks
 
-Anchor against: **Martin Fowler "Refactoring: Improving the Design of Existing Code" (2nd ed., 2018)** — catalog of named refactorings (Extract Method, Extract Class, Move Method, Replace Conditional with Polymorphism, Inline Method); each refactoring has a motivation, mechanics, and before/after example. **Michael Feathers "Working Effectively with Legacy Code" (2004)** — characterization testing; seam model (finding seam points to break dependencies for testing); techniques for getting untestable code under test. **Kent Beck "Small Steps" principle** — always keep the system in a working state; red/green/refactor cycle; commit after every green bar. **Semantic Versioning (semver.org)** — any change to a public API that is not backward-compatible is a MAJOR version change; public contract awareness is prerequisite for refactoring shared libraries. **ArchUnit / Dependency Cruiser** — automated structural rule enforcement; detects if refactoring violates intended dependency direction (e.g., domain layer importing from infrastructure layer). **git bisect** — binary search through commits to find the regression; only works if each commit independently passes tests. **Mutation testing (Stryker, PITest)** — reveals characterization tests that are too weak to catch behavior changes during refactoring. **SonarQube cognitive complexity** — quantifies whether a refactoring actually reduced cognitive load (before/after cognitive complexity score).
-
-### Refactoring Risk Classification
-
-| Risk Level | Code Characteristics | Required Preparation | Step Size |
-| --- | --- | --- | --- |
-| Low | Covered by tests; no external contracts; private/internal scope | Verify test suite passes; proceed | Individual commit per transformation |
-| Medium | Partially covered; touches internal API or shared utility | Add characterization tests for uncovered branches first | Separate commit per refactoring type |
-| High | Untested or complex; authorization/financial/data integrity logic; public contract | Full characterization test suite first; review plan with team | One mechanical change per PR |
-| Critical | Shared library; public API; database schema-adjacent; concurrency | Compatibility plan; consumer impact review; deprecation strategy | Separate PR per contract boundary |
-
-### Refactoring Step Discipline
-
-```
-Before starting any refactoring:
-
-1. Define Observable Behavior Boundary
-   What outputs (return values, DB mutations, events, side effects) must remain identical?
-   Document: "This refactoring preserves X; does NOT preserve Y (intentional change)"
-
-2. Define Target Structure Decision
-   Which functions should stay private? Which classes should be split, collapsed, or composed? Which files should split, merge into an owner, or stay separate with a boundary? Which files should own the extracted behavior? Which module boundaries or public APIs must stay unchanged?
-   Reject new shared/common/utils placement unless the extracted code is a pure technical utility with no business terminology.
-
-3. Check Test Coverage
-   Run coverage report on the target code.
-   If coverage < acceptable threshold → write characterization tests first.
-   Characterization test pattern:
-     test("characterizes current behavior of OrderService.calculateTotal", () => {
-       const result = calculateTotal(fixture_order_with_discount);
-       expect(result).toBe(127.50); // captures current behavior; fix intentionally later
-     });
-
-4. Plan Step Sequence (each step independently passing)
-   Step 1: Rename internal variables (no logic change)
-   Step 2: Extract private helper method (no logic change)
-   Step 3: Move method to correct class (no logic change)
-   Step 4: [Optional] Replace conditional with polymorphism
-   Each step: commit → run full test suite → verify green
-
-5. Separate Formatting
-   Run formatter BEFORE starting refactoring on files you will touch.
-   Formatting commit is separate from any logic movement.
-
-6. After Each Step
-   git diff --stat → confirm line count is reasonable
-   Run all tests (unit + integration for touched boundaries)
-   If any test fails → revert the step; do not proceed with failing tests
-
-7. After All Steps
-   Run mutation testing on characterized code → verify tests actually protect behavior
-   Measure before/after complexity score (cognitive complexity) → confirm improvement
-```
-
-### Anti-examples
-
-| Anti-pattern | Problem | Fix |
-| --- | --- | --- |
-| Refactor PR includes: 3 renamed methods + 1 changed return type | Return type change is a behavior change disguised as structural movement; reviewer misses it | Separate commit / PR: rename-only PR followed by explicit behavior-change PR with changelog |
-| "I'll add tests after the refactor" | No safety net during refactoring; one mechanical slip changes behavior silently | Write characterization tests before structural changes on risky code |
-| Extract class + change logic in same commit | Impossible to review: is the behavior change from the extraction or the logic change? | Extract class first (passes tests); change logic in separate commit (passes tests) |
-| Rename `user_id` column in migration + refactor service layer in same PR | Schema migration is a breaking change; conflated with structural refactoring; rollback is complex | Separate: (1) migration + backward-compatible app code; (2) refactor service layer; (3) cleanup old compat code |
-| 1,800-line refactoring PR with comment "just cleanup" | Reviewer cannot verify behavior preservation; rubber-stamp review; regression introduced | Max ~300 lines per refactoring PR; each commit is independently green |
-| Optimize hot path "while I was in there refactoring" | Optimization requires before/after profiling measurement; mixed with structural change; cannot validate improvement | Separate PRs: (1) refactoring; (2) optimization with baseline + after measurement |
+Anchor against Fowler's named refactorings, Feathers-style characterization tests and seams, Beck small steps, SemVer public-contract discipline, architecture-rule enforcement, git-bisectable commits, mutation testing, and cognitive-complexity reduction. Keep deep mechanics, risk classification, step discipline, and anti-examples in [references/checklist.md](references/checklist.md) so the body stays focused on trigger, routing, evidence, and closure rules.
 
 # Selection Rules
 
 Select this capability when **structural improvement is the primary goal and behavior must be preserved**. Route elsewhere when: `code-review` is primary (evaluating an existing diff for correctness and review feedback); `module-boundary-design` is primary (deciding what the target architecture should be — use that first, then refactor toward it); `test-strategy` is primary (defining what tests are needed for new functionality — not preserving existing behavior); `profiling` is primary (measuring and reducing performance bottleneck — optimize after refactoring, not during); `api-contract-design` is primary (changing a public API contract — that is a breaking change, not a refactoring).
+
+# Proactive Professional Triggers
+
+- **Signal:** A refactor moves, extracts, inlines, renames, splits, or merges code without an explicit observable behavior boundary. **Hidden risk:** behavior changes are hidden inside structural movement and reviewers cannot tell whether outputs, side effects, ordering, or errors changed. **Required professional action:** define behavior boundary and split intentional behavior changes into separate work. **Route to:** `implementation-structure-design`, `code-review`. **Evidence required:** preserved outputs/side effects list, excluded behavior-change work item, before/after test command, and rollback step.
+- **Signal:** Untested, branch-heavy, auth, money, data-integrity, concurrency, or external side-effect code is refactored before characterization tests. **Hidden risk:** a mechanical extraction changes critical behavior with no failing signal. **Required professional action:** add or identify characterization and negative-path tests before movement. **Route to:** `quality-test-gate`, `regression-testing`. **Evidence required:** current-behavior fixtures, risky branch map, command output, and assertion-quality note.
+- **Signal:** A helper, file, class, module, `common`, `shared`, or `utils` target is introduced as part of refactoring. **Hidden risk:** ownership moves to a dumping ground, dependency direction drifts, or tests start coupling to private structure. **Required professional action:** run placement/reuse review before accepting the new shape. **Route to:** `implementation-structure-design`, `code-clarity-maintainability`. **Evidence required:** reuse search, owner boundary, rejected locations, dependency-direction proof, and public-behavior tests.
+- **Signal:** Public API, schema, config key, event, metric, log field, generated client, or exported package surface changes during a refactor. **Hidden risk:** a breaking contract ships under a behavior-preserving label. **Required professional action:** stop pure refactor closure and route compatibility or consumer impact. **Route to:** `consumer-impact-analysis`, `data-api-contract-changer`. **Evidence required:** import/export or schema diff, consumer inventory, compatibility plan, migration/rollback note.
+- **Signal:** Dead code, deprecated API, stale feature flag, fallback, compatibility branch, or obsolete abstraction is removed while reshaping code. **Hidden risk:** deletion safety, old/new branch tests, owner, and expiry are skipped. **Required professional action:** separate cleanup governance from movement. **Route to:** `cleanup-deletion-governance`, `minimal-correct-implementation`. **Evidence required:** caller search, removal condition, owner/expiry, old/new behavior tests, and rollback limit.
+- **Signal:** Project memory, prior incident notes, generated references, reflection/dynamic dispatch, or old validation says the refactor is safe without current-source confirmation. **Hidden risk:** stale context misses runtime callers or validation predates final movement. **Required professional action:** reconcile memory and graph before handoff. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `validation-broker`. **Evidence required:** searched graph boundaries, accepted/rejected memory, fresh changed-path validators, remaining unknowns.
 
 # Risk Escalation Rules
 
@@ -144,7 +101,7 @@ Escalate when: the refactoring touches authorization, financial calculation, or 
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when the refactor is high or critical risk, crosses files/modules/contracts, touches auth/financial/data-integrity/concurrency behavior, or claims shared/common utility placement. Do not load it for an isolated private rename with passing local tests and no observable behavior surface.
+Load [references/checklist.md](references/checklist.md) when the refactor is high or critical risk, crosses files/modules/contracts, touches auth/financial/data-integrity/concurrency behavior, claims shared/common utility placement, removes cleanup debt, or needs the risk matrix, small-step mechanics, or anti-examples. Use [examples/example-output.md](examples/example-output.md) only when the plan shape is unclear. Do not load references for an isolated private rename with passing local tests and no observable behavior surface.
 
 # Output Contract
 
@@ -179,6 +136,7 @@ Return a refactoring plan with:
 - `dead_code_removal_assessment` (callers searched, generated/runtime references checked, and deletion safety)
 - `before_after_complexity_evidence` (cognitive complexity, branch count, collaborator count, dependency count, public API surface, directory density, or test clarity)
 - `compatibility_branch_owner_and_expiry` (owner, expiry condition, follow-up artifact, and tests proving safe coexistence)
+- `graph_memory_execution_validation` (repository graph freshness, accepted/rejected project-memory claims, changed-path validator map, validation freshness, and tool permission/sandbox record for refactor commands)
 
 # Evidence Contract
 
@@ -191,9 +149,10 @@ A refactor is complete only when the output includes:
 - **Dependency direction**: imports/layers remain valid or the boundary shift is explicitly routed to architecture review.
 - **Split/merge preservation evidence**: import/export before/after, public contract preserved, dependency direction preserved, behavior test before/after, and side-effect boundary visibility for each file split or file merge.
 - **Deletion path**: what old code becomes removable, when, and what proves removal is safe.
-- **What evidence proves**: behavior equivalence for covered paths.
-- **What evidence does not prove**: untested consumers, dynamic reflection paths, runtime-only config, performance side effects, or hidden integration dependencies.
-- **Residual risk**: uncovered behavior, owner, and next gate.
+- **What refactor evidence proves**: behavior equivalence for covered public paths, import/export stability, dependency direction, cleanup safety, or complexity reduction for the inspected scope.
+- **What refactor evidence does not prove**: untested consumers, dynamic reflection paths, runtime-only config, generated-client drift, performance side effects, or hidden integration dependencies.
+- **Graph and memory freshness**: current source, generated artifacts, runtime registration, tests, and prior memory claims confirmed or rejected before closure.
+- **Residual refactor risk**: uncovered behavior, stale validation, unsupported runtime edge, owner, and next gate.
 
 # Quality Gate
 
@@ -217,6 +176,8 @@ The refactoring plan is complete only when:
 16. File movement, merge, split, import/export cleanup, and behavior change are not mixed in the same step.
 17. Dead code, deprecated APIs, feature flags, and compatibility branches have removal owner, expiry, and cleanup validation.
 18. Before/after complexity evidence is recorded or the lack of reduction is justified.
+19. Repository graph, project memory, generated references, reflection/dynamic dispatch, and validation freshness are reconciled before handoff.
+20. Tool permission/sandbox evidence exists for broad move, rename, format, test, build, generated-artifact, or deletion commands.
 
 # Used By
 

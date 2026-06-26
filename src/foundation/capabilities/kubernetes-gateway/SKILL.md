@@ -9,194 +9,141 @@ changeforge_version: 0.1.0
 
 # Mission
 
-Deploy and operate Kubernetes workloads **deliberately** — defining workload type, routing contract, real health semantics, resource budgets, security posture, rollout strategy, and rollback scope — accepting Kubernetes complexity only when the team has the operational maturity to own it safely.
+Deploy and operate Kubernetes workloads deliberately: choose Kubernetes only when the platform maturity justifies it, then define workload shape, routing contract, health semantics, resource budgets, security posture, rollout strategy, rollback scope, and validation evidence before the change is accepted.
 
 # When To Use
 
-Use this capability when a change: deploys a new workload to Kubernetes (Deployment, StatefulSet, Job, CronJob, DaemonSet); modifies Ingress or Gateway API routing rules; changes liveness, readiness, or startup probe configuration; adjusts resource requests, limits, or HPA/KEDA scaling policy; modifies ServiceAccount, RBAC, NetworkPolicy, WAF, DNS, CDN, load balancer, or cloud identity binding; changes rollout strategy or PodDisruptionBudget; or introduces a new service that must be reachable inside or outside the cluster.
-
-- Creating or modifying Helm charts, Chart.yaml, values.yaml, values.schema.json, templates, chart dependencies, hooks, CRD installation, release values, or Helm rollback behavior.
+Use this capability when a change creates or modifies Kubernetes workloads, Services, Ingress, Gateway API, DNS/CDN/WAF/load balancer exposure, probes, resources, HPA/KEDA/VPA, PodDisruptionBudget, ServiceAccount, RBAC, NetworkPolicy, ConfigMaps, Secrets, cloud identity bindings, Helm charts, GitOps manifests, CRDs, hooks, or rollout/rollback behavior.
 
 # Do Not Use When
 
-Do not use this capability to introduce Kubernetes for a runtime that lacks: a team member who owns platform operations; automated deployment pipeline with rollback capability; centralized logging and metrics; secret management (not in manifests); and network policy enforcement. Kubernetes is not a deployment simplification tool — it is operational complexity traded for scalability and reliability. Introducing it without operational ownership creates a higher-risk environment than the alternative.
+Do not use this capability to justify Kubernetes for a workload with no platform owner, deployment pipeline, rollback path, centralized logs/metrics, secret-management process, or network policy enforcement. Do not use it for image construction alone; route image build and base-image hardening to `containerization`. Do not treat Kubernetes as simpler than a managed runtime when the team cannot operate the cluster surface.
+
+# Stage Fit
+
+Use during architecture/design for runtime selection, coding and refactoring when manifests or charts change, code-review when gateway/security/rollout posture changes, testing when rendered manifests or policy checks are needed, release when Helm/GitOps/deploy commands are involved, and handoff when residual operational risk must be explicit.
 
 # Non-Negotiable Rules
 
-- **Readiness controls traffic; liveness restarts processes; startup protects slow init.** These are not interchangeable. Readiness: "is the pod ready to receive traffic?" — failing readiness removes the pod from load balancing without restarting it. Liveness: "is the pod alive and not deadlocked?" — failing liveness restarts the pod. Startup: "is the pod done initializing?" — disables liveness during slow startup to prevent premature restart loops. Never check process existence (e.g., HTTP 200 from a `/health` endpoint that always returns 200) — check real application readiness (DB connection pool ready; cache warmed; config loaded).
-- **Resource requests are required on every container; limits must be set for CPU if autoscaling is used.** Without resource requests, the Kubernetes scheduler cannot make correct placement decisions; pods compete unpredictably for node resources. CPU limits cause throttling; memory limits cause OOMKill. Set CPU request = expected steady-state usage; CPU limit = peak burst allowance or omit for latency-sensitive workloads. Set memory request = memory limit (to prevent memory-overcommit-induced OOMKill surprises).
-- **Secrets must not appear in manifests, environment literals, or container args.** Kubernetes Secrets in YAML manifests stored in Git are base64-encoded, not encrypted. Use: ExternalSecrets Operator (AWS Secrets Manager, GCP Secret Manager, Azure Key Vault); Sealed Secrets (Bitnami, encrypts for a specific cluster); HashiCorp Vault Agent Injector; or CSI Secret Store Driver. Never use `kubectl create secret` from CI without a sealed/external secret process.
-- **Security context: `runAsNonRoot: true`, `allowPrivilegeEscalation: false`, `readOnlyRootFilesystem: true`, seccomp profile.** Apply at pod and container level. This is the Kubernetes Pod Security Standards "restricted" profile baseline. Root containers are a container escape risk. (NSA Kubernetes Hardening Guide; CIS Kubernetes Benchmark).
-- **NetworkPolicy: deny-by-default; allow explicitly.** Without a NetworkPolicy, all pods can reach all other pods in the cluster. Implement a default-deny NetworkPolicy in every namespace; add allow rules only for required pod-to-pod communication. This is zero-trust network segmentation at the pod level.
-- **ServiceAccount: create a dedicated ServiceAccount per workload with minimal RBAC.** The default ServiceAccount in most clusters has excessive permissions. Create a named ServiceAccount; bind only the Role with the minimum permissions required; annotate for Workload Identity (IRSA on EKS, Workload Identity on GKE) when cloud API access is needed — never mount cloud credentials as secrets.
-- **Rollback scope is broader than deployment revision.** A Kubernetes rollout rollback (`kubectl rollout undo`) reverts the image. It does not revert: ConfigMaps; Secret values; database schema migrations; Ingress/Gateway rules; external service configuration. Define what must be reverted for each rollback scenario; document the procedure.
-- **Gateway exposure is a cloud governance boundary.** Any change to Ingress, Gateway API, LoadBalancer, DNS, CDN, WAF, ServiceAccount cloud identity, or namespace routing must state internet exposure, tenant/namespace blast radius, TLS policy, auth enforcement, rollback path, and audit owner.
-- **Helm charts must render deterministically before deployment.** `helm lint`, `helm template`, schema validation, and rendered manifest validation must pass before release.
-- **Secrets must not live in values.yaml.** Sensitive values must come from ExternalSecrets, SealedSecrets, CSI Secret Store, Vault, or platform secret managers.
-- **values.schema.json is required for non-trivial charts.** Missing required values must fail before deployment, not silently fall back to unsafe defaults.
-- **Production Helm upgrades must be atomic and waited.** Use `helm upgrade --install --atomic --wait --timeout ...` or an equivalent GitOps controller policy.
-- **CRDs are not normal resources.** CRD install/upgrade/rollback ordering must be documented; Helm rollback does not safely roll back CRD schema semantics.
-- **Helm hooks must be idempotent and bounded.** Hook jobs need timeout, delete policy, rerun safety, and failure behavior.
+- Readiness controls traffic, liveness restarts only stuck processes, and startup protects slow init. Do not use one endpoint with identical semantics for all three.
+- Every container has CPU and memory requests; critical services justify memory request/limit shape and HPA/KEDA inputs from observed or forecast load.
+- Secrets never appear in manifests, `values.yaml`, ConfigMaps, container args, or literal environment values; use approved secret sources and redaction.
+- Pod and container security context uses non-root execution, no privilege escalation, read-only root filesystem where feasible, and seccomp/AppArmor where supported.
+- ServiceAccount, RBAC, cloud identity, and NetworkPolicy are workload-specific and least-privilege; default broad access is a blocker.
+- Gateway/Ingress/LoadBalancer/DNS/CDN/WAF changes state public exposure, tenant/namespace blast radius, TLS/auth policy, timeout/rate-limit policy, owner, and rollback.
+- Rollback covers image, ConfigMap, Secret version, route, feature flag, schema, CRD, hook, and external config scope; `kubectl rollout undo` is not enough.
+- Helm/GitOps changes render deterministically before deployment and include schema validation, lint/template output, diff, policy checks, CRD/hook handling, and rollback limits.
 
 # Industry Benchmarks
 
-Anchor against: **CIS Kubernetes Benchmark** (cisecurity.org) — cluster hardening, RBAC, network policy, secret handling, audit logging. **NSA/CISA Kubernetes Hardening Guide** (2022) — pod security, network separation, authentication, audit. **Kubernetes Pod Security Standards** (kubernetes.io/docs/concepts/security/pod-security-standards) — Privileged / Baseline / Restricted profiles; apply "restricted" as default for application workloads. **Kubernetes Gateway API** (gateway.sigs.k8s.io; NGINX/Envoy/Istio implementations) — successor to Ingress; GatewayClass, Gateway, HTTPRoute, TCPRoute; more expressive routing; traffic splitting for canary. **NGINX Ingress Controller** — widely deployed; `nginx.ingress.kubernetes.io/` annotations for timeout, rate limit, auth, CORS. **HPA (Horizontal Pod Autoscaler)** — CPU/memory based scaling; `targetAverageUtilization: 70%`; requires resource requests. **KEDA (Kubernetes Event-Driven Autoscaler, keda.sh)** — scale on Kafka consumer lag, SQS queue depth, Prometheus metrics, Cron; scales to zero for event-driven workloads. **VPA (Vertical Pod Autoscaler)** — recommends/sets resource requests based on actual usage; use in "Off" mode (recommendation only) to avoid disruptive pod restarts. **PodDisruptionBudget** — `minAvailable: 1` prevents all pods being evicted simultaneously during node drain; required for HA workloads. **Argo Rollouts / Flagger** — progressive delivery; canary analysis; automated rollback on error rate threshold. **Helm** — Kubernetes package manager; chart versioning; values.yaml override per environment; release history for rollback. **ExternalSecrets Operator** (external-secrets.io) — syncs secrets from AWS Secrets Manager / GCP / Azure Key Vault into Kubernetes Secrets; refresh interval; rotation without restart via `reloadOnChange`. **Prometheus + Kube-state-metrics** — pod/container metrics; HPA decisions; alerting on OOMKill, CrashLoopBackOff, pod restart rate.
+Anchor against CIS Kubernetes Benchmark, NSA/CISA Kubernetes Hardening Guide, Kubernetes Pod Security Standards, Gateway API, HPA/KEDA/VPA, PodDisruptionBudget, Argo Rollouts/Flagger, Helm release controls, ExternalSecrets/CSI Secret Store/Vault patterns, Prometheus/kube-state-metrics, and GitOps rendered-diff discipline. Keep deep checklists in [references/checklist.md](references/checklist.md) and keep this body focused on routing, gates, and closure evidence.
 
-### Probe Design Rules
+# Mode Matrix
 
-```
-Liveness probe:
-  - Check application heartbeat (not just process alive)
-  - Lightweight: do not call external dependencies (DB, cache)
-  - If liveness calls DB and DB is down: all pods restart; cascading failure
-  - initialDelaySeconds: must be > startup time (or use startupProbe instead)
-  - failureThreshold × periodSeconds = max tolerable hung duration before restart
-
-Readiness probe:
-  - Check that the pod can serve traffic:
-      HTTP: return 200 only when DB connection pool ready + config loaded + warmup done
-      TCP: port open
-      Exec: process-specific check
-  - MAY call external dependencies (DB, cache) — failing readiness removes from LB without restart
-  - Appropriate for: dependency unavailability, ongoing shutdown, warmup pending
-
-Startup probe (use when init > initialDelaySeconds):
-  - Disables liveness probe until startupProbe succeeds
-  - failureThreshold: high (e.g., 30) × periodSeconds: 10s = 300s max startup time
-  - After startupProbe succeeds: liveness and readiness take over
-
-Anti-patterns:
-  ❌ Liveness calls external DB → DB outage causes restart loop → cascading failure
-  ❌ No startup probe + high initialDelaySeconds → slow starts killed as unhealthy
-  ❌ Readiness always returns 200 → broken pods receive traffic → errors served to users
-  ❌ Same endpoint for liveness and readiness → coupled semantics; cannot independently fail
-```
-
-### Resource Configuration Matrix
-
-| Concern | Setting | Recommendation |
-| --- | --- | --- |
-| Scheduler placement | CPU request, memory request | Set to P95 steady-state observed usage; use VPA recommendations |
-| CPU throttling | CPU limit | Omit for latency-sensitive; set 2-4x request for batch workloads |
-| OOMKill prevention | Memory limit | Set equal to memory request (guaranteed QoS); add headroom for GC |
-| Autoscaling trigger | HPA targetAverageUtilization | 50-70% CPU; requests must be set or HPA cannot function |
-| Event-driven scaling | KEDA ScaledObject | Kafka: lagTarget; SQS: queueLength; Cron: schedule |
-| Spot node protection | PodDisruptionBudget | `minAvailable: 1` or `maxUnavailable: 25%` |
-| Topology | topologySpreadConstraints | Spread across zones: `whenUnsatisfiable: DoNotSchedule` |
-
-### Rollout Strategy Selection
-
-| Strategy | Mechanism | Zero-downtime | Rollback speed | Use when |
-| --- | --- | --- | --- | --- |
-| RollingUpdate (default) | Incremental pod replacement | Yes (if readiness correct) | `kubectl rollout undo` (fast) | Standard stateless services |
-| Recreate | Kill all, then create new | No (downtime) | Redeploy old version | Dev/test; single-instance batch; stateful with schema lock |
-| Canary (Argo Rollouts) | Route % traffic to new version | Yes | Automated on metric threshold | Production; high-traffic; risk-averse releases |
-| Blue-Green | Full parallel environment | Yes (instant cutover) | Switch traffic back instantly | Regulated; financial; zero-tolerance error rate |
-
-### Helm Chart Release Controls
-
-For Helm chart changes, require:
-
-- `Chart.yaml`: chart version and `appVersion` are explicit and semantically correct.
-- `values.yaml`: contains only safe defaults; no secrets, tokens, passwords, private keys, or environment-specific credentials.
-- `values.schema.json`: validates required values, type constraints, enums, resource shapes, and unsafe default prevention.
-- `templates/`: render cleanly with `helm template` for every supported environment values file.
-- `helm lint`: passes for the chart and dependency graph.
-- `helm dependency build`: produces locked dependencies from `Chart.lock`.
-- Rendered manifests: pass `kubeconform` / `kubeval` and policy-as-code checks.
-- `helm diff`: included in review for upgrades.
-- Production upgrade: uses `helm upgrade --install --atomic --wait --timeout`.
-- CRDs: ownership, upgrade ordering, compatibility, and rollback limitations documented.
-- Hooks: idempotency, timeout, delete policy, service account, RBAC, and rerun safety documented.
-- Environment overlays: minimal values overlays; no divergent charts per environment.
-- Rollback scope: explicitly state what Helm can roll back and what it cannot roll back.
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+| --- | --- | --- | --- | --- | --- |
+| Runtime fit | New service, migration from PaaS/VM, platform ownership unclear. | Decide whether Kubernetes is justified. | Owner, on-call/runbook, deploy pipeline, rollback path, observability, secret and network policy readiness. | `delivery-release-gate`, `reliability-observability-gate` | Skip Kubernetes recommendation when a simpler managed runtime meets scale/reliability needs. |
+| Workload contract | Deployment/StatefulSet/DaemonSet/Job/CronJob or pod spec changes. | Match workload type, lifecycle, storage, shutdown, scheduling, and topology to behavior. | Workload rationale, replicas, termination grace, volume/PVC impact, topology and PDB decision. | `containerization`, `release-rollback` | Skip stateful recommendations for stateless workloads with no persistent data. |
+| Traffic exposure | Service, Ingress, Gateway API, DNS, CDN, WAF, LoadBalancer, auth, timeout, or route change. | Control exposure, tenant blast radius, TLS/auth, routing, and rollback. | Rendered route diff, host/path/TLS/auth/timeouts/rate limits, exposure owner, rollback step. | `security-privacy-gate`, `delivery-release-gate` | Skip public-exposure analysis only for internal-only services with confirmed namespace/network boundaries. |
+| Health/resources/scaling | Probe, requests/limits, HPA/KEDA/VPA, PDB, or topology spread changes. | Prevent traffic to unready pods, restart storms, starvation, and rollout capacity loss. | Probe semantics, resource baseline, scaling metric, PDB, saturation alert, post-deploy check. | `reliability-observability-gate`, `observability`, `performance-budgeting` | Skip autoscaling design for one-shot Jobs unless concurrency or retry pressure is material. |
+| Security/policy/secrets | ServiceAccount, RBAC, NetworkPolicy, cloud identity, Secret, ConfigMap, or values change. | Enforce least privilege, secret-safe config, and namespace isolation. | RBAC diff, network allowlist, secret source, identity binding, policy check result. | `security-privacy-gate`, `secret-configuration-security` | Skip cluster-wide RBAC only when workload uses no API/cloud identity and namespace policy is unchanged. |
+| Helm/GitOps release | Chart, values, schema, CRD, hook, rendered manifest, upgrade, rollback, or controller sync change. | Make deployment deterministic and reversible enough for release. | `helm lint/template`, schema, diff, policy result, CRD/hook order, atomic/waited or GitOps sync evidence. | `ci-cd`, `release-rollback`, `agent-tool-permission-sandbox` | Skip live command guidance when the task is design-only and no release action will run. |
 
 # Selection Rules
 
-Select this capability when **Kubernetes workload design, routing, health, scaling, cloud gateway exposure, or security posture** is the primary concern. Adjacent routing:
-
+Select this capability when Kubernetes workload design, routing, health, scaling, gateway exposure, Helm/GitOps release, or cluster security posture is primary. Adjacent routing:
 - Prefer `containerization` when the primary concern is container image hardening, build, and registry.
 - Prefer `ci-cd` when the primary concern is deployment pipeline automation, environment promotion, and release triggers.
-- Prefer `observability` when the primary concern is distributed tracing, metrics collection, and alerting.
+- Prefer `observability` when the primary concern is metric, log, trace, dashboard, and alert design.
 - Prefer `release-rollback` when the primary concern is coordinating rollback across code, config, schema, and service integrations.
+- Add `agent-tool-permission-sandbox` before any Kubernetes, Helm, GitOps, cloud, secret, DNS, WAF, or rollback command that can mutate shared or production state.
+
+# Technical Selection Criteria
+
+Evaluate workload type, operational ownership, environment scope, namespace and tenant boundary, traffic exposure, health semantics, requests/limits, autoscaling metric, PDB/topology, RBAC/identity, NetworkPolicy, secret source, ConfigMap behavior, Helm/GitOps packaging, CRD/hook semantics, rollback breadth, observability, validation commands, source-vs-generated boundary, and release owner. A usable answer is either approved with evidence, blocked with the missing evidence, or scoped as design-only with no live mutation.
+
+# Proactive Professional Triggers
+
+- **Signal:** Ingress, Gateway API, LoadBalancer, DNS, CDN, WAF, namespace routing, or cloud identity expands reach. **Hidden risk:** a route or identity change creates public exposure, tenant leakage, or privilege escalation. **Required professional action:** require rendered route/policy review, exposure owner, rollback path, and auth/TLS/WAF decision. **Route to:** `security-privacy-gate`, `delivery-release-gate`, `kubernetes-gateway`. **Evidence required:** rendered manifest or diff, host/path/TLS/auth policy, blast-radius statement, rollback step.
+- **Signal:** `kubectl`, Helm, GitOps sync, cloud, secret, DNS, WAF, or rollback command may write shared state without permission/sandbox classification. **Hidden risk:** an agent mutates live infrastructure outside the reviewed boundary. **Required professional action:** classify action class, permission state, sandbox, dry-run/rendered diff, rollback/revert path, and redaction rule before execution. **Route to:** `agent-tool-permission-sandbox`, `delivery-release-gate`. **Evidence required:** command, scope, dry-run or rendered output, approval boundary, rollback note.
+- **Signal:** Probes, requests/limits, autoscaling, PDB, topology spread, or rollout strategy are missing or copied from another service. **Hidden risk:** rollouts send traffic to unready pods, trigger restart storms, or lose all replicas during node drain. **Required professional action:** design service-specific health and capacity controls and tie them to release watch metrics. **Route to:** `reliability-observability-gate`, `observability`, `performance-budgeting`. **Evidence required:** probe semantics, resource baseline, HPA/KEDA metric, PDB/topology decision, alert/query.
+- **Signal:** ServiceAccount, RBAC, NetworkPolicy, Secret source, ConfigMap, or workload identity broadens access. **Hidden risk:** compromised pods gain lateral movement, secret read access, or cloud permissions. **Required professional action:** apply least privilege, default-deny networking, secret-safe sourcing, and policy-as-code checks. **Route to:** `security-privacy-gate`, `secret-configuration-security`. **Evidence required:** RBAC diff, network allowlist, secret source, identity binding, policy result.
+- **Signal:** Helm chart, values, CRD, hook, or GitOps manifest changes without lint/template/schema/diff/policy and rollback-scope evidence. **Hidden risk:** the release applies an unreviewed manifest, unsafe default, irreversible CRD change, or stuck hook job. **Required professional action:** require deterministic render validation, CRD/hook order, atomic/waited or controller sync behavior, and rollback limits. **Route to:** `ci-cd`, `release-rollback`, `delivery-release-gate`. **Evidence required:** command output, exit code, rendered artifact/report, CRD/hook note, rollback scope.
 
 # Risk Escalation Rules
 
-Escalate when: the workload is public-facing (Ingress/Gateway exposes it to the internet without an auth layer); DNS, CDN, WAF, or LoadBalancer rules expand exposure; the workload runs as root or with privileged SecurityContext; the workload accesses another tenant's namespace resources; the ServiceAccount has cluster-level RBAC bindings or broad cloud identity permissions; a StatefulSet modification changes PersistentVolume claims; NetworkPolicy is absent and the namespace contains sensitive workloads; or a database migration is coupled to the rollout and cannot be rolled back independently.
+Escalate when a workload is public-facing, exposure expands, privileged or root execution is proposed, cluster-level RBAC or broad cloud identity appears, NetworkPolicy is absent around sensitive workloads, StatefulSet/PVC behavior changes, CRD schema rollback is unclear, a database migration is coupled to deployment, or release commands can mutate shared state without a reviewed permission boundary.
 
 # Critical Details
 
-- **Liveness calling a database.** A liveness probe calls `GET /health` which checks DB connectivity. The database goes down during maintenance. All pods fail the liveness check. All pods restart. The restart-storm causes the DB connection pool to be re-established under load. Recovery takes 10x longer than if liveness had not called the DB. Fix: liveness checks only process health; readiness checks dependencies.
-- **Memory limit = memory request.** If memory request < memory limit, the pod has Burstable QoS. Under node memory pressure, Kubernetes will evict Burstable pods first. A Java service with 512Mi request and 1Gi limit bursts to 800Mi; node is under pressure; pod evicted; service unavailable. Fix: set memory limit = request for Guaranteed QoS on critical services.
-- **Secret in ConfigMap.** ConfigMaps are not encrypted at rest in etcd by default. A database password stored in a ConfigMap (not a Secret) is visible to anyone with `kubectl get configmap` RBAC. Even Kubernetes Secrets are only base64-encoded unless etcd encryption at rest is enabled. Use ExternalSecrets or Sealed Secrets for all credential values.
-- **No PodDisruptionBudget during node drain.** A cluster upgrade drains nodes. Without a PDB, all replicas of a Deployment may be evicted simultaneously. For a 2-replica deployment: both pods evicted → service unavailable during drain. PDB `minAvailable: 1` prevents this.
-
-### Anti-examples
-
-| Anti-pattern | Failure |
-| --- | --- |
-| Liveness probe checks DB connectivity | DB maintenance → liveness fails → pods restart → restart storm → extended outage |
-| Secret in ConfigMap or manifest YAML | Credential visible to anyone with namespace read access; base64 is not encryption |
-| No resource requests | Scheduler blind to pod needs; noisy neighbors steal CPU/memory; workload starved |
-| Memory limit >> memory request | Burstable QoS; evicted first under pressure; unexpected pod loss |
-| Default ServiceAccount with broad RBAC | Any compromised pod has cluster permissions; lateral movement risk |
-| No NetworkPolicy | Any pod reaches any other pod; compromised pod can exfiltrate from adjacent services |
-| No PodDisruptionBudget | Node drain evicts all replicas simultaneously; zero-downtime promise broken |
-| Rollback = kubectl rollout undo only | Reverts image; does not revert ConfigMap, schema migration, Ingress rule; service broken |
+- Liveness may check process responsiveness; readiness may check dependencies; startup absorbs initialization. Mixing them turns a dependency outage into a restart storm.
+- Memory request/limit shape affects QoS and eviction behavior; copying values from another workload hides real capacity risk.
+- ConfigMaps are not a credential container, and committed Kubernetes Secrets are not a safe secret-management process.
+- PDB and topology spread are part of the availability contract, not optional decoration, for multi-replica services.
+- Helm rollback does not safely undo CRDs, data migrations, external routes, secret versions, or provider-side configuration.
 
 # Failure Modes
 
-- Liveness probe calls DB; DB maintenance window; all pods restart; 10-minute outage during planned maintenance.
-- Database password in ConfigMap; read by developer with `kubectl get configmap -n prod`; credential leaked.
-- No resource requests; noisy batch job starves API pod of CPU; latency spikes; alert fires during business hours.
-- Memory request 256Mi, limit 1Gi; node under pressure; pod evicted at 600Mi; service unavailable; no readiness signal given.
-- Default ServiceAccount; compromised pod reads Secrets from other namespaces via cluster RBAC; lateral movement.
-- No NetworkPolicy; compromised frontend pod makes internal calls to payment service directly; bypasses API gateway.
-- Node drain during upgrade; 2-replica deployment; both pods evicted simultaneously (no PDB); 60-second outage.
-- Canary rollout with no automated rollback; error rate 10%; alert fires but no automated rollback; on-call manually reverts after 20 minutes.
+- **Restart storm:** liveness calls the database; maintenance makes every pod restart; recovery is slower than dependency restoration.
+- **Credential leak:** password appears in ConfigMap, values file, or committed Secret YAML; namespace readers can retrieve it.
+- **Scheduler blindness:** no resource requests; a noisy neighbor starves the API and latency spikes without clear capacity evidence.
+- **Eviction surprise:** memory request is far below limit; node pressure evicts a critical pod before readiness protects traffic.
+- **Privilege spread:** default ServiceAccount or cluster role lets a compromised pod read unrelated Secrets or APIs.
+- **Network bypass:** absent NetworkPolicy lets one namespace call an internal service directly and bypass gateway controls.
+- **Availability gap:** node drain evicts all replicas because PDB/topology spread was not defined.
+- **Rollback illusion:** `kubectl rollout undo` restores the image while the Gateway rule, Secret version, or schema remains incompatible.
+- **Helm hook stall:** non-idempotent hook job hangs during upgrade; release is stuck and rollback semantics are unclear.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries routing, gates, and closure rules. Load [references/checklist.md](references/checklist.md) when drafting a concrete manifest/chart review, production/shared-environment Kubernetes plan, Gateway/Ingress exposure review, RBAC/NetworkPolicy/secret review, Helm/GitOps release plan, CRD/hook decision, or rollout/rollback checklist. Do not load it for a local-only design note with no cluster, release, route, or secret surface.
 
 # Output Contract
 
-Return a Kubernetes workload design with:
+Return a `kubernetes_gateway_plan` with:
+- `mode_selected` and trigger signal.
+- `boundaries_inspected`: workload, namespace, route, cloud exposure, identity/RBAC, network policy, config/secret, Helm/GitOps, rollout, observability, and skipped boundaries with reason.
+- `workload_contract`: type, lifecycle, replicas, shutdown, storage/PVC, topology, PDB, and image tag policy.
+- `health_resources_scaling`: probes, requests/limits, HPA/KEDA/VPA, saturation signal, and post-deploy watch metric.
+- `traffic_security`: Service, Ingress/Gateway, DNS/CDN/WAF/load balancer, TLS/auth/timeouts/rate limits, ServiceAccount/RBAC, NetworkPolicy, secret source, and security context.
+- `release_validation`: command, validator/test, output, exit code, rendered artifact/report, diff, policy result, and freshness status.
+- `rollback_plan`: image, config, secret, route, schema, CRD, hook, and external dependency rollback or forward-fix scope.
+- `residual_risk` and next gate or handoff owner.
 
-- `maturity_rationale` (why Kubernetes is justified; operational ownership confirmed)
-- `workload_type` (Deployment / StatefulSet / Job / CronJob / DaemonSet; rationale)
-- `image` (registry, tag policy: semver tag not `latest`; image pull policy)
-- `config_secrets` (ConfigMap keys; Secret source: ExternalSecrets / Sealed Secrets; mount method)
-- `service_account` (dedicated SA name; RBAC bindings; Workload Identity annotation if cloud API access needed)
-- `security_context` (pod + container: runAsNonRoot, allowPrivilegeEscalation, readOnlyRootFilesystem, seccompProfile)
-- `resources` (CPU request/limit; memory request/limit; QoS class target)
-- `probes` (liveness: endpoint, what it checks, thresholds; readiness: endpoint, dependencies checked; startup if needed)
-- `service` (ClusterIP / LoadBalancer / NodePort; port mapping; session affinity)
-- `routing` (Ingress / Gateway API: host, path, TLS, timeout, auth annotation, rate limit)
-- `cloud_exposure` (DNS/CDN/WAF/load balancer exposure, cloud account/project boundary, namespace blast radius, TLS/auth policy, rollback owner)
-- `network_policy` (ingress allow rules; egress allow rules; default-deny namespace policy)
-- `scaling` (HPA: metric, target utilization; KEDA: trigger type; PodDisruptionBudget: minAvailable)
-- `topology` (topologySpreadConstraints: zone spread; node affinity/anti-affinity)
-- `rollout_strategy` (RollingUpdate / Canary / Blue-Green; rollback trigger; rollback procedure for config + schema)
-- `observability` (metrics endpoints; log format: structured JSON; distributed trace context propagation)
-- `verification` (post-deploy health check command; smoke test; rollback decision criteria)
-- `helm_chart` (Chart.yaml version, appVersion, dependencies, values files, values.schema.json, rendered manifest validation, CRDs, hooks, upgrade flags, rollback scope)
+# Evidence Contract
+
+Close Kubernetes work only when these answers are concrete:
+- **Boundaries inspected:** source manifests/charts, namespace, route, exposure, identity/RBAC, NetworkPolicy, secrets/config, release path, observability, rollback, and skipped scope.
+- **Validation evidence:** exact command, validator or test, output summary, exit code, artifact/report path, rendered diff/policy result, and freshness relative to the final edit.
+- **What evidence proves:** scheduling contract, route intent, secret-safe config, policy posture, rendered manifest validity, rollout readiness, or rollback command readiness.
+- **What evidence does not prove:** live cluster admission, provider-side DNS/CDN/WAF behavior, production capacity, future secret rotation, actual canary success, or data/schema reversibility unless verified separately.
+- **Reuse / placement rationale:** why the responsibility belongs in Kubernetes manifests, Helm chart, GitOps overlay, platform policy, CI gate, or adjacent capability.
+- **Residual risk:** unverified cluster/provider behavior, missing test edge, irreversible CRD/schema/provider state, manual rollback step, or operational ownership gap.
+- **Next gate:** `delivery-release-gate`, `reliability-observability-gate`, `security-privacy-gate`, `quality-test-gate`, or `agent-tool-permission-sandbox` as applicable.
+
+# Benchmark Coverage
+
+This capability covers Kubernetes workload fit, Gateway/Ingress exposure, pod security, least-privilege identity, NetworkPolicy, secret sourcing, probes, resource and scaling controls, PDB/topology availability, Helm/GitOps deterministic rendering, CRD/hook risk, rollout and rollback scope, observability handoff, and tool-permission boundaries for cluster-mutating actions.
+
+# Routing Coverage
+
+Routes from `change-forge-router`, `delivery-release-gate`, `reliability-observability-gate`, `security-privacy-gate`, `ci-cd`, `containerization`, `secret-configuration-security`, and `release-rollback` should arrive here when Kubernetes manifests, charts, routes, probes, resources, security posture, or rollout behavior need design or review. Route away when the primary need is only image construction, pipeline mechanics, secret rotation design, observability instrumentation, or cross-surface rollback orchestration.
 
 # Quality Gate
 
-The Kubernetes workload design is complete only when:
-
 1. Liveness, readiness, and startup probes designed with correct semantics (liveness does not call external deps).
-2. Resource requests set on every container; memory request = memory limit for critical workloads.
-3. Secrets sourced from ExternalSecrets/Sealed Secrets — not ConfigMaps, manifests, or env literals.
-4. SecurityContext: `runAsNonRoot: true`, `allowPrivilegeEscalation: false`, `readOnlyRootFilesystem: true`.
+2. Resource requests are set on every container and scaling metrics have a defensible baseline or forecast.
+3. Secrets are sourced from approved secret mechanisms, not ConfigMaps, manifests, `values.yaml`, or env literals.
+4. SecurityContext covers non-root execution, privilege escalation, writable filesystem need, and seccomp/AppArmor where supported.
 5. Dedicated ServiceAccount per workload with minimum RBAC.
-6. NetworkPolicy: namespace default-deny in place; explicit allow rules added.
-7. PodDisruptionBudget defined for all HA workloads.
-8. Rollout strategy selected; rollback procedure documented (image + config + schema scope).
-9. Gateway/Ingress: TLS configured; auth enforced; timeout set; rate limit configured.
+6. NetworkPolicy default-deny and explicit allow rules are reviewed for sensitive namespaces.
+7. PDB and topology spread are defined or explicitly skipped with reason.
+8. Gateway/Ingress/LoadBalancer exposure has TLS, auth, timeout, rate limit, blast-radius, owner, and rollback decision.
+9. Rollout and rollback cover image, config, secret, route, schema, CRD, hook, and external config scope.
 10. Operational ownership confirmed: team owns on-call, deployment pipeline, and incident runbook.
-11. DNS/CDN/WAF/load balancer exposure, ServiceAccount cloud identity, and namespace blast radius are reviewed when changed.
-12. Helm chart changes pass `helm lint`, `helm template`, schema validation, rendered manifest validation, and policy checks.
-13. `values.yaml` contains no secrets; secret values are sourced through approved secret mechanisms.
-14. Production Helm release path uses atomic, waited upgrades or equivalent GitOps safeguards.
-15. CRDs and hooks have explicit ordering, idempotency, timeout, and rollback limitations documented.
+11. Helm/GitOps changes pass lint/template/schema/diff/rendered-manifest/policy checks or are disclosed as not verified.
+12. CRDs and hooks have ordering, idempotency, timeout, service account, and rollback limitations documented.
+13. Tool permission, sandbox boundary, dry-run/rendered diff, rollback path, and redaction rule are recorded before live cluster or cloud mutation.
 
 # Used By
 
@@ -205,8 +152,8 @@ The Kubernetes workload design is complete only when:
 
 # Handoff
 
-Hand off to `containerization` for image hardening and registry; `ci-cd` for deployment pipeline and environment promotion; `observability` for metrics, traces, and alerting; `release-rollback` for cross-surface rollback coordination.
+Hand off to `containerization` for image hardening and registry, `ci-cd` for deployment pipeline and environment promotion, `observability` for metrics/traces/alerts, `security-privacy-gate` for exposure/RBAC/secret risk, `release-rollback` for cross-surface recovery, and `agent-tool-permission-sandbox` before live Kubernetes/Helm/cloud mutations.
 
 # Completion Criteria
 
-The capability is complete when **the workload can be scheduled with correct resources, routed safely, observed, scaled automatically, and rolled back with an explicit procedure covering image, configuration, schema scope, and Helm chart release scope when Helm is used** — including lint/template/schema/rendered-manifest validation, secret-safe values, CRD/hook handling, and atomic waited upgrade behavior — secured by non-root execution, minimal RBAC, secret injection, and network policy.
+The capability is complete when the workload is justified, schedulable, routable, least-privileged, secret-safe, observable, scalable, validated by current rendered or policy evidence, and recoverable through an explicit rollback/forward-fix plan that covers Kubernetes, Helm/GitOps, gateway, config, secret, schema, CRD, hook, and external surfaces within the stated evidence limits.

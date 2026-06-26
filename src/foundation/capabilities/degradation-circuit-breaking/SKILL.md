@@ -19,6 +19,10 @@ Use this capability when a change calls: external HTTP/gRPC APIs (payment gatewa
 
 Do not use this capability to hide genuine correctness requirements. If a dependency is **required for correct behavior** (payment authorization, identity verification, data integrity check), the system must **fail closed** — no silent degradation. This capability designs degradation; it does not approve degradation of critical flows. Do not use it to avoid fixing an unreliable dependency; the root cause should also be addressed. Do not use it to silently drop irreversible operations (financial writes, audit records) without explicit product owner approval for that behavior.
 
+# Stage Fit
+
+Own resilience design during planning, implementation review, testing, release preparation, and incident repair when dependency failure, timeout, overload, or fallback can affect a core flow. In planning, turn current source, dependency graph, project memory, execution trajectory, SLOs, retry budgets, and product criticality into fail-open/closed, timeout, fallback, circuit, bulkhead, and observability decisions. In review, reject stale "safe fallback", "optional dependency", "library default is fine", or "circuit already protects it" claims unless current source, telemetry, and validation confirm them. Hand off when the unresolved question is retry/idempotency, cache freshness, public failure contract, config/kill-switch lifecycle, observability, release readiness, or security/privacy.
+
 # Non-Negotiable Rules
 
 - **Every external dependency call has a timeout.** No call may block indefinitely. Timeout values are explicit and documented: `connection_timeout` (time to establish connection) and `read_timeout` (time to receive full response) are configured separately. Default "no timeout" is always wrong in production.
@@ -31,106 +35,22 @@ Do not use this capability to hide genuine correctness requirements. If a depend
 - **Stale fallback data has an explicit maximum staleness tolerance.** If a cache miss falls back to a stale value, the maximum acceptable age is defined and enforced. "Return whatever is in cache" without a staleness limit is not a fallback; it is silent data quality degradation.
 - **Chaos and resilience tests verify degradation behavior.** Fallback paths that are never triggered in production are not tested by normal test suites. Circuit breaker behavior requires fault injection: `chaos-monkey`, `tc netem` (network emulation), `toxiproxy`, or platform-level fault injection (AWS Fault Injection Simulator, Gremlin).
 
+# Mode Matrix
+
+Select the degradation mode before choosing timeout, fallback, circuit, bulkhead, load-shed, or recovery mechanics.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Critical fail-closed dependency | Auth, authorization, fraud, payment, compliance, tenant isolation, or data integrity dependency. | Preserve correctness and security while bounding latency. | Criticality class, denied/degraded outcome, timeout, user-safe error, alert. | `failure-contract-design`, `security-privacy-gate` | Silent fallback or fail-open. |
+| Optional graceful degradation | Recommendations, personalization, analytics, search refinement, notification, model inference, or non-core enhancement. | Keep core flow available with explicit degraded state. | Product approval, fallback contract, user impact, metric/log/trace signal. | `observability`, `frontend-change-builder` when UX changes | Null/empty default without typed state. |
+| Latency budget protection | External call, cache miss, model call, queue, or service hop risks exceeding upstream deadline. | Timeout budget chain and bounded wait. | Upstream/downstream deadline, P95/P99 baseline or not-verified limit, abort behavior. | `performance-budgeting`, `language-performance-safety` | Timeout from library defaults. |
+| Retry storm and circuit control | Retry, backoff, throttling, 429/503, SDK retry, or provider saturation. | Prevent amplification and cut load before cascade. | Retry budget, idempotency proof, circuit thresholds, open/half-open behavior. | `idempotency-retry-design`, `concurrency-control` | Retrying non-idempotent writes. |
+| Bulkhead and load shedding | Shared pool, fan-out, worker pool, queue, cache stampede, or hot dependency. | Isolate resource exhaustion and fail fast under pressure. | Pool/queue/concurrency bound, reject behavior, backpressure metric, SLO impact. | `performance-budgeting`, `observability` | Global locks or unbounded queues. |
+| Resilience repair or drill | Incident, chaos test, failing fallback, open circuit, timeout cascade, or stale degraded mode. | Verify cause, repair controls, and prove recovery. | Baseline, fault injection, before/after signal, rollback/disable path. | `failure-diagnosis`, `quality-test-gate` | Third same-path retry without route repair. |
+
 # Industry Benchmarks
 
-Anchor against: **Michael Nygard "Release It!" (2nd ed., 2018)** — canonical reference for timeout, circuit breaker, bulkhead, and fail-fast patterns; coined "circuit breaker" for software. **Netflix Hystrix** (now in maintenance; concepts still canonical) — thread pool isolation, circuit breaker, fallback chain; original production-scale circuit breaker. **Resilience4j** (Java) — Hystrix successor; circuit breaker, rate limiter, retry, bulkhead; Micrometer metrics. **Polly** (.NET) — circuit breaker, retry, timeout, bulkhead. **Envoy / Istio service mesh** — circuit breaking and outlier detection at the infrastructure layer (no code required); `outlierDetection` and `connectionPool` configuration. **AWS SDK retry configuration** — exponential backoff with jitter (https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/). **Google SRE Book** Ch. 19 (Front-end Infrastructure / Load Balancing) and Ch. 21 (Handling Overload) — request hedging, load shedding, backpressure. **CNCF Chaos Engineering principles** (Chaos Monkey, LitmusChaos, Gremlin) — verify resilience by injecting faults. **RFC 7807 / RFC 9457** — Problem Details used in degraded response bodies to communicate the fallback state to clients. **OWASP API Top 10 (2023)** — API4:2023 Unrestricted Resource Consumption relates to timeout and rate-limit discipline. **Martin Fowler "Patterns of Enterprise Application Architecture"** — Gateway pattern for wrapping third-party dependencies. **Toxiproxy** (Shopify) — TCP proxy for simulating network conditions (latency, bandwidth, timeouts) in tests. **AWS Fault Injection Simulator (FIS)** — production-grade chaos engineering. **Alibaba Sentinel** — flow control, circuit breaking, system adaptive protection for microservices.
-
-### Dependency Criticality Classification
-
-| Criticality | Definition | Failure policy | Example |
-| --- | --- | --- | --- |
-| **CRITICAL-CLOSED** | Required for correctness or security | Fail closed; return error; no silent degradation | Auth service, payment authorization, fraud check |
-| **CRITICAL-DEGRADABLE** | Required for core flow but has safe fallback | Retry then defined fallback; alert immediately | Primary DB (→ read replica fallback); price service (→ cached price with age shown) |
-| **OPTIONAL-DEGRADABLE** | Enhances experience; safe to omit | Return empty/null; log; no user-visible error | Recommendations, personalization, analytics |
-| **FIRE-AND-FORGET** | Side effect; no user impact if lost | Queue + retry; drop if queue full with metric | Audit log sink, event tracking, notification |
-| **SOFT-REALTIME** | Affects UX if slow, not if absent | Timeout aggressively (< 200ms); return empty | Feature flags, A/B test assignment |
-
-### Timeout Configuration Decision Tree
-
-```
-Is this call on the critical path (synchronous, user-facing)?
-├─ Yes →
-│   Is this a connection establishment?
-│   ├─ Yes → connection_timeout: 1–3s (network latency + TLS)
-│   └─ No  → read_timeout: P99 latency × 2, max 5s for user-facing calls
-│             (e.g., P99 = 800ms → read_timeout = 1600ms, capped at 5s)
-└─ No (background, async, batch) →
-    read_timeout: P99 × 3, up to 30s; circuit break at sustained high latency
-
-Is the dependency in the same datacenter / VPC?
-├─ Yes → connection_timeout: 500ms; read_timeout: P99 × 2
-└─ No  (cross-region, public internet) → connection_timeout: 3s; read_timeout: 10s max for non-user-facing
-
-Is there a cascading timeout budget (upstream caller has a shorter timeout)?
-└─ Yes → downstream timeout < upstream timeout - 20% buffer
-         (e.g., upstream read_timeout = 3s → downstream read_timeout ≤ 2400ms)
-```
-
-### Circuit Breaker Configuration Matrix
-
-| Parameter | Conservative | Standard | Aggressive | Notes |
-| --- | --- | --- | --- | --- |
-| **Failure rate threshold** | 20% | 50% | 80% | % of requests that must fail before opening |
-| **Minimum request volume** | 5 | 10 | 20 | Avoids tripping on cold traffic |
-| **Sliding window size** | 10 calls | 20 calls | 50 calls | Count-based or time-based (e.g., 60s) |
-| **Open state duration** | 5s | 10s | 30s | Time before half-open probe attempt |
-| **Half-open probe count** | 1 | 3 | 5 | Requests allowed in half-open before deciding |
-| **Probe success threshold** | 1 success | 2 successes | 3 successes | Required to close circuit |
-| **Pick when** | Payment, auth | General services | High-volume logging/analytics | Match to criticality |
-
-### Retry Policy Design
-
-```
-Retryable error conditions (RETRY):
-  - HTTP 500, 502, 503, 504
-  - Connection timeout (ETIMEDOUT, ECONNRESET)
-  - gRPC UNAVAILABLE, RESOURCE_EXHAUSTED
-
-Non-retryable conditions (FAIL IMMEDIATELY):
-  - HTTP 400, 401, 403, 404, 409, 422 (client errors; retrying doesn't help)
-  - gRPC INVALID_ARGUMENT, NOT_FOUND, PERMISSION_DENIED
-  - Idempotency key collision (HTTP 409 with specific error code)
-
-Retry backoff:
-  sleep = min(cap, base * 2^attempt) + random(0, jitter)
-  e.g.: base=100ms, cap=10s, jitter=±50ms
-  Attempt 1: ~100ms; Attempt 2: ~200ms; Attempt 3: ~400ms; Attempt 4: ~800ms
-
-Max attempts:
-  User-facing synchronous: 2–3 attempts (stay within timeout budget)
-  Background async: 5–10 attempts; exponential up to 30s
-  Dead letter queue: after max attempts, route to DLQ with full context
-```
-
-### Bulkhead Sizing
-
-```
-Thread pool bulkhead (per downstream dependency):
-  pool_size = (dependency_P99_latency_ms / 1000) × dependency_RPS × 1.3 (20% buffer)
-  queue_size = pool_size × 2 (bounded; reject when full → 503 fast-fail)
-  
-  Example: dependency P99 = 200ms, expected RPS = 100
-  pool_size = (200/1000) × 100 × 1.3 = 26 threads
-  queue_size = 52
-
-Semaphore bulkhead (for async/non-blocking calls):
-  max_concurrent = dependency_RPS × dependency_P99_latency_s × 1.5
-```
-
-### Anti-examples
-
-| Anti-pattern | Failure mode |
-| --- | --- |
-| No timeout on HTTP client | One slow dependency queues all threads; server unresponsive; cascading outage |
-| `retry: 3` on `POST /payments` without idempotency key | Payment charged 3 times on transient 500 response |
-| Circuit breaker at library default (50% threshold, 5 calls) | Trips on 3 failures during warm-up; healthy service appears broken; false positive outage |
-| Auth service: fail-open ("if unavailable, allow") | Availability blip grants access to all resources to all users |
-| "Return null" fallback for pricing service without product approval | Items shown with $0 price; financial loss |
-| No circuit breaker state metric | Circuit opens; nobody knows; fallback runs for 72 hours silently |
-| Retry on HTTP 401 | 10 retries × auth failure = 10 failed auth attempts; account lockout triggered |
-| Shared thread pool for all downstream services | Analytics sink becomes slow; exhausts threads; payment service requests queue; outage |
-| Stale cache fallback with no age limit | Cache shows data 2 weeks old; no observable signal; silent data quality issue |
-| Fallback not tested | 2 years later, fallback code has a bug; discovered only during actual outage |
+Anchor against Nygard's **Release It!**, Google SRE overload and error-budget practice, Hystrix/Resilience4j/Polly circuit-breaker patterns, Envoy/Istio outlier detection, AWS exponential backoff with jitter, Toxiproxy/Fault Injection Simulator resilience testing, RFC 7807/RFC 9457 degraded problem details, and OWASP API resource-consumption controls. Keep this body focused on routing, evidence, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for dependency criticality matrices, timeout/circuit/retry/bulkhead patterns, graph/memory/trajectory coupling, resilience evidence examples, and anti-pattern review.
 
 # Selection Rules
 
@@ -145,6 +65,16 @@ Select this capability when **dependency failure or cascading outage risk** is p
 # Risk Escalation Rules
 
 Escalate when: a fail-open decision affects authentication, authorization, fraud detection, compliance validation, or payment authorization; fallback behavior silently drops irreversible writes (financial, audit, legal); stale fallback data has financial, regulatory, or contractual implications; a circuit breaker configuration change is being made to a dependency that handles PII, payments, or secrets; the degraded behavior is complex enough that testing requires production traffic (shadow mode required); the dependency failure mode could affect all tenants simultaneously (shared-infrastructure blast radius); chaos engineering requires injecting faults into a production environment.
+
+# Proactive Professional Triggers
+
+- **Signal:** project memory, repository graph, or prior execution says a dependency is optional, already protected, or safe to degrade without current confirmation. **Hidden risk:** stale context approves a fallback that no longer matches current callers, SLOs, tenants, or product criticality. **Required professional action:** confirm current source, call graph, dependency ownership, telemetry, and validation freshness. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected memory, freshness limits, and unknown dependency disclosure.
+- **Signal:** external HTTP/gRPC/SDK/cache/search/model/feature-flag call lacks explicit deadline, timeout, cancellation, or owner. **Hidden risk:** one slow dependency can consume request budget and pool capacity until the core flow fails. **Required professional action:** define timeout budget chain and cancellation behavior before handoff. **Route to:** `performance-budgeting`, `failure-contract-design`. **Evidence required:** upstream deadline, dependency P99 or not-verified limit, timeout values, and user-safe timeout result.
+- **Signal:** fallback returns null, empty/default data, stale cache, or "skip" without a typed degraded state. **Hidden risk:** degraded mode is indistinguishable from correctness, data loss, or product absence. **Required professional action:** define fallback contract, product approval, user impact, and observability. **Route to:** `failure-contract-design`, `observability`. **Evidence required:** degraded response, product owner approval, metric/log/trace field, and test.
+- **Signal:** retries are configured without idempotency proof, retry budget, jitter, or circuit interaction. **Hidden risk:** retry amplification worsens the outage and can duplicate side effects. **Required professional action:** bound retries and prove safe duplicate behavior. **Route to:** `idempotency-retry-design`, `concurrency-control`. **Evidence required:** retryable/non-retryable list, backoff/jitter, max attempts, idempotency key, and retry-load estimate.
+- **Signal:** circuit breaker uses library defaults or lacks half-open probes, reset behavior, or state metrics. **Hidden risk:** false trips, stuck-open circuits, or silent degraded operation. **Required professional action:** calibrate circuit thresholds to traffic and criticality. **Route to:** `reliability-observability-gate`, `observability`. **Evidence required:** window, min volume, open duration, probe count, close threshold, dashboard signal.
+- **Signal:** dependency failure can exhaust shared pool, worker, queue, thread, coroutine, DB connection, or fan-out capacity. **Hidden risk:** optional dependency failure takes down unrelated critical flows. **Required professional action:** add bulkhead, load shedding, backpressure, or bounded concurrency. **Route to:** `performance-budgeting`, `language-performance-safety`, `concurrency-control`. **Evidence required:** pool/queue/fan-out ceiling, reject behavior, saturation metric, and load/fault test or not-verified limit.
+- **Signal:** feature flag, kill switch, provider mode, or runtime config controls degradation behavior without owner, typed default, rollback, or cleanup. **Hidden risk:** production mitigation depends on ungoverned config and can invert safe defaults. **Required professional action:** apply runtime config policy. **Route to:** `configuration-runtime-policy`, `delivery-release-gate`. **Evidence required:** config schema, safe default, owner, rollout/rollback, telemetry, and cleanup path.
 
 # Critical Details
 
@@ -173,21 +103,46 @@ Resilience patterns are only as good as their configuration and observability. P
 - `retry: 10` on HTTP 401; auth service returns 401 for malformed token; 10 auth attempts per request; triggers account lockout for 1000 users.
 - Feature flag service unavailable; default is "feature off"; all new checkout flow gated features disabled; 40% revenue drop for 20 minutes.
 
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 degradation selection, safety, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete resilience plan, before implementation starts, or when timeout, fallback, circuit, bulkhead, observability, product approval, or recovery evidence is uncertain. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when dependency criticality, timeout/circuit/retry/bulkhead matrices, chaos testing, graph/memory/trajectory reuse, resilience evidence, or anti-pattern detail needs depth. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are enough.
+
 # Output Contract
 
 Return a resilience plan with:
 
+- `mode_selected` (critical fail-closed, optional graceful degradation, latency budget protection, retry storm/circuit control, bulkhead/load shedding, or resilience repair/drill)
+- `resilience_evidence` (current source paths, dependency graph, project memory, execution trajectory, SLOs, telemetry, runbooks, tests, and validation freshness inspected)
+- `graph_memory_trajectory_judgment` (accepted, rejected, or not verified for every graph/memory/trajectory claim that affects safety)
 - `dependencies` (per dependency: name, criticality class, protocol, P50/P99 latency, availability SLA)
+- `protected_flows` (core user, admin, worker, batch, or operational flows protected from cascade)
 - `timeout_config` (per dependency: connection_timeout, read_timeout, total_budget, justification)
 - `retry_policy` (per dependency: max_attempts, backoff_algorithm, jitter, retryable_errors, non_retryable_errors, idempotency_requirement)
 - `circuit_breaker` (per dependency: library/layer, failure_rate_threshold, min_requests, window_size, open_duration, half_open_probes, close_threshold)
-- `bulkhead` (per dependency: isolation_type — thread pool/semaphore, pool_size, queue_size, reject_behavior)
+- `bulkhead_load_shedding` (per dependency: isolation_type, pool_size, queue_size, max_concurrent, shed/reject behavior)
 - `fallback_behavior` (per dependency: fallback type, fallback value, staleness_limit, product_owner_approval, user_impact_description)
+- `degradation_contract` (typed degraded response/state, safe user message, retryability, terminal behavior, and recovery signal)
 - `fail_open_vs_closed` (per dependency: decision, security/correctness justification)
 - `stale_tolerance` (per cache fallback: maximum acceptable age, enforcement mechanism)
+- `config_and_kill_switches` (safe defaults, owner, typed validation, rollout/rollback, cleanup path)
 - `observability` (metrics emitted: circuit_state, fallback_count, timeout_count, retry_count; dashboard; alert thresholds)
 - `chaos_tests` (test scenarios: fault type, injection tool, expected behavior, pass criterion)
 - `cascade_analysis` (timeout budget chain from client → API → dependencies; amplification risk)
+- `changed_degradation_to_validation_map` (each timeout, retry, circuit, bulkhead, fallback, degraded response, config, metric, and test mapped to validator or residual risk)
+- `handoff_boundaries` (what belongs to retry/idempotency, cache freshness, failure contract, config, observability, release, security, or no-next-gate rationale)
+- `evidence_limits` (what was not verified, such as production traffic shape, provider behavior, all tenants, chaos environment, SLO baseline, or recovery drill)
+
+# Evidence Contract
+
+Close a resilience plan only when the output names selected mode, current resilience evidence inspected, graph/memory/execution reuse judgment, protected flow and dependency criticality, fail-open/closed decision, timeout budget chain, retry/circuit/bulkhead/fallback configuration, typed degraded response, observability signals, chaos or targeted test evidence, changed-degradation-to-validation map, handoff boundaries, residual risk, and evidence limits. A statement like "add circuit breaker and fallback" is not sufficient evidence.
+
+# Benchmark Coverage
+
+Improved degradation plans should reject no-timeout clients, retries on non-idempotent writes, library-default breakers, fail-open auth/payment/fraud/compliance checks, null or empty fallback without typed degraded state, no circuit-state metric, shared pools without bulkhead, stale cache fallback without max age, unsafe feature-flag defaults, and untested fallback paths. Detailed matrices and examples belong in references so this body stays efficient.
+
+# Routing Coverage
+
+Route here when the primary work is dependency failure containment: timeout, fallback, circuit breaker, bulkhead, load shedding, fail-open/closed policy, stale fallback, or graceful degradation. Hand off when the primary concern is duplicate-effect retry lifecycle (`idempotency-retry-design`), cache freshness/invalidation (`cache-design`), typed boundary errors (`failure-contract-design`), runtime config or kill-switch lifecycle (`configuration-runtime-policy`), telemetry design (`observability`), release/watch/rollback (`delivery-release-gate`), or security/privacy of a fail-open decision (`security-privacy-gate`).
 
 # Quality Gate
 
@@ -203,6 +158,11 @@ The resilience plan passes only when:
 8. Stale cache fallbacks have a defined maximum staleness.
 9. Circuit breaker state changes, fallback invocations, and timeout events are emitted as metrics.
 10. Fallback paths are covered by a specific test (unit test with stubbed failure or chaos test).
+11. Repository graph, project memory, and execution trajectory inputs are current-source confirmed or marked not verified before they shape fail-open/closed, fallback, circuit, or recovery decisions.
+12. Every timeout, retry, circuit, bulkhead, fallback, degraded response, config, metric, and chaos/test decision maps to validation evidence or named residual risk.
+13. Degraded responses are typed and distinguishable from normal correctness, validation failure, permission denial, and terminal dependency failure.
+14. Config, feature flag, provider-mode, and kill-switch degradation controls have typed validation, safe default, owner, rollout/rollback path, observability, and cleanup path.
+15. Handoff boundaries and evidence limits are explicit so degradation design is not over-claimed as retry safety, cache correctness, public API failure contract, production release readiness, or security approval.
 
 # Used By
 

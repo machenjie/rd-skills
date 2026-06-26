@@ -19,6 +19,10 @@ Use this capability when: a test suite needs database records, fixtures, factori
 
 Do not use this capability for: testing business logic that requires no external state (pure functions, value object validation — use in-memory unit tests with no data layer); designing the test level strategy (which tests to write at which layer — use `test-strategy`); integration or end-to-end test design beyond the data layer (use `integration-testing` or `e2e-testing`).
 
+# Stage Fit
+
+Owns test-data design during test planning, implementation review, and repair when fixture, factory, seed, sandbox, file, cache, queue, generated identifier, clock, randomness, or cleanup behavior can affect correctness, privacy, determinism, or flake risk. In planning, it turns current test structure, source schemas, repository graph, project memory, execution trajectory, fixtures, factories, CI behavior, and external sandbox contracts into a scoped data plan with isolation, cleanup, determinism, privacy, and validation obligations. In review, it rejects shared mutable fixtures, production-data copies, hidden test order dependencies, stale project-memory fixture reuse, reset commands that can affect other suites, and test data plans that cannot map data state to validation evidence. Hand off when the primary question is test-level selection, integration seam behavior, full E2E journey design, or security/privacy approval for regulated non-production data.
+
 # Non-Negotiable Rules
 
 - **Test data must be deterministic and owned by the test or test suite that needs it.** A fixture or factory that produces different values on different runs causes non-reproducible failures. Owned data means: if the test is deleted, the data is also deleted. Shared test records that outlive any individual test are a liability — they accumulate mutations, cause ordering dependencies, and eventually cause cascading failures across the suite.
@@ -28,9 +32,21 @@ Do not use this capability for: testing business logic that requires no external
 - **Control time, randomness, locale, timezone, and generated identifiers when they affect assertions.** Any test that asserts on a timestamp, a random-generated value, or a locale-formatted string must mock or seed the source of that value. `Date.now()`, `Math.random()`, `uuid()`, `Intl.DateTimeFormat`, and system timezone are all test nondeterminism sources. The pattern: inject a deterministic clock (e.g., `jest.useFakeTimers`, `freezegun`, `timecop`), seed the random number generator to a fixed value, and fix the locale and timezone in the test environment configuration.
 - **Fixtures must be scoped to the behavior under test, not to database schema completeness.** A fixture that creates a fully-populated user record with 40 columns to test one email-send behavior is over-specified. Over-specified fixtures fail when unrelated columns are added to the table. Fixtures should set only the fields that matter for the assertion, using sensible defaults for everything else. This is the factory pattern: `UserFactory.build({ email: 'alice@example.com' })` — only the email column matters for the email-send test.
 
+# Mode Matrix
+
+Select the test-data mode before defining fixtures or cleanup.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Fixture and factory ownership | New/changed factories, fixtures, seeds, golden data, snapshots, or shared test helpers. | Keep data local to the behavior and avoid shared mutable business fixtures. | Owning suite/module, fields used by assertions, default/trait strategy, deletion/update path. | `test-strategy`, `unit-testing`, `code-clarity-maintainability` | Schema-complete fixtures and global object mothers. |
+| Persistent side-effect isolation | Tests write DB/cache/file/queue/email/sandbox state or run in parallel. | Prevent cross-test contamination and destructive reset scope. | Side-effect inventory, isolation mechanism, cleanup command, parallel-safety proof. | `integration-testing`, `e2e-testing`, `agent-tool-permission-sandbox` | `flushall`, truncate, or shared reset without owner/scope. |
+| Privacy-safe synthetic data | Production copy, sanitized dump, PII, credentials, tokens, payment/health data, or user free text appears. | Block real sensitive data and require synthetic or governed sanitized data. | Data classification, generation/sanitization rule, approved reference data, secret scan or not-verified disclosure. | `security-privacy-gate`, `data-api-contract-changer` | "Anonymized" data without transformation proof. |
+| Determinism and flake repair | Time, randomness, UUID, locale, timezone, ordering, external sandbox state, or TTL causes flake risk. | Make reproduced failures and parallel runs deterministic. | Clock/random/ID/locale controls, run-order evidence, seed owner, flake signature. | `regression-testing`, `quality-test-gate`, `execution-trajectory-analysis` | Blind retries or arbitrary sleeps. |
+| Volume and performance data | Load, soak, migration, data-quality, benchmark, or per-virtual-user datasets are needed. | Match scale/distribution without leaking production data or causing collisions. | Volume model, synthetic distribution, per-worker/per-VU slicing, cleanup/retention, validator. | `performance-budgeting`, `backup-recovery`, `bigdata-product-extension` when analytics data is primary | Unbounded production dump or shared CSV mutation. |
+
 # Industry Benchmarks
 
-Anchor against: **xUnit Patterns (Gerard Meszaros)** — Fixture types: inline, delegated, implicit, shared; Object Mother pattern; Builder pattern. **FactoryBot (Ruby)** — declarative factory definitions; trait-based variation; `build` vs. `create` strategy; sequences for unique values; lazy attribute evaluation. **Faker.js / Python Faker / JavaFaker** — locale-aware synthetic data; seeded determinism (`faker.seed(42)`); realistic names, emails, addresses without real PII. **Testcontainers (Java, Go, Python, Node.js)** — ephemeral Docker containers for integration test databases, message brokers, caches; guaranteed isolation; no shared state between test suites. **Database Cleaner (Ruby) / django-pytest-transactions** — strategies: truncation, transaction rollback, deletion; strategy selection by database adapter. **GDPR — Article 5(1)(b) and Article 25** — purpose limitation; data minimization by design; prohibition on using real personal data in test environments without explicit lawful basis. **NIST SP 800-188 (De-identification of Personal Information)** — pseudonymization and anonymization standards for non-production data. **k6 / Gatling test data management** — parameterized data files (`users.csv`); shared virtual user data isolation; per-VU data slices to prevent concurrent collision.
+Anchor against xUnit Patterns fixture taxonomy, FactoryBot/builders/traits, seeded Faker libraries, Testcontainers and ephemeral infrastructure, Database Cleaner and transaction rollback strategies, GDPR purpose limitation and data minimization, NIST de-identification guidance, and k6/Gatling per-virtual-user data slicing. Keep this body focused on selection, evidence, output, and quality gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for fixture ownership patterns, side-effect cleanup matrices, privacy classification, deterministic control examples, graph/memory/trajectory coupling, and anti-pattern review.
 
 ### Test Data Strategy Selection Matrix
 
@@ -73,12 +89,24 @@ Select this capability when **data setup, isolation, or cleanup is a source of t
 
 Escalate when: production data is proposed as test data (GDPR/privacy violation — must block and require synthetic data); a test environment has access to production credentials or tokens (credential exposure risk — must isolate); test data involves payment card numbers, SSNs, health records, or other regulated categories (PCI-DSS, HIPAA, GDPR — specific pseudonymization requirements); parallel test execution is introduced without explicit isolation verification (data contamination risk — must verify isolation mechanism is parallel-safe); or a data reset/cleanup operation is destructive (drops tables, truncates in shared environments) and could affect other teams or CI pipelines.
 
+# Proactive Professional Triggers
+
+- **Signal:** A fixture, factory, seed, golden file, or shared test helper is reused from project memory, repository graph proximity, or prior agent trajectory. **Hidden risk:** stale schema, changed defaults, hidden mutation, or unreviewed repair path becomes copied test debt. **Required professional action:** confirm against current source, tests, schema, fixture owners, and validation freshness before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected reuse, freshness limit, and evidence limits.
+- **Signal:** Test data persists outside one test process through DB, cache, file, queue, email, browser storage, object storage, or external sandbox. **Hidden risk:** cleanup misses a side-effect layer and creates order-dependent flakes. **Required professional action:** inventory side effects and define cleanup/reset/TTL per layer. **Route to:** `integration-testing`, `e2e-testing`, `quality-test-gate`. **Evidence required:** side-effect map, isolation mechanism, teardown command, parallel-safety statement.
+- **Signal:** Production data, sanitized dump, user text, email, token, credential, card, health, location, or tenant data is proposed for non-production tests. **Hidden risk:** privacy or secret exposure through fixtures, snapshots, logs, or committed files. **Required professional action:** block real sensitive data unless governed transformation and owner approval are explicit. **Route to:** `security-privacy-gate`, `secret-configuration-security`. **Evidence required:** data classification, generator/sanitizer, secret-scan or not-verified disclosure, retention.
+- **Signal:** A test uses wall-clock time, random values, UUIDs, auto-increment order, locale, timezone, current date, async delay, or TTL in assertions. **Hidden risk:** failures cannot be reproduced and CI order/region changes alter results. **Required professional action:** inject deterministic clock/random/ID/locale controls and record seed ownership. **Route to:** `testability-seam-design`, `regression-testing`. **Evidence required:** deterministic control map, seed, timezone/locale setting, flake proof or residual risk.
+- **Signal:** Parallel execution, sharding, load tests, or per-worker data files are introduced. **Hidden risk:** workers collide on shared IDs, mutate shared data, or exhaust sandbox quotas. **Required professional action:** define namespace/per-worker/per-VU slicing and cleanup. **Route to:** `performance-budgeting`, `quality-test-gate`, `agent-tool-permission-sandbox` for destructive cleanup commands. **Evidence required:** worker ID strategy, dataset partitioning, quota/collision check, cleanup owner.
+
 # Critical Details
 
 - **The most dangerous test data pattern: shared mutable fixtures.** A shared fixture record that is mutated by one test and read by another creates a test ordering dependency. The test suite passes when run in alphabetical order, fails when run in random order, and takes hours to debug. The fix: make every test that needs mutable state own its own copy (factory-created within the test, cleaned up after).
 - **Faker-seeded determinism prevents non-reproducible failures.** Calling `faker.name()` without seeding produces a different name on every run. When a test asserts on a formatted display name, a non-seeded faker call produces a different assertion value on every run. Fix: `faker.seed(12345)` or use a factory with a fixed default value for the asserted field.
 - **Cleanup must cover every side effect layer, not just the database.** A test that creates a database record AND writes a cache key AND enqueues a background job has three side effects. Rolling back the database transaction does not clear the cache key or dequeue the background job. The cleanup plan must enumerate all three side effects and specify how each is reversed.
 - **External sandbox accounts accumulate state over time if not explicitly reset.** A test suite that creates sandbox payment customers in Stripe without resetting them will eventually hit API rate limits or accumulate thousands of test customers that make debugging impossible. Every sandbox account must have either an API reset call in teardown or a TTL-based cleanup job.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 test-data selection, ownership, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete test data plan, when cleanup/privacy/determinism coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when fixture ownership, isolation strategy, privacy classification, deterministic controls, side-effect cleanup, volume data, or graph/memory/trajectory reuse needs depth. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are enough.
 
 ### Anti-examples
 
@@ -104,6 +132,9 @@ Escalate when: production data is proposed as test data (GDPR/privacy violation 
 
 Return a test data plan with:
 
+- `mode_selected` (fixture/factory ownership, persistent side-effect isolation, privacy-safe synthetic data, determinism/flake repair, or volume/performance data)
+- `data_scope` (test suites, behaviors, owning module, persistent stores, external sandboxes, excluded data sources, and cleanup boundary)
+- `source_evidence` (current tests, fixtures, factories, seeds, schemas, repository graph, project memory, execution trajectory, CI behavior, and freshness limits)
 - `data_strategy` (per test suite: strategy type from selection matrix, justification)
 - `isolation_mechanism` (per persistent side effect: mechanism, parallel-safe confirmation)
 - `factory_definitions` (per domain entity: required fields, optional fields with defaults, sequences for unique values)
@@ -112,6 +143,23 @@ Return a test data plan with:
 - `privacy_classification` (per data category: synthetic/sanitized/approved-reference; no real PII)
 - `volume_and_performance` (if load test data: parameterized data files, per-VU slice strategy)
 - `flake_risks` (ordering dependencies, race conditions, external API reliability, TTL expiry race)
+- `fixture_ownership_map` (each fixture/factory/seed/golden file owner, consumer tests, mutation policy, deletion/update path)
+- `changed_data_to_validation_map` (each fixture/factory/seed/cleanup/determinism/privacy decision mapped to test, validator, scan, or residual risk)
+- `handoff_boundaries` (what belongs to test strategy, integration/E2E design, security/privacy, data migration, backup/recovery, or performance gates)
+- `reuse_and_freshness_judgment` (accepted/rejected graph, memory, or execution-trajectory evidence and why)
+- `evidence_limits` (what was not verified: production-like volume, external sandbox cleanup, CI sharding, secret scans, real parallel execution, or long-lived TTL behavior)
+
+# Evidence Contract
+
+Close a test-data-management change only when the output names selected mode, data scope, current source/test/fixture evidence inspected, graph/memory/execution reuse judgment, data ownership, isolation mechanism, cleanup coverage for every side-effect layer, privacy classification, deterministic controls, parallel-safety status, changed-data-to-validation map, handoff boundaries, residual risk, and evidence limits. A fixture list or "use factories" statement is not sufficient evidence.
+
+# Benchmark Coverage
+
+Behavior improvement should be validated structurally: weak test-data plans usually reuse shared mutable fixtures, omit cleanup for cache/files/queues/sandboxes, rely on production-like dumps without privacy proof, use unseeded random/time values, hide fixture ownership in shared helpers, or skip parallel-safety evidence. Improved outputs must name mode, source evidence, fixture ownership, side-effect cleanup, privacy controls, deterministic controls, validation mapping, and handoff boundaries while keeping detailed examples in references.
+
+# Routing Coverage
+
+Route here when the primary work is fixture/factory/seed/golden-data ownership, deterministic generated data, test database state, cleanup/reset rules, privacy-safe synthetic data, side-effect cleanup, sandbox data, load-test data slicing, or flake repair caused by shared data. Guard against over-routing by handing off when the primary concern is test layer selection (`test-strategy`), real boundary behavior (`integration-testing`), complete browser/user journey setup (`e2e-testing`), API compatibility fixtures (`contract-testing`), historical bug protection (`regression-testing`), regulated data approval (`security-privacy-gate`), or production-scale recovery drills (`backup-recovery`).
 
 # Quality Gate
 
@@ -127,6 +175,10 @@ The test data plan is complete only when:
 8. Tests are confirmed to pass in any execution order (no ordering dependencies).
 9. Privacy classification is documented for every data category used in tests.
 10. Volume data for load tests uses parameterized files with per-VU data slice isolation.
+11. Selected mode, data scope, source evidence, fixture ownership, and cleanup boundary are explicit.
+12. Repository graph, project memory, and execution trajectory evidence are current-source confirmed or marked not verified.
+13. Every fixture, factory, seed, side-effect cleanup, deterministic control, and privacy decision maps to validation evidence or named residual risk.
+14. Handoff boundaries and evidence limits are explicit so the plan is not over-claimed as test strategy, integration proof, privacy approval, live parallel proof, or production-scale validation.
 
 # Used By
 

@@ -19,6 +19,10 @@ Use this capability when a change: adds or modifies database indexes; introduces
 
 Do not use this capability for non-relational data store optimization (use `nosql-database` for DynamoDB/MongoDB partition and index design). Do not use it for full-text search optimization (use `search-analytics-design` for Elasticsearch/Solr relevance tuning). Do not add indexes "just in case" — every index has a write amplification cost, a storage cost, and a maintenance burden; justification is mandatory.
 
+# Stage Fit
+
+Owns query/index optimization during data-middleware planning, implementation review, and performance repair when the primary risk is a concrete SQL/ORM read path, execution plan, pagination strategy, or physical index lifecycle. In planning, it turns current query evidence into index/query/pagination decisions and migration-safe validation obligations. In review, it rejects blind index additions, dev-data-only plans, N+1 misdiagnosis, unsafe offset pagination, or build/drop decisions without write-cost and rollback evidence. Repository graph, project memory, and execution trajectory may point to slow queries or prior fixes, but current SQL/ORM call sites, schema/index definitions, telemetry, and execution plans must confirm the optimization target before the output treats that evidence as authoritative.
+
 # Non-Negotiable Rules
 
 - **Every index must be tied to a named query.** Index justification format: "Index `idx_orders_user_status` exists to serve query: `SELECT ... FROM orders WHERE user_id = $1 AND status = $2 ORDER BY created_at DESC LIMIT 50`." No index without a named beneficiary query.
@@ -29,62 +33,19 @@ Do not use this capability for non-relational data store optimization (use `nosq
 - **Offset pagination is forbidden for tables > 100,000 rows without a keyset/cursor alternative.** `OFFSET 10000 LIMIT 20` scans and discards 10,000 rows before returning 20. For large tables this becomes O(N) with N proportional to page depth. Use keyset pagination: `WHERE (created_at, id) < ($last_created_at, $last_id) ORDER BY created_at DESC, id DESC LIMIT 20`.
 - **Covering index optimization requires column order discipline.** A covering index that includes all SELECT columns avoids a table heap fetch entirely. Column order: filter columns (equality) → sort columns → include columns (SELECT targets). PostgreSQL supports `INCLUDE` clause for non-key include columns (PostgreSQL 11+) to avoid key bloat.
 
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Slow-query diagnosis | Slow query alert, latency regression, high scan cost, or profiling confirms database query as bottleneck. | Identify the exact query, plan bottleneck, cardinality/selectivity issue, and non-index causes before proposing a fix. | Current SQL/ORM call site, telemetry or trace, representative `EXPLAIN`, data volume, and baseline latency. | `profiling`, `observability`, `performance-budgeting` | Adding an index from intuition or dev-data timing. |
+| New or changed read path | Feature adds filters, joins, sorting, grouping, reporting query, or repository method. | Design query and index together so access pattern, result size, and sort order are explicit before merge. | Query text/ORM builder, predicates, sort, pagination, expected cardinality, write rate, and existing indexes. | `repository-persistence`, `data-model-design`, `relational-database` | Treating ORM-generated SQL as unknown. |
+| Index lifecycle change | Add, drop, rebuild, partial/functional/covering index, or index migration on hot table. | Tie each index to a beneficiary query and manage build, rollback, write cost, and post-deploy usage. | Named query, before/after plan, build strategy, lock risk, write amplification, and `idx_scan`/usage monitoring. | `data-migration-design`, `release-rollback`, `quality-test-gate` | Blocking builds or drops without usage evidence. |
+| Pagination and ordering correction | Offset pagination, unstable sorting, deep pages, API cursor, infinite scroll, or timeout at page depth. | Select keyset/cursor/deferred join strategy and matching composite index. | Order columns, tie-breaker, cursor semantics, table size, depth behavior, and compatibility limits. | `api-contract-design`, `frontend-api-integration` | Offset on large tables without disclosure. |
+| Write-heavy production tradeoff | High insert/update rate, many existing indexes, hot partitions, or query benefit competes with write SLO. | Balance read improvement against write amplification, storage, vacuum/maintenance, and rollback. | Write rate, index count, storage growth, vacuum/maintenance impact, read frequency, and SLO budget. | `performance-budgeting`, `reliability-observability-gate` | Read-only optimization claims on write paths. |
+
 # Industry Benchmarks
 
-Anchor against: **PostgreSQL documentation** — "Using EXPLAIN" (official guide to interpreting execution plans); `EXPLAIN (ANALYZE, BUFFERS)` for runtime statistics; `pg_stat_statements` for production slow query identification; `pg_indexes` / `pg_stat_user_indexes` for index usage statistics (unused indexes = `idx_scan = 0`). **MySQL EXPLAIN FORMAT=JSON** — `key`, `key_len`, `rows`, `Extra: Using filesort` (sort not covered by index), `Extra: Using index` (covering index hit). **Use The Index, Luke** (Winand, use-the-index-luke.com) — definitive practical guide to SQL index design; B-Tree structure; composite index column selection; range conditions break index usage for subsequent columns. **Kleppmann DDIA** (Ch. 3) — B-Tree vs LSM-Tree trade-offs; write amplification; SSTables; compaction. **Markus Winand "SQL Performance Explained"** — composite index predicates; three-star index system; partial indexes; index-only scans. **Percona pt-query-digest** — MySQL slow query log analysis and aggregation. **pg_partman** — PostgreSQL table partitioning by range/list; reduces index scan scope for time-series data. **Partial indexes** (PostgreSQL) — `CREATE INDEX idx_active_users ON users (email) WHERE deleted_at IS NULL` — smaller index; faster scans; useful for filtered queries on a subset of rows. **Functional indexes** (PostgreSQL) — `CREATE INDEX idx_email_lower ON users (lower(email))` for case-insensitive lookups. **BRIN indexes** (Block Range INdexes) — PostgreSQL; efficient for physically ordered large tables (timestamps, sequential IDs); tiny compared to B-tree; suitable for time-series append-only tables. **GIN indexes** — PostgreSQL; for array contains, JSONB key search, full-text search; high build cost; suitable for read-heavy JSONB querying. **Keyset pagination** (also called seek method; Winand) — `WHERE (col1, col2) < (last_val1, last_val2)` with matching composite index; O(log N) at any depth; stable under inserts/deletes.
-
-### Index Type Selection Matrix
-
-| Data type / query pattern | Recommended index | Notes |
-| --- | --- | --- |
-| Equality + range on columns (most common) | B-Tree composite | Column order: equality cols first, range col last, sort col last |
-| Full-text search (PostgreSQL) | GIN on `tsvector` column | `to_tsvector()` stored in generated column; `@@` operator |
-| JSONB key/value search | GIN on JSONB column | Supports `@>`, `?`, `?|`, `?&` operators |
-| Array contains (`@>`) | GIN on array column | Inverted index; high build cost; excellent read performance |
-| Geospatial (PostGIS) | GiST index | `&&` overlap, `<->` distance operators |
-| Time-series, append-only (ordered insert) | BRIN | Tiny; effective only when physical row order correlates with query order |
-| Case-insensitive text lookup | B-Tree on `lower(column)` | Functional index; query must use `lower()` to match |
-| Sparse condition (soft-delete, status filter) | Partial B-Tree with WHERE clause | Only indexes qualifying rows; much smaller |
-| UUID primary key (random) | B-Tree; consider UUIDv7 for seq | UUIDv4 causes page splits; UUIDv7 is sequential |
-
-### Query Plan Analysis Checklist
-
-```
-Before proposing an index, analyze the execution plan:
-
-PostgreSQL:
-  EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) <your query>;
-
-Key signals to check:
-  ✅ Index Scan or Index Only Scan on the target table
-  ⚠️  Seq Scan on a table > 10,000 rows without WHERE clause is expected
-  ❌  Seq Scan on a table > 100,000 rows with selective WHERE clause = missing index
-  ❌  Nested Loop with Seq Scan on inner side = N+1 or missing FK index
-  ❌  Sort (cost=...) without "using index" = sort not covered; add sort column to index
-  ❌  "rows=10000 actual rows=1" = severe cardinality estimate error; run ANALYZE
-  ❌  Bitmap Heap Scan with high "recheck" = low selectivity index or stale statistics
-
-After adding index:
-  EXPLAIN (ANALYZE) re-run: confirm plan changed to Index Scan
-  Check actual_rows matches expected selectivity
-  Check buffers: blocks hit should increase; blocks read should decrease
-  Check total execution time (actual time): measure improvement
-
-Monitor in production:
-  SELECT * FROM pg_stat_user_indexes 
-  WHERE relname = 'orders' 
-  ORDER BY idx_scan DESC;
-  -- idx_scan = 0 after 7+ days: unused index candidate for removal
-```
-
-### Pagination Method Comparison
-
-| Method | Query pattern | Performance at depth | Stability | Use when |
-| --- | --- | --- | --- | --- |
-| Offset | `LIMIT 20 OFFSET N` | O(N) — degrades with depth | Unstable under inserts | Small tables (< 100k rows), page number navigation required |
-| Keyset (seek) | `WHERE (ts, id) < (last_ts, last_id)` | O(log N) — constant depth | Stable | Large tables, infinite scroll, API cursors |
-| Cursor (opaque) | Encoded keyset values in cursor token | O(log N) | Stable | API pagination (GraphQL Relay, REST next_cursor) |
-| Deferred join | `SELECT * FROM t JOIN (SELECT id FROM t ORDER BY ... LIMIT 20 OFFSET N) AS sub USING (id)` | Better than plain offset | Unstable | When keyset not feasible; reduces row data access |
+Anchor against PostgreSQL `EXPLAIN (ANALYZE, BUFFERS)`, `pg_stat_statements`, and `pg_stat_user_indexes`; MySQL `EXPLAIN FORMAT=JSON`; Use The Index, Luke; Markus Winand's SQL Performance Explained; Kleppmann's storage-engine tradeoffs; Percona slow-query analysis; and production-safe online index-build practices. Keep this body focused on selection and evidence rules; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed index-type selection, plan-reading signals, pagination comparisons, and benchmark examples.
 
 # Selection Rules
 
@@ -100,6 +61,14 @@ Select this capability when **query performance, index design, or execution plan
 
 Escalate when: an index build is planned on a table > 10 million rows in production (estimate build time and lock duration); a query modification affects a billing, financial reporting, or audit table; an index is being dropped that might be used by undocumented queries; the table is write-heavy (> 1,000 writes/s) and additional index maintenance cost could cause write latency SLA breach; a query plan regression is detected in production (latency P99 increase correlated with a schema change).
 
+# Proactive Professional Triggers
+
+- **Signal:** An index is proposed without a named query, current plan, or usage metric. **Hidden risk:** the index becomes permanent write/storage cost with no measurable read benefit. **Required professional action:** name the beneficiary query, capture current plan, and reject or defer until evidence exists. **Route to:** `indexing-query-optimization`, `quality-test-gate`. **Evidence required:** query text, plan, selectivity, and expected benefit.
+- **Signal:** A query plan is based on dev data, empty tables, stale project memory, repository graph proximity, or prior agent trajectory. **Hidden risk:** stale or unrepresentative evidence hides production full scans, bad join order, or unused indexes. **Required professional action:** confirm with current source, schema, statistics, and representative data or disclose not-verified limits. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, data-volume freshness, telemetry/plan source, and evidence limits.
+- **Signal:** N+1 ORM behavior is described as a missing-index problem. **Hidden risk:** faster individual queries still produce request-level latency from query fan-out. **Required professional action:** count per-request queries and decide between eager loading, batching, query rewrite, or index. **Route to:** `repository-persistence`, `profiling`. **Evidence required:** query-count trace, ORM call site, selected repair, and residual index need.
+- **Signal:** Pagination uses `OFFSET` or sorting without a stable tie-breaker on a large table. **Hidden risk:** deep-page latency, duplicate/missing rows under concurrent inserts, and unstable API cursors. **Required professional action:** evaluate keyset/cursor/deferred join and matching composite index. **Route to:** `api-contract-design`, `frontend-api-integration` when API/UI semantics are affected. **Evidence required:** table size, sort columns, cursor contract, and compatibility tradeoff.
+- **Signal:** Index build, rebuild, or drop touches a large, write-heavy, regulated, audit, or revenue table. **Hidden risk:** lock outage, write latency regression, compliance/reporting regression, or irreversible rollback gap. **Required professional action:** route migration/release planning and monitoring before approval. **Route to:** `data-migration-design`, `delivery-release-gate`, `reliability-observability-gate`. **Evidence required:** online build/drop plan, rollback path, usage monitoring, and write-cost estimate.
+
 # Critical Details
 
 Execution plan estimates on development data diverge significantly from production at scale. Precision failures:
@@ -109,6 +78,10 @@ Execution plan estimates on development data diverge significantly from producti
 - **Unused indexes on write-heavy table.** A table receives 10,000 inserts/sec. It has 8 indexes that were added incrementally over 2 years. Query pg_stat_user_indexes: 3 of them have `idx_scan = 0` for 30 days. Those 3 indexes are consuming write capacity and disk space with no read benefit. Remove unused indexes on write-heavy tables.
 - **N+1 ORM query.** An ORM loads 100 orders. Then for each order, it loads `order.customer.name` — executing 100 additional SELECT statements. Total: 101 queries. This is not an index problem; it is an eager loading problem. Fix with `JOIN FETCH` or `include: ['customer']` in the ORM query. No index can fix N+1.
 - **Statistics staleness.** After a bulk import of 5 million rows, PostgreSQL statistics are stale. The planner estimates 1,000 rows but scans 5 million. Run `ANALYZE orders;` after bulk imports. Schedule `autovacuum` appropriately for high-churn tables.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 query/index selection and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete optimization plan, when plan evidence or write-cost coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when index-type choice, plan-reading detail, pagination tradeoffs, or benchmark examples are needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load these references for pure routing or trivial wording work where the output contract and quality gate are enough.
 
 ### Anti-examples
 
@@ -138,8 +111,12 @@ Execution plan estimates on development data diverge significantly from producti
 
 Return a query optimization plan with:
 
+- `mode_selected` (slow-query diagnosis / new or changed read path / index lifecycle change / pagination correction / write-heavy production tradeoff)
+- `query_scope` (service/repository/report/API surface, target tables, SQL or ORM call sites, and current source files inspected)
+- `source_evidence` (current schema/index definitions, repository graph, project memory, execution trajectory, telemetry, slow-query logs, or execution plans inspected with freshness limits)
 - `target_queries` (SQL text or ORM equivalent; call site; estimated call frequency)
 - `current_execution_plan` (EXPLAIN ANALYZE output; identified bottlenecks)
+- `plan_evidence_quality` (representative data volume, statistics freshness, parameter/sample assumptions, and evidence gaps)
 - `proposed_indexes` (index name, table, columns in order, partial condition if any, type; named query served)
 - `rejected_indexes` (alternatives considered; why rejected)
 - `composite_index_rationale` (column order justification: selectivity, predicate type, sort direction)
@@ -150,6 +127,21 @@ Return a query optimization plan with:
 - `pagination_strategy` (keyset/cursor/offset; query pattern; index to support it)
 - `observability` (pg_stat_user_indexes monitoring; slow query threshold; latency SLO)
 - `tests` (query execution time before/after; execution plan verification; write latency regression test)
+- `changed_query_to_validation_map` (each query/index/pagination change mapped to plan verification, latency check, monitoring, or residual risk)
+- `handoff_boundaries` (migration, repository persistence, profiling, API contract, observability, or reliability work that belongs elsewhere)
+- `evidence_limits` (what the plan proves and does not prove about production load, real data distribution, write impact, and downstream consumers)
+
+# Evidence Contract
+
+Close an indexing-query-optimization change only when the output names selected mode, query scope, current source and schema evidence inspected, memory/graph/trajectory freshness when used, before/after plan evidence or a not-verified disclosure, write amplification, migration/rollback path, changed-query-to-validation map, evidence limits, residual risk, and next handoff owner. "Add an index" or "query should be faster" is not sufficient evidence.
+
+# Benchmark Coverage
+
+Behavior improvement should be validated structurally: weak optimization plans usually add an index without naming the query, rely on dev-data timing, ignore write cost, miss N+1 fan-out, use offset pagination on large tables, or skip migration/monitoring. Improved outputs must name mode, source evidence, representative plan quality, rejected alternatives, write tradeoff, validation mapping, and handoff boundaries while keeping detailed benchmark matrices in references.
+
+# Routing Coverage
+
+Route here when the primary work is SQL/ORM read-path optimization, index selection, pagination performance, or execution-plan evidence. Guard against over-routing by handing off when the primary concern is domain data shape (`data-model-design`), relational engine operations beyond a target query (`relational-database`), NoSQL partition/index design (`nosql-database`), migration mechanics (`data-migration-design`), initial bottleneck discovery (`profiling`), or ongoing SLO/alerting (`reliability-observability-gate`).
 
 # Quality Gate
 
@@ -165,6 +157,10 @@ The optimization plan is complete only when:
 8. N+1 query patterns checked and resolved (eager loading vs index).
 9. ANALYZE planned after any bulk data load affecting query statistics.
 10. Tests include: execution plan verification, latency measurement, write regression test.
+11. Selected mode, query scope, source evidence, and plan-evidence quality are explicit.
+12. Project memory, repository graph, and execution trajectory evidence are source-confirmed or marked not verified.
+13. Each changed query, index, or pagination strategy maps to a validator, monitoring signal, or named residual risk.
+14. Handoff boundaries and evidence limits are named so the plan is not over-claimed as live production proof.
 
 # Used By
 
@@ -173,7 +169,7 @@ The optimization plan is complete only when:
 
 # Handoff
 
-Hand off to `data-migration-design` for large index build migration procedure; `data-model-design` for schema and normalization decisions; `reliability-observability-gate` for slow query alerting and SLO impact; `search-analytics-design` when the query requires full-text search or OLAP capabilities.
+Hand off to `repository-persistence` when the fix is ORM query shape, eager loading, batching, or repository call placement; `profiling` when the database query is not yet proven as the bottleneck; `data-migration-design` for large index build/drop procedure; `data-model-design` for schema and normalization decisions; `performance-budgeting` for latency/write-cost thresholds; `reliability-observability-gate` for slow-query alerting and SLO impact; `api-contract-design` or `frontend-api-integration` when pagination semantics affect clients; and `search-analytics-design` when the query requires full-text search or OLAP capabilities.
 
 # Completion Criteria
 

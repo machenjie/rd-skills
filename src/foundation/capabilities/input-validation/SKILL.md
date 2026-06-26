@@ -9,153 +9,173 @@ changeforge_version: 0.1.0
 
 # Mission
 
-Define **server-enforced validation at every trust boundary** so malformed, hostile, unauthorized, or semantically invalid input is rejected before it can corrupt state, bypass authorization, or trigger unsafe processing — with allowlist-first design, canonicalization before security decisions, and safe error responses that help legitimate clients without exposing bypass paths.
+Define server-enforced validation at every trust boundary so malformed, hostile, unauthorized, oversized, stale, or semantically invalid input is rejected before it can corrupt state, bypass authorization, poison downstream contracts, or trigger unsafe processing. Validation work must bind current source evidence, repository graph, project memory, execution trajectory, changed fields, and test evidence into one contract rather than listing field rules in isolation.
 
 # When To Use
 
-Use this capability when a change accepts: HTTP request bodies, query parameters, path parameters, headers; file uploads; webhook payloads (signed or unsigned); form submissions; CLI arguments; environment configuration; AI tool call inputs; or any payload crossing a trust boundary from an external actor. Also required when adding new fields to existing endpoints that carry security or state-change meaning.
+Use this capability when a change accepts or changes HTTP bodies, query parameters, path parameters, headers, cookies, files, form submissions, CLI arguments, environment/configuration inputs, webhook payloads, event payloads, import records, server-side fetch URLs, path selectors, template fragments, AI/tool inputs, automation parameters, or any data crossing from an external actor, lower-trust subsystem, generated client, queue, storage import, or partner integration. Also use it when adding security-meaningful fields to existing endpoints or tightening validation in a way deployed clients may observe.
 
 # Do Not Use When
 
-Do not use this capability to validate internal in-process function call arguments in already-trusted contexts — that is type safety, not input validation. Do not rely on client-side validation alone; it is UI convenience only and provides zero security guarantee.
+Do not use this capability as a substitute for internal type safety, pure UI form feedback, full web exploit review, object-level authorization modeling, DTO schema design, or client-visible error taxonomy. Route to `dto-schema-design` for transfer schema shape, `permission-boundary-modeling` for object access rules, `web-security` for exploit-class review, `error-code-design` for public error semantics, and `form-validation-design` for frontend validation timing and UX.
+
+# Stage Fit
+
+Use during planning when a new boundary, field, parser, upload, webhook, fetch, import, or automation input is introduced. Use during coding and review when validators, parsers, DTO binding, canonicalization, ownership guards, allowlists, adapters, or error mapping change. Use during testing and release when hostile-input cases, client compatibility, rollback, generated clients, prior incidents, project memory claims, or graph-discovered callers need proof. Hand off when endpoint semantics, authorization policy, file lifecycle, exploit-class analysis, or release approval becomes the primary decision.
 
 # Non-Negotiable Rules
 
-- **Validate at the server trust boundary, not only the client.** Frontend validation is user experience assistance. The server must independently enforce all constraints because any client can be bypassed. No exception.
-- **Allowlist is mandatory for string formats.** Define what is permitted (pattern, character set, max length). Attempting to blocklist dangerous characters is an arms race — encoding variants, Unicode normalization, and context-specific escaping defeat blocklists. Allowlist-first (OWASP ASVS V5.1.2).
-- **Canonicalize before validating security-sensitive input.** URL-decode, Unicode-normalize (NFC), and trim input before checking against security patterns. `%2F` → `/`, `../` → path traversal; `\u202e` → bidirectional override. Validate against the canonical form. (OWASP ASVS V5.3.1).
-- **URL fetch validation is a security-sensitive canonicalization path.** For any server-side fetch from user input, parse and canonicalize scheme, host, port, and resolved addresses before fetch; require exact allowlist matching; reject loopback, private, link-local, and metadata addresses; revalidate redirect targets; bound timeout and response size; fail closed on parse/DNS/redirect/timeout errors; and redact userinfo, query, fragment, token, key, signature, and secret values from errors and logs.
-- **Reject unknown fields — do not silently ignore them.** Mass assignment (also called over-posting) occurs when an unvalidated field maps to a privileged property (e.g., `role`, `isAdmin`, `price`). Either use an explicit allowlist of accepted fields (DTO schema), or reject requests containing extra fields. (CWE-915).
-- **Validate identifiers for existence, ownership, and tenant scope.** A syntactically valid UUID `user_id` can belong to a different tenant. Every resource identifier must be checked: does it exist? does it belong to the authenticated caller or their tenant? is it in a permitted state? (OWASP ASVS V4.2.1 — IDOR).
-- **File uploads require content-type validation beyond MIME header.** The `Content-Type` header is attacker-controlled. Validate file content using magic bytes (file signature). Restrict file size. Reject executable file types unless the use case requires them. Scan with antivirus for user-facing upload features. (OWASP ASVS V12.1).
-- **Webhook payloads require signature verification before processing.** Never trust webhook payload content before verifying the HMAC signature using a constant-time comparison. (OWASP ASVS V1.5.3; Stripe signature verification; GitHub webhook secret).
-- **Error responses must not expose validation bypass hints.** "Invalid email format" is safe. "Email must match regex `^[a-zA-Z0-9._%+\-]+@..."` teaches the attacker the exact pattern boundary. Return normalized error codes with human-readable messages appropriate for the error's sensitivity level. (OWASP ASVS V8.1.2).
+- **Server trust-boundary enforcement is mandatory.** Client validation, HTML attributes, generated clients, SDK types, UI hiding, API gateway checks, and form libraries are convenience or defense-in-depth only.
+- **Allowlists beat blocklists.** Define accepted type, length, range, enum, character set, pattern, and parser grammar; do not rely on filtering known-bad substrings.
+- **Canonicalize before security decisions.** Decode, normalize, trim, resolve, and parse before checking paths, URLs, encodings, identifiers, filenames, or header-like values.
+- **Reject unknown request fields unless compatibility requires an explicit tolerant path.** Silent pass-through creates mass assignment and hidden semantic drift.
+- **Identifiers require syntax, existence, ownership, tenant scope, lifecycle state, and permission-context checks.** A valid UUID is not valid authorization evidence.
+- **User-controlled URL, path, file, template, command, query, selector, prompt, or tool parameter is security-sensitive.** Validate destination, grammar, size, scheme, path containment, and safe logging before processing.
+- **File intake validates content, not declarations.** Browser MIME type, extension, filename, archive path, object key, and client-declared size are untrusted.
+- **Webhook and integration payloads are not trusted until authenticity, freshness, replay protection, schema, and idempotency expectations are checked.**
+- **Validation errors must be actionable without exposing bypass details.** Return stable codes, safe field paths, and sensitivity-aware messages; never return exact private regexes, stack traces, parser internals, secrets, raw URLs, provider bodies, or tenant existence hints.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+| --- | --- | --- | --- | --- | --- |
+| New trust-boundary schema | New request, parser, import, CLI, config, event, webhook, or automation input. | Define field constraints, canonicalization, unknown-field policy, safe errors, and negative tests before implementation. | Source boundary, schema/validator path, field table, error contract, hostile-input cases. | `dto-schema-design`, `quality-test-gate` | Pure internal type assertions. |
+| Existing validation evolution | Field constraints tightened, relaxed, renamed, made required, or moved between layers. | Preserve client compatibility and old behavior while fixing invalid input paths. | Old/new rule diff, consumer impact, rollout/rollback path, regression cases. | `version-compatibility`, `consumer-impact-analysis` | Silent breaking 400/422 change. |
+| Identifier and object scope | Input contains user, tenant, account, owner, resource, role, status, permission, or classification fields. | Prevent IDOR, tenant spoofing, mass assignment, and client-controlled policy conditions. | Trusted source of subject/scope, ownership query, denied wrong-tenant test. | `permission-boundary-modeling`, `security-privacy-gate` | Role-only controller check. |
+| URL, path, fetch, or execution selector | User input reaches server-side fetch, filesystem path, redirect, parser, renderer, shell, template, SQL/LDAP builder, or AI/tool call. | Canonicalize, constrain grammar/destination, fail closed, and redact diagnostics. | Allowlist, deny ranges/base path, timeout/size bounds, malicious payload tests. | `web-security`, `threat-modeling` | Regex-only validation after execution starts. |
+| File upload or archive/import intake | Upload, attachment, direct-to-storage object, archive, CSV/XML/JSON import, or media processing changes. | Validate size, content signature, structure, storage key, scan/publish state, and tenant ownership. | Magic-byte/type rule, archive traversal rule, scan gate, malicious fixture result. | `file-storage-processing`, `security-privacy-gate` | Browser `Content-Type` or extension trust. |
+| Webhook or external event payload | Signed/unsigned webhook, partner event, queue message, replayable callback, or cross-service payload. | Verify authenticity before parse/use; validate schema, freshness, replay, idempotency, and safe errors. | Signature algorithm, raw-body handling, timestamp/replay window, tamper tests. | `integration-change-builder`, `idempotency-retry-design` | Parsing payload before signature validation. |
+| Validation error contract | Field violations, RFC 7807/9457 payload, safe echo policy, localization, or SDK behavior changes. | Make invalid-input handling client-actionable and non-leaky. | Field-path map, violation codes, safe rejected-value policy, negative examples. | `error-code-design`, `frontend-api-integration` | One generic "invalid input" or raw regex leak. |
 
 # Industry Benchmarks
 
-Anchor against: **OWASP ASVS V5 — Validation, Sanitization and Encoding** (Application Security Verification Standard): V5.1 Input Validation Requirements; V5.2 Sanitization Requirements; V5.3 Output Encoding/Escaping Requirements; V5.4 Memory/String/Unmanaged Code; V5.5 Deserialization Prevention. **OWASP Top 10:2021 A03 — Injection**: SQL injection, XSS, SSTI, LDAP injection, OS command injection; all preventable with allowlist validation and parameterized queries. **CWE-20** (Improper Input Validation) — #6 in CWE Top 25 Most Dangerous Software Weaknesses. **CWE-915** (Improperly Controlled Modification of Object Prototype / Mass Assignment). **CWE-434** (Unrestricted Upload of File with Dangerous Type). **Pydantic v2** (Python) — field validators, strict mode, model_validator for cross-field constraints; JSON schema generation. **Zod** (TypeScript/JavaScript) — schema-first; parse-don't-validate; `z.object({}).strict()` rejects extra fields; `z.string().regex().max()`; `superRefine` for async validation. **Joi** (Node.js) — `Joi.object().options({ allowUnknown: false })`; `Joi.string().alphanum().max(50)`. **Bean Validation (Jakarta)** — `@NotNull`, `@Size(max=255)`, `@Pattern(regexp=...)`, `@Valid` for nested; `@Validated` at controller. **express-validator** — middleware chain; `body('email').isEmail().normalizeEmail()`; `validationResult(req)`. **RFC 7807** — Problem Details for HTTP APIs: `type`, `title`, `status`, `detail`, `instance`; return validation errors as structured problem detail. **OWASP File Upload Cheat Sheet** — magic byte validation; filename sanitization; size limits; storage outside web root. **GitHub webhook signature verification** — `X-Hub-Signature-256`: `HMAC-SHA256(secret, body)`; constant-time comparison to prevent timing attacks.
-
-### Validation Layer Responsibility Matrix
-
-| Layer | What to validate | Example tools | What NOT to do here |
-| --- | --- | --- | --- |
-| API Controller / Route | Schema shape, type, required fields, max length, format, unknown fields | Zod, Pydantic, Bean Validation | Business rules, ownership, state transitions |
-| Application Service | Ownership (does this resource belong to the caller?), tenant scope, state transition legality | Custom guard, repository lookup | HTTP transport concerns, response formatting |
-| Domain Model | Business invariants, value object constraints, lifecycle rules | Value object constructors, domain exceptions | Persistence, HTTP, external I/O |
-| Infrastructure | File magic bytes, webhook HMAC, external payload schemas | python-magic, crypto.timingSafeEqual | Business rules, user-facing error formatting |
-
-### Validation Constraint Taxonomy
-
-```
-Every field at a trust boundary must declare:
-
-Type:
-  string | number | boolean | array | object | date | uuid | enum
-
-Structural constraints:
-  minLength / maxLength (strings)
-  minimum / maximum (numbers)
-  minItems / maxItems (arrays)
-  required / optional / nullable
-
-Format constraints (use allowlist regex):
-  email:      /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/
-  uuid:       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  ISO 8601:   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/
-  slug:       /^[a-z0-9]+(?:-[a-z0-9]+)*$/ + maxLength: 63
-  filename:   /^[a-zA-Z0-9_\-\.]+$/ + no path separators + maxLength: 255
-
-Business constraints (Application Service):
-  EXISTS: resource with this id exists
-  OWNED: resource belongs to caller's tenant / account
-  STATE: current state permits this transition
-  QUOTA: caller has not exceeded rate limit or resource quota
-
-Security-critical constraints:
-  No path traversal (canonicalize → check against allowed base path)
-  No null bytes (\x00) in string fields
-  No control characters (strip or reject \r\n in header-like values)
-  File type: magic bytes match ALLOWED_TYPES list (not Content-Type header)
-  Webhook: HMAC-SHA256(secret, raw_body) == timingSafeEqual(header_sig)
-```
-
-### Anti-examples: Injection via Input Validation Failure
-
-| Attack class | Missing validation | Prevention |
-| --- | --- | --- |
-| SQL injection | `WHERE name = '${input}'` (string concat) | Parameterized queries (never input in SQL string); validate type/format |
-| XSS (stored) | `<div>{userContent}</div>` (unescaped) | Output encoding at render; allowlist HTML tags if rich text needed |
-| Path traversal | `fs.readFile(dir + input)` | Canonicalize; confirm path within allowed base using `path.resolve()` |
-| SSTI | `render(template_string=input)` | Never accept template strings from user input; use static templates only |
-| Mass assignment | `User.update(req.body)` | Use DTO allowlist; reject unknown fields; never spread raw request body |
-| File polyglot | `.jpg` file with PHP code in EXIF | Magic byte check; do not serve uploaded files with execution privileges |
-| IDOR | `/api/orders/{id}` without ownership check | Validate `order.tenant_id == caller.tenant_id` before returning |
+Anchor against OWASP ASVS V5 validation/sanitization, OWASP API Security API3/API4/API8, OWASP Top 10 A03 injection and A01 broken access control, CWE-20, CWE-22, CWE-79, CWE-89, CWE-434, CWE-918, CWE-915, RFC 7807/9457 problem details, JSON Schema/OpenAPI validation practice, strict schema libraries such as Zod and Pydantic, Bean Validation, OWASP File Upload, SSRF, XSS, and SQL Injection cheat sheets, and constant-time webhook signature verification patterns. Keep the body focused on routing, evidence, and output; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed layer responsibility, constraint taxonomy, parser/fetch/upload/webhook matrices, graph-memory-trajectory coupling, anti-patterns, and test mapping.
 
 # Selection Rules
 
-Select this capability when **trust boundary enforcement, schema validation, and security constraint design** are the primary concern. Adjacent routing:
+Select this capability when **trust-boundary validation design and enforcement evidence** are primary. Adjacent routing:
 
-- Prefer `web-security` when the primary concern is exploit-class attack surface review (injection, XSS, CSRF, SSRF at a system level).
-- Prefer `api-contract-design` when the primary concern is external request/response contract design (OpenAPI schema, versioning).
-- Prefer `dto-schema-design` when the primary concern is internal DTO shape and field naming conventions.
-- Prefer `authentication-authorization` when the primary concern is identity verification and access control decisions.
-- Prefer `form-validation-design` when the primary concern is frontend form UX validation timing and user feedback.
+- Prefer `dto-schema-design` when field naming, null/default semantics, transfer schema source, generated clients, or DTO/domain mapping are primary.
+- Prefer `web-security` when exploit-class review across XSS, CSRF, SSRF, injection, upload abuse, deserialization, redirects, or browser controls is primary.
+- Prefer `permission-boundary-modeling` when the main decision is subject/resource/action/condition authorization and object-level enforcement.
+- Prefer `error-code-design` when public error taxonomy, retryability, localization, or support diagnostics are primary.
+- Prefer `form-validation-design` when frontend timing, field preservation, async validation UX, or accessibility feedback is primary.
+- Prefer `integration-change-builder` when external partner protocol behavior, retries, reconciliation, credentials, or webhook operational ownership dominates.
 
 # Risk Escalation Rules
 
-Escalate when input can affect: financial amounts or pricing; permission grants or role assignments; tenant or account scope boundaries; file system paths or command execution; SQL, template, or script construction; external API calls with user-controlled parameters; configuration values that alter system behavior; or privileged automation inputs (AI tool call parameters, webhook triggers, CI/CD pipeline inputs).
+Escalate when input can affect financial amounts, billing, permissions, roles, tenant scope, regulated data, files, executable paths, templates, queries, deserialization, server-side URL fetches, CI/CD or automation actions, AI/tool calls, configuration, webhooks, replayable events, or privileged support/admin workflows. Escalate when prior memory says validation exists but current source, callers, generated schemas, and tests have not been inspected.
+
+# Proactive Professional Triggers
+
+- **Signal:** validation is described as frontend-only, SDK-only, HTML attribute-only, API gateway-only, or "the client cannot send that." **Hidden risk:** direct API or alternate client bypass stores invalid or hostile data. **Required professional action:** require server-side trust-boundary validation and negative direct-call proof. **Route to:** `backend-change-builder`, `quality-test-gate`. **Evidence required:** server validator path and bypass test.
+- **Signal:** handler spreads, auto-binds, deserializes, or passes raw request bodies into commands, ORM updates, jobs, prompts, or provider calls. **Hidden risk:** mass assignment, object-property authorization bypass, prompt/tool injection, or unsafe provider behavior. **Required professional action:** define strict DTO allowlist, unknown-field rejection, and mapping owner. **Route to:** `dto-schema-design`, `security-privacy-gate`. **Evidence required:** allowlisted mapper and denied unknown-field case.
+- **Signal:** path, URL, redirect, filename, object key, archive entry, template, query, shell argument, selector, or AI/tool parameter comes from caller-controlled input. **Hidden risk:** SSRF, path traversal, open redirect, injection, RCE, prompt injection, or data exfiltration. **Required professional action:** canonicalize before use, constrain destination/grammar, fail closed, and redact diagnostics. **Route to:** `web-security`, `threat-modeling`. **Evidence required:** malicious-input test, deny-before-use proof, and safe log/error sample.
+- **Signal:** request includes `user_id`, `tenant_id`, `owner_id`, `resource_id`, role, permission, status, classification, price, quota, or state transition fields. **Hidden risk:** IDOR, tenant spoofing, client-controlled policy, or business invariant bypass. **Required professional action:** derive authority from trusted server state and validate identifier ownership/scope. **Route to:** `permission-boundary-modeling`, `business-rule-extraction`. **Evidence required:** trusted source, ownership query, denied wrong-owner/tenant case.
+- **Signal:** validation tightening changes required fields, enum values, length/range, unknown-field handling, parser strictness, or accepted file/payload types on an existing public path. **Hidden risk:** deployed clients, mobile apps, partners, fixtures, or replayed events break after release. **Required professional action:** classify compatibility and provide rollout or deprecation path. **Route to:** `version-compatibility`, `consumer-impact-analysis`. **Evidence required:** old/new rule diff, consumer inventory, compatibility tests or residual risk.
+- **Signal:** memory, repository graph, generated docs, or prior test reports claim validation coverage without current source inspection. **Hidden risk:** stale validators, missing new entry points, or generated-client drift. **Required professional action:** confirm current validator, caller graph, schema source, tests, and report freshness. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected memory, freshness limit.
 
 # Critical Details
 
-Input validation is the first and most cost-effective line of defense across the entire OWASP Top 10. Precision failures:
+Validation precision failures usually arise from boundary confusion:
 
-- **Blocklist defeat via encoding.** Blocklisting `<script>` to prevent XSS. Attacker sends `%3Cscript%3E` or `\u003cscript\u003e`. URL decode or Unicode normalize first, then validate. Blocklists are always incomplete — use allowlists.
-- **MIME type spoofing for file uploads.** File upload endpoint checks `Content-Type: image/jpeg`. Attacker sends a PHP webshell with `Content-Type: image/jpeg`. Content-Type is set by the client and cannot be trusted. Read the first 16 bytes (magic bytes): JPEG = `FF D8 FF`; PNG = `89 50 4E 47`. Reject anything that does not match the magic bytes for the allowed type list.
-- **IDOR via missing ownership check.** GET `/api/invoices/12345` — invoice 12345 belongs to tenant B. Caller is authenticated as tenant A. API checks only "is authenticated" but not "is this your invoice." Returns tenant B's financial data. Fix: validate `invoice.tenant_id == request.user.tenant_id` in the application service, not the controller.
-- **Mass assignment via ORM.** `user.update(request.body)` with an ORM that maps all body fields to model fields. Body includes `{"role": "admin"}`. ORM sets `user.role = "admin"`. Fix: use explicit DTO with only permitted fields; never pass raw request body to ORM update.
-- **Webhook without signature verification.** Webhook endpoint at `/webhooks/payment` processes payload directly. Attacker sends a forged payment success event. System grants access without a real payment. Fix: verify `HMAC-SHA256(secret, raw_body)` using `crypto.timingSafeEqual()` before parsing payload.
+- A field can be syntactically valid but unauthorized for the caller, tenant, lifecycle state, or object relationship.
+- Encoding and parser ambiguity defeat late blocklists; validate the canonical representation before security decisions.
+- Generated schemas and SDK types do not prove runtime enforcement unless the server boundary rejects invalid direct calls.
+- Unknown-field tolerance is a compatibility decision, not a default. Tolerating unknown request fields must not map them to domain mutations.
+- "Sanitize" is not one operation. Validation, canonicalization, output encoding, parameterization, and authorization each protect different boundaries.
+- Error responses, logs, metrics, and traces are output boundaries; rejected values can still leak secrets or attack payloads.
+- Project memory and repository graph are evidence leads. Current source, current callers, current validators, and current tests decide the validation contract.
+
+### Anti-examples
+
+| Anti-pattern | Failure | Required correction |
+| --- | --- | --- |
+| Frontend validates email; API accepts direct invalid POST | Downstream data corruption and bounce loops. | Server-side schema and negative direct-call test. |
+| `Model.update(req.body)` | Mass assignment to role, price, tenant, or status fields. | Strict DTO, allowlisted mapper, unknown-field rejection. |
+| URL regex before fetch only checks prefix | SSRF via redirects, DNS rebinding, private ranges, or userinfo tricks. | Parse, resolve, allowlist, deny private/link-local/metadata, revalidate redirects. |
+| File accepts `.jpg` extension and browser MIME | Type spoof, malware, or executable upload. | Size cap, magic bytes, storage isolation, scan-before-publish. |
+| Webhook parses JSON before signature check | Forged event can trigger side effects or parser abuse. | Verify raw body signature, freshness, replay, then parse. |
+| Error returns exact regex or raw parser message | Attackers learn bypass boundary or internals. | Stable violation codes and sensitivity-aware messages. |
 
 # Failure Modes
 
-- Frontend blocks invalid email format; API bypassed directly via curl; invalid email stored in database; downstream system fails.
-- File upload accepts `.jpg` extension; magic bytes not checked; PHP webshell uploaded; remote code execution.
-- IDOR: authenticated user queries another tenant's invoice via `/api/invoices/{id}`; ownership check missing; data breach.
-- Mass assignment: PUT `/users/me` with `{"role":"admin"}` in body; ORM maps all fields; privilege escalation.
-- Webhook endpoint processes forged payment success event; signature verification absent; user granted paid features without payment.
-- SQL injection via unvalidated search parameter; string concatenation into query; full table dump.
-- Path traversal: `GET /files?name=../../etc/passwd`; filename not canonicalized; file system contents leaked.
-- Validation error response leaks regex pattern; attacker learns exact allowlist boundary; crafts valid-but-malicious input.
+- Direct API calls bypass frontend validation and store invalid data because the server boundary lacks the same rule.
+- Raw request bodies map into commands, ORM models, jobs, prompts, or provider calls and mutate privileged fields.
+- Encoded, Unicode, or path-normalized payloads pass late blocklists and trigger injection, traversal, SSRF, or unsafe parser behavior.
+- Valid-looking identifiers reference another tenant, owner, deleted resource, forbidden state, or invisible object.
+- File uploads trust extension, browser MIME, filename, archive path, or client size and publish unsafe content.
+- Webhooks are parsed or processed before signature, freshness, replay, schema, or idempotency checks.
+- Validation tightening breaks deployed clients, mobile apps, generated SDKs, partner payloads, imports, or replayed events without a rollout path.
+- Error responses, logs, metrics, or traces leak regexes, stack traces, raw URLs, secrets, tenant existence, or provider/parser internals.
+- Project memory says validation already exists, but current repository graph exposes a new route, job, import, or generated client path without coverage.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 routing, non-negotiable rules, triggers, and output requirements. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete validator, field table, parser, upload, webhook, URL/fetch rule, identifier guard, or validation test plan. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when layer responsibility, constraint taxonomy, file/upload rules, SSRF/path/canonicalization, webhook authenticity, graph-memory-trajectory evidence, compatibility, or changed-validation-to-test mapping needs deeper detail. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or metadata-only edits with no validation decision.
 
 # Output Contract
 
 Return an input validation contract with:
 
-- `input_sources` (request body, query params, path params, headers, files, webhooks; trust level of each)
-- `schema` (per field: type, required/optional, constraints: minLength, maxLength, pattern, enum, range)
-- `unknown_field_handling` (reject with 400 / strip silently; rationale)
-- `canonicalization` (URL decode, Unicode NFC normalize, trim; sequence: before validation)
-- `ownership_checks` (identifier → existence check; → ownership check: field, relation, tenant binding)
-- `state_transition_guards` (current state → permitted transitions; enforcement layer: application service)
-- `file_validation` (allowed MIME types + magic bytes; max size; filename sanitization; storage location)
-- `webhook_signature` (algorithm: HMAC-SHA256; header; comparison: timingSafeEqual; rejection on mismatch)
-- `error_contract` (HTTP status; RFC 7807 problem detail; field path; message; what is NOT included in message)
-- `security_constraints` (no path traversal; no null bytes; no control chars; injection-class rules)
-- `tests` (valid input accepted; each constraint violation rejected; ownership failure; mass assignment attempt; file type spoof; webhook signature tamper)
+- `mode_selected` (new trust-boundary schema, existing validation evolution, identifier/object scope, URL/path/fetch/execution selector, file/import intake, webhook/event payload, validation error contract)
+- `boundaries_inspected` (routes, handlers, DTOs/schemas, validators, parsers, mappers, services, repositories, files/uploads, webhook adapters, jobs/events, generated clients/specs, tests, logs/errors, registry/project memory, and skipped boundaries with reason)
+- `source_evidence` (current files, caller graph, schema source, generated artifacts, validators, reports, test fixtures, or telemetry inspected)
+- `graph_memory_trajectory_judgment` (accepted, rejected, or not verified claims about existing validation, callers, contracts, prior failures, generated artifacts, and test freshness)
+- `input_sources` (body, query, path, headers, cookies, files, webhooks, events, imports, CLI/config, URL/fetch, automation/tool parameters, trust level, and actor)
+- `schema_constraints` (per field: type, required/optional, nullable/absent/empty semantics when relevant, length/size/range, enum, pattern/grammar, format, array/object bounds, cross-field rules)
+- `canonicalization_sequence` (decode, Unicode normalization, trimming, path resolution, URL parsing/resolution, case folding, timezone/currency normalization, and when the raw value is still needed)
+- `unknown_field_policy` (reject, tolerate for forward compatibility, or strip at boundary; rationale and safety constraints)
+- `identifier_and_authority_checks` (field, trusted source, existence, ownership, tenant scope, permission, lifecycle state, query/filter location)
+- `state_and_business_guards` (per status-changing field or command: invariant, current state, permitted transition, enforcement layer)
+- `url_path_file_controls` (scheme/host/port/address allowlist, private/metadata denial, redirect revalidation, base-path containment, filename/storage key, MIME/magic bytes, size, archive traversal, scan gate, timeout/response bounds)
+- `webhook_event_controls` (raw-body signature, algorithm, timestamp/freshness, replay protection, schema version, idempotency key/event id, parse-after-verify rule)
+- `error_contract` (status/code/type, field path, safe message, safe rejected-value echo policy, redaction for errors/logs/metrics/traces, localization or SDK impact)
+- `changed_validation_to_test_map` (each field, parser, canonicalization step, unknown-field policy, identifier check, upload rule, webhook rule, error shape, compatibility decision, and security constraint mapped to validator/test/manual proof or residual risk)
+- `reuse_and_placement_rationale` (existing schema, validator library, mapper, service boundary, policy module, parser, helper, fixture, and reference files reused or rejected; why no client-only, duplicated, or speculative abstraction was introduced)
+- `behavior_preservation` (old valid inputs, old clients, old generated artifacts, old error semantics, old replayed events, old storage/import records, and rollback behavior preserved or intentionally migrated)
+- `validation_evidence` (commands, validators, reports, fixtures, exit codes, artifact names, manual verification, freshness after final edit, or not-verified disclosure)
+- `handoff_boundaries` (DTO schema, error catalog, object authorization, web exploit review, file lifecycle, integration/retry, release/docs)
+- `evidence_limits` (unknown clients, unqueried telemetry, uninspected generated artifacts, unavailable production payloads, stale memory, untested malicious cases, or residual risk owner)
+
+# Evidence Contract
+
+Close an input-validation design only when these answers are concrete:
+
+- **Boundary basis:** selected mode, trust boundary, actor, input source, parser/validator owner, and security or compatibility risk class.
+- **Current-source inspection:** paths for routes, validators, DTOs/schemas, parsers, mappers, services, repositories, adapters, jobs/events, generated artifacts, tests, and prior reports checked or explicitly skipped.
+- **Placement rationale:** why validation belongs at the chosen boundary, and why client-only, gateway-only, late sanitizer-only, duplicate helper, raw binding, or speculative shared abstraction was rejected.
+- **Validation proof:** each changed rule maps to valid, invalid, boundary, malformed, canonicalization, unauthorized, unknown-field, malicious payload, file/webhook/fetch, compatibility, and error-contract evidence where applicable.
+- **Behavior preservation:** old valid inputs, public clients, generated clients, replayed events, imports, error semantics, and rollback stay valid or have a migration path.
+- **Evidence limits and residual risk:** unknown consumers, untested parsers, unavailable telemetry, stale project memory, unverified generated clients, or manual security review gaps have owner and next gate.
+
+# Benchmark Coverage
+
+This capability covers server-side trust-boundary validation, strict schema and allowlisted mapping, canonicalization ordering, unknown-field policy, identifier ownership and tenant scope, file/upload/import intake, URL/path/fetch controls, webhook authenticity and replay checks, safe validation errors, compatibility classification, graph-memory-trajectory verification, and changed-validation-to-test mapping. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed matrices and implementation patterns.
+
+# Routing Coverage
+
+Routes from `security-privacy-gate`, `backend-change-builder`, `frontend-change-builder`, `data-api-contract-changer`, `api-contract-design`, `dto-schema-design`, `error-code-design`, `form-validation-design`, `file-storage-processing`, `integration-change-builder`, `web-security`, `permission-boundary-modeling`, `contract-testing`, and `quality-test-gate` should arrive here when trust-boundary validation evidence is primary. Route away when endpoint semantics, DTO field modeling, public error taxonomy, authorization policy, exploit-class threat review, file lifecycle, retry/reconciliation, or release approval is primary.
 
 # Quality Gate
 
 The validation contract is complete only when:
 
-1. Every input field has declared type, constraints, and allowlist format where applicable.
-2. Unknown/extra fields are explicitly rejected (not silently accepted).
-3. All input is canonicalized before security-sensitive pattern checks.
-4. Ownership and tenant scope check defined for every resource identifier.
-5. State transition guard defined for every status-changing operation.
-6. File uploads validated via magic bytes, not Content-Type header alone.
-7. Webhook payloads validated via HMAC signature with constant-time comparison.
-8. Error responses return normalized codes — not regex patterns, stack traces, or internal field names.
-9. Tests include: constraint boundary cases, ownership failures, mass assignment attempts, injection payloads, file type spoofs.
-10. Validation enforced at server trust boundary; no "client validates so server skips" documentation.
+1. Mode, inspected boundaries, source evidence, graph-memory-trajectory judgment, and evidence limits are recorded.
+2. Every input source and actor has a trust level, parser/validator owner, and server-side enforcement point.
+3. Every accepted field has type, required/optional status, size/length/range, format/grammar, enum/allowlist, array/object bounds, and cross-field rules where applicable.
+4. Canonicalization order is defined before security-sensitive checks.
+5. Unknown request fields are rejected or tolerated only with explicit compatibility and non-mapping rationale.
+6. Identifiers validate existence, ownership, tenant scope, permission context, and lifecycle state using trusted server-side data.
+7. State-changing and business-significant inputs have invariant and transition guards at the service/domain boundary.
+8. URL, path, fetch, redirect, template, query, selector, command, and AI/tool inputs have destination or grammar allowlists, fail-closed behavior, and redacted diagnostics.
+9. File/import/archive inputs validate size, content signature, structure, storage key/path, scan/publish state, and tenant ownership.
+10. Webhooks/events verify raw-body authenticity, freshness, replay/idempotency, schema, and parse-after-verify ordering.
+11. Validation errors use stable codes/field paths and do not leak regexes, internals, secrets, raw URLs, provider bodies, or tenant existence.
+12. Tightened validation is compatibility-classified with consumer, generated-client, fixture, replay, and rollback impact.
+13. Changed validation-to-test map covers valid, invalid, boundary, malformed, hostile, unauthorized, unknown-field, file/webhook/fetch, and error-contract cases or names residual risk.
+14. Reuse and placement rationale identifies existing validators/schemas/helpers/tests and rejects client-only, late sanitizer-only, raw-binding, or speculative shared paths.
+15. Handoff boundaries and residual-risk owner are explicit.
 
 # Used By
 
@@ -165,8 +185,8 @@ The validation contract is complete only when:
 
 # Handoff
 
-Hand off to `web-security` for system-level injection and exploit surface review; `api-contract-design` for OpenAPI schema contract and versioning; `authentication-authorization` for identity and access control; `form-validation-design` for frontend validation UX timing; `quality-test-gate` for test coverage gate.
+Hand off to `dto-schema-design` for transfer schema and mapper semantics; `error-code-design` for public validation error taxonomy; `permission-boundary-modeling` for object-level authorization; `web-security` for exploit-class review; `file-storage-processing` for file lifecycle and storage controls; `integration-change-builder` for webhook/partner protocol operation; `quality-test-gate` for coverage sufficiency; and `delivery-release-gate` when validation tightening needs rollout, rollback, or release approval.
 
 # Completion Criteria
 
-The capability is complete when **every field at every trust boundary has declared type, format, and business constraints; security-critical inputs are canonicalized before validation; identifiers are checked for ownership and scope; and no input validation concern is deferred to the client alone**.
+The capability is complete when every trust-boundary input has server-side validation, canonicalization, unknown-field policy, authority checks, safe errors, behavior-preservation analysis, changed-validation-to-test mapping, graph-memory-trajectory evidence, handoff boundaries, and residual-risk owner, with no validation concern deferred to client behavior alone.

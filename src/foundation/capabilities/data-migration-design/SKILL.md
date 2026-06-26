@@ -19,6 +19,10 @@ Use this capability when a change: adds, drops, renames, or alters a column, tab
 
 Do not use this capability for application-level business logic changes that do not alter stored data or schema. Do not use it to design the target data model — use `data-model-design` first, then return here for the migration plan. Do not use it to authorize destructive operations — escalate to the risk escalation rules first.
 
+# Stage Fit
+
+Own migration design during planning, implementation review, testing, and release preparation when stored data, schema, indexes, constraints, partitions, backfills, purges, or cross-system cutovers change. In planning, turn current schema, migrations, generated clients, repository graph, project memory, execution trajectory, row-count evidence, deployment topology, and validation history into an expand/migrate/contract plan before implementation. In review, reject stale "no readers", "safe DDL", "already backfilled", "rollback is restore", or "migration passed once" claims unless current source, telemetry, and validation confirm them. Hand off when the unresolved decision is target data model, API/DTO compatibility, storage-engine execution, release sequencing, backup restore, security/privacy, or production observability.
+
 # Non-Negotiable Rules
 
 - **Migrations are idempotent or guarded.** Running a migration twice must produce the same correct outcome — either via idempotency (`IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, upsert logic) or via execution guards (migration versioning table, Flyway/Liquibase checksum, custom guard row). An unguarded migration that errors on second run is not guarded.
@@ -31,83 +35,21 @@ Do not use this capability for application-level business logic changes that do 
 - **Destructive operations require runbook approval.** Dropping a column, truncating a table, or deleting data at scale requires: a recorded dry-run count, an owner sign-off, a backup verification, and a rollback plan with tested restore time.
 - **Migrations are deployment-environment-aware.** A migration that uses `gh-ost` on production may need `pt-online-schema-change` on staging (different MySQL minor version). Migration tooling versions, target DB versions, and replication topology must match between test and production environments.
 
+# Mode Matrix
+
+Select the migration mode before choosing DDL, backfill, cutover, validation, or rollback mechanics.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Additive schema expand | Nullable column, new table, new index, new constraint, or safe structure added for future code. | Preserve old readers/writers and avoid hot-table locks. | Current schema, old/new code compatibility, lock class, online DDL option, rollback as ignore/drop. | `data-model-design`, `relational-database`, `version-compatibility` | Contract cleanup in same deploy. |
+| Batched backfill or data repair | Existing rows need computed values, normalization, repair, archive, or purge. | Make the work resumable, observable, rate-limited, and tenant/partition complete. | Row counts, batch/checkpoint plan, lag threshold, validation query, retry/resume proof. | `transaction-consistency`, `data-side-effect-flow-tracing`, `quality-test-gate` | Single unbounded UPDATE/DELETE. |
+| Destructive contract cleanup | Drop/rename column, remove table/index, add NOT NULL, tighten constraint, or delete data. | Prove all old readers/writers are gone and rollback point is explicit. | Telemetry zero-use gate, backup/restore proof, owner signoff, rollback tier. | `release-rollback`, `delivery-release-gate`, `backup-recovery` | Destructive change before telemetry. |
+| Cross-system migration or cutover | CDC, dual-write, dual-read, source-to-target copy, service split, cloud migration, or sharding. | Keep source of truth, reconciliation, cutover, and rollback clear. | Source/target ownership, CDC lag, consistency check, cutover criteria, forward-fix plan. | `data-api-contract-changer`, `message-queue-design`, `reliability-observability-gate` | Big-bang cutover without dual-read or reconciliation. |
+| Operational migration repair | Failed, partial, slow, duplicate, checksum-mismatched, or interrupted migration. | Verify actual state before repair and avoid repeated blind reruns. | Migration ledger, partial row counts, same-pattern scan, repair script, revalidation output. | `failure-diagnosis`, `agent-execution-discipline`, `regression-testing` | Third same-path retry. |
+
 # Industry Benchmarks
 
-Anchor against: **Flyway** (Redgate) — versioned migration with checksum-protected SQL and Java migrations; `V{version}__{description}.sql` naming convention. **Liquibase** — XML/YAML/SQL changelog with rollback support and `dbDoc`. **`gh-ost`** (GitHub Online Schema Change) — online MySQL DDL without metadata lock; triggers-free, testable on replica first. **`pt-online-schema-change`** (Percona Toolkit) — MySQL online DDL with trigger-based sync. **PostgreSQL `pg_repack`** — online table reorganization without exclusive locks. **Django migrations** / **Alembic (SQLAlchemy)** / **ActiveRecord migrations** — framework-level migration execution and dependency tracking. **`pgcopydb`** — PostgreSQL online copy with change data capture for large-table migrations. **Debezium / CDC (Change Data Capture)** — event-based data migration for dual-write or cross-system migration. **Martin Fowler "Evolutionary Database Design"** (Sadri & Sadalage) — expand-contract pattern. **Sam Newman "Monolith to Microservices"** Ch. 4 — database decomposition and Strangler Fig pattern for data migration. **Google SRE Book** Ch. 30 (Dealing with Cascading Failures) — rate limiting and load shedding during backfills. **NIST SP 800-34** — contingency planning including data backup verification. **ISO 22301** — business continuity; restore time objective (RTO) for data recovery. **AWS Database Migration Service (DMS)** — source-to-target CDC for cross-cloud migrations. **Zero-downtime deployment** discipline: traffic must be serveable during every migration phase.
-
-### Migration Type Selection Matrix
-
-| Migration type | Tool / pattern | Lock risk | Rollback complexity | Pick when |
-| --- | --- | --- | --- | --- |
-| **Column add (nullable)** | Native DDL (PostgreSQL ≥ 11: instant) | None/minimal | Drop column | Greenfield; no data needed |
-| **Column add (NOT NULL + default)** | Add nullable → backfill → add constraint | Table rewrite if < PG 11 | Drop column; rollback constraint | Adding required field to existing table |
-| **Column rename** | Expand: add new → dual-write → migrate reads → drop old | None per phase | Remove new; revert writes | Never: `ALTER TABLE RENAME COLUMN` in one step on live table |
-| **Column drop** | Contract phase only after 2 prior deployments | None | Restore from backup | Final cleanup after expand-migrate confirmed |
-| **Large backfill** | Batched UPDATE with checkpoint table; `pg_background` / background job | Row-level locks per batch | Mark column nullable; read as NULL | > 100K rows; production table |
-| **Index creation** | `CREATE INDEX CONCURRENTLY` (PostgreSQL) / `pt-online-schema-change` (MySQL) | None (concurrent) | `DROP INDEX` | Any production index; avoids share lock |
-| **Table rename / restructure** | Expand: new table → dual-write → migrate reads → deprecate old | None per phase | Re-enable old reads | Cross-service; data model refactor |
-| **Cross-DB migration** | CDC (Debezium) → dual-read → validate → cutover | None until cutover | Re-enable source | Monolith decomposition; cloud migration |
-| **Schema version migration** | Flyway/Liquibase with explicit version | Per migration script | `flyway repair` + compensating | Standard versioned schema evolution |
-| **Data purge / archive** | Batched DELETE with checkpoint; move to archive table first | Row-level per batch | Cannot un-delete without backup | GDPR erasure; retention enforcement |
-
-### Expand-Migrate-Contract Phases
-
-```
-Phase 1: EXPAND
-  - Add nullable column / new table / new index
-  - Old code: reads and writes old structure ✅
-  - New code: not yet deployed
-  - Validation: new structure exists; old reads still pass; zero null impact on writes
-
-Phase 2: MIGRATE (may be split into deploy + background backfill)
-  - Deploy code that writes BOTH old and new structure (dual-write)
-  - Run batched backfill of historical data
-  - Validation: backfill 100% complete; no null values in new column for required fields
-
-Phase 3: CONTRACT (only after code cutover confirmed)
-  - Deploy code that reads ONLY new structure
-  - Remove old structure (column, table, index) in a separate migration
-  - Validation: zero reads of old column in APM/query logs for ≥ 24h
-  - Cleanup: remove dual-write code; drop old column/table
-```
-
-### Backfill Checkpoint Pattern
-
-```sql
--- Checkpoint table: tracks last processed primary key
-CREATE TABLE IF NOT EXISTS _migration_checkpoint (
-  migration_id VARCHAR(100) PRIMARY KEY,
-  last_processed_id BIGINT DEFAULT 0,
-  processed_rows BIGINT DEFAULT 0,
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Backfill loop (application-level or stored procedure)
-LOOP
-  SELECT last_processed_id INTO v_checkpoint FROM _migration_checkpoint WHERE migration_id = 'backfill_new_col_v1';
-  
-  UPDATE users
-  SET new_col = compute_fn(old_col)
-  WHERE id > v_checkpoint AND id <= v_checkpoint + 1000
-    AND new_col IS NULL;  -- idempotent: skip already-migrated rows
-  
-  -- Checkpoint after each batch
-  UPDATE _migration_checkpoint SET last_processed_id = v_checkpoint + 1000, processed_rows = processed_rows + ROW_COUNT();
-  
-  EXIT WHEN v_checkpoint >= (SELECT MAX(id) FROM users);
-  PERFORM pg_sleep(0.05);  -- rate limit: 50ms pause between batches
-END LOOP;
-```
-
-### Rollback Tier Classification
-
-| Rollback tier | Definition | Recovery action |
-| --- | --- | --- |
-| **Fully reversible** | Structure added; no data changed; old code unaffected | Drop new column/table; re-deploy old code |
-| **Code-only rollback** | Old code deployed; dual-write disabled; new column ignored | Re-deploy old code; new column stays (nullable; benign) |
-| **Compensating migration** | New column written; can write reverse migration | Run reverse UPDATE/backfill to undo writes; deploy old code |
-| **Point of no return** | Old column dropped; data deleted | Restore from last verified backup; measure RTO explicitly |
-| **Catastrophic (irreversible)** | Data deleted with no backup window | Escalate immediately; incident response; post-mortem |
+Anchor against versioned migration tools, online DDL practice, expand/migrate/contract, batched and checkpointed backfills, CDC and dual-read cutovers, backup/restore continuity standards, zero-downtime deployment, and SRE rate limiting during production data work. Keep this body focused on stage fit, routing, evidence, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for migration-type matrices, EMC phase detail, checkpoint patterns, rollback tiers, graph/memory/trajectory coupling, validation evidence, and anti-pattern detail.
 
 # Selection Rules
 
@@ -121,6 +63,15 @@ Select this capability when **existing stored data or schema must change** in a 
 # Risk Escalation Rules
 
 Escalate when: migration is destructive (column drop, data deletion, truncation) and backup has not been verified; migration touches financial records, audit logs, personal data (GDPR right to erasure), or regulatory data; migration exceeds 10M rows and no batching plan exists; migration requires DDL on a table with > 1K transactions/second; migration runs in a 30-minute deployment window but estimated backfill is 6 hours; rollback would require a backup restore with RTO > SLA; a cross-service migration requires multiple teams to coordinate deployment ordering; schema registry (Confluent, Glue) compatibility mode change is required as part of the migration.
+
+# Proactive Professional Triggers
+
+- **Signal:** project memory, repository graph, or prior execution says there are "no readers", a backfill is "done", a DDL is "safe", or rollback is "just restore" without current confirmation. **Hidden risk:** stale evidence green-lights destructive or mixed-version-unsafe migration work. **Required professional action:** confirm current schema, migrations, code readers/writers, generated clients, query/report consumers, telemetry, and validation freshness. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected memory, freshness limits, and unknown consumer disclosure.
+- **Signal:** DDL touches a hot table, large table, NOT NULL/default, foreign key, unique constraint, enum, index, partition, or table rewrite. **Hidden risk:** metadata locks, table scans, replication lag, or query-plan regression cause outage. **Required professional action:** identify lock class and online alternative before execution. **Route to:** `relational-database`, `indexing-query-optimization`, `reliability-observability-gate`. **Evidence required:** row/write volume, lock analysis, online DDL choice, timeout/abort threshold, dry-run or not-verified limit.
+- **Signal:** backfill, purge, repair, archive, or data transform is unbatched, uncheckpointed, unbounded, or tenant/partition blind. **Hidden risk:** partial application, duplicate processing, lag spike, or missed tenant data. **Required professional action:** require batch/checkpoint/rate-limit/resume and full validation queries. **Route to:** `transaction-consistency`, `data-side-effect-flow-tracing`, `quality-test-gate`. **Evidence required:** checkpoint store, idempotent WHERE clause, progress metrics, per-partition validation.
+- **Signal:** drop, rename, data delete, constraint tightening, or contract cleanup is proposed before telemetry proves old usage is gone. **Hidden risk:** old code, reporting, jobs, or external consumers break during rollback or mixed-version window. **Required professional action:** enforce expand/migrate/contract and classify rollback tier. **Route to:** `version-compatibility`, `release-rollback`, `delivery-release-gate`. **Evidence required:** old/new compatibility matrix, zero-use telemetry gate, owner signoff, rollback or forward-fix plan.
+- **Signal:** migration crosses systems, uses CDC, dual-write, dual-read, service decomposition, source-to-target sync, or cutover. **Hidden risk:** source-of-truth ambiguity, ordering drift, missed updates, and rollback data divergence. **Required professional action:** define source/target ownership, reconciliation, cutover window, and post-cutover validation. **Route to:** `data-api-contract-changer`, `message-queue-design`, `reliability-observability-gate`. **Evidence required:** CDC lag, consistency query, replay/reconciliation plan, cutover abort criteria.
+- **Signal:** migration touches financial, audit, PII/regulated, tenant boundary, or deletion/retention data. **Hidden risk:** legal/compliance harm or unrecoverable customer data loss. **Required professional action:** classify data and require security/privacy, backup, and approval evidence. **Route to:** `security-privacy-gate`, `backup-recovery`, `delivery-release-gate`. **Evidence required:** data classification, retention/deletion rule, backup restore proof, approval owner.
 
 # Critical Details
 
@@ -162,10 +113,17 @@ Data migrations are among the highest-risk operations in a production system. Pr
 - `pg_dump` backup taken before migration but not verified; restore fails; point-of-no-return with no rollback.
 - Cross-service migration: service A drops column before service B is updated; service B crashes on reads.
 
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 migration selection, safety, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete migration plan, before implementation starts, or when batching, rollback, observability, cleanup, or owner signoff is uncertain. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when migration-type selection, EMC phase detail, checkpoint SQL, rollback tiers, graph/memory/trajectory reuse, validation evidence, or anti-pattern detail needs depth. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are enough.
+
 # Output Contract
 
 Return a migration plan with:
 
+- `mode_selected` (additive schema expand, batched backfill/data repair, destructive contract cleanup, cross-system migration/cutover, operational migration repair)
+- `migration_evidence` (current schema, migration ledger, code readers/writers, generated clients, reports/jobs, repository graph, project memory, execution trajectory, validation freshness, and row-count/volume evidence inspected)
+- `graph_memory_trajectory_judgment` (accepted, rejected, or not verified for every graph/memory/trajectory claim that affects safety)
 - `migration_type` (DDL schema, data backfill, cross-system, purge/archive, constraint add, index creation)
 - `affected_objects` (tables, columns, indexes, constraints, partitions with row-count estimates)
 - `phases` (per phase: name, description, code-deploy order, migration script, validation queries, duration estimate)
@@ -182,6 +140,21 @@ Return a migration plan with:
 - `owner` (migration owner, on-call contact, change approval record)
 - `runbook_steps` (execute steps for each phase with expected outputs and abort criteria)
 - `cleanup_criteria` (what telemetry must show before old structure is dropped)
+- `changed_migration_to_validation_map` (each phase, DDL, backfill, reader/writer, guard, validation query, rollback step, and cleanup gate mapped to validator or residual risk)
+- `handoff_boundaries` (what belongs to data model, API/DTO compatibility, relational/NoSQL execution, release sequencing, backup restore, security/privacy, reliability/observability, or no-next-gate rationale)
+- `evidence_limits` (what was not verified, such as unknown consumers, production cardinality, lock contention, replica lag, restore RTO, CDC replay, or hidden reports/jobs)
+
+# Evidence Contract
+
+Close a migration plan only when the output names selected mode, current migration evidence inspected, graph/memory/execution reuse judgment, affected objects and volumes, old/new reader-writer compatibility, phase order, guard/idempotency strategy, lock and batch analysis, validation queries, rollback tier and steps, backup/restore proof when destructive, observability and abort criteria, changed-migration-to-validation map, handoff boundaries, residual risk, and evidence limits. A migration plan that says "run migration, monitor logs, restore backup if needed" is not sufficient evidence.
+
+# Benchmark Coverage
+
+Improved migration plans should reject one-step rename/drop, NOT NULL/default hot-table rewrites, unbounded UPDATE/DELETE, missing migration guards, sampling-only validation, publish/reader cutover before backfill completion, "restore from backup" without measured RTO, checksum repair without state verification, and contract cleanup without telemetry proving old usage is gone. Detailed matrices and examples belong in references so this body stays efficient.
+
+# Routing Coverage
+
+Route here when the primary work is live stored-data or schema change sequencing: DDL safety, backfill, checkpointing, validation, rollback tier, EMC phases, migration ledger, or cutover. Hand off when the primary concern is target model design (`data-model-design`), client-visible compatibility (`version-compatibility`, `data-api-contract-changer`), storage-engine physical execution (`relational-database` or `nosql-database`), backup restore/RTO (`backup-recovery`), release rollout (`delivery-release-gate` or `release-rollback`), security/privacy of data (`security-privacy-gate`), or production telemetry (`reliability-observability-gate`).
 
 # Quality Gate
 
@@ -197,6 +170,11 @@ The migration plan passes only when:
 8. Migration progress is observable by on-call engineer in real time without grepping logs.
 9. Replication lag monitoring is active during backfill with a pause threshold.
 10. Feature flag or equivalent gates new-column reads until backfill is validated as complete.
+11. Repository graph, project memory, and execution trajectory inputs are current-source confirmed or marked not verified before they shape migration safety decisions.
+12. Old and new readers/writers, generated clients, reports, jobs, and rollback paths are compatible for every expand/migrate/contract phase or explicitly handed off to compatibility/release gates.
+13. Every DDL, backfill, validation, guard, observability, rollback, and cleanup decision maps to validation evidence or named residual risk.
+14. Destructive or irreversible phases have data classification, backup/restore evidence, owner signoff, and point-of-no-return disclosure before execution.
+15. Handoff boundaries and evidence limits are explicit so migration design is not over-claimed as target model approval, consumer compatibility proof, production release readiness, or backup-recovery proof.
 
 # Used By
 

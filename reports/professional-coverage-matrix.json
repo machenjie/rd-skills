@@ -1,40 +1,40 @@
 {
-  "generated_at": "2026-06-25T13:02:46.532629+00:00",
+  "generated_at": "2026-06-26T15:00:28.508887+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "no",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
       "name": "algorithm-data-structure-selection",
-      "output_contract": "partial",
+      "output_contract": "yes",
       "path": "src/foundation/capabilities/algorithm-data-structure-selection/SKILL.md",
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 36,
-      "status": "needs-review",
+      "score": 56,
+      "status": "sample-grade",
       "warnings": []
     },
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "no",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
       "name": "architecture-enforcement-tooling",
-      "output_contract": "partial",
+      "output_contract": "yes",
       "path": "src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md",
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 36,
-      "status": "needs-review",
+      "score": 54,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -51,8 +51,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (1)",
-      "score": 44,
-      "status": "acceptable",
+      "score": 56,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -69,26 +69,26 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (5)",
-      "score": 45,
-      "status": "acceptable",
+      "score": 55,
+      "status": "sample-grade",
       "warnings": []
     },
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "no",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
       "name": "cleanup-deletion-governance",
-      "output_contract": "partial",
+      "output_contract": "yes",
       "path": "src/foundation/capabilities/cleanup-deletion-governance/SKILL.md",
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (3)",
-      "score": 42,
-      "status": "needs-review",
+      "score": 56,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -105,8 +105,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (9)",
-      "score": 50,
-      "status": "acceptable",
+      "score": 57,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -117,32 +117,32 @@
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
       "name": "configuration-runtime-policy",
-      "output_contract": "partial",
+      "output_contract": "yes",
       "path": "src/foundation/capabilities/configuration-runtime-policy/SKILL.md",
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 41,
-      "status": "needs-review",
+      "score": 54,
+      "status": "sample-grade",
       "warnings": []
     },
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "no",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
       "name": "consumer-impact-analysis",
-      "output_contract": "partial",
+      "output_contract": "yes",
       "path": "src/foundation/capabilities/consumer-impact-analysis/SKILL.md",
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 40,
-      "status": "needs-review",
+      "score": 56,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -159,8 +159,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (9)",
-      "score": 44,
-      "status": "acceptable",
+      "score": 56,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -177,44 +177,44 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (3)",
-      "score": 49,
-      "status": "acceptable",
+      "score": 56,
+      "status": "sample-grade",
       "warnings": []
     },
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "no",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
       "name": "data-side-effect-flow-tracing",
-      "output_contract": "partial",
+      "output_contract": "yes",
       "path": "src/foundation/capabilities/data-side-effect-flow-tracing/SKILL.md",
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 37,
-      "status": "needs-review",
+      "score": 58,
+      "status": "sample-grade",
       "warnings": []
     },
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "no",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
       "name": "dependency-wiring-lifecycle",
-      "output_contract": "partial",
+      "output_contract": "yes",
       "path": "src/foundation/capabilities/dependency-wiring-lifecycle/SKILL.md",
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 40,
-      "status": "needs-review",
+      "score": 54,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -231,26 +231,26 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (4)",
-      "score": 50,
-      "status": "acceptable",
+      "score": 57,
+      "status": "sample-grade",
       "warnings": []
     },
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "no",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
       "name": "failure-contract-design",
-      "output_contract": "partial",
+      "output_contract": "yes",
       "path": "src/foundation/capabilities/failure-contract-design/SKILL.md",
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 39,
-      "status": "needs-review",
+      "score": 58,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -267,8 +267,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (7)",
-      "score": 51,
-      "status": "acceptable",
+      "score": 56,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -285,8 +285,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (2)",
-      "score": 49,
-      "status": "acceptable",
+      "score": 56,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -303,8 +303,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (10)",
-      "score": 45,
-      "status": "acceptable",
+      "score": 56,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -321,8 +321,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (12)",
-      "score": 44,
-      "status": "acceptable",
+      "score": 57,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -339,8 +339,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (1)",
-      "score": 49,
-      "status": "acceptable",
+      "score": 57,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -357,8 +357,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (1)",
-      "score": 51,
-      "status": "acceptable",
+      "score": 57,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -375,8 +375,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (4)",
-      "score": 47,
-      "status": "acceptable",
+      "score": 56,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -393,8 +393,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (4)",
-      "score": 51,
-      "status": "acceptable",
+      "score": 57,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -411,8 +411,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (7)",
-      "score": 44,
-      "status": "acceptable",
+      "score": 55,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -429,8 +429,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (4)",
-      "score": 43,
-      "status": "acceptable",
+      "score": 54,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -454,19 +454,19 @@
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "no",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
       "name": "model-boundary-mapping",
-      "output_contract": "partial",
+      "output_contract": "yes",
       "path": "src/foundation/capabilities/model-boundary-mapping/SKILL.md",
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 37,
-      "status": "needs-review",
+      "score": 58,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -483,8 +483,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (28)",
-      "score": 43,
-      "status": "acceptable",
+      "score": 55,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -519,8 +519,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (11)",
-      "score": 49,
-      "status": "acceptable",
+      "score": 55,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -537,8 +537,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (35)",
-      "score": 49,
-      "status": "acceptable",
+      "score": 56,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -555,14 +555,14 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (3)",
-      "score": 43,
-      "status": "acceptable",
+      "score": 54,
+      "status": "sample-grade",
       "warnings": []
     },
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "yes (2)",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
@@ -573,8 +573,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (20)",
-      "score": 43,
-      "status": "acceptable",
+      "score": 57,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -591,8 +591,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (2)",
-      "score": 49,
-      "status": "acceptable",
+      "score": 57,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -609,8 +609,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (1)",
-      "score": 51,
-      "status": "acceptable",
+      "score": 57,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -627,14 +627,14 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (2)",
-      "score": 49,
-      "status": "acceptable",
+      "score": 57,
+      "status": "sample-grade",
       "warnings": []
     },
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "no",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
@@ -645,26 +645,26 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (7)",
-      "score": 48,
-      "status": "acceptable",
+      "score": 55,
+      "status": "sample-grade",
       "warnings": []
     },
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "no",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
       "name": "testability-seam-design",
-      "output_contract": "partial",
+      "output_contract": "yes",
       "path": "src/foundation/capabilities/testability-seam-design/SKILL.md",
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 44,
-      "status": "needs-review",
+      "score": 56,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -681,8 +681,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (8)",
-      "score": 44,
-      "status": "acceptable",
+      "score": 55,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -699,8 +699,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (3)",
-      "score": 50,
-      "status": "acceptable",
+      "score": 57,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -717,8 +717,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (17)",
-      "score": 44,
-      "status": "acceptable",
+      "score": 55,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -771,7 +771,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (15)",
-      "score": 58,
+      "score": 57,
       "status": "sample-grade",
       "warnings": []
     },
@@ -789,7 +789,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (49)",
-      "score": 60,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -933,7 +933,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 56,
+      "score": 55,
       "status": "sample-grade",
       "warnings": []
     },
@@ -1023,7 +1023,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 56,
+      "score": 55,
       "status": "sample-grade",
       "warnings": []
     },
@@ -1059,7 +1059,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (33)",
-      "score": 58,
+      "score": 57,
       "status": "sample-grade",
       "warnings": []
     },

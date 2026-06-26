@@ -9,19 +9,16 @@ changeforge_version: 0.1.0
 
 # Mission
 
-Enforce professional SQL usage for application queries, migrations, reports, and analytics: parameterized queries, plan-verified indexes, bounded and stable pagination, explicit NULL / timezone / numeric-precision semantics, lock-aware migrations, and expand-contract delivery. Reject string-composed queries, plan-unverified "it works locally" changes, and migrations that hold long locks on production tables.
+Enforce professional SQL usage for application queries, migrations, reports, and analytics: parameterized queries, plan-verified indexes, bounded and stable pagination, explicit NULL / timezone / numeric-precision semantics, lock-aware migrations, expand-contract delivery, and fresh source evidence before relying on repository graph, project memory, or prior execution claims. Reject string-composed queries, plan-unverified "it works locally" changes, and migrations that hold long locks on production tables.
 
-# Pinned Engine / Tooling Baseline (SQL)
+# Tooling Baseline (SQL)
 
-- **Postgres**: ≥ 16 (17 GA Sep 2024); 15 acceptable through its support window. 13 and below approach EOL — plan upgrade. Use `psql --no-psqlrc`, `EXPLAIN (ANALYZE, BUFFERS, VERBOSE)`, `pg_stat_statements`, `auto_explain`.
-- **MySQL**: ≥ 8.4 LTS (or 8.0 through its EOL April 2026). 5.7 is EOL — forbidden for new work. Use `EXPLAIN ANALYZE` (8.0.18+), `performance_schema`, `sys` schema.
-- **SQLite**: ≥ 3.45 for new use cases; `PRAGMA foreign_keys=ON`, WAL mode, busy-timeout configured.
-- **Linter / formatter**: `sqlfluff` ≥ 3 with dialect set; `pgFormatter` (Postgres); CI runs lint.
-- **Migration tools**: `Flyway` ≥ 10 / `Liquibase` ≥ 4.27 / `Atlas` / `golang-migrate` / `Alembic` (Python) / `Prisma Migrate` / `Rails ActiveRecord`. Migrations versioned, idempotent, and **reviewed**.
+- **Engine lifecycle**: use a vendor-supported engine version approved by the target project. If a Postgres, MySQL, SQLite, cloud warehouse, or managed database version is EOL, preview-only, unsupported by the driver, or conflicts with the project's platform policy, record the project rule and update this capability before treating the baseline as current.
+- **Engine evidence**: Postgres uses `psql --no-psqlrc`, `EXPLAIN (ANALYZE, BUFFERS, VERBOSE)`, `pg_stat_statements`, and `auto_explain`; MySQL uses `EXPLAIN ANALYZE`, `performance_schema`, `sys`, and lock/deadlock reports; SQLite requires `PRAGMA foreign_keys=ON`, WAL when concurrent reads/writes matter, and a busy timeout.
+- **SQL format and migration tooling**: `sqlfluff` with dialect set, `pgFormatter` for Postgres where used, and project-approved tools such as Flyway, Liquibase, Atlas, golang-migrate, Alembic, Prisma Migrate, or Rails ActiveRecord. Migrations are versioned, idempotent where supported, and reviewed.
 - **Online schema change (large tables)**: `gh-ost` or `pt-online-schema-change` (MySQL); `pg_repack` (Postgres) for table rewrites; concurrent index builds (`CREATE INDEX CONCURRENTLY` in Postgres, `ALTER TABLE ... ALGORITHM=INPLACE, LOCK=NONE` in MySQL 8).
 - **Query observability**: `pg_stat_statements` + `auto_explain.log_min_duration` (Postgres); `slow_query_log` + `performance_schema.events_statements_summary_by_digest` (MySQL).
-- **Drivers (application side)**: parameterized-query-mandatory drivers (`psycopg` v3 / `asyncpg` for Postgres-Python; `pgx` for Go; `sqlx` for Rust; `node-postgres` for Node; `jdbc` with `PreparedStatement` for JVM).
-- **Connection pool**: per-pool size calculated via Little's Law (peak QPS × query latency × safety factor 1.5–2); never unbounded.
+- **Drivers and pools**: require driver-native parameters (`psycopg`, `asyncpg`, `pgx`, Rust `sqlx`, `node-postgres`, JDBC `PreparedStatement`) and pool sizing via Little's Law; never unbounded.
 
 # When To Use
 
@@ -33,13 +30,23 @@ Do not use as a syntax lesson. Do not use to bypass `data-migration-design` (sch
 
 # Stage Fit
 
-Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+Use during implementation planning, coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
 
 - **coding**: parameterization, set-based logic, explicit columns, transaction isolation, index-aware predicates.
 - **debugging-diagnosis**: missing/unused index, lock contention, plan regression, N+1 or full scan.
 - **code-review**: injection risk, implicit cast, non-sargable predicate, unbounded result set.
 - **refactoring**: view/CTE extraction, migration expand-contract, result-shape compatibility.
 - **testing**: migration validation, isolation-level tests, deterministic seed data.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Query correctness and shape | New or changed SELECT/UPDATE/DELETE, report query, ORM builder, aggregation, join, filter, or sort. | Preserve result semantics, cardinality, tenant/object predicates, NULL handling, and bounded result size. | SQL/ORM call site, parameters, expected rows, fixtures, and plan or not-verified disclosure. | `relational-database`, `repository-persistence`, `quality-test-gate` | Syntax tutoring or style-only formatting. |
+| Injection and dynamic SQL | Raw SQL, string interpolation, identifier interpolation, user-controlled filter/sort, or report builder. | Separate values from identifiers and keep allowlists, parameter binding, and output redaction explicit. | Parameter binding proof, identifier allowlist, malicious-input test, same-pattern scan. | `security-privacy-gate`, `input-validation`, `data-api-contract-changer` | Trusting ORM use without inspecting generated SQL. |
+| Transaction, lock, and isolation | Write transaction, upsert, batch update, queue worker, retry, `FOR UPDATE`, gap lock, or deadlock report. | Bound lock duration, isolation anomalies, retry behavior, rollback, and idempotency. | Transaction map, isolation level, lock analysis, concurrency test or residual owner. | `transaction-consistency`, `data-middleware-change-builder` | Sequential unit tests as concurrency proof. |
+| Migration and schema compatibility | Column/index/table/constraint/default change, backfill, enum change, online DDL, or rollback concern. | Stage expand/migrate/contract without old/new code breakage or hot-table outage. | Migration phases, row count, lock class, forward/rollback command, validation query. | `data-migration-design`, `delivery-release-gate`, `quality-test-gate` | Direct rename/drop without caller search. |
+| Existing SQL evidence reuse | Repository graph, project memory, old report, generated query, telemetry, or prior validation says safe/fast. | Confirm current source, schema, indexes, statistics, migrations, consumers, and validation freshness. | Inspected paths, accepted/rejected memory, command exit code, artifact/report path, evidence limits. | `repository-graph-analysis`, `project-memory-governance`, `validation-broker` | Stale memory or dev-data timing as closure proof. |
 
 # Non-Negotiable Rules
 
@@ -57,19 +64,24 @@ Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage fo
 
 # Industry Benchmarks
 
-- **PostgreSQL documentation** (`postgresql.org/docs/current/`) and **"PostgreSQL Internals"** (Egor Rogov).
-- **MySQL 8.0 Reference Manual** + **High Performance MySQL, 4th ed.** (Schwartz / Tkachenko / Zaitsev).
+- **PostgreSQL documentation**, **PostgreSQL Internals** (Egor Rogov), **MySQL Reference Manual**, and **High Performance MySQL, 4th ed.** (Schwartz / Tkachenko / Zaitsev).
 - **SQL Performance Explained** (Markus Winand) — the canonical reference for indexes and pagination across engines.
 - **OWASP A03:2021 Injection** — parameterized-query mandate; **SQL Injection Prevention Cheat Sheet**.
-- **Postgres lock matrix** and MySQL InnoDB lock behavior (gap / next-key locks).
-- **ACID + isolation levels** (Postgres: Read Committed default, Serializable available; MySQL InnoDB: Repeatable Read default).
+- **Postgres lock matrix**, MySQL InnoDB gap / next-key locks, and ACID isolation-level documentation.
 - **`gh-ost` / `pt-online-schema-change` / `pg_repack`** documentation for online migrations.
-- **`auto_explain` (Postgres) / `slow_query_log` (MySQL)** + **`pg_stat_statements` / `performance_schema`** for production query observability.
-- **EVAN P / Brent Ozar / Use The Index, Luke** as canonical educational references.
+- **`auto_explain`, `slow_query_log`, `pg_stat_statements`, `performance_schema`, and Use The Index, Luke** for production query observability and indexing practice.
 
 # Selection Rules
 
 Select when SQL, migrations, reports, analytics, query performance, locking, pagination, injection, NULL behavior, timezone, or money correctness appear. Pair with `data-middleware-change-builder`, `data-migration-design`, `transaction-consistency`, `indexing-query-optimization`, `security-privacy-gate`.
+
+# Proactive Professional Triggers
+
+- **Signal:** SQL text is composed from request input, report filters, sort fields, table names, or tenant/resource IDs. **Hidden risk:** injection, IDOR, tenant leakage, or plan instability can survive happy-path tests. **Required professional action:** require parameter binding for values, allowlists for identifiers, caller-derived identity, and a same-pattern scan. **Route to:** `security-privacy-gate`, `input-validation`, `permission-boundary-modeling`. **Evidence required:** malicious-input or denied-case test output, parameterization proof, inspected call sites, and residual exception owner.
+- **Signal:** a query adds joins, aggregations, windows, `DISTINCT`, pagination, soft-delete filters, or tenant predicates. **Hidden risk:** duplicate/missing rows, N+1 fan-out, unstable cursors, or cross-tenant results appear only at realistic cardinality. **Required professional action:** inspect current SQL/ORM source, expected row shape, fixtures, and representative plan before accepting the query. **Route to:** `relational-database`, `indexing-query-optimization`, `quality-test-gate`. **Evidence required:** query text, cardinality assumption, `EXPLAIN`/plan artifact, boundary-row test, and not-verified data-volume limits.
+- **Signal:** write path changes transaction scope, isolation level, upsert, batch update, retry, lock statement, or queue worker SQL. **Hidden risk:** lost updates, deadlocks, gap locks, duplicate side effects, or partial rollback are invisible in sequential tests. **Required professional action:** map transaction boundaries, lock order, retry/idempotency behavior, and concurrency validation depth. **Route to:** `transaction-consistency`, `data-middleware-change-builder`, `quality-test-gate`. **Evidence required:** isolation/lock analysis, concurrent test or dry-run command, exit code, and unresolved scheduler risk.
+- **Signal:** migration changes a column, index, constraint, default, enum, partition, backfill, or drop/rename path. **Hidden risk:** old/new code incompatibility, hot-table locks, replica lag, partial backfill, or irreversible rollback. **Required professional action:** require expand/migrate/contract phases, caller search, rollback tier, validation query, and release sequencing. **Route to:** `data-migration-design`, `delivery-release-gate`, `data-api-contract-changer`. **Evidence required:** row-count estimate, lock class, forward/rollback command, validation report, and consumer compatibility note.
+- **Signal:** repository graph, project memory, generated SQL, old slow-query report, or prior execution claims the SQL path is safe, unused, indexed, or tested. **Hidden risk:** stale schema, changed migration ledger, missing report consumer, outdated stats, or final edit after validation invalidates the claim. **Required professional action:** confirm current source, migrations, generated artifacts, telemetry, and validation freshness before closure. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `validation-broker`. **Evidence required:** inspected paths, accepted/rejected memory, fresh command output or artifact path, evidence limits, and residual owner.
 
 # Risk Escalation Rules
 
@@ -93,10 +105,8 @@ Select when SQL, migrations, reports, analytics, query performance, locking, pag
 - **Locking**: long-running `UPDATE` / `DELETE` on a busy table blocks readers (depending on isolation). Batch via `WHERE id BETWEEN ? AND ? LIMIT N` chunks; release & reacquire row locks between chunks.
 - **MySQL InnoDB gap / next-key locks**: a range query in `REPEATABLE READ` locks gaps to prevent phantoms, causing surprising deadlocks; use `READ COMMITTED` where this is intolerable (with the trade-off of phantom reads).
 - **Postgres `VACUUM` / dead tuples**: heavy updates without `HOT update` accumulate dead tuples; `autovacuum` settings tuned for write-heavy tables; bloat measured via `pgstattuple`.
-- **`COUNT(*)` over a large table** is expensive in Postgres (MVCC requires scanning all visible rows). Use `pg_class.reltuples` estimate or maintain a counter for cheap counts; MySQL InnoDB count is also full-table-scan since 5.7+.
 - **`CREATE INDEX CONCURRENTLY` (Postgres)** does not block writes but is slower and can fail — verify state after; build in a separate transaction.
 - **MySQL `ALTER TABLE` online**: `ALGORITHM=INPLACE, LOCK=NONE` works for many cases (since 5.6+); fall back to `gh-ost` / `pt-osc` when it doesn't.
-- **Connection-pool starvation**: too-low pool causes latency; too-high pool causes DB-side context-switch / lock contention. Little's Law: `pool_size ≈ peak_qps × avg_query_latency × 1.5–2`.
 - **Timezone**: store UTC in DB; convert at presentation layer to user/tenant timezone. `TIMESTAMPTZ` (Postgres) stores UTC internally and converts on read based on session timezone.
 - **Migration with default value on huge table**: in older Postgres (< 11) and MySQL pre-instant-DDL, adding a column with `DEFAULT` rewrites the table. In Postgres 11+ and MySQL 8.0.12+, default values are stored in metadata (instant-add); verify version + use of `DEFAULT` constant (not volatile expression).
 
@@ -111,17 +121,18 @@ Select when SQL, migrations, reports, analytics, query performance, locking, pag
 - **`FLOAT` for money** — Symptom: penny rounding drift; reconciliation fails. Cause: float type. Detection: schema review. Impact: financial discrepancy.
 - **Timezone confusion** — Symptom: events appear at wrong time; cron runs at DST shift; calendars off. Cause: `TIMESTAMP` without TZ; local-time stored. Detection: schema + app-layer audit. Impact: scheduling bugs, audit / compliance issues.
 - **`SELECT *` brittleness** — Symptom: app breaks after schema add. Cause: positional column expectation. Detection: lint / review. Impact: deploy break.
-- **Connection pool exhaustion** — Symptom: app times out waiting for connection; DB has idle slots. Cause: pool sized too small or long-held connection. Detection: pool-wait metric + Little's Law. Impact: cascading failure.
 - **Pre-Postgres-11 `ADD COLUMN ... DEFAULT`** — Symptom: migration locks table for minutes. Cause: default value rewrites table. Detection: version + DEFAULT-constant check. Impact: outage.
 - **MySQL `REPEATABLE READ` next-key deadlock** — Symptom: deadlock between range update and insert. Cause: gap lock. Detection: deadlock log; isolation review. Impact: failed transactions, retry storms.
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when SQL changes touch dynamic queries, parameterization, joins, indexes, query plans, transactions/isolation, migrations, backfills, tenant predicates, or data safety. Do not load it for a trivial static lookup query with no user input or data-shape impact.
+Load [references/checklist.md](references/checklist.md) when SQL changes touch dynamic queries, parameterization, joins, indexes, query plans, transactions/isolation, migrations, backfills, tenant predicates, or data safety. Use [examples/example-output.md](examples/example-output.md) when the required review shape is unclear. Do not load references for a trivial static lookup query with no user input or data-shape impact.
 
 # Output Contract
 
 Return a **SQL Usage Review** containing:
+- **Mode selected**: query correctness, injection/dynamic SQL, transaction/lock/isolation, migration/schema compatibility, or existing-evidence reuse, with trigger signal
+- **Boundaries inspected**: SQL/ORM call sites, schema/migrations, indexes, tests/fixtures, tenant/object filters, report/API consumers, generated SQL, telemetry, and skipped boundaries with reason
 - **Engine** (Postgres / MySQL / SQLite / etc.) and version
 - **Query purpose** + parameters
 - **`EXPLAIN ANALYZE` plan** attached (with `BUFFERS` where Postgres); index usage verified
@@ -135,7 +146,10 @@ Return a **SQL Usage Review** containing:
 - **Injection safety**: parameterization at every input site
 - **Connection pool**: size calculated via Little's Law
 - **Tests**: query unit tests against real engine (Testcontainers); migration forward+rollback test; perf assertion on critical queries
-- **Accepted exceptions** with owner / scope / expiration
+- **SQL graph, memory, and execution freshness**: repository graph, project memory, generated SQL, prior reports, telemetry, and validation runs accepted, rejected, stale, or not verified after final edit
+- **SQL validation proof**: literal command, exit code, artifact/report path, and what the output proves or does not prove
+- **Tool permission boundary**: query-plan, migration, lint, test, shell, connector, or generated-artifact command class; sandbox/approval state; write scope; and secret-output redaction rule
+- **Accepted SQL deviations** with owner, scope, expiration, and cleanup trigger
 
 # Evidence Contract
 
@@ -149,6 +163,7 @@ A SQL change is professionally complete only when the output includes:
 - **Validation evidence**: query plan, migration dry run, integration test, or not-verified disclosure.
 - **What evidence proves**: the inspected SQL path is parameterized, planned, and safe for the declared data shape.
 - **What evidence does not prove**: production cardinality, lock contention, replica lag, or untested tenants.
+- **Graph and memory freshness**: current source, schema, migrations, generated SQL, telemetry, prior reports, and execution claims confirmed or rejected before closure.
 - **Residual risk**: untested data path, owner, and next gate.
 
 # Quality Gate
@@ -163,6 +178,8 @@ A SQL change is professionally complete only when the output includes:
 8. Migration tested forward + rollback in CI against real engine.
 9. Connection pool sized via Little's Law.
 10. sqlfluff (or equivalent) lint green; query covered by test against real engine.
+11. Validation report maps each changed SQL/query/migration path to command, exit code, covered risk, stale/not-run target, and residual owner.
+12. Tool permission/sandbox record exists for query-plan, migration, lint, test, shell, connector, or artifact-writing commands.
 
 # Used By
 
@@ -178,4 +195,4 @@ data-middleware-change-builder, data-api-contract-changer, backend-change-builde
 
 # Completion Criteria
 
-Review is complete when: queries are parameterized; non-trivial queries have `EXPLAIN ANALYZE` plans attached; indexes are justified with cost estimates; pagination is keyset-based; NULL / timezone / numeric semantics are explicit; migrations are expand-contract and tested forward + rollback; lock impact has been verified on prod-shape data; connection pool is Little's-Law-sized; and any exception is documented with owner, scope, expiration.
+Review is complete when: queries are parameterized; non-trivial queries have `EXPLAIN ANALYZE` plans attached; indexes are justified with cost estimates; pagination is keyset-based; NULL / timezone / numeric semantics are explicit; migrations are expand-contract and tested forward + rollback; lock impact has been verified on prod-shape data; graph/memory/execution claims are current-source confirmed; tool permissions are recorded; and any exception is documented with owner, scope, expiration.

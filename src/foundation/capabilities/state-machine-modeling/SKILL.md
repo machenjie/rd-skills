@@ -9,7 +9,7 @@ changeforge_version: 0.1.0
 
 # Mission
 
-**Model every domain object with meaningful lifecycle as an explicit finite state machine** — enumerating all states, all allowed transitions, all illegal transitions, every transition's guard conditions, side effects, emitted events, and audit impact — so that lifecycle behavior is enforceable in the authoritative domain layer, untestable implicit status logic is eliminated, and impossible states become structurally unrepresentable rather than defended by scattered conditional checks.
+**Model every domain object with meaningful lifecycle as an explicit finite state machine** - enumerating all states, all allowed transitions, all illegal transitions, every transition's guard conditions, side effects, emitted events, and audit impact - so lifecycle behavior is enforceable in the authoritative domain layer, untestable implicit status logic is eliminated, and impossible states become structurally unrepresentable rather than defended by scattered conditional checks.
 
 # When To Use
 
@@ -19,71 +19,33 @@ Use this capability when: a domain object (order, payment, subscription, job, do
 
 Do not use this capability for: simple display-only status labels that control no behavior, no persistence, no authorization, no events, and no side effects (a color badge on a card is not a state machine); UI-only loading/error/empty states that are local to a single component and map to no domain concept (use `interaction-state-modeling`); domain event consumers that react to transitions but do not own the transition logic (use `domain-event-modeling`).
 
+# Stage Fit
+
+Use during domain discovery when lifecycle ownership is unclear; during implementation planning when transition authority, guards, side effects, persistence, events, authorization, or recovery behavior must be designed; during review when a diff adds status values, scattered conditionals, new actors, or external side effects; and during repair when incidents trace to illegal transitions, stuck records, duplicate side effects, stale migration assumptions, or missing regression coverage. Hand off when the primary question is object identity, detailed rule cataloging, event transport, storage migration sequencing, or executable test implementation.
+
 # Non-Negotiable Rules
 
-- **States must be mutually exclusive and exhaustive for the lifecycle.** A domain object must be in exactly one state at any point in time. Overlapping states ("PROCESSING and also PENDING"), implicit states ("no status field means PENDING"), and undeclared states discovered by reading boolean flags in combination are design defects. The state machine must enumerate all states including terminal states (from which no transition is possible) and error/failed states.
-- **Allowed transitions must be explicit, and all unlisted transitions are illegal by default.** Enforcement means: any code path that attempts to transition a domain object from state A to state B must be validated against the allowed transition table. Any attempt to perform an unlisted transition must throw a domain exception (e.g., `IllegalStateTransitionException`), not silently fail or succeed. "State B can only be reached from state A and state C — all other origins are illegal" must be enforced at the authoritative domain layer.
-- **Every transition must name its actor or trigger, guard conditions, side effects, emitted events, and audit record.** A transition row without a guard is a transition that anyone can trigger under any conditions — which is almost never correct. A transition without a side effect specification enables developers to add external calls to transition handlers with no review. A transition without an audit record is an untracked business event.
-- **Side effects must be tied to committed transitions, not attempted transitions.** If a transition side effect is "send confirmation email," the email must be sent only after the state transition has durably committed to the source of truth. An email sent before the commit means the user can receive a confirmation for a transaction that ultimately fails. Pattern: transition and persist → commit → emit event → downstream handles side effect asynchronously.
-- **Retry and idempotency must be designed for every transition that triggers an external effect.** If the transition "PENDING → PROCESSING" initiates a payment charge, a retry of this transition (due to timeout, network error, or at-least-once delivery) must not cause a double charge. Idempotency key design for the external call must be part of the transition specification.
-- **Recovery, cancellation, and timeout must be first-class transitions, not afterthoughts.** A state machine that has `PROCESSING` but no `FAILED`, `TIMED_OUT`, `CANCELLED`, or recovery transition will produce stuck records in production. Every state that represents in-progress work must have an explicit exit to a failure or recovery state, with the trigger (timeout after N minutes, manual operator action, system event) and the side effects of that recovery transition.
+- **States must be mutually exclusive and exhaustive for the lifecycle.** A domain object must be in exactly one state at any point in time. Overlapping states ("PROCESSING and also PENDING"), implicit states ("no status field means PENDING"), and undeclared states discovered by reading boolean flags in combination are design defects. The state machine must enumerate all states including terminal states and error/failed states.
+- **Allowed transitions must be explicit, and all unlisted transitions are illegal by default.** Any code path that attempts to transition from state A to state B must be validated against the allowed transition table. Unlisted transitions must throw a domain exception, not silently fail or succeed.
+- **Every transition must name its actor or trigger, guard conditions, side effects, emitted events, and audit record.** A transition row without a guard, side effect policy, or audit record is incomplete.
+- **Side effects must be tied to committed transitions, not attempted transitions.** Pattern: transition and persist, commit, emit event, then downstream handlers execute external effects asynchronously.
+- **Retry and idempotency must be designed for every transition that triggers an external effect.** A retry caused by timeout, network error, or at-least-once delivery must not double-charge, double-ship, duplicate a ledger entry, or re-run a destructive action.
+- **Recovery, cancellation, and timeout must be first-class transitions, not afterthoughts.** Every in-progress state must have an explicit exit to failure, timeout, cancellation, or operator recovery with trigger, actor, guard, and side effects.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| New lifecycle model | New domain object, workflow, job, approval, asset, request, or ticket with meaningful states. | Define source of truth, state list, legal/illegal transitions, ownership, terminal states, recovery exits, and validation plan before implementation. | Object owner, state source, transition table, illegal-transition policy, terminal/failure states, diagram or table, tests. | `domain-object-identification`, `business-rule-extraction`, `quality-test-gate` | Modeling UI-only loading/error states. |
+| Transition or guard change | New status value, transition, actor, guard, cancellation path, or lifecycle rule. | Preserve existing valid paths while proving new and old paths cannot create impossible states. | Current transition graph, changed rows, guard owner, actor authority, backward/forward compatibility, migration impact. | `business-rule-extraction`, `permission-boundary-modeling`, `version-compatibility` | Editing a status enum without graph review. |
+| Incident or illegal transition repair | Stuck record, duplicate charge, duplicate fulfillment, invalid cancel, silent transition failure, or failed recovery. | Reproduce the illegal path and add regression evidence for the exact recurrence surface. | Incident path, current state, attempted transition, missing guard or lock, repair transition, red/green or compensating evidence. | `failure-diagnosis`, `regression-testing`, `concurrency-control` | Treating repair as a one-off data patch. |
+| External side-effect transition | Transition triggers payment, shipment, email, webhook, event, ledger, inventory, or integration call. | Bind side effects to committed transitions and make retries idempotent. | Commit boundary, outbox/event plan, idempotency key, duplicate handling, ordering expectation, audit fields. | `domain-event-modeling`, `idempotency-retry-design`, `transaction-consistency` | Direct side effects before persistence commit. |
+| Migration or versioned state change | State is renamed, removed, split, merged, or added for objects with stored records or consumers. | Keep old records, old code, new code, events, reports, and rollback behavior coherent. | Record counts, mapping plan, expand/contract or bridge, rollback behavior, consumer impact, validation query. | `data-migration-design`, `version-compatibility`, `delivery-release-gate` | Assuming enum changes are code-only. |
+| Review and test evidence | PR review, architecture review, or release gate asks whether lifecycle behavior is safe. | Map every state/transition/risk to executable or documented validation evidence. | Changed-state-to-validation map, invalid transition tests, timeout/recovery tests, event/audit checks, evidence limits. | `quality-test-gate`, `ai-code-review-refactor`, `validation-broker` | Approving from diagram shape alone. |
 
 # Industry Benchmarks
 
-Anchor against: **UML State Machine Diagrams (ISO/IEC 19501)** — formal notation for states, transitions, guards `[condition]`, actions `/effect`, entry/exit actions; composite states for nested behaviors. **Harel Statecharts (David Harel, 1987)** — hierarchical state machines; parallel states; history states for resuming after interruption. **XState (JavaScript)** — modern implementation of Statecharts; guards (`cond`), actions, services for async transitions; strict transition validation at runtime. **Martin Fowler — State Pattern** (Patterns of Enterprise Application Architecture) — encapsulating state-specific behavior in objects; preventing `if status === X` branching scattered through domain code. **Event Sourcing (Greg Young, CQRS pattern)** — each state transition is a domain event; state is derived by replaying events; transition history is the audit log. **BPMN 2.0** — business process modeling notation for workflow states including parallel paths, interrupting events, error boundaries. **DORA Research** — change failure rate metric; a significant proportion of production incidents are caused by invalid state transitions or missing failure/recovery states. **IEEE Std 830 / ISTQB** — state transition testing: all-states coverage, all-transitions coverage, invalid-transition coverage.
-
-### State Transition Table Template
-
-```
-Object: Order
-States: DRAFT | PENDING | PROCESSING | CONFIRMED | SHIPPED | DELIVERED | CANCELLED | FAILED | REFUNDING | REFUNDED
-Terminal states: DELIVERED | CANCELLED | REFUNDED
-
-Transition Table:
-From         | To           | Trigger                  | Actor            | Guard                              | Side Effect                         | Emitted Event            | Audit Record
--------------|--------------|--------------------------|------------------|------------------------------------|-------------------------------------|--------------------------|----------------------------
-DRAFT        | PENDING      | Customer submits order   | Customer         | Items in cart ≥ 1; payment method  | Reserve inventory                   | order.submitted          | orderId, customerId, items
-PENDING      | PROCESSING   | Payment initiated        | Payment system   | All items in-stock; payment method | Charge payment (idempotency: orderId)| order.payment.initiated  | orderId, amount, gateway
-PROCESSING   | CONFIRMED    | Payment gateway callback | Payment webhook  | payment.status = SUCCESS           | Release inventory hold; notify user | order.confirmed          | orderId, transactionId
-PROCESSING   | FAILED       | Payment gateway callback | Payment webhook  | payment.status = FAILED            | Release inventory; refund if charged| order.payment.failed     | orderId, failureReason
-PROCESSING   | FAILED       | Timeout (15 min)         | Scheduler        | PROCESSING for > 15 min with no CB | Release inventory; alert support    | order.timed.out          | orderId, elapsedMs
-CONFIRMED    | SHIPPED      | Warehouse ships order    | Warehouse system | Tracking number provided           | Notify customer; update ETA         | order.shipped            | orderId, trackingId
-SHIPPED      | DELIVERED    | Delivery confirmed       | Courier system   | Delivery scan received             | Close order; trigger review prompt  | order.delivered          | orderId, deliveryTimestamp
-CONFIRMED    | CANCELLED    | Customer cancels         | Customer         | < 1 hour since CONFIRMED           | Initiate refund; release inventory  | order.cancelled          | orderId, reason, refundId
-FAILED       | CANCELLED    | Manual support action    | Support operator | —                                  | Notify customer                     | order.cancelled          | orderId, operatorId
-
-Illegal Transitions (must throw IllegalStateTransitionException):
-- DELIVERED → any state (terminal)
-- CANCELLED → any state (terminal)
-- SHIPPED → CANCELLED (cannot cancel after shipping)
-- PROCESSING → CONFIRMED (must go through payment webhook, not direct)
-```
-
-### State Machine Guard Validation Pattern
-
-```typescript
-// Enforced at domain layer — not in controller or service
-class Order {
-  private state: OrderState;
-
-  transition(targetState: OrderState, trigger: OrderTrigger): void {
-    const allowed = ALLOWED_TRANSITIONS[this.state];
-    if (!allowed?.includes(targetState)) {
-      throw new IllegalStateTransitionException(
-        `Cannot transition from ${this.state} to ${targetState} via ${trigger}`
-      );
-    }
-    const guard = TRANSITION_GUARDS[`${this.state}->${targetState}`];
-    if (guard && !guard(this, trigger)) {
-      throw new TransitionGuardFailedException(
-        `Guard failed for ${this.state}->${targetState}`
-      );
-    }
-    this.state = targetState;
-    this.recordTransition(targetState, trigger); // audit trail
-  }
-}
-```
+Anchor against UML State Machine Diagrams, Harel Statecharts, XState, Fowler State Pattern, Event Sourcing and CQRS, BPMN 2.0, DORA change-failure analysis, and IEEE/ISTQB state transition testing. Keep this body focused on lifecycle ownership and evidence rules; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for transition-table templates, guard-validation patterns, testing coverage matrices, detailed benchmark anchors, and anti-pattern review.
 
 # Selection Rules
 
@@ -91,48 +53,88 @@ Select this capability when **state transitions carry business rules, authorizat
 
 # Risk Escalation Rules
 
-Escalate immediately when: an illegal transition can cause a double charge, duplicate fulfillment, duplicate shipment, or inventory corruption (financial or operational impact — MUST-HANDLE); a transition can be triggered by an actor who should not have authority (authorization constraint on transitions must be reviewed with `authentication-authorization`); a state has no recovery/failure exit (stuck records risk — must add timeout or manual recovery transition); a transition involves a GDPR-relevant action (data deletion, export — must verify audit record requirement); or a state machine change would require a data migration for existing records in states that no longer exist.
+Escalate immediately when: an illegal transition can cause a double charge, duplicate fulfillment, duplicate shipment, inventory corruption, ledger corruption, or regulated-record corruption; a transition can be triggered by an actor who should not have authority; a state has no recovery/failure exit; a transition involves deletion, export, retention, or privacy-relevant behavior; or a state machine change requires a data migration for existing records in states that no longer exist.
+
+# Proactive Professional Triggers
+
+- **Signal:** A status or enum field is added without a transition table. **Hidden risk:** the enum becomes a bag of labels and illegal transitions stay implicit. **Required professional action:** build states, legal transitions, illegal transitions, and enforcement source before code review. **Route to:** `state-machine-modeling`, `domain-object-identification`. **Evidence required:** source of truth, owner, state list, transition table, and rejected display-only interpretation.
+- **Signal:** Lifecycle behavior is scattered across services, controllers, jobs, SQL, support scripts, or tests. **Hidden risk:** each entry point enforces a different state model. **Required professional action:** centralize transition authority or document delegated command boundaries. **Route to:** `business-rule-extraction`, `domain-logic-implementation`, `repository-graph-analysis`. **Evidence required:** writer scan, delegated callers, enforcement layer, and same-pattern review.
+- **Signal:** Project memory or a previous state machine is reused for a new object. **Hidden risk:** stale lifecycle assumptions override current source, migrations, events, or actors. **Required professional action:** confirm current code, data, events, tests, and owner before reuse. **Route to:** `project-memory-governance`, `repository-context-map`. **Evidence required:** accepted/rejected memory, inspected paths, graph freshness, and unverified areas.
+- **Signal:** A transition emits an event or external side effect. **Hidden risk:** retries, rollback, or dual-write failures produce duplicate or ghost effects. **Required professional action:** bind the side effect to committed state and design idempotency. **Route to:** `domain-event-modeling`, `idempotency-retry-design`, `transaction-consistency`. **Evidence required:** commit boundary, outbox/event handoff, deduplication key, and failure behavior.
+- **Signal:** A state is renamed, removed, split, merged, or newly terminal for stored records. **Hidden risk:** old data, reports, consumers, and rollback cannot interpret the lifecycle. **Required professional action:** require migration and compatibility review. **Route to:** `data-migration-design`, `version-compatibility`, `delivery-release-gate`. **Evidence required:** record mapping, compatibility window, rollback behavior, and validation query.
 
 # Critical Details
 
-- **The most dangerous state machine defect is a missing failure/recovery exit.** A `PROCESSING` state with no `FAILED` or `TIMED_OUT` exit will produce permanently stuck records when the external dependency fails. These stuck records require manual operator intervention with no runbook, cause customer support escalations, and violate SLA commitments. Every in-progress state must have a timeout trigger and a failure state.
-- **Guard evaluation order matters for concurrent transitions.** If two concurrent actors (customer and support operator) can both trigger a cancellation transition, and the guard is evaluated before the row-level lock, a race condition can cause double execution of the side effects (two refunds, two inventory releases). Guard evaluation must happen after acquiring the row-level lock, or transitions must use optimistic concurrency control (version column check).
-- **Terminal states require irreversibility enforcement at the infrastructure layer, not just in guards.** A domain object in `DELIVERED` or `CANCELLED` state must not be modifiable by any actor. This means: the application layer enforces the terminal state check; but as a defense-in-depth measure, the database row should also be protected by an update trigger or soft-lock pattern that alerts on unauthorized state modification.
-- **State machine diagrams and transition tables must be versioned alongside the domain code.** A state machine that evolves without updating the table makes future maintainers guess at the intended behavior, reopening the risk of illegal transitions. The transition table is the authoritative specification — it is a living document, not a one-time artifact.
+- **The most dangerous state machine defect is a missing failure/recovery exit.** A `PROCESSING` state with no `FAILED` or `TIMED_OUT` exit will produce permanently stuck records when the external dependency fails. Every in-progress state must have a timeout trigger and a failure state.
+- **Guard evaluation order matters for concurrent transitions.** If two concurrent actors can both trigger a transition, guard evaluation must happen after acquiring the row-level lock or the transition must use optimistic concurrency control.
+- **Terminal states require irreversibility enforcement beyond caller convention.** A domain object in a terminal state must not be modifiable by any actor except an explicit, audited recovery or correction workflow.
+- **State machine diagrams and transition tables must be versioned alongside the domain code.** The transition table is the authoritative specification and must evolve with implementation, tests, migrations, and events.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 lifecycle routing, ownership, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete state model. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when transition-table shape, guard implementation, all-state/all-transition testing, or benchmark detail is needed. Use [examples/example-output.md](examples/example-output.md) only as an output-shape example, not as a domain template. Do not load references for trivial display-status wording or pure routing work where the output contract is enough.
 
 ### Anti-examples
 
 | Anti-pattern | Problem | Fix |
 | --- | --- | --- |
 | `if order.status == 'PENDING' or order.status == 'PROCESSING': allow_cancel()` scattered in 6 files | Inconsistent cancellation rules; one file updated, others not; illegal cancel allowed | Single domain method `order.cancel()` enforces the guard; all callers delegate |
-| `PROCESSING` state with no `FAILED` or `TIMED_OUT` exit | Stuck records when payment gateway times out; manual DB surgery required | Add `FAILED` state; add scheduler timeout trigger (15 min); add support recovery transition |
-| Side effect (send email) called before transaction commit | Email sent; DB rollback; user receives confirmation email for failed order | Emit domain event after commit; downstream email service handles asynchronously |
-| Transition `SHIPPED → DELIVERED` has no guard or audit record | Delivery can be confirmed by any actor with any data; no audit trail | Guard: `courier_scan_code verified`; audit: `deliveredAt`, `courierId`, `scanCode` |
-| Payment charged again on retry because idempotency key not set | Double charge; customer dispute; financial loss | Idempotency key = `orderId` in payment gateway call; charge is deduplicated on retry |
-| State machine stored as integer (0=PENDING, 1=PROCESSING...) | Magic numbers; no domain meaning; collision when states reordered | Named enum with string values; enforced by domain layer; DB stores string |
+| `PROCESSING` state with no `FAILED` or `TIMED_OUT` exit | Stuck records when payment gateway times out; manual DB surgery required | Add `FAILED` state; add scheduler timeout trigger; add support recovery transition |
+| Side effect called before transaction commit | External action succeeds while DB rolls back | Emit a post-commit event or outbox record; downstream handler performs the side effect |
+| Transition has no guard or audit record | Any actor can trigger it and nobody can reconstruct why | Guard with reasoned denial; audit actor, trigger, old state, new state, and evidence |
+| External call retried without idempotency key | Duplicate charge, shipment, notification, or ledger write | Use stable idempotency key tied to transition identity and external effect |
+| State machine stored as magic integer | Values lose domain meaning and break when reordered | Store named state values and enforce through domain transition authority |
 
 # Failure Modes
 
-- Double charge: `PENDING → PROCESSING` transition retried without idempotency key; payment charged twice.
-- Stuck order: `PROCESSING` has no timeout exit; payment gateway down for 2 hours; 847 orders stuck; manual intervention required.
-- Illegal cancel: `SHIPPED → CANCELLED` not in illegal-transitions list; support tool allows cancellation after shipment; refund and delivery both complete.
-- Race condition: two goroutines read order as `CONFIRMED`; both apply `CONFIRMED → CANCELLED` guard successfully without lock; two refunds initiated.
-- Silent failure: illegal transition attempt swallows exception; order remains in `PROCESSING` indefinitely with no audit record.
-- Missing state in data migration: new state `REFUNDING` added; 200 existing records have no migration path from `FAILED → REFUNDING`; migration script not written.
+- Double charge: `PENDING -> PROCESSING` transition retried without idempotency key; payment charged twice.
+- Stuck order: `PROCESSING` has no timeout exit; external dependency outage leaves records permanently in progress.
+- Illegal cancel: `SHIPPED -> CANCELLED` not rejected; refund and delivery both complete.
+- Race condition: two actors read the same old state and execute duplicate side effects without a lock or version check.
+- Silent failure: illegal transition attempt is swallowed; object remains in progress with no audit record.
+- Missing migration: new state added but existing records, reports, consumers, or old code cannot interpret it.
 
 # Output Contract
 
 Return a state machine model with:
 
+- `mode_selected` (new lifecycle, transition change, incident repair, external side effect, migration/versioned state change, or review/test evidence)
+- `source_evidence` (domain object source, current code/docs/tests/registry, writer paths, repository graph, project memory, and freshness limits)
+- `lifecycle_owner` (business owner, technical owner, aggregate or workflow owner, mutation authority)
+- `state_source_of_truth` (field/table/event stream/aggregate state, storage representation, authoritative enforcement layer)
 - `states` (all states: name, meaning, terminal/non-terminal)
 - `transition_table` (per transition: from, to, trigger, actor, guard, side effects, emitted event, audit record)
+- `transition_authority` (which command, service, aggregate method, job, or operator workflow may execute each transition)
+- `guard_evidence` (rule owner, input facts, reason codes, ordering, and denied behavior)
 - `illegal_transitions` (explicitly listed; enforcement method)
 - `timeout_triggers` (per in-progress state: duration, actor, resulting state, side effects)
 - `recovery_transitions` (per failure/stuck state: trigger, actor, resulting state)
+- `side_effect_commit_boundary` (when persistence commits, when events/outbox publish, and when downstream side effects run)
+- `event_and_audit_contract` (event names, payload/audit fields, privacy classification, retention or compliance note when relevant)
 - `idempotency_design` (per transition with external effect: idempotency key, deduplication method)
 - `concurrency_controls` (row-level lock vs. optimistic concurrency; where applied)
+- `migration_and_versioning` (existing record mapping, compatibility window, rollback behavior when states change)
 - `state_machine_diagram` (textual notation or Mermaid stateDiagram-v2)
-- `test_coverage` (all-states, all-transitions, all-invalid-transitions, timeout, recovery)
+- `graph_and_memory_decisions` (current writers/consumers confirmed, reused patterns accepted or rejected, stale memory caveats)
+- `changed_state_to_validation_map` (each state, transition, guard, event, migration, and side effect mapped to a validator/test or residual risk)
+- `handoff_boundaries` (what belongs to object identification, business rules, events, idempotency, permissions, migration, release, or testing)
+- `evidence_limits` (uninspected code paths, data, migrations, events, runtime behavior, tests not run, or graph freshness limits)
+
+# Evidence Contract
+
+- **Repository evidence:** name the domain files, models, services, jobs, SQL, event schemas, tests, docs, registry entries, and support/admin tools inspected; if no concrete implementation exists, state that the output is a design contract rather than verified source behavior.
+- **Graph evidence:** identify state writers, readers, event producers/consumers, job triggers, support tools, migration scripts, and any same-pattern lifecycle code that could bypass the transition authority.
+- **Memory evidence:** project memory, prior state machines, and previous agent trajectories are suggestions only until current source, tests, data, and owners confirm they still apply.
+- **Execution evidence:** map lifecycle decisions to unit, integration, state-transition, invalid-transition, timeout/recovery, migration, event/audit, concurrency, or regression tests, or explicitly mark unrun validation and residual risk.
+- **Boundary evidence:** every transition states what it owns and what it hands off to rules, authorization, idempotency, events, migrations, release, or test execution.
+
+# Benchmark Coverage
+
+Professional state-machine modeling covers state exhaustiveness, transition legality, actor authority, guard rule ownership, side-effect commit boundaries, event/audit contracts, idempotency, concurrency, timeout/recovery, migration/compatibility, repository graph freshness, memory freshness, and validation mapping. A diagram or enum update without enforcement and evidence is incomplete.
+
+# Routing Coverage
+
+Route here when the primary question is lifecycle state authority, allowed/illegal transition design, recovery/cancel/timeout behavior, or state-change side effects. Hand off to `domain-object-identification` for object and aggregate ownership, `business-rule-extraction` for guard details, `permission-boundary-modeling` or `authentication-authorization` for actor authority, `domain-event-modeling` for event contracts, `idempotency-retry-design` and `transaction-consistency` for retry/commit safety, `data-migration-design` and `version-compatibility` for persisted state changes, `quality-test-gate` or `regression-testing` for executable proof, and `delivery-release-gate` when production rollout or rollback is affected.
 
 # Quality Gate
 
@@ -148,6 +150,10 @@ The state machine model is complete only when:
 8. Transition table is versioned alongside the domain code.
 9. Test plan covers: all states, all valid transitions, all invalid transitions, timeout paths, recovery paths.
 10. Data migration plan exists if new states are added to objects with existing production records.
+11. Selected mode, source evidence, lifecycle owner, source of truth, and transition authority are explicit.
+12. Repository graph, project memory, and prior execution trajectory evidence are confirmed against current source or marked stale/not verified.
+13. Every changed state, transition, guard, side effect, event, audit field, migration, and permission branch maps to validation evidence or named residual risk.
+14. Handoff boundaries and evidence limits are stated so lifecycle modeling is not over-claimed as full rule extraction, event implementation, migration execution, release approval, or test certification.
 
 # Used By
 
@@ -157,8 +163,8 @@ The state machine model is complete only when:
 
 # Handoff
 
-Hand off to `business-rule-extraction` for guard condition detail; `domain-event-modeling` for downstream event consumption design; `domain-logic-implementation` for enforcement implementation; `idempotency-retry-design` for retry safety; `backend-change-builder` for implementation.
+Hand off to `domain-object-identification` when object, aggregate, or lifecycle ownership is unresolved; `business-rule-extraction` for guard condition detail; `permission-boundary-modeling` or `authentication-authorization` for actor authority; `domain-event-modeling` for event and audit contracts; `domain-logic-implementation` and `backend-change-builder` for enforcement implementation; `idempotency-retry-design`, `transaction-consistency`, or `concurrency-control` for retry, commit, and concurrent transition safety; `data-migration-design` and `version-compatibility` for persisted state changes; `quality-test-gate` and `regression-testing` for validation evidence; `security-privacy-gate` when transitions affect regulated data or privileged actions; and `delivery-release-gate` when rollout, rollback, or production migration is affected.
 
 # Completion Criteria
 
-The capability is complete when **every state, legal transition, illegal transition, guard, side effect, audit record, timeout exit, recovery transition, and idempotency design is explicit — and lifecycle behavior can be implemented and tested without scattered conditional status checks**.
+The capability is complete when **every state, legal transition, illegal transition, guard, actor authority, side effect, event, audit record, timeout exit, recovery transition, idempotency design, migration/versioning impact, and validation obligation is explicit, evidence-limited, and implementable without scattered conditional status checks**.

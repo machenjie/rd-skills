@@ -19,6 +19,10 @@ Use this capability when a change: adds a new form with field rules and submissi
 
 Do not use this capability to document form library configuration (React Hook Form, Formik) or UI component API usage — that is framework implementation, not form design. Do not use it for API input validation on endpoints that are not user-facing forms — use `dto-schema-design` and `controller-api-implementation` for those.
 
+# Stage Fit
+
+Use during experience-definition, implementation-planning, coding, review, and testing when a user-facing form has validation rules, async checks, submission side effects, duplicate-submit risk, partial failure, or recoverable backend errors. In planning, define authority, timing, state machine, security controls, error mapping, and test obligations before implementation. In coding/review, reject stale project-memory or repository-graph claims unless current source, schemas, tests, and validation output confirm the form contract. Hand off when the primary question is generic API schema, server controller implementation, request lifecycle/caching, full frontend test strategy, or security review.
+
 # Non-Negotiable Rules
 
 - **Backend validation is the only enforcement boundary.** Frontend validation may be bypassed via curl, browser devtools, native apps, or automated scripts. Every field rule, business constraint, and authorization check must be enforced in the backend regardless of what the frontend validates. Frontend validation = UX optimization only.
@@ -29,91 +33,20 @@ Do not use this capability to document form library configuration (React Hook Fo
 - **Validation errors must be field-precise and actionable.** Every error message must: name the specific field, state what was wrong (not just "invalid"), and state what is required. "Invalid input" is not an error message. WCAG 3.3.1: error messages must identify the item in error. WCAG 3.3.3: if known, provide a suggestion for correction.
 - **Preserve user input across failures.** User-entered form data must not be discarded on validation error, network failure, or server error. Only discard on successful submission (unless the form is a one-time-use security operation). Preserve fields in component state; do not store sensitive data (passwords, payment details) in localStorage or sessionStorage.
 
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Basic field contract | New or changed fields, required/optional rules, format, length, enum, range, or copy. | Backend authority, frontend UX timing, field-level errors, preservation. | Field list, backend schema/handler, timing rule, error map. | `input-validation`, `dto-schema-design` | Form library how-to. |
+| Async field validation | Username/email availability, external verification, duplicate checks, or slow validation. | Cancellation, stale-result rejection, re-check on submit, rate/load limits. | Request key, AbortController/ignore policy, debounce, final server check. | `frontend-api-integration`, `interaction-state-modeling` | onChange request spam. |
+| Side-effecting submit | Create/update/delete/pay/invite/import, irreversible action, or expensive mutation. | Idempotency, duplicate-submit defense, CSRF, backend dedup, durable outcome. | Idempotency key, CSRF method, state machine, retry policy, denied duplicate test. | `security-privacy-gate`, `idempotency-retry-design` | Button disable as only defense. |
+| Server error mapping | Backend `violations[]`, problem details, conflict, authz, partial failure, or internal error. | Field/form/global mapping, safe user copy, preserved input, recovery action. | Error taxonomy, field path map, internal-message suppression, recovery state. | `error-code-design`, `interaction-state-modeling` | Raw backend messages. |
+| Multi-step or bulk form | Wizard, draft, import, multi-item edit, partial success, resumable flow. | Step persistence, per-item status, retry failed only, no duplicate side effects. | Step state, item status map, retry scope, idempotency scope, cleanup owner. | `user-flow-modeling`, `frontend-testing` | All-or-nothing generic failure. |
+| Security-sensitive form | Auth, MFA, account recovery, payment, admin, PII, destructive, or legal/financial submission. | Treat form as trust boundary; require server enforcement, CSRF, anti-enumeration, privacy. | Actor/data classification, abuse case, denied test, evidence limits. | `threat-modeling`, `security-privacy-gate` | Client-side assurance claims. |
+
 # Industry Benchmarks
 
-Anchor against: **OWASP Input Validation Cheat Sheet** — allowlist validation; server-side enforcement mandatory; centralized validation library; avoid client-side-only validation for security. **OWASP CSRF Prevention Cheat Sheet** — `SameSite` cookie attribute; synchronizer token pattern; double-submit cookie pattern. **HTML5 Constraint Validation API** — `required`, `pattern`, `min`/`max`, `minlength`/`maxlength`, `type` attributes; `setCustomValidity(message)`; `checkValidity()`, `reportValidity()`; `invalid` event; `ValidityState` object. **Schema Validation Libraries** — Zod (TypeScript; parse-then-use; branded types); Yup (JS; async validation; transform); Valibot (lightweight; modular); Joi (Node.js; enterprise; async rules); Pydantic v2 (Python; strict mode; BaseModel); Jakarta Bean Validation 3.0 (Java; `@NotNull`, `@Size`, `@Pattern`, `@Valid` cascade). **WCAG 2.2** — 3.3.1 Error Identification (required for A): identify and describe each error in text; 3.3.2 Labels or Instructions (required for A): provide labels and instructions for user input; 3.3.3 Error Suggestion (required for AA): suggest correction when error known; 3.3.4 Error Prevention (required for AA): for legal, financial, data-submission forms: provide reversibility, check, or confirmation. **RFC 7807 / RFC 9457** — Problem Details for HTTP APIs; use `violations` array for field-level errors: `{"violations":[{"field":"email","constraint":"format","message":"Must be a valid email","rejectedValue":"user@"}]}`. **Idempotency-Key header** (Stripe, Square API pattern; IETF draft-ietf-httpapi-idempotency-key-header) — UUID v4 generated at form mount; server deduplicates within 24h; response cached for duplicate requests. **AbortController** (Web API) — cancel in-flight fetch requests when field value changes; prevents stale async validation acceptance. **Debounce pattern** — 300–500ms debounce on async validation triggers; avoids excessive server requests during typing. **State machine pattern** — form submission lifecycle modeled as explicit states: `idle → validating → submitting → success | error → recovery`; prevents undefined intermediate behavior.
-
-### Validation Authority Table
-
-| Rule type | Enforce in frontend? | Enforce in backend? | Notes |
-| --- | --- | --- | --- |
-| Required field | ✅ UX only | ✅ Mandatory | Server rejects empty |
-| Field format (email, phone, URL) | ✅ UX only | ✅ Mandatory | Server uses allowlist regex or library |
-| Field length (min/max chars) | ✅ UX only | ✅ Mandatory | Prevent DoS; DB column size |
-| Allowed character set | ✅ UX only | ✅ Mandatory | Allowlist chars; reject others |
-| Cross-field rules (password confirm) | ✅ UX only | ✅ Mandatory | Server re-derives if state-dependent |
-| Business rules (balance >= charge) | ❌ Not reliable | ✅ Mandatory | Client state may be stale |
-| Authorization (user owns record) | ❌ Never only | ✅ Mandatory | Frontend can be spoofed |
-| Uniqueness (username taken) | ✅ Async preview | ✅ Mandatory on submit | Race condition: final check at submit |
-| Financial calculations | ❌ Not trusted | ✅ Mandatory | Never trust client-side totals |
-
-### Validation Timing Rules
-
-```
-Per-field validation timing (choose per rule type):
-
-  onChange: ONLY for password strength indicator, character count display
-            Do NOT use for format validation — too aggressive during typing
-  
-  onBlur:   Format validation, required checks, length checks
-            Standard timing for most field-level validation
-            Re-validate on blur after the field was corrected following submit attempt
-  
-  onSubmit: Cross-field rules, async uniqueness, authorization-dependent rules
-            All rules validated again on submit regardless of prior per-field state
-
-  Async validation (username, email availability):
-    1. Trigger onBlur (not onChange)
-    2. Debounce 300ms before firing request
-    3. Show loading indicator on field during request
-    4. Cancel in-flight request with AbortController if field changes before response
-    5. Accept response only if current field value matches the value that was sent
-    6. Clear async result if field value changes after result was received
-    7. Re-run async check on submit even if prior check passed (final authority = server)
-
-  After first submit attempt:
-    Switch to "validate on change" mode for fields the user edits
-    Provide immediate feedback as user corrects errors
-```
-
-### Submission State Machine
-
-```
-States: idle | validating | submitting | success | error | recovery
-
-idle:
-  User fills form
-  Per-field validation runs on blur
-
-validating (triggered by submit click):
-  Run all synchronous frontend validations
-  Run pending async checks
-  If validation fails → show field errors → return to idle (do not submit)
-  If validation passes → transition to submitting
-
-submitting:
-  Disable submit button immediately (prevent double-click)
-  Show loading state
-  Send Idempotency-Key header (UUID v4 generated at form mount)
-  Do NOT regenerate Idempotency-Key on network retry (same key = server dedup)
-
-success:
-  Clear form (only for create flows) or update form with confirmed server values
-  Show success confirmation
-  Idempotency-Key expires after success; generate new key on next form mount
-
-error:
-  Network error: show retry prompt; preserve form data; do NOT disable retry
-  Server validation error (400): map violations[] to fields; preserve data; allow correction
-  Server conflict (409): show specific conflict message; do NOT silently overwrite
-  Server error (500): show generic error; preserve data; allow retry
-
-recovery (partial failure in bulk forms):
-  Show per-item status: succeeded N / failed M
-  Allow retry of failed items only
-  Do not re-submit succeeded items (idempotency + DX)
-  Preserve item data for failed items; allow correction before retry
-```
+Anchor against OWASP Input Validation and CSRF guidance, HTML Constraint Validation API, mature schema validation libraries, WCAG 2.2 form criteria, RFC 7807/RFC 9457 Problem Details, idempotency-key practice, AbortController cancellation, debounce patterns, and explicit submission state machines. Keep this body focused on routing, authority, evidence, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed benchmark anchors, authority/timing matrices, state machine patterns, library baselines, graph/memory/trajectory coupling, and anti-patterns.
 
 # Selection Rules
 
@@ -124,6 +57,15 @@ Select this capability when **form field validation contract and submission life
 - Prefer `idempotency-retry-design` when the primary concern is server-side deduplication implementation and retry policy.
 - Prefer `frontend-api-integration` when the focus is the HTTP request/response lifecycle, loading states, and error handling in the frontend layer.
 - Prefer `security-privacy-gate` for OWASP CSRF and injection security review.
+
+# Proactive Professional Triggers
+
+- **Signal:** validation is described as "frontend handles it", HTML attributes only, form-library rules only, or mobile/API clients are ignored. **Hidden risk:** invalid, unauthorized, or malicious data bypasses the UI and corrupts server state. **Required professional action:** require backend enforcement per rule and field. **Route to:** `input-validation`, `security-privacy-gate`. **Evidence required:** backend rule map and bypass test.
+- **Signal:** async uniqueness or external validation accepts whichever response returns last. **Hidden risk:** stale valid state lets the user submit an unavailable or unauthorized value. **Required professional action:** require request key, cancellation/ignore policy, debounce, and final server re-check on submit. **Route to:** `frontend-api-integration`, `interaction-state-modeling`. **Evidence required:** stale-response test and submit-time conflict mapping.
+- **Signal:** side-effecting submit relies only on disabled button, spinner, or client debounce. **Hidden risk:** double-click, retry, timeout, or back/forward navigation creates duplicate records or charges. **Required professional action:** require idempotency key, stable retry key, backend dedup window, and UI in-flight state. **Route to:** `idempotency-retry-design`, `quality-test-gate`. **Evidence required:** duplicate-submit test and retry evidence.
+- **Signal:** backend validation errors are raw strings, stack traces, database messages, or unmapped problem details. **Hidden risk:** users cannot recover, accessibility fails, or internal schema/security details leak. **Required professional action:** define safe field/form/global error mapping and message ownership. **Route to:** `error-code-design`, `security-privacy-gate`. **Evidence required:** violations-to-field map and internal-error suppression test.
+- **Signal:** multi-step, draft, or bulk form has no per-step/item state, preservation rule, or retry scope. **Hidden risk:** user data loss, duplicate side effects, or partial success hidden behind generic failure. **Required professional action:** define state persistence, per-item result, retry failed only, and idempotency scope. **Route to:** `user-flow-modeling`, `frontend-testing`. **Evidence required:** partial failure scenario and recovery test.
+- **Signal:** repository graph, project memory, or prior agent trajectory says a form pattern already exists. **Hidden risk:** stale schema, old validation library, or previous repair path is copied into a new form. **Required professional action:** current-source-confirm fields, schema, tests, stories, and validation freshness before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected pattern, freshness limit.
 
 # Risk Escalation Rules
 
@@ -153,6 +95,10 @@ Every form is a security boundary. Precision failures:
 | Submit button re-enabled immediately after click | Double-click window still exists; protection only if server dedup present |
 | Generic "Something went wrong" on 400 | User cannot identify which field to fix; support ticket created |
 
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 form validation selection, authority, evidence, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete form contract, submission lifecycle, validation timing, async check, or error mapping. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed benchmark anchors, timing/state matrices, library baselines, accessibility criteria, graph/memory/trajectory coupling, or anti-pattern review is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or minor wording edits where the output contract and quality gate are enough.
+
 # Failure Modes
 
 - Frontend-only email format check bypassed; invalid email stored in DB; marketing email sending failure; CSV export breaks.
@@ -168,6 +114,9 @@ Every form is a security boundary. Precision failures:
 
 Return a form validation contract with:
 
+- `mode_selected` (basic field contract / async field validation / side-effecting submit / server error mapping / multi-step-bulk form / security-sensitive form)
+- `source_evidence` (current form code, backend schema/handler, API error contract, tests, stories, repository graph, project memory, or execution trajectory inspected with freshness limits)
+- `graph_memory_trajectory_judgment` (accepted, rejected, or not verified for each reused form, schema, validator, error mapping, or test pattern)
 - `fields` (name, type, required, validation rules, async check, error messages per constraint)
 - `validation_authority` (per field: frontend-only / both / backend-only; reason)
 - `validation_timing` (per field: onChange / onBlur / onSubmit / async; conditions)
@@ -180,7 +129,23 @@ Return a form validation contract with:
 - `partial_failure_behavior` (per-item status; retry scope; data preservation)
 - `field_preservation` (what is kept on error; what is cleared; sensitive field policy)
 - `accessibility` (WCAG 3.3.1 error identification; 3.3.2 labels; 3.3.3 suggestions; 3.3.4 error prevention)
+- `security_threats` (frontend bypass, CSRF, mass assignment, enumeration, duplicate side effect, sensitive field retention, raw error disclosure)
+- `changed_form_to_validation_map` (each field, rule, async check, submit state, backend error, CSRF/idempotency control, and partial failure path mapped to validator/test or residual risk)
+- `handoff_boundaries` (what belongs to API schema, backend validation, error taxonomy, frontend API integration, security review, frontend testing, or product/legal review)
 - `tests` (bypass frontend validation test, double-submit test, stale async result test, CSRF protection test, partial failure recovery test, field preservation test)
+- `evidence_limits` (what was not inspected or not run: real backend handlers, API schema, browser assistive tech, production race behavior, payment provider, legal copy, or full E2E flow)
+
+# Evidence Contract
+
+Close a form-validation-design output only when it names selected mode, current source evidence inspected, graph/memory/trajectory reuse judgment, backend authority for every rule, timing, async stale-result policy, submit state machine, CSRF/idempotency controls, error mapping, field preservation, accessibility, changed-form-to-validation map, handoff boundaries, residual risk, and evidence limits. A generic "validate the form" or "use client and server validation" statement is not sufficient evidence.
+
+# Benchmark Coverage
+
+Improved form validation contracts reject common weak patterns: frontend-only validation, onChange async request spam, stale async acceptance, disabled-button-only duplicate protection, regenerated idempotency keys on retry, raw backend error display, generic 400 messages, lost input after failure, inaccessible errors, and stale repository-memory claims about existing form patterns. Detailed benchmark anchors, authority/timing matrices, library baselines, and state patterns belong in references so the body stays efficient.
+
+# Routing Coverage
+
+Route here when form field authority, validation timing, async checks, submission state, duplicate-submit defense, backend error mapping, partial failure, or field preservation is primary. Hand off when the primary concern is generic trust-boundary validation (`input-validation`), DTO/schema shape (`dto-schema-design`), backend controller implementation (`controller-api-implementation`), HTTP lifecycle/caching (`frontend-api-integration`), frontend test plan (`frontend-testing`), or broad security review (`security-privacy-gate`).
 
 # Quality Gate
 
@@ -196,6 +161,9 @@ The form design is complete only when:
 8. Partial failure behavior defined for any bulk or multi-item form.
 9. WCAG 3.3.1–3.3.4 requirements addressed for applicable form types.
 10. Test matrix covers: backend bypass attempt, double-submit, stale async, CSRF, partial failure.
+11. Selected mode, source evidence, and graph/memory/trajectory reuse judgment are explicit.
+12. Every field rule, async check, submit transition, backend error mapping, CSRF/idempotency control, and partial failure path maps to validation evidence or named residual risk.
+13. Handoff boundaries and evidence limits are explicit so form-design evidence is not over-claimed as backend implementation, real browser/a11y validation, legal approval, or production race proof.
 
 # Used By
 

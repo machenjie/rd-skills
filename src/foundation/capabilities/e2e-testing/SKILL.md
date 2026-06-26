@@ -19,6 +19,10 @@ Use this capability when a change affects: primary user journeys spanning multip
 
 Do not use this capability to cover every permutation of input or every component state — those are the domain of unit testing and component testing. Do not use it to re-prove rules already validated by integration or contract tests (asserting HTTP status codes from an E2E test that already has integration test coverage wastes time and creates flake). Do not add E2E tests for flows where the risk profile is low and a fast integration test is sufficient.
 
+# Stage Fit
+
+Use during planning, testing, code review, and validation when assembled browser behavior, route transitions, auth state, permissions, side effects, or CI artifacts decide release confidence. Repository graph, project memory, and prior agent trajectory can suggest existing journeys or flaky zones, but current source, routes, tests, fixtures, and CI output must confirm that evidence is fresh before reuse.
+
 # Non-Negotiable Rules
 
 - **Select only critical journeys and high-risk branches for E2E coverage.** The E2E suite must stay small enough to give a result in under 10 minutes in a standard CI runner. If the suite grows beyond this, it must be parallelized across browser workers, not expanded unchecked.
@@ -32,70 +36,7 @@ Do not use this capability to cover every permutation of input or every componen
 
 # Industry Benchmarks
 
-Anchor against: **Playwright** (Microsoft) — leading cross-browser E2E framework; auto-wait, network interception, trace viewer, component testing, parallel workers. **Cypress** — popular browser-native E2E framework; real-time reload, time-travel debugging; strong ecosystem. **WebdriverIO** — W3C WebDriver protocol; multi-browser, mobile (Appium) support. **Selenium Grid / WebDriver** — legacy standard; still dominant in enterprise regulated environments. **Google Testing Blog — Testing Trophy** (Kent C. Dodds adaptation) — integration tests provide the best ROI; E2E tests are the peak of the trophy (few but high value). **OWASP Testing Guide v4.2** — auth, session, access control, and business logic test cases map directly to high-priority E2E journeys. **DORA metrics** — E2E suite execution time contributes to CI lead time; must not exceed 10 minutes on standard runner. **Selenium Grid 4 / Playwright Grid** — parallel multi-browser execution; required for sub-10-minute full-suite runs. **Percy / Chromatic** — visual regression testing integrated into E2E; snapshot diffing for UI component stability. **Axe-core in Playwright** — accessibility assertions within E2E journey tests (`checkA11y`). **Page Object Model (POM)** — abstraction pattern; encapsulates selectors and actions per page; reduces selector duplication across tests. **App Actions Pattern** (Cypress philosophy) — prefer API/backend setup over UI setup for test data; avoid "login via UI" for every test; use programmatic auth (cookie injection, JWT setup).
-
-### Journey Priority Matrix
-
-| Journey category | Risk | E2E priority | Alternative if no E2E |
-| --- | --- | --- | --- |
-| Login / authentication | Critical | Must have | Integration test for auth middleware |
-| Permission gate (deny path) | Critical | Must have | Integration test with auth mock |
-| Checkout / payment confirmation | Critical | Must have | Integration + contract test |
-| Onboarding multi-step wizard | High | Recommended | Integration + component test |
-| Destructive action (delete, cancel) | High | Recommended | Integration test with side-effect assertion |
-| Password reset / account recovery | High | Recommended | Integration test for email flow |
-| Core CRUD user flow | Medium | Optional | Integration test is sufficient |
-| Search and filter | Medium | Optional | Component + integration test |
-| Static / informational pages | Low | Skip | Visual regression snapshot only |
-| Admin configuration screens | Low | Optional | Integration test for API |
-
-### Selector Strategy Priority
-
-```
-Priority 1 (Preferred): ARIA-semantic locators
-  page.getByRole('button', { name: 'Confirm Order' })
-  page.getByLabel('Email address')
-  page.getByText('Your order has been placed', { exact: true })
-
-Priority 2 (Acceptable): Explicit test IDs
-  page.locator('[data-testid="submit-order-btn"]')
-
-Priority 3 (Avoid): CSS class or structural selectors
-  page.locator('.btn-primary')           ← breaks on style refactor
-  page.locator('div:nth-child(3) > a')  ← breaks on layout change
-  page.locator('//button[@class="..."]') ← XPath; brittle
-
-Rule: Add data-testid to elements ONLY when no ARIA-semantic locator
-is available AND the element is exercised by a required E2E test.
-Never add data-testid preemptively; add them when the test needs them.
-```
-
-### Test Data Isolation Pattern
-
-```
-// BAD: shared test account — causes order dependency
-await page.goto('/login');
-await page.fill('[data-testid="email"]', 'testuser@shared.com');
-
-// GOOD: per-test isolated user created via API
-const user = await createTestUser(apiClient, { role: 'buyer' });
-await setAuthCookie(page, user.sessionToken);  // skip UI login
-test.afterEach(async () => { await deleteTestUser(apiClient, user.id); });
-
-// WHY: UI login in every test adds 3-5s per test; with 50 tests = 4 min overhead
-// Use App Actions (API setup) for everything except the login journey itself
-```
-
-### Flake Control Checklist
-
-| Cause | Detection | Fix |
-| --- | --- | --- |
-| Race condition (animation, async render) | Flake without network throttle | Replace `waitForTimeout` with `expect(locator).toBeVisible()` |
-| Shared test data | Fails when run in parallel | Per-test data creation + teardown |
-| External API latency | Timeout flake in CI | Mock or stub external API; use `route.fulfill()` |
-| Browser fingerprint / rate limit | Fails only in CI | Rotate user-agent; use API auth setup |
-| Selector coupled to changing text | Fails on copy change | Use `data-testid` or role-based selector |
-| Non-deterministic data order | Assertion on wrong item | Sort data before assertion; use specific item ID |
+Anchor against Playwright auto-wait/tracing, Cypress browser-native debugging, WebDriver/Selenium Grid enterprise browser coverage, Testing Trophy layer selection, OWASP auth/session/access-control journey coverage, DORA CI lead-time pressure, visual regression tools, axe-core checks, Page Object discipline, and App Actions data setup. Keep the body focused on routing and evidence; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for journey priority, selector, data-isolation, flake-control, graph/memory/execution, and framework-specific details.
 
 # Selection Rules
 
@@ -110,6 +51,34 @@ Select this capability when the **assembled user journey through multiple system
 # Risk Escalation Rules
 
 Escalate when: no E2E test exists for a login or authentication flow being changed; no coverage for permission-denied path on a sensitive resource; a payment or financial confirmation flow has no E2E evidence; a multi-step onboarding flow with no test is being modified; the E2E suite has > 30% flaky tests that are unquarantined; the suite takes > 20 minutes on CI and is blocking deployments.
+
+# Proactive Professional Triggers
+
+- **Signal:** Auth, session expiry, MFA, OAuth, tenant, or permission-gated navigation changes are covered only by component or API tests.
+  **Hidden risk:** assembled cookies, redirects, role gates, or denied journeys can be wrong while lower layers pass.
+  **Required professional action:** require one narrow E2E journey for the changed auth/permission path or document why integration coverage is sufficient.
+  **Route to:** `e2e-testing`, `security-privacy-gate`, `frontend-testing`.
+  **Evidence required:** journey map, allowed and denied branch, command with exit code or not-run disclosure, trace or screenshot artifact.
+- **Signal:** Checkout, destructive action, data export, onboarding, or recovery journey asserts only navigation or visible text.
+  **Hidden risk:** the user sees success while the durable order, deletion, export, audit event, email, or retry state is missing.
+  **Required professional action:** add a side-effect assertion or route the lower-level integration proof that makes E2E unnecessary.
+  **Route to:** `integration-testing`, `test-data-management`, `quality-test-gate`.
+  **Evidence required:** persisted state/API/email/event assertion, fixture owner, teardown proof, and evidence-limit note.
+- **Signal:** E2E tests use shared accounts, live external providers, CSS/XPath selectors, arbitrary sleeps, or unowned test data.
+  **Hidden risk:** flaky or unsafe tests hide real regressions, leak data, or block releases with non-diagnostic failures.
+  **Required professional action:** require rewriting with isolated fixtures, semantic selectors, deterministic waits, and provider stubs before gate closure.
+  **Route to:** `test-data-management`, `frontend-testing`, `validation-broker`.
+  **Evidence required:** selector strategy, data cleanup path, stub matrix, CI artifact, and flake/quarantine owner.
+- **Signal:** Repository graph, project memory, old CI output, or prior agent notes suggest reusing an E2E pattern or known flaky journey.
+  **Hidden risk:** stale routes, renamed fixtures, changed CI config, or unrepaired prior failures make reused evidence unverified.
+  **Required professional action:** inspect current source/tests/routes/CI and verify freshness before accepting the pattern or mark it stale.
+  **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `plan-execution-consistency`.
+  **Evidence required:** inspected paths, accepted/rejected pattern, freshness limit, command/report path, and residual owner.
+- **Signal:** E2E is proposed as the only proof for local business rules, field permutations, or a growing broad suite.
+  **Hidden risk:** slow browser coverage replaces faster unit/integration/regression evidence and hides missing branch tests.
+  **Required professional action:** split local logic to lower test levels and keep E2E only for the critical journey.
+  **Route to:** `test-strategy`, `regression-testing`, `quality-test-gate`.
+  **Evidence required:** risk-to-layer map, omitted-level rationale, CI runtime or flake budget, and changed-code-to-test map.
 
 # Critical Details
 
@@ -148,13 +117,15 @@ E2E tests are the most expensive tests to write, maintain, and debug. Precision 
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when the change touches critical user journeys, auth/session flows, permission denial, checkout/payment confirmation, destructive actions, external stubs, flake policy, or CI browser artifacts. Do not load it when a lower-level unit, integration, or contract test is sufficient for the stated risk.
+The body carries L1/L2 E2E selection, routing, output, and quality-gate rules. Load [references/checklist.md](references/checklist.md) when the change touches critical user journeys, auth/session flows, permission denial, checkout/payment confirmation, destructive actions, external stubs, flake policy, or CI browser artifacts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when journey priority, selector strategy, data isolation, flake triage, framework choice, or graph/memory/execution freshness needs detail. Use [examples/example-output.md](examples/example-output.md) only when the output shape is unclear. Do not load deep references when lower-level unit, integration, or contract evidence is sufficient for the stated risk.
 
 # Output Contract
 
 Return an E2E plan with:
 
 - `journey_name` and `business_risk` (why this journey merits E2E coverage)
+- `mode_selected` (critical journey, auth/permission branch, side-effect journey, flake repair, or evidence reuse)
+- `source_evidence` (current routes, tests, fixtures, CI config, repository graph, project memory, or prior agent output inspected with freshness limits)
 - `user_role(s)` and `permission_level` required
 - `test_data_strategy` (API setup, DB seed, or UI setup; isolation mechanism; teardown plan)
 - `auth_strategy` (storageState, cookie injection, or UI login with justification)
@@ -169,6 +140,7 @@ Return an E2E plan with:
 - `flake_controls` (waitFor strategy, no arbitrary timeouts, deterministic data)
 - `ci_configuration` (parallelism workers, browser matrix, trace/screenshot/video on failure)
 - `artifacts` (trace zip, screenshot, video; where stored in CI)
+- `validation_evidence` (command, working directory, exit code, artifact path, freshness after final edit, and not-run scope)
 
 # Evidence Contract
 
@@ -179,7 +151,9 @@ An E2E test is accepted only when the output includes:
 - **State setup**: test data owner, environment, feature flags, authentication state, and cleanup.
 - **Observable assertions**: user-visible state, accessibility state, persisted result, network result, notification, or audit record.
 - **Stability controls**: deterministic waits, retry policy, fixture isolation, and flake mitigation.
+- **Source freshness**: current source, routes, tests, fixtures, CI config, repository graph, project memory, old CI reports, and prior agent claims accepted, rejected, stale, or not verified.
 - **Flake budget**: expected stability and quarantine/triage plan if the test is flaky.
+- **Validation evidence**: command, working directory, exit code, artifact path, and freshness after latest material edit.
 - **What evidence proves**: the named end-to-end journey works through the selected environment.
 - **What evidence does not prove**: all browsers/devices/locales, production scale, third-party production behavior, alternate roles, or untested journeys.
 - **Residual risk**: untested journey variants, owner, and next gate.
@@ -198,6 +172,8 @@ The E2E plan is complete only when:
 8. CI configured to capture trace, screenshot, and video on failure.
 9. Flake quarantine policy defined; max CI run time target documented (≤ 10 min standard; ≤ 20 min with parallelism).
 10. Suite size justified: each test maps to a journey in the journey priority matrix.
+11. Repository graph, project memory, old CI output, and prior agent claims are source-confirmed or marked stale/not verified before reuse.
+12. Validation evidence names command, exit code, artifact path, freshness, and what the E2E result does not prove.
 
 # Used By
 
@@ -206,7 +182,7 @@ The E2E plan is complete only when:
 
 # Handoff
 
-Hand off to `test-strategy` for overall coverage balance; `frontend-testing` for component and route tests; `test-data-management` for complex data isolation strategy; `observability` for production smoke tests and post-release monitoring; `regression-testing` for non-journey behavioral regression coverage.
+Hand off to `test-strategy` for overall coverage balance; `frontend-testing` for component and route tests; `test-data-management` for complex data isolation strategy; `observability` for production smoke tests and post-release monitoring; `regression-testing` for non-journey behavioral regression coverage; `repository-context-map`, `repository-graph-analysis`, and `project-memory-governance` when reused journeys or prior failures need freshness checks; and `validation-broker` when changed paths must map to narrow/module/full browser validation commands.
 
 # Completion Criteria
 

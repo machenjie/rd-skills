@@ -9,26 +9,16 @@ changeforge_version: 0.1.0
 
 # Mission
 
-Launch professional capability by engineering stage. Decide which stage a change is in,
-which product surface and language surface it touches, and which risks apply, then launch only
-the minimum sufficient capabilities for that stage. Explicitly skip heavy out-of-stage
-capabilities, declare a context budget, and name the next-stage handoff. This capability is a
-launcher, not a checklist owner: the compact launch matrix below is the runtime reference, and
-the deep per-stage, per-surface, and per-language detail lives in the owning professional skills
-and capability bodies, not here.
+Launch professional capability by engineering stage. Decide which stage a change is in, which product surface and language surface it touches, and which risks apply, then launch only the minimum sufficient capabilities for that stage. Explicitly skip heavy out-of-stage capabilities, declare a context budget, and name the next-stage handoff. This capability is a launcher, not a checklist owner: the stage model registry is canonical, this body carries routing and gates, and [references/stage-launch-matrix.md](references/stage-launch-matrix.md) carries deeper launch/evidence detail.
 
 # When To Use
 
-Use for any non-trivial change that involves design, implementation planning, coding,
-debugging, bug-fix, code review, refactoring, testing, release, documentation handoff, or skill
-authoring, when the request does not already declare which stage is active and which
-capabilities should launch. Use before doing the work, and again when the active stage changes.
+Use for any non-trivial change that involves design, implementation planning, coding, debugging, bug-fix, code review, refactoring, testing, release, documentation handoff, or skill authoring, when the request does not already declare which stage is active and which capabilities should launch. Use before doing the work, and again when the active stage changes.
 
 # Do Not Use When
 
 - Do not use for a single trivial edit whose stage and capability are already obvious.
-- Do not use as a replacement for `change-forge-router`; the router selects the path, this
-  capability sequences professional launch within it.
+- Do not use as a replacement for `change-forge-router`; the router selects the path, this capability sequences professional launch within it.
 - Do not use to launch every relevant capability; that defeats the stage budget.
 - Do not use to copy the stage, product, or language matrices into other skills.
 
@@ -52,78 +42,46 @@ capabilities should launch. Use before doing the work, and again when the active
 
 # Stage Fit
 
-Use this capability to launch the current stage only. If the request spans multiple
-stages, record the current stage, required evidence, and next-stage handoff rather
-than loading every stage at once.
+Use this capability to launch the current stage only. If the request spans multiple stages, record the current stage, required evidence, and next-stage handoff rather than loading every stage at once.
 
-- Start only the capabilities needed by the active stage, product surface,
-  language surface, or explicit risk trigger.
-- Do not cross into heavy out-of-stage capabilities unless the current evidence
-  shows their trigger; record skipped heavy capabilities and the reason.
-- For the current stage, name the evidence that must exist before transition, the
-  next gate, and any stage conflict or skip rationale.
+- Start only capabilities needed by the active stage, product surface, language surface, or explicit risk trigger.
+- Do not cross into heavy out-of-stage capabilities unless current evidence shows their trigger; record the skipped capability and reason.
+- Name transition evidence, next gate, stage conflict, graph/memory freshness limit, and skip rationale before handoff.
 
 # Industry Benchmarks
 
-- Phase-gate and stage-gate engineering review.
-- Trunk-based delivery with progressive risk gates.
-- Context engineering and retrieval precision (load the minimum sufficient context).
-- Risk-based testing and review depth.
-- Definition-of-ready and definition-of-done per stage.
-- Decision-record discipline for handoff boundaries.
+Anchor against phase-gate engineering review, trunk-based delivery, context engineering, risk-based testing, definition-of-ready/done, workflow state machines, validation freshness, and decision-record handoff boundaries. Keep this body focused on selection and closure; load [references/stage-launch-matrix.md](references/stage-launch-matrix.md) for detailed launch/evidence/transition matrices and [references/checklist.md](references/checklist.md) for a compact operator checklist.
 
 # Selection Rules
 
-Map the stage to its launch set using the compact matrix below:
+Map the stage to its launch set using the stage model registry as source of truth. Launch only the matching current-stage, product-surface, language-surface, and risk-trigger capabilities; defer out-of-stage architecture, coding, testing, release, and documentation gates with explicit reasons.
 
-| Stage | Launch focus | Skip by default |
-| --- | --- | --- |
-| requirement-intake | `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition`, `acceptance-standard-definition`, `scenario-decomposition` | coding, language, testing, refactoring, release |
-| architecture-design | `architecture-style-selection`, `module-boundary-design`, `layered-architecture-design`, `architecture-tradeoff-analysis`, `extensibility-design`, `solution-optimality-evaluation` | language idiom, coding, test authoring |
-| implementation-planning | `repository-context-map`, `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` | full architecture review, release, deep performance profiling |
-| coding | matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling` | architecture deep review, release, full regression suite design |
-| debugging-diagnosis | `failure-diagnosis`, `agent-execution-discipline`, `observability` | refactoring, new design |
-| bug-fix | `agent-execution-discipline`, `regression-testing`, `code-review`; add `minimal-correct-implementation` only for minimal fix, delete/shrink, dependency, abstraction, wrapper-only delegation, shortcut, or overengineering signals | architecture redesign |
-| code-review | `code-review`, `plan-execution-consistency`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `minimal-correct-implementation` only for complexity/delete/shrink/dependency/abstraction/wrapper/shortcut signals; add `ai-code-review-refactor` as the professional owner for generated code | release, deployment, infrastructure |
-| refactoring | `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `code-review`, `regression-testing` | feature design, release |
-| testing | `test-strategy`, `plan-execution-consistency`, `language-testing-strategy`, `test-data-management`, matching test capability | architecture redesign, new feature coding |
-| release-delivery | `ci-cd`, `release-rollback`, `containerization`, `kubernetes-gateway`, `observability`, `backup-recovery` | language deep checks, coding |
-| documentation-handoff | `agent-workflow-state-machine`, `plan-execution-consistency`, `documentation-generation`, `agent-execution-discipline` | coding capabilities |
-| skill-authoring | `repository-context-map`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `documentation-generation`, `agent-execution-discipline`, `plan-execution-consistency` | product coding, language runtime, release |
+Compact current-stage default launch summary:
 
-Select the product surface and language surface for the change, and launch only the
-matching professional skill and capabilities. Pair with `change-forge-router` for the overall
-path and `agent-execution-discipline` for evidence and handoff discipline.
+| Stage | Default capabilities |
+| --- | --- |
+| requirement-intake | `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition`, `acceptance-standard-definition`, `scenario-decomposition` |
+| architecture-design | `architecture-style-selection`, `module-boundary-design`, `layered-architecture-design`, `architecture-tradeoff-analysis`, `extensibility-design`, `solution-optimality-evaluation` |
+| implementation-planning | `repository-context-map`, `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` |
+| coding | `language-idiom-enforcement`, `input-validation`, `logging-error-handling` |
+| debugging-diagnosis | `failure-diagnosis`, `agent-execution-discipline`, `observability` |
+| bug-fix | `agent-execution-discipline`, `regression-testing`, `code-review` |
+| code-review | `code-review`, `plan-execution-consistency`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement` |
+| refactoring | `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `code-review`, `regression-testing` |
+| testing | `test-strategy`, `plan-execution-consistency`, `language-testing-strategy`, `test-data-management` |
+| release-delivery | `ci-cd`, `release-rollback`, `containerization`, `kubernetes-gateway`, `observability`, `backup-recovery` |
+| documentation-handoff | `agent-workflow-state-machine`, `plan-execution-consistency`, `documentation-generation`, `agent-execution-discipline` |
+| skill-authoring | `repository-context-map`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `documentation-generation`, `agent-execution-discipline`, `plan-execution-consistency` |
+
+Use [references/stage-launch-matrix.md](references/stage-launch-matrix.md) for the human-readable launch matrix. Pair with `change-forge-router` for the overall path, `agent-workflow-state-machine` for legal transitions, and `agent-execution-discipline` for evidence and handoff discipline.
 
 # Professional Evidence By Stage
 
-Each stage has a minimum evidence obligation before handoff:
-
-| Stage | Professional evidence required |
-| --- | --- |
-| requirement-intake | current behavior, desired behavior, non-goals, constraints, assumptions, open questions, and testable completion signal. |
-| architecture-design | affected boundaries, dependency direction, ownership, simpler alternative, tradeoff, and rollback implication. |
-| implementation-planning | inspected target-project boundaries, reuse ladder, placement rationale, touched files, validation commands, and split/sequence decision. |
-| coding | inspected local convention, selected capabilities, changed boundary, TDD or validation signal, tests or validators run, and residual risk. |
-| debugging-diagnosis | symptom, hypothesis tested, method, verified cause, counter-evidence, and no same-path third retry. |
-| bug-fix | verified cause, same-pattern scan, regression proof, old behavior preservation, and local/broad fix rationale. |
-| code-review | independent review owner, severity-classified findings, boundary inspected, missing evidence, behavior-change risk, required fix owner, and re-review result when repaired. |
-| refactoring | before/after behavior preservation, affected callers, deletion path, placement decision, and regression evidence. |
-| testing | risk-based test level, fixture/data owner, what the test proves, what it does not prove, and flaky-risk note. |
-| release-delivery | rollout plan, rollback path, config/migration compatibility, monitoring signal, and owner acceptance. |
-| documentation-handoff | affected artifacts, no-change rationales, validation/link checks, residual doc risk, and owner. |
-| skill-authoring | source body/reference boundary, registry impact, validators/evals run, and no runtime architecture drift. |
+Each stage has a minimum handoff obligation: requirement clarity, inspected boundaries, owner/reviewer split, selected/skipped capability rationale, validation signal, evidence freshness, behavior preservation, residual risk, and next gate. Load [references/stage-launch-matrix.md](references/stage-launch-matrix.md) for the stage-by-stage evidence table.
 
 # Stage Transition Rules
 
-- Move from diagnosis to bug-fix only after a verified cause exists or the next action is a reversible instrumentation change.
-- Move from requirement-intake to implementation-planning only after blocking requirement questions are resolved or the plan records explicit assumptions and residual risk.
-- Move from implementation-planning to coding only after target-project evidence is inspected and reuse, placement, validation, and skipped heavy capabilities are named.
-- Move from coding to testing only after the changed behavior and residual risk are explicit; tests are then selected by risk, not by habit.
-- Move from coding to code-review only with a review owner different from the action owner.
-- Move from code-review to refactoring or bug-fix only when findings name a repair owner; move from code-review to documentation-handoff only after repaired findings have been re-reviewed or residual risk is explicitly accepted.
-- Move from testing to release-delivery only when the test result states what it proves, what it does not prove, and which release risk remains.
-- Move from release-delivery to documentation-handoff when rollout, rollback, migration, config, or operational behavior changes reader obligations.
+Stage transitions require the entry evidence for the next stage and the exit evidence for the current one. Move forward only after blocking requirement questions, source inspection, reuse/placement, TDD or validation signal, owner/reviewer split, repair/re-review, proof limits, and residual risk are explicit. If graph, memory, or validation freshness is stale, route back to read, repair, validation, or review instead of advancing.
 
 # Risk Escalation Rules
 
@@ -133,25 +91,37 @@ Each stage has a minimum evidence obligation before handoff:
 - Escalate to `architecture-impact-reviewer` when an implementation or refactor stage shifts module boundaries or dependency direction.
 - Escalate to `failure-diagnosis` when a third same-path retry is attempted; force a stage and route change.
 
+# Proactive Professional Triggers
+
+- **Signal:** Route or plan starts coding, testing, release, or documentation without exactly one current stage.
+  **Hidden risk:** Out-of-stage capabilities hide missing entry evidence and skipped gates.
+  **Required professional action:** Require a stage launch plan before implementation or closure.
+  **Route to:** `agent-workflow-state-machine`, `agent-execution-discipline`.
+  **Evidence required:** current stage, selected/skipped capability map, context budget, transition condition, stage manifest.
+- **Signal:** Implementation-planning or coding begins before source, tests, configs, docs, callers, or generated artifacts are inspected.
+  **Hidden risk:** Prompt-only planning creates wrong placement, duplicate helpers, or stale validation assumptions.
+  **Required professional action:** Inspect current source and verify reuse, placement, and validation before advancing.
+  **Route to:** `repository-context-map`, `repository-graph-analysis`, `implementation-structure-design`.
+  **Evidence required:** inspected paths, search scope, reuse ladder, rejected locations, validator map.
+- **Signal:** Project memory, repository graph, compaction summary, or prior validation is used as current proof.
+  **Hidden risk:** Stale context selects the wrong stage or marks stale evidence ready.
+  **Required professional action:** Downgrade to selector-only, compare with current source, and rerun stale validators.
+  **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`.
+  **Evidence required:** accepted/rejected memory or graph claim, freshness comparison, command/report path, residual owner.
+
 # Critical Details
 
 - A stage is identified by the action being performed, not by the artifact type alone: editing a file during a bug-fix is the bug-fix stage, not the coding stage.
 - The launch set is additive per active stage only; previously launched stages are not kept loaded once their evidence is produced and handed off.
 - Skip rationale is part of the output, not a silent omission. "Skipped: release gate (no rollout in this change)" is valid; dropping the gate silently is not.
 - The context budget decision is explicit: `minimal` for L1, `single-stage` for L2, `staged-plan` for L3+ where planning spans stages but execution stays staged.
-- The canonical machine-readable launch matrix lives in the stage model registry. This body keeps only a compact runtime summary, and validators reject drift between them. Per-language deep checklists stay in the language professional usage capability bodies.
+- The canonical machine-readable launch matrix lives in the stage model registry. This body keeps only runtime routing rules, and validators reject drift between them. Per-language deep checklists stay in the language professional usage capability bodies.
 - Mode Matrix sections in professional skills refine the active stage: for example, backend `bug-fix` selects bug-fix stage evidence, while backend `performance/reliability fix` stays in coding, debugging, or release depending on whether the work is implementation, diagnosis, or rollout.
 - Anti-pattern examples that must be rejected: loading architecture, coding, testing, and release gates for one local patch; running release-delivery during review because a deployment might happen later; loading all language capabilities for a config-only release; keeping debugging references loaded after root cause has been handed to bug-fix.
 
 # Stage-Specific Hidden Risks
 
-- **Implementation-planning:** missing reuse/placement evidence creates new helpers, public exports, or directories before ownership is known.
-- **Coding:** local code success can hide contract, tenant, transaction, retry, or release-skew risks selected by the active professional skill.
-- **Debugging-diagnosis:** symptom patching and same-path retry can produce a plausible diff without a verified cause.
-- **Bug-fix:** one local fix can leave the same defect pattern in sibling modules unless the same-pattern scan is recorded.
-- **Code-review:** review can drift into implementation or release planning before severity-classified findings and evidence gaps are named.
-- **Testing:** adding tests by habit can miss the risk that matters, such as contract compatibility, regression proof, fixture ownership, or negative cases.
-- **Release-delivery:** deploy rollback can be invalid when migrations, feature flags, old/new versions, or config defaults changed state.
+Hidden risks include missing reuse/placement evidence, local success hiding contract or release-skew risk, symptom patching without cause, sibling same-pattern defects, review drifting into implementation, habitual tests missing the real risk, and rollback invalidated by migration/config state. Use [references/stage-launch-matrix.md](references/stage-launch-matrix.md) for stage-specific risk detail.
 
 # Failure Modes
 
@@ -162,6 +132,10 @@ Each stage has a minimum evidence obligation before handoff:
 - Launching refactoring during debugging before a verified root cause exists.
 - Copying the stage, product, or language matrix into multiple skill bodies, creating drift.
 - Failing to re-run when the active stage changes, so the launch set no longer matches the work.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 stage selection, launch, output, and closure rules. Load [references/checklist.md](references/checklist.md) for quick stage-launch review. Load [references/stage-launch-matrix.md](references/stage-launch-matrix.md) when the launch set, evidence obligation, transition, skipped-heavy rationale, graph/memory/execution coupling, or stage-specific risk needs detail. Do not load deep references for trivial single-stage edits where the stage, launch set, and validation signal are already explicit.
 
 # Output Contract
 
@@ -182,13 +156,12 @@ Return a **Stage Professional Launch Plan**:
 - Stage transition condition:
 - Stage selection evidence:
 - Stage conflicts ruled out:
+- Graph/memory/execution freshness:
+- Validation evidence and proof limits:
+- Residual risk and rollback note:
 - Handoff target:
 
-Each selected capability must cite its stage, product surface, language surface, or risk
-trigger. Each skipped heavy capability must cite a skip rationale. The context budget decision
-must be one of `minimal`, `single-stage`, or `staged-plan`. The plan must include the
-professional evidence required for the active stage and the transition condition for the next
-stage.
+Each selected capability must cite its stage, product surface, language surface, or risk trigger. Each skipped heavy capability must cite a skip rationale. The context budget decision must be one of `minimal`, `single-stage`, or `staged-plan`. The plan must include active-stage evidence, graph/memory/execution freshness, validation proof limits, residual risk, and the transition condition for the next stage.
 
 # Evidence Contract
 
@@ -197,18 +170,11 @@ Close a stage launch only when the plan states:
 - `current_stage` and the stage evidence that selected it.
 - Selected capabilities and the stage, product, language, or risk trigger for each.
 - Skipped heavy capabilities with a concrete reason.
-- Boundaries inspected: product surface, language surface, risk surface, source files,
-  callers, docs, configs, validators, and generated artifacts relevant to this stage.
-- Reuse and placement rationale: why the selected stage owner and capabilities are the
-  minimum sufficient launch set and why skipped stages are deferred.
-- Behavior preservation: old runtime profile, routing, skill, registry, docs, and
-  source/dist behavior preserved or intentionally changed.
-- Repository context dependency: inspected files, callers, docs, configs, validators,
-  generated artifacts, or the accepted not-inspected risk.
-- Validation freshness: commands or review artifacts, exit code when available, and
-  whether files changed after the evidence was produced.
-- Validation evidence and evidence limits: what evidence proves, what evidence does not
-  prove, and residual risk.
+- Boundaries inspected: product surface, language surface, risk surface, source files, callers, docs, configs, validators, and generated artifacts relevant to this stage.
+- Reuse and placement rationale: why the selected stage owner and capabilities are the minimum sufficient launch set and why skipped stages are deferred.
+- Behavior preservation: old runtime profile, routing, skill, registry, docs, and source/dist behavior preserved or intentionally changed.
+- Repository context dependency: inspected files, callers, docs, configs, validators, generated artifacts, graph/memory claims, or accepted not-inspected risk.
+- Validation freshness: commands or review artifacts, exit code when available, whether files changed after evidence, and what the evidence proves/does not prove.
 - Next-stage handoff: next gate, owner, and transition condition.
 
 # Quality Gate
@@ -232,17 +198,8 @@ professional skills.
 
 # Handoff
 
-- `change-forge-router`: re-routing and stage re-evaluation when the active stage changes.
-- `implementation-structure-design`: placement and reuse decisions during implementation-planning.
-- `failure-diagnosis`: verified root cause during debugging-diagnosis.
-- `quality-test-gate`: risk-based test evidence during testing.
-- `delivery-release-gate`: rollout, rollback, and config compatibility during release-delivery.
-- `change-documentation-gate`: change boundary and residual risk during documentation-handoff.
-- `skill-authoring-expert`: skill, capability, reference, registry, and routing changes.
+Hand off to `change-forge-router` when the active stage changes; `implementation-structure-design` for placement/reuse; `failure-diagnosis` for verified cause; `quality-test-gate` for test evidence; `delivery-release-gate` for rollout/rollback; `change-documentation-gate` for docs boundary; and `skill-authoring-expert` for skill, capability, reference, registry, and routing changes.
 
 # Completion Criteria
 
-This capability is complete when an agent can name the current engineering stage, launch only
-the minimum sufficient professional capabilities for that stage, record the heavy capabilities
-it skipped and why, declare a context budget, list required evidence and quality gates, and name
-the next-stage handoff, without loading every capability at once or copying the stage matrices.
+This capability is complete when an agent can name the current engineering stage, launch only the minimum sufficient capabilities for that stage, record skipped heavy capabilities and reasons, declare a context budget, list required evidence and quality gates, reconcile graph/memory/execution freshness, and name the next-stage handoff without loading every capability at once or copying stage matrices.

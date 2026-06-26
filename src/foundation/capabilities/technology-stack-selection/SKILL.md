@@ -19,6 +19,13 @@ Use when a change proposes a new stack, replaces a major framework, chooses a pl
 
 Do not use for syntax lessons, framework setup walkthroughs, abstract trend comparison without project constraints, or technology choices already mandated by a binding architecture decision (ADR) that has not been reopened. Do not use for like-for-like upgrades within the same stack family (use `package-dependency-management` instead).
 
+# Stage Fit
+
+- **Discovery / intake** - classify hard constraints, approved stack inventory, owner, support horizon, and decision reversibility before candidate preference is accepted.
+- **Design / architecture** - compare candidates with repository graph, project memory, ADRs, operational model, and production-shape evidence before topology or platform commitments are frozen.
+- **Implementation / review** - verify framework, runtime, dependency, build, deploy, observability, and security implications before the stack expands into code.
+- **Release / operation** - re-check migration path, coexistence, rollback trigger, owner acceptance, support policy, and validation freshness before production exposure.
+
 # Non-Negotiable Rules
 
 - **Boring technology bias is the default.** New stack additions in an existing system require proof that no existing approved stack can serve the requirement at acceptable cost. Fashion, novelty, and resume value are not justifications.
@@ -28,6 +35,7 @@ Do not use for syntax lessons, framework setup walkthroughs, abstract trend comp
 - **Maturity floor**: prefer technology with ≥ 3 years stable production track record at organizations of comparable scale, ≥ 2 active maintainers (or vendor SLA), security CVE disclosure process, and observable upgrade cadence. Single-maintainer / pre-1.0 / abandoned-issue-tracker technology is a supply-chain risk.
 - **Exit cost must be estimated before entry.** State migration cost in engineer-quarters if the choice fails. If exit cost is unknown, the decision is not ready.
 - **Local development experience does not extrapolate to production scale.** Prototype success at 10 RPS and 10 GB is not evidence at 1,000 RPS and 1 TB. Production-shape evidence (load, data volume, failure modes, deployment topology) is required for production-critical choices.
+- **Current evidence is mandatory.** Cite current repository graph, approved stack inventory, project memory or ADRs with dates, execution traces or benchmark evidence, official support policy, and validation freshness. Treat memory as a lead, not proof, until the current graph and executable evidence confirm it.
 
 # Industry Benchmarks
 
@@ -78,6 +86,24 @@ Select this capability when the request involves: choosing or replacing a primar
    when material tradeoffs remain after scoring.
 ```
 
+# Proactive Professional Triggers
+
+Use this capability proactively, even when the request does not ask for stack selection:
+
+- **Signal:** a diff introduces a new framework family, datastore category, queue/streaming platform, observability system, cloud-managed service, or deployment substrate. **Hidden risk:** stack sprawl adds long-lived operational, security, hiring, observability, and incident-response cost without explicit ownership. **Required professional action:** compare against the approved stack inventory, quantify operational tax, name the owning team, and reject novelty unless constraints prove existing-stack insufficiency. **Route to:** `technology-stack-selection`, `architecture-impact-reviewer`, `delivery-release-gate`, and `security-privacy-gate` when trust boundaries or supply chain change. **Evidence required:** graph paths, existing-stack scan, owner acceptance, TCO estimate, and rejected simpler path.
+- **Signal:** project memory, previous ADRs, templates, benchmark notes, or generated summaries justify a stack decision. **Hidden risk:** stale memory can preserve unsupported versions, dead owners, outdated constraints, or benchmark assumptions from a different workload. **Required professional action:** treat memory as a hypothesis, compare it with current repository graph and execution evidence, and record accepted/rejected assumptions. **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`, and this capability. **Evidence required:** memory source/date, current graph delta, support policy, benchmark freshness, and explicit unknowns.
+- **Signal:** performance, cost, security, reliability, or scale claims decide between candidate stacks. **Hidden risk:** reputation-level claims can hide workload mismatch, hidden managed-service cost, weak supply-chain posture, or missing production readiness. **Required professional action:** require workload-shaped validation and route specialist gates for the deciding risk. **Route to:** `solution-optimality-evaluation`, `validation-broker`, `reliability-observability-gate`, and `security-privacy-gate`. **Evidence required:** measured or planned harness, cost model, security posture, production-readiness checklist, and residual risk owner.
+- **Signal:** a new stack crosses package manager, runtime, SDK, generated client, container, CI/CD, or deployment boundaries. **Hidden risk:** local proof can pass while build lanes, lockfiles, generated artifacts, deploy targets, or rollback paths diverge. **Required professional action:** map stack choice to runtime/dependency/build/deploy validation before approval. **Route to:** `language-runtime-selection`, `package-dependency-management`, `containerization`, `ci-cd`, and `validation-broker`. **Evidence required:** toolchain inventory, dependency/build graph, generated-file policy, deployment target, validation command, and rollback path.
+- **Signal:** a stack choice is effectively irreversible because it locks data shape, cloud primitives, customer integration contracts, or team operating model. **Hidden risk:** rollback becomes a rewrite, not a release action, and future pricing/EOL/security changes become product risk. **Required professional action:** require ADR, exit-cost budget, migration/coexistence plan, re-evaluation trigger, and explicit accountable owner. **Route to:** `architecture-tradeoff-analysis`, `release-rollback`, `data-api-contract-changer`, and this capability. **Evidence required:** reversibility class, exit estimate, migration window, rollback trigger, owner, and re-evaluation date.
+
+# Reference Loading Policy
+
+- **L1 default:** read this `SKILL.md` for routing, rejection signals, and the stack decision shape.
+- **L2 decision work:** load `references/checklist.md` when selecting, reviewing, rejecting, or reopening a stack decision.
+- **L3 output shaping:** load `examples/example-output.md` when drafting a concise stack decision record or ADR summary.
+- **L4 evidence coupling:** pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when approved-stack inventory, prior decisions, benchmark traces, or validation freshness determine approval.
+- **L5 implementation coupling:** pair only the selected specialist gates: `language-runtime-selection`, `package-dependency-management`, `architecture-tradeoff-analysis`, `solution-optimality-evaluation`, `security-privacy-gate`, `delivery-release-gate`, `containerization`, `ci-cd`, `release-rollback`, or relevant data/API capability.
+
 # Risk Escalation Rules
 
 - Escalate to `architecture-impact-reviewer` when the choice changes service boundaries, deployment topology, or dependency direction.
@@ -122,7 +148,11 @@ Return a **Stack Decision Record** (ADR-formatted) containing:
 - **Ecosystem maturity** — production track record (years × organization scale), maintainer count, hiring market size
 - **TCO projection** — 3-year cost (license/managed cost + engineer-FTE-equivalent operational tax)
 - **Migration path** — rollout sequence, coexistence plan, validation criteria, rollback trigger
+- **Boundaries inspected** — approved stack inventory, repository graph, runtime/toolchain/build/deploy boundaries, package/dependency surfaces, docs/ADRs, and skipped boundaries with reasons
+- **Graph / memory / execution validation** — current graph evidence, project memory or ADR date, benchmark/load/prototype freshness, command output, and stale evidence disclosure
+- **Stack-to-validation map** — each candidate and accepted risk mapped to build, test, benchmark, security, observability, migration, rollback, or specialist gate evidence
 - **Open risks** — explicitly accepted unknowns with named owners and re-evaluation date
+- **Evidence limits** — what the decision evidence proves, what it does not prove, stale or missing measurements, unsupported platforms, downstream consumers not checked, and residual risk owner
 
 # Quality Gate
 
@@ -134,6 +164,23 @@ Return a **Stack Decision Record** (ADR-formatted) containing:
 6. **Maturity floor passed**: ≥ 3 years production at comparable scale, ≥ 2 maintainers or vendor SLA, OpenSSF Scorecard ≥ 5 (for OSS).
 7. **TCO** projected over 3 years with loaded engineer cost; managed-vs-self-managed calculation included where applicable.
 8. **Production-shape evidence** for performance and reliability claims, not prototype-shape.
+9. **Repository graph inspected** for approved stack inventory, existing runtime/toolchain/deploy/build lanes, package manager boundaries, generated artifacts, and integration edges.
+10. **Project memory checked** for prior ADRs, exceptions, owner/date, workload match, and stale assumptions; memory-only approval is rejected.
+11. **Stack-to-validation map complete** for build, test, benchmark, security, observability, migration, rollback, and affected specialist gates.
+12. **Support and EOL posture current** against official vendor/community lifecycle policy; unsupported stacks require exception owner and retirement date.
+13. **Evidence limits stated** so approval does not overclaim production scale, downstream adoption, or untested rollback behavior.
+
+# Evidence Contract
+
+Do not approve a stack decision from preference, reputation, generic benchmark posts, or old memory. Cite `boundaries_inspected`, current repository graph, prior decision records with dates, official support policy, operational owner, validation commands or planned proof steps, what evidence proves, what it does not prove, residual risk, and the next handoff gate. Missing current graph, owner acceptance, reversibility, or validation freshness blocks approval or returns a deferred decision.
+
+# Benchmark Coverage
+
+Use maturity radars, public surveys, Scorecard results, PRR practice, and supply-chain frameworks as screening signals. Approval requires target-system or representative-harness evidence for the deciding claim: performance, cost, reliability, security, migration, or operational ownership.
+
+# Routing Coverage
+
+When selected by a router, report which adjacent capabilities were loaded or intentionally skipped: `language-runtime-selection`, `package-dependency-management`, `architecture-tradeoff-analysis`, `solution-optimality-evaluation`, `security-privacy-gate`, `delivery-release-gate`, `containerization`, `ci-cd`, `release-rollback`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker`.
 
 # Used By
 

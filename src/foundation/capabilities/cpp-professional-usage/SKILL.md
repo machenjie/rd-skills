@@ -1,6 +1,6 @@
 ---
 name: cpp-professional-usage
-description: Use when writing or reviewing professional C or C++ for systems, native libraries, embedded, performance, or interoperability code with focus on RAII, undefined behavior, ownership, ABI, sanitizers, thread safety, errors, portability, and resource safety.
+description: Use when C/C++ code, native extensions, embedded modules, ABI/FFI, parsers, atomics, CMake/toolchain, or performance-sensitive native work needs RAII, undefined-behavior, ownership, sanitizer, thread-safety, portability, resource-safety, graph/memory freshness, or validation-evidence review.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "94"
@@ -13,7 +13,7 @@ Enforce professional C / C++ usage for systems, native libraries, embedded, perf
 
 # Pinned Tooling Baseline (C / C++)
 
-Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+For C/C++, treat pinned versions as minimum review baselines. If a compiler, standard, sanitizer, or package pin is EOL, superseded, unsupported, or conflicts with the target project's platform policy, record the platform rule and update this capability before using the pin for new work.
 
 - **Language standard**: **C++20** as the floor for new code; **C++23** where the toolchain supports it (`std::expected`, `std::print`, `std::flat_map`, deducing-this). C++17 acceptable only with documented reason. C++14 and below for legacy maintenance only. For C: **C17 / C23** where supported.
 - **Compilers**: GCC ≥ 13, Clang ≥ 17, MSVC ≥ 17.10 (VS 2022 17.10). All build with `-Wall -Wextra -Wpedantic -Werror` (GCC/Clang) or `/W4 /WX` (MSVC) plus project-specific additions (`-Wconversion`, `-Wshadow`, `-Wnon-virtual-dtor`).
@@ -32,7 +32,7 @@ Pinned versions are review baselines, not permanent recommendations. If a pinned
 
 # When To Use
 
-Use when C or C++ code, native extensions (Python C ext / Node N-API / JNI), embedded modules, performance code, ABI boundaries, FFI, platform-specific builds, or sanitizer coverage is part of the change. Use whenever raw pointers, `new` / `delete`, threading primitives, atomic ops, alignment, or undefined-behavior surfaces appear.
+Use when C or C++ code, native extensions (Python C ext / Node N-API / JNI), embedded modules, performance code, ABI boundaries, FFI, platform-specific builds, or sanitizer coverage is part of the change. Trigger this capability when raw pointers, `new` / `delete`, threading primitives, atomic ops, alignment, exported headers, parser buffers, generated bindings, or undefined-behavior surfaces appear. Route by the specific boundary and risk: ownership, UB, ABI, concurrency, portability, dependency, or evidence freshness.
 
 # Do Not Use When
 
@@ -40,13 +40,22 @@ Do not use to teach C/C++ syntax. Do not use to bless manual `new`/`delete` patt
 
 # Stage Fit
 
-Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+Use during C/C++ implementation planning, coding, bug-fix, code-review, refactoring, testing, and sanitizer evidence review. Per-stage focus:
 
 - **coding**: RAII/ownership, bounds, integer overflow, const-correctness, deterministic resource cleanup.
 - **debugging-diagnosis**: undefined behavior, use-after-free, data race, leak under ASan/UBSan/TSan/Valgrind.
 - **code-review**: raw `new`/`delete`, missing rule-of-five, aliasing, unchecked buffer.
 - **refactoring**: header/ABI boundary, ownership-transfer clarity, RAII wrapper extraction.
 - **testing**: sanitizer builds, parser fuzzing, deterministic teardown.
+
+# Mode Matrix
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Ownership and lifetime review | Raw pointer, `new`/`delete`, custom deleter, iterator/reference reuse, resource handle. | Make ownership transfer, destruction order, and moved-from state explicit. | Owner map, RAII wrapper, delete/free boundary, ASan or leak-check result. | `low-level-systems-extension`, `code-review` | Style-only guidance. |
+| UB and bounds review | Cast, arithmetic, buffer, alignment, strict aliasing, parser/deserializer, C API. | Remove exploitable UB before optimizing or packaging. | UBSan/ASan command, fuzz or boundary test, rejected unsafe shortcut. | `security-privacy-gate`, `quality-test-gate` | Happy-path unit-only proof. |
+| ABI and FFI review | Exported header, shared library, `extern "C"`, JNI/N-API/Python extension, symbol layout. | Preserve binary/source compatibility and translate errors safely. | ABI policy, symbol visibility, versioning decision, exception translation proof. | `data-api-contract-changer`, `contract-testing` | Treating internal tests as ABI proof. |
+| Concurrency and atomics review | Mutex, lock-free structure, `std::atomic`, thread pool, cancellation, memory order. | Prove synchronization, lock order, and lifetime across threads. | Thread-safety contract, memory-order rationale, TSan/stress result. | `concurrency-control`, `reliability-observability-gate` | Sequential-only tests. |
+| Toolchain and portability review | CMake/presets, compiler flags, package manager, sanitizer lane, cross-build. | Keep builds reproducible across target compilers and platforms. | Build matrix, warning policy, static-analysis report, dependency scan. | `package-dependency-management`, `validation-broker` | Single local compiler as release proof. |
 
 # Non-Negotiable Rules
 
@@ -75,7 +84,15 @@ Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage fo
 
 # Selection Rules
 
-Select when C / C++ / native / ABI / FFI / embedded / memory-ownership / sanitizer / low-level performance concerns appear. Pair with `low-level-systems-extension` (deep ABI / kernel / hardware), `language-performance-safety` (hot paths), `concurrency-control` (atomics / memory model), `quality-test-gate` (sanitizer / fuzz evidence), `package-dependency-management` (vcpkg / Conan deps).
+Select when C / C++ / native / ABI / FFI / embedded / memory-ownership / sanitizer / low-level performance concerns appear. Pair with `low-level-systems-extension` (deep ABI / kernel / hardware), `language-performance-safety` (hot paths), `concurrency-control` (atomics / memory model), `quality-test-gate` (sanitizer / fuzz evidence), `package-dependency-management` (vcpkg / Conan deps), and `validation-broker` when commands or reports must be mapped to changed paths. Skip only for formatter-only, comment-only, or generated-output refreshes with no native behavior, contract, or toolchain change.
+
+# Proactive Professional Triggers
+- **Signal:** raw pointer, `new`/`delete`, borrowed reference, iterator, file descriptor, socket, lock, or GPU/native handle crosses a function or thread boundary without an owner. **Hidden risk:** use-after-free, double free, leaked descriptor, or dangling reference survives ordinary tests. **Required professional action:** require an ownership map and RAII wrapper or a documented non-owning lifetime. **Route to:** `low-level-systems-extension`, `code-review`. **Evidence required:** owner/deleter boundary, rejected raw-owning alternative, ASan or leak-check command and exit code.
+- **Signal:** exported header, shared-library type, virtual class, `extern "C"` function, JNI/N-API/Python extension, or generated binding changes without ABI policy. **Hidden risk:** downstream binary or foreign caller breakage appears after release. **Required professional action:** classify source/API/binary compatibility and translate exceptions/errors at the boundary. **Route to:** `contract-testing`, `data-api-contract-changer`. **Evidence required:** symbol/layout diff, versioning decision, FFI error translation test, and residual consumer risk.
+- **Signal:** parser, deserializer, packet/file decoder, C-string path, size calculation, or `reinterpret_cast` touches untrusted or variable-length input. **Hidden risk:** buffer overflow, strict-aliasing UB, integer overflow, or information disclosure. **Required professional action:** add bounds/overflow proof and fuzz or boundary coverage before acceptance. **Route to:** `security-privacy-gate`, `quality-test-gate`. **Evidence required:** ASan/UBSan command, fuzz artifact or boundary test output, and what evidence does not prove.
+- **Signal:** `std::atomic`, lock-free structure, mutex ordering, thread pool, callback lifetime, cancellation, or `memory_order_relaxed` appears without a thread-safety contract. **Hidden risk:** data race, deadlock, stale read, or lifetime race only reproduces under load. **Required professional action:** document synchronization ownership and run race/stress evidence. **Route to:** `concurrency-control`, `reliability-observability-gate`. **Evidence required:** memory-order rationale, lock-order statement, TSan/stress report, and residual platform risk.
+- **Signal:** build, sanitizer, static-analysis, package-manager, or cross-platform evidence predates the final source edit or runs on only one local compiler. **Hidden risk:** stale validation or platform skew hides UB and ABI defects. **Required professional action:** map changed paths to fresh validators and disclose skipped targets. **Route to:** `validation-broker`, `quality-test-gate`. **Evidence required:** command, exit code, covered files, stale/not-run targets, and owner.
+- **Signal:** repository graph, project memory, prior agent output, or old incident note says a native path is safe, unused, or already covered without current source confirmation. **Hidden risk:** stale context misses generated bindings, hidden consumers, or platform-specific build paths. **Required professional action:** confirm graph/memory claims against current headers, build files, tests, generated artifacts, and reports. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `agent-execution-discipline`. **Evidence required:** inspected paths, accepted/rejected memory, current-source proof, and remaining unknowns.
 
 # Risk Escalation Rules
 
@@ -85,6 +102,7 @@ Select when C / C++ / native / ABI / FFI / embedded / memory-ownership / sanitiz
 - Escalate to `concurrency-control` for memory-ordering and atomics design.
 - Escalate to `security-privacy-gate` for buffer-handling on untrusted input, deserialization, integer-overflow in size calculations.
 - Escalate to `package-dependency-management` for vcpkg / Conan dependency changes, CVE responses.
+- Escalate to `agent-tool-permission-sandbox` when sanitizer, fuzz, build, package-manager, or generated-binding commands can write artifacts, access broad paths, or expose secret-bearing output.
 
 # Critical Details
 
@@ -120,11 +138,12 @@ Select when C / C++ / native / ABI / FFI / embedded / memory-ownership / sanitiz
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when C/C++ changes touch raw pointers, ownership/lifetime, bounds, undefined behavior, concurrency, atomics, ABI/API layout, FFI, sanitizers, static analysis, or exported headers. Do not load it for formatter-only or comment-only changes.
+Load [references/checklist.md](references/checklist.md) when C/C++ changes touch raw pointers, ownership/lifetime, bounds, undefined behavior, concurrency, atomics, ABI/API layout, FFI, sanitizers, static analysis, or exported headers. Use [examples/example-output.md](examples/example-output.md) only when the expected review shape is unclear. Do not load references for formatter-only or comment-only changes.
 
 # Output Contract
-
 Return a **C / C++ Usage Review** containing:
+- **Mode selected**: ownership/lifetime, UB/bounds, ABI/FFI, concurrency/atomics, or toolchain/portability, with trigger signal.
+- **Boundaries inspected**: source/header files, generated bindings, build files, tests, package manifests, exported symbols, ABI/FFI callers, and skipped boundaries with reason.
 - **Language standard** in use (C17 / C++20 / C++23 etc.); compiler versions per target
 - **Tooling pins**: build system, formatter, clang-tidy checks enabled, sanitizer CI lanes, fuzz harness coverage
 - **Ownership model**: smart-pointer usage; raw owning-pointer audit; rule-of-zero/five compliance
@@ -136,10 +155,12 @@ Return a **C / C++ Usage Review** containing:
 - **Build portability**: target matrix; cross-compile considerations; CMake presets
 - **Dependencies**: vcpkg / Conan manifest; CVE / OSV scan status
 - **Tests**: unit + integration + fuzz (libFuzzer / AFL) + benchmark (gbench) coverage
-- **Accepted exceptions** with owner / scope / expiration
+- **Graph/memory/execution coupling**: repository graph and project-memory claims accepted, rejected, stale, or not verified; prior validation freshness after final edit
+- **Validation evidence**: literal command, exit code, validator/report/artifact path, and what the output proves or does not prove
+- **Tool permission boundary**: build/fuzz/package/generated-artifact command class, sandbox/approval state, write scope, and secret-output redaction rule
+- **Accepted C/C++ deviations** with owner, scope, expiration, and cleanup trigger
 
 # Evidence Contract
-
 A C/C++ change is professionally complete only when the output includes:
 
 - **Ownership model**: stack/heap ownership, RAII wrapper, smart pointer choice, and delete/free boundary.
@@ -147,10 +168,11 @@ A C/C++ change is professionally complete only when the output includes:
 - **Bounds and UB**: array/vector bounds, integer overflow, signed/unsigned conversion, undefined behavior risk.
 - **Concurrency**: lock ownership, atomics, memory ordering, and data race risk.
 - **ABI/API boundary**: struct layout, header compatibility, exported symbols, and FFI boundary.
-- **Validation evidence**: unit test, sanitizer, valgrind, static analyzer, or not-verified disclosure.
+- **Validation evidence**: unit test, sanitizer, valgrind, static analyzer, fuzz, benchmark, validator, or not-verified disclosure with command, exit code, output summary, and report/artifact path.
 - **What evidence proves**: the inspected native safety and ABI risk is covered.
 - **What evidence does not prove**: all platforms, production workload, compiler-specific UB exposure, or downstream binary compatibility.
-- **Residual risk**: untested runtime behavior, owner, and next gate.
+- **Graph and memory freshness**: current source, generated artifacts, build files, and prior project-memory claims confirmed or rejected before closure.
+- **Native residual risk**: untested platform/compiler/runtime path, owner, and next gate.
 
 # Quality Gate
 
@@ -164,6 +186,8 @@ A C/C++ change is professionally complete only when the output includes:
 8. Parsers / deserializers / network-input code have fuzz harness.
 9. Hot paths have gbench numbers; allocation / cache / false-sharing reviewed if perf-claimed.
 10. Build matrix covers all deploy targets; CMake hygiene (no globals; target-based).
+11. Validation report maps each changed C/C++ path to command, exit code, covered risk, stale/not-run targets, and residual owner.
+12. Tool permission/sandbox record exists for build, fuzz, package-manager, generated-binding, or artifact-writing commands.
 
 # Used By
 
@@ -180,4 +204,4 @@ low-level-systems-extension, reliability-observability-gate, quality-test-gate, 
 
 # Completion Criteria
 
-Review is complete when: code compiles clean at maximum warnings; clang-tidy + sanitizer + fuzz lanes are green; ownership is RAII; UB risks are eliminated or sanitized; ABI policy is stated and matches version bump; thread-safety contracts are documented; performance claims have benchmark evidence; and any accepted exception has owner, scope, and expiration.
+Review is complete when: code compiles clean at maximum warnings; clang-tidy + sanitizer + fuzz lanes are green with commands and exit codes recorded; ownership is RAII; UB risks are eliminated or sanitized; ABI policy is stated and matches version bump; graph/memory claims are current-source confirmed; thread-safety contracts are documented; performance claims have benchmark evidence; and any accepted exception has owner, scope, and expiration.

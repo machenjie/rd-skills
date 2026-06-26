@@ -19,6 +19,10 @@ Use this capability when a change adds, modifies, or removes: HTTP/REST endpoint
 
 Do not use this capability for testing provider business logic (internal service behavior behind the boundary — use integration tests for that), testing undocumented behavior that must not become a supported contract, or unit-testing rendering or client UI behavior (use UI/component tests). Do not use consumer-driven contract testing for one-sided contracts where only one team controls both provider and consumer.
 
+# Stage Fit
+
+Use during API/data design review, provider implementation, consumer integration, release readiness, and compatibility incident repair when a consumer-visible contract must remain executable and version-aware. Re-enter after schema, OpenAPI/AsyncAPI/proto, SDK, generated client, pact broker, schema registry, vendor fixture, or deployment-version evidence changes. Skip when the change is provider-internal behavior with no supported consumer-visible contract surface.
+
 # Non-Negotiable Rules
 
 - **Consumer expectations are explicit and executable.** Consumer pact or expectation files are committed to source control and are verifiable against the actual provider. "We assume it still works" is not a contract test.
@@ -32,53 +36,17 @@ Do not use this capability for testing provider business logic (internal service
 
 # Industry Benchmarks
 
-Anchor against: **Pact** (consumer-driven contract testing framework; pact.io; supported for REST, gRPC, messages) — the industry reference for CDC testing. **Pact Specification v3/v4** — supports interactions, message pacts, synchronous request/response. **Spring Cloud Contract** — JVM-ecosystem CDC testing with stub generation. **OpenAPI Specification (OAS) 3.x** (OpenAPI Initiative) — machine-readable REST contract; validate with `spectral`, `openapi-diff`, `oasdiff`. **AsyncAPI Specification 2.x/3.x** — event and async message contract. **Protocol Buffers** (Protobuf/gRPC) — `buf breaking` for breaking-change detection on proto files. **Confluent Schema Registry** + Avro/Protobuf/JSON Schema with compatibility modes (BACKWARD / FORWARD / FULL). **JSON Schema Draft 2020-12** — structural validation; `additionalProperties: false` as explicit unknown-field policy. **`oasdiff` / `openapi-diff`** — CLI tools for OpenAPI backward compatibility analysis. **Pact Broker / PactFlow** — contract version registry and provider verification coordination. **WireMock / MockServer** — stub generation from contracts for consumer integration tests. **Spectral** (Stoplight) — OpenAPI/AsyncAPI linting with custom rulesets. **OWASP API Top 10 (2023)** — API2:2023 Broken Authentication, API3:2023 Broken Object Property Level Authorization relate to contract-level security expectations. **REST API versioning best practices** (SemVer, URL path, Accept header, sunset header RFC 8594).
+Anchor against consumer-driven contract testing, OpenAPI/AsyncAPI/protobuf schema compatibility, schema registry compatibility modes, generated-client checks, Pact Broker or equivalent version history, and breaking-change diff tools. Use [references/checklist.md](references/checklist.md) for quick planning and load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when selecting tooling, classifying breaking changes, or designing a broker/schema-registry workflow.
 
-### Contract Type Selection Matrix
+# Mode Matrix
 
-| Contract type | Tooling | Machine-readable source | Breaking change detection | Pick when |
-| --- | --- | --- | --- | --- |
-| **REST / HTTP** | Pact v4, OAS3 diff (`oasdiff`), WireMock stubs | OpenAPI 3.x YAML/JSON | `oasdiff breaking`; Pact provider test | HTTP services with independent release cycles |
-| **gRPC / Protobuf** | `buf breaking`, Pact gRPC plugin | `.proto` files | `buf breaking --against origin/main` | gRPC services; strict binary compatibility needed |
-| **Async / Events** | Pact v3 message pacts, AsyncAPI diff | AsyncAPI 2.x/3.x YAML | AsyncAPI diff; Pact message provider test | Kafka, SNS, SQS, webhooks, event-driven |
-| **JSON Schema** | AJV, `ajv-cli`, json-schema-diff | JSON Schema 2020-12 | json-schema-diff; `additionalProperties` mode | DTOs, config, data pipeline payloads |
-| **Avro (Kafka)** | Confluent Schema Registry CLI | `.avsc` | Registry compatibility check (BACKWARD mode default) | Confluent Kafka with schema registry |
-| **Protobuf (Kafka)** | `buf`, Confluent Schema Registry | `.proto` | `buf breaking`; registry FULL mode | High-throughput serialized events needing binary compat |
-| **GraphQL** | `graphql-inspector diff` | SDL schema | `graphql-inspector diff` breaking | GraphQL APIs with external consumer apps |
-| **Webhook** | Pact v4 async; WireMock stubbing | OpenAPI Webhook (OAS 3.1) / AsyncAPI | Manual review + pact; event shape snapshot | Third-party webhook integrations |
-
-### Breaking vs Non-Breaking Change Classification
-
-| Change type | Breaking? | Safe evolution strategy |
-| --- | --- | --- |
-| Remove required field from response | **Yes** | Deprecate (mark `deprecated: true`), keep for ≥ 1 version, sunset |
-| Remove required request field | Yes if consumers send it | Version if ambiguous; mark optional first |
-| Change field type (`string` → `integer`) | **Yes** | New field name + deprecation; never silent type change |
-| Remove HTTP status code | **Yes** | Keep code, add new code simultaneously in v transition |
-| Remove enum value | **Yes** | Never; add `x-extensible-enum` / open enum pattern |
-| Add new **optional** response field | No | Safe; consumers should ignore unknown fields |
-| Add new **required** request field | **Yes** | Add as optional + validate server-side; force in v+1 |
-| Add new enum value (closed enum) | **Yes** for typed consumers | Use extensible enum pattern; warn consumers |
-| Change sort order of collection | **Yes** (if order was relied on) | Explicitly document sort; provide `sort` parameter |
-| Remove endpoint / operation | **Yes** | Sunset header (RFC 8594) + deprecation + versioned alt |
-| Rename field | **Yes** | Add new field + deprecate old; dual-write period |
-| Widen nullability (non-null → nullable) | Yes for strict consumers | Deprecate + new version; test null handling |
-
-### Consumer-Driven Contract Testing Workflow
-
-```
-Consumer writes interaction expectations
-    ↓ pact publish → Pact Broker (version tagged to consumer branch)
-Provider CI runs:
-    pact verify --provider-url http://localhost:8080
-    --pact-broker-base-url https://pact-broker.internal
-    --consumer-version-selectors '[{"mainBranch": true}]'
-    ↓ If any interaction fails → PR blocked
-Can I Deploy check:
-    pact-broker can-i-deploy --pacticipant MyProvider --version <sha> --to-environment prod
-    ↓ Checks all consumers are verified against this version
-    ↓ If any consumer unverified → deployment blocked
-```
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| API schema compatibility | OpenAPI, GraphQL, SDK, DTO, or error response changes. | Classify additive, breaking, deprecated, or versioned changes. | Schema diff, affected consumers, generated-client or provider verification command. | `api-contract-design`, `version-compatibility` | Provider unit tests as compatibility proof. |
+| Event/message contract | AsyncAPI, Kafka/SQS/SNS, schema registry, protobuf, Avro, webhook payload. | Prove producer and consumer serialization compatibility. | Subject/schema, compatibility mode, fixture replay, old/new consumer version matrix. | `message-queue-design`, `integration-testing` | Registry default compatibility assumptions. |
+| Consumer-driven contract | Independent provider and consumer release cycles. | Verify active consumer expectations against provider before deploy. | Pact/expectation source, broker selector, provider verification, can-i-deploy result. | `quality-test-gate`, `delivery-release-gate` | Provider-owned pact files only. |
+| Vendor contract fixture | Third-party API, webhook, sandbox, or SDK dependency. | Prevent mocks from drifting from real or published vendor behavior. | Published spec or recorded sandbox response, fixture freshness, redaction, replay command. | `integration-change-builder`, `security-privacy-gate` | Memory-built vendor mocks. |
+| Compatibility repair | Prior consumer break, breaking-change review finding, or stale contract evidence. | Reproduce the broken expectation and lock it into CI. | Defect/consumer reference, red/green contract check, migration/sunset plan, residual risk. | `regression-testing`, `execution-trajectory-analysis` | Compatibility claim without consumer evidence. |
 
 # Selection Rules
 
@@ -93,6 +61,14 @@ Select this capability when **consumer-visible compatibility** is the primary co
 # Risk Escalation Rules
 
 Escalate when: a change removes or renames any field consumed by mobile apps (cannot force-upgrade); a breaking change affects a public/partner API with SLA; a Kafka topic schema changes in a way that invalidates in-flight messages; a webhook contract changes for third-party integrations that cannot be notified; a schema registry compatibility mode change is proposed; a consumer depends on undocumented behavior that the provider considers "internal"; an external vendor API is discovered to behave differently than its documented spec.
+
+# Proactive Professional Triggers
+
+- **Signal:** A PR changes OpenAPI, AsyncAPI, proto, JSON Schema, GraphQL SDL, SDK exports, DTOs, or error response fields without naming consumers. **Hidden risk:** local tests pass while downstream clients break. **Required professional action:** build a consumer inventory and run or require schema/client compatibility checks. **Route to:** `consumer-impact-analysis`, `data-api-contract-changer`. **Evidence required:** changed surface, consumer list, schema diff, generated-client or contract command.
+- **Signal:** Provider tests pass but no pact, broker, generated-client, or schema-registry verification ran. **Hidden risk:** provider business behavior is verified while the supported contract is untested. **Required professional action:** map each contract surface to consumer and provider verification. **Route to:** `quality-test-gate`, `validation-broker`. **Evidence required:** provider command, consumer command, broker/can-i-deploy status or not-run reason.
+- **Signal:** An event, webhook, or topic schema uses default compatibility mode or omits null/optional/unknown-field policy. **Hidden risk:** mixed-version producers and consumers fail during rollout. **Required professional action:** declare compatibility mode and test old/new version behavior. **Route to:** `message-queue-design`, `version-compatibility`. **Evidence required:** schema subject, mode, old/new fixtures, registry check output.
+- **Signal:** A vendor or partner mock is hand-written from memory or stale docs. **Hidden risk:** integration tests validate impossible behavior and miss real sandbox quirks. **Required professional action:** rebuild fixtures from a published spec or recorded sandbox response and mark freshness. **Route to:** `integration-testing`, `security-privacy-gate`. **Evidence required:** fixture source, captured_at/version, redaction boundary, replay result.
+- **Signal:** Project memory, repository graph, or prior validation says a contract passed before later schema, generated client, or fixture changes. **Hidden risk:** stale compatibility evidence is treated as current. **Required professional action:** reconcile graph/memory/trajectory freshness and rerun mapped validators after final edits. **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected prior claims, final changed paths, validation freshness, residual risk.
 
 # Critical Details
 
@@ -139,13 +115,15 @@ Contract testing succeeds only when both **provider** and **consumer** perspecti
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when a change touches provider/consumer compatibility, API schema, event payload, SDK method, webhook shape, versioning, schema registry mode, or external vendor contract behavior. Do not load it for provider-internal tests with no consumer-visible contract surface.
+The `SKILL.md` body carries L1/L2 selection, routing, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting a concrete contract test plan. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when selecting tooling, classifying breaking changes, comparing REST/gRPC/event/webhook/GraphQL contract styles, or designing Pact Broker/schema-registry workflows. Do not load references for provider-internal tests with no consumer-visible contract surface.
 
 # Output Contract
 
 Return a contract test plan with:
 
+- `mode_selected` (API schema compatibility, event/message contract, consumer-driven contract, vendor contract fixture, or compatibility repair)
 - `contract_surface` (endpoints, operations, event types, message schemas, webhook shapes)
+- `source_evidence` (schema paths, generated clients, pacts, registry subjects, vendor specs, graph slice, direct source files, and freshness)
 - `providers` (service name, version, deployment cycle)
 - `consumers` (service/app name, version, deployment cycle, pact or expectation source)
 - `schema_sources` (authoritative spec files: OpenAPI path, proto file, AsyncAPI file, JSON Schema)
@@ -160,6 +138,11 @@ Return a contract test plan with:
 - `ci_gate` (tool + command that runs in CI; blocking condition)
 - `pact_broker_config` (broker URL; can-i-deploy check; consumer version selectors)
 - `migration_evidence` (for breaking changes: dual version period, consumer migration deadline, sunset date)
+- `graph_memory_execution_coupling` (repository graph, project memory, prior summary, and trajectory claims accepted, rejected, stale, partial, or not verified)
+- `validation_freshness` (provider/consumer commands, schema diff, generated-client check, registry check, broker check, exit code or not-run status, and final-edit freshness)
+- `tool_permission_boundary` (shell/vendor-sandbox/registry/broker action class, sandbox/approval status, and sensitive fixture redaction rule)
+- `what_evidence_proves` and `what_evidence_does_not_prove`
+- `residual_risk` (unknown consumers, stale fixtures, unsupported versions, unrun broker checks, owner, and next gate)
 
 # Evidence Contract
 
@@ -174,6 +157,7 @@ A contract test is accepted only when the output includes:
 - **What evidence proves**: the named consumer/provider contract remains compatible.
 - **What evidence does not prove**: unknown consumers, production traffic compatibility, runtime data semantics, or behavior outside the contract.
 - **Residual risk**: unverified consumers, owner, and next gate.
+- **Boundaries inspected**: schema, provider, consumer, generated client, broker/registry, vendor fixture, graph, memory, and trajectory evidence included or explicitly skipped.
 
 # Quality Gate
 
@@ -189,6 +173,18 @@ The contract test plan passes only when:
 8. External vendor behavior is mocked from a machine-readable spec or recorded real response, not from memory.
 9. Contract tests run in CI on every PR that touches a contract surface.
 10. `can-i-deploy` (or equivalent) is checked before production deployment.
+11. Validation evidence names provider, consumer, schema diff, registry, broker, generated-client, or fixture replay command plus exit code or not-run status.
+12. Graph, memory, prior-summary, and execution-trajectory claims are reconciled before they influence compatibility or release readiness.
+13. Vendor fixtures and recorded responses have sensitive data redacted and freshness markers.
+14. Residual risk and next gate are explicit for unknown consumers, unsupported versions, or skipped compatibility checks.
+
+# Benchmark Coverage
+
+This capability covers consumer-driven contract testing, OpenAPI/AsyncAPI/protobuf/GraphQL compatibility diffing, schema registry mode selection, generated-client verification, broker-backed provider verification, vendor fixture replay, error/null/pagination/enum contract coverage, versioned migration, and validation freshness.
+
+# Routing Coverage
+
+Route here when the primary risk is consumer-visible compatibility across API, event, webhook, SDK, schema, generated client, or vendor contract boundaries. Route away when the primary need is contract design (`api-contract-design`, `dto-schema-design`), provider-internal behavior (`integration-testing`), release rollout (`version-compatibility`, `delivery-release-gate`), or prior defect recurrence (`regression-testing`).
 
 # Used By
 

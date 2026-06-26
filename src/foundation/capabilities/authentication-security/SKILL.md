@@ -19,6 +19,10 @@ Use this capability when a change touches: login, logout, sessions, cookies, acc
 
 Do not use this capability to treat a successful login as authorization for every action — that is `authentication-authorization`. Do not use it to design RBAC/ABAC policy or object-level access — also `authentication-authorization`. Do not use it for application secret storage (database passwords, third-party API keys not user-bound) — use `secret-configuration-security`.
 
+# Stage Fit
+
+Use during planning when a login, MFA, account recovery, identity-provider, cookie, service credential, or token lifecycle decision is being designed; during coding when issuance, refresh, revocation, storage, or step-up implementation is changed; during code-review when a patch can weaken credential lifecycle, session fixation prevention, token validation, or recovery controls; during testing when replay, enumeration, brute-force, JWT confusion, recovery hijack, or MFA bypass evidence is required; and during release when key rotation, session invalidation, user notification, audit-event, or federated logout behavior must be handed off. Skip this capability for pure authorization policy matrices, general web exploit review, or non-user-bound secret storage unless those surfaces also change authentication material.
+
 # Non-Negotiable Rules
 
 - **Password storage** uses a memory-hard, salted KDF: **Argon2id (preferred)**, **scrypt**, or **bcrypt (cost ≥ 12)**. SHA-256/MD5/PBKDF2-SHA1 are insufficient for new systems. Never roll your own.
@@ -38,61 +42,19 @@ Do not use this capability to treat a successful login as authorization for ever
 - **Notify users** of: new device login (geo/UA), password change, MFA change, email change, new active session, recovery initiated. Provide a "revoke" action.
 - **Token signing keys** rotated regularly (≤ 90 days) with key set (JWKS) published for verifiers; old key kept until max token lifetime expires.
 
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| New or changed login/session flow | Login, logout, cookie, session store, passwordless, magic link, or remember-me change. | Lifecycle design: issuance, storage, fixation prevention, idle/absolute timeout, logout, and revocation. | Flow map, cookie/session attributes, regeneration points, revocation behavior, negative tests. | `web-security`, `logging-error-handling`, `quality-test-gate` | Authorization policy matrix work. |
+| Token lifecycle and JWT validation | Access/refresh/id token, JWKS, `kid`, audience, issuer, token exchange, or introspection change. | Short lifetime, rotation, reuse detection, algorithm pinning, audience binding, revocation latency. | Token claims, lifetime table, signing algorithm, key rotation plan, replay/JWT-confusion tests. | `secret-configuration-security`, `integration-change-builder` | Treating token claims as permission design. |
+| MFA, step-up, and recovery | MFA enrollment/removal, recovery code, password reset, email change, device trust, high-risk action. | Prevent account takeover through weaker recovery or stale authentication. | AAL target, factor hierarchy, `auth_time`/`acr` rule, notification, recovery invalidation, bypass tests. | `threat-modeling`, `frontend-testing` | UX-only MFA prompts with no server enforcement. |
+| Federation or client integration | OAuth/OIDC/SAML, social login, SSO logout, public client, redirect URI, PKCE, account linking. | Preserve IdP trust boundaries and prevent code/token replay, open redirect, stale email linking, and SAML assertion abuse. | Client type, exact redirect list, state/nonce, PKCE, linking rules, cert/key pinning, provider test. | `web-security`, `threat-modeling` | Broad IdP migration without threat model. |
+| Credential compromise or security repair | Stolen session, leaked token, refresh-token reuse, brute force, enumeration, account takeover report. | Verify cause, revoke affected material, scan same patterns, add regression evidence, notify/audit. | Incident scope, same-pattern search, rotation/revocation proof, alert/user notice, regression command and exit code. | `security-privacy-gate`, `agent-execution-discipline` | Local patch without family invalidation or scan. |
+
 # Industry Benchmarks
 
-Anchor against: **NIST SP 800-63B Rev. 3 / 4-draft** (Authenticator Assurance Levels AAL1/2/3, password rules, MFA requirements), **OWASP Authentication Cheat Sheet**, **OWASP Session Management Cheat Sheet**, **OWASP ASVS v4** chapters V2 (Authentication), V3 (Session Management), V6 (Cryptography); **FIDO2 / WebAuthn Level 2/3** for phishing-resistant auth (now the gold standard for high-assurance consumer and workforce auth — Apple/Google/Microsoft passkey rollout); **OAuth 2.0 Security BCP (RFC 9700)** — note its explicit prohibitions: no implicit flow, PKCE for all clients, exact redirect URI matching; **OIDC Core 1.0** + **OIDC Session Management**; **JWT BCP (RFC 8725)** — algorithm pinning, audience binding, no `alg: none`; **RFC 7009** Token Revocation; **RFC 8693** Token Exchange (for delegation); **RFC 7591/7592** Dynamic Client Registration if used; **PCI-DSS v4 §8** (authentication for cardholder-data systems); **HIPAA §164.312(a)(2)(i)** for healthcare; **GDPR Art. 32** for personal data; **BSI TR-02102** for crypto choice (EU). For breached-password screening: **Have I Been Pwned Pwned Passwords v3 API (k-anonymity)**. For MFA strength ranking: **NIST 800-63B Table 6-1** (phishing resistance, replay resistance, verifier impersonation resistance).
-
-### MFA Method Selection
-
-| Method | Phishing resistant | Replay resistant | UX | Recommendation |
-| --- | --- | --- | --- | --- |
-| **Passkeys / WebAuthn (platform or roaming)** | ✓ (origin-bound) | ✓ | Best | **Default for new systems** |
-| **Hardware security key (FIDO2)** | ✓ | ✓ | Good | Admin / high-risk |
-| **TOTP (Authenticator app, RFC 6238)** | ✗ (phishable) | ✓ | Good | Acceptable second factor |
-| **Push notification (with number matching)** | Partial | ✓ | Best | Acceptable; require number matching to defeat MFA fatigue |
-| **Push notification (tap-to-approve)** | ✗ | ✓ | Best | **Deprecated** — MFA fatigue attacks |
-| **SMS OTP** | ✗ | ✓ | OK | **Fallback only**; sim-swap + SS7 risk |
-| **Email OTP** | ✗ | ✓ | OK | **Low assurance**; email is often the recovery vector |
-| **Security questions** | ✗ | ✗ | Poor | **Banned by NIST 800-63B**; do not use |
-
-### Session vs Token Strategy Matrix
-
-| Strategy | Storage | Revocation | Scaling | Pick when |
-| --- | --- | --- | --- | --- |
-| **Server-side opaque session id** in HttpOnly cookie | Server DB / Redis | Immediate (delete row) | Requires shared session store | Browser apps, monolith, need immediate revocation |
-| **Stateless JWT access token** (short-lived) + opaque refresh in HttpOnly cookie | Client-held JWT; refresh in DB | Access: wait for expiry (5–30 min). Refresh: revoke in DB | Stateless API, no shared session | API + SPA / mobile; accept short revocation window |
-| **JWT + revocation list (denylist)** | DB cache of revoked `jti` | Immediate | Adds a check per request | Need both stateless and immediate revocation |
-| **Token introspection (RFC 7662)** | Authorization server | Immediate | Adds network call per request | Multi-service with central auth |
-| **Sender-constrained tokens (DPoP RFC 9449 / mTLS RFC 8705)** | Bound to client key | Immediate via revocation | More client complexity | High-value APIs (open banking, payments) |
-
-### Decision Tree: Refresh Token Strategy
-
-```
-Are refresh tokens issued?
-├─ No → Re-auth at each access-token expiry (acceptable for high-security / short-session products).
-└─ Yes →
-    Are refresh tokens single-use (rotated)?
-    ├─ No  → REJECT design. Long-lived static refresh = persistent compromise.
-    └─ Yes →
-        On every refresh:
-          1. Issue new access + new refresh.
-          2. Mark old refresh consumed.
-          3. If a CONSUMED refresh is presented again → token theft signal:
-             - Invalidate the entire refresh token family for that subject.
-             - Force re-authentication.
-             - Notify user + audit.
-        Refresh token absolute lifetime: ≤ 30–90 days; sliding renewal allowed within absolute cap.
-        Bind refresh token to: client_id, optionally device fingerprint, optionally DPoP key.
-```
-
-### Cookie Attribute Decision
-
-| Flow | Recommended attributes |
-| --- | --- |
-| Same-origin SPA + API | `__Host-session=...; HttpOnly; Secure; SameSite=Lax; Path=/` |
-| Cross-site embed (allowed) | `SameSite=None; Secure; HttpOnly; Partitioned` (CHIPS) |
-| OAuth/OIDC callback cookies | Short-lived (`Max-Age` minutes), `HttpOnly`, `Secure`, `SameSite=Lax` |
-| Remember-me token | Separate cookie, longer-lived, **bound to a server-side row**, single-use rotation |
+Anchor against NIST SP 800-63B AAL1/2/3, OWASP Authentication and Session Management guidance, OWASP ASVS V2/V3/V6, FIDO2/WebAuthn, OAuth 2.0 Security BCP, OIDC Core and Session Management, JWT BCP, RFC 7009 token revocation, RFC 8693 token exchange, and regulated authentication expectations such as PCI-DSS v4 section 8, HIPAA technical safeguards, and GDPR Article 32. Keep this body focused on routing, lifecycle decisions, evidence, and closure; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for MFA method ranking, session/token strategy matrices, refresh-token rotation logic, cookie attributes, federation traps, and detailed anti-patterns.
 
 # Selection Rules
 
@@ -107,6 +69,14 @@ Select this capability when **identity proof or session material** is primary. A
 # Risk Escalation Rules
 
 Escalate when authentication affects: admin access, payment actions, regulated data (PII/PHI/PCI), social-login account linking (account takeover via stale email reclaim), account recovery (often the weakest link), long-lived tokens (> 24h), device trust persistence, service accounts with elevated scopes, cross-domain or cross-subdomain cookies, federated identity (SAML/OIDC IdP trust changes), or any deviation from MFA on sensitive flows. Escalate any new authentication flow that does not have a security review and threat model.
+
+# Proactive Professional Triggers
+
+- **Signal:** Refresh tokens are long-lived, reusable, or stored without family identifiers. **Hidden risk:** one stolen token becomes persistent account access even after normal logout. **Required professional action:** require single-use rotation, consumed-token reuse detection, family invalidation, audit, and user notification. **Route to:** `authentication-security`, `security-privacy-gate`, `quality-test-gate`. **Evidence required:** refresh-token lifecycle table, reuse-detection negative test, revocation proof, and residual revocation-window owner.
+- **Signal:** Session id or equivalent bearer credential is preserved through login, MFA, role elevation, password reset, or email change. **Hidden risk:** session fixation or stale authentication lets an attacker inherit a privileged session. **Required professional action:** map every privilege transition and require regeneration or invalidation at each point. **Route to:** `web-security`, `logging-error-handling`. **Evidence required:** transition map, session regeneration test, audit event, and what the test does not prove about all clients.
+- **Signal:** MFA is offered only as optional UX, SMS/email is the strongest factor, or recovery bypasses enrolled MFA. **Hidden risk:** sensitive actions remain protected by the weakest recovery path. **Required professional action:** define AAL target, factor hierarchy, step-up freshness, fallback rules, and recovery invalidation. **Route to:** `threat-modeling`, `frontend-testing`. **Evidence required:** MFA policy matrix, bypass/regression tests, user-notification artifact, and accepted fallback risk.
+- **Signal:** OAuth/OIDC/SAML integration uses wildcard redirect URIs, missing state/nonce, public client secret, automatic email-based account linking, or unreviewed IdP-initiated SSO. **Hidden risk:** code/token theft, auth-flow CSRF, id-token replay, or account takeover via stale provider email. **Required professional action:** enforce exact redirect matching, PKCE for public clients, state/nonce validation, explicit linking, and hardened library/cert validation. **Route to:** `web-security`, `threat-modeling`, `integration-change-builder`. **Evidence required:** provider config, redirect allowlist, negative callback tests, and certificate/key rotation notes.
+- **Signal:** Project memory, repository graph, or previous incident notes claim authentication is already handled. **Hidden risk:** stale memory hides current code paths, new clients, rotated keys, or untested recovery flows. **Required professional action:** confirm against current source, registry/config, tests, audit events, and execution trajectory before relying on prior evidence. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected current paths, freshness limit, accepted/rejected prior evidence, and remaining unknowns.
 
 # Critical Details
 
@@ -137,6 +107,10 @@ Authentication security is **lifecycle control**. Issuing a token safely is not 
 - **Federated logout (OIDC RP-initiated logout / front-channel / back-channel)** is non-trivial; without it, logging out of the app does not log out of the IdP, and the next "Sign in with X" silently re-authenticates.
 - **Crash reports, analytics, CI logs, browser extensions** are token leakage surfaces. Redact known token shapes; review SDKs.
 
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 authentication routing, lifecycle decision, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete authentication security plan, when lifecycle coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when MFA strength, session-vs-token strategy, refresh-token rotation, cookie attributes, OAuth/OIDC/SAML, or anti-pattern detail is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected review shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are sufficient.
+
 # Failure Modes
 
 - Refresh tokens never rotate and remain usable after theft.
@@ -165,6 +139,8 @@ Authentication security is **lifecycle control**. Issuing a token safely is not 
 
 Return an authentication security review with:
 
+- `mode_selected` (new/changed login flow, token lifecycle, MFA/recovery, federation/client integration, or compromise repair)
+- `boundaries_inspected` (login, logout, refresh, revocation, recovery, MFA, cookies, IdP callbacks, service credentials, logs, configs, and tests inspected or skipped with reason)
 - `identity_sources` (internal credentials, OIDC/OAuth providers, SAML IdPs, passkey relying-party id)
 - `credential_storage` (hash algorithm + parameters; service-account key storage)
 - `password_policy` (min length, breach screening source, prohibited substring rules, history)
@@ -185,7 +161,22 @@ Return an authentication security review with:
 - `token_signing_keys` (algorithm, rotation schedule, JWKS endpoint, dual-active window)
 - `crypto_choices` (KDF parameters, algorithm pinning, audience validation, clock-skew tolerance)
 - `tests` (positive flows + replay, fixation, enumeration, brute force, recovery hijack, JWT confusion, refresh reuse detection, MFA bypass attempts)
+- `changed_auth_surface_to_validation_map` (each flow, token, cookie, key, recovery path, or notification change mapped to validator command, test output, report artifact, or named residual risk)
+- `validation_evidence` (commands, exit codes, relevant output, artifacts, what evidence proves, and what evidence does not prove)
+- `handoff_boundaries` (authorization, web security, secret configuration, logging, frontend testing, delivery, or incident response work that belongs elsewhere)
+- `evidence_limits` (clients, IdPs, environments, browsers, telemetry, or production data not verified)
 - `residual_risks` and `owner`
+
+# Evidence Contract
+
+Close an authentication-security review only when these answers are concrete:
+
+- **Basis:** selected mode, risk class, AAL or policy target, and benchmark/control basis used for the judgment.
+- **Boundaries inspected:** current login/session/token/recovery/MFA/federation/source/config/test paths inspected, plus repository graph, project memory, and execution trajectory evidence accepted or rejected for freshness.
+- **Reuse and placement rationale:** why lifecycle controls live at the selected boundary (issuer, verifier, session store, IdP callback, service credential, frontend prompt, audit pipeline) rather than authorization policy, web exploit review, or non-user secret storage.
+- **Behavior preservation:** old session, logout, recovery, MFA, IdP, notification, and audit behavior preserved or intentionally changed, including compatibility and rollout risks.
+- **Validation evidence:** validator command, test/report artifact, exit code, and changed-auth-surface-to-validation map; state what evidence proves and what it does not prove.
+- **Residual risk and next gate:** accepted revocation window, fallback factor, federated logout gap, untested client/IdP, stale telemetry, or manual control with owner, expiry, and next professional gate.
 
 # Quality Gate
 

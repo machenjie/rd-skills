@@ -19,6 +19,13 @@ Use this capability when a change adds or modifies: HTTP handler functions or ro
 
 Do not use this capability to design business rules, domain invariants, use-case logic, transaction orchestration, or data access patterns — those belong in the service or domain layer. Do not use it to design the API contract shape itself — use `api-contract-design`. Do not use it to implement authorization policies — use `authentication-authorization`; the controller only extracts and forwards identity context. Do not use it for integration or e2e test design — use `integration-testing`.
 
+# Stage Fit
+
+- **Discovery / intake** - identify the route/operation, contract source, trust boundary, auth context, affected clients, and existing controller conventions before implementation.
+- **Implementation / coding** - keep the controller thin: parse, validate, extract context, delegate, map response, and map errors.
+- **Code review** - verify no business logic, persistence access, object-level authorization shortcut, domain-object response, or raw exception leakage entered the controller.
+- **Testing / release** - map controller responsibilities to unit/contract/integration checks, validation freshness, and client-safe error evidence.
+
 # Non-Negotiable Rules
 
 - **Controllers are transport adapters, not business logic hosts.** The controller's job: (1) parse and deserialize input; (2) validate structure and types at the API boundary; (3) extract auth context (user identity, scopes, tenant) from the request; (4) invoke the correct use case or service method; (5) map the result to the response shape; (6) map errors to appropriate status codes and error bodies. Nothing else.
@@ -30,12 +37,13 @@ Do not use this capability to design business rules, domain invariants, use-case
 - **Correlation and tracing context is captured at entry.** Every request has a correlation ID (from `X-Request-ID` header or generated if absent), propagated to the logger and to downstream calls as a trace context. Controllers are the canonical entry point for structured logging context.
 - **Idempotency keys are validated at the controller boundary.** If the operation is non-idempotent (payment, booking), the controller validates the `Idempotency-Key` header format and forwards it to the service; the service checks for duplicate execution.
 - **Content negotiation follows the contract.** `Content-Type` and `Accept` headers are validated; 415 Unsupported Media Type is returned for unrecognized content types; 406 Not Acceptable for unsupported accept types.
+- **Current graph and contract evidence are required.** Controller guidance must cite current route wiring, contract source, middleware/auth path, service boundary, prior API decisions, and validation commands; stale memory or inferred conventions are not enough.
 
 # Industry Benchmarks
 
-Anchor against: **Clean Architecture (Robert C. Martin)** — Presentation layer (controller) depends inward on Use Case / Application layer; never the reverse. **Hexagonal Architecture / Ports and Adapters (Alistair Cockburn)** — controller is a primary adapter (driving side); it calls the port (use case interface). **Domain-Driven Design (Evans, 2003)** — Application Service pattern: use-case orchestration without domain logic; controller invokes Application Service. **OWASP API Security Top 10 (2023)**: API1:2023 Broken Object Level Authorization (object-level auth must run in service layer; controller alone cannot verify it); API3:2023 Broken Object Property Level Authorization (response mapping must not expose privileged fields); API5:2023 Broken Function Level Authorization (all routes must be authorization-checked). **OWASP Input Validation Cheat Sheet** — all inputs validated server-side regardless of client-side validation. **RFC 7807 / RFC 9457** (Problem Details for HTTP APIs) — standard error response shape: `type`, `title`, `status`, `detail`, `instance`. **RFC 9110** (HTTP Semantics) — authoritative source for HTTP method semantics and status code definitions. **REST API Design Rulebook (Masse, 2011)** / **Microsoft Azure REST API Guidelines** for status code discipline. **Google API Design Guide** — resource-oriented design; request/response message pattern for gRPC. **OpenAPI 3.x** operation `requestBody` + `responses` as the testable contract spec.
+Anchor against: Clean Architecture, Hexagonal Architecture, DDD Application Service, OWASP API Security Top 10, OWASP Input Validation, RFC 7807/RFC 9457 Problem Details, RFC 9110 HTTP Semantics, REST/API design guidelines, Google API Design Guide, and OpenAPI/proto contracts. Use these as boundary and response-shape checks, not as substitutes for the target project's current route graph and contract source.
 
-### HTTP Status Code Decision Matrix
+# HTTP Status Code Decision Matrix
 
 | Situation | Correct status | Wrong (common) | Notes |
 | --- | --- | --- | --- |
@@ -50,7 +58,7 @@ Anchor against: **Clean Architecture (Robert C. Martin)** — Presentation layer
 | Rate limited | **429** Too Many Requests | 503 | Must include `Retry-After` header |
 | Unexpected internal error | **500** Internal Server Error | leaking stack trace | Log full context server-side; return generic Problem Details body |
 
-### Controller Layer Responsibilities (Boundary Table)
+# Controller Layer Responsibilities
 
 | Responsibility | Controller? | Service/Domain? |
 | --- | --- | --- |
@@ -66,7 +74,7 @@ Anchor against: **Clean Architecture (Robert C. Martin)** — Presentation layer
 | Log correlation ID / trace context | ✅ Yes (entry point) | Propagate context |
 | Idempotency key header validation | ✅ Yes (format check) | ✅ Yes (deduplicate) |
 
-### Error Mapping Decision Tree
+# Error Mapping Decision Tree
 
 ```
 Service throws / returns error
@@ -81,7 +89,7 @@ Service throws / returns error
 └─ Unexpected / uncaught               → 500; log full context; return generic body WITHOUT internal details
 ```
 
-### Anti-examples
+# Anti-examples
 
 | Anti-pattern | Failure |
 | --- | --- |
@@ -102,6 +110,24 @@ Select this capability when **transport-layer implementation** is the main decis
 - Prefer `authentication-authorization` when authorization policy design is the main concern.
 - Prefer `error-code-design` when designing the error taxonomy and machine-readable error codes.
 - Prefer `integration-testing` for testing controller + service + persistence wired together.
+
+# Proactive Professional Triggers
+
+Use this capability proactively, even when the request does not ask for controller design:
+
+- **Signal:** a diff adds or modifies an HTTP handler, route method, gRPC method, RPC dispatcher, middleware endpoint, streaming endpoint, or multipart endpoint. **Hidden risk:** business rules, persistence, object authorization, or response contracts can leak into the transport adapter. **Required professional action:** map the route to thin-controller responsibilities and reject non-transport work from the controller. **Route to:** `controller-api-implementation`, `service-business-logic`, `api-contract-design`, and `quality-test-gate`. **Evidence required:** route path, service method, forbidden responsibilities, contract reference, and controller test plan.
+- **Signal:** repository graph shows controller code calling repositories, domain mutators, external providers, transaction managers, pricing/rule functions, or policy decisions directly. **Hidden risk:** transport layer bypasses service invariants and makes tests slow or incomplete. **Required professional action:** inspect caller/callee graph and move decisions to the owning service/domain/policy layer. **Route to:** `repository-graph-analysis`, `service-business-logic`, `domain-logic-implementation`, and this capability. **Evidence required:** graph paths, rejected controller calls, service boundary, and behavior-preservation test.
+- **Signal:** project memory, old API docs, generated controllers, copied handlers, or previous examples are reused as implementation proof. **Hidden risk:** stale conventions can preserve wrong status codes, missing validation, auth bypasses, or contract drift. **Required professional action:** compare memory against current OpenAPI/proto, middleware chain, tests, and route wiring. **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`, and this capability. **Evidence required:** source date, accepted/rejected assumptions, current contract, validation command, and unknowns.
+- **Signal:** controller response maps raw service errors, ORM/domain objects, stack traces, SQL errors, internal IDs, privileged fields, or inconsistent status codes. **Hidden risk:** internal details leak, clients break, and monitoring/retry behavior misclassifies failures. **Required professional action:** require DTO mapping, Problem Details/error taxonomy, allowlisted fields, and client-safe error mapping. **Route to:** `error-code-design`, `input-validation`, `security-privacy-gate`, and this capability. **Evidence required:** response schema, error map, redaction/allowlist, negative tests, and contract result.
+- **Signal:** endpoint handles auth context, tenant scope, destructive writes, idempotency keys, large payloads, rate-limit headers, or public unauthenticated access. **Hidden risk:** controller-level shortcut can create BOLA, duplicate side effects, DoS, or broken retry semantics. **Required professional action:** validate transport-only handling and route policy/deduplication/resource checks to service and specialist gates. **Route to:** `authentication-authorization`, `idempotency-retry-design`, `performance-budgeting`, and this capability. **Evidence required:** auth context fields, idempotency header rule, max payload/page policy, rate-limit headers, and service-layer authorization proof.
+
+# Reference Loading Policy
+
+- **L1:** Use only this `SKILL.md` for routing or rejecting business logic in a controller when the route and contract are obvious.
+- **L2:** Load `references/checklist.md` when drafting or reviewing a real controller implementation plan, transport boundary review, or controller unit-test plan.
+- **L3:** Load `examples/example-output.md` when the expected output contract shape is unclear or a concise user-facing plan is needed.
+- **L4:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the controller decision depends on route wiring, middleware/auth chain, generated code, prior API decisions, tests, command output, or validation freshness.
+- **L5:** Pair only selected specialist gates: `api-contract-design`, `input-validation`, `error-code-design`, `authentication-authorization`, `idempotency-retry-design`, `security-privacy-gate`, `performance-budgeting`, or `integration-testing`; do not load unrelated references for a simple thin-controller rejection.
 
 # Risk Escalation Rules
 
@@ -139,6 +165,8 @@ Controllers are the first trust boundary. Every security, performance, and contr
 Return a controller implementation plan with:
 
 - `route_or_operation` (HTTP method + path or gRPC service + method; OpenAPI operationId)
+- `boundaries_inspected` (route wiring, middleware/auth chain, contract source, service boundary, generated code, tests, and skipped boundaries)
+- `graph_memory_execution_validation` (current repository graph, project memory, API docs, generated artifacts, test output, and validation evidence accepted or rejected with freshness limits)
 - `request_parsing` (path variables, query params, headers, body schema reference)
 - `validation_handoff` (validator invoked, schema reference, validation error response shape)
 - `auth_context_extraction` (claims extracted: userId, tenantId, scopes; forwarded to service as)
@@ -150,6 +178,8 @@ Return a controller implementation plan with:
 - `forbidden_responsibilities` (explicit list of what this controller must not do)
 - `test_plan` (unit tests: routing, validation, status codes, error bodies — all with mocked service)
 - `contract_reference` (OpenAPI operationId or proto method reference this controller implements)
+- `controller_to_validation_map` (each controller responsibility mapped to unit, contract, integration, security, or validation-broker evidence)
+- `evidence_limits` (not-inspected routes, stale API docs, generated-code uncertainty, skipped integration tests, or unresolved policy owner)
 
 # Quality Gate
 
@@ -165,6 +195,22 @@ The controller implementation passes only when:
 8. Object-level authorization is not in the controller.
 9. Request body binding uses explicit field allowlisting (no mass assignment).
 10. Large collection responses enforce a maximum page size.
+11. Repository graph confirms the controller delegates business logic, persistence, authorization decisions, transactions, and provider calls outside the transport adapter.
+12. Project memory, generated controllers, old API docs, and copied handlers are accepted or rejected against current contract and route wiring.
+13. Controller-to-validation map covers success, validation failure, auth context extraction, client-safe errors, status codes, DTO mapping, content negotiation, and forbidden responsibilities.
+14. Evidence limits and residual risk state what was not verified and which specialist gate owns it.
+
+# Evidence Contract
+
+The controller plan must cite `boundaries_inspected`, validation commands or artifacts, what evidence proves, what evidence does not prove, residual risk, and next handoff gate. Controller evidence proves transport parsing, validation handoff, auth context extraction, service delegation, response mapping, and error boundaries for the inspected route only; it does not prove service authorization, domain invariants, persistence correctness, or full API compatibility unless those gates were selected and verified. Missing route graph, contract source, middleware/auth path, generated-code freshness, or validation evidence blocks completion.
+
+# Benchmark Coverage
+
+Architecture and HTTP standards calibrate responsibility boundaries and response semantics. Approval requires current project evidence: route graph, contract source, DTO mapping, middleware/auth chain, controller tests, and client-safe error validation.
+
+# Routing Coverage
+
+When selected by a router, report which adjacent capabilities were loaded or intentionally skipped: `api-contract-design`, `input-validation`, `error-code-design`, `authentication-authorization`, `idempotency-retry-design`, `service-business-logic`, `integration-testing`, `security-privacy-gate`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker`.
 
 # Used By
 
@@ -177,4 +223,4 @@ Hand off to `service-business-logic` for use-case orchestration; `authentication
 
 # Completion Criteria
 
-The capability is complete when **the controller can be reviewed as a pure transport adapter** — input is parsed and validated, identity is extracted and forwarded, business decisions happen in the service layer, all responses match the API contract, and no internal exception detail, domain object internals, or business rules are visible in the controller code.
+The capability is complete when **the controller can be reviewed as a pure transport adapter** — input is parsed and validated, identity is extracted and forwarded, business decisions happen in the service layer, all responses match the API contract, current graph/memory/execution evidence supports the boundary, and no internal exception detail, domain object internals, or business rules are visible in the controller code.

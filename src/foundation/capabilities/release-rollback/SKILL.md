@@ -19,6 +19,10 @@ Use this capability when: a change is promoted to a shared or production environ
 
 Do not use this capability to: claim rollback safety from a code redeployment alone when data, configuration, flags, caches, or external contracts have also changed (each surface requires an independent rollback assessment); replace a post-mortem for a completed incident (use `failure-diagnosis`); design the migration itself (use `data-migration-design`); or plan backup restoration (use `backup-recovery`).
 
+# Stage Fit
+
+Use during release planning when code, configuration, migration, feature flag, cache, job, external integration, artifact, environment, or consumer coordination changes need recovery boundaries. Use during implementation and review when release order, mixed-version compatibility, rollback triggers, forward-fix path, or validation evidence is being shaped. Use during validation, release, and incident-mitigation review when repository graph, project memory, prior runbooks, generated docs, pipeline output, canary results, or prior execution evidence must be reconciled with current changed surfaces before deployment or rollback decisions are accepted.
+
 # Non-Negotiable Rules
 
 - **Rollback must be planned per changed surface, not as a single "redeploy previous version" action.** A code rollback that restores the previous Docker image does not undo: database schema changes that new application code wrote to; new configuration keys that old code cannot parse; external provider webhooks or API subscriptions that were registered; feature flags that were toggled; or background jobs that are mid-execution. Each surface requires an independent rollback assessment and action plan.
@@ -30,74 +34,19 @@ Do not use this capability to: claim rollback safety from a code redeployment al
 
 # Industry Benchmarks
 
-Anchor against: **DORA State of DevOps** — change failure rate and mean time to restore as elite-team metrics; progressive delivery reduces change failure rate by reducing blast radius. **Martin Fowler "Feature Toggles" (martinfowler.com/articles/feature-toggles.html)** — toggle types (release toggle, ops toggle, experiment toggle, permission toggle); safe defaults; toggle lifespan discipline. **Continuous Delivery (Humble & Farley)** — deployment pipeline gates; canary release; blue-green deployment; smoke tests as go/no-go signals. **Expand-contract migration pattern** — schema migration sequencing for zero-downtime compatibility. **ITIL Change Management** — change advisory board (CAB) for high-risk changes; emergency change procedure; change classification (standard, normal, emergency). **AWS / GCP / Azure deployment docs** — blue/green, canary, rolling update deployment strategies; automated rollback based on CloudWatch / Cloud Monitoring metrics. **PagerDuty Incident Response Guide** — incident commander role; rollback decision authority; communication timeline.
-
-### Release Surface Rollback Matrix
-
-| Surface | Rollback Method | Pre-condition for Rollback | Irreversibility Risk |
-| --- | --- | --- | --- |
-| Application code | Redeploy previous image / tag | Old image available in registry; no schema dependency | Low (if schema compatible) |
-| Database schema (additive) | DOWN migration or ignore new column | Old code ignores new column (nullable, no default) | Low (if expand only) |
-| Database schema (destructive) | Forward-fix only; restore from backup | Backup tested and restorable within RTO | HIGH — plan forward-fix pre-deploy |
-| Configuration / env vars | Revert config change; restart pods | Old config values archived; secret versions available | Medium (cache/restart lag) |
-| Feature flag (code gate) | Disable flag; verify safe default behavior | Safe default state tested; flag state monitored | Low (if default is safe) |
-| External webhook registration | Contact provider to deregister; or maintain both | Provider API allows self-service deregister | Medium-HIGH (provider SLA) |
-| Background job / cron | Cancel in-flight jobs; redeploy old scheduler | Job is idempotent; can be safely cancelled | Medium (in-flight data state) |
-| Cache (Redis/Memcached) | Flush affected cache keys; warm from DB | TTL acceptable; DB can absorb cache miss load spike | Low (cache miss is recoverable) |
-| CDN / edge cache | Purge CDN cache for affected paths | CDN API allows programmatic purge | Low |
-| External provider contract | Provider-side reversal request | Defined provider contact and escalation path | HIGH (provider-dependent) |
-
-### Rollback Runbook Template
-
-```
-Release: [version tag / PR number]
-Release Owner: [name + escalation contact]
-Deployment Method: [rolling / blue-green / canary]
-Deployment Window: [start time — expected end time]
-
-Changed Surfaces:
-  Code: [image tag being deployed; previous image tag for rollback]
-  Schema: [migration IDs; reversible Y/N; DOWN script location]
-  Config: [keys changed; previous values archived at: ...]
-  Feature Flags: [flag names; current state → new state; safe default state]
-  External: [provider; change made; reversal method; contact]
-  Jobs: [job names; in-flight behavior on rollback]
-
-Rollback Triggers (monitor for 10 min post-deploy):
-  - HTTP error rate (5xx) > 1% for 2 consecutive minutes → ROLLBACK
-  - p99 latency > 2000ms for 2 consecutive minutes → ROLLBACK
-  - Payment failure rate > 0.5% → ROLLBACK
-  - Health check /healthz returns non-200 > 30 seconds → ROLLBACK
-  - [Custom: define metric + threshold + measurement tool]
-
-Rollback Decision Owner: [name; must be available during deployment window]
-Rollback Decision Deadline: [e.g., 15 minutes after deployment start]
-
-Per-Surface Rollback Actions (in order):
-  1. Feature flag: disable [flag name] → verify safe default behavior
-  2. Code: redeploy [previous image tag]
-  3. Config: restore [previous config values] + restart pods
-  4. Schema: run DOWN migration [script path] (if reversible)
-         OR: accept forward-fix path [pre-written fix branch: ...]
-  5. External: [contact provider; request: ...]
-  6. Cache: flush [affected key patterns]
-  7. Jobs: cancel in-flight [job name] (verify idempotent)
-
-Validation After Rollback:
-  - Run smoke tests: [test suite name / URL]
-  - Verify payment flow: [manual test script]
-  - Confirm monitoring dashboards return to pre-deploy baseline
-  - Page release owner when all checks pass
-
-Communication:
-  Internal notification: [Slack channel / incident channel]
-  Customer communication trigger: [if customer-visible impact > X minutes]
-  Post-mortem scheduled: [yes / no; when]
-```
+Anchor against DORA change failure rate and MTTR, progressive delivery, feature-toggle safe defaults, Continuous Delivery pipeline gates, expand/migrate/contract schema sequencing, ITIL normal and emergency change classes, cloud blue-green/canary/rolling rollback patterns, and PagerDuty incident role clarity. Keep this body focused on routing, evidence, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when surface rollback matrices, irreversibility tiers, runbook templates, decision timelines, graph/memory/execution coupling, or validation checklists need detail.
 
 # Selection Rules
 
 Select this capability when **release recovery planning is the primary concern** — before or during a production deployment. Route elsewhere when: `data-migration-design` is primary (designing the migration itself — expand-contract sequencing, batching strategy); `backup-recovery` is primary (planning data restoration from backup as the primary recovery path); `ci-cd` is primary (designing the deployment pipeline and automated gate logic); `observability` is primary (defining what metrics to monitor during deployment — use `observability` to design the signal, then reference the signal in the rollback trigger).
+
+# Proactive Professional Triggers
+
+- **Signal:** a rollback plan says only "redeploy the previous version" while schema, configuration, flag, cache, job, external integration, or provider state changes are present. **Hidden risk:** code rollback succeeds but stateful surfaces keep the incident active or create a new failure mode. **Required professional action:** inventory every changed surface and assign rollback or forward-fix owner, order, trigger, and validation. **Route to:** `data-migration-design`, `backup-recovery`, `configuration-runtime-policy`, `delivery-release-gate`. **Evidence required:** changed-surface list, compatibility matrix, migration rollback tier, config/flag prior state, provider reversal path, and residual irreversibility note.
+- **Signal:** release order, mixed-version compatibility, or rollout safety is inferred from memory, old runbooks, generated docs, or pipeline defaults without current source, migration, config, manifest, flag, and dependency-graph checks. **Hidden risk:** stale memory approves an unsafe rolling, canary, or blue-green sequence. **Required professional action:** reconcile repository graph, project memory, generated artifacts, and execution trajectory before accepting release safety. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, `version-compatibility`. **Evidence required:** inspected paths, graph edges, accepted/rejected memory claims, command freshness, and unknown consumer disclosure.
+- **Signal:** feature flag, config, secret reference, kill switch, or runtime policy rollback lacks safe default behavior, propagation latency, owner, test evidence, cleanup path, or stale-toggle expiry. **Hidden risk:** emergency disablement or config revert does not take effect, exposes old-bug behavior, or leaves permanent operational drift. **Required professional action:** require safe default proof, propagation measurement, rollback command, owner, cleanup gate, and post-toggle validation. **Route to:** `configuration-runtime-policy`, `secret-configuration-security`, `cleanup-deletion-governance`, `observability`. **Evidence required:** prior/current values, flag state, cache/TTL behavior, validation command, monitor, owner approval, and cleanup expiry.
+- **Signal:** a migration, external provider change, cache format, background job, payment/identity integration, destructive cleanup, or infrastructure state change is irreversible or partially reversible. **Hidden risk:** rollback requires provider SLA, backup restore, compensation, reconciliation, or forward fix that cannot fit the release decision window. **Required professional action:** classify irreversibility tier and require trigger, decision deadline, compensating control, owner, and validation proof before deployment. **Route to:** `data-migration-design`, `message-queue-design`, `backup-recovery`, `security-privacy-gate`, `reliability-observability-gate`. **Evidence required:** rollback or forward-fix branch, provider escalation path, restore/reconciliation proof, job idempotency, and compliance approval when applicable.
+- **Signal:** canary, post-release validation, rollback command, or release gate lacks measurable thresholds, artifact/environment identity, tool permission evidence, or changed-surface-to-validator map. **Hidden risk:** the team cannot prove which artifact/environment was changed or whether recovery evidence applies to the live release. **Required professional action:** bind each release and rollback action to artifact identity, environment, permission boundary, monitor, query, manual approval, and evidence limit. **Route to:** `ci-cd`, `observability`, `validation-broker`, `quality-test-gate`, `agent-tool-permission-sandbox`. **Evidence required:** image/tag/build ID, deploy target, command output or dry-run limit, canary metric threshold, validator result, owner signoff, and unexecuted-live-action disclosure.
 
 # Risk Escalation Rules
 
@@ -113,25 +62,30 @@ Escalate when: any changed surface is classified as HIGH irreversibility (destru
 
 # Failure Modes
 
-- Rollback plan says "redeploy previous version" — old code cannot read new schema — rollback produces a different failure mode — incident escalates.
-- Feature flag disabled in emergency — flag's safe default is "show old behavior" — but old behavior path has a bug — disabling the flag introduces a regression.
-- External webhook registered in production — rollback restores old code — webhook still fires at new endpoint — new endpoint receives traffic from old code that doesn't handle it.
-- Migration rollback script tested against a fixture database — fails against production data with unexpected NULLs — rollback attempt causes data corruption.
-- Rollback trigger defined post-incident: "we should have rolled back when latency spiked" — 15-minute delay in rollback decision — 15 extra minutes of customer impact.
-- Background job was mid-execution during rollback — partially processed 50,000 records — old code reprocesses same records — duplicate transactions created.
+- **Schema mismatch rollback:** rollback plan says "redeploy previous version" — old code cannot read new schema — rollback produces a different failure mode — incident escalates.
+- **Unsafe flag default:** feature flag disabled in emergency — flag's safe default is "show old behavior" — but old behavior path has a bug — disabling the flag introduces a regression.
+- **Provider state drift:** external webhook registered in production — rollback restores old code — webhook still fires at new endpoint — new endpoint receives traffic from old code that does not handle it.
+- **Fixture-only migration proof:** migration rollback script tested against a fixture database — fails against production data with unexpected NULLs — rollback attempt causes data corruption.
+- **Late trigger definition:** rollback trigger defined post-incident: "we should have rolled back when latency spiked" — 15-minute delay in rollback decision — 15 extra minutes of customer impact.
+- **In-flight job duplication:** background job was mid-execution during rollback — partially processed 50,000 records — old code reprocesses same records — duplicate transactions created.
+- **Artifact identity error:** rollback command targets the wrong image tag, namespace, cluster, region, or config version — validation passes in one environment while the live release remains broken.
+- **Stale runbook memory:** prior runbook says provider rollback is self-service — provider changed the workflow — release owner waits for unavailable support path while customer impact continues.
 
 # Reference Loading Policy
 
-Read `references/checklist.md` for any production/shared-environment release with migrations, config, feature flags, external provider state, cache format changes, jobs, or mixed-version windows. Do not load it for a local-only build artifact with no deployment or rollback surface.
+The `SKILL.md` body carries normal L1/L2 release rollback routing, evidence, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete shared-environment release, rollback plan, migration-sensitive rollout, config/flag rollback, external provider reversal, cache/job recovery path, or mixed-version window. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when surface matrices, irreversibility tiers, runbook templates, graph/memory/execution coupling, canary/rollback decision detail, or validation matrices need depth. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for local-only build artifacts or pure routing work where the inline output contract and quality gate are enough.
 
 # Output Contract
 
 Return a release rollback plan with:
 
+- `mode_selected` (standard rollback / migration-sensitive rollout / config-or-flag rollback / external-integration rollback / incident mitigation / regulated release recovery)
+- `source_evidence` (current source files, deployment manifests, migration scripts, config/secret references, feature flag definitions, job definitions, cache formats, external provider config, pipeline output, repository graph, project memory, execution trajectory, and validation freshness inspected)
 - `changed_surfaces` (per surface: name, change description, rollback method, irreversibility classification)
 - `release_order` (deployment sequence; mixed-version compatibility confirmation)
 - `preflight_checks` (smoke tests to run before enabling traffic)
 - `deployment_method` (rolling / blue-green / canary; traffic % if canary)
+- `artifact_and_environment_state` (image/tag/build ID, config version, migration ID, feature flag state, provider state, target environment, command/tool permission boundary)
 - `rollback_triggers` (per trigger: metric, threshold, measurement tool, duration)
 - `rollback_decision` (owner name; decision deadline; escalation path)
 - `per_surface_rollback_actions` (ordered steps; estimated time per step)
@@ -142,10 +96,14 @@ Return a release rollback plan with:
 - `post_rollback_validation` (smoke tests; manual verification steps; baseline metric confirmation)
 - `communication_plan` (internal channel; customer notification trigger; post-mortem schedule)
 - `residual_risk` (surfaces that cannot be fully rolled back; compensating controls)
+- `graph_memory_execution_validation` (graph edges inspected, memory/runbook claims accepted or rejected, prior execution evidence reused or rejected, validator map, and evidence limits)
+- `changed_release_to_validation_map` (each code, config, schema, flag, job, cache, provider, artifact, communication, and cleanup change mapped to validation command, monitor, query, manual check, owner approval, or residual risk)
+- `handoff_boundaries` (what must move to `data-migration-design`, `backup-recovery`, `ci-cd`, `observability`, `failure-diagnosis`, or compliance/change-management review)
+- `evidence_limits` (what was not inspected, which commands were not run, which environments/providers were not contacted, and what cannot be claimed from the current evidence)
 
 # Evidence Contract
 
-Close rollback planning only when the output names changed surfaces, release order, mixed-version compatibility, rollback triggers, decision owner, per-surface rollback or forward-fix action, validation command, what rollback evidence proves, what it does not prove for production data/external providers, residual irreversibility risk, and next gate.
+Close rollback planning only when the output names changed surfaces, release order, mixed-version compatibility, rollback triggers, decision owner, per-surface rollback or forward-fix action, validation command, what rollback evidence proves, what it does not prove for production data/external providers, residual irreversibility risk, and next gate. It must also state graph/memory/execution judgment: which repository edges, generated artifacts, prior runbooks, project memory claims, pipeline outputs, command outputs, or canary evidence were accepted or rejected, why they are current enough, and where freshness could not be proven. Do not present a plan as production-approved unless live environment identity, credentials/permissions, owner approval, and release-window evidence are explicitly present.
 
 # Quality Gate
 
@@ -161,6 +119,10 @@ The release rollback plan is complete only when:
 8. Cache invalidation is included where new code changes cache format.
 9. Irreversible surfaces have explicit forward-fix plans reviewed before deployment.
 10. Post-rollback validation steps are defined and can be executed within 5 minutes.
+11. Repository graph, project memory, generated docs, prior runbooks, and pipeline claims are reconciled with current code, config, migration, provider, and environment evidence.
+12. Every rollback action maps to a validator, monitor, query, manual check, owner approval, or named residual risk.
+13. Artifact identity, target environment, tool permission boundary, command freshness, and unexecuted-live-action limits are recorded.
+14. Handoff boundaries and evidence limits are explicit; the plan does not over-claim release approval, provider reversal, data recovery, or live rollback proof.
 
 # Used By
 

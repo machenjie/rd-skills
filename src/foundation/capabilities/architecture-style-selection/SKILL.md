@@ -19,6 +19,10 @@ Use this capability when a change proposes, questions, or migrates between: mono
 
 Do not use this capability to rename an existing architecture for marketing reasons, to justify a personal preference without measured constraints, or to override a local pattern that already satisfies the change safely. Do not use it to design *within* a chosen style — that is the job of `module-boundary-design`, `microservice-splitting`, `event-driven-architecture`, or `layered-architecture-design`.
 
+# Stage Fit
+
+Use during architecture planning when the style, deployable unit, runtime topology, team boundary, compliance perimeter, or migration path is still being chosen. Use during review when a proposal adds services, events, serverless functions, cells, regions, or edge/runtime boundaries and claims the complexity is justified. Treat repository graph, project memory, and execution trajectory as discovery inputs only: current source, tests, deploy topology, ownership files, ADRs, runbooks, and validation output must confirm or reject that evidence before it influences the decision. Hand off when the style is chosen and the remaining work is internal module design, concrete service extraction, event-flow design, ADR wording, release sequencing, or production readiness.
+
 # Non-Negotiable Rules
 
 - Default to the **simplest architecture** that satisfies measurable constraints. Complexity is paid by operations, not by authors.
@@ -30,54 +34,21 @@ Do not use this capability to rename an existing architecture for marketing reas
 - Decisions must be recorded as an ADR (`architecture-tradeoff-analysis` output).
 - Operational readiness must be proved, not assumed: each new runtime component requires owner, SLO, alert, runbook, deploy pipeline, observability before go-live.
 
+# Mode Matrix
+
+Select the architecture-style mode before recommending topology or migration.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Baseline style selection | New product area, unclear topology, greenfield module/service choice, or no current ADR. | Choose least-complex style from current constraints and credible 12-24 month forces. | Current architecture, force ranking, rejected simpler option, owner/review path. | `architecture-impact-reviewer`, `architecture-tradeoff-analysis` | Distributed boundaries before constraints are measured. |
+| Complexity escalation review | Microservice, event-driven, serverless, cell, edge, or multi-region boundary is proposed. | Prove deploy/scale/fault/compliance/team force exceeds operational premium. | Simpler-style disqualification, operational readiness gap list, cost/reliability impact. | `reliability-observability-gate`, `delivery-release-gate` | "Codebase is large" as justification. |
+| Style migration | Current style is moving to modular monolith, services, events, cells, or hybrid. | Make migration reversible where possible and prevent legacy-plus-new forever. | Migration pattern, phases, freeze points, rollback/containment, dual-run owner. | `module-boundary-design`, `data-migration-design`, `release-rollback` | Rewrite-then-cutover without proving rollback. |
+| Org/compliance boundary | Team topology, data residency, PCI/HIPAA/GDPR scope, or ownership changes. | Align style to owners and regulated data boundaries without over-fragmenting. | Team map, data classification, compliance perimeter, approval owner. | `domain-impact-modeler`, `security-privacy-gate`, `permission-boundary-modeling` | Org chart as sole architecture proof. |
+| Drift reassessment | Repository graph, project memory, incidents, cost, release contention, or execution trajectory shows style no longer fits. | Reassess current style using current-source and operational evidence. | Drift signal, source confirmation, DORA/SLO/cost evidence, keep/change decision. | `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis` | Treating stale ADRs as current truth. |
+
 # Industry Benchmarks
 
-Anchor against: **ADRs (Michael Nygard)**, **C4 model (Simon Brown)** for context/container/component diagrams, **Modular Monolith** practice (Simon Brown, Kamil Grzybek), **Domain-Driven Design** (Evans) for bounded contexts, **Team Topologies** (Skelton/Pais) for stream-aligned/platform/enabling/complicated-subsystem teams, **Evolutionary Architecture** (Ford/Parsons/Kua) including fitness functions, **DORA / Accelerate** metrics (deployment frequency, lead time, change-fail rate, MTTR), **Reactive Manifesto** for responsive/resilient/elastic/message-driven, **Cell-Based Architecture** (AWS, Slack), **12-Factor App** (Heroku), **CNCF** maturity model for cloud-native operability, **Conway's Law** & inverse-Conway maneuver, **Google SRE** operational readiness review (ORR), **Microservices premium / monolith first** (Martin Fowler).
-
-### Style Comparison Matrix
-
-| Style | Deploy unit | Strongest force | Cost driver | Failure mode if mis-selected |
-| --- | --- | --- | --- | --- |
-| **Monolith** | 1 process | Speed of change at small scale | Becomes a tangle without internal modules | Cross-cutting edits, contention on release train |
-| **Modular monolith** | 1 process, enforced module boundaries | Clear boundaries + low ops cost | Discipline required in code review | Modules drift without architecture fitness tests |
-| **Layered / hexagonal** | Often 1 process | Testability, domain isolation | Indirection overhead | Anemic domain, leaky adapters |
-| **SOA (coarse services)** | Several services | Reuse across enterprise | ESB / governance overhead | Smart pipes, dumb endpoints |
-| **Microservices** | Many small services | Independent deploy/scale/own | Platform, observability, on-call cost grows superlinearly | Distributed monolith — all deploy together but with network in between |
-| **Event-driven (choreography)** | Producers + consumers | Decoupling, audit, fan-out | Hard to reason end-to-end | Lost events, ordering bugs, replay storms |
-| **Event-driven (orchestration)** | Workflow engine | Visible long-running flows | Engine becomes single point of authority | Workflow bloat, tight coupling to engine |
-| **Serverless / FaaS** | Function | Spiky traffic, low baseline, ops offload | Cold starts, vendor lock-in, cost at scale | Hidden distributed monolith via shared DB |
-| **Cell-based** | Replicated cell | Blast-radius isolation at scale | Multi-cell routing + data placement cost | Premature for sub-multi-region scale |
-| **Edge / multi-region active-active** | Per-region | Low latency, sovereignty | Data conflict resolution | Split-brain on shared mutable data |
-
-### Decision Tree
-
-```
-1. Does one team own all the code today?
-   ├─ Yes → 2.
-   └─ No  → Strong signal toward service split per team boundary (Conway).
-              Validate with team-topology and on-call capability before proceeding.
-
-2. Is independent deployment of any part required (release cadence, regulatory freeze, blast radius)?
-   ├─ No  → Monolith or modular monolith. STOP. Add fitness tests for module boundaries.
-   └─ Yes → 3.
-
-3. Is independent runtime scaling required (CPU/memory/latency profile differs by orders of magnitude)?
-   ├─ No  → Modular monolith with separate horizontal scale rarely needs split. Re-evaluate (2).
-   └─ Yes → 4.
-
-4. Is the operating organization able to support N additional services?
-       (Each service ≈ pipeline + dashboards + alerts + on-call + runbook + SLO + capacity plan.)
-   ├─ No  → Stop. Build the platform capability first, or stay modular monolith.
-   └─ Yes → 5.
-
-5. Is the dominant interaction synchronous request/response or eventful?
-   ├─ Sync-dominant → Microservices with REST/gRPC; minimize chatty calls; co-locate data with owner.
-   └─ Event-dominant → Event-driven; choose choreography vs orchestration by who owns the end-to-end view.
-
-6. Is per-tenant or per-region blast radius isolation a stated requirement?
-   ├─ Yes → Add cell-based partitioning over the chosen style.
-   └─ No  → Proceed.
-```
+Anchor against ADRs, C4 diagrams, modular monolith practice, Domain-Driven Design bounded contexts, Team Topologies, evolutionary architecture and fitness functions, DORA/Accelerate metrics, cell-based architecture, 12-Factor and CNCF operability, Conway's Law, SRE operational readiness review, and the microservices premium / monolith-first heuristic. Keep this body focused on mode selection, routing, evidence, and quality gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for style comparison, force scoring, decision trees, migration and reversibility patterns, operational readiness, graph/memory/trajectory coupling, and anti-pattern detail.
 
 # Selection Rules
 
@@ -93,6 +64,15 @@ Select this capability when the primary decision is **the architecture style its
 # Risk Escalation Rules
 
 Escalate when the selected style changes: deployment topology, data ownership, availability/RTO/RPO targets, incident response ownership, compliance boundary (PCI/HIPAA/GDPR data residency), release cadence, the number of runtime components operators must support, the on-call rotation count, or vendor lock-in posture. Specifically escalate when moving from monolith → microservices without an existing platform team, or when moving to serverless for workloads with > 50 RPS sustained or > 100 ms latency budgets. Escalate any "rewrite vs evolve" decision to leadership with explicit cost ranges.
+
+# Proactive Professional Triggers
+
+- **Signal:** A microservice, serverless, event-driven, edge, cell, or multi-region style is proposed before current deployability, scaling, ownership, latency, compliance, and reliability constraints are measured. **Hidden risk:** architecture adds operational premium without solving a real force. **Required professional action:** score the forces and disqualify the simpler option with evidence. **Route to:** `architecture-impact-reviewer`, `reliability-observability-gate`. **Evidence required:** force scorecard, rejected simpler option, operating model and cost impact.
+- **Signal:** Repository graph or project memory suggests the system is "already modular", "already service-oriented", or "ready to split" but current source, ownership, tests, CI, deploy topology, or runbooks were not inspected. **Hidden risk:** stale architecture memory turns into unverified service boundaries. **Required professional action:** confirm graph/memory/trajectory against current source and generated artifacts before decision. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected memory, freshness limit, unknown boundary list.
+- **Signal:** A distributed boundary is introduced while module boundaries, public contracts, data ownership, or transaction ownership are unclear. **Hidden risk:** a network boundary hides a modularity defect and creates a distributed monolith. **Required professional action:** repair or explicitly defer module/data boundary design before style approval. **Route to:** `module-boundary-design`, `data-model-design`, `transaction-consistency`. **Evidence required:** boundary map, public contracts, data owner, shared-database decision, residual risk.
+- **Signal:** Style migration has no phased migration, rollback, dual-run, freeze point, or old-system retirement trigger. **Hidden risk:** legacy and new architectures run indefinitely with doubled cost and unclear ownership. **Required professional action:** define migration pattern and reversibility class. **Route to:** `release-rollback`, `delivery-release-gate`, `architecture-tradeoff-analysis`. **Evidence required:** phases, rollback/containment, dual-run owner, retirement trigger.
+- **Signal:** Architecture choice changes compliance perimeter, sensitive data flow, tenant isolation, public exposure, or AI/agent tool execution boundary. **Hidden risk:** style change silently expands privacy, security, or prompt/tool attack surface. **Required professional action:** run security/privacy and domain-extension review before approval. **Route to:** `security-privacy-gate`, `threat-modeling`, `ai-product-extension` when model/tool behavior is in scope. **Evidence required:** data classification, trust boundary, allowed actors/tools, redaction and permission evidence.
+- **Signal:** New runtime components, queues, regions, cells, functions, or services lack SLOs, alerts, traces, dashboards, runbooks, capacity plan, or on-call ownership. **Hidden risk:** architecture looks clean on paper but is not operable. **Required professional action:** block readiness or mark explicit residual risk until operations evidence exists. **Route to:** `reliability-observability-gate`, `performance-budgeting`, `concurrency-control`. **Evidence required:** SLI/SLO, telemetry, runbook, capacity/cost guardrail, owner.
 
 # Critical Details
 
@@ -126,12 +106,20 @@ The right style is constrained by the **team and operating model** as much as by
 - Org reorganized but architecture not revisited → boundaries no longer match teams; ownership decays.
 - "Strangler fig" begun but never finished — legacy + new run forever, doubling cost.
 
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 architecture-style selection, boundary, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete style decision, when constraints or migration coverage are uncertain, or before implementation planning depends on the style. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when style comparison, force scoring, migration/reversibility, operational readiness, graph/memory/trajectory reuse, or anti-pattern depth is needed. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are sufficient.
+
 # Output Contract
 
 Return an architecture style decision document containing:
 
+- `mode_selected` (baseline style selection, complexity escalation review, style migration, org/compliance boundary, or drift reassessment)
+- `current_architecture_evidence` (source paths, deploy artifacts, ownership docs, ADRs, tests, runbooks, dashboards, and docs inspected; or explicit not-yet-existing state)
+- `graph_memory_trajectory_judgment` (repository graph, project memory, and execution trajectory evidence accepted, rejected, or not verified, with freshness limits)
 - `selected_style` (with sub-style: e.g., modular monolith with hexagonal layering)
 - `constraints` (forces ranked by weight: deployability, scalability, latency, availability, compliance, team topology, cost, talent)
+- `style_force_scorecard` (each candidate style scored against hard constraints and credible near-term forces)
 - `rejected_alternatives` (≥ 1, each with the disqualifying constraint)
 - `justification` (mapping forces → style choice)
 - `boundaries` (module list for monolith; service list for services; bounded-context map)
@@ -144,8 +132,23 @@ Return an architecture style decision document containing:
 - `reversibility_class` (Type 1 irreversible / Type 2 reversible)
 - `fitness_functions` (automated checks that detect drift from the decision)
 - `reassessment_trigger` (concrete signal that requires re-deciding: traffic, team count, compliance change, cost threshold)
+- `changed_decision_to_validation_map` (each style, boundary, migration, reliability, security, cost, and fitness-function decision mapped to evidence or residual risk)
+- `handoff_boundaries` (what moves to module boundary, microservice split, event-driven design, domain impact, security/privacy, reliability, delivery, or ADR formalization)
+- `evidence_limits` (what was not verified: production load, unknown consumers, runtime topology, current dashboards, incident history, cost model, or organizational commitment)
 - `review_owner` (named individual + escalation chain)
 - ADR-ready prose (context, decision, status, consequences)
+
+# Evidence Contract
+
+Close an architecture-style decision only when the output names the selected mode, current architecture evidence, force ranking, simpler option rejected by measured constraint, graph/memory/execution freshness judgment, data ownership impact, deployment impact, operational obligations, migration and rollback path, reversibility class, validation map, handoff boundaries, residual risk, and evidence limits. A style label or "use microservices/modular monolith" statement is not sufficient evidence.
+
+# Benchmark Coverage
+
+Improved style decisions should reject the common weak patterns: distributed boundaries for vague complexity, service splits before module/data ownership, serverless without latency/cost proof, event-driven style without consistency/replay/readiness evidence, cell or active-active topology before blast-radius or sovereignty needs, and stale ADR/project-memory reuse without current-source confirmation. Detailed comparisons and decision aids belong in references so this body stays efficient.
+
+# Routing Coverage
+
+Route here when the primary work is choosing or reassessing architecture style, deployable unit count, runtime topology, topology migration, or whether distributed complexity is justified. Hand off when the style is already chosen and the remaining decision is module internals (`module-boundary-design` or `layered-architecture-design`), concrete service boundaries (`microservice-splitting`), async topology (`event-driven-architecture`), ADR formalization (`architecture-tradeoff-analysis`), production readiness (`reliability-observability-gate`), or rollout sequencing (`delivery-release-gate`).
 
 # Quality Gate
 
@@ -158,6 +161,12 @@ The decision passes only when:
 5. The reassessment trigger is specific (number/event), not "periodically".
 6. Compliance, data residency, and PII/PHI scope are explicitly addressed.
 7. The decision survives a hostile review by an architect outside the proposing team.
+8. Current architecture evidence and graph/memory/execution trajectory inputs are confirmed against current source or marked not verified.
+9. Every selected style and rejected alternative maps to a measured force, not preference or stale precedent.
+10. Data ownership, transaction boundary, and shared-database impact are explicit before any service or event boundary is approved.
+11. Reliability, security/privacy, compliance, cost, and on-call obligations are routed to the right gates or recorded as residual risk.
+12. Each style/migration/fitness-function decision maps to validation evidence or a named residual risk owner.
+13. Handoff boundaries and evidence limits are explicit so style selection is not over-claimed as service split design, event topology proof, production readiness, or ADR approval.
 
 # Used By
 

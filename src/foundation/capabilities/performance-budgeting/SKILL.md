@@ -19,6 +19,10 @@ Use this capability when a change: introduces a new API endpoint, background job
 
 Do not use this capability to: define SLI/SLO alert thresholds and operational error budgets (use `observability`); profile existing production code to diagnose a performance regression already in production (use `profiling`); tune database index selection or query execution plans for existing data (use `indexing-query-optimization`); or set arbitrary numbers without measurement data to justify them.
 
+# Stage Fit
+
+Use during planning when a production-facing change needs latency, throughput, payload, bundle, query, memory, CPU, or cloud unit-cost thresholds before implementation. Use during implementation review when code, query, frontend route, job, worker, dependency fan-out, or resource usage changes might exceed an existing budget. Use during testing and release when CI/load/canary evidence must prove budget compliance, explain budget exceptions, or block promotion. Repository graph, project memory, and prior execution trajectory can suggest known hot paths or historical baselines, but current source, current telemetry, or explicit not-verified disclosure must confirm them before a budget is treated as authoritative.
+
 # Non-Negotiable Rules
 
 - **Every performance budget must be justified by user impact data, business requirements, or measured baselines — not by guessing.** A budget of "< 200ms API latency" that has no baseline measurement and no user-impact justification is decoration. Acceptable justifications: industry benchmark (Google: < 200ms for perceived responsiveness); SLO derived from user research (checkout abandonment at > 3s); business requirement (partner SLA); measured baseline with regression threshold (current P99 = 180ms; budget = current + 20% headroom).
@@ -31,105 +35,19 @@ Do not use this capability to: define SLI/SLO alert thresholds and operational e
 - **Memory budgets must be specified for long-running processes.** A Node.js API server that starts at 200 MB RSS but grows to 2 GB RSS over 48 hours before OOM kill has a memory leak. Budget: baseline RSS at startup; maximum RSS after 24 hours of production load; maximum heap growth between GC cycles; container memory limit must be ≥ 2× maximum expected RSS (not tight).
 - **Background job and batch process budgets must include wall-clock time, CPU, and memory peaks.** A nightly report job must complete within a defined window (e.g., must complete before business hours start at 06:00 local time); must not consume > X% CPU of shared processing capacity; must process N records within the window without degrading concurrent API latency.
 
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| New production surface budget | New API, route, job, worker, query, dependency fan-out, batch, or resource-intensive feature. | Define user-impact, throughput, resource, and cost ceilings before implementation locks in scale shape. | Baseline or industry anchor, expected data volume/concurrency, blocking threshold, and enforcement gate. | `solution-optimality-evaluation`, `algorithm-data-structure-selection`, `quality-test-gate` | Micro-optimization or profiler work before a budget exists. |
+| Existing budget evolution | Threshold, budget scope, device profile, load scenario, or exception changes. | Preserve old behavior while recalibrating from current telemetry or business/SLO requirement. | Old/new threshold, baseline freshness, exception owner, expiry, and affected validation. | `observability`, `delivery-release-gate`, `reliability-observability-gate` | Lowering a gate only because CI is failing. |
+| Performance-sensitive implementation review | Code path changes allocation, fan-out, payload, query count, bundle size, worker concurrency, or long-running process memory. | Map changed paths to budget dimensions and reject unbounded growth. | Changed-path-to-budget map, runtime/algorithm bounds, validator command, evidence limits. | `language-performance-safety`, `concurrency-control`, `profiling` | Claiming "small change" without input-size or path-frequency evidence. |
+| Cost and capacity budget | Cloud resource, warehouse scan, egress, storage lifecycle, autoscaling, queue depth, or per-tenant cost changes. | Express spend as unit economics and connect it to capacity and anomaly gates. | Cost per request/tenant/job/query scan, approved ceiling, owner, anomaly threshold. | `reliability-observability-gate`, `bigdata-product-extension`, `delivery-release-gate` | Monthly total without unit driver. |
+| Release enforcement and exception | CI/load/canary budget violation, launch exception, or post-incident budget hardening. | Decide block/warn/exception, preserve evidence freshness, and define rollback or revisit threshold. | Command output, canary/load result, exception owner/expiry, rollback threshold. | `quality-test-gate`, `delivery-release-gate`, `agent-execution-discipline` | Green release claim without current validator output. |
+
 # Industry Benchmarks
 
-Anchor against: **Google Web Vitals (web.dev/vitals)** — Core Web Vitals standard: LCP ≤ 2.5s, INP ≤ 200ms, CLS ≤ 0.1; Good / Needs Improvement / Poor thresholds. **Lighthouse CI (github.com/GoogleChrome/lighthouse-ci)** — automated budget enforcement in CI; `lighthouserc.json` configuration with budget assertions. **RAIL Model (Response, Animation, Idle, Load)** — Response: < 100ms for interactions feeling instantaneous; Animation: 16ms per frame (60fps); Idle: < 50ms task chunks; Load: content displayed in < 1s (FCP). **HTTP Archive / Core Web Vitals Technology Report** — industry P75 baseline for LCP by framework; median JavaScript transfer size by sector. **Alex Russell "The Performance Inequality Gap"** — budget for median mobile device (Moto G Power, ~8× CPU slowdown vs MacBook); 200 KB total JavaScript parse budget on median mobile. **k6 / Gatling load testing** — `p(95) < 500` SLA assertion syntax; ramp scenarios (ramp-up, steady-state, spike, soak); virtual user (VU) targets. **EXPLAIN ANALYZE / Query Execution Plan** — `rows_examined` vs `rows_returned` ratio; `seq_scan` on > 10K rows without index = budget violation. **Container Resource Requests / Limits (Kubernetes)** — CPU request ≠ limit; memory limit OOM kill behavior; `resources.limits.memory` must not be set below peak RSS observed in load test. **Web Performance Budget Calculator (performancebudget.io)** — maps target load time to maximum transfer size by connection type.
-
-### Performance Budget Reference Matrix
-
-| Budget Type | Target Tier | Good | Needs Work | Poor / Reject |
-| --- | --- | --- | --- | --- |
-| API Latency P95 | Standard endpoint | < 200ms | 200–500ms | > 500ms |
-| API Latency P99 | Critical flow (checkout, auth) | < 500ms | 500ms–1s | > 1s |
-| LCP (Largest Contentful Paint) | Marketing / landing | ≤ 2.5s | 2.5–4.0s | > 4.0s |
-| INP (Interaction to Next Paint) | Interactive app | ≤ 200ms | 200–500ms | > 500ms |
-| CLS (Layout Shift) | Any page | ≤ 0.1 | 0.1–0.25 | > 0.25 |
-| TTI (Time to Interactive) | App shell | ≤ 3.8s | 3.8–7.3s | > 7.3s |
-| JS Bundle (main, gzipped) | SPA / PWA | ≤ 150 KB | 150–300 KB | > 300 KB |
-| JSON Response Payload | API response | ≤ 50 KB | 50–200 KB | > 200 KB (paginate) |
-| DB Query Execution Time | Standard read | < 50ms | 50–200ms | > 200ms → index or cache |
-| Rows Examined / Row Returned | Query efficiency | ≤ 10× | 10–100× | > 100× → seq scan risk |
-| Container Memory RSS | API server | ≤ container limit / 2 | 50–80% of limit | > 80% (OOM risk) |
-| Cloud Unit Cost | Request / tenant / job | Within approved ceiling | 10-20% above baseline | > 20% above baseline or unbounded |
-| Query Scan Budget | Warehouse / lake query | Partition-pruned and approved | Scans more than expected partition | Full scan without approval |
-
-### Budget Enforcement Configuration Template
-
-```yaml
-# Lighthouse CI: lighthouserc.json
-{
-  "ci": {
-    "assert": {
-      "budgets": [
-        {
-          "path": "/*",
-          "timings": [
-            { "metric": "largest-contentful-paint", "budget": 2500 },
-            { "metric": "interactive",               "budget": 3800 },
-            { "metric": "cumulative-layout-shift",   "budget": 0.1 }
-          ],
-          "resourceSizes": [
-            { "resourceType": "script",  "budget": 300 },
-            { "resourceType": "total",   "budget": 800 }
-          ]
-        }
-      ]
-    }
-  }
-}
-
-# k6 load test assertion (SLA gate)
-thresholds:
-  http_req_duration:
-    - "p(95)<500"    # 95th percentile < 500ms
-    - "p(99)<1000"   # 99th percentile < 1000ms
-  http_req_failed:
-    - "rate<0.01"    # error rate < 1%
-
-# bundlesize (package.json)
-"bundlesize": [
-  { "path": "./dist/main.*.js",       "maxSize": "150 kB" },
-  { "path": "./dist/vendor.*.js",     "maxSize": "200 kB" },
-  { "path": "./dist/route-admin.*.js","maxSize": "50 kB"  }
-]
-```
-
-### Performance Budget Selection Decision Tree
-
-```
-What type of performance risk does this change introduce?
-
-API / Service Response Time?
-  → Set P95 and P99 latency budgets
-  → Add k6/Gatling load test gate at expected concurrent VU count
-  → Add EXPLAIN ANALYZE budget (rows examined, index required)
-
-Frontend Page Load / Interaction?
-  → Set LCP, INP, CLS, TTI budgets via Lighthouse CI
-  → Set per-chunk JS bundle size budgets via bundlesize
-  → Measure on simulated slow-device profile (4G + 4× CPU)
-
-Database Query / Data Access?
-  → Set max execution time at expected data volume (not dev volume)
-  → Require EXPLAIN output showing index usage (no seq scan on > 10K rows)
-  → Set rows-examined / rows-returned ratio budget
-
-Background Job / Batch Process?
-  → Set wall-clock window (must complete before N:00 local time)
-  → Set maximum CPU % consumed during window
-  → Set maximum memory peak; validate does not degrade concurrent API P99
-
-Memory Leak Risk (long-running process)?
-  → Set baseline RSS + maximum RSS after 24h load test
-  → Add heap growth metric (heap used before/after GC cycle)
-  → Set container memory limit ≥ 2× expected peak RSS
-
-Cloud Cost / FinOps Risk?
-  → Set cloud cost budget per request, tenant, job, feature, and query scan
-  → Set egress and storage lifecycle budgets
-  → Add budget approval gate when projected spend exceeds threshold
-  → Add cost anomaly alert tied to the rollout or feature flag
-```
+Anchor against Google Core Web Vitals and RAIL for browser/user-perceived latency; Lighthouse CI, bundlesize, k6, Gatling, and Playwright performance assertions for enforcement; SRE latency-budget and error-budget practice for production-facing thresholds; Little's Law, Amdahl's Law, USE/RED methods, and runtime profiler guidance for capacity, pool, and saturation reasoning; EXPLAIN/ANALYZE and query-plan evidence for database work; and FinOps unit economics for request, tenant, job, scan, storage, autoscaling, and egress costs. Keep this body focused on selection, evidence, output, and quality gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed budget matrices, enforcement templates, decision trees, graph/memory/trajectory coupling, and anti-pattern review.
 
 # Selection Rules
 
@@ -138,6 +56,16 @@ Select this capability when the primary concern is **defining and enforcing meas
 # Risk Escalation Rules
 
 Escalate when: a change removes or changes an existing budget threshold without a documented justification and updated baseline measurement; a load test reveals that the P99 budget is exceeded at less than 50% of expected peak concurrent users; a database query change results in a seq scan on a table with > 100K rows in production; a frontend bundle size increase exceeds 20% of the current budget without lazy-loading justification; memory RSS grows > 50% above baseline after 12 hours of steady-state load (potential leak); or projected cloud unit cost, query scan cost, egress, or storage growth exceeds the approved per-feature cost ceiling.
+
+# Proactive Professional Triggers
+
+- **Signal:** a change adds an endpoint, route, job, worker, query, external call, or batch path with no P95/P99, throughput, payload, memory, or unit-cost threshold. **Hidden risk:** regressions are subjective until users, SLO burn, or bills reveal them. **Required professional action:** define mode, budget dimensions, baseline source, and enforcement gate before handoff. **Route to:** `performance-budgeting`, `quality-test-gate`. **Evidence required:** baseline or industry anchor, expected load/data volume, threshold, and command/canary gate.
+- **Signal:** budget numbers come from project memory, prior reports, or repository graph without current source or telemetry confirmation. **Hidden risk:** stale baselines under-budget or over-budget the wrong path. **Required professional action:** confirm current route/query/job/source ownership or disclose not-verified limits. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`. **Evidence required:** inspected paths, accepted/rejected memory, freshness limit, and unknowns.
+- **Signal:** implementation uses nested scans, load-all, unbounded fan-out, large batch, broad `Promise.all`, or growing cache while the budget only names latency. **Hidden risk:** memory, CPU, pool, and cost failure modes are uncapped even if a small test passes. **Required professional action:** add algorithm/runtime bounds and changed-path-to-budget mapping. **Route to:** `algorithm-data-structure-selection`, `language-performance-safety`, `concurrency-control`. **Evidence required:** input size, complexity, memory/item cap, pool/fan-out ceiling, and benchmark/profile plan.
+- **Signal:** a frontend budget is total bundle only or measured on a fast developer machine. **Hidden risk:** route-specific users pay for unused code and median devices miss Core Web Vitals. **Required professional action:** set route/chunk budgets and representative device/network profile. **Route to:** `frontend-testing`, `frontend-change-builder`. **Evidence required:** Lighthouse/device profile, per-route chunk delta, CWV thresholds, and exception owner.
+- **Signal:** database or warehouse budget lacks production-scale data volume, plan/scan evidence, or rows examined/returned limit. **Hidden risk:** dev-data timing hides full scans, N+1 fan-out, and query-scan cost. **Required professional action:** require representative plan, scan budget, and handoff for query repair if needed. **Route to:** `indexing-query-optimization`, `data-middleware-change-builder`. **Evidence required:** query scope, data volume, EXPLAIN/scan bytes, and validation gap.
+- **Signal:** cost budget is a monthly total with no per-request, tenant, job, query, storage, egress, or autoscaling driver. **Hidden risk:** launch scales cost nonlinearly and invoice evidence arrives too late. **Required professional action:** express cost as unit economics and anomaly thresholds. **Route to:** `reliability-observability-gate`, `delivery-release-gate`. **Evidence required:** unit driver, ceiling owner, anomaly threshold, rollback/revisit condition.
+- **Signal:** CI/load/canary validation predates the final edit or covers only a smoke path while claiming budget readiness. **Hidden risk:** stale evidence closes the gate for untested code. **Required professional action:** rerun or mark stale and map every material changed path to validation. **Route to:** `validation-broker`, `agent-execution-discipline`, `quality-test-gate`. **Evidence required:** changed path, validator, outcome, freshness, and residual risk.
 
 # Critical Details
 
@@ -167,10 +95,17 @@ Escalate when: a change removes or changes an existing budget threshold without 
 - Memory leak in Node.js worker: RSS grows 50 MB per hour; no memory budget or monitoring; OOM kill occurs every 18 hours; restarts cause 30-second availability gaps.
 - Cold-start latency budget ignored: Kubernetes pod cold start takes 8 seconds; during a rollout, 15% of requests hit cold pods; P99 spikes to 9 seconds; rollout not automatically blocked.
 
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 routing, budget dimensions, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete budget, exception, release gate, or changed-path-to-budget map. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed benchmark thresholds, budget selection matrices, enforcement templates, cost/capacity patterns, or graph/memory/trajectory coupling are needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure registry routing or metadata-only edits where no performance, cost, or resource budget is being produced.
+
 # Output Contract
 
 Return a performance budget specification with:
 
+- `mode_selected` (new production surface, existing budget evolution, implementation review, cost/capacity budget, or release enforcement/exception)
+- `boundaries_inspected` (source paths, API/route/job/query/worker/dependency surfaces, existing budgets, tests, CI gates, dashboards, release checks, and prior memory accepted or rejected)
+- `source_evidence` (current source, repository graph, project memory, execution trajectory, telemetry, load result, query plan, bundle report, or billing data inspected with freshness limits)
 - `budget_scope` (which change surfaces are budgeted: API endpoints, frontend routes, queries, jobs, background workers)
 - `latency_budgets` (per endpoint/flow: P50/P95/P99/P999 targets; percentile justification; baseline measurement or industry anchor)
 - `frontend_budgets` (LCP, INP, CLS, TTI; device profile; measurement tool; Lighthouse CI configuration)
@@ -180,10 +115,28 @@ Return a performance budget specification with:
 - `per_feature_cost_ceiling` (approved spend ceiling, owner, approval gate, and cost anomaly threshold)
 - `job_budgets` (per job/pipeline: wall-clock window; CPU and memory peak limits; concurrency impact on API latency)
 - `memory_budgets` (baseline RSS; maximum RSS after 24h load; heap growth between GC cycles; container limit recommendation)
+- `capacity_and_concurrency_budgets` (Little's-Law pool sizing, worker/fan-out limits, queue/backlog bounds, cold/warm path distinction)
 - `enforcement_gates` (CI/CD integration: Lighthouse CI config, k6/Gatling threshold assertions, bundlesize config, EXPLAIN validation script)
 - `load_test_scenario` (concurrency levels: average load, expected peak, spike; ramp-up profile; VU targets)
 - `measurement_baseline` (source of baseline numbers: production P-tile measurements, load test results, or justified industry anchors)
 - `escalation_thresholds` (conditions for blocking release: which budget violations block vs warn)
+- `changed_path_to_budget_map` (each changed endpoint, route, query, job, bundle, dependency, runtime growth surface, or cost driver mapped to budget and validator)
+- `reuse_and_placement_rationale` (existing budgets, profiles, dashboards, tests, and release gates reused; rejected speculative new tooling)
+- `behavior_preservation` (old budget thresholds, old routes/jobs/queries, existing SLO promises, dashboards, and release gates preserved or intentionally changed)
+- `validation_evidence` (commands, reports, load/canary/query/bundle artifacts, exit codes, freshness, or not-verified disclosure)
+- `handoff_boundaries` (profiling, observability, query optimization, degradation, runtime safety, release, or security work that belongs elsewhere)
+- `evidence_limits` (what the budget proves and does not prove about production load, data skew, browser/device mix, cloud pricing, tail latency, and release readiness)
+
+# Evidence Contract
+
+Close a performance budget only when these answers are concrete:
+
+- **Budget basis:** selected mode, user/operational scenario, baseline source, business/SLO/industry anchor, and why each number is a threshold rather than a guess.
+- **Current boundaries inspected:** source paths, routes, jobs, queries, frontend chunks, workers, dependencies, existing budgets, dashboards, validators, registry/project memory, and execution trajectory checked or explicitly not found.
+- **Scale and cost proof:** expected and peak load, data volume, concurrency, memory/item bounds, pool/fan-out sizing, payload/bundle size, query scan, and unit-cost driver named with freshness limits.
+- **Enforcement proof:** each changed path maps to CI/load/canary/query/bundle/cost validator, exit status or not-run disclosure, what evidence proves, and what it does not prove.
+- **Behavior preservation:** old thresholds, performance promises, release gates, and monitoring remain valid or the intentional change and approval owner are named.
+- **Handoff and residual risk:** profiling, observability, degradation, query tuning, runtime safety, release, security, or product owner handoff is named when the budget cannot prove readiness alone.
 
 # Quality Gate
 
@@ -201,6 +154,10 @@ The budget specification is complete only when:
 10. Budget violations: distinction between blocking (release cannot proceed) and warning (investigation required).
 11. Cloud cost budget exists for material resource changes, including query scan, egress, storage lifecycle, and per-feature cost ceiling.
 12. Budget approval gate and cost anomaly alert are defined when projected spend can exceed the approved ceiling.
+13. Current-source, graph, memory, or telemetry evidence is freshness-scoped; stale or inferred baselines are marked not verified.
+14. Every material changed endpoint, route, query, job, bundle, dependency, runtime growth surface, or cost driver maps to a budget and validator or to named residual risk.
+15. Algorithm, runtime, concurrency, and capacity assumptions include input size, memory bound, pool/fan-out ceiling, or explicit handoff.
+16. Validation evidence is fresh after the final material edit and does not report smoke, lint, or one-path checks as full budget proof.
 
 # Used By
 

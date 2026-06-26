@@ -15,9 +15,19 @@ changeforge_version: 0.1.0
 
 Use this capability when: a change adds a new public API endpoint, authentication mechanism, authorization rule, file upload handler, payment integration, or external service integration; a change accesses, stores, transmits, or processes sensitive data (PII, payment card data, credentials, health records, financial transactions); a change introduces administrative actions, tenant management, privilege escalation paths, or cross-tenant data access; a change modifies infrastructure boundaries (new VPC, new DNS record, new CDN configuration, new IAM policy); or an architecture review has flagged a security concern that must be formally modeled before the change proceeds.
 
+Also use this capability when repository graph evidence, project memory, execution traces, previous design notes, generated artifacts, or validation results show an unclear trust boundary, stale threat assumption, unverified mitigation, or newly reachable abuse path.
+
 # Do Not Use When
 
 Do not use this capability as a substitute for implementing concrete security controls — a threat model that lists mitigations without implemented code, configuration, and tests is a paper document, not a defense. Do not use for purely cosmetic changes or internal refactors that do not touch trust boundaries, data access, or behavioral authorization logic.
+
+# Stage Fit
+
+- **Planning:** require the threat model before choosing an architecture for new sensitive surfaces, cross-boundary data flows, admin actions, integrations, uploads, AI/tool paths, or regulated processing.
+- **Read/code-review:** verify the current repository graph, actual entry points, actors, assets, data flows, trust boundaries, prior threat notes, and known mitigations before judging risk.
+- **Coding/refactoring:** ensure every selected mitigation has an owner, implementation location, fallback behavior, test, and monitoring signal while preserving existing controls.
+- **Testing/release:** require current validation evidence for Critical and High threats, plus release owner acceptance for residual risk, monitoring, and rollback limits.
+- **Debugging/bug-fix/incident:** update the model from the verified exploit path, scan for same-pattern abuse cases, and keep mitigations tied to regression tests and detection signals.
 
 # Non-Negotiable Rules
 
@@ -27,6 +37,7 @@ Do not use this capability as a substitute for implementing concrete security co
 - **Every abuse case must map to a concrete mitigation with owner, implementation location, test, and monitoring signal.** A threat listed as "attacker may brute-force the login form" with mitigation "add rate limiting" is incomplete unless it specifies: which rate limiting implementation (e.g., token bucket at the API gateway layer, limit 10 attempts per 15 minutes per IP + per account), how it is configured (fail-open vs. fail-closed), how it is tested (automated test that simulates 11 rapid attempts and asserts 429 response), and what alert fires when the rate limit is triggered in production.
 - **Residual risks must be accepted explicitly with owner, rationale, review date, and escalation trigger.** A risk that is accepted silently — by shipping without addressing it — is a liability. Every residual risk must have: the threat it represents, the likelihood and impact rating, the reason it is accepted (mitigating control is proportionate; threat is out-of-scope for the current change; compensating control exists elsewhere), the owner who accepted it (role, not individual), and a review date (residual risk acceptance expires; it must be re-evaluated if the threat landscape changes).
 - **High-impact threats must have verification evidence before merge or release.** A "Critical" severity threat with a listed mitigation has zero value if the mitigation has not been implemented and tested. The threat model must track: mitigation status (designed/implemented/tested/monitoring deployed), the specific test that proves the control works (test ID or test case description), and the monitoring signal that will detect exploitation attempts in production.
+- **No threat status is valid without current design evidence.** Prior project memory, architecture notes, or earlier threat models can seed the review, but final conclusions must be grounded in current repository graph inspection, data-flow evidence, execution artifacts, test results, monitoring configuration, or explicit owner confirmation.
 
 # Industry Benchmarks
 
@@ -43,49 +54,61 @@ Anchor against: **STRIDE (Microsoft)** — Spoofing identity, Tampering with dat
 | Denial of Service | D | Brute force; resource exhaustion; ReDoS; large file upload | Rate limiting; input size limits; regex safety; resource quotas |
 | Elevation of Privilege | E | Horizontal privilege escalation (user A sees user B's data); vertical escalation (user becomes admin) | RBAC enforcement; ownership checks; re-authentication for privilege operations |
 
-### Threat Model Record Template
+### Threat Model Record Minimum Fields
 
-```yaml
-threat_id: "TM-007"
-component: "File Upload API — POST /api/v1/documents"
-threat_category: "Tampering + Elevation of Privilege"
-threat_description: >
-  An authenticated user uploads a file with a .php extension renamed as .pdf.
-  The file is stored in a public S3 bucket accessible without authentication.
-  If the server renders files from the bucket path, the PHP file may execute
-  server-side or be served to other users as a malicious download.
-actor: "Authenticated user (malicious)"
-entry_point: "POST /api/v1/documents — multipart form upload"
-assets_at_risk:
-  - "Server-side code execution (system integrity)"
-  - "Other users' browsers (malicious download delivery)"
-trust_boundary_crossed: "Client → File Storage (public bucket)"
-likelihood: "High"  # authenticated users have access; no extension filtering
-impact: "Critical"  # code execution or malware distribution
-mitigation:
-  - control: "File type validation using magic bytes (not extension alone)"
-    implementation: "src/uploads/validators/mime-validator.ts"
-    status: "implemented"
-    test: "T-089: upload .php renamed as .pdf; assert 422; assert file not stored"
-  - control: "Store uploads in private bucket; serve via signed URLs with 1h expiry"
-    implementation: "infra/s3-policy.tf — BucketPublicAccessBlock"
-    status: "implemented"
-    test: "T-090: assert unauthenticated GET on S3 URL returns 403"
-  - control: "Strip executable permissions; store with .bin extension regardless of original"
-    implementation: "src/uploads/processors/sanitizer.ts"
-    status: "in-progress"
-    test: "T-091: pending"
-monitoring:
-  - "Alert: upload request with executable MIME type → PagerDuty P1"
-  - "Alert: S3 bucket ACL changed to public → CloudTrail → SNS"
-residual_risk: "Low — after all three controls implemented"
-residual_risk_owner: "security-lead"
-residual_risk_review_date: "2025-01-01"
-```
+Each threat record must include `threat_id`, component, entry point, actor, asset, trust boundary, STRIDE category, abuse path, likelihood, impact, mitigation owner, implementation location, mitigation status, test or review evidence, monitoring signal, residual risk owner, review date, and escalation trigger.
 
 # Selection Rules
 
 Select this capability when **the security risk shape of a change is unclear or known to be high impact**. Route to `web-security` for specific browser exploit classes (XSS, CSRF, CSP, clickjacking); `authentication-security` for identity lifecycle hardening (MFA, token rotation, account takeover); `input-validation` for boundary validation design; `secret-configuration-security` for secret exposure risk; `permission-boundary-modeling` for authorization model design.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+| --- | --- | --- | --- | --- | --- |
+| New sensitive surface | New endpoint, webhook, upload, admin action, AI/tool action, external integration, IAM/policy boundary, regulated processing, or data export. | Enumerate assets, actors, data flows, trust boundaries, STRIDE threats, mitigations, tests, monitoring, and residual-risk owner before implementation. | Route/entry-point list, data-flow map, trust-boundary inventory, protected-asset classification, severity rationale, validation plan. | `security-privacy-gate`, `input-validation`, `permission-boundary-modeling` | Cosmetic or internal-only refactor with no protected asset, actor, entry point, or boundary change. |
+| Existing model refresh | Project memory, prior threat model, architecture note, generated report, or graph evidence claims a boundary is already safe. | Treat memory as a lead, compare it to current source reachability, accept/reject assumptions, and update stale threats. | Memory date/scope, current graph delta, unchanged-boundary proof, inspected paths, unknowns. | `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis` | Reusing old diagrams as proof without current graph inspection. |
+| Mitigation validation | Threat record names a control, owner, or release gate but lacks implementation, test, monitoring, or rollback evidence. | Convert paper mitigations into code/config locations, abuse-case validation, detection signal, release condition, and residual-risk decision. | `threat_to_validation_map`, command/report output, test ID, exit code or manual review artifact, alert source, owner. | `validation-broker`, `quality-test-gate`, `reliability-observability-gate` | Marking Critical/High mitigated because the design says it will be fixed later. |
+| Debugging or incident repair | A bug-fix, incident, pen-test finding, scanner result, or support escalation reveals an exploit path or unmodeled actor. | Rebuild the threat path from verified evidence, scan for same-pattern exposure, and bind remediation to regression tests and monitoring. | Incident/scanner artifact, affected graph paths, exploit precondition, same-pattern scan, regression test, detection rule. | `failure-diagnosis`, `web-security`, `security-privacy-gate` | Treating the single failing route as isolated without reachability review. |
+| Release or residual-risk acceptance | Critical/High threat, regulated data, cross-tenant exposure, credential/private-key path, payment/trading workflow, or irreversible action remains partially unmitigated. | Block or explicitly accept residual risk with owner, rationale, expiry, compensating control, rollback and next gate. | Security-owner approval, severity record, compensating-control evidence, review date, release gate, rollback note. | `delivery-release-gate`, `security-privacy-gate`, `agent-tool-permission-sandbox` | Shipping unresolved Critical exposure without explicit owner sign-off and expiry. |
+
+# Proactive Professional Triggers
+
+Use this capability proactively, even when the request does not ask for threat modeling:
+
+- **Signal:** a diff or design adds an endpoint, webhook, callback, file upload, admin action, AI/tool action, background worker, external integration, public gateway, IAM/policy change, or data export.
+  **Hidden risk:** a missing entry-point model can hide a data leak, wrong-boundary privilege path, or unverified abuse path not covered by existing controls.
+  **Required professional action:** enumerate assets, actors, data flows, boundaries, STRIDE threats, mitigations, tests, and monitoring before implementation approval.
+  **Route to:** `threat-modeling`, `security-privacy-gate`, and the domain capability for the changed boundary.
+  **Evidence required:** graph paths, entry point list, data-flow map, trust boundary list, and validation plan.
+- **Signal:** project memory, old architecture notes, a previous threat model, or generated summary claims an area is already safe.
+  **Hidden risk:** stale design memory can miss new callers, permissions, data flows, or deployment exposure.
+  **Required professional action:** compare memory against current repository graph and execution evidence, then record accepted/rejected assumptions.
+  **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`, and this capability.
+  **Evidence required:** memory source date, current graph delta, unchanged boundary proof, and explicit unknowns.
+- **Signal:** a mitigation is named without an implementation location, test, monitoring signal, owner, or release gate.
+  **Hidden risk:** an unverified paper mitigation is mistaken for an implemented control, leaving the threat silently open.
+  **Required professional action:** map the threat to concrete code/config, verification, alerting, rollback, and residual-risk acceptance.
+  **Route to:** `validation-broker`, `quality-test-gate`, `reliability-observability-gate`, and this capability.
+  **Evidence required:** `threat_to_validation_map`, passing evidence, monitoring source, and owner.
+- **Signal:** a user-controlled value reaches a parser, renderer, query, shell, prompt, path, URL fetch, serializer, queue, file store, or third-party API.
+  **Hidden risk:** injection, SSRF, prompt injection, tampering, data leak, or privilege escalation can cross the wrong untrusted boundary.
+  **Required professional action:** model the boundary and route to the exact control capability rather than leaving a generic threat note.
+  **Route to:** `input-validation`, `web-security`, `permission-boundary-modeling`, `agent-tool-permission-sandbox`, and this capability.
+  **Evidence required:** malicious-input tests, allowlist/encoding/control location, and same-pattern scan.
+- **Signal:** residual risk is accepted for Critical/High exposure, regulated data, multi-tenant access, payments, credentials, private keys, infrastructure privilege, or irreversible operations.
+  **Hidden risk:** the release can silently ship unresolved material risk without accountable approval.
+  **Required professional action:** block Critical unmitigated threats unless explicit owner sign-off exists, define compensating controls, review date, and escalation trigger.
+  **Route to:** `security-privacy-gate`, `delivery-release-gate`, and this capability.
+  **Evidence required:** owner, rationale, severity, compensating control, expiry, and release condition.
+
+# Reference Loading Policy
+
+- **L1:** Use only this `SKILL.md` for routing when the change clearly has no trust boundary, protected asset, actor, entry point, or security behavior change.
+- **L2:** Load [references/checklist.md](references/checklist.md) for any actual threat model, security review, design review, incident repair, or release decision involving new or changed assets, actors, data flows, boundaries, mitigations, or residual risk.
+- **L3:** Load [examples/example-output.md](examples/example-output.md) when producing a handoff, evaluation fixture, user-facing threat model, or structured mitigation plan.
+- **L4:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the threat model depends on current code reachability, prior decision freshness, command output, generated artifacts, or validation evidence.
+- **L5:** Pair with `agent-tool-permission-sandbox` before tool runs that can read sensitive code/config, print secrets, mutate security state, call external connectors, or generate evidence from untrusted output.
 
 # Risk Escalation Rules
 
@@ -111,16 +134,19 @@ Escalate immediately when: a threat is rated Critical (high likelihood × high i
 
 # Failure Modes
 
-- IDOR in new API endpoint: user ID in URL parameter not checked against session; data leak to any authenticated user.
-- Admin action added with authentication but no authorization: any user can invoke admin endpoint.
-- File upload without MIME validation: malicious file uploaded; served to other users.
-- Rate limiting designed but not configured correctly: 10,000 brute-force attempts succeed overnight.
-- JWT secret committed to repository: all sessions can be forged; all users compromised.
-- SSRF via user-supplied URL: attacker reads AWS metadata endpoint; obtains EC2 instance credentials.
+- **IDOR in new API endpoint:** user ID in URL parameter not checked against session; data leak to any authenticated user.
+- **Admin action added with authentication but no authorization:** any user can invoke admin endpoint.
+- **File upload without MIME validation:** malicious file uploaded; served to other users.
+- **Rate limiting designed but not configured correctly:** 10,000 brute-force attempts succeed overnight.
+- **JWT secret committed to repository:** all sessions can be forged; all users compromised.
+- **SSRF via user-supplied URL:** attacker reads AWS metadata endpoint; obtains EC2 instance credentials.
+- **Stale model after architecture change:** new callback, worker, or storage path is added after design review and ships outside the threat inventory.
+- **Mitigation without observability:** control is implemented but no audit, alert, metric, log, or runbook proves exploitation attempts would be detected.
+- **Old memory accepted as current proof:** prior review says the boundary is safe, but current graph exposes a new caller, tenant path, generated artifact, or deployment route.
 
 # Output Contract
 
-Return a threat model with:
+Return `threat_model_review` with:
 
 - `assets` (name, classification, owner, applicable regulation)
 - `actors` (external attacker / insider / legitimate user abusing workflow / automated system)
@@ -132,6 +158,36 @@ Return a threat model with:
 - `monitoring` (per threat: detection signal, alert, incident response)
 - `residual_risks` (per accepted risk: rationale, owner, review date, escalation trigger)
 - `verification_evidence` (per Critical/High threat: test ID, passing status, monitoring deployed)
+- `graph_memory_execution_validation` (repository paths and generated artifacts inspected, project-memory claims accepted or rejected, execution evidence used, validation freshness, and unknowns)
+- `threat_to_validation_map` (each Critical/High and selected Medium threat mapped to required control, owner, test/review artifact, monitoring signal, and release gate)
+- `reuse_and_placement_rationale` (existing security control, policy module, validator, monitor, fixture, reference, and skill source reused or rejected; why no duplicated control or speculative abstraction was introduced)
+- `behavior_preservation` (legitimate old access, existing mitigations, expected denials, audit behavior, rollout and rollback behavior preserved or intentionally changed)
+- `validation_evidence` (command, validator, test, scanner, report, output, exit code, artifact, screenshot when relevant, and freshness after final edit)
+- `evidence_limits` (uninspected entry points, missing logs, stale architecture notes, unrun tests, unavailable environments, and residual uncertainty owners)
+
+# Evidence Contract
+
+Close a threat model only when these answers are concrete:
+
+- **Boundary basis and boundaries inspected:** selected mode, protected assets, actors, entry points, data flows, trust boundaries, source/config paths, generated artifacts, tests, monitoring definitions, registry/project memory, and skipped boundaries with reason.
+- **Reuse / placement rationale:** existing control, policy module, validator, secret store, gateway, service boundary, monitor, fixture, or reference reused; duplicated controls, client-only checks, paper mitigations, and speculative abstractions rejected.
+- **Validation evidence:** each Critical/High threat maps to command, validator, test, scanner, report, output, exit code, manual review artifact, monitoring signal, owner, and evidence freshness after the final change.
+- **What evidence proves:** the inspected source path, test, alert, or review demonstrates the named mitigation for the named threat, actor, asset, and boundary.
+- **What evidence does not prove:** scanner passes, stale diagrams, old project memory, generated summaries, or partial tests do not prove uninspected routes, environments, tenants, integrations, or future architecture changes.
+- **Behavior preservation:** legitimate old access, existing security controls, expected denials, audit events, monitoring, rollout, and rollback behavior are preserved or intentionally changed with release approval.
+- **Residual risk and next gate:** every remaining Critical/High risk has owner, rationale, expiry, compensating control, escalation trigger, and next gate such as `security-privacy-gate`, `quality-test-gate`, `delivery-release-gate`, or incident follow-up.
+
+# Benchmark Coverage
+
+Use STRIDE for systematic enumeration, PASTA for business-impact sequencing, OWASP ASVS/Top 10/API Top 10 for control requirements, NIST SP 800-30 for likelihood and impact calibration, CWE/CVSS for vulnerability severity, SDL for lifecycle placement, and GDPR DPIA criteria for high-risk personal-data processing. Benchmark references must drive threat selection, severity, mitigation, or evidence; do not cite frameworks without a decision they changed.
+
+# Routing Coverage
+
+- Pair with `permission-boundary-modeling` and `authentication-security` when abuse paths involve identity, role, tenant, object, or privilege boundaries.
+- Pair with `input-validation`, `web-security`, and `secret-configuration-security` when threats involve injection, XSS/CSRF/SSRF, upload abuse, token exposure, credentials, or cryptography.
+- Pair with `dependency-vulnerability-scanning`, `kubernetes-gateway`, and `delivery-release-gate` when the attack surface comes from packages, cloud/IaC, ingress, IAM, KMS, release sequencing, or rollout.
+- Pair with `reliability-observability-gate` and `logging-error-handling` when mitigation depends on monitoring, audit logs, alerting, rate limits, abuse detection, or incident visibility.
+- Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` whenever the model depends on graph reachability, remembered prior state, command evidence, or validation freshness.
 
 # Quality Gate
 
@@ -147,6 +203,11 @@ The threat model is complete only when:
 8. All residual risks have owner, rationale, and review date.
 9. DPIA flag is set if GDPR Article 35 processing applies.
 10. Threat model is current with the final design (updated after any architecture change).
+11. Repository graph inspection covers current entry points, callers, external integrations, generated artifacts, and deploy/IaC exposure or explicitly marks each unavailable.
+12. Project memory and previous threat models are dated, scope-checked, and rejected as proof when stale.
+13. Every Critical/High threat appears in `threat_to_validation_map` with an implementation location, owner, test or review artifact, monitoring signal, and release gate.
+14. No Critical unmitigated threat is accepted without explicit security-owner approval and expiry.
+15. Tool, connector, scanner, or agent execution used to gather evidence has permission, sandbox, redaction, and rollback classification.
 
 # Used By
 

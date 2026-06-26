@@ -1,6 +1,6 @@
 ---
 name: rust-professional-usage
-description: Use when writing or reviewing professional Rust for systems, services, CLIs, WASM, or performance-sensitive modules with focus on ownership, lifetimes, Result modeling, traits, async runtime, unsafe invariants, concurrency safety, and zero-cost abstraction.
+description: Use when writing or reviewing professional Rust for systems, services, CLIs, WASM, unsafe/FFI, async, Cargo dependencies, concurrency, or performance-sensitive modules with focus on ownership, lifetimes, Result modeling, traits, runtime choice, unsafe invariants, graph/memory freshness, validation evidence, and zero-cost abstraction.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "93"
@@ -11,11 +11,11 @@ changeforge_version: 0.1.0
 
 Enforce professional Rust usage for systems, services, CLIs, WASM, and performance-sensitive modules: ownership and lifetime discipline, `Result`-based error modeling, justified trait abstractions, explicit async-runtime choice, documented `unsafe` invariants, concurrency safety, and zero-cost abstractions backed by measurement. Reject `Box<dyn Trait>` hierarchies that mimic Java; reject `unwrap()` in library code; reject `unsafe` without a written safety contract.
 
-# Pinned Tooling Baseline (Rust)
+# Tooling Baseline (Rust)
 
-Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+Treat tool versions as project policy inputs, not permanent recommendations. If a Rust toolchain, edition, MSRV, scanner, or async runtime rule is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, record the project rule and update this capability before relying on it for new product work.
 
-- **Toolchain**: stable Rust on a 6-week cadence. Pin via `rust-toolchain.toml` (`channel = "1.81"` or similar). Edition **2021** (2024 edition stabilizing in 1.85 — plan migration). Declare an **MSRV (Minimum Supported Rust Version)** in `Cargo.toml` (`rust-version = "..."`) for libraries.
+- **Toolchain**: stable Rust on the release cadence approved by the project. Pin via `rust-toolchain.toml`; declare an **MSRV (Minimum Supported Rust Version)** in `Cargo.toml` (`rust-version = "..."`) for libraries; choose edition 2021 or 2024 deliberately and document migration constraints.
 - **Format**: `rustfmt` with project `rustfmt.toml` (or defaults); CI runs `cargo fmt -- --check`.
 - **Lint**: `cargo clippy --all-targets --all-features -- -D warnings` in CI, with `clippy::pedantic` enabled for new code (`#![warn(clippy::pedantic)]`) and selective allows justified inline.
 - **Vulnerability scan**: `cargo audit` in CI; `cargo deny check` for license + bans + advisories.
@@ -37,13 +37,23 @@ Do not use to teach Rust syntax. Do not use to introduce Rust solely because of 
 
 # Stage Fit
 
-Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+Use during Rust implementation planning, coding, bug-fix, code-review, refactoring, testing, and release-readiness review. Per-stage focus:
 
 - **coding**: ownership/borrowing, `Result`/`?` error model, justified `unsafe` boundary, trait design, async runtime choice.
 - **debugging-diagnosis**: lifetime/borrow errors, `panic`/`unwrap` paths, async deadlock, `Send`/`Sync` violation.
 - **code-review**: unjustified `unsafe`, `clone()` overuse, premature trait abstraction, error-type erosion.
 - **refactoring**: module/visibility boundary, public trait/type compatibility, lifetime simplification.
 - **testing**: unit and `#[should_panic]`, property tests, `miri` or sanitizer for `unsafe`.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Ownership and error boundary | Borrow checker workaround, `.clone()` spread, `unwrap`, `panic!`, `Box<dyn Error>`, library API. | Preserve ownership clarity and typed recoverable errors without hiding failure behavior. | Ownership map, clone-cost decision, typed error boundary, panic audit, tests. | `failure-contract-design`, `code-review` | Teaching syntax or style-only review. |
+| Unsafe, FFI, and layout | `unsafe`, `extern "C"`, `repr(C)`, raw pointer, custom allocator, `Pin`, `no_std`. | Document invariants and keep safe wrappers, ABI, panic, and aliasing rules explicit. | `// SAFETY:` contract, FFI layout, panic boundary, Miri/fuzz/unsafe audit. | `low-level-systems-extension`, `security-privacy-gate` | Trusting compiler success as safety proof. |
+| Async and concurrency | Tokio task, runtime attribute, `Send`/`Sync`, `Arc<Mutex>`, channel, atomics, lock across await. | Keep runtime singular, cancellation-aware, deadlock-resistant, and scheduler-safe. | Runtime choice, lock/await audit, loom or stress evidence, blocking-call scan. | `concurrency-control`, `reliability-observability-gate` | Sequential tests as concurrency proof. |
+| Trait/API and dependency | New trait, public type, feature flag, workspace crate, new dependency, generated client. | Avoid single-impl abstraction, preserve semver, and control feature/provenance risk. | Impl inventory, semver check, cargo tree/audit/deny reports, accepted-risk owner. | `package-dependency-management`, `consumer-impact-analysis` | Dependency by convenience. |
+| Existing Rust behavior reuse | Repository graph, project memory, old review, generated bindings, prior validation says safe. | Confirm current source, Cargo files, generated artifacts, and validation freshness before closure. | Inspected paths, accepted/rejected memory, changed-path validators, residual unknowns. | `repository-graph-analysis`, `validation-broker` | Stale memory as proof. |
 
 # Non-Negotiable Rules
 
@@ -72,6 +82,14 @@ Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage fo
 # Selection Rules
 
 Select when Rust / Cargo / ownership / lifetimes / `unsafe` / traits / async runtime / WASM / FFI / systems performance is part of the request. Pair with `low-level-systems-extension` (unsafe, FFI, embedded), `language-performance-safety` (hot paths), `concurrency-control` (synchronization), `package-dependency-management` (Cargo deps), and `quality-test-gate` (fuzz / property evidence).
+
+# Proactive Professional Triggers
+
+- **Signal:** `unsafe`, raw pointer, FFI, `repr(C)`, custom allocator, `Pin`, or `no_std` appears without a written invariant. **Hidden risk:** Rust's safety story is bypassed and UB can survive ordinary tests. **Required professional action:** require a safety contract, safe wrapper, and unsafe-specific validation. **Route to:** `low-level-systems-extension`, `quality-test-gate`. **Evidence required:** `// SAFETY:` invariant, aliasing/lifetime/layout rule, Miri/fuzz/geiger command or not-run owner.
+- **Signal:** `unwrap`, `expect`, `panic!`, `Box<dyn Error>`, or `anyhow` appears in a library or recoverable boundary. **Hidden risk:** consumers lose typed failure handling or hit production panics. **Required professional action:** design typed `Result` and panic boundaries before accepting the API. **Route to:** `failure-contract-design`, `code-review`. **Evidence required:** error enum/conversion map, no-panic scan, caller-visible negative tests, residual exception owner.
+- **Signal:** async runtime, `tokio::spawn`, `block_on`, `Arc<Mutex<_>>`, channel, atomics, or lock across `.await` changes. **Hidden risk:** deadlock, cancellation leak, runtime mixing, or non-`Send` future appears only under scheduler pressure. **Required professional action:** review runtime singularity, lock scope, blocking calls, and concurrency validator depth. **Route to:** `concurrency-control`, `reliability-observability-gate`. **Evidence required:** runtime map, `await_holding_lock`/stress/loom evidence, skipped scheduler risks.
+- **Signal:** new trait, `Box<dyn Trait>`, public generic, feature flag, workspace crate, or Cargo dependency is introduced. **Hidden risk:** Java-style abstraction, semver break, feature unification, or unreviewed advisory enters the graph. **Required professional action:** prove abstraction and dependency value before acceptance. **Route to:** `implementation-structure-design`, `package-dependency-management`. **Evidence required:** impl inventory, rejected concrete alternative, `cargo tree -e features`, audit/deny report, compatibility note.
+- **Signal:** repository graph, project memory, generated bindings, or old validation claims Rust code is safe, unused, race-free, or already tested. **Hidden risk:** stale context misses current Cargo features, generated FFI callers, or changed unsafe/concurrency paths. **Required professional action:** confirm current source and validation freshness before handoff. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `validation-broker`. **Evidence required:** inspected files, accepted/rejected memory, fresh command/report, remaining unknowns.
 
 # Risk Escalation Rules
 
@@ -114,11 +132,13 @@ Select when Rust / Cargo / ownership / lifetimes / `unsafe` / traits / async run
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when Rust changes touch ownership/lifetimes, error modeling, async/runtime behavior, unsafe, FFI, trait/public API design, concurrency, or validation tooling such as clippy, Miri, loom, or cargo test. Do not load it for rustfmt-only edits.
+Load [references/checklist.md](references/checklist.md) when Rust changes touch ownership/lifetimes, error modeling, async/runtime behavior, unsafe, FFI, trait/public API design, concurrency, Cargo dependencies, feature flags, or validation tooling such as clippy, Miri, loom, fuzzing, cargo audit, or cargo test. Use [examples/example-output.md](examples/example-output.md) only when the expected review shape is unclear. Do not load references for rustfmt-only edits.
 
 # Output Contract
 
 Return a **Rust Usage Review** containing:
+- **Mode selected**: ownership/error, unsafe/FFI/layout, async/concurrency, trait/API/dependency, or existing-behavior reuse, with trigger signal
+- **Boundaries inspected**: crates/modules, public APIs, unsafe blocks, FFI/generated bindings, async runtime entrypoints, Cargo files, tests, docs, generated artifacts, and skipped boundaries with reason
 - **Toolchain pin** (`rust-toolchain.toml`), **edition**, **MSRV**
 - **Tooling pins**: clippy lint set, rustfmt config, cargo-audit / cargo-deny / cargo-semver-checks status
 - **Ownership / borrowing model**: clone audit; `Arc` / `Cow` / lifetime choices justified
@@ -131,7 +151,10 @@ Return a **Rust Usage Review** containing:
 - **Public API compat** (libraries): `cargo semver-checks` verdict
 - **Tests**: unit + property (proptest / quickcheck) + fuzz (cargo-fuzz) + loom (concurrency) + miri (unsafe) coverage
 - **Performance**: criterion benchmarks for hot paths; allocation profile
-- **Accepted exceptions** with owner / scope / expiration
+- **Rust graph, memory, and execution freshness**: crate graph, generated bindings, Cargo files, project-memory claims, and previous Rust validation accepted, rejected, stale, or not verified after the final edit
+- **Rust validation proof**: literal cargo or validator command, exit code, report/artifact path, and what the output proves or does not prove
+- **Tool permission boundary**: test/Miri/loom/fuzz/build/Cargo-audit/generated-artifact command class, sandbox/approval state, write scope, and secret-output redaction rule
+- **Accepted Rust deviations** with owner, scope, expiration, and cleanup trigger
 
 # Evidence Contract
 
@@ -145,7 +168,8 @@ A Rust change is professionally complete only when the output includes:
 - **Validation evidence**: `cargo test`, `cargo clippy`, `cargo fmt`, Miri/loom when applicable, or not-verified disclosure.
 - **What evidence proves**: the inspected Rust safety and API boundary is covered.
 - **What evidence does not prove**: every platform, production concurrency, FFI caller behavior, or all unsafe aliasing scenarios.
-- **Residual risk**: untested runtime behavior, owner, and next gate.
+- **Graph and memory freshness**: current source, generated artifacts, Cargo manifests, toolchain config, and prior project-memory claims confirmed or rejected before closure.
+- **Rust residual risk**: untested runtime/platform/scheduler/FFI/dependency behavior, owner, and next gate.
 
 # Quality Gate
 
@@ -159,6 +183,8 @@ A Rust change is professionally complete only when the output includes:
 8. Parsers / deserializers / FFI boundaries have fuzz harness or property tests.
 9. `cargo geiger` reviewed; unsafe surface area minimized.
 10. Cargo features audited; no transitive feature surprises.
+11. Validation report maps each changed Rust path to command, exit code, covered risk, stale/not-run targets, and residual owner.
+12. Tool permission/sandbox record exists for test, Miri, loom, fuzz, build, audit, deny, semver, generated-binding, or artifact-writing commands.
 
 # Used By
 
@@ -175,4 +201,4 @@ low-level-systems-extension, backend-change-builder, reliability-observability-g
 
 # Completion Criteria
 
-Review is complete when: toolchain + clippy + audit + deny + miri (where applicable) + tests are green; every `unsafe` is documented and reviewed; error model is consistent; async runtime is singular; traits are justified; lock scope is minimal; public API compat is verified; and any accepted exception has owner, scope, and expiration.
+Review is complete when: toolchain + clippy + audit + deny + Miri or unsafe-specific substitute (where applicable) + tests are green with commands and exit codes recorded; every `unsafe` is documented and reviewed; error model is consistent; async runtime is singular; traits are justified; lock scope is minimal; public API compatibility is verified; graph/memory claims are current-source confirmed; and any accepted exception has owner, scope, and expiration.

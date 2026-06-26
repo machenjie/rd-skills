@@ -9,136 +9,143 @@ changeforge_version: 0.1.0
 
 # Mission
 
-**Build a complete, typed role inventory before any behavior, permission, or workflow design begins** — making every human actor (end user, support agent, administrator), privileged operator (incident responder, data admin), system actor (service account, background job, cron), external actor (partner API, OAuth provider, payment webhook), and tenant/organizational boundary explicitly visible, so that authorization models, access controls, data visibility rules, audit requirements, and actor-specific risks are never designed with hidden assumptions about who can act.
+**Build a complete, typed role inventory before behavior, permission, workflow, or test design begins** so that every human actor, privileged operator, machine actor, external system, tenant boundary, trust level, data visibility rule, and role-specific risk is explicit before downstream capabilities design access, scenarios, or implementation.
 
 # When To Use
 
-Use this capability when a change affects: user journeys, feature visibility, or data access for any actor class; authorization rules, permission gates, or role-based feature flags; administrative, support, or operational workflows; service-to-service API calls, webhook receivers, or event consumers; notifications, exports, or audit trails where actor identity determines scope; multi-tenant systems where data isolation depends on actor role; or any change where one actor type might be implicitly assumed to be the only actor.
+Use this capability when a change affects user journeys, role-specific feature visibility, data access, authorization rules, administrative or support workflows, service-to-service calls, webhooks, background jobs, notifications, exports, audit trails, tenant isolation, or any surface where "the user" may hide multiple actors with different trust, authority, or data scope.
 
 # Do Not Use When
 
-Do not use this capability to: invent fictional personas for a brainstorming exercise unrelated to the change; create marketing personas that have no bearing on system authorization or behavior; replace `permission-boundary-modeling` (which specifies enforcement rules for the identified roles); or replace `threat-modeling` (which identifies adversarial use of roles and trust boundary violations).
+Do not use this capability to create marketing personas unrelated to system behavior; replace `permission-boundary-modeling` for enforcement predicates; replace `authentication-security` for credential, session, token, or MFA design; replace `scenario-decomposition` for path coverage; or perform detailed threat modeling after the actor taxonomy is already known.
+
+# Stage Fit
+
+Use during intake when actor identity, authority, data scope, tenant boundary, support/admin involvement, automation, or external caller assumptions are unclear. Use during design when repository graph, project memory, or previous execution suggests actor patterns that must be confirmed against current source, docs, tests, policy files, or registry evidence. Use during review when a change says "user", "admin", "system", "internal", "partner", "support", "worker", or "webhook" without naming the actual subject, trust level, and denied actions. Hand off once the role inventory is precise enough for permission, scenario, flow, test, security, and implementation gates.
 
 # Non-Negotiable Rules
 
-- **Distinguish actor types explicitly.** A "user" is not a type — it is a placeholder. Every actor must be classified: end user (authenticated vs. unauthenticated), role-differentiated user (e.g., Customer, Employee, Partner), support agent, administrator, privileged operator, service account, background job, scheduled task, external system (partner API, identity provider, payment provider, webhook), or system-level process. Mixing these types in a single "user" label hides authorization differences that become security gaps.
-- **Identify support, admin, background, and system actors even when the request mentions only end users.** A product change to "the checkout flow" will be exercised by: the end customer, the fraud review agent (support), the order operations admin, the inventory restock scheduled job, and the payment webhook. All 5 must be identified, not just the customer. Missing actors at design time means missing authorization checks, missing audit log entries, and missing operational runbooks at production time.
-- **Capture data visibility scope per actor.** Each actor must have an explicit statement of: what data they can see (by object, field, tenant), what data is never visible to them (even through aggregated queries or bulk exports), and whether visibility extends to related objects (e.g., a support agent can see order details but not payment method raw data). Undeclared data visibility defaults to "all data visible" — which is always wrong.
-- **Mark object-level ownership and tenant boundaries for permission modeling.** "Admin can see orders" is insufficient. "Admin can see all orders within their organization's tenant; cross-tenant order access is never permitted; tenant boundary is enforced at query level, not presentation level" is correct. Every actor statement must include the ownership / tenant boundary scope so that `permission-boundary-modeling` can derive enforcement predicates.
-- **Service accounts and background jobs require the same rigor as human actors.** A service account that calls the billing API needs: an explicit owner (team + human contact), a defined scope (which endpoints, which data), a rotation policy, audit logging, and least-privilege justification. Treating service accounts as "trusted because they're internal" is the most common source of lateral movement in compromised environments.
-- **Do not assume administrative or support roles may bypass business rules.** An admin who can set a user's subscription to ACTIVE without going through the payment flow creates an audit gap and a potential fraud vector. A support agent who can cancel an order without the cancellation window check creates inconsistent business state. Every actor's authority must be bounded by the same business invariants as end users, with explicit exceptions documented and audit-logged.
-- **External systems that receive or produce data are actors with trust levels and contracts.** A payment webhook is not a background event — it is an external actor calling your API. It requires: authentication (HMAC signature, API key, OAuth), trust level (what claims can it assert?), idempotency contract (what happens on duplicate delivery?), and failure behavior (what if the payload is malformed?).
+- **"User" is never a final actor type.** Classify every subject as unauthenticated visitor, authenticated end user, role-differentiated user, support agent, administrator, privileged operator, service account, background job, scheduled task, external system, identity provider, webhook caller, or system process.
+- **Support, admin, operator, and machine actors must be discovered even when the request only names end users.** Checkout, billing, export, onboarding, deletion, and recovery flows usually involve support tools, admin consoles, scheduled jobs, and external callbacks.
+- **Persona and role are separate artifacts.** A persona explains motivation and context; a role explains authorization, data scope, business authority, audit obligations, and denied actions. Do not use persona traits as permission rules.
+- **Every actor needs explicit data visibility.** State what they can see by object, field, tenant, aggregate, export, and related object, plus what they must never see.
+- **Tenant, ownership, and object boundaries must be stated per actor.** "Admin can see orders" is incomplete; "Org admin can see orders in own tenant only, enforced at query boundary" is actionable.
+- **Service accounts and background jobs need owner, scope, credential lifecycle, audit, and least-privilege justification.** "Internal" or "trusted" is not a permission model.
+- **Support and admin roles do not bypass business invariants by default.** Diagnostic read, mutation, impersonation, override, refund, export, delete, and role-grant authority must be separately justified and audited.
+- **External systems are actors with trust contracts.** Identity providers, payment webhooks, partner APIs, event publishers, and file consumers need authentication, trusted claims, duplicate/replay handling, and failure behavior.
+- **Memory, graph, and execution evidence must be freshness-scoped.** Repository graph, project memory, previous role inventories, and old validation runs can guide discovery, but current source and current change context decide the inventory.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| New actor surface | New feature, API, workflow, job, event, support/admin path, or integration mentions a broad "user/system/admin". | Build initial taxonomy with data scope, denied actions, and downstream model needs. | Brief, route/surface, actor source, role names, tenant/object boundary. | `requirement-structuring`, `use-case-modeling`, `permission-boundary-modeling` | Permission predicates until actors are stable. |
+| Existing role evolution | Role, support/admin authority, tenant access, service account, partner contract, or feature visibility changes. | Preserve legitimate access while preventing silent privilege expansion. | Old/new role inventory, current source/tests/docs, consumer or support impact. | `regression-testing`, `security-privacy-gate`, `consumer-impact-analysis` | Broad role rewrite without preservation evidence. |
+| Permission-sensitive discovery | Actor can read/write others' data, cross tenant, export, impersonate, approve, refund, delete, grant roles, or trigger irreversible effects. | Mark enforcement depth and escalation before design continues. | Subject/resource/action/scope, data source, audit need, denied case. | `permission-boundary-modeling`, `threat-modeling`, `quality-test-gate` | Treating role name alone as authorization proof. |
+| Machine/external actor modeling | Service account, worker, cron, webhook, message consumer, OAuth/OIDC/SAML provider, partner API, or file exchange appears. | Treat non-human callers as scoped subjects with trust and replay boundaries. | Owner, credential/auth method, scope, token/secret lifecycle, retry/duplicate behavior. | `integration-change-builder`, `idempotency-retry-design`, `authentication-security` | Collapsing machine callers into generic system actor. |
+| Reuse and memory validation | Previous inventory, project memory, repository graph, support note, incident, or execution output suggests actors. | Accept only source-confirmed current evidence and record stale or unknown paths. | Inspected files, tests, docs, graph edges, memory freshness, rejected assumptions. | `repository-context-map`, `repository-graph-analysis`, `project-memory-governance` | Copying old role inventories without current-source checks. |
 
 # Industry Benchmarks
 
-Anchor against: **NIST SP 800-162 — RBAC and ABAC** — role/attribute-based access control; role assignment; permission assignment; role hierarchy; separation of duties. **NIST SP 800-53 AC-2/AC-3/AC-6** — account management; access enforcement; least privilege. **NIST SP 800-63-3 — Digital Identity Guidelines** — identity assurance levels (IAL1/IAL2/IAL3); authentication assurance levels (AAL1/AAL2/AAL3); relevant for mapping actor trust levels. **OAuth 2.0 (RFC 6749) / OIDC (OpenID Connect Core)** — scope-based delegation; client types; service account credential flows (Client Credentials flow). **OWASP ASVS V2/V4** — identity and access control verification requirements. **OWASP A01:2021 — Broken Access Control** — most common web vulnerability; object-level authorization (IDOR); function-level authorization; privilege escalation. **Nielsen Norman Group — Persona Creation** — behavioral persona vs. authorization role; personas describe motivation, not permissions. **Google Cloud IAM Design Patterns** — least privilege; separation of duties; service account governance; workload identity.
-
-### Actor Type Classification Matrix
-
-| Actor Type | Trust Level | Authentication | Data Visibility Scope | Privilege Risk | Example |
-| --- | --- | --- | --- | --- | --- |
-| Unauthenticated visitor | None | None | Public data only | Low | Anonymous browsing |
-| Authenticated end user | Low-medium | Session / JWT | Own objects in own tenant | Medium | Customer |
-| Role-differentiated user | Medium | Session / JWT + role claim | Role-scoped objects | Medium-high | Admin, Editor, Viewer |
-| Support agent | High (operational) | SSO + MFA + audit | Diagnostic view of others' data | High | Customer Success rep |
-| Administrator | Highest (human) | SSO + MFA + break-glass audit | All tenant data; platform config | Critical | Org Admin, Super Admin |
-| Service account | High (machine) | API key / mTLS / Client Credentials | Defined by scope; no UI | Critical if over-scoped | Billing service → Inventory API |
-| Background job / cron | Medium (machine) | Scheduled task identity | Data batch it processes | Medium-high | Nightly report generator |
-| External partner API | Variable | API key / OAuth / mTLS | Partner's contracted data scope | High (external trust) | Partner inventory feed |
-| Identity provider / SSO | Trusted (federated) | SAML / OIDC | Asserts identity claims | Critical (trust chain) | Auth0, Okta, Azure AD |
-| Payment / financial webhook | External-limited | HMAC signature | Transaction result data | High (financial) | Stripe webhook |
-
-### Role Risk Assessment Decision Tree
-
-```
-For each identified actor, answer:
-  1. Can this actor read data belonging to another actor or tenant?
-     YES → Mark: Object-level authorization required; IDOR risk; escalate to permission-boundary-modeling
-     NO  → Standard ownership check sufficient
-
-  2. Can this actor trigger irreversible financial, legal, or compliance-relevant actions?
-     YES → Mark: Dual control or approval workflow required; all actions must be audit-logged
-     NO  → Standard audit log
-
-  3. Does this actor operate across tenant boundaries?
-     YES → Mark: Tenant boundary enforcement at query layer; cross-tenant data leakage risk
-     NO  → Tenant scope = single tenant
-
-  4. Is this actor a service account or automated process?
-     YES → Require: owner team, scope definition, rotation policy, least-privilege review
-     NO  → Standard session management
-
-  5. Can this actor impersonate another actor or elevate to a more privileged role?
-     YES → Mark: Critical privilege escalation risk; requires threat modeling review
-     NO  → Standard role boundary
-```
+Anchor against NIST RBAC/ABAC and access-control guidance, NIST digital identity assurance, OWASP ASVS identity/access-control requirements, OWASP Broken Access Control and API BOLA risks, OAuth 2.0 and OIDC delegation/client patterns, IAM least-privilege and service-account governance, and UX persona practice that separates behavioral personas from authorization roles. Keep this body focused on routing, evidence, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for actor taxonomies, persona/role separation, service-account governance, support/admin access patterns, graph/memory/trajectory coupling, and anti-pattern review.
 
 # Selection Rules
 
-Select this capability when **the primary question is who participates, what they can do, and what data they can access** for a given change. Route to `permission-boundary-modeling` to define the enforcement predicates and access control rules for the identified roles. Route to `user-flow-modeling` when roles are known and path-level branching by role is the design question. Route to `threat-modeling` when adversarial use of roles (privilege escalation, impersonation, insider threat) is the primary risk. Route to `authentication-authorization` when authentication mechanism selection and identity assurance levels are the primary concern.
+Select this capability when the primary question is **who participates, what identity/trust they carry, what they can do, what data they can see, and which downstream models must use that actor set**. Route to `permission-boundary-modeling` when enforcement predicates are primary, `scenario-decomposition` when actor-specific paths need coverage, `use-case-modeling` when a single actor goal needs flow structure, `authentication-security` when identity proof and session/token mechanics are primary, and `security-privacy-gate` or `threat-modeling` when adversarial misuse is the dominant risk.
 
 # Risk Escalation Rules
 
-Escalate when: any actor can access data belonging to a different actor or tenant (IDOR risk); an actor can trigger money movement, data deletion, or compliance-relevant record modification without audit (financial/regulatory risk); a service account has broader permissions than its defined job function (least-privilege violation — must remediate before release); an external actor's identity is not authenticated and verified server-side (trust boundary violation); or an administrative or support actor can modify data in ways that bypass business rules or leave no audit trail.
+Escalate when an actor crosses tenant or ownership boundaries; can read or export regulated, financial, private, or cross-actor data; can mutate money, legal, compliance, identity, subscription, deletion, or role-grant state; can impersonate or elevate; uses a broad service account; depends on unsigned or unauthenticated external claims; or relies on stale project memory, UI-only filtering, or "internal system" trust without current-source proof.
+
+# Proactive Professional Triggers
+
+- **Signal:** A request says "user", "admin", "support", "system", "internal", "partner", "webhook", or "service" without subject detail. **Hidden risk:** hidden actors produce missing authorization, audit, support, and scenario coverage. **Required professional action:** split actor types, trust levels, data visibility, and denied actions before design. **Route to:** `requirement-structuring`, `permission-boundary-modeling`, `scenario-decomposition`. **Evidence required:** current brief, source, route, job, integration, or policy inspected.
+- **Signal:** Repository graph or project memory names an actor pattern. **Hidden risk:** stale memory preserves retired roles, renamed routes, or changed tenant boundaries. **Required professional action:** confirm against current source, docs, tests, registry, or execution output before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`. **Evidence required:** accepted/rejected memory, inspected paths, freshness limit, and unknown surfaces.
+- **Signal:** Service account, worker, cron, migration, webhook, or event consumer participates. **Hidden risk:** broad machine identity creates lateral movement, duplicate side effects, or unowned credentials. **Required professional action:** require owner, credential/auth method, scope, tenant/job/run boundary, audit, and replay/duplicate handoff. **Route to:** `permission-boundary-modeling`, `integration-change-builder`, `idempotency-retry-design`. **Evidence required:** machine actor row, credential owner, scope, and downstream integration/idempotency route.
+- **Signal:** Support/admin/operator can diagnose, mutate, impersonate, export, refund, delete, grant roles, or override business rules. **Hidden risk:** privileged access becomes unaudited mutation or privacy exposure. **Required professional action:** separate read-only diagnostic access from elevated mutation and mark audit/approval needs. **Route to:** `permission-boundary-modeling`, `security-privacy-gate`, `quality-test-gate`. **Evidence required:** support/admin model, purpose binding, denied actions, audit requirement, and permission handoff.
+- **Signal:** Persona language is being used as permission language. **Hidden risk:** demographics or behavioral context become access-control rules. **Required professional action:** split behavioral context from authorization role and preserve both when they matter. **Route to:** `use-case-modeling`, `user-flow-modeling`, `permission-boundary-modeling`. **Evidence required:** persona-role split, source of persona context, authorization role, and denied actions.
+- **Signal:** Actor-specific behavior affects scenarios or tests. **Hidden risk:** valid alternate paths, denied paths, abuse, recovery, and operational behavior are collapsed into happy-path testing. **Required professional action:** map roles to valid, denied, abuse, recovery, and operational scenario coverage. **Route to:** `scenario-decomposition`, `acceptance-standard-definition`, `quality-test-gate`. **Evidence required:** role-to-scenario validation map, validation method, residual risk, and next gate.
 
 # Critical Details
 
-- **"Role" and "persona" are different concepts that must not be conflated.** A persona ("Sarah, a 35-year-old who shops on mobile") describes behavioral motivation and context. A role ("Customer: authenticated, single-tenant, can CRUD own orders, cannot access others' orders") describes authorization boundaries. A product team that works only in persona language produces no authorization model. A development team that works only in role language misses the behavioral context that drives flow design. Both are needed, and they must be kept distinct.
-- **Support agents typically need diagnostic access without mutation authority.** A support agent who can read order details, trace transaction history, and view error logs can resolve most customer issues. A support agent who can also modify order state, issue refunds, or change subscription plans is a privileged operator whose every action must be audit-logged to a named user. The default for support roles is read-only diagnostic access; write authority requires explicit justification and enhanced audit controls.
-- **Service account credentials must have explicit owners and rotation policies.** A service account with no named owner gets neither renewed nor rotated. When the engineer who created it leaves, the credential lives indefinitely. Minimum requirements per service account: named owning team, named human contact, scope definition (list of endpoints/permissions), rotation cadence (90 days or shorter), monitoring for anomalous usage patterns.
-- **Tenant boundary enforcement cannot rely on UI filtering.** A multi-tenant system where the UI only shows the user's own tenant data, but the API accepts any `tenantId` parameter without validating it against the authenticated user's tenant, is not tenant-isolated — it is IDOR-vulnerable. The tenant boundary must be enforced in every query predicate and every write operation at the data layer, not filtered at presentation time.
-
-### Anti-examples
-
-| Anti-pattern | Problem | Fix |
-| --- | --- | --- |
-| All users modeled as a single "User" actor | Support agents, admins, service accounts share one model; authorization gaps appear | Typed actor taxonomy: Customer, Support Agent, Org Admin, Billing Service Account |
-| Persona ("Sarah, frequent shopper") used as authorization model | No permission boundaries, data scope, or risk flags in a persona | Separate: behavioral persona (UX) + authorization role (engineering) |
-| Service account "trusted because it's internal" | Lateral movement vector if the service is compromised; no audit trail | Define scope, rotate every 90 days, log all calls to named service account identity |
-| Admin role exempt from business rules ("admin can do anything") | Audit gap; potential fraud; inconsistent state; no compensating controls | Admin actions subject to same business invariants; exceptions explicitly listed and audit-logged |
-| External webhook modeled as "background event" | No authentication check; malicious caller can forge webhook events | External webhook = actor; requires HMAC signature validation or OAuth token verification |
-| Tenant boundary enforced only in UI | Any API call with a different `orgId` returns another tenant's data (IDOR) | Tenant predicate enforced in every query: `WHERE tenant_id = :authenticated_tenant_id` |
+- **Role inventories are source-of-truth inputs, not implementation proof.** They inform permission, scenario, flow, and test work; they do not prove enforcement exists.
+- **Data visibility must include negative visibility.** Explicitly name data, fields, tenants, exports, aggregates, and related records the actor cannot access.
+- **Machine actors have blast radius.** A leaked credential or flawed worker can bypass UI, sessions, and human approval. Scope and audit them as rigorously as human roles.
+- **Support/admin exceptions are product and compliance decisions.** If an override is needed, name the invariant exception, approval path, audit event, and downstream validation.
 
 # Failure Modes
 
-- Support agent role not modeled: no diagnostic read API designed; support creates data-access workarounds via admin console.
-- Service account scope not defined: billing service has read access to all user data "because it's easier than restricting it"; used as lateral movement entry point after compromise.
-- Tenant boundary enforced only at UI layer: IDOR vulnerability exposes all customers' data through direct API calls.
-- Admin bypass of business rules not audited: admin issues refund without payment record; fraud discovered months later with no audit trail.
-- External payment webhook not authenticated: attacker POSTs fake `payment_succeeded` events; orders fulfilled without payment.
-- Persona treated as authorization model: no explicit data visibility scope; PII visible to actors who should not have access.
+- Single "User" actor hides support, admin, service-account, external, or tenant-specific behavior until authorization gaps appear in implementation.
+- Persona traits are reused as permission rules, leaving no object, tenant, or denied-action boundary for enforcement.
+- Service accounts and workers are treated as trusted internals, creating broad credential blast radius and weak audit evidence.
+- Support or admin roles can mutate, export, impersonate, refund, delete, or override without purpose binding, approval, or audit.
+- External webhooks, IdPs, partner APIs, or file consumers are modeled as background events, so authentication, trusted claims, replay, and failure behavior are omitted.
+- Repository graph, project memory, or old execution output is copied without current-source confirmation, preserving stale role assumptions.
+- **Validation gap:** role rows do not map to validator, test, report, or manual review evidence, so planning cannot prove coverage.
+- **Behavior drift:** existing legitimate access and existing safe denials are not preserved or intentionally changed with owner approval.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 selection, mode, routing, evidence, output, and quality gates. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete role inventory, role change, support/admin path, service account, webhook, external integration, or role-to-scenario map. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when actor taxonomy, persona/role separation, service-account governance, support/admin access, trust contracts, graph/memory/trajectory reuse, or anti-pattern detail needs more depth. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or minor wording work where this body is enough.
 
 # Output Contract
 
-Return a role inventory with per actor:
+Return a role inventory with:
 
-- `actor_name` (precise, not "user")
-- `actor_type` (end user / support / admin / service account / background job / external system / identity provider)
-- `goal` (what this actor wants from the system)
-- `authentication_mechanism` (session, JWT, API key, HMAC, OIDC, none)
-- `trust_level` (none / low / medium / high / critical)
-- `data_visibility` (own objects / role-scoped / all-tenant / cross-tenant / defined scope)
-- `allowed_actions` (list)
-- `denied_actions` (explicit denials, especially cross-tenant and cross-actor)
-- `tenant_boundary_scope` (single tenant / own org / platform-wide / n/a)
-- `audit_requirement` (every action / privileged actions only / none)
-- `role_specific_risks` (IDOR, privilege escalation, lateral movement, data exposure, financial fraud)
-- `downstream_models_required` (permission-boundary-modeling, threat-modeling, flow branching)
+- `mode_selected` (new actor surface, existing role evolution, permission-sensitive discovery, machine/external actor modeling, or reuse and memory validation)
+- `role_inventory_scope` (change surface, actor source, affected tenants, protected resources, excluded/non-goal actors, and release boundary)
+- `source_evidence` (current brief, source files, routes, jobs, policy files, docs, tests, registry, repository graph, project memory, execution trajectory, incidents, or support signals inspected with freshness limits)
+- `graph_memory_trajectory_judgment` (accepted, rejected, stale, and unknown graph/memory/execution evidence)
+- `actor_taxonomy` (per actor: name, actor type, human/machine/external classification, trust level, authentication mechanism, owner, tenant scope, and lifecycle)
+- `persona_role_split` (behavioral persona context kept separate from authorization role, or explicit statement that persona context is not needed)
+- `data_visibility_matrix` (per actor: visible data, hidden data, field/export/aggregate limits, related-object scope, tenant/object ownership boundary)
+- `allowed_denied_actions` (per actor: allowed actions, denied actions, irreversible actions, privilege escalation limits, and business-invariant exceptions)
+- `service_account_governance` (owner, purpose, credentials, rotation/review cadence, scope, audit, and anomaly monitoring for each machine actor)
+- `external_actor_trust_contract` (auth method, claims trusted, claims rejected, idempotency/replay needs, failure behavior, and consumer/producer contract)
+- `support_admin_operator_model` (diagnostic read, mutation authority, impersonation, break-glass, approval, purpose binding, time box, and audit obligations)
+- `role_to_permission_boundary_map` (actors and actions that require `permission-boundary-modeling`, with subject/resource/action/scope hints)
+- `role_to_scenario_validation_map` (valid, denied, abuse, recovery, operational, and support scenarios that each role must cover)
+- `downstream_models_required` (permission, scenario, flow, authentication, security, test, integration, reliability, release, or documentation handoffs)
+- `handoff_boundaries` (what this inventory does not prove: enforcement, threat depth, executable tests, auth implementation, runbook completeness, or production policy state)
+- `evidence_limits` (uninspected actors, stale memory, unknown consumers, generated clients, live IdP/provider state, production permissions, manual controls, or missing validation)
+
+# Evidence Contract
+
+Close role identification only when these answers are concrete:
+
+- **Scope basis:** selected mode, change surface, actor source, non-goal actors, protected resources, tenant/object boundary, and release boundary.
+- **Current evidence:** source, docs, tests, routes, jobs, integrations, policy files, registry, repository graph, project memory, execution trajectory, incidents, or support signals inspected and freshness-scoped.
+- **Actor proof:** every human, support/admin/operator, service account, background job, external system, identity provider, webhook, and system process is represented or explicitly excluded with reason.
+- **Authority proof:** trust level, authentication mechanism, data visibility, denied actions, business invariant exceptions, service-account scope, and support/admin access are explicit.
+- **Coupling proof:** repository graph, project memory, and execution trajectory are accepted, rejected, stale, or unknown, and role rows map to permission and scenario validation handoffs.
+- **Validation proof:** validation command, validator, test, report, artifact, output, and exit code are named when available; state what evidence proves, what evidence does not prove, residual risk, next gate, reuse and placement rationale, and behavior preservation.
+- **Limits:** enforcement, authentication implementation, detailed threat model, test execution, production policy state, and manual operational controls are not over-claimed.
+
+# Benchmark Coverage
+
+Behavior improvement should be validated structurally: weak role work collapses actors into "user", merges personas with authorization roles, forgets support/admin/machine/external actors, omits negative visibility, trusts project memory without source checks, or lacks downstream handoff maps. Improved outputs name selected mode, source evidence, graph/memory/trajectory judgment, typed actor taxonomy, visibility and denied actions, service/external governance, support/admin model, permission/scenario maps, and evidence limits while keeping deep benchmark detail in references.
+
+# Routing Coverage
+
+Route here when actor taxonomy and role inventory are the primary work. Hand off when enforcement predicates (`permission-boundary-modeling`), actor path coverage (`scenario-decomposition`), actor-goal flow (`use-case-modeling`), credential/session design (`authentication-security`), adversarial depth (`security-privacy-gate` or `threat-modeling`), executable verification (`quality-test-gate`), or integration/reliability/release work becomes primary. Do not let this capability become runtime authorization implementation.
 
 # Quality Gate
 
 The role inventory is complete only when:
 
-1. Every actor type in the system is represented, not just the primary end user.
-2. Every actor has an explicit data visibility scope (not "access as needed").
-3. Service accounts have named owners, defined scopes, and rotation policies.
-4. External actors have authentication mechanisms and trust levels.
-5. Tenant and ownership boundaries are stated per actor.
-6. Audit requirements are specified for privileged actors.
-7. Risk flags are raised for every actor who can trigger irreversible, cross-tenant, or financial actions.
-8. Persona descriptions and authorization roles are maintained as separate artifacts.
-9. Admin/support exception rules are explicitly stated, not implied.
-10. The inventory is precise enough for `permission-boundary-modeling` to derive enforcement predicates without additional clarification.
+1. Every relevant actor type is represented or explicitly excluded with a reason.
+2. No actor remains named only as "user", "admin", "system", "internal", or "partner".
+3. Persona context and authorization role are separated.
+4. Every actor has authentication mechanism, trust level, owner where applicable, tenant/object boundary, and data visibility.
+5. Hidden data, denied actions, and business-invariant exceptions are explicit.
+6. Service accounts, workers, jobs, and system processes have owner, scope, credential lifecycle, audit, and review obligations.
+7. External actors have trust contract, accepted/rejected claims, replay/idempotency needs, and failure behavior.
+8. Support/admin/operator access separates diagnostic read from mutation, impersonation, override, export, delete, and role-grant authority.
+9. Repository graph, project memory, and execution trajectory evidence are source-confirmed or marked stale/unknown.
+10. Actors that cross tenant, owner, regulated-data, financial, or irreversible-action boundaries are escalated.
+11. Every role that affects enforcement maps to `permission-boundary-modeling`.
+12. Every role that affects path coverage maps to `scenario-decomposition` or validation evidence.
+13. Handoff boundaries and evidence limits prevent the inventory from being mistaken for enforcement, threat model, or completed tests.
 
 # Used By
 
@@ -148,8 +155,8 @@ The role inventory is complete only when:
 
 # Handoff
 
-Hand off to `permission-boundary-modeling` for enforcement rules and access predicates; `user-flow-modeling` for role-branching flow design; `threat-modeling` for adversarial role misuse; `authentication-authorization` for identity assurance and authentication mechanism selection.
+Hand off to `permission-boundary-modeling` for enforcement predicates and access-control rules; `scenario-decomposition` for role-specific valid, denied, abuse, recovery, and operational paths; `use-case-modeling` or `user-flow-modeling` for actor-goal flow detail; `authentication-security` for identity/session/token mechanics; `security-privacy-gate` or `threat-modeling` for adversarial role misuse; and `quality-test-gate` for verification strategy.
 
 # Completion Criteria
 
-The capability is complete when **every actor type is explicitly identified and typed, data visibility and tenant boundaries are declared, and the inventory is precise enough to prevent hidden permission assumptions from propagating into implementation and authorization design**.
+The capability is complete when **every relevant human, privileged, machine, external, and system actor is typed; trust, visibility, denied actions, tenant/object boundaries, support/admin authority, service-account governance, graph/memory/trajectory judgment, downstream handoffs, and evidence limits are explicit; and no hidden permission assumption can propagate into implementation planning**.

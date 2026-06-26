@@ -19,6 +19,10 @@ Use this capability when a change: introduces a new entity, aggregate, or docume
 
 Do not use this capability to mirror a UI form directly into a database table — forms reflect UX concerns; models reflect domain invariants. Do not use it to expose persistence tables as API contracts — use `dto-schema-design` and `api-contract-design`. Do not use it for query performance optimization on an existing schema — that is physical tuning; use `relational-database` or `nosql-database`. Do not use it to design migration scripts for existing data — use `data-migration-design`.
 
+# Stage Fit
+
+Use during planning when source-of-truth data shape, entity ownership, relationship cardinality, invariants, lifecycle states, retention, query/write pattern fit, or storage-family choice is unresolved. Use during implementation review when a patch changes persisted fields, constraints, aggregate boundaries, derived read models, or persistence/API separation. Use during testing when invariants, null/default semantics, referential integrity, retention/deletion behavior, or model-boundary mapping need validation evidence. Hand off before release to `data-migration-design` for live stored-data change sequencing, to `dto-schema-design`/`api-contract-design` for client-visible shapes, and to `repository-persistence` for application persistence boundary placement. Skip for pure DTO wording, physical index tuning, or migration runbook execution when the conceptual model is already accepted.
+
 # Non-Negotiable Rules
 
 - **Model invariants first, storage second.** Define what must always be true (invariants), what constitutes an invalid state, what transitions are allowed, and who owns each attribute — before choosing table structure, document structure, or index layout. Storage is a physical concern; invariants are a domain concern.
@@ -31,74 +35,19 @@ Do not use this capability to mirror a UI form directly into a database table �
 - **Soft-delete is a product decision, not a default.** Soft-delete (`deleted_at`, `is_deleted`) introduces: query filter noise (every query must add `WHERE deleted_at IS NULL`), unique constraint interference, referential integrity complexity, audit log duplication, and GDPR "right to be forgotten" complications. Use it only when the business explicitly requires recoverable deletion or audit of deletions. Otherwise, hard-delete with proper archival strategy.
 - **Aggregate boundaries define transaction scope.** Objects modified together in one business operation belong in the same aggregate. Objects that can be modified independently belong in separate aggregates. An overly large aggregate causes write contention; an overly small aggregate requires distributed transactions for business operations that should be atomic.
 
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| New source-of-truth model | New entity, document, aggregate, ownership area, or stored lifecycle. | Define invariants, owner, identity, relationships, lifecycle, storage fit, and contract separation before schema or DTOs. | Entity/attribute owner, invariants, relationship/cardinality map, invalid states, query/write patterns. | `domain-object-identification`, `business-rule-extraction`, `repository-persistence` | DTO/API field polish. |
+| Existing model evolution | Add/remove/rename fields, constraints, relationships, or states on stored data. | Preserve old data, compatibility, rollback, and null/default semantics while evolving the model. | Old/new model diff, compatibility class, nullable/lifecycle meaning, migration impact, rollback risk. | `data-migration-design`, `version-compatibility`, `quality-test-gate` | One-step destructive DDL. |
+| Boundary separation repair | Persistence table leaks into API/event/DTO, or DTO/domain/persistence semantics drift. | Reassert source-of-truth model and mapping boundaries without exposing internals. | Boundary map, internal/public field split, mapper owner, generated/client impact. | `dto-schema-design`, `api-contract-design`, `model-boundary-mapping` | Returning ORM/persistence objects as contracts. |
+| Read model or denormalization decision | Materialized view, projection, snapshot, JSON field, or copied data is proposed. | Decide source-of-truth vs derived data, staleness tolerance, rebuild path, and write amplification. | Critical queries, staleness policy, rebuild strategy, owner of derived data, rejected normalized alternative. | `search-analytics-design`, `indexing-query-optimization`, `repository-persistence` | Cache/search as source of truth. |
+| Regulated, temporal, or destructive data | PII/PHI/PCI, financial ledger, audit, retention, erasure, archival, temporal history. | Model retention, deletion, auditability, reversibility, and historical truth before implementation. | Data classification, retention/deletion rule, temporal strategy, audit owner, validation report. | `security-privacy-gate`, `backup-recovery`, `data-migration-design` | Unowned soft-delete default. |
+
 # Industry Benchmarks
 
-Anchor against: **Domain-Driven Design (Eric Evans, 2003)** — Entity, Value Object, Aggregate, Repository, Domain Event; aggregate boundary as transaction boundary; ubiquitous language in model naming. **Domain-Driven Design Distilled (Vaughn Vernon, 2016)** — aggregate design rules; Cargo/Policy examples. **Designing Data-Intensive Applications (Kleppmann, 2017)** Ch. 2 (Data Models) and Ch. 3 (Storage and Retrieval) — document vs relational vs graph tradeoffs. **CQRS / Event Sourcing (Fowler, Young, Vernon)** — read model design, event stream as source of truth, projection rebuild. **Third Normal Form (3NF)** and **Boyce-Codd Normal Form (BCNF)** (Codd, 1972) — normalization for relational consistency. **Temporal Data and the Relational Model (Date, Darwen, Lorentzos)** — temporal attributes; bi-temporal modeling (valid time, transaction time). **GDPR Article 17** (Right to Erasure) — design for data deletion without breaking historical records. **HIPAA Safe Harbor** — de-identification rules affecting storage of PHI. **PCI DSS Requirement 3** — cardholder data storage minimization. **OWASP Secure Coding Practices** — parameterized queries; avoid dynamic SQL assembled from column names; no internal IDs in public-facing APIs. **Martin Fowler "Analysis Patterns"** — reusable domain models for accounts, parties, observations. **"The Data Model Resource Book" (Hay)** — canonical industry data models. **PostgreSQL Constraint Types** — `CHECK`, `UNIQUE`, `EXCLUDE`, `FOREIGN KEY DEFERRABLE` for constraint-enforced invariants. **JSON Schema Draft 2020-12** — document model validation.
-
-### Storage Type Selection Matrix
-
-| Storage type | Invariant enforcement | Query flexibility | Schema evolution | Pick when |
-| --- | --- | --- | --- | --- |
-| **Relational (PostgreSQL, MySQL)** | Strong (FK, CHECK, UNIQUE, transactions) | High (arbitrary joins, aggregations) | DDL migrations required | Structured data with relationships; ACID required; complex queries |
-| **Document (MongoDB, DynamoDB, Firestore)** | Application-level only | By access pattern (embedded vs reference) | Schema-free but requires app discipline | Hierarchical / nested data; access-pattern-driven; flexible schema |
-| **Time-series (TimescaleDB, InfluxDB, Cassandra)** | Weak (append-only usually) | Time-range; limited aggregation | Append-only; column add possible | Sensor data, metrics, events with time-based queries |
-| **Graph (Neo4j, Amazon Neptune)** | Relationship-level constraints | Traversal; pattern matching | Node/edge label add | Social graphs, knowledge graphs, complex relationship traversal |
-| **Key-value (Redis, DynamoDB simple)** | None (schema-free) | By key only | Key/value change | Session storage, cache, counters, simple lookup |
-| **Wide-column (Cassandra, HBase)** | Partition-key uniqueness | Partition key + clustering key only | Column family add (online) | High-write time-series; geographically distributed writes |
-| **Event store (EventStore, Kafka + compaction)** | Append-only; event ordering | Projection rebuilds | Append events; schema evolution via upcasting | Event-sourced aggregates; audit log; rebuild capability |
-
-### Normalization vs Denormalization Decision Tree
-
-```
-Is the data read-heavy with complex joins across multiple entities?
-├─ Yes + latency is critical → Consider denormalization or read model (materialized view / CQRS projection)
-│   └─ Is the denormalized data authoritative or derived?
-│       ├─ Derived → Use materialized view; define refresh interval and staleness tolerance
-│       └─ Authoritative → Dual-write is dangerous; reconsider aggregate boundary instead
-└─ No → Normalize to 3NF as baseline
-
-Does the query join > 3 tables for every read of this entity?
-├─ Yes → Evaluate: pre-join read model vs query optimization vs domain model split
-└─ No → Stay normalized; add index
-
-Is the relationship 1:few (< 20 items, always accessed together, same write owner)?
-├─ Yes → Embed in document or use JSON column (PostgreSQL jsonb)
-└─ No → Separate table with foreign key
-
-Is the relationship M:N?
-└─ Use explicit junction table with own primary key, created_at, and status — never an implicit join table
-```
-
-### State Machine Constraint Pattern
-
-```sql
--- Model lifecycle states as a constrained enum
-CREATE TYPE order_status AS ENUM ('draft', 'submitted', 'confirmed', 'shipped', 'delivered', 'cancelled');
-
--- Enforce valid transitions via check constraint (application validates; DB is safety net)
-ALTER TABLE orders ADD CONSTRAINT order_status_not_null CHECK (status IS NOT NULL);
-
--- Enforce that shipped_at is only set when status = 'shipped' or later
-ALTER TABLE orders ADD CONSTRAINT shipped_at_valid
-  CHECK (shipped_at IS NULL OR status IN ('shipped', 'delivered'));
-
--- Enforce that cancelled_at is only set when status = 'cancelled'
-ALTER TABLE orders ADD CONSTRAINT cancelled_at_valid
-  CHECK (cancelled_at IS NULL OR status = 'cancelled');
-```
-
-Key principle: the database is the last line of defense for invariants. Application-layer-only enforcement fails under direct SQL access, migration scripts, or bugs.
-
-### Data Ownership Boundary Map
-
-| Boundary question | Rule |
-| --- | --- |
-| Who creates this record? | Only that service writes the `created_at` and surrogate key |
-| Who updates `status`? | Single authority service; others subscribe to events |
-| Who can delete? | Named owner + authorization gate; logged in audit table |
-| Cross-service read | Exposed via API/event only; never via shared DB access |
-| Shared DB (legacy) | Must define write-authority per column; read-only for consumers |
-| External ID mapping | Separate cross-reference table owned by the integrating service |
+Anchor against Domain-Driven Design aggregate and repository patterns, Designing Data-Intensive Applications data-model/storage tradeoffs, CQRS/read-model discipline, 3NF/BCNF normalization, temporal modeling, GDPR erasure, HIPAA/PCI minimization, OWASP secure data handling, PostgreSQL constraint patterns, and JSON Schema validation. Keep this body focused on routing, evidence, output, and quality gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for storage-family selection, normalization/denormalization decisions, invariant enforcement examples, ownership maps, temporal/retention patterns, and detailed anti-patterns.
 
 # Selection Rules
 
@@ -114,6 +63,14 @@ Select this capability when **the shape, constraints, and lifecycle of stored da
 # Risk Escalation Rules
 
 Escalate when: the model stores regulated data (PII/PHI/PCI/PSD2 financial); the model is the source of truth for financial account balances, audit logs, or compliance records; data deletion is irreversible and violates GDPR/CCPA requirements; the aggregate boundary change requires distributed transactions across services that cannot be made atomic; the model is shared across microservices via direct DB access (dual-write, read replica coupling); the model change requires a large backfill (> 10M rows) with no approved migration plan; a foreign key removal would silently allow orphaned records; the model stores cryptographic material (key IDs, hashes, salts) without defined access control.
+
+# Proactive Professional Triggers
+
+- **Signal:** a new table/document mirrors a screen, form, import file, or API response one-to-one. **Hidden risk:** UX or integration shape becomes the source of truth and domain invariants are missing. **Required professional action:** identify entities, ownership, invariants, lifecycle states, and rejected persistence/API leakage before schema acceptance. **Route to:** `domain-object-identification`, `dto-schema-design`, `api-contract-design`. **Evidence required:** entity map, invariant list, contract separation map, and validation plan.
+- **Signal:** nullable field, default value, enum/status, JSON blob, or polymorphic association is added without lifecycle semantics. **Hidden risk:** invalid states and semantic drift become representable and hard to migrate. **Required professional action:** classify absent/null/unknown/not-applicable/deleted meanings and enforce constraints where feasible. **Route to:** `model-boundary-mapping`, `quality-test-gate`. **Evidence required:** null/default semantics table, invalid-state examples, constraint or service validation evidence, and residual risk owner.
+- **Signal:** two services, jobs, integrations, or support tools can write the same record or attribute. **Hidden risk:** source-of-truth ambiguity, last-write-wins data loss, and graph ownership drift. **Required professional action:** assign per-attribute write authority and cross-service access protocol before model approval. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`. **Evidence required:** writer inventory, current-source confirmation, accepted/rejected prior memory, and event/API access path.
+- **Signal:** denormalized read model, materialized view, copied snapshot, JSON column, or search/analytics projection is proposed as authoritative. **Hidden risk:** derived state becomes stale source of truth and writes need unowned reconciliation. **Required professional action:** decide source-of-truth vs derived data, staleness tolerance, rebuild strategy, and write amplification. **Route to:** `search-analytics-design`, `indexing-query-optimization`, `data-side-effect-flow-tracing`. **Evidence required:** query/write pattern map, staleness policy, rebuild command or report artifact, and owner.
+- **Signal:** a model proposal relies on prior project memory, repository graph proximity, or a previous agent trajectory as proof of accepted data shape. **Hidden risk:** stale context misses current callers, generated artifacts, migrations, or downstream contract dependencies. **Required professional action:** confirm with current source, registry/config, tests, generated artifacts, and validation output before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, freshness limit, accepted/rejected prior evidence, and remaining unknowns.
 
 # Critical Details
 
@@ -156,10 +113,17 @@ The most expensive data model mistakes are invisible at design time and catastro
 - Temporal query ("what was the price on 2025-01-01?") impossible because price column is overwritten in place; historical records lost.
 - UUID v4 clustered PK with 200K inserts/s; index fragmentation grows; query performance degrades 3× over 6 months.
 
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 data-model selection, boundary, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete model proposal, when invariants/ownership/migration coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when storage-family choice, normalization tradeoff, constraint pattern, ownership map, temporal model, retention/deletion, or anti-pattern detail is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected proposal shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are sufficient.
+
 # Output Contract
 
 Return a data model proposal with:
 
+- `mode_selected` (new source-of-truth, existing model evolution, boundary separation repair, read-model decision, regulated/temporal/destructive data)
+- `boundaries_inspected` (source paths, registry/config, migrations, generated artifacts, tests, existing models, and prior memory accepted or rejected)
+- `source_evidence` (specific current-source observations, not inferred architecture memory)
 - `entities_or_documents` (per entity: name, table/collection, purpose, storage type)
 - `ownership` (per entity/attribute: owning service, write authority, cross-service access protocol)
 - `invariants` (per entity: rules that must always be true; invalid state description; enforcement: DB constraint vs application)
@@ -174,7 +138,25 @@ Return a data model proposal with:
 - `read_models` (CQRS projections or materialized views: staleness tolerance, rebuild strategy)
 - `contract_separation` (API-facing DTO names and fields vs internal table names; explicit mapping)
 - `normalization_level` (3NF, BCNF, or justified denormalization with staleness policy)
+- `changed_model_to_validation_map` (each changed entity/attribute/relationship mapped to unit, integration, migration, contract, or manual validation)
+- `reuse_and_placement_rationale` (existing model/reference reused, extension location, rejected locations, and why no new shared abstraction was added)
+- `behavior_preservation` (old rows, old writers, old readers, old generated clients, and old queries that remain valid)
+- `validation_evidence` (commands, reports, fixtures, screenshots, or review artifacts that were run and what they prove)
+- `handoff_boundaries` (which decisions move to migration, DTO/API contract, repository, security, reliability, or release gates)
+- `evidence_limits` (what was not inspected, what remains unknown, and residual risk owner)
 - `open_decisions` (unresolved: aggregate boundary, ownership, temporal modeling approach)
+
+# Evidence Contract
+
+Close a data-model-design proposal only when these answers are concrete:
+
+- **Current source inspected:** name the files, schemas, migrations, generated artifacts, registry/config entries, tests, docs, and prior memory that were checked. If no current implementation exists, say that explicitly.
+- **Graph and memory freshness:** state which repository graph or project-memory facts were accepted, which were rejected as stale or irrelevant, and which source reads confirmed them.
+- **Invariant proof:** for each critical invariant, identify the enforcement layer, validation command or review artifact, and the failure mode covered.
+- **Compatibility proof:** state how old persisted data, old writers, old readers, old API/DTO clients, generated code, and reporting/query consumers behave after the model change.
+- **Validation result:** include command names and pass/fail status. Do not claim completion from design reasoning alone.
+- **What evidence does not prove:** call out untested scale, concurrency, migration-duration, privacy, or downstream-contract assumptions.
+- **Next gate:** name the next capability or human review needed when migration, API, DTO, security, reliability, or release evidence is outside this capability.
 
 # Quality Gate
 

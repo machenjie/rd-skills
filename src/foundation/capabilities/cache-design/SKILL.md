@@ -19,6 +19,14 @@ Use this capability when a change adds or modifies: in-process memoization (LRU 
 
 Do not use this capability to **make cache the source of truth**, to mask a slow query that should be fixed (`indexing-query-optimization`), to mask a wrong data model (`data-model-design`), to mask permissions enforcement defects (`authentication-authorization`), or to substitute for a specialized read engine (`search-analytics-design`). Cache is acceleration; it cannot rescue incorrect logic, missing indexes, or weak isolation.
 
+# Stage Fit
+
+- **Discovery / planning:** use when a proposal introduces a cache tier, edge cache rule, request memoization, materialized read projection, or stale fallback and the source of truth, staleness budget, and invalidation owner are not yet explicit.
+- **Implementation / review:** use when cache keys, value schemas, TTLs, invalidation events, negative caches, hot-key controls, or HTTP cache headers are being added or changed.
+- **Testing / verification:** use when evidence must prove key isolation, invalidation, stale-window bounds, stampede protection, cache-down fallback, and observability without depending on live cache infrastructure.
+- **Release / incident repair:** use when a cold cache, cache cluster restart, edge purge, hit-rate cliff, miss storm, stale authorization/pricing/inventory value, or cache poisoning/deception incident can overload source systems or leak data.
+- **Graph / memory / execution coupling:** use project graph and memory as leads only; revalidate against current cache code, config, tests, registry, telemetry, and command output before claiming a cache path is safe.
+
 # Non-Negotiable Rules
 
 - **Cache is not source of truth.** Cache loss must never lose data and must never change behavior beyond stated stale tolerance.
@@ -39,61 +47,19 @@ Do not use this capability to **make cache the source of truth**, to mask a slow
 
 # Industry Benchmarks
 
-Anchor against: **RFC 9111 (HTTP Caching)** for response cacheability, freshness, validation, and `Cache-Control` directives (`no-store`, `no-cache`, `private`, `public`, `s-maxage`, `stale-while-revalidate` per **RFC 5861**, `immutable` per **RFC 8246**); **RFC 7232 (Conditional Requests)** for ETag/`If-None-Match` validation; **RFC 9211 (`Cache-Status`)** for cache observability headers. **Google SRE Workbook — Managing Critical State** (cache as performance optimization, never as durability). **Facebook Memcache @ Scale (NSDI '13)** lessons: lease tokens for stampede control; gutter pool for failover; key namespace isolation. **Facebook TAO** for read-optimized graph cache with consistency contract. **Netflix EVCache** patterns. **Twitter "Pelikan" / Memcached at scale** lessons. **Redis best practices** — appropriate eviction policy (`allkeys-lru`, `allkeys-lfu`, `volatile-ttl`), persistence trade-offs (RDB/AOF), keyspace notifications, cluster slot mapping, **Redis 6+ ACL** for tenant isolation, **client-side caching with invalidation (RESP3 tracking)**. **Memcached** consistent hashing (Ketama) for minimal redistribution on node change. **CDN caching**: **AWS CloudFront**, **Fastly VCL**, **Cloudflare cache rules**, **Akamai**; cache-key normalization, query-string allowlist, vary-on header discipline, surrogate keys / cache tags for targeted purge. **Varnish** patterns: TTL + grace + keep. **OWASP Web Cache Deception** (CVE class — attacker tricks shared cache into storing a private response under a public key). **OWASP Cache Poisoning** (unkeyed input poisons shared cache). **GoF / groupcache (Brad Fitzpatrick)** single-flight pattern. **Probabilistic Early Recomputation (XFetch)** — Vattani et al., 2015. **Bloom filter** (Burton Bloom 1970) for negative-existence acceleration; **Cuckoo filter** for deletable membership.
+Anchor against RFC 9111 / 7232 / 5861 / 8246 / 9211 for HTTP freshness, validation, stale extensions, immutable assets, and cache observability; Google SRE guidance that cache is performance optimization rather than critical state; Memcache-at-scale / TAO lessons on leases, namespaces, and read-optimized graph caches; Redis / Memcached / CDN / Varnish operational patterns; OWASP web cache deception and cache poisoning; single-flight, probabilistic early recomputation, Bloom filters, and Cuckoo filters. Keep the body lightweight; use [references/checklist.md](references/checklist.md) for implementation checks and [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for pattern, technology, defense, observability, graph/memory, and anti-pattern matrices.
 
-### Cache Pattern Selection Matrix
+# Mode Matrix
 
-| Pattern | Read path | Write path | Consistency window | Pick when |
-| --- | --- | --- | --- | --- |
-| **Cache-aside (lazy)** | App reads cache → miss → load source → populate | App writes source, **invalidates** cache | TTL or invalidation lag | Default for most apps; flexible; risk of stampede on cold key |
-| **Read-through** | App reads cache; cache loads source on miss | App writes source; cache evicts/updates | TTL or invalidation lag | Encapsulated cache library; uniform load behavior |
-| **Write-through** | App reads cache | App writes cache **and** source synchronously | Strong (cache always fresh) | Read-heavy + tolerable write latency |
-| **Write-behind (write-back)** | App reads cache | App writes cache; async flush to source | Cache leads source by flush window | Very write-heavy; **dangerous** — cache loss = data loss; rarely acceptable |
-| **Refresh-ahead** | App reads cache | Background refresh before TTL expires | Near-real-time | Predictable hot keys; absorbs source latency |
-| **Versioned-key (immutable)** | Read `v:{ver}:{key}` after reading current `ver` | Bump `ver` on write | Atomic per key | Avoids invalidation complexity; great for content / config |
-| **Materialized view as cache** | Read pre-aggregated view | Source writes trigger view refresh | View refresh window | Expensive aggregations; analytics; bounded staleness ok |
-| **HTTP / CDN cache** | Edge serves; revalidate with ETag | Origin sets `Cache-Control`; purge via tag | Per `max-age`/`s-maxage` | Public assets; geographic distribution; high egress savings |
-
-### Cache Technology Selection
-
-| Technology | Topology | Best for | Avoid when |
-| --- | --- | --- | --- |
-| **In-process LRU (Caffeine, lru-cache)** | Per pod | Per-pod hot config, decoded JWT, tiny hot keys | Multi-pod consistency required; large dataset |
-| **Memcached** | Sharded, no replication | Simple key/value, ephemeral, high throughput | Need replication, persistence, complex types |
-| **Redis (single / sentinel / cluster)** | Replicated, optional persistence | Complex types (sets, sorted sets, streams), pub/sub invalidation, distributed locks | Need transactional source-of-truth (it isn't one) |
-| **Cloud-managed (ElastiCache / MemoryDB / Memorystore)** | Managed Redis/Memcached + multi-AZ | Production durability/availability of Redis | Cost-sensitive dev/test |
-| **CDN (CloudFront/Fastly/Cloudflare)** | Edge POPs | Static + cacheable responses; geographic reach | Per-user dynamic content (or use surrogate keys + Vary carefully) |
-| **Materialized view in DB** | Same DB | Aggregate/joins reused widely | High write rate making refresh expensive |
-| **Search engine result cache (Elastic / OpenSearch)** | Same engine | Repeated queries on slow indices | Tiny diverse query space |
-
-### Stampede / Penetration / Avalanche — Defense Decision Tree
-
-```
-Hot key with sudden expiry?
-├─ Single hot key → single-flight (groupcache) per process; distributed lease (Memcache lease tokens) cluster-wide.
-├─ Many keys expiring together → TTL jitter (±20–30%) + probabilistic early refresh (XFetch).
-├─ Cache cluster restart / failover → request coalescing + origin-side rate limit + stale-if-error fallback + warm-up plan.
-Missing key flood (penetration)?
-├─ Bounded set of legitimate keys → bloom filter / cuckoo filter at edge.
-├─ Open key space → negative cache with short TTL + per-IP rate limit; never unbounded passthrough.
-Authorization-sensitive value?
-├─ Always include identity + permission version in key; invalidate on permission change; bound TTL ≤ permission propagation SLA.
-```
-
-### Anti-examples
-
-| Anti-pattern | Failure |
-| --- | --- |
-| Cache key omits tenant; permission applied after fetch | Cross-tenant data leak when keys collide |
-| All product-detail keys TTL=600s set at deploy | Synchronous expiry → coordinated stampede every 10 min |
-| Negative cache stores `null` with no TTL | Once a key is missing, it stays "missing" forever |
-| Cache restart without warm-up | Origin meltdown on first traffic wave |
-| Pricing cached 1 hour for "performance"; promo launches | Customers see old prices, support storm, revenue dispute |
-| Authorization decision cached 5 min after revoke | Revoked admin still acts for 5 minutes |
-| `Cache-Control: public` on response containing `Set-Cookie` user data | CDN serves user A's response to user B (web cache deception) |
-| Vary on `User-Agent` (high cardinality) | Cache hit rate collapses |
-| Write-behind to keep latency low; Redis crashes | Last 30 s of writes lost; data integrity broken |
-| Key includes raw user input not normalized | Cache poisoning / unbounded cardinality |
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+| --- | --- | --- | --- | --- | --- |
+| Request-local cache | Memoization, LRU, request scope | lifetime and identity boundary | unit test or trace | `unit-testing`, `testability-seam-design` | skip when no shared state or stale consequence |
+| Distributed cache | Redis, Memcached, ORM L2, hot key | source truth, keys, TTL, invalidation | fake-cache concurrent test and fallback proof | `reliability-observability-gate`, `observability` | skip when source query must be fixed first |
+| HTTP / CDN cache | `Cache-Control`, `Vary`, edge rules | public/private boundary and purge | header review and deception/poisoning test | `web-security`, `security-privacy-gate` | skip for purely private non-cacheable responses |
+| Negative cache | miss flood, open key space | bounded miss caching and existence filter | transient-miss recovery and flood proof | `input-validation`, `degradation-circuit-breaking` | skip when miss space is bounded and cheap |
+| Correctness-sensitive cache | auth, pricing, inventory, finance | event invalidation and stale SLA | revoke/update test and owner acceptance | `authentication-authorization`, `transaction-consistency` | skip if source rechecks before action |
+| Degradation cache | stale-if-error, cache outage | source backpressure and kill switch | cache-down drill or scripted fallback test | `reliability-observability-gate`, `release-rollback` | skip when cache failure cannot affect users |
+| Evidence freshness | old graph, memory, report, telemetry | current path and validation reconciliation | command exit status and explicit unknowns | `validation-broker`, `agent-tool-permission-sandbox` | skip only for pure wording with no claim change |
 
 # Selection Rules
 
@@ -111,31 +77,30 @@ Select this capability when **cache behavior is primary**. Adjacent routing:
 
 Escalate when cached data affects: permissions / authorization decisions, pricing / discounts / promotions, financial state (balances, limits, fees), inventory / reservations, compliance records, audit data, tenant isolation in multi-tenant systems, high-traffic hot keys (single key > a few % of total load), launch events / flash sales (predictable stampede), shared HTTP caches (CDN/edge) on responses containing per-user data, scenarios where a cache-miss storm could exceed source capacity, or where cache loss could cause data loss (write-behind). Escalate any new cross-region or shared-edge cache configuration.
 
+# Proactive Professional Triggers
+
+- **Signal:** A cache key omits tenant, identity, permission version, schema version, or normalization. **Hidden risk:** isolation leak, cache poisoning, or mixed-version rollout defect hides behind high hit rate. **Required professional action:** redesign key/value contract and reject post-fetch permission filtering. **Route to:** `cache-design`, `security-privacy-gate`. **Evidence required:** key template, collision boundary, permission test, and redaction rule.
+- **Signal:** Authorization, entitlement, pricing, inventory, financial, or compliance data is cached with only a TTL. **Hidden risk:** stale values authorize revoked users, show wrong prices, oversell inventory, or violate an erasure/audit obligation. **Required professional action:** bind invalidation to the source event or version key and get owner-approved stale bounds. **Route to:** `authentication-authorization`, `transaction-consistency`. **Evidence required:** revoke/update test, invalidation path, SLA, and residual stale window.
+- **Signal:** Hot key, launch event, cold start, restart, or cache outage can move traffic to the source. **Hidden risk:** miss storm or coordinated expiry cascades into source overload. **Required professional action:** add single-flight, lease, jitter, stale-if-error, warm-up, and origin backpressure. **Route to:** `reliability-observability-gate`, `degradation-circuit-breaking`. **Evidence required:** concurrent same-key proof, cache-down drill, hit-rate alert, and source-load guardrail.
+- **Signal:** Missing keys are attacker-controlled, unbounded, or expensive to prove absent. **Hidden risk:** penetration attack turns misses into repeated source lookups. **Required professional action:** add short negative TTL, existence filter or allowlist, normalization, and rate limits. **Route to:** `input-validation`, `degradation-circuit-breaking`. **Evidence required:** transient-miss recovery test, flood test, TTL bound, and false-positive handling.
+- **Signal:** HTTP or CDN cache rules touch cookies, auth headers, personalized responses, extension-routed paths, unkeyed headers, or high-cardinality `Vary`. **Hidden risk:** shared cache deception or poisoning serves one user's response to another. **Required professional action:** review cacheability, `Vary`, path normalization, surrogate keys, and purge path. **Route to:** `web-security`, `security-privacy-gate`. **Evidence required:** header sample, deception/poisoning test, purge proof, and no-store/private decision.
+- **Signal:** Project memory, repository graph, old reports, or previous validation says the cache is safe after key, TTL, invalidation, permissions, serialization, topology, or release path changed. **Hidden risk:** stale evidence is reused for a different execution graph. **Required professional action:** reconcile current paths, rerun focused validation, and disclose what remains unknown. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `validation-broker`, `agent-tool-permission-sandbox`. **Evidence required:** inspected path list, accepted/rejected prior claim, command result, sandbox record, and residual risk.
+
 # Critical Details
 
 Cache correctness is defined by **what staleness is acceptable, for how long, under what failure mode, and to whom**. Apply these refinements:
 
-- **Cache key design.** Include: schema version, tenant, identity (or permission-set version where applicable), normalized inputs, content negotiation. Exclude: noise (request id, traceparent, unbounded headers). Normalize input (lowercase, sort, canonicalize) to maximize hit rate without poisoning.
-- **Value schema versioning.** Bump `v{N}` in key prefix when shape changes; do not mutate in place. Old pods reading new shape (or vice versa) crash or corrupt during rolling deploy.
-- **TTL choice.** Driven by (a) maximum acceptable staleness for the *least-tolerant consumer*, (b) source recompute cost, (c) write rate and invalidation reliability. Add jitter; document the choice.
-- **Invalidation reliability.** "Publish + best-effort delete" loses messages; prefer outbox + CDC, or versioned keys, for correctness-critical invalidation.
-- **Single-flight is per scope.** In-process single-flight does not protect across pods. Cluster-wide protection needs distributed lease / lock or origin-side rate limit.
-- **Probabilistic early recomputation (XFetch)** refreshes a fraction of requests *before* TTL with probability rising near expiry → eliminates synchronized expiry without coordinator.
-- **Hot-key detection.** Sample top-N by request rate; large gap between #1 and #10 means split or replicate the hot key (e.g., shard `key#0..N`, client picks shard).
-- **Stampede test seam.** A reviewable cache implementation exposes or injects the cache client, lock/lease clock, and source loader through the public cache boundary so tests can use a fake cache plus FakeBackend/source-of-truth, fixed time, and concurrent workers to assert single-flight behavior, backend call count of one, TTL jitter bounds, lock timeout fallback, Redis unavailable fallback, and hot/miss/fallback/contention metrics without private-helper imports.
-- **Permission cache TTL** must be ≤ permission propagation SLA. Cached PDP decisions need invalidation on grant change (event-driven), not just TTL.
-- **HTTP cache correctness.** `Cache-Control: private` for per-user; `s-maxage` for shared; `Vary` on the *minimum* set of headers that affect representation; never `Vary: User-Agent` unless content actually depends on UA. `no-store` for sensitive responses.
-- **Cache deception.** Attacker requests `/profile/foo.css` — origin serves `/profile`, edge caches under `.css` (treated as static) → next user gets victim's profile. Defense: normalize path, deny dot-extension on dynamic routes, set `Cache-Control: private` defensively.
-- **Cache poisoning via unkeyed input.** Headers like `X-Forwarded-Host`, `X-Forwarded-Scheme`, `X-Original-URL` may influence response but not be in the cache key → attacker poisons. Defense: include in key or strip at edge.
-- **CDN purge granularity.** Per-URL purge is slow + costly at scale. Use **surrogate keys / cache tags** (Fastly, Cloudflare) so a write event purges only affected tags.
-- **Negative cache with bloom filter.** Bloom filter at edge answers "definitely not present" → short-circuit without origin call. Cache `null` answers with short TTL for items confirmed absent.
-- **Eviction policy.** `allkeys-lru` for general; `allkeys-lfu` for skewed access; `volatile-ttl` only when most keys have TTL and you want the soonest-to-expire evicted first. Wrong policy → working set evicted under memory pressure, hit rate collapses.
-- **Memory pressure → tail latency.** Redis approaching `maxmemory` evicts on every write → p99 latency spikes. Alert on memory % well before maxmemory.
-- **Connection pooling and pipelining.** Redis is fast; the network round trip dominates. Use pipelining for batch reads; tune pool size to avoid connection storms on cold start.
-- **Cache loss drill.** Periodically (in non-prod) flush cache and confirm: source survives, no error spike, hit rate recovers within target. Untested = unknown.
-- **Multi-region.** Cross-region replication has lag; do not use distributed cache for strongly-consistent decisions across regions.
-- **Observability headers.** Emit `Cache-Status` (RFC 9211) so it is visible *what* the cache decided and why (hit/miss/bypass/stale).
-- **GDPR / data subject erasure.** Cached PII must be invalidated on erasure; document the path. Long-TTL cached PII is a compliance risk.
+- **Key and value design.** Include schema version, tenant, identity or permission-set version, normalized inputs, content negotiation, serialization, max size, and value version; exclude request ids, trace ids, unbounded headers, and raw sensitive identifiers.
+- **TTL and invalidation.** TTL follows least-tolerant consumer stale budget, recompute cost, write rate, and invalidation reliability; jitter every shared TTL and prefer outbox, CDC, or versioned keys for correctness-critical updates.
+- **Stampede scope.** In-process single-flight does not protect across pods; cluster-wide protection needs lease/lock, origin rate limit, stale fallback, or probabilistic early recomputation.
+- **Hot-key and cold-start control.** Sample top-N key rate, shard or replicate extreme hot keys, warm caches gradually, and prove source survives restart/failover.
+- **Test seam.** Expose cache client, lock/lease clock, and source loader at the public cache boundary so fake-cache tests can prove backend calls, TTL jitter, lock timeout, fallback, and metrics.
+- **Permission and policy caches.** PDP TTL must be no longer than propagation SLA and must invalidate on grant change; source must recheck final high-risk actions.
+- **HTTP shared cache safety.** Use `private` or `no-store` for sensitive responses, minimize `Vary`, normalize paths, include or strip response-affecting headers, and use surrogate keys for precise purge.
+- **Negative cache.** Cache confirmed absence with short TTL, pair with existence filters when the legitimate key set is bounded, and verify transient misses recover.
+- **Eviction and memory.** Pick eviction policy to match access skew, alert before `maxmemory`, and measure item size, fragmentation, key cardinality, and p99 latency under pressure.
+- **Multi-region and erasure.** Declare replication lag, avoid strong decisions on eventually replicated cache, and invalidate cached PII on erasure.
+- **Observability.** Emit hit, miss, stale, bypass, eviction, refresh failure, hot-key, source-load, memory, and `Cache-Status`-style decision signals where applicable.
 
 # Failure Modes
 
@@ -152,57 +117,51 @@ Cache correctness is defined by **what staleness is acceptable, for how long, un
 - Cache value schema rolled out without key versioning; old pods crash on new shape during rolling deploy.
 - Negative cache without TTL turns transient miss into permanent "not found".
 - Permission-decision cache TTL longer than admin's expectation → revoked admin still acts.
-- Eviction policy mismatch (e.g., `noeviction`) → writes start failing under memory pressure.
-- CDN per-URL purge cannot keep up with write rate → stale spreading globally.
-- `Vary: User-Agent` collapses hit rate; switching to `Vary: Accept-Encoding` recovers it.
-- PII cached with long TTL violates erasure SLA.
+- Eviction policy, purge granularity, or `Vary` cardinality mismatch collapses hit rate or spreads stale content globally.
+- PII cached beyond erasure SLA creates a privacy and compliance failure.
 
 # Reference Loading Policy
 
-Read `references/checklist.md` only when the change touches distributed caches, HTTP/CDN caches, tenant or permission scoped data, mutable entitlements, pricing, inventory, negative caching, stampede protection, cache-down fallback, or production observability. Do not load it for an isolated request-local memoization with no shared state, no sensitive data, and no stale-read consequence.
+- Use the `SKILL.md` body for L1/L2 routing, stage fit, mode selection, trigger detection, output contract, and quality gate.
+- Load [references/checklist.md](references/checklist.md) for concrete cache plans involving distributed caches, HTTP/CDN caches, tenant or permission scoped data, mutable entitlements, pricing, inventory, negative caching, stampede protection, cache-down fallback, or production observability.
+- Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when selecting cache pattern/technology, reviewing stampede/penetration/avalanche defenses, handling HTTP cache security, mapping observability and validation evidence, or reconciling graph/memory/execution evidence.
+- Do not load references for isolated request-local memoization with no shared state, no sensitive data, and no stale-read consequence unless the cache behavior is disputed.
 
 # Output Contract
 
 Return a cache strategy with, per cached value class:
 
-- `purpose` (latency reduction, source protection, fallback, edge distribution)
-- `source_of_truth` (system, table/endpoint)
-- `owner` (team/role)
-- `key_schema` (template with version: `v{N}:t{tenant}:u{identity}:{logical}`; normalization rules; cardinality estimate)
-- `value_shape` (schema, version, serialization format, max size)
-- `tier` (in-process / distributed / HTTP / CDN / materialized view) and **technology choice rationale**
-- `pattern` (cache-aside / read-through / write-through / write-behind / refresh-ahead / versioned-key)
-- `ttl` (base + jitter %; per-class)
-- `consistency_tolerance` (max acceptable staleness; consumer-named)
-- `invalidation` (write-path triggers, outbox/CDC, version bump, surrogate-key purge)
-- `stampede_protection` (single-flight scope, lease, XFetch, lock-with-fallback)
-- `penetration_protection` (negative cache TTL, bloom/cuckoo filter, rate limit)
-- `avalanche_protection` (warm-up, request coalescing, source rate limit, stale-if-error)
-- `tenant_permission_scoping` (key composition; PDP cache invalidation on grant change)
-- `failure_mode` (cache down → degrade-and-serve from source under backpressure; bounds documented)
-- `eviction_policy` and **memory headroom alert threshold**
-- `observability` (hit/miss/stale/eviction/refresh-failure/source-load/hot-key/memory metrics; alerts; `Cache-Status` header where HTTP)
-- `security` (no secrets in keys/logs; hashed PII; HTTP cacheability + Vary review; deception/poisoning defenses)
-- `gdpr_erasure_path` (where applicable)
-- `tests` (correctness under: stale, miss flood, stampede, cache-down, schema-version mixed deploy, permission revoke, invalidation race)
-- `rollout_plan` (warm-up, canary, kill-switch, rollback)
+- `mode_and_rationale` (request-local, distributed, HTTP/CDN, negative, correctness-sensitive, degradation; why this tier/pattern)
+- `source_owner_contract` (source of truth, owner, purpose, consumers, stale tolerance)
+- `key_value_contract` (versioned key template, tenant/permission scope, normalized inputs, value schema, serialization, cardinality, max size)
+- `freshness_contract` (TTL, jitter, invalidation event/version, consistency window, write-path responsibility)
+- `defense_contract` (stampede, penetration, avalanche, hot-key, cold-start, stale-if-error, source backpressure)
+- `security_privacy_contract` (secrets/PII redaction, HTTP cacheability, `Vary`, deception/poisoning defenses, erasure path)
+- `failure_and_rollout_contract` (cache-down behavior, warm-up, canary, kill switch, rollback independent of cache health)
+- `observability_contract` (hit/miss/stale/eviction/refresh-failure/source-load/hot-key/memory metrics, alerts, `Cache-Status`)
+- `validation_contract` (tests for stale, miss flood, stampede, cache-down, mixed schema, permission revoke, invalidation race)
+- `graph_memory_execution_coupling` (current graph/memory facts used, current files/config/tests/telemetry that confirm or reject them)
+- `validation_freshness` (commands, timestamps or run identifiers, exit status, and stale evidence called out)
+- `tool_permission_boundary` (read-only vs state-mutating cache/tool actions, sandbox, approval requirement, redaction rule)
+- `evidence_scope` (what the evidence covers, what remains unproven, residual owner/risk)
 
 # Evidence Contract
 
 A cache change is complete only when the output includes:
 
-- **Source of truth**: canonical store and how the cache is derived.
-- **Key design**: namespace, version, tenant/user/resource boundary, cardinality, and collision prevention.
-- **TTL / invalidation**: TTL value, TTL jitter, explicit invalidation trigger, write-through/write-around/write-back choice, and stale-window acceptance.
-- **Negative caching**: whether misses/errors are cached, for how long, and how poisoning is prevented.
-- **Staleness contract**: maximum stale duration and user-visible consequence.
-- **Stampede protection**: lock, singleflight, request coalescing, backoff, or warmup strategy.
-- **Memory bound**: estimated key count, value size, eviction policy, hot-key risk, and monitoring metric.
-- **Failure behavior**: cache miss, backend unavailable, stampede, stale read, cross-tenant collision, partial invalidation, and multi-region invalidation if relevant.
-- **Validation evidence**: test or command proving TTL, invalidation, key isolation, stampede protection, negative cache behavior, and fallback behavior.
-- **What evidence proves**: the inspected cache path stays within the declared staleness, isolation, and fallback contract.
-- **What evidence does not prove**: production cardinality, real traffic skew, cache cluster pressure, rare invalidation race, or regional propagation delay.
-- **Residual risk**: untested invalidation path, owner, and next gate.
+- **Boundaries inspected**: cache owner, source of truth, key/value classes, tenant/user/permission scope, HTTP edge boundary, write paths, telemetry, tests, and release path.
+- **Selected mode**: cache pattern, tier, and why cheaper alternatives were insufficient.
+- **Cache contract**: source of truth, versioned key/value schema, TTL/jitter, invalidation trigger, stale-window acceptance, negative cache policy, memory bound, and eviction policy.
+- **Failure behavior**: cache miss, backend unavailable, stampede, stale read, cross-tenant collision, partial invalidation, multi-region lag, and cache-down fallback.
+- **Validation evidence**: test or command proving TTL, invalidation, key isolation, stampede protection, negative cache behavior, fallback behavior, and mixed-version safety.
+- **Security and privacy review**: tenant/permission scope, key/log redaction, PII erasure, HTTP cacheability, deception, poisoning, and secret handling.
+- **Reliability and observability review**: hit/miss/stale/eviction/source-load/hot-key/memory metrics, alert thresholds, drill status, and overload guardrails.
+- **What evidence proves**: inspected cache paths stay within declared staleness, isolation, fallback, and observability contracts.
+- **What evidence does not prove**: production cardinality, real traffic skew, cache pressure, rare invalidation race, regional propagation delay, or uninspected edge rules.
+- **Graph / memory / execution reconciliation**: current repository graph, remembered facts, files, commands, and validation outputs align; stale or missing evidence is named.
+- **Reuse / placement rationale**: why cache-specific guidance stays in this capability or its references rather than registry, dist, shared/common, or out-of-scope runtime content paths.
+- **Tool boundary**: whether any cache command, purge, telemetry query, build, install, or validation was read-only or state-mutating, with sandbox and redaction noted.
+- **Residual risk and handoff**: untested invalidation path, owner, next gate, and handoff target.
 
 # Quality Gate
 
@@ -212,14 +171,22 @@ The strategy passes only when:
 2. **Per cached class**: purpose, key schema (with version + tenant + identity scope), value schema, TTL with jitter, invalidation, consistency tolerance are documented.
 3. **Stampede, penetration, and avalanche protection** are designed (not assumed) for hot keys and cold-start.
 4. **Tenant + permission scope** is in the key, not in post-fetch filtering.
-5. **Cache failure degrades gracefully** (source still serves under backpressure); cache-loss drill executed or scheduled.
-6. **Authorization / pricing / financial / inventory caches** have invalidation tied to the underlying event, not pure TTL guess.
-7. **Schema versioning** allows safe rolling deploys without mixed-shape crashes.
-8. **Observability**: hit/miss/stale/eviction/source-load/memory metrics emitted; alerts on hit-rate cliff, miss storm, hot-key concentration, memory pressure.
-9. **HTTP/CDN caches** reviewed for correctness of `Cache-Control`, `Vary`, surrogate keys; deception and poisoning vectors closed.
-10. **No secrets, tokens, or unredacted PII** in keys or logs; PII has erasure path.
-11. **Tests** cover stale, miss flood, stampede, cache-down, mixed-version deploy, permission revoke, invalidation race.
-12. **Rollout plan** includes warm-up, canary, kill-switch, and a documented rollback that does not depend on cache being healthy.
+5. **Cache failure degrades gracefully** under source backpressure; cache-loss drill is executed or scheduled.
+6. **Correctness-sensitive caches** use event invalidation/versioning, not TTL guess; schema versioning handles rolling deploys.
+7. **HTTP/CDN and privacy review** closes `Cache-Control`, `Vary`, surrogate-key, deception, poisoning, secret, token, PII, and erasure risks.
+8. **Observability** covers hit/miss/stale/eviction/source-load/hot-key/memory signals and alert thresholds.
+9. **Tests** cover stale, miss flood, stampede, cache-down, mixed-version deploy, permission revoke, and invalidation race.
+10. **Rollout** includes warm-up, canary, kill switch, and rollback that does not depend on cache health.
+11. **Graph, memory, validation, and tool-boundary evidence** is fresh and records read-only vs state-mutating actions.
+12. **Claims are bounded** and do not overstate production traffic skew, regional propagation, memory pressure, or rare races.
+
+# Benchmark Coverage
+
+This capability covers HTTP cache semantics, conditional validation, stale extensions, cache-status observability, distributed cache topology, key namespace isolation, hot-key and stampede defenses, negative cache defenses, CDN purge models, web cache deception and poisoning, rolling schema version safety, cache-down degradation, and observability-driven validation. It does not replace source query optimization, durable storage design, authorization modeling, or deployment rollout ownership.
+
+# Routing Coverage
+
+Route here when cache behavior, freshness, invalidation, or fallback is the central design risk. Combine with `reliability-observability-gate` for overload and degradation, `security-privacy-gate` or `web-security` for shared HTTP cache and tenant/privacy risks, `authentication-authorization` for PDP/permission-decision caches, `indexing-query-optimization` when the real issue is source query cost, `data-model-design` when read shape is wrong, `observability` for signal design, `validation-broker` for evidence freshness, and `agent-tool-permission-sandbox` for cache commands, telemetry reads, validation, build, install, or release actions.
 
 # Used By
 
@@ -228,7 +195,7 @@ The strategy passes only when:
 
 # Handoff
 
-Hand off to `indexing-query-optimization` when the underlying source query needs to be fixed; `data-model-design` when the read shape requires denormalization; `search-analytics-design` when a specialized read engine is the right answer; `authentication-authorization` for permission-decision cache invalidation; `web-security` for HTTP cache deception / poisoning review; `reliability-observability-gate` for degradation policies and overload protection; `observability` for cache-specific signal design; `backend-change-builder` for implementation.
+Hand off to `indexing-query-optimization` when the underlying source query needs to be fixed; `data-model-design` when the read shape requires denormalization; `search-analytics-design` when a specialized read engine is the right answer; `authentication-authorization` for permission-decision cache invalidation; `web-security` / `security-privacy-gate` for HTTP cache deception, poisoning, tenant, or privacy review; `reliability-observability-gate` for degradation policies and overload protection; `observability` for cache-specific signal design; `validation-broker` for evidence freshness; `agent-tool-permission-sandbox` for cache commands and validation/build operations; `backend-change-builder` for implementation.
 
 # Completion Criteria
 

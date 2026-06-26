@@ -19,6 +19,10 @@ Use this capability when a change: introduces a new use case that crosses multip
 
 Do not use this capability to force unnecessary layering ceremony on a small, isolated change that already follows established layering and has no business-rule risk. Do not use it to impose a canonical folder structure on a team that has established a different — but internally consistent — architecture; consistency within a codebase outweighs theoretical correctness of an external standard.
 
+# Stage Fit
+
+Use during architecture-design, implementation-planning, coding, code-review, refactoring, debugging, testing, and release-readiness when presentation, application, domain, infrastructure, repository, adapter, transaction, exception, or dependency-direction responsibility is unclear. In planning, define layer ownership, dependency rules, exceptions, test seams, and enforcement before implementation. In coding/review, reject stale project-memory or repository-graph claims unless current imports, package layout, service/repository/domain code, tests, and architecture checks confirm the layering behavior. Hand off when the primary question is module ownership, architecture style choice, concrete service orchestration, domain invariant implementation, persistence design, or distributed transaction behavior.
+
 # Non-Negotiable Rules
 
 - **Controllers (Presentation) must not contain business decisions.** A controller may: parse transport input (deserialize, validate format via DTO), call an application service method, and format the response. It must not: branch on business conditions (`if order.status == 'processing'`), calculate values, or enforce business policies. The litmus test: if the same use case is triggered by a CLI command, a queue consumer, or a scheduled job — the business behavior must work unchanged without the HTTP layer.
@@ -27,85 +31,22 @@ Do not use this capability to force unnecessary layering ceremony on a small, is
 - **Infrastructure exceptions must not leak into domain or application layers as framework types.** `psycopg2.errors.UniqueViolation`, `SqlException`, `MongoWriteConcernError` must be caught at the repository adapter boundary and re-thrown as domain exceptions (`DuplicateOrderException`, `PersistenceException`). Domain and application code must never import or catch database-specific exception classes.
 - **Transactions belong to the Application layer.** The unit of work (transaction boundary) spans use cases, not individual repository calls. A domain entity must not start or commit transactions. A repository must not open a cross-entity transaction. The application service (or a unit-of-work pattern) manages the transaction scope.
 - **Dependency direction is enforced by tooling, not convention.** Architecture conventions without automated enforcement erode over time. Use: **ArchUnit** (Java) — `layeredArchitecture().layer("Domain").definedBy("..domain..")...noDependency()...`; **Dependency Cruiser** (JavaScript/TypeScript) — `.dependency-cruiser.js` with forbidden import rules; **import-linter** (Python) — `[importlinter:contract:domain-no-infra]`; **NDepend** (.NET) — dependency matrix rules. These checks must run in CI.
+- **Closure evidence names the architecture check command, validator/tool, artifact/report path, exit code or manual result, import graph scope, changed paths, and freshness after the final layer-related edit.** A stale successful architecture check from before import or package movement is not completion evidence.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Layer responsibility map | New controller/service/domain/repository/adapter or unclear use-case placement. | Assign presentation, application, domain, and infrastructure responsibilities. | Current package layout, entry point, use case, domain objects, repository/adapters, rejected placements. | `implementation-structure-design`, `module-boundary-design` | Macro architecture style debate. |
+| Dependency direction enforcement | Import cycle, domain imports ORM/framework, application imports HTTP/DB client, or no architecture check. | Inward dependency rule and machine enforcement. | Import graph, forbidden import list, existing or proposed ArchUnit/dependency-cruiser/import-linter rule. | `architecture-enforcement-tooling`, `quality-test-gate` | Manual convention-only review. |
+| Business rule placement | Business condition in controller/service/repository, duplicated invariant, or anemic domain concern. | Put invariants in domain or justify transaction script. | Rule name, actor/use case, domain owner, current duplicate sites, test seam. | `domain-logic-implementation`, `service-business-logic` | Rich domain model for trivial CRUD. |
+| Transaction and exception boundary | Transaction scope, infrastructure exception, unit of work, or adapter error mapping is unclear. | Application transaction ownership and adapter exception translation. | Participating repositories, rollback rule, exception map, unit-of-work owner. | `transaction-consistency`, `repository-persistence` | Distributed saga design unless needed. |
+| Framework and adapter isolation | Framework decorators, ORM models, HTTP clients, queues, files, or env access appear in core code. | Keep core testable without framework/infrastructure startup. | Import scan, adapter boundary, constructor/port seam, test command. | `test-strategy`, `repository-persistence` | Framework tutorial detail. |
+| Architecture exception review | Team uses transaction script, Active Record, framework-first layering, or deliberate shortcut. | Name exception, owner, expiry/review trigger, and tests that contain risk. | Local convention, simpler alternative, risk accepted, enforcement or residual risk. | `architecture-impact-reviewer`, `minimal-correct-implementation` | Dogmatic clean-architecture rewrite. |
 
 # Industry Benchmarks
 
-Anchor against: **Robert C. Martin "Clean Architecture"** (2017) — Entities (domain), Use Cases (application), Interface Adapters (presentation/infrastructure), Frameworks/Drivers; dependency rule: inner layers know nothing about outer layers; the most cited architectural text for layer discipline. **Alistair Cockburn "Hexagonal Architecture / Ports and Adapters"** (2005, alistair.cockburn.us) — application core (domain + application services) surrounded by ports (interfaces) and adapters (implementations); enables testing the core without adapters. **Eric Evans "Domain-Driven Design"** (2003, Addison-Wesley) — Layered Architecture (Ch. 4): UI, Application, Domain, Infrastructure; "Domain layer is the heart of the business software." **Martin Fowler "Patterns of Enterprise Application Architecture"** (2002) — Service Layer, Repository, Domain Model, Table Module, Transaction Script patterns; placement rules for business logic. **Onion Architecture** (Jeffrey Palermo, 2008) — concentric rings; domain core at center; application services; infrastructure at periphery; dependency inward only. **SOLID — Dependency Inversion Principle** (Robert Martin) — high-level modules must not depend on low-level modules; both must depend on abstractions. **Spring (Java) layer conventions** — `@Controller` → `@Service` → `@Repository`; stereotype annotations enforce layer awareness (not enforced by language; requires ArchUnit for rule enforcement). **NestJS (TypeScript)** — Modules, Controllers, Services, Repositories; `@Injectable()` + DI container; facilitates Hexagonal but does not enforce it. **pytest / JUnit test architecture** — domain unit tests: no mocks needed (pure functions / value objects); application service tests: mock repository interfaces; infrastructure tests: real DB via Testcontainers.
-
-### Layer Responsibility Table
-
-| Layer | Owns | Must not contain | Depends on | Typical types |
-| --- | --- | --- | --- | --- |
-| Presentation | Transport parsing, request validation, response formatting, auth header extraction | Business rules, database queries, domain decisions | Application | Controller, Handler, Resolver, Presenter, DTO (request/response) |
-| Application | Use case orchestration, transaction boundary, authorization invocation, event publishing coordination | Business invariants, persistence details, HTTP/transport details | Domain (via interfaces); Infrastructure (via DI injection of interfaces) | ApplicationService, UseCase, CommandHandler, QueryHandler, UnitOfWork |
-| Domain | Business invariants, entity lifecycle, value objects, domain events, domain services, business calculations | Database clients, HTTP clients, framework imports, environment config | Nothing (pure) | Entity, ValueObject, AggregateRoot, DomainService, Repository (interface), DomainEvent |
-| Infrastructure | Persistence (ORM, SQL), external API HTTP clients, message producers/consumers, file I/O, framework adapters | Business rules, domain decisions | Domain (implements domain interfaces); Application (implements application ports) | Repository (impl), DbModel, HttpAdapter, MessageProducer, CacheAdapter |
-
-### Dependency Direction Enforcement
-
-```
-Correct dependency direction:
-  Presentation → Application → Domain ← Infrastructure
-
-                +------------------+
-                |   Presentation   |  (Controllers, DTOs)
-                +--------↓---------+
-                |   Application    |  (Use Cases, Services)
-                +--------↓---------+
-                |     Domain       |  (Entities, Value Objects, Interfaces)
-                +------- ↑ --------+
-                | Infrastructure   |  (Repositories, HTTP Adapters)
-                +------------------+
-
-Domain defines:
-  interface OrderRepository {
-    findById(id: OrderId): Order | null
-    save(order: Order): void
-  }
-
-Infrastructure implements:
-  class PostgresOrderRepository implements OrderRepository {
-    constructor(private db: Database) {}
-    findById(id: OrderId): Order | null {
-      const row = this.db.query('SELECT * FROM orders WHERE id = $1', [id.value])
-      return row ? Order.reconstitute(row) : null
-    }
-  }
-  // ← Infrastructure imports domain interface and entity
-  // ← Domain does NOT import PostgresOrderRepository
-
-ArchUnit enforcement (Java):
-  layeredArchitecture()
-    .layer("Presentation").definedBy("..presentation..")
-    .layer("Application").definedBy("..application..")
-    .layer("Domain").definedBy("..domain..")
-    .layer("Infrastructure").definedBy("..infrastructure..")
-    .whereLayer("Domain").mayNotAccessLayersExcept()
-    .whereLayer("Application").mayNotAccessLayersExcept("Domain")
-    .whereLayer("Presentation").mayNotAccessLayersExcept("Application")
-```
-
-### Business Logic Placement Decision Tree
-
-```
-Is this a CALCULATION, POLICY, or INVARIANT?
-  → Domain layer (Entity method, Domain Service, Value Object)
-
-Is this a WORKFLOW STEP that coordinates multiple domain objects,
-transactions, authorization, or events?
-  → Application Service / Use Case
-
-Is this about PARSING REQUEST / VALIDATING FORMAT / FORMATTING RESPONSE?
-  → Presentation layer (Controller, DTO validator)
-
-Is this about READING/WRITING to external storage or calling external APIs?
-  → Infrastructure layer (Repository impl, HTTP adapter)
-
-Anti-test:
-  "Can I unit-test this without starting a DB, HTTP server, or framework container?"
-    YES → Domain logic is correct
-    NO  → Domain logic has leaked into Infrastructure or Application has Infrastructure imports
-```
+Anchor against Clean Architecture, Hexagonal/Ports and Adapters, DDD Layered Architecture, Fowler's Service Layer/Repository/Domain Model/Transaction Script patterns, Onion Architecture, SOLID Dependency Inversion, framework layer conventions, architecture fitness functions, and test pyramids that keep domain tests infrastructure-free. Keep this body focused on routing, layer decisions, evidence, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for layer responsibility matrices, dependency enforcement examples, business logic placement rules, graph/memory/trajectory coupling, and anti-pattern review.
 
 # Selection Rules
 
@@ -116,6 +57,14 @@ Select this capability when **business logic placement and dependency direction*
 - Prefer `domain-logic-implementation` when implementing domain entities, value objects, and invariants is primary.
 - Prefer `microservice-splitting` when the question is whether a bounded context should be extracted into a separate deployable service.
 - Prefer `architecture-tradeoff-analysis` when the decision is between layered, CQRS, event-sourcing, or other macro-architecture patterns.
+
+# Proactive Professional Triggers
+
+- **Signal:** a controller, resolver, route, CLI handler, or queue consumer contains business conditionals, calculations, or policy checks. **Hidden risk:** delivery mechanisms diverge and duplicate rules. **Required professional action:** move behavior to application/domain boundary and define the layer map. **Route to:** `service-business-logic`, `domain-logic-implementation`. **Evidence required:** current entry point, rule name, target layer, and test seam.
+- **Signal:** domain objects, value objects, or domain services import ORM models, database sessions, HTTP clients, queues, filesystem APIs, framework containers, or environment config. **Hidden risk:** domain behavior cannot be tested or reused without infrastructure. **Required professional action:** introduce/confirm ports and adapter implementations. **Route to:** `repository-persistence`, `implementation-structure-design`. **Evidence required:** import scan, port/interface owner, adapter owner, domain-only test.
+- **Signal:** architecture is said to be layered because folders exist, but no dependency rule runs in CI. **Hidden risk:** convention decays silently. **Required professional action:** define architecture fitness check or name residual risk. **Route to:** `architecture-enforcement-tooling`, `quality-test-gate`. **Evidence required:** ArchUnit/dependency-cruiser/import-linter/NDepend rule or not-verified enforcement limit.
+- **Signal:** project memory, repository graph, or prior trajectory claims a layering pattern already exists. **Hidden risk:** stale layer labels hide current imports, framework coupling, or exception leaks. **Required professional action:** confirm current source imports, package layout, tests, and validation freshness before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected pattern, freshness limit.
+- **Signal:** a team proposes Clean/Hexagonal/Onion layering for simple CRUD or a tiny isolated change. **Hidden risk:** ceremony and pass-through layers reduce efficiency without protecting behavior. **Required professional action:** decide transaction script versus domain model explicitly. **Route to:** `minimal-correct-implementation`, `architecture-impact-reviewer`. **Evidence required:** business-rule count, invariant complexity, rejected heavier layer, and test boundary.
 
 # Risk Escalation Rules
 
@@ -139,8 +88,14 @@ Escalate when: a controller contains branching business policies that would chan
 | All application services have 10+ constructor dependencies | God class; orchestrating too much | Split into multiple focused use cases; extract domain services |
 | Domain Service calls `requests.get('https://...')` | Infrastructure call in Domain | Define a port interface in domain; implement HTTP adapter in infrastructure |
 
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 layer selection, stage fit, evidence, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete layer map, dependency direction rule, business logic placement, transaction boundary, exception mapping, or architecture enforcement obligation. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed benchmark anchors, responsibility matrices, enforcement snippets, placement decision trees, graph/memory/trajectory coupling, or anti-pattern review is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or minor wording edits where the inline output contract and quality gate are enough.
+
 # Failure Modes
 
+- **Stale graph closure**: project memory says "domain has no infrastructure imports," but the import graph was not rerun after a new adapter or package move; a hidden domain -> ORM edge reaches release.
+- **Unowned layer exception**: a temporary framework-first shortcut has no owner, expiry, containment test, or residual risk; later refactoring normalizes the exception across new features.
 - Controller contains `if subscription.plan == 'enterprise' and feature_flag: return enhanced_response` — business rule duplicated across 3 controllers; plan change requires updating all 3; inconsistency bug.
 - Domain entity imports SQLAlchemy model to resolve a lazy relationship — ORM session required to unit-test domain logic; test startup time triples.
 - Application service catches `psycopg2.errors.ForeignKeyViolation` directly — domain and application code now coupled to PostgreSQL; migration to a different database requires changes in application layer.
@@ -152,6 +107,10 @@ Escalate when: a controller contains branching business policies that would chan
 
 Return a layer responsibility map with:
 
+- `mode_selected` (layer responsibility map / dependency direction enforcement / business rule placement / transaction and exception boundary / framework and adapter isolation / architecture exception review)
+- `layering_scope` (use case, module/package boundary, included layers, excluded modules, local architecture convention)
+- `source_evidence` (current controllers/handlers, application services, domain objects, repositories/adapters, imports, tests, architecture checks, repository graph, project memory, and execution trajectory inspected with freshness limits)
+- `graph_memory_trajectory_judgment` (accepted, rejected, or not verified for each reused layer convention, import rule, repository pattern, transaction pattern, exception mapping, test pattern, or architecture check)
 - `entry_points` (controllers, handlers, consumers; what they parse and delegate)
 - `application_use_cases` (named use cases; transaction boundaries; authorization invocation; event publishing coordination)
 - `domain_rules` (entities; value objects; domain services; invariants; which rules live where)
@@ -163,21 +122,45 @@ Return a layer responsibility map with:
 - `exception_mapping` (infrastructure exception → domain exception: table of mappings)
 - `test_strategy` (domain: pure unit test; application: unit with repository mock; infrastructure: integration with Testcontainers)
 - `enforcement` (ArchUnit / dependency-cruiser / import-linter rule: run in CI)
+- `validation_commands` (architecture/import check command, validator/tool, artifact/report path, exit code or manual result, changed path scope, and freshness verdict)
+- `layer_exception_decisions` (transaction script, Active Record, framework-first, or legacy exception with reason, owner, expiry/review trigger, and containment test)
+- `changed_layer_to_validation_map` (each entry point, use case, domain rule, repository interface, adapter, transaction boundary, exception mapping, dependency rule, architecture exception, and enforcement check mapped to validator/test or residual risk)
+- `handoff_boundaries` (what belongs to module boundary, service orchestration, domain invariant, repository/persistence, transaction consistency, architecture style, or quality/test gate)
+- `evidence_limits` (what was not inspected or run: full import graph, actual CI architecture rule, target project tests, DB/infrastructure tests, framework startup, generated clients, or production package layout)
+
+# Evidence Contract
+
+Close a layered-architecture output only when it names selected mode, layer scope, current source evidence, graph/memory/trajectory reuse judgment, boundaries inspected, entry points, application use cases, domain rules, repository interfaces, infrastructure adapters, dependency direction, transaction boundary, validation boundary, exception mapping, test strategy, enforcement rule or residual risk, layer exceptions, changed-layer-to-validation map, handoff boundaries, residual risk, and evidence limits. A folder list, "use clean architecture", or "controllers call services" statement is not sufficient evidence.
+
+Validation evidence must name command, validator, artifact/report path, exit code or manual result, changed path scope, and freshness after the final material import/layer/edit. State what evidence proves, what evidence does not prove, reuse and placement rationale for graph/memory/trajectory claims, behavior preservation for existing layer conventions and exceptions, and next gate/handoff owner.
+
+# Benchmark Coverage
+
+Improved layer outputs reject common weak patterns: controller business conditionals, domain imports of ORM/framework/HTTP code, application services catching infrastructure exceptions, repositories owning cross-aggregate transactions, domain events publishing directly to Kafka, pass-through services with no boundary reason, rich domain models for trivial CRUD, architecture rules that exist only as convention, and stale project-memory claims about layering. Detailed benchmark anchors, responsibility tables, enforcement examples, and placement decision trees belong in references so the body stays efficient.
+
+# Routing Coverage
+
+Route here when presentation/application/domain/infrastructure responsibilities, dependency direction, business logic placement, repository interface ownership, transaction scope, infrastructure exception mapping, or architecture enforcement is primary. Hand off when the primary concern is module ownership/public API (`module-boundary-design`), macro architecture style (`architecture-style-selection`), concrete application service orchestration (`service-business-logic`), domain invariant implementation (`domain-logic-implementation`), persistence adapter design (`repository-persistence`), distributed transaction/idempotency (`transaction-consistency` / `idempotency-retry-design`), or executable architecture checks (`quality-test-gate` / `architecture-enforcement-tooling`).
 
 # Quality Gate
 
 The layer design is complete only when:
 
-1. Controller contains no business conditional logic; delegates entirely to application service.
-2. Domain entities and services have zero imports from infrastructure or framework packages.
-3. Repository interfaces defined in domain layer; implementations in infrastructure.
-4. Infrastructure exceptions mapped to domain exceptions at the adapter boundary.
-5. Transaction boundary defined in application layer (not in repository or domain).
-6. Domain logic is unit-testable without starting a database, HTTP server, or framework container.
-7. Dependency direction rule implemented in automated tool (ArchUnit, dependency-cruiser, import-linter) and runs in CI.
-8. Business invariants live in domain entities/services, not in application service conditional checks.
-9. Domain events raised inside domain boundary; published by application service after use case completes.
-10. Transaction Script vs Domain Model decision documented for each aggregate (justified choice, not assumed).
+1. Selected mode, layer scope, source evidence, and graph/memory/trajectory reuse judgment are explicit.
+2. Controller contains no business conditional logic; delegates entirely to application service.
+3. Domain entities and services have zero imports from infrastructure or framework packages.
+4. Repository interfaces are defined in the domain or explicitly justified local convention; implementations live in infrastructure/adapters.
+5. Infrastructure exceptions are mapped to domain/application exceptions at the adapter boundary.
+6. Transaction boundary is defined in application layer or unit-of-work owner, not hidden in repository/domain code.
+7. Domain logic is unit-testable without starting a database, HTTP server, framework container, queue, or external API.
+8. Dependency direction rule is implemented in an automated tool and runs in CI, or the missing enforcement is named as residual risk.
+9. Business invariants live in domain entities/services, not duplicated in controller/application conditional checks.
+10. Domain events are raised inside domain boundary and published by application service/outbox after the use case reaches a consistent state.
+11. Transaction Script vs Domain Model decision is documented for each aggregate/use case, with complexity justification.
+12. Every deliberate layer exception has owner, reason, expiry/review trigger, and containment test or residual risk.
+13. Each changed entry point, use case, domain rule, repository interface, adapter, transaction boundary, exception mapping, dependency rule, and enforcement check maps to validation evidence or named residual risk.
+14. Validation commands, validators, artifacts/reports, exit code or manual result, changed path scope, and freshness are recorded for every accepted import, layer exception, or enforcement claim.
+15. Handoff boundaries and evidence limits are explicit so layer evidence is not over-claimed as module boundary, domain implementation, persistence, distributed transaction, or CI enforcement proof.
 
 # Used By
 

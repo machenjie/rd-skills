@@ -197,30 +197,17 @@ Examples:
 - `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
 
 ## Output Contract
-Return a structured architecture review with:
-- **Mode selected**: Architecture mode and trigger signal that selected it.
-- **Decision**: Approved / Approved with conditions / Returned for redesign.
-- **Alternatives considered**: At least one simpler alternative with explicit reason for rejection.
-- **Boundary impact**: New or changed module and service boundaries with ownership declarations.
-- **Module graph**: Monorepo package/module graph, owners, public interfaces, allowed dependency directions, and generated-file ownership when applicable.
-- **Dependency impact**: New dependencies with direction, coupling level, and availability analysis.
-- **Dependency wiring and lifecycle**: composition root, dependency graph, lifecycle scope, service locator decision, singleton/global-state ownership, startup validation, and shutdown cleanup when architecture changes wiring.
-- **Architecture enforcement plan**: import/cycle/export/forbidden-dependency rules, tool choice, CI command, generated-code exceptions, migration path, and residual unenforced rule.
-- **Consumer impact report**: changed public contract, known/unknown consumers, compatibility, migration/deprecation, telemetry, and rollout/rollback when public boundaries change.
-- **Data ownership impact**: Any changes to authoritative data ownership with contract requirements.
-- **Tradeoff analysis**: Explicit tradeoffs accepted (performance vs. consistency, simplicity vs. extensibility, etc.).
-- **Failure blast radius**: Operational impact if the new component fails.
-- **Observability requirements**: Metrics, traces, and alerts required for the new component.
-- **Build and test impact**: Affected tests, incremental build approach, build cache key inputs, generated file policy, and full-suite fallback when applicable.
-- **ADR requirement**: Yes/No — whether a written ADR is required before implementation.
-- **Open risks**: Unresolved design risks with proposed owners and review dates.
-- **Boundaries inspected**: modules, packages, services, public APIs, data owners, generated files, dependency edges, release topology, and tests inspected.
-- **Professional judgment**: over-engineering vs under-design decision, reversibility, hidden coupling ruled out, and owner accountability.
-- **Reuse and placement rationale**: existing module/service/API/contract reused or new boundary justified, with public/private decision.
-- **Behavior preservation statement**: existing contract, dependency direction, ownership, rollout, and operational behavior preserved or intentionally changed.
-- **Validation evidence**: dependency-graph, affected-test, build-cache, ADR, or not-verified disclosure with outcome.
-- **Evidence limits**: what architecture evidence proves and does not prove about scale, org ownership, production traffic, and future requirements.
-- **Residual risk and next gate**: accepted tradeoff, deferred ADR, rollout/reliability/docs handoff, and owner.
+Return a structured architecture review with actionable evidence:
+- **Mode and decision:** selected mode, trigger signal, Approved / Approved with conditions / Returned for redesign.
+- **Boundaries inspected:** modules, packages, services, public APIs, data owners, generated files, dependency edges, release topology, tests, and skipped areas with reason.
+- **Architecture judgment:** over-engineering vs under-design decision, strongest simpler alternative rejected, tradeoffs, reversibility, hidden coupling ruled out, and owner accountability.
+- **Boundary impact:** module/service ownership, dependency direction, data ownership, consumer impact, public/private surface, architecture enforcement, and dependency lifecycle.
+- **Operability impact:** failure blast radius, availability math, observability requirements, rollout/rollback behavior, build/test impact, and ADR requirement.
+- **Reuse / placement rationale:** existing module/service/API/contract reused or new boundary justified, with public/private decision.
+- **Validation evidence:** dependency graph, affected tests, build cache, ADR, or not-verified disclosure, including what evidence proves and does not prove.
+- **Residual risk and next gate:** accepted tradeoff, deferred ADR, rollout/reliability/docs handoff, owner, and review date.
+
+For the full output field list, quality gate, and handoff table, load `references/architecture-output-and-gates.md`.
 
 ## Evidence Contract
 Close an architecture review only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
@@ -232,33 +219,16 @@ Close an architecture review only when all five canonical answers are concrete (
 - **Residual risk**: the accepted tradeoff, failure blast radius, or deferred ADR that remains, with the named owner and review date.
 
 ## Quality Gate
-1. The chosen design is demonstrably simpler than at least one alternative that was explicitly considered.
-2. Every new boundary has a named owner and a failure handling strategy.
-3. Dependency direction is correct — no dependencies point from stable to volatile layers.
-4. Data ownership is unambiguous — no entity has two authoritative owners.
-5. All tradeoffs are explicitly documented, not assumed.
-6. No speculative extensibility abstractions without existing concrete use cases.
-7. Availability implications of new synchronous dependencies are quantified.
-8. Irreversible decisions are explicitly acknowledged and approved.
-9. Rollback path exists or the absence is explicitly documented and accepted.
-10. Observability requirements for the new component are stated.
-11. Monorepo changes include module graph, affected tests, cache key inputs, generated-file policy, and ownership boundaries.
+- The chosen design is simpler than an explicitly considered alternative, or the complexity has a concrete constraint and owner.
+- Every new boundary has owner, public/private surface, dependency direction, failure strategy, data ownership, and rollback/reversibility decision.
+- Synchronous dependency availability, operational blast radius, observability, and build/test or monorepo graph impact are quantified when relevant.
+- No speculative abstractions, unowned shared utilities, ambiguous data owners, or unenforced architecture rules are approved without explicit residual risk.
+- Irreversible decisions have ADR or documented no-ADR rationale, owner, review date, and next gate.
 
 ## Handoff
-- **data-api-contract-changer** — when new or changed data models, schemas, or API contracts require design.
-- **backend-change-builder** — when implementation direction is confirmed and coding can begin.
-- **integration-change-builder** — when new external service dependencies are introduced.
-- **reliability-observability-gate** — when new components require SLI/SLO definition and observability design.
-- **delivery-release-gate** — when architectural changes affect deployment topology, migration sequencing, or rollback safety.
-- **change-documentation-gate** — when an ADR, runbook, or developer guide update is required.
-- **ci-cd** — when module graph decisions must be enforced through affected tests, incremental builds, or cache policy.
-- **package-dependency-management** — when workspace dependencies, lockfiles, generated packages, or hoisting affect architecture boundaries.
-- **architecture-enforcement-tooling** — when architecture rules need import, cycle, export, forbidden dependency, lint, type, dead-code, or CI enforcement.
-- **dependency-wiring-lifecycle** — when dependency graphs, composition roots, service locators, singleton lifecycle, or shutdown ownership affect architecture boundaries.
-- **consumer-impact-analysis** — when public exports, SDKs, APIs, schemas, or events can affect downstream consumers.
-- **algorithm-data-structure-selection** — when architecture-level caches, registries, batch flows, rankings, or graph/routing structures need scale and memory proof.
-- **data-side-effect-flow-tracing** — when architecture decisions hide persistence, cache, event, external IO, or telemetry side effects across boundaries.
-- **cleanup-deletion-governance** — when architecture cleanup removes stale modules, flags, compatibility branches, deprecated APIs, or dead code.
+- Hand data/API contracts, implementation, external dependencies, SLI/SLO/observability, release topology, migration, rollback, ADRs, runbooks, and developer guides to the owning professional skill.
+- Hand module graph enforcement, affected tests, build cache, workspace dependencies, generated packages, forbidden-dependency rules, dependency lifecycle, and public consumer impact to the matching capability owner.
+- Hand architecture-level caches, registries, batch flows, graph/routing structures, hidden side effects, or cleanup/deletion work to the selected foundation capability.
 
 ## Completion Criteria
 The change has an architecture direction with justified complexity, documented tradeoffs, declared ownership for all boundaries, an explicit failure handling strategy, a quantified availability impact, monorepo/module graph governance when applicable, and either an approved ADR or a documented rationale for why one is not required.

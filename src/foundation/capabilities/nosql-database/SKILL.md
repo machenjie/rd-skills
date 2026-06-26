@@ -9,154 +9,152 @@ changeforge_version: 0.1.0
 
 # Mission
 
-**Decide and design NoSQL database changes only when the access patterns, data shape, scale model, and consistency boundaries make non-relational storage the safer production choice** — ensuring that partition key design, consistency guarantees, denormalization ownership, schema versioning, and operational limits are explicit before any non-relational store enters production.
+**Decide and design NoSQL database changes only when access patterns, data shape, scale model, and consistency boundaries make non-relational storage the safer production choice** - ensuring partition keys, consistency guarantees, denormalization ownership, schema versioning, capacity limits, and operational validation are explicit before any non-relational store enters production.
 
 # When To Use
 
-Use this capability when a change: proposes document, key-value, wide-column, graph, time-series, or other non-relational storage; adds indexes, collections, partitions, or item schemas to an existing NoSQL store; changes the partition/sort key design, consistency level, or TTL on existing data; introduces denormalization that duplicates data across multiple items or collections; or is flagged in review for "hot partition", "unbounded document growth", "missing schema validation", or "cross-partition transaction."
+Use this capability when a change proposes document, key-value, wide-column, graph, time-series, or other non-relational storage; adds indexes, collections, partitions, table layouts, item schemas, or document validators to an existing NoSQL store; changes partition/sort key design, consistency level, TTL, schema version, or denormalized copies; introduces access-pattern-specific projections; or is flagged in review for "hot partition", "unbounded document growth", "missing schema validation", "cross-partition transaction", or "NoSQL because it scales".
 
 # Do Not Use When
 
-Do not use this capability to avoid relational modeling, constraints, referential integrity, or JOIN-based queries when the product invariants require them. Do not use it to justify choosing NoSQL because "it's more modern" or "it scales better" without concrete access pattern evidence. Do not use it as a substitute for `relational-database` when the data is inherently relational and multi-entity transactional consistency is required.
+Do not use this capability to avoid relational modeling, constraints, referential integrity, or JOIN-based queries when product invariants require them. Do not use it to justify NoSQL because "it is more modern" or "it scales better" without concrete access-pattern and production-volume evidence. Do not use it as a cache design when the store is only an acceleration layer, or as search/analytics design when full-text relevance, faceting, or OLAP is primary.
+
+# Stage Fit
+
+Use during data-middleware planning when choosing a non-relational store or shaping collections/tables/items; during implementation review when key design, document growth, consistency, TTL, indexes, or denormalization are introduced; during repair when incidents trace to hot partitions, stale reads, item/document overflow, drift, or cross-partition assumptions; and during release review when migrations, backfills, capacity, cost, or rollback affect stored NoSQL data. Hand off when the primary decision is conceptual domain modeling, relational constraints, query-plan tuning, cache-only behavior, search relevance, or migration execution sequencing.
 
 # Non-Negotiable Rules
 
-- **Define access patterns before choosing keys.** NoSQL key design is irreversible in most stores (DynamoDB table key cannot be changed; Cassandra partition key requires new table). Access patterns drive key design: partition key = what you filter on; sort key = what you range-scan on; secondary index = additional access path at cost. Designing keys before access patterns guarantees incorrect design.
-- **State the consistency model and which invariants are eventually consistent.** DynamoDB default reads are eventually consistent. Cassandra `QUORUM` vs `ONE`. MongoDB read preference `primaryPreferred` vs `primary`. Eventually consistent reads can return stale data. Every invariant that must be correct (balance, inventory count, lock state, permission) must identify whether it is eventually consistent or strongly consistent — and if eventually consistent, what happens when a client reads stale data.
-- **Avoid cross-item / cross-partition transactions unless explicitly supported.** DynamoDB TransactWrite supports up to 100 items in a single transaction. MongoDB supports multi-document ACID within a replica set. Cassandra: no cross-partition transactions. If the business invariant requires atomically updating two items in different partitions, and the database does not support it, the design must use a compensating transaction, saga, or outbox pattern — not just assume atomicity.
-- **Partition keys must be high-cardinality to avoid hot partitions.** A partition key with low cardinality (e.g., `status = 'pending'`) routes all writes to one shard or partition. In DynamoDB: throughput is partitioned; a hot partition exhausts its capacity and causes throttling. In Cassandra: a large partition causes compaction and GC pressure. Rule: use entity ID (`userId`, `orderId`) as partition key; use status-based access via Global Secondary Index (GSI).
-- **Denormalized data requires explicit ownership and update propagation.** NoSQL denormalization (duplicating `userName` in `Order` documents to avoid a join) trades consistency for read performance. The trade-off is only acceptable if: (a) the source of truth is identified (User owns `userName`); (b) the propagation mechanism is defined (on User update, fan-out to all Order documents — or accept eventual staleness within TTL); (c) drift detection exists (periodic reconciliation job or consistency check).
-- **Schema versioning is mandatory for document stores.** JSON documents in MongoDB, DynamoDB, or Firestore have no enforced schema. Without versioning, a code change that adds a required field breaks all readers of documents written before the migration. Every document type must carry a `schemaVersion` field (or equivalent). Readers must handle old schema versions gracefully.
-- **Define document size, partition size, and index limits before production.** DynamoDB: 400KB item size limit; 10GB per partition before split; 25 GSIs per table; 40KB max GSI item size. MongoDB: 16MB BSON document limit; unbounded collection growth requires TTL indexes or archival. Cassandra: 100MB partition size practical limit (larger causes compaction issues). These limits must be validated against projected data volume before deploying to production.
+- **Define access patterns before choosing keys.** NoSQL key design is hard to reverse in most stores. Partition keys, sort keys, secondary indexes, document embedding, and clustering columns must be derived from named read/write patterns, not from entity diagrams alone.
+- **State the consistency model and which invariants are eventually consistent.** Every invariant that must be correct (balance, inventory, lock, permission, entitlement, audit) must identify strong/eventual consistency, stale-read behavior, and user-visible consequence.
+- **Avoid cross-item or cross-partition transactions unless explicitly supported.** If a business invariant requires atomically updating records across partitions or stores, the design must use supported transactions, Saga, Outbox, compensation, or a relational model instead of assuming atomicity.
+- **Partition keys must be high-cardinality and workload-balanced.** Low-cardinality keys such as `status`, `type`, or a single large tenant create hot partitions. Any tenant, time, status, or category key must include a distribution strategy and production load estimate.
+- **Denormalized data requires explicit ownership and repair.** Every duplicated field names its source of truth, propagation mechanism, accepted staleness, drift detection, and repair path.
+- **Schema versioning is mandatory for documents/items with evolving shape.** Every document type needs a version field or equivalent; readers must handle old versions safely; migrations/backfills must be planned when new required fields appear.
+- **Store limits, quotas, and cost ceilings are design inputs.** Item/document size, partition size, index count, throughput, read/write unit cost, TTL/retention, and operational alerts must be checked against projected data volume before production.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Store selection | New NoSQL proposal, replacement of relational store, or new read model/projection. | Prove non-relational storage is the right source or derived store for named workload. | Access patterns, invariants, data shape, scale model, relational/cache/search alternatives rejected. | `data-model-design`, `relational-database`, `search-analytics-design` | "NoSQL scales better" as rationale. |
+| Key and partition design | New table/collection, partition key, sort key, clustering key, shard key, or secondary index. | Prevent hot partitions and unsupported queries before data exists. | Query list, key schema, cardinality, item size, index projections, tenant/time distribution. | `indexing-query-optimization`, `performance-budgeting` | Key choice from entity name alone. |
+| Consistency and transaction boundary | Strong/eventual read choice, cross-item update, denormalized write, saga/outbox, or stale-read tolerance. | Name invariants and design safe consistency behavior. | Invariant map, consistency level, stale-read consequence, atomicity support, compensation/reconciliation. | `transaction-consistency`, `idempotency-retry-design`, `domain-event-modeling` | Cross-partition assumptions. |
+| Schema evolution and migration | New required field, schemaVersion change, backfill, TTL change, re-shard, table split, or projection rebuild. | Keep old data, old code, new code, and rollback coherent. | Version policy, reader compatibility, backfill plan, dual-read/write, validation query, rollback behavior. | `data-migration-design`, `version-compatibility`, `delivery-release-gate` | In-place shape change with no old-document handling. |
+| Denormalized read model | Duplicated fields, materialized documents, event-fed projections, or read optimization. | Make duplication owned, repairable, and bounded by staleness. | Source of truth, propagation trigger, lag budget, drift check, replay/repair path, consumer impact. | `data-side-effect-flow-tracing`, `observability`, `quality-test-gate` | Silent dual writes. |
+| Operational readiness review | Production NoSQL change, capacity/cost concern, throttle, hot key, large tenant, or quota alert. | Prove the design can run under expected volume and failure modes. | Capacity math, service quotas, cost budget, throttle behavior, alarms, load/smoke validation. | `reliability-observability-gate`, `performance-budgeting`, `backup-recovery` | Dev-data-only confidence. |
 
 # Industry Benchmarks
 
-Anchor against: **Alex DeBrie "The DynamoDB Book"** — single-table design; access-pattern-first modeling; GSI overloading; adjacency list pattern; composite sort key pattern. **AWS DynamoDB Best Practices** (docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html) — partition key design, GSI design, item collections, DynamoDB Streams + Lambda for fan-out. **MongoDB Schema Design Anti-Patterns** (mongodb.com/developer/products/mongodb/schema-anti-patterns) — massive arrays, bloated documents, unnecessary indexes, separating data that is accessed together. **Martin Fowler "NoSQL Distilled"** (2012, with Pramod Sadalage) — aggregate-oriented databases; key-value, document, column-family, graph; consistency model taxonomy. **CAP theorem (Brewer)** — Consistency, Availability, Partition Tolerance; any distributed system can guarantee only 2 of 3. **PACELC model (Daniel Abadi)** — extends CAP: during Partition: C vs A; Else (no partition): Latency vs Consistency. **Apache Cassandra Data Modeling** — partition key design; clustering columns; Cassandra Anti-Patterns (secondary indexes on high-cardinality columns, allow filtering, UDTs in partition key). **Google Firestore / Bigtable** — hierarchical document model; composite indexes; query limitations (no inequality on two different fields). **Redis data structure design** — key naming conventions; TTL discipline; memory eviction policies; persistence (AOF vs RDB). **Time-series: InfluxDB / TimescaleDB** — measurement + tag design; retention policies; downsampling; cardinality limits on tags.
-
-### NoSQL Store Selection Matrix
-
-| Use Case | Recommended Store | Avoid | Key Design Pattern |
-| --- | --- | --- | --- |
-| Flexible documents, complex queries | MongoDB | DynamoDB for ad-hoc queries | Entity ID as primary key; compound indexes |
-| High-scale key-value with predictable access | DynamoDB | MongoDB for unpredictable query patterns | Partition key = entity type#id, sort key = SK#value |
-| Graph traversal (social, recommendation) | Neo4j / Amazon Neptune | Document store | Node + Relationship model |
-| Time-series (metrics, IoT, logs) | InfluxDB / TimescaleDB | DynamoDB (wrong model) | Measurement + tags + timestamp |
-| Session, cache, ephemeral state | Redis | MongoDB (overkill) | Key = session:{userId}; TTL mandatory |
-| Wide-column, write-heavy, time-partitioned | Cassandra / HBase | DynamoDB (cost at scale) | Partition by entity; cluster by time |
-| Search / full-text | Elasticsearch / OpenSearch | Any of the above | Inverted index; mapping types |
-
-### DynamoDB Access Pattern Design Template
-
-```
-Table design starts with access patterns, NOT with entity structure.
-
-Step 1: List ALL access patterns:
-  AP1: Get user by userId              → PK: USER#<userId>     SK: PROFILE
-  AP2: Get orders for user             → PK: USER#<userId>     SK: ORDER#<orderId>
-  AP3: Get order by orderId            → GSI1-PK: ORDER#<orderId>
-  AP4: Get orders by status (admin)    → GSI2-PK: STATUS#<status>  (low cardinality → accept hot partition for admin-only read)
-
-Step 2: Define key schema from access patterns:
-  PK: USER#<userId>  /  SK: ORDER#<orderId>
-  GSI1: ORDER#<orderId>  (overloaded index for direct order lookup)
-
-Step 3: Define item shape:
-  {
-    "PK": "USER#u123",
-    "SK": "ORDER#o456",
-    "schemaVersion": 2,
-    "orderId": "o456",
-    "userId": "u123",
-    "status": "confirmed",
-    "totalCents": 4999,
-    "createdAt": "2026-01-15T14:00:00Z",
-    "GSI1PK": "ORDER#o456"
-  }
-
-Anti-patterns:
-  ❌ PK = userId (string only) — cannot distinguish User items from Order items in single-table design
-  ❌ SK = timestamp alone — cannot retrieve specific entity without scan
-  ❌ GSI on status with low cardinality — hot partition; use for read-heavy admin queries only with careful capacity
-  ❌ Storing large JSON blobs (>100KB) as attribute — nearing 400KB limit; causes expensive reads
-```
-
-### Consistency Level Decision Matrix
-
-| Invariant | Consistency Required | DynamoDB | MongoDB | Cassandra |
-| --- | --- | --- | --- | --- |
-| Financial balance / ledger | Strong | `ConsistentRead=true` | `primary` read preference | `QUORUM` or `ALL` |
-| Inventory count (purchase gate) | Strong | `ConsistentRead=true` + optimistic lock | `findOneAndUpdate` with version | `QUORUM` |
-| User profile display | Eventual OK | Default (eventually consistent) | `primaryPreferred` | `ONE` |
-| Session / presence | Eventual + TTL | Default + TTL attribute | — | `ONE` + TTL |
-| Audit / append-only log | Strong write, eventual read | `TransactWrite` + `ConsistentRead` | `writeConcern: majority` | `QUORUM` write |
+Anchor against DynamoDB access-pattern-first modeling, MongoDB document validation and anti-patterns, Cassandra wide-column partition modeling, Firestore/Bigtable query limits, Redis key/value TTL discipline, graph database traversal modeling, time-series cardinality and retention design, CAP/PACELC tradeoffs, and Kleppmann/Fowler/Sadalage aggregate-oriented data modeling. Keep this body focused on selection and evidence rules; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for store-selection matrices, DynamoDB access-pattern templates, consistency matrices, operational-limit checks, and anti-pattern review.
 
 # Selection Rules
 
-Select this capability when: a non-relational store is being proposed or needs its schema, key design, or index structure changed. Route elsewhere when: **relational-database** is primary (strong referential integrity, complex joins, multi-table ACID transactions are required); **cache-design** is primary (the store is purely an acceleration layer, not the system of record); **search-analytics-design** is primary (full-text search, relevance ranking, faceting, or OLAP queries); **data-model-design** is primary (domain entity modeling independent of persistence technology).
+Select this capability when a non-relational store is being proposed or its physical schema, key design, partitioning, indexing, consistency behavior, TTL, denormalization, or operational limits are the primary decision. Prefer `relational-database` when constraints, joins, referential integrity, or ACID multi-table transactions are required. Prefer `cache-design` when the store is only an acceleration layer. Prefer `search-analytics-design` for full-text relevance, faceting, or OLAP. Prefer `data-model-design` when domain entities and invariants are not yet understood. Prefer `data-migration-design` when existing stored data must be moved, backfilled, or reshaped.
 
 # Risk Escalation Rules
 
-Escalate when: NoSQL is proposed for financial records, ledger data, or any invariant that requires atomic multi-entity updates; the partition key has low cardinality (< 10 distinct values under production load); the data volume will exceed DynamoDB 400KB item limit or Cassandra 100MB partition limit within 12 months; cross-partition transactions are assumed without confirming database support; the store is proposed for regulated data (PII, PAN, PHI) without defining encryption at rest, access logging, and data retention policy; or denormalized data has no defined authoritative writer and no drift detection mechanism.
+Escalate when NoSQL is proposed for financial records, ledger data, permissions, inventory, entitlements, audit records, regulated data, or any invariant requiring atomic multi-entity updates; a partition key has low cardinality or a tenant/time/status hotspot; projected data approaches item/document/partition/index/service quota limits; cross-partition transactions are assumed without database support; denormalized data lacks authoritative writer or drift detection; or schema evolution affects existing stored records without reader compatibility and backfill validation.
+
+# Proactive Professional Triggers
+
+- **Signal:** A NoSQL table or collection is designed from entity shape without listing access patterns. **Hidden risk:** keys cannot serve required queries without scans or backfills. **Required professional action:** build an access-pattern inventory before accepting keys. **Route to:** `nosql-database`, `repository-context-map`. **Evidence required:** AP list, query shape, key/index map, rejected scan-based design.
+- **Signal:** A partition, shard, or GSI key uses status, type, tenant, category, or date alone. **Hidden risk:** hot partition or unbounded item collection under production skew. **Required professional action:** estimate cardinality and add distribution strategy or alternate access path. **Route to:** `performance-budgeting`, `reliability-observability-gate`. **Evidence required:** cardinality, top-tenant/time skew, write rate, throttle limit, monitoring.
+- **Signal:** A document shape gains a required field without schema versioning. **Hidden risk:** old documents break readers after deploy. **Required professional action:** require schemaVersion, backward-compatible reader, and migration/backfill plan. **Route to:** `data-migration-design`, `version-compatibility`. **Evidence required:** version map, old/new reader behavior, validation query, rollback.
+- **Signal:** Denormalized fields are copied across items or collections. **Hidden risk:** source-of-truth drift and silent stale reads. **Required professional action:** name writer authority, propagation, accepted lag, drift detection, and repair. **Route to:** `data-side-effect-flow-tracing`, `domain-event-modeling`. **Evidence required:** writer, event/outbox/replay path, reconciliation check.
+- **Signal:** Prior project memory says a NoSQL pattern worked elsewhere. **Hidden risk:** stale pattern ignores current access patterns, tenant skew, store limits, or consistency invariants. **Required professional action:** confirm against current source, volume, store version, and tests before reuse. **Route to:** `project-memory-governance`, `repository-graph-analysis`. **Evidence required:** inspected current paths, accepted/rejected memory, freshness limits.
 
 # Critical Details
 
-- **Single-table design (DynamoDB) is powerful but requires upfront access pattern completeness.** A single DynamoDB table with overloaded keys (`PK`, `SK`) can serve multiple entity types and access patterns with one table, avoiding JOIN operations and reducing costs. But every access pattern must be identified upfront — adding a new access pattern later may require backfilling all existing items to add a new GSI attribute, which is expensive on large tables.
-- **MongoDB schema validation should be enforced in production.** Although MongoDB is "schemaless," MongoDB 3.6+ supports JSON Schema validation via `$jsonSchema` validator on collections. This should be enforced in production to prevent invalid documents. Without it, code changes that add required fields silently break on old documents at read time.
-- **TTL (Time-To-Live) is a cost and safety control, not just a convenience.** In DynamoDB, items without TTL persist indefinitely and accumulate cost. In Redis, keys without TTL never expire and consume memory until eviction. Every ephemeral item (sessions, rate limit counters, OTP codes, job locks) must have a TTL. Define TTL at schema design time — retrofitting TTL on millions of items is expensive.
-- **Global Secondary Indexes (GSI) in DynamoDB are asynchronously replicated.** A GSI is eventually consistent with the base table by default. If you write an item and immediately query the GSI, the item may not appear. For read-after-write correctness, use `ConsistentRead=true` on the base table; for GSI reads, design the flow to tolerate eventual consistency or use a different access pattern.
+- **NoSQL is an access-pattern commitment.** The design should start from AP1..N and only then choose store, key, indexes, and document embedding.
+- **"Schemaless" is not "versionless."** Flexible document stores move schema enforcement into application readers, validators, and migrations; they do not remove schema governance.
+- **Eventual consistency needs a product contract.** If a stale read can expose permissions, oversell inventory, misstate a balance, or hide an audit record, the design needs strong reads, source-of-truth verification, or a different store.
+- **Derived NoSQL projections are not source of truth unless explicitly designed as such.** If a projection can be rebuilt from events or relational data, call it derived, name lag tolerance, and define rebuild/drift detection.
+- **Operational limits fail abruptly.** Item size, partition size, index projection size, service quotas, and TTL/backfill behavior need validation before data growth makes redesign expensive.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 NoSQL routing, ownership, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete NoSQL design. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when store selection, access-pattern templates, consistency matrices, operational limits, or anti-pattern detail is needed. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are enough.
 
 ### Anti-examples
 
 | Anti-pattern | Problem | Fix |
 | --- | --- | --- |
-| DynamoDB PK = `status` (low cardinality) | All `pending` orders route to one partition shard; throughput throttled | PK = `ORDER#<orderId>`; use GSI for status-based admin queries |
-| MongoDB document with no `schemaVersion` field | Code change adds required field; old documents fail at read time | Add `schemaVersion: 1` to all documents; readers handle old versions gracefully |
-| Cassandra `ALLOW FILTERING` query in production | Full cluster scan; latency grows with data volume | Redesign partition key to support query; or add materialized view |
-| DynamoDB item stores 500KB JSON blob per user | Exceeds 400KB limit; write fails | Split into multiple items with SK segmentation or store blob in S3; store S3 key in DynamoDB |
-| No TTL on Redis session keys | Memory fills at rate of user signups; Redis OOM eviction; session corruption | Set `EX` (seconds) on all session writes; document TTL in schema |
-| Denormalized `userName` in 10M Order documents, no update propagation | User changes name; Orders show stale name indefinitely | Define propagation: publish `UserNameChanged` event; update Orders asynchronously OR accept staleness with business sign-off |
+| DynamoDB PK = `status` | Low-cardinality hot partition; writes throttle on popular status | Use entity or tenant+entity key; put status lookup behind carefully scoped GSI or projection |
+| MongoDB document with no `schemaVersion` | Required field change breaks old documents at read time | Add version field; readers upcast or branch safely; backfill old documents |
+| Cassandra `ALLOW FILTERING` in production | Cluster scan; latency grows with data volume | Redesign partition/clustering key or build a query-specific table |
+| Item stores unbounded event array | Item/document grows until hard limit; writes fail abruptly | Segment by time or event id; use append-only child items or object storage reference |
+| Redis used as durable source of truth for sessions/orders | Eviction or crash loses authoritative state | Use Redis as cache/ephemeral store only, or choose a durable store with recovery plan |
+| Denormalized field copied with no propagation | Source updates do not reach copies; stale data persists indefinitely | Define event/outbox propagation, accepted lag, reconciliation, and repair |
 
 # Failure Modes
 
-- DynamoDB partition key set to `tenantId` for a multi-tenant SaaS — one large tenant generates 80% of writes; hot partition; capacity exhausted for other tenants; DynamoDB throttles entire table.
-- MongoDB collection has no schema validation — after 18 months of incremental development, 8 different document shapes exist; code branches on shape detected at runtime; impossible to reason about invariants.
-- DynamoDB item size grows unboundedly (list attribute appended on every event) — after 3 weeks in production, item exceeds 400KB; writes fail with `ValidationException: Item size has exceeded the maximum allowed size`; data loss.
-- Cross-partition transaction assumed in Cassandra — payment deduction and inventory reservation written in separate partition key batches; failure after first write leaves account debited but inventory not reserved.
-- No TTL on DynamoDB rate-limit counter — rate limits never reset; legitimate users permanently blocked after single burst.
-- MongoDB query uses `$regex` without index — full collection scan; latency grows linearly with collection size; 50ms at 1M documents becomes 5 seconds at 100M documents.
+- Hot partition: one tenant, status, or time bucket receives most writes and exhausts partition throughput.
+- Shape drift: years of schema-free writes produce incompatible document variants and branching readers.
+- Item overflow: unbounded list/map grows past item or document size limit and write path fails.
+- Cross-partition partial write: one update succeeds and the matching invariant update fails, leaving inconsistent business state.
+- Stale read: eventually consistent secondary index hides a just-written permission, inventory, or lock change.
+- TTL mistake: ephemeral counters or sessions never expire, or required records expire because TTL field semantics were not documented.
+- Denormalization drift: projected fields diverge from their authoritative source and no reconciliation detects it.
 
 # Output Contract
 
 Return a NoSQL design with:
 
-- `store_selection` (store type, version; justification against alternatives; specific access pattern evidence)
-- `access_patterns` (complete list: AP1..N; for each: query type, filter fields, sort fields, result shape, expected volume)
-- `key_schema` (partition key, sort key, justification for each; GSI definitions with PK/SK/projected attributes)
-- `item_schema` (field names, types, `schemaVersion`, TTL attribute if applicable; max projected item size)
-- `consistency_model` (per-invariant: strongly consistent vs eventually consistent; which operations use `ConsistentRead=true` or `QUORUM`)
-- `denormalization_rules` (which fields are duplicated; authoritative source; propagation mechanism; drift detection)
-- `schema_versioning` (version field name; how readers handle old versions; migration plan)
-- `capacity_limits` (projected item count, item size, partition size, GSI count; validated against store limits)
-- `operational_limits` (DynamoDB: WCU/RCU baseline; Cassandra: compaction strategy; MongoDB: index count)
-- `failure_modes` (hot partition, item size overflow, stale read, cross-partition transaction failure — mitigation for each)
-- `migration_plan` (backfill strategy; dual-write period; cutover; rollback)
-- `observability` (read/write latency, throttling/exception rate, partition heat, document size percentiles)
-- `test_strategy` (assert: large item rejected; stale read handled; hot partition simulation; TTL expiration)
+- `mode_selected` (store selection, key/partition design, consistency boundary, schema evolution, denormalized read model, or operational readiness)
+- `source_evidence` (current data model, access paths, repository graph, project memory, workload estimates, store version, docs/tests/telemetry inspected with freshness limits)
+- `store_selection` (store type/version; source-of-truth vs derived-store role; rejected relational/cache/search alternatives)
+- `access_patterns` (AP1..N; query type, filters, sort/range, result shape, consistency need, expected volume, caller)
+- `write_patterns` (write rate, burst/skew, tenant/time distribution, append/update/delete behavior)
+- `key_schema` (partition/shard key, sort/clustering key, secondary indexes, projection fields, cardinality and hotspot rationale)
+- `item_or_document_schema` (fields, types, `schemaVersion`, validators, TTL/retention attributes, max projected item/document size)
+- `consistency_model` (per invariant: strong/eventual, stale-read consequence, read/write settings, conflict handling)
+- `transaction_and_atomicity` (single-item, multi-item, cross-partition, saga/outbox/compensation, unsupported assumptions rejected)
+- `denormalization_rules` (duplicated fields, authoritative source, propagation trigger, accepted lag, drift detection, repair/replay)
+- `schema_versioning_and_migration` (reader compatibility, backfill/dual-write, validation query, rollback behavior)
+- `capacity_and_operational_limits` (item/document/partition/index/throughput/quota/cost limits with projected volume)
+- `security_and_retention` (PII/PHI/PAN classification if present, encryption/access logging, TTL, retention, erasure path)
+- `observability` (latency, throttling, hot partition, item size, index lag, drift, quota, and cost signals)
+- `test_strategy` (access-pattern tests, stale-read handling, hot partition simulation, TTL expiration, schema-version compatibility, drift repair)
+- `graph_and_memory_decisions` (current writers/readers/consumers confirmed, reused patterns accepted or rejected, stale memory caveats)
+- `changed_store_to_validation_map` (each key/index/schema/TTL/consistency/denormalization/migration decision mapped to validator/test/monitoring or residual risk)
+- `handoff_boundaries` (what belongs to data model, relational DB, indexing, cache, search, migration, transaction, security, reliability, or release work)
+- `evidence_limits` (uninspected production data, quotas, traffic skew, cloud account settings, telemetry, migrations, or live performance)
+
+# Evidence Contract
+
+- **Repository evidence:** name data models, repositories, collection/table definitions, indexes, migration/backfill scripts, tests, docs, and registry entries inspected; if no implementation exists, state that output is a design contract rather than verified source behavior.
+- **Access-pattern evidence:** every key/index exists because a named caller and query needs it; every rejected access path states why scan, join, cache, search, or relational design was not chosen.
+- **Graph and memory evidence:** repository graph and project memory can suggest candidate writers/readers, but current source, tests, telemetry, and store constraints must confirm them before reuse.
+- **Execution evidence:** map NoSQL decisions to validators, tests, load/capacity checks, migration dry runs, schema-version compatibility checks, monitoring, or explicit not-verified residual risk.
+- **Boundary evidence:** distinguish source-of-truth data, derived projections, caches, search indexes, and migration artifacts so the NoSQL design is not over-claimed as conceptual model, cache policy, search relevance, or release approval.
+
+# Benchmark Coverage
+
+Professional NoSQL design covers access-pattern completeness, store fit, source-of-truth role, key cardinality, hot-partition resistance, consistency and atomicity, denormalization ownership, schema versioning, TTL/retention, capacity and cost limits, security/retention classification, observability, graph/memory freshness, and validation mapping. A key-value or document shape without production access-pattern and consistency evidence is incomplete.
+
+# Routing Coverage
+
+Route here when the primary question is non-relational store selection, physical document/item/table design, partition/shard key choice, secondary index layout, denormalized projection ownership, schema versioning, TTL, or NoSQL operational limits. Hand off to `data-model-design` for conceptual domain shape, `relational-database` for SQL constraints/joins/ACID design, `indexing-query-optimization` for relational query plans, `cache-design` for acceleration-only stores, `search-analytics-design` for search/OLAP engines, `transaction-consistency` for invariant/atomicity depth, `data-migration-design` for live backfill/cutover sequencing, `security-privacy-gate` for regulated data, and `reliability-observability-gate` for capacity/cost/SLO readiness.
 
 # Quality Gate
 
 The design is complete only when:
 
-1. Every access pattern is listed and each one maps to a key or index design.
-2. Partition key has sufficient cardinality (no low-cardinality values at the top level of writes).
-3. Consistency model is explicit for every invariant that must be correct.
-4. Cross-partition/cross-item transactions either use supported database feature or have a Saga/Outbox alternative.
-5. Every document type carries a `schemaVersion` (or equivalent) with a reader backward-compatibility policy.
-6. TTL defined for all ephemeral data (sessions, counters, locks, OTP).
-7. Projected item/document size validated against store limits (DynamoDB: < 400KB; Cassandra: < 100MB partition).
-8. Denormalization ownership and propagation mechanism are explicit.
-9. Capacity limits validated against projected production data volume.
-10. NoSQL choice justified with access pattern evidence (not merely convenience or trend).
+1. Every access pattern is listed and maps to a key, index, query, or rejected alternative.
+2. NoSQL choice is justified against relational, cache, search, and existing-store alternatives.
+3. Partition/shard keys have sufficient cardinality and documented skew/hotspot mitigation.
+4. Consistency model is explicit for every invariant that must be correct.
+5. Cross-partition or cross-item transactions either use supported database features or have Saga/Outbox/compensation design.
+6. Every evolving document/item type carries schema versioning and reader backward compatibility.
+7. TTL and retention are defined for ephemeral data, regulated data, and derived projections.
+8. Projected item/document/partition/index size and service quota limits are validated against production estimates.
+9. Denormalization ownership, propagation, drift detection, and repair are explicit.
+10. Observability covers latency, throttling, hot partitions, item/document size, index lag, drift, quota, and cost.
+11. Selected mode, source evidence, source-of-truth role, access-pattern map, and handoff boundaries are explicit.
+12. Repository graph, project memory, and prior execution trajectory evidence are confirmed against current source or marked stale/not verified.
+13. Every changed key, index, schemaVersion, TTL, consistency, denormalization, migration, and retention decision maps to validation evidence or named residual risk.
+14. Evidence limits are stated so the design is not over-claimed as live performance, production cardinality, security certification, migration execution, or release approval.
 
 # Used By
 
@@ -164,12 +162,8 @@ The design is complete only when:
 
 # Handoff
 
-Hand off to `data-model-design` for domain entity structure independent of persistence technology; `relational-database` when constraints, joins, or ACID multi-table transactions are required; `transaction-consistency` for Saga or Outbox patterns when cross-item atomicity is needed; `cache-design` for acceleration layers on top of the NoSQL store; `data-migration-design` for backfill and schema migration planning.
+Hand off to `data-model-design` when domain entities, invariants, or ownership are unresolved; `relational-database` when constraints, joins, or ACID multi-table transactions are required; `indexing-query-optimization` when the primary issue is relational query/index tuning; `transaction-consistency` for Saga, Outbox, or cross-item atomicity; `cache-design` when the store is only an acceleration layer; `search-analytics-design` for full-text/faceted/OLAP engines; `data-migration-design` and `version-compatibility` for backfill, schema evolution, or mixed-version rollout; `security-privacy-gate` for regulated or tenant-sensitive data; and `reliability-observability-gate` for capacity, SLO, cost, or operational readiness.
 
 # Completion Criteria
 
-The capability is complete when **NoSQL use is justified by concrete access patterns, partition key design supports all required queries without hot partition risk, consistency model is explicit per invariant, schema versioning prevents backward-incompatibility failures, all data size and operational limits are validated, and denormalization has a defined authoritative writer and propagation strategy**.
-
-# Completion Criteria
-
-The capability is complete when the NoSQL design can satisfy named access patterns without hidden consistency, partition, schema, or repair risks.
+The capability is complete when **NoSQL use is justified by concrete access patterns, the selected store role is explicit, partition/key/index design supports required reads and writes without hidden hotspot risk, consistency is named per invariant, schema versioning protects old data, operational limits are validated, denormalization has an authoritative writer plus repair path, and every material decision maps to evidence or residual risk**.

@@ -9,165 +9,130 @@ changeforge_version: 0.1.0
 
 # Mission
 
-**Protect implementation focus by making non-goals, version boundaries, exclusions, and deferred decisions explicit, testable, and enforceable** — ensuring that reviewers can identify unauthorized scope expansion, implementers know which adjacent work is explicitly out of scope, and no deferred decision leaks into current APIs, data schemas, permissions, or user-visible states without a conscious contract.
+**Protect implementation focus by making non-goals, version boundaries, exclusions, and deferred decisions explicit, testable, and enforceable** so reviewers can identify unauthorized scope expansion, implementers know which adjacent work is out of scope, and no deferred decision leaks into current APIs, data schemas, permissions, UI, jobs, flags, observability, or user-visible states without a conscious contract.
 
 # When To Use
 
-Use this capability when a change request: is at risk of expanding into adjacent workflows, redesigns, migrations, platform changes, UX refreshes, or policy changes; includes language like "while we're here, we should also…", "eventually this will need to support…", or "we might as well add the infrastructure for…"; defines a first version of a feature with implicit assumptions about future versions; sets boundaries between what is being built now versus what is deferred; or is being designed in a context where multiple stakeholders have different expectations about scope.
+Use this capability when a change request risks expanding into adjacent workflows, redesigns, migrations, platform changes, UX refreshes, policy changes, or "while we are here" work; defines a first version with assumptions about later versions; has multiple stakeholders with different scope expectations; needs explicit current-release versus deferred-release boundaries; or uses repository graph, project memory, prior plans, or execution history that could accidentally promote old assumptions into current scope.
 
 # Do Not Use When
 
-Do not use this capability to: avoid required risk work (security, data integrity, compliance, accessibility) by labeling it a "non-goal"; suppress legitimate technical dependencies that must be resolved before coding begins (defer those via `requirement-clarification`, not non-goal definition); or defer decisions that fundamentally block the implementation from being correct or safe (a deferred auth design on a protected resource is not a non-goal — it is a blocker).
+Do not use this capability to avoid required risk work by labeling it a non-goal, suppress legitimate technical dependencies, defer decisions that block correctness or safety, or decide unknown product/security/legal answers without authority. Use `requirement-clarification` when the unknown itself blocks coding, `requirement-structuring` when confirmed facts need a traceable brief, and `acceptance-standard-definition` when the in-scope done signal needs precision.
+
+# Stage Fit
+
+Use during requirement intake, implementation planning, review, and quality gate preparation when scope pressure, version staging, deferred decisions, or boundary disputes could affect implementation. In planning, define exact inclusions, exclusions, forbidden artifacts, safe future compatibility constraints, and acceptance exclusions before task sequencing. In review, reject speculative endpoints, nullable fields, reserved roles, hidden UI, feature flags, migrations, metrics, jobs, or adapters added for deferred work. Hand off when the primary issue is unclear authority, scenario coverage, test-layer selection, architecture sequencing, release governance, or specialist security/reliability validation.
 
 # Non-Negotiable Rules
 
-- **Non-goals must be specific and testable as exclusions.** "We are not building a full admin portal" is not a non-goal — it cannot be checked. "We are not building user management (create, edit, deactivate users); only read-only display of existing user list is in scope for v1" is a non-goal — reviewers can verify no mutation endpoints exist and no user management UI appears in the implementation.
-- **Version boundaries must state what the current release will and will not do — explicitly.** A `v1` boundary must define: what the feature does in v1, what it explicitly will NOT do in v1 (and is therefore excluded from v1 acceptance criteria), and what assumptions are forbidden (e.g., "v1 must not add a `subscription_tier` column to `users` table in anticipation of v2 billing features").
-- **Deferred decisions must not introduce placeholder behavior in APIs, data models, permissions, or UI.** A non-goal excludes scope. It does not license adding empty endpoints, nullable columns, permission stubs, or hidden UI elements as "preparation for v2." Placeholder behavior creates surface area that is never cleaned up, may be accidentally exposed, and introduces untested paths. If a capability is not in scope, its surface area must not exist in the codebase.
-- **Non-goals must not be used to bypass required security, data integrity, reliability, or compatibility work.** "Rate limiting is a non-goal for v1" is unacceptable if the endpoint is publicly accessible. "Input validation is a non-goal" is unacceptable for any endpoint that writes to a database. Required work that addresses OWASP Top 10, data correctness, or SLO obligations is not optional scope — it is a baseline requirement that non-goal definitions cannot remove.
-- **Deferred scope must not contradict existing customer, legal, security, or platform commitments.** If a contract guarantees a feature by a date, if a regulation requires a control by a deadline, or if a platform SLA requires a behavior — these cannot be deferred by labeling them non-goals. Non-goal definitions must be reviewed against existing commitments before being accepted.
-- **Acceptance criteria must include explicit "not present" checks for non-goals.** Every non-goal generates an exclusion check: "Verify that user management endpoints (POST/PUT/DELETE /users) do not exist." Without explicit exclusion checks in acceptance criteria, scope creep is invisible to QA and reviewers.
+- **Non-goals must be specific and testable as exclusions.** "We are not building a full admin portal" is not checkable. "User management CRUD (POST/PUT/DELETE /admin/users) is not in v1; these endpoints and UI actions must not exist" is checkable.
+- **Version boundaries must state what the current release will and will not do.** A v1 boundary defines included behavior, excluded behavior, immutable contracts, compatibility assumptions, and forbidden future-preparation artifacts.
+- **Deferred decisions must not create placeholder behavior.** A non-goal excludes scope. It does not permit empty endpoints, nullable columns, reserved enum values, permission stubs, no-op UI controls, future flags, unused jobs, or hidden API fields.
+- **Required security, data integrity, reliability, accessibility, compliance, and compatibility work cannot be made a non-goal.** If the in-scope feature requires a control to be safe, that control is in scope or the feature is blocked.
+- **Deferred scope must not contradict customer, legal, security, platform, SLA, or migration commitments.** Existing commitments outrank local scope preference.
+- **Acceptance criteria must include "not present" checks for non-goals.** Every accepted non-goal produces at least one exclusion check in QA, review, contract validation, API schema validation, migration review, or UI inspection.
+- **Future compatibility must be acknowledged without speculative surface area.** v1 should avoid closing the door on v2, but must not add artifacts whose only purpose is unapproved future scope.
+- **Graph, memory, and trajectory evidence are advisory until source-confirmed.** Prior plans, nearby files, stale TODOs, old tickets, and previous execution results cannot expand current scope unless current source, registry, docs, tests, and stakeholder authority confirm them.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| V1 scope boundary | First release, MVP, phased delivery, or "not now" decisions. | Exact included/excluded behavior and forbidden artifacts. | Current scope source, excluded surfaces, version contract, acceptance exclusions. | `requirement-structuring`, `acceptance-standard-definition` | Future scaffolding. |
+| Anti-scope-creep review | PR, plan, or task list adds adjacent work. | Detect unapproved endpoints, schema, UI, jobs, flags, roles, events, or docs. | Diff/path inventory, out-of-scope map, same-pattern search. | `change-impact-analyzer`, `plan-execution-consistency` | Opportunistic cleanup unless approved. |
+| Deferred decision control | Unknown future behavior, product debate, dependency pending, or authority gap. | Separate deferrable choices from blockers and prevent hidden assumptions. | Decision owner, safe current constraint, forbidden assumption, follow-up trigger. | `requirement-clarification`, `user-role-identification` | Silent defaults for authority questions. |
+| Contract and compatibility boundary | API/schema/event/version/data model may change later. | Keep current contract stable and future extension possible without placeholder fields. | API/schema surface, consumer impact, migration risk, compatibility note. | `version-compatibility`, `data-api-contract-changer` | Nullable future fields in current contract. |
+| Risk-sensitive exclusion | Security, compliance, reliability, performance, accessibility, money, data loss, or auth is proposed as out of scope. | Decide whether exclusion is invalid, accepted with risk owner, or requires specialist gate. | Requirement risk, control owner, compensating control, written risk acceptance. | `security-privacy-gate`, `reliability-observability-gate`, `quality-test-gate` | Treating baseline controls as optional. |
+| Evidence reuse boundary | Repository graph, project memory, old plan, or prior validation suggests scope. | Accept, reject, or downgrade reuse based on freshness and current source. | Inspected paths, accepted/rejected memory, final-edit validation freshness. | `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis` | Copying stale non-goals. |
 
 # Industry Benchmarks
 
-Anchor against: **INVEST criteria (Bill Wake)** — Stories must be Independent, Negotiable, Valuable, Estimable, Small, Testable; "Negotiable" and "Testable" directly require scope boundaries to be explicit and verifiable. **RFC process (IETF)** — every RFC includes an explicit "Out of Scope" section that defines what the document does not address, preventing scope assumptions by implementers. **Product Management — Intercom "Shape Up" (Basecamp / Ryan Singer)** — "appetite" + "fixed time, variable scope" + explicit "rabbit holes" (things that look in-scope but must be avoided) — directly models non-goal boundary discipline. **Agile backlog slicing (Richard Lawrence "Humanizing Work")** — horizontal vs. vertical slice; explicit "we are only slicing this capability to [depth]; the rest is a separate backlog item." **TOGAF 9.2 Architecture Definition Document** — "Statement of Architecture Work" includes scope statement with explicit inclusions, exclusions, and constraints. **IEEE 830 Software Requirements Specification** — Section 1.5: "Scope of product"; Section 1.6: "Overview of non-functional requirements"; explicitly listing out-of-scope items is a standard SRS practice. **Google Design Docs** — every Google design document includes a "Non-Goals" section as a required heading; this practice is industry standard in engineering design documents. **OKR discipline (John Doerr "Measure What Matters")** — focus and key results only have meaning if the boundary of what is NOT being measured / achieved is explicit.
-
-### Non-Goal Classification Matrix
-
-| Category | Example In-Scope (v1) | Example Non-Goal (v1) | Risk if Not Stated |
-| --- | --- | --- | --- |
-| User management | Read-only user profile display | Create/edit/deactivate users | Engineers add management endpoints "while here" |
-| Data migration | New feature persists new data | Migrating existing data to new schema | Migration added to v1, delaying launch |
-| Internationalization | English-only UI | Multi-language support | Hardcoded strings; refactor required in v2 |
-| Advanced search | Basic keyword filter | Full-text search, facets, saved searches | Full Elasticsearch integration attempted in v1 |
-| API versioning | v1 endpoint | Backward compatibility with legacy API | Breaking change to legacy contract undetected |
-| Performance optimization | Functional correctness | Sub-100ms P99 latency optimization | Premature optimization delays feature delivery |
-| Platform migration | Feature built on current stack | Migration to new platform | Dual-platform code added speculatively |
-| Accessibility | Keyboard navigable | Full WCAG 2.1 AA compliance | A11y left entirely for "later" (becomes never) |
-
-### Non-Goal Boundary Definition Template
-
-```
-Feature: [Name of feature/change]
-Version: v[N]
-Date: [ISO date]
-Owner: [Team/person responsible for this boundary]
-
-IN SCOPE (v[N]):
-  - [Specific behavior A: what it does, for which actors, in which context]
-  - [Specific behavior B]
-
-OUT OF SCOPE (v[N]) — Non-goals:
-  - [Capability X]: NOT in v[N]. Deferred to v[N+1] backlog item #[ID].
-    Reason: [time/complexity/dependency/priority]
-    Forbidden assumption: [implementation MUST NOT add [Y] in anticipation of X]
-  - [Capability Z]: NOT in v[N]. Will be assessed in Q[N] planning.
-
-VERSION BOUNDARY:
-  - v[N] contract: [What API shape, DB schema, permissions, UI are committed to]
-  - Forbidden in v[N]: [Specific technical artifacts that must not exist]
-
-DEFERRED DECISIONS:
-  - [Decision D]: deferred to v[N+1]. Current implementation must not assume [assumption A or B].
-
-ACCEPTANCE EXCLUSIONS (for QA):
-  - Verify: [excluded endpoint] does NOT exist (returns 404 or is not defined in OpenAPI spec)
-  - Verify: [excluded field] does NOT appear in response payload
-  - Verify: [excluded UI element] is NOT rendered
-
-ANTI-SCOPE-CREEP REVIEW CHECKLIST:
-  [ ] Does any PR add endpoints, fields, or UI for out-of-scope capabilities?
-  [ ] Does any DB migration add columns for future capabilities not in current scope?
-  [ ] Does any change add permission checks or roles for future features?
-  [ ] Does any change add feature flags for speculative future behavior?
-```
-
-### Scope Boundary Decision Tree
-
-```
-Is the proposed addition required for the in-scope feature to be:
-  a) Functionally correct?
-  b) Secure? (OWASP Top 10 controls, input validation, auth)
-  c) Compliant with existing commitments? (contracts, regulations, SLA)
-    ANY YES → NOT a non-goal; required work; must be in scope
-
-Is it required for acceptable user experience for the defined user story?
-  YES → In scope for v1
-  NO  → Candidate for non-goal
-
-Does deferring it break backward compatibility or create technical debt
-that would cost more to fix in v2 than to include now?
-  YES → Escalate: may not be deferrable
-  NO  → Acceptable to defer; document as non-goal with explicit exclusion check
-
-Does the current implementation need to "prepare" for it with placeholder code?
-  YES → Block: placeholder code is not permitted for non-goals
-         (if preparation is needed, the non-goal may be a dependency — escalate)
-  NO  → Confirm: non-goal is clean; add acceptance exclusion check
-```
+Anchor against INVEST testability and small-scope discipline, IETF RFC "out of scope" practice, Shape Up appetite and rabbit-hole control, IEEE/ISO requirements traceability, TOGAF scope inclusions/exclusions, Google design-doc non-goals, OKR focus discipline, and product backlog slicing. Keep the body focused on routing, evidence, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for classification matrices, version-boundary templates, decision trees, graph/memory/trajectory coupling, anti-pattern review, and benchmark anchors.
 
 # Selection Rules
 
-Select this capability when: the primary need is **containing scope** and making exclusions explicit and testable. Route elsewhere when: **requirement-clarification** is primary (the unknown itself may block coding — the requirement is unclear, not merely out of scope); **task-dag-planner** is primary (approved scope must be sequenced into a task graph); **acceptance-standard-definition** is primary (defining what "done" means for in-scope items, not what is excluded).
+Select this capability when the primary need is **containing scope and making exclusions explicit, testable, and enforceable**. Route elsewhere when the problem is unresolved authority (`requirement-clarification`), confirmed requirement structure (`requirement-structuring`), scenario coverage (`scenario-decomposition`), in-scope done standards (`acceptance-standard-definition`), sequencing (`task-dag-planner`), or specialist control design (`security-privacy-gate`, `reliability-observability-gate`, `data-api-contract-changer`, `delivery-release-gate`).
+
+# Proactive Professional Triggers
+
+- **Signal:** A plan says "later", "future-proof", "while here", "coming soon", "v2", "for now", or "placeholder". **Hidden risk:** deferred scope enters the codebase as untested surface area. **Required professional action:** list forbidden artifacts and acceptance exclusions. **Route to:** `non-goal-boundary-definition`, `acceptance-standard-definition`. **Evidence required:** excluded endpoints/fields/UI/jobs/flags and not-present checks.
+- **Signal:** A proposed non-goal touches auth, security, privacy, compliance, money, data loss, reliability, accessibility, or compatibility. **Hidden risk:** baseline safety is removed from the release. **Required professional action:** reject the non-goal, move the control into scope, or require explicit risk acceptance and specialist gate. **Route to:** owning professional gate plus `quality-test-gate`. **Evidence required:** control decision, owner, compensating control, residual risk.
+- **Signal:** Repository graph or project memory suggests an old boundary. **Hidden risk:** stale scope, renamed routes, changed consumers, or retired assumptions become current requirements. **Required professional action:** inspect current source/registry/tests/docs before reuse and mark stale evidence. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected reuse judgment and freshness limit.
+- **Signal:** Implementation adds nullable columns, reserved enum values, no-op endpoints, permission bits, hidden tabs, event topics, or feature flags for future work. **Hidden risk:** current contract is polluted by unapproved future behavior. **Required professional action:** remove speculative surface or re-scope formally. **Route to:** `data-api-contract-changer`, `architecture-impact-reviewer`. **Evidence required:** diff search, removed/preserved artifact decision, compatibility note.
+- **Signal:** A non-goal has no QA/review exclusion check. **Hidden risk:** scope creep is invisible because only in-scope success is tested. **Required professional action:** add negative acceptance checks and changed-scope-to-validation mapping. **Route to:** `acceptance-standard-definition`, `quality-test-gate`. **Evidence required:** not-present validator, review checklist, residual risk for manual-only checks.
 
 # Risk Escalation Rules
 
-Escalate when a proposed non-goal would: leave unsafe partial behavior (an in-scope mutation without input validation or authorization); violate backward compatibility without a migration plan; hide a required data migration that must precede v2; create a user-visible state with no defined behavior ("the button exists but does nothing in v1"); contradict a customer, legal, security, platform, or SLA commitment; or result in an implementation that cannot be extended to the v2 scope without a breaking change to the v1 API or data model.
+Escalate when a proposed non-goal would leave unsafe partial behavior, violate backward compatibility, defer required migration or data integrity work, create a user-visible dead state, contradict a customer/legal/security/platform/SLA commitment, remove an operational recovery path, or make v2 impossible without breaking the v1 API or schema. Escalate to the owning gate when a deferred item affects authorization, privacy, payments, accessibility, reliability, compliance, external integrations, migrations, or irreversible side effects.
 
 # Critical Details
 
-- **"We'll add it in v2" requires that v1 does not close the door on v2.** A non-goal means "not now." It does not mean "never." Before accepting a non-goal, verify that the v1 implementation does not create a structural blocker for the v2 capability. If v2 requires a multi-tenant data model and v1 is being built as single-tenant without tenant isolation, v2 will require a full data migration — that cost must be acknowledged, not hidden.
-- **Non-goals that touch security or correctness require explicit justification.** Saying "rate limiting is a non-goal for this internal endpoint" is only acceptable if: (a) the endpoint is not publicly accessible; (b) there is a network-layer control (IP allowlist, VPC boundary); and (c) the business accepts the residual risk in writing. "Security feature X is a non-goal" must be justified, not assumed.
-- **Empty endpoints, null fields, and placeholder permissions are scope violations.** If a feature is not in scope, its technical surface area must not exist. A placeholder `POST /admin/users` that returns `501 Not Implemented` is not a non-goal implementation — it is a security surface area and a test gap. Remove it entirely; add it only when the feature is actually in scope.
-- **Non-goals interact with API versioning.** If v1 defines an API response shape, and v2 will add fields to that response, the v2 fields must not be included as `null` in the v1 response (they create implicit expectations and schema coupling). Use versioned API design: v2 is a new API version with the new fields; v1 response shape is immutable once released.
+- **"Not now" still needs future compatibility judgment.** A non-goal means excluded from the current release, not permanently impossible. Record whether v1 keeps a clean path to v2 without speculative artifacts.
+- **Security and correctness exclusions require named ownership.** "Rate limiting is not in scope" is acceptable only when the endpoint exposure, compensating controls, and accepting owner are explicit. Otherwise it is a blocker.
+- **Placeholder artifacts are scope violations.** A `501 coming soon` endpoint, nullable future field, reserved enum, hidden button, unused role, or future flag creates contract and attack surface. Remove it unless the feature is actually in scope.
+- **Non-goals interact with API versioning and consumer expectations.** Do not include v2 fields as nulls in v1 responses. Do not add schema fields, events, flags, or docs that imply support before the capability is accepted.
+- **Reviewers need a mechanical check.** Each non-goal should translate to a diff search, schema review, OpenAPI/contract check, UI route check, migration review, or explicit manual inspection.
 
-### Anti-examples
+# Reference Loading Policy
 
-| Anti-pattern | Problem | Fix |
-| --- | --- | --- |
-| Non-goal: "Admin features" (no specific boundary) | Untestable; "admin features" is vague; reviewers cannot check | Non-goal: "User management CRUD (POST/PUT/DELETE /admin/users) — not in v1; these endpoints must not exist" |
-| Nullable `subscription_tier` column added to `users` table "for v2" | Schema coupling to unreleased feature; DB migration required; field may be accidentally accessed | Remove column entirely from v1 schema; add in v2 migration when feature is in scope |
-| Non-goal: "GDPR compliance" | GDPR is a legal obligation — cannot be a non-goal if PII is processed | Scope GDPR work into v1; it is not optional if PII is in scope |
-| `POST /reports` returns 501 "coming soon" placeholder | Unimplemented endpoint is a security surface area | Remove endpoint entirely; add only in the sprint when reports feature is in scope |
-| No exclusion checks in acceptance criteria | QA cannot verify non-goal was honored | Add explicit "verify X does NOT exist" checks to acceptance criteria |
-| Non-goal deferred for 4 quarters without reassessment | Non-goals accumulate as permanent exclusions; system never becomes complete | Review deferred non-goals in quarterly planning; either promote to scope or close as permanent |
+The `SKILL.md` body carries normal L1/L2 selection, stage fit, routing, evidence, output, and gates. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete scope boundary, non-goal list, anti-scope-creep review, or acceptance exclusions. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed benchmark anchors, classification matrices, version-boundary templates, graph/memory/trajectory coupling, review questions, or anti-pattern analysis is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or trivial wording changes where the inline output contract and quality gate are enough.
 
 # Failure Modes
 
-- "We're not building admin features in v1" is accepted as a non-goal without specifics — engineers add a user management modal "since the API was already there"; non-goal was too vague to enforce.
-- GDPR right-to-erasure deferred as a non-goal — EU users request data deletion; legal cannot comply; regulatory fine.
-- `nullable subscription_tier` column added to `users` table as "v2 preparation" — 18 months later, the v2 subscription feature is abandoned; column remains permanently nullable; new engineers treat it as a valid field and write code that silently branches on `null`.
-- Non-goal boundary defined but no exclusion checks in acceptance criteria — QA tests only in-scope features; three out-of-scope endpoints are deployed to production because no test checked their absence.
-- Deferred rate limiting on a "low-traffic internal endpoint" — endpoint exposed to partner API keys; partner misconfigures client; 50,000 requests/minute; service outage.
-- v1 API design includes `nullable` fields reserved for v2 — v2 team treats nulls as "disabled"; third-party consumers treat nulls as "missing"; breaking behavior difference discovered at v2 launch.
-- Non-goal: "No pagination in v1" — approved without a volume assumption — data grows to 50,000 records in 6 months; unparameterized query loads entire dataset; page load timeout; non-goal was not reviewed against growth projections.
+- A vague non-goal such as "no admin features" lets user-management endpoints appear because no excluded surfaces were named.
+- GDPR, auth, rate limiting, or data retention is deferred as a non-goal even though the in-scope feature processes protected data.
+- Nullable future fields, reserved roles, or hidden UI are added for v2 and become permanent ambiguous contract surface.
+- Non-goals have no acceptance exclusions, so QA verifies only the included behavior and misses deployed out-of-scope endpoints.
+- Project memory from an old plan is reused after routes, roles, schema, or customer commitments changed.
+- "No pagination in v1" is accepted without volume assumption, and the current release times out under realistic data growth.
 
 # Output Contract
 
 Return a scope boundary record with:
 
-- `in_scope` (specific behaviors, actors, contexts, endpoints, UI elements, and data entities that are included in the current version)
-- `out_of_scope` (specific non-goals with: what is excluded, deferred-to version/backlog-item, reason for deferral, forbidden placeholder artifacts)
-- `version_boundary` (v1 contract: API shape, DB schema, permissions, UI committed; what is immutable once released; what must not change)
-- `deferred_decisions` (decisions that cannot be made now; constraints current implementation must respect to not close the door on future decisions)
-- `forbidden_assumptions` (specific technical artifacts — columns, endpoints, permissions, UI elements — that must not exist in the current implementation)
-- `anti_scope_creep_checklist` (PR review checklist: check for out-of-scope endpoints, fields, migrations, permissions, feature flags)
-- `acceptance_exclusions` (QA checks for each non-goal: "verify X does NOT exist / is NOT rendered / does NOT appear in response")
-- `risk_acknowledgement` (for any deferred security/compliance/reliability work: explicit risk statement accepted by [owner] on [date])
-- `escalation_triggers` (conditions that would require re-scoping: volume growth, regulatory change, customer commitment, dependency unblocked)
+- `mode_selected` (v1 scope boundary / anti-scope-creep review / deferred decision control / contract and compatibility boundary / risk-sensitive exclusion / evidence reuse boundary)
+- `scope_boundary` (current version, authority owner, release boundary, in-scope behavior, out-of-scope behavior, and excluded surfaces)
+- `source_evidence` (request/ticket, current docs, registry, source paths, API/schema specs, tests, repository graph, project memory, execution trajectory, stakeholder commitments, and freshness limits)
+- `graph_memory_trajectory_judgment` (accepted, rejected, or not verified for each reused scope boundary, non-goal, prior plan, route, schema, test, or validation result)
+- `in_scope` (specific behaviors, actors, contexts, endpoints, jobs, UI elements, data entities, permissions, events, and observability that are included)
+- `out_of_scope` (specific non-goals with excluded behavior, deferred-to version/backlog item, reason, owner, and forbidden placeholder artifacts)
+- `version_boundary` (current contract for API shape, DB schema, permissions, UI, jobs, flags, events, docs, and what is immutable once released)
+- `deferred_decisions` (decision, owner, deadline or trigger, why it is non-blocking or blocking, and current implementation constraint)
+- `forbidden_assumptions` (columns, endpoints, enum values, roles, UI elements, flags, jobs, events, docs, metrics, or behavior that must not exist now)
+- `future_compatibility_judgment` (whether v1 keeps a clean path to v2, known migration cost, and rejected speculative scaffolding)
+- `acceptance_exclusions` (not-present checks for each non-goal: API/schema/UI/route/migration/permission/job/event/metric/doc/review evidence)
+- `anti_scope_creep_checklist` (PR review checks for out-of-scope endpoints, fields, migrations, permissions, flags, UI, events, jobs, tests, and docs)
+- `risk_acknowledgement` (for deferred security/compliance/reliability/accessibility/money/data work: owner, date, compensating control, and why it is acceptable or blocked)
+- `changed_scope_to_validation_map` (each included behavior, excluded surface, forbidden artifact, compatibility constraint, deferred decision, and risk acknowledgement mapped to a test, validator, review check, or residual risk)
+- `handoff_boundaries` (what belongs to clarification, structuring, scenarios, acceptance, quality tests, security, reliability, data/API contracts, release, or task planning)
+- `evidence_limits` (what was not inspected or validated: live system, production data, customer contracts, current permissions, generated specs, UI routes, migrations, docs, tests, or final validation freshness)
+
+# Evidence Contract
+
+Close a scope-boundary output only when it names the selected mode, current scope boundary, source evidence, graph/memory/trajectory reuse judgment, exact inclusions, exact exclusions, version contract, deferred decisions, forbidden assumptions/artifacts, future compatibility judgment, acceptance exclusions, changed-scope-to-validation map, handoff boundaries, residual risk, and evidence limits. A non-goal list without "not present" checks, source evidence, and forbidden artifacts is not sufficient evidence.
+
+# Benchmark Coverage
+
+Improved outputs reject weak patterns: vague category non-goals, "future-proof" scaffolding, placeholder endpoints, nullable v2 fields, hidden no-op UI, baseline security as optional, unowned deferred decisions, missing exclusion tests, stale project-memory scope, and scope boundaries that make v2 impossible. Detailed benchmark anchors, templates, decision trees, review questions, graph/memory/trajectory coupling, and anti-pattern matrices belong in references so the body remains efficient.
+
+# Routing Coverage
+
+Route here when scope containment, non-goals, version limits, excluded surfaces, deferred decisions, forbidden artifacts, future compatibility, or anti-scope-creep review is primary. Hand off when the primary concern is unresolved authority (`requirement-clarification`), confirmed behavior brief (`requirement-structuring`), scenario path coverage (`scenario-decomposition`), falsifiable done standards (`acceptance-standard-definition`), test-layer strategy (`quality-test-gate`), security/privacy control design (`security-privacy-gate`), reliability/ops readiness (`reliability-observability-gate`), API/schema compatibility (`data-api-contract-changer`), or task ordering (`task-dag-planner`).
 
 # Quality Gate
 
 The scope boundary is complete only when:
 
-1. Every non-goal is specific enough to be checked in a test or PR review (not vague categories).
-2. Acceptance criteria include explicit exclusion checks for every non-goal.
-3. Forbidden placeholder artifacts are listed (no nullable columns, stub endpoints, or reserved permission bits).
-4. Deferred security, compliance, or reliability work is either justified with explicit risk acknowledgement or moved into scope.
-5. v1 API and schema are designed to not block v2 non-goals from being implemented without breaking changes.
-6. Every deferred decision has an explicit "must not assume X" constraint on the current implementation.
-7. Non-goals are reviewed against existing commitments (customer, legal, security, platform SLA).
-8. Risk acknowledgement is documented for any deferred OWASP Top 10 control or compliance requirement.
+1. Selected mode, scope boundary, source evidence, and graph/memory/trajectory reuse judgment are explicit.
+2. Every non-goal is specific enough to be checked by test, schema/API validation, UI inspection, diff review, or PR review.
+3. Acceptance criteria include explicit exclusion checks for every non-goal.
+4. Forbidden placeholder artifacts are listed and checked.
+5. Deferred security, compliance, reliability, accessibility, money, data integrity, or compatibility work is justified with explicit risk acknowledgement or moved into scope.
+6. The current API, schema, permissions, UI, jobs, flags, events, and docs avoid speculative future surface while preserving stated future compatibility where required.
+7. Every deferred decision has an owner, trigger or deadline, blocking/non-blocking classification, and "must not assume" constraint.
+8. Non-goals are reviewed against customer, legal, security, platform, SLA, release, and migration commitments.
+9. Changed-scope-to-validation mapping covers every included behavior, excluded surface, forbidden artifact, deferred decision, compatibility constraint, and risk acknowledgement.
+10. Handoff boundaries and evidence limits are explicit so non-goal definition is not over-claimed as clarification, acceptance, test execution, security sign-off, reliability sign-off, or release approval.
 
 # Used By
 
@@ -177,21 +142,8 @@ The scope boundary is complete only when:
 
 # Handoff
 
-Hand off to `requirement-clarification` for unknown requirements that block coding (not just deferred scope); `acceptance-criteria-builder` to write in-scope acceptance criteria with the exclusion checks derived from non-goals; `task-dag-planner` to sequence the in-scope work once boundaries are confirmed.
+Hand off to `requirement-clarification` when an exclusion may actually be a blocking decision; `requirement-structuring` when confirmed facts need a traceable brief; `scenario-decomposition` when excluded paths affect scenario boundaries; `acceptance-standard-definition` when exclusion checks need falsifiable done standards; `quality-test-gate` when not-present checks require executable validation; `data-api-contract-changer` for API/schema/version compatibility; `security-privacy-gate` or `reliability-observability-gate` when a proposed exclusion touches baseline controls; and `task-dag-planner` for sequencing approved in-scope work.
 
 # Completion Criteria
 
-The capability is complete when **every non-goal is stated as a specific, testable exclusion with a forbidden-artifacts list; acceptance criteria contain explicit "not present" verification for each non-goal; no deferred security or compliance work is silently excluded; and the v1 implementation is structurally compatible with v2 non-goals without breaking changes**.
-
-# Used By
-
-- change-intake-compiler
-- task-dag-planner
-
-# Handoff
-
-Hand off to task-dag-planner for sequencing approved work or requirement-clarification when an exclusion may actually be a blocking decision.
-
-# Completion Criteria
-
-The capability is complete when scope boundaries are concrete enough to prevent future assumptions from silently entering the implementation.
+The capability is complete when **every non-goal is a specific, testable exclusion with forbidden artifacts, acceptance exclusions, source evidence, future compatibility judgment, changed-scope-to-validation mapping, explicit handoff boundaries, and evidence limits; no deferred security or compliance work is silently excluded; and the current implementation path is protected from speculative future scope**.

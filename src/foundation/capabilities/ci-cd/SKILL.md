@@ -19,6 +19,14 @@ Use this capability when creating or modifying: CI workflows (GitHub Actions, Gi
 
 Do not use this capability to bypass local verification (`pre-commit`, unit tests), treat green pipeline as proof of correctness without acceptance evidence, hide flaky checks by retrying silently, or design general deployment architecture — that belongs to `release-rollback` and `containerization`.
 
+# Stage Fit
+
+- **Planning / design:** use when pipeline triggers, artifact identity, required checks, environment promotion, or release evidence are being designed.
+- **Implementation / review:** use when workflow files, build jobs, test gates, image publishing, IaC plan/apply gates, Helm chart jobs, or monorepo affected-test logic change.
+- **Validation / release:** use when a pipeline result must prove build/test/security/artifact/rollback readiness before promotion.
+- **Repair / incident:** use when flaky checks, failed deploys, retry-to-green behavior, missing rollback hooks, or stale pipeline evidence are blocking a release.
+- **Graph / memory / execution coupling:** treat old pipeline knowledge, generated reports, and prior green runs as leads only; reconcile current workflow files, registry, reports, dist output, and validation commands before closure.
+
 # Non-Negotiable Rules
 
 - **Build once, promote everywhere.** The *same binary/image* digest is promoted across dev → staging → production; never rebuild for each environment. Environment differences come from config injection, not from a different build.
@@ -38,48 +46,18 @@ Do not use this capability to bypass local verification (`pre-commit`, unit test
 
 # Industry Benchmarks
 
-Anchor against: **DORA four key metrics** (Deployment Frequency, Lead Time for Changes, Change Failure Rate, Failed Deployment Recovery Time) — elite performers deploy on-demand with < 1 h lead time and < 5% change failure rate. **SLSA (Supply-chain Levels for Software Artifacts) v1.0** levels 1–3 for build integrity. **OpenSSF Scorecard** for supply-chain security signals. **Sigstore / Cosign** for keyless signing. **CycloneDX / SPDX** SBOM standards. **NIST SSDF (SP 800-218)** for secure software development lifecycle integration. **OWASP Software Assurance Maturity Model (SAMM) v2** for CI security practices. **GitHub Actions security hardening guide** (pin actions to `sha`, OIDC federation, `permissions: {}` minimal). **GitLab CI/CD security practices**. **Tekton Chains** for supply-chain provenance in Kubernetes-native pipelines. **AWS/GCP/Azure OIDC federation** for keyless cloud credentials. **Google Build / Bazel** hermetic build discipline. **Netflix Spinnaker** progressive delivery patterns. **Argo CD / Flux** (GitOps) — declarative desired state, reconciliation, diff visibility. **Weaveworks/Flux CNCF graduation** as reference for pull-based GitOps. **Semantic Versioning (SemVer 2.0)** for release artifact naming. **Keep a Changelog** format for release notes automation.
+Anchor against DORA four key metrics, SLSA v1.0, OpenSSF Scorecard, Sigstore/Cosign, CycloneDX/SPDX, NIST SSDF, OWASP SAMM, GitHub/GitLab CI security guidance, Tekton Chains, cloud OIDC federation, hermetic build discipline, GitOps, SemVer, and release-note automation. Keep the body focused on routing, gates, and evidence; load [references/checklist.md](references/checklist.md) for concise planning and [references/pipeline-benchmarks.md](references/pipeline-benchmarks.md) for stage ordering, deployment strategy, supply-chain hardening, gate-blocking decisions, graph/memory/execution coupling, and anti-pattern detail.
 
-### Pipeline Stage Design — Fail-Fast Ordering
+# Mode Matrix
 
-| Stage | Typical checks | Block on failure? | Speed target |
-| --- | --- | --- | --- |
-| **Pre-merge / PR** | Lint, format, unit tests, secrets scan, PR policy (reviewers, size) | Yes | < 5 min |
-| **CI (on merge to trunk)** | Full test suite, SAST (Semgrep/CodeQL), licence check, SBOM generation | Yes | < 15 min |
-| **Build / Package** | Reproducible build, artifact signing, container scan (Trivy/Grype/Snyk), provenance attestation | Yes | < 10 min |
-| **Deploy to dev/test** | Auto-deploy, integration smoke test | Yes | < 5 min |
-| **Deploy to staging** | Auto-deploy, integration + regression suite, performance gate, config drift check | Yes | < 30 min |
-| **Deploy to production** | Approval gate, change window, progressive rollout (canary → ≥x%), post-deploy health check | Yes + human gate | Per org policy |
-| **Post-deploy** | Synthetic monitors, SLO burn-rate check, auto-rollback trigger | Auto-rollback if fail | < 5 min |
-
-### Deployment Strategy Selection
-
-| Strategy | Traffic shift | Rollback speed | Blast radius | Pick when |
-| --- | --- | --- | --- | --- |
-| **Recreate** | All at once | Slow (redeploy) | 100% | Dev/test; acceptable downtime |
-| **Rolling** | Gradual pods | Moderate (drain + replace) | Partial | Stateless services; default |
-| **Blue/Green** | Instant switch | Fastest (flip LB) | 0% until cut | Database-compatible migrations; instant rollback needed |
-| **Canary** | % of traffic | Fast (drain canary) | Small % | Production risk reduction; A/B behavior |
-| **Shadow / Mirror** | No live impact | N/A (no real traffic) | 0% | New path validation without user impact |
-| **Feature flag** | Cohort-based | Instant (flag off) | Per cohort | Decouple deploy from release |
-
-### Decision Tree: Should This Gate Block?
-
-The gate-blocking rule is in Non-Negotiable Rules ("Required checks block promotion … except via a named, audited emergency-override"). Full worked decision tree for security findings, flaky vs new test failures, dev-only vulnerabilities, lint failures, and regulated-environment deploys: `references/pipeline-benchmarks.md`.
-
-### Supply-Chain Security Hardening
-
-| Control | Implementation | Standard |
-| --- | --- | --- |
-| Pin third-party actions to commit SHA | `uses: actions/checkout@abc123` not `@v4` | GitHub hardening guide |
-| OIDC keyless cloud credentials | `aws-actions/configure-aws-credentials` with `role-to-assume` | AWS OIDC, SLSA |
-| Minimal permissions per job | `permissions: contents: read` (no inherited `write-all`) | GitHub hardening guide |
-| Image digest pinning | `FROM debian@sha256:...` in Dockerfile | SLSA L2 |
-| SBOM at build time | `syft` / `cyclonedx` output to artifact store | CycloneDX, SPDX |
-| Build provenance attestation | `cosign attest --predicate provenance.json` | SLSA L2/L3 |
-| Container scan | Trivy / Grype / Snyk in CI; block on CRITICAL runtime CVEs | NIST SSDF |
-| Dependency lockfile | `package-lock.json`, `Cargo.lock`, `go.sum`, `requirements.txt --require-hashes` | SLSA L1 |
-| Secret scanning | `truffleHog`, `gitleaks`, `detect-secrets` pre-commit + CI | OWASP SAMM |
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+| --- | --- | --- | --- | --- | --- |
+| PR / CI quality gate | Workflow, lint, test, SAST, affected tests, flaky checks. | Fail-fast checks that can block unsafe merge. | required-check list, failure action, owner, freshness. | `quality-test-gate`, `test-strategy` | skip release gates for local-only checks. |
+| Artifact build and promotion | Package/image build, SBOM, signing, registry, provenance. | Build once and promote one immutable digest. | digest, SBOM, attestation, scan result, retention. | `containerization`, `dependency-vulnerability-scanning` | skip deploy design when no promotion occurs. |
+| Environment deployment | Dev/staging/prod promotion, approvals, canary, health gate. | Gate by blast radius and rollback readiness. | environment map, deploy strategy, health check, rollback hook. | `delivery-release-gate`, `release-rollback` | skip canary when blast radius is low and rollback is fast. |
+| IaC / Helm / GitOps pipeline | Terraform/Pulumi/Crossplane, Helm, rendered manifests, policy checks. | Review plan/rendered diff before state mutation. | plan diff, policy result, state lock, IAM/cost/destructive review. | `kubernetes-gateway`, `security-privacy-gate` | skip live apply when design-only. |
+| Supply-chain and secret boundary | Actions, runners, credentials, dependency/image scan, provenance. | Least privilege, no secret leakage, traceable artifacts. | OIDC scope, permissions block, secret scan, CVE threshold. | `security-privacy-gate`, `secret-configuration-security` | skip broad compliance packet unless regulated/audited. |
+| Evidence freshness | Old green build, memory, graph, report, dist, or prior pipeline output. | Reconcile current changed paths to validation. | changed-path map, command exit status, stale/not-run disclosure. | `validation-broker`, `agent-tool-permission-sandbox` | skip only for wording that makes no pipeline claim. |
 
 # Selection Rules
 
@@ -96,78 +74,28 @@ Select this capability when **pipeline design, quality gates, artifact lifecycle
 
 Escalate when: deployment is to production with no rollback hook tested, required checks are being bypassed, secrets were detected in logs or artifacts, an emergency override is invoked (requires async CISO/engineering-lead notification within 1 h), the pipeline serves regulated workloads (PCI, HIPAA, SOX ITGC, ISO 27001 A.8.25), a data migration runs inline with the deploy (separate concern), or a deployment fails the post-deploy health check and auto-rollback does not trigger.
 
+# Proactive Professional Triggers
+
+- **Signal:** A pipeline rebuilds, retags, or repackages per environment. **Hidden risk:** production runs a different artifact than staging tested. **Required professional action:** enforce build-once/promote-by-digest and record artifact identity. **Route to:** `ci-cd`, `containerization`, `delivery-release-gate`. **Evidence required:** digest, registry path, promotion path, and rollback target.
+- **Signal:** Required checks are bypassed, marked warning-only, silently retried, or hidden behind emergency override. **Hidden risk:** known failure ships while the pipeline appears green. **Required professional action:** classify gate blocking, exception owner, expiry, and notification path. **Route to:** `quality-test-gate`, `agent-execution-discipline`. **Evidence required:** check name, failed output, override approver, expiry, and residual risk.
+- **Signal:** CI credentials, runner permissions, logs, artifacts, summaries, or build layers may expose secrets. **Hidden risk:** pipeline compromise or log leak enables unauthorized deploy. **Required professional action:** use OIDC/vault, minimal job permissions, redaction, secret scan, and runner isolation. **Route to:** `security-privacy-gate`, `secret-configuration-security`. **Evidence required:** permission block, secret source, scan result, and redaction rule.
+- **Signal:** IaC, Helm, GitOps, or cloud apply can mutate shared infrastructure without reviewed diff. **Hidden risk:** destructive resource, IAM, DNS, gateway, or cost change reaches production without audit. **Required professional action:** require plan/rendered diff, policy checks, state lock, budget/IAM review, and rollback note. **Route to:** `delivery-release-gate`, `kubernetes-gateway`. **Evidence required:** plan/diff artifact, policy output, approval, and rollback scope.
+- **Signal:** A monorepo affected-test or cache rule decides what runs. **Hidden risk:** changed modules, generated inputs, lockfiles, or fixtures are skipped by stale graph/cache keys. **Required professional action:** map changed paths to modules/dependents and prove cache invalidation. **Route to:** `repository-graph-analysis`, `validation-broker`, `quality-test-gate`. **Evidence required:** graph edge, cache key inputs, selected tests, and full-suite fallback rule.
+- **Signal:** Project memory, prior green builds, old reports, or generated dist output are used after workflow, gate, artifact, permission, registry, or validation scripts changed. **Hidden risk:** stale evidence is reused for a different release graph. **Required professional action:** reconcile current source and rerun mapped validators before closure. **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `agent-tool-permission-sandbox`. **Evidence required:** inspected path list, accepted/rejected prior claim, command result, sandbox record, and residual risk.
+
 # Critical Details
 
 The CI/CD pipeline is both a **quality enforcement mechanism and a supply-chain security boundary**. Key refinements:
 
-- **Trunk-based development reduces merge debt.** Short-lived branches (< 1 day) with feature flags outperform long-lived feature branches for DORA metrics. PR size limits (< 400 lines) are enforceable by policy.
-- **Caching must not skip determinism.** Cache keys must hash the dependency manifest (lockfile); cache hits that restore stale packages silently produce different builds. Cache the build *output*, not the package fetch, for artifact reproducibility.
-- **CI parallelism with test sharding.** Slow test suites should be sharded (`pytest-split`, `vitest --shard`, `--split-by-timing`) across parallel jobs; fan-out / fan-in pattern; total wall time target < 10 min for pre-merge.
-- **Flaky test economics.** A flaky test that causes 1 in 20 builds to fail adds ~5% overhead; at 10 engineers × 8 deploys/day = 4 lost engineer-hours/day. Flakiness is a throughput tax; assign an owner and SLA.
-- **Environment parity.** Staging must mirror production topology (same image, same config shape, same external mocks). "Works in staging" is only evidence when parity is documented.
-- **GitOps pull model (Argo CD / Flux).** Deploy job pushes a git-reconciled desired-state manifest; cluster controller applies it. Benefits: drift detection, reconciliation loop, `kubectl apply` is never run from CI directly → audit trail is the git history.
-- **Progressive delivery telemetry.** Canary requires live SLO baseline; canary must emit the *same metrics* as stable; rollback decision is automated by comparing canary error rate / latency vs stable baseline (Argo Rollouts, Flagger).
-- **Infrastructure-as-code pipelines.** `terraform plan` output requires human review in `diff` form; `terraform apply` runs only after plan approval; state lock prevents concurrent runs; drift detection runs nightly.
-- **Database migration pipelines.** Migrations must be backwards-compatible with N-1 app version; deploy migration *before* app (expand / contract); never bundle destructive migration with app deploy without explicit gate.
-- **SBOM retention.** SBOM attached to each release artifact and retained per compliance policy; enables rapid CVE impact triage (which releases contain `libxyz < 1.2.3`?).
-- **Audit log as compliance evidence.** For SOX ITGC / PCI-DSS §6.4: every production deploy must have: change record, test evidence, approval, artifact digest, deploy timestamp. Pipeline must emit structured events to an immutable audit sink.
-- **Self-hosted runners security.** Shared self-hosted runners are a lateral-movement risk; use ephemeral (just-in-time provisioned) runners or GitHub-hosted runners; isolate secrets per environment.
-- **Notification and visibility.** Failed deploys notify the team in real time (Slack/PagerDuty); deploy-to-production events are visible to all engineers; anomalies (unexpected failure rate, unusual deploy time) alert.
-- **Ownership.** Each pipeline has a named owner; the pipeline config is code-reviewed with the same rigor as application code; `CODEOWNERS` or equivalent enforces review.
-
-### Infrastructure-As-Code Governance
-
-IaC pipelines must treat infrastructure diffs as production changes, not as generated text:
-
-- Terraform/Pulumi/Crossplane module interface: required inputs, outputs, version constraints, provider versions, and compatibility contract.
-- State backend and state locking required before any apply; lock contention must fail closed.
-- Drift detection schedule with owner, notification path, and reconciliation policy.
-- Plan file review with immutable plan artifact, reviewer, environment, and commit SHA.
-- Destructive resource detection for delete/recreate, replacement, data-loss, or downtime-inducing actions.
-- IAM diff review for privilege additions, trust policy changes, wildcard grants, and service account scope changes.
-- Cost delta review for compute, storage, egress, reserved commitments, and autoscaling-sensitive resources.
-- Budget approval gate for high-cost resources before apply.
-- Resource tagging and audit trail for owner, environment, data classification, cost center, and lifecycle.
-
-### Monorepo Build And DevEx
-
-Monorepo pipelines must prove that incremental speed does not hide correctness gaps:
-
-- Module graph is declared and checked for boundary violations.
-- Affected test selection maps changed files to modules, dependents, and contract tests.
-- Incremental build works with Bazel, Pants, Nx, Turborepo, or equivalent workspace tooling when justified.
-- Build cache keys include lockfiles, compiler/tool versions, environment inputs, generated source inputs, and test fixtures.
-- Generated file policy states which generated files are committed, ignored, or regenerated in CI.
-- Devcontainer or equivalent reproducible local environment keeps onboarding setup time measurable.
-- Pre-commit policy runs only fast deterministic checks; CI owns expensive checks.
-
-### Helm Pipeline Gate
-
-Helm release pipelines must include:
-
-- `helm dependency build` with `Chart.lock` committed for dependency reproducibility.
-- `helm lint` for chart syntax and common chart errors.
-- `helm template` for every environment values file.
-- `values.schema.json` validation for required and typed values.
-- `kubeconform` or `kubeval` on rendered manifests.
-- Policy-as-code checks with OPA/Gatekeeper/Kyverno/Conftest.
-- `helm diff upgrade` for human review before production promotion.
-- `helm upgrade --install --atomic --wait --timeout` or equivalent GitOps rollback policy.
-- OCI chart provenance/signing when charts are published as artifacts.
-- Release evidence: chart version, appVersion, values file checksum, rendered manifest digest, reviewer, deployment outcome.
-
-### Anti-examples
-
-| Anti-pattern | Failure |
-| --- | --- |
-| `FROM python:latest` in Dockerfile, `npm install` without lockfile | Different builds from same git SHA → irreproducible; silent dependency changes |
-| Long-lived `DEPLOY_TOKEN` in CI secret | Token theft → unauthorized deploy to prod; never audited |
-| `continue-on-error: true` on SAST job | Security findings silently ignored |
-| Rebuild image per environment; inject `ENV=prod` at build time | Production runs a different binary than staging tested |
-| Flaky test retried 3× silently; green if at least 1 pass | Flakiness hidden; intermittent race conditions ship |
-| `terraform apply -auto-approve` in CI with no plan review | Unreviewed infra change destroys production resource |
-| Deploy job runs with `AdministratorAccess` | Blast radius = entire AWS account on any pipeline compromise |
-| No post-deploy health check; rollback is a manual Slack request | Silent degradation ships; recovery time = detection time |
+- **Determinism before speed.** Cache keys include lockfiles, compiler/tool versions, environment inputs, generated source, and fixtures; cache hits must never change the artifact without a source change.
+- **Fail-fast with named owners.** Pre-merge checks stay fast and mandatory; slow suites shard with fan-out/fan-in; flaky checks get owner, SLA, quarantine track, and promotion criteria.
+- **Environment parity is evidence.** Staging results count only when topology, image digest, config shape, integration surface, and secret source match production expectations or gaps are disclosed.
+- **GitOps and IaC are release surfaces.** Desired-state commits, rendered manifests, plan diffs, state locks, drift checks, IAM/cost/destructive reviews, and rollback notes are audit artifacts.
+- **Migration gates are compatibility gates.** Schema migrations use expand/contract sequencing and are not bundled destructively with app deployment unless an explicit release gate accepts forward-fix risk.
+- **Helm gates render before mutation.** Dependency build, lint, template, values schema, rendered-manifest validation, policy checks, diff, atomic/waited upgrade or GitOps sync, and release evidence are required for chart pipelines.
+- **Supply-chain evidence travels with artifacts.** SBOM, signing/provenance, vulnerability scan, artifact digest, approver, retention, and deploy event must be attached to each promoted release.
+- **Self-hosted runners are trust boundaries.** Prefer ephemeral isolated runners for privileged deploy jobs; shared runners cannot hold broad production credentials.
+- **Pipeline ownership is code ownership.** Workflow files have owners, review requirements, emergency exception policy, and audit retention.
 
 # Failure Modes
 
@@ -186,33 +114,51 @@ Helm release pipelines must include:
 - Approval gate bypassed in emergency; no async notification to security/engineering lead.
 - Build cache keyed only on branch name; dependency update not reflected in cached build.
 
+# Reference Loading Policy
+
+- Use the `SKILL.md` body for routing, mode selection, triggers, output contract, evidence, quality gates, and handoff.
+- Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete CI/CD plan and a compact checklist is enough.
+- Load [references/pipeline-benchmarks.md](references/pipeline-benchmarks.md) when stage ordering, deployment strategy, gate-blocking decisions, supply-chain hardening, IaC/Helm/monorepo detail, graph/memory/execution coupling, or anti-pattern review needs depth.
+- Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear.
+- Do not load references for a pure routing decision or a local wording edit with no pipeline behavior claim.
+
 # Output Contract
 
 Return a CI/CD pipeline specification with:
 
-- `triggers` (push, PR, schedule, manual, webhook, release tag — per branch/environment)
-- `stages` (ordered; for each stage: purpose, jobs, parallelism, fail-fast policy, speed target)
-- `required_checks` (per merge/deploy gate: name, failure action, override policy and approver)
-- `optional_checks` (warnings, tracking backlog, SLA for promotion to required)
-- `artifact_spec` (image digest policy, binary hash, SBOM format, provenance attestation, registry, retention)
+- `triggers_and_stages` (push/PR/schedule/manual/tag triggers; ordered jobs, parallelism, fail-fast policy, speed target)
+- `required_and_optional_checks` (merge/deploy gates, failure action, override policy, approver, warning backlog, owner SLA)
+- `artifact_spec` (digest policy, binary hash, SBOM, provenance attestation, registry, retention, promotion path)
 - `cache_policy` (cache key hash inputs, invalidation rules, security scope)
-- `secret_handling` (vault/OIDC source, injection method, log masking, no static long-lived keys)
-- `deployment_credentials` (OIDC federation, scope per environment, no shared admin role)
-- `environment_promotion` (gates per tier: dev → staging → production; auto vs manual; window)
-- `deployment_strategy` (per environment: recreate/rolling/blue-green/canary/GitOps; rollout %)
-- `helm_pipeline` (lint/template/schema/rendered-manifest/policy/diff/upgrade/rollback/provenance evidence)
-- `post_deploy_health_gate` (check type, timeout, auto-rollback trigger, on-call notification)
-- `rollback_hook` (automated path, trigger condition, test evidence)
-- `supply_chain_controls` (action pinning, SBOM, signing, scan thresholds)
-- `infrastructure_pipeline` (module interface, state backend, state locking, plan file review, apply gate, drift detection, destructive resource detection, IAM diff review, cost delta review — if IaC)
-- `cost_controls` (IaC plan cost impact review, cost delta summary for infra changes, budget approval gate for high-cost resources)
-- `compliance_evidence` (deploy audit event, approval evidence, artifact digest evidence, SBOM evidence, vulnerability scan evidence, retention target)
-- `monorepo_build_policy` (module graph, affected tests, incremental build tool, cache key inputs, generated file policy, devcontainer or reproducible local environment)
-- `migration_gate` (expand/contract, backwards-compat validation — if DB migrations)
-- `audit_trail` (fields emitted per deploy event, retention, sink)
+- `secrets_and_credentials` (vault/OIDC source, injection method, log masking, environment-scoped role, no shared admin credential)
+- `environment_promotion_and_strategy` (dev/staging/prod gates, deploy window, rolling/blue-green/canary/GitOps choice, rollout percentage)
+- `helm_iac_pipeline` (lint/template/schema/rendered manifest/policy/diff/upgrade/rollback/provenance, state lock, IAM/cost/destructive review)
+- `post_deploy_and_rollback` (health check, timeout, auto-rollback trigger, rollback hook, test evidence, on-call notification)
+- `supply_chain_controls` (action pinning, SBOM, signing, provenance, scan thresholds, dependency lock/hash policy)
+- `compliance_and_audit_trail` (deploy event, approval, artifact digest, SBOM/scan evidence, retention target, immutable sink)
+- `monorepo_build_policy` (module graph, affected tests, cache key inputs, generated file policy, full-suite fallback)
+- `migration_gate` (expand/contract and backwards-compat validation when DB migrations are in the pipeline)
 - `flaky_check_policy` (quarantine criteria, owner SLA, promotion to required process)
 - `ownership` (pipeline owner, review requirements for pipeline config changes)
 - `dora_baseline` (current Deployment Frequency, Lead Time, Change Failure Rate, MTTR — or "unmeasured")
+- `graph_memory_execution_coupling` (current workflow/config/report/dist facts used, prior evidence accepted or rejected, validation freshness)
+- `tool_permission_boundary` (read-only vs state-mutating pipeline/deploy/IaC actions, sandbox, dry-run/rendered diff, rollback, redaction)
+- `evidence_scope` (what evidence proves, what remains unproven, residual owner/risk)
+
+# Evidence Contract
+
+A CI/CD change is complete only when the output includes:
+
+- **Boundaries inspected**: workflow files, runner trust, artifact registry, deployment targets, env config, secrets, IaC/Helm/GitOps, monorepo graph, generated reports, dist output, and skipped boundaries.
+- **Source and artifact contract**: commit SHA, artifact digest, SBOM/provenance, promotion path, environment identity, and rollback target.
+- **Validation evidence**: exact command, pipeline result, validator, rendered diff, scan, or report proving checks, artifact integrity, gate behavior, and fallback/rollback readiness.
+- **What evidence proves**: the inspected pipeline enforces required checks, artifact traceability, secret handling, promotion gates, and audit evidence for the named scope.
+- **What evidence does not prove**: live provider behavior, production runner isolation, cloud/IAM effective policy, real canary health, regional rollout, or uninspected downstream consumers unless verified separately.
+- **Security/release review**: secrets, OIDC permissions, action pinning, scans, emergency overrides, IaC/Helm/cloud exposure, compliance evidence, and release approval boundaries.
+- **Graph / memory / execution reconciliation**: repository graph, project memory, previous green builds, generated reports, and command outputs are current or rejected as stale.
+- **Reuse / placement rationale**: why detail stays in this capability or its references and why registry, dist, shared/common, or runtime install paths are not changed.
+- **Tool boundary**: read-only versus state-mutating commands, sandbox/approval state, dry-run or rendered output, rollback/revert path, and redaction rule.
+- **Residual risk and handoff**: unrun live pipeline, unverified provider/cloud behavior, stale downstream evidence, next gate, and owner.
 
 # Quality Gate
 
@@ -234,6 +180,17 @@ The pipeline design passes only when:
 14. Monorepo affected-test selection and build cache keys are deterministic and validated against a full-test fallback.
 15. Helm chart pipelines run dependency build, lint, template, values schema validation, rendered manifest validation, policy checks, helm diff, and atomic waited upgrade or equivalent GitOps safeguards.
 16. Helm release evidence includes chart version, appVersion, values checksum, rendered manifest digest, reviewer, and deployment outcome.
+17. Graph, memory, report, and validation evidence is fresh relative to final workflow or skill edits.
+18. Tool permission/sandbox evidence is recorded before deploy, IaC apply, Helm/Kubernetes, cloud, secret, publish, or rollback action.
+19. Claims are bounded and do not imply live CI provider, secret store, cloud/IAM, canary, or production release proof unless those were actually inspected.
+
+# Benchmark Coverage
+
+This capability covers DORA-oriented delivery health, fail-fast CI stages, immutable artifact promotion, required checks, flaky-check governance, supply-chain provenance, OIDC/secret safety, IaC/Helm/GitOps gates, monorepo affected-test correctness, compliance audit evidence, rollback hooks, post-deploy health checks, and graph/memory/execution evidence freshness.
+
+# Routing Coverage
+
+Route here when pipeline mechanics, quality gates, artifact lifecycle, promotion, CI security, monorepo build policy, or deployment automation are primary. Combine with `delivery-release-gate` for live release readiness, `security-privacy-gate` for secrets/IAM/public exposure/compliance, `release-rollback` for recovery planning, `containerization` for image construction, `dependency-vulnerability-scanning` for CVE methodology, `kubernetes-gateway` for Helm/Kubernetes manifest behavior, `validation-broker` for freshness, and `agent-tool-permission-sandbox` for any pipeline/deploy/cloud command.
 
 # Used By
 

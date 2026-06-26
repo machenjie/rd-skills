@@ -23,5 +23,11 @@ Boundary decisions:
 - No shared component is extracted until another page needs the same behavior.
 
 Verification:
-- Test save flow, validation errors, partial failure recovery, and permission-disabled controls.
+- Component test verifies draft editing and validation errors.
+- Storybook story covers save progress, recoverable error, and permission-disabled controls.
+
+Validation obligations:
+- `ProfileFormSection`: run component test or record not-run owner; proves draft validation boundary only.
+- `SaveBar`: inspect Storybook/error story or screenshot artifact; does not prove backend save contract.
+- Permission-disabled controls: run role fixture test with exit code/report status after the final component-map edit, or name residual security handoff.
 ```

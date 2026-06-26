@@ -51,85 +51,11 @@ Use this skill during coding, bug-fix, debugging, code-review, refactoring, and 
 ## Technical Selection Criteria
 Classify each log decision by type, owner layer, level, fields, redaction, and validation path.
 
-### Log Taxonomy
-- **Diagnostic log**: used for troubleshooting and execution reconstruction. Focus on operation, error_code, duration_ms, dependency, attempt, retryable, fallback_used, and correlation identifiers.
-- **Audit log**: used for compliance or security audit. Focus on actor, action, resource, decision, timestamp, result, and integrity controls. It must not be casually deleted or mixed with transient diagnostics.
-- **Business event log**: used for key domain state changes such as order_cancelled or payment_failed. Focus on domain_event, entity_type, entity_id_hash, state_from, state_to, result, and business-safe context.
-- **Security log**: used for denials, authorization failures, abnormal access, and policy matches. Focus on policy, reason, category, actor_hash, resource_type, and result. Never log raw secret-bearing input.
-- **Access log**: used at request entry. Focus on method, route_template, status_class, latency_ms, request_id, and user_or_tenant hash where allowed. Never log raw query, raw body, or authorization material.
-- **Integration/dependency log**: used for external dependency calls. Focus on dependency, operation, latency_ms, status, retryable, attempt, timeout, circuit_state, and correlation identifiers.
-- **Lifecycle log**: used for startup, shutdown, configuration loading, migration, and job scheduling. Focus on version, environment, config fingerprint, migration id, scheduler state, and readiness result.
+Use the inline criteria to choose: log type, owner layer, level, structured field set, forbidden field list, redaction/hashing, correlation identifiers, cardinality controls, and validation path.
 
-### Level Policy
-- **DEBUG**: low-frequency deep diagnostics; production default off or sampled; never the only signal needed for incident diagnosis.
-- **INFO**: key lifecycle events, important business state changes, and important successful transitions; not every function entry or cache miss.
-- **WARN**: recoverable anomaly, retry, fallback, degradation, stale dependency state, or unexpected condition that did not make the operation fail; include retryable when relevant.
-- **ERROR**: request, job, command, or operation finally failed with user impact, data impact, lost side effect, or required investigation. Expected validation errors and ordinary 404s are not ERROR.
-- **CRITICAL/FATAL**: process cannot continue, startup is unrecoverable, data may be corrupted, or a required dependency is unavailable with no degradation path.
+Coverage anchors that must remain visible in this body: Diagnostic log, Audit log, Business event log, Security log, Access log, Integration/dependency log, Lifecycle log; DEBUG, INFO, WARN, ERROR, CRITICAL/FATAL; trace_id, request_id, correlation_id, entity_id_hash, duration_ms; redaction for raw request body, raw webhook body, raw URL query, password, token, authorization header; high-cardinality controls across metrics, traces, and alerts; placement at entry/controller, application service, queue/worker, and security boundary; retry, fallback, and degradation evidence.
 
-### Structured Fields
-Prefer structured fields with stable names:
-- timestamp
-- level
-- service
-- environment
-- version
-- trace_id
-- span_id
-- request_id
-- correlation_id
-- operation
-- domain_event
-- entity_type
-- entity_id_hash
-- tenant_id_hash
-- status
-- error_code
-- error_category
-- retryable
-- attempt
-- duration_ms
-- dependency
-- fallback_used
-- degradation_reason
-
-Fields suitable for logs may be too high-cardinality for metric labels. Use route_template, status_class, dependency, error_category, retryable, and operation as metric labels; avoid raw IDs, raw URL, raw query, raw payload, request_id, trace_id, entity_id_hash, tenant_id_hash, and arbitrary user input as metric labels.
-
-### Redaction And Forbidden Inputs
-Forbidden in production logs:
-- password
-- token
-- access_token
-- refresh_token
-- authorization header
-- cookie
-- api key
-- secret
-- private key
-- full credit card
-- raw request body
-- raw webhook body
-- raw URL query
-- signature, code, or session identifiers
-- PII unless hashed, explicitly allowed, and retention-reviewed
-
-Allowed with care:
-- hashed user, entity, or tenant id
-- route template
-- status class
-- error code or category
-- dependency name
-- duration
-- attempt count
-- policy or denial category
-
-### Placement Policy
-- **Entry/controller**: access logs, request identity, route template, status_class, latency_ms, request_id, and validation boundary outcomes.
-- **Domain**: avoid infrastructure logging in pure domain objects. Emit domain events or return decisions that application services can log.
-- **Application service**: workflow decisions, domain event publication, transaction boundary results, fallback decisions, and final operation result.
-- **Adapter/infrastructure**: dependency latency, timeout, retryable status, circuit state, translated error categories, and safe provider metadata.
-- **Queue/worker**: job id hash, attempt, idempotency key hash, lag bucket, retry/final failure, DLQ decision, and correlation propagation.
-- **Security boundary**: denial category, policy, actor/resource hash, result, and audit handoff without raw secret-bearing input.
+Load `references/logging-selection-criteria.md` when the work needs detailed taxonomy, level-by-level policy, structured field candidates, redaction allow/deny lists, or layer placement guidance. Keep L1/L2 no-log or single-log decisions in this body when the mode matrix and output contract are enough.
 
 ## Mode Matrix
 Select the logging design mode that matches the operational evidence need.
@@ -188,7 +114,7 @@ Use this decision sequence:
 - Logs are added with no tests for redaction or required fields.
 
 ## Reference Loading Policy
-Read `references/capabilities/index.md` only when the selected capability list is available and the task needs deeper foundation detail. Load only the selected capability references for the active L1, L2, L3, L4, or L5 route. Do not read all references by default. When a selected capability needs more detail, read `references/capabilities/<capability-id>-<capability-name>.md` and only the adjacent references explicitly named there.
+Read `references/logging-selection-criteria.md` when detailed log taxonomy, level policy, structured field, redaction, or placement guidance is needed. Read `references/capabilities/index.md` only when the selected capability list is available and the task needs deeper foundation detail. Load only the selected capability references for the active L1, L2, L3, L4, or L5 route. Do not read all references by default. When a selected capability needs more detail, read `references/capabilities/<capability-id>-<capability-name>.md` and only the adjacent references explicitly named there.
 
 ## Output Contract
 Return or embed a logging decision with this shape when logs are relevant:

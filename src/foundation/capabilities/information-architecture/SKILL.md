@@ -19,6 +19,10 @@ Use this capability when a change: adds or restructures pages, navigation sectio
 
 Do not use this capability to mirror database table names in navigation (technical nouns do not equal user tasks). Do not use it to expose internal service or microservice boundaries in the product UI — service decomposition is an engineering concern, not a user navigation concern. Do not use it to specify visual styling, component-level layout, or interaction patterns — those belong in `design-system-rules` and `page-component-decomposition`.
 
+# Stage Fit
+
+Use during experience-definition, implementation-planning, review, and testing when page/module grouping, navigation hierarchy, labels, search/findability, role visibility, empty structural states, cross-module handoffs, or admin/operational task discoverability are changing. In planning, define task vocabulary, organization scheme, visibility policy, deep-link and empty-state structure, validation method, and handoff boundaries before route or component implementation. In review, reject database-noun IA, service-boundary leakage, hidden permission dead ends, stale project-memory taxonomy, and repository-graph claims that are not confirmed against current screens, routes, labels, analytics/support signals, and tests. Hand off when the primary question is ordered flow behavior, route guard mechanics, component composition, permission policy, visual styling, or executable frontend tests.
+
 # Non-Negotiable Rules
 
 - **Organization is task-first, not noun-first.** Navigation menus that list database entities (Users, Orders, Products, Events) without task framing fail users who think in terms of goals (Manage team access, Track a delivery, Update pricing). Every navigation item must answer: "What does the user want to do from here?"
@@ -29,51 +33,20 @@ Do not use this capability to mirror database table names in navigation (technic
 - **Every list, table, or card view must have a designed empty state.** An empty state without a call-to-action is a dead end. "No items found" is insufficient. Include: what goes here, why it is empty, what to do next (create first item, invite a team member, import data).
 - **Cross-module handoff points must be explicit.** When a task spans two modules (e.g., Order → Customer; Invoice → Project), define the exact handoff: what link or action moves the user; what context is preserved (breadcrumb parent, back navigation); whether it is a deep link or a full navigation reset.
 
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Task taxonomy and labels | New section, renamed nav, new content type, or user vocabulary mismatch. | Task-first grouping, label audit, content/context/user fit. | Primary tasks, user segment, current labels, vocabulary source, rejected internal terms. | `scenario-decomposition`, `user-role-identification` | Database table mirroring. |
+| Navigation hierarchy | New or reorganized global/section nav, sidebar, tabs, mobile nav, breadcrumb, or search path. | Depth, breadth, pattern fit, wayfinding, fallback search/filter. | Current route/nav inventory, max depth, target device, deep-link and breadcrumb behavior. | `routing-navigation-design`, `page-component-decomposition` | Component styling. |
+| Role and permission visibility | Permission-specific nav, locked destinations, confidential feature, admin/support view. | Visible/locked/hidden policy and non-dead-end restricted access. | Role matrix, sensitivity reason, request-access or non-leaking recovery path. | `permission-boundary-modeling`, `security-privacy-gate` when sensitive | Server authorization design. |
+| Empty and unavailable structure | Empty list, filtered-empty, first-run, archived, deleted, unavailable, no-access, or no-results states. | Structural meaning, CTA, recovery path, and non-leaking copy. | Surface list, condition split, allowed CTA, reset/retry/request-access path. | `interaction-state-modeling`, `prototype-description` | Generic "no data" copy. |
+| Cross-module handoff | Task crosses modules, support/admin handoff, audit trail, object relationship navigation. | Preserved context, back navigation, breadcrumb, source-of-truth owner. | Source/target module, task context, relationship label, return path. | `user-flow-modeling`, `repository-graph-analysis` | Full journey details unless needed. |
+| IA validation and migration | Card sort, tree test, first-click test, route/nav migration, analytics/support signal. | Findability proof, changed structure to validation map, evidence limits. | Validation method, task set, target score, current links/routes searched, stale evidence limits. | `quality-test-gate`, `validation-broker` | Visual preference testing. |
+
 # Industry Benchmarks
 
-Anchor against: **Jesse James Garrett "Elements of User Experience"** (2002) — IA exists at the structure layer between strategy/scope and skeleton/surface; separates conceptual structure (IA) from visual design. **Peter Morville & Louis Rosenfeld "Information Architecture for the World Wide Web"** (4th ed., O'Reilly) — Three circles: content, context, users; four core IA systems: organization, labeling, navigation, search. **Richard Saul Wurman LATCH principle** (1996) — five ways to organize information: Location, Alphabet, Time, Category, Hierarchy; choose organization scheme based on user task type. **Card Sorting** (Spencer, UXMethods; Optimal Workshop Optimal Sort) — open card sort validates user mental model before committing to IA; closed card sort tests proposed IA against user expectations; open sort for discovery, closed sort for validation. **Tree Testing** (Treejack; Nielsen Norman Group) — measures findability without visual design bias; target: > 70% directness score per primary task; measures whether users go directly to the right location without backtracking. **Jakob Nielsen "10 Usability Heuristics"** (1994) — Heuristic 1: Visibility of system status; Heuristic 6: Recognition over recall; Heuristic 8: Aesthetic and minimalist design — all inform IA decisions about what is visible and how much cognitive load navigation imposes. **WCAG 2.1 Success Criteria 2.4.1–2.4.8** — Navigation: bypass blocks (2.4.1); Page titled (2.4.2); Focus order (2.4.3); Link purpose (2.4.4); Multiple ways to find content (2.4.5); Headings and labels (2.4.6). **Mobile navigation patterns** — Apple HIG and Material Design 3 recommend bottom navigation for ≤ 5 primary items (thumb reach zone); top app bar for secondary navigation; drawer for infrequently used items. **WCAG 2.5.5** — Touch target size ≥ 44×44 CSS pixels for bottom navigation items. **Nielsen Norman Group "Information Scent"** (2003) — users scan page titles, link text, and headings for relevance cues; weak scent = abandonment at navigation node; test with click maps or first-click tests.
-
-### Navigation Pattern Selection Matrix
-
-| Pattern | Best for | Max items | Depth | Do not use when |
-| --- | --- | --- | --- | --- |
-| Top navigation bar | Global/primary sections (desktop) | 5-7 | 1-2 | Mobile primary nav (reach), > 10 items |
-| Left sidebar | Section/product navigation | 7-15 | 2-3 | Mobile (collapses poorly), < 3 items |
-| Bottom navigation | Mobile primary navigation | 3-5 | 1 | Desktop (not expected), > 5 items |
-| Tabs | Peer-level sections within a page | 3-8 | 1 | Hierarchy (parent/child), > 8 tabs |
-| Mega menu | Deep flat taxonomy (e-commerce catalog) | Unlimited | 2-3 | Small apps, B2B tools with < 10 sections |
-| Breadcrumb | Hierarchical context / wayfinding | N/A | Any | Flat navigation (no hierarchy to show) |
-| Progressive disclosure | Complex forms, step-by-step tasks | N/A | N/A | When all information is needed at once |
-
-### IA Organization Scheme Selection
-
-```
-Given a user task type, select the organization scheme:
-
-IF user_task = "find a specific known item" (e.g., find an order by ID)
-  → Alphabetical or Search
-  → Do not bury in category hierarchy
-
-IF user_task = "browse and explore options" (e.g., product catalog)
-  → Category hierarchy + faceted filter
-  → Card sorting to validate category labels
-
-IF user_task = "understand what happened over time" (e.g., activity log)
-  → Time-based organization (reverse chronological default)
-  → Date range filter required
-
-IF user_task = "complete a multi-step workflow" (e.g., onboarding, checkout)
-  → Task flow / wizard with progress indicator
-  → Navigation back must be safe (no data loss)
-
-IF user_task = "monitor and act on current state" (e.g., support queue, ops dashboard)
-  → Status-based grouping (priority, urgency, type)
-  → Filter + sort + bulk action pattern
-
-IF user = "admin / operational user" (different mental model from end user)
-  → Separate admin IA from product IA
-  → Surfaced: audit trails, user impersonation, bulk operations, system health
-```
+Anchor against Garrett's UX structure layer, Morville/Rosenfeld organization-labeling-navigation-search systems, Wurman's LATCH organization schemes, card sorting, tree testing, first-click testing, Nielsen information scent and usability heuristics, WCAG navigation and link-purpose criteria, mobile navigation guidance, and task-oriented operational UX practice. Keep this body focused on routing, evidence, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for benchmark anchors, navigation pattern selection, organization scheme decisions, validation methods, graph/memory/trajectory coupling, and anti-pattern review.
 
 # Selection Rules
 
@@ -84,6 +57,15 @@ Select this capability when **information grouping, navigation structure, labeli
 - Prefer `design-system-rules` when the primary concern is visual design tokens, component library, and styling.
 - Prefer `permission-boundary-modeling` when the primary concern is who can see and do what, and the authorization model.
 - Prefer `experience-impact-modeler` for end-to-end change impact review across user-facing surfaces.
+
+# Proactive Professional Triggers
+
+- **Signal:** a page/module/nav request names database entities, services, internal teams, or implementation nouns as the proposed IA. **Hidden risk:** users cannot find tasks because product structure mirrors storage or org charts. **Required professional action:** rewrite the IA around primary user tasks and vocabulary. **Route to:** `scenario-decomposition`, `user-role-identification`. **Evidence required:** task list, user segment, internal term rejected, user label source.
+- **Signal:** a new navigation item, section, or tab is added without a current nav/route inventory, depth budget, search fallback, or mobile pattern decision. **Hidden risk:** IA grows by accretion and findability degrades. **Required professional action:** map hierarchy, pattern, depth, and fallback. **Route to:** `routing-navigation-design`, `page-component-decomposition`. **Evidence required:** inspected current nav/routes, target device, max depth, search/filter fallback.
+- **Signal:** role-based navigation is implemented as "hide it if unauthorized" for every case. **Hidden risk:** legitimate users hit dead ends from notifications, bookmarks, support handoffs, or permission changes. **Required professional action:** define visible/locked/hidden policy and restricted-destination recovery. **Route to:** `permission-boundary-modeling`, `routing-navigation-design`. **Evidence required:** role visibility table, sensitivity reason, direct-entry behavior, request-access or non-leaking recovery.
+- **Signal:** empty states are described as generic "no data" across lists, cards, search, filtered views, unavailable resources, and no-access states. **Hidden risk:** users cannot tell whether to create, clear filters, request access, retry, or leave. **Required professional action:** split structural empty meanings and CTAs. **Route to:** `interaction-state-modeling`, `prototype-description`. **Evidence required:** condition matrix, user copy intent, CTA or recovery action, non-leak rule.
+- **Signal:** repository graph, project memory, analytics, support tickets, or prior trajectory is used to justify an IA pattern. **Hidden risk:** stale labels, dead links, old support workflows, or outdated permissions become new structure. **Required professional action:** confirm current source, routes, labels, support/admin tasks, and validation freshness before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths/signals, accepted/rejected pattern, freshness limit, validation or residual risk.
+- **Signal:** a sitemap, menu list, or IA recommendation changes labels, levels, visibility, empty states, or handoffs without a changed-IA-to-validation map. **Hidden risk:** a plausible structure ships without proof that users can find tasks or recover from restricted/dead-end states. **Required professional action:** map every changed IA decision to a tree/card/first-click/repository-route test, expert review artifact, or named residual owner. **Route to:** `information-architecture`, `quality-test-gate`, `validation-broker`. **Evidence required:** changed decision, validator or manual artifact, freshness after final IA edit, and what remains not verified.
 
 # Risk Escalation Rules
 
@@ -112,6 +94,10 @@ IA failures are invisible during development because developers navigate by file
 | Admin IA = product IA with extra items | Admin mental model differs; operational tasks buried; incident response slowed |
 | Mobile: 7 items in top navigation | Items clip; tap targets too small; keyboard navigation broken |
 
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 IA selection, stage fit, routing, evidence, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete IA plan, navigation hierarchy, role visibility table, empty-state structure, search/filter placement, or cross-module handoff. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed benchmark anchors, navigation pattern matrices, organization scheme decisions, validation methods, graph/memory/trajectory coupling, or anti-pattern review is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or minor wording edits where the inline output contract and quality gate are enough.
+
 # Failure Modes
 
 - Navigation rebuilt from database entity names; user task completion rate on primary flows drops 25%; usability study required post-launch.
@@ -127,6 +113,10 @@ IA failures are invisible during development because developers navigate by file
 
 Return an information architecture plan with:
 
+- `mode_selected` (task taxonomy and labels / navigation hierarchy / role and permission visibility / empty and unavailable structure / cross-module handoff / IA validation and migration)
+- `ia_scope` (user segment, product surface, current structure boundary, included and excluded modules/pages/routes)
+- `source_evidence` (current nav/routes/pages, labels, search/filter behavior, roles, analytics/support signals, user research, repository graph, project memory, execution trajectory, tests, and freshness limits)
+- `graph_memory_trajectory_judgment` (accepted, rejected, or not verified for each reused taxonomy, nav pattern, role policy, empty state, handoff, support workflow, or validation result)
 - `primary_user_tasks` (task name, user segment, frequency, criticality)
 - `organization_scheme` (task-first grouping; rationale: LATCH principle applied)
 - `navigation_structure` (hierarchy: top-level sections → sub-sections → pages; max depth)
@@ -138,22 +128,53 @@ Return an information architecture plan with:
 - `search_filter` (search scope; filterable dimensions; sort options; for which sections)
 - `structural_risks` (fragmented workflows, deep link breaks, permission dead ends, mobile reach issues)
 - `validation_method` (card sort / tree test / first-click test; target: > 70% directness on primary tasks)
+- `validation_obligations` (for each IA decision: validation type, pass target or review owner, source freshness, and not-run consequence)
 - `admin_ia` (if admin users exist: separate admin IA section or explicitly integrated)
+- `changed_ia_to_validation_map` (each changed task group, label, nav level, role visibility rule, empty state, handoff, search/filter decision, deep-link behavior, admin/support path, and validation method mapped to evidence/test or residual risk)
+- `handoff_boundaries` (what belongs to flow modeling, route design, component decomposition, permission modeling, interaction state, accessibility, copy/content, analytics, or frontend testing)
+- `evidence_limits` (what was not inspected or not run: live users, analytics date range, route graph, production roles, browser/mobile behavior, accessibility testing, card sort/tree test, or support workflow validation)
+
+# Evidence Contract
+
+Close an information-architecture output only when it names:
+
+- **Basis:** selected mode, IA scope, target user segment, included/excluded surfaces, and the structural decision being made.
+- **Repository evidence:** current nav/routes/pages, labels, breadcrumbs, search/filter behavior, role visibility, empty states, support/admin paths, tests, and source-vs-generated boundaries inspected or explicitly unavailable.
+- **Graph, memory, and trajectory evidence:** reused taxonomy, route graph, support workflow, project-memory decision, analytics/support signal, or prior validation accepted, rejected, stale, or not verified with freshness limits.
+- **IA proof:** primary tasks, organization scheme, navigation hierarchy, pattern choice, labels and vocabulary source, role visibility policy, empty/unavailable structure, cross-module handoffs, search/filter placement, and admin/operational IA.
+- **Validation proof:** changed-IA-to-validation map, validation method, pass target or reviewer, command/manual artifact when available, validation freshness after the final IA edit, and every not-run validation with owner.
+- **Handoff evidence:** boundaries to flow modeling, route design, component decomposition, permission modeling, interaction state, accessibility, copy/content, analytics, and frontend testing.
+- **What evidence does not prove:** live user success, production analytics, browser/mobile behavior, route guard correctness, authorization enforcement, accessibility certification, or support workflow adoption unless those were specifically inspected or run.
+
+A generic sitemap, menu list, or "organize around users" statement is not sufficient evidence.
+
+# Benchmark Coverage
+
+Improved IA outputs reject common weak patterns: database-noun navigation, service-boundary sections, internal labels, invisible permission dead ends, generic empty states, >3-level hierarchy without search, mobile nav overload, admin IA copied from end-user IA, cross-module links without return context, and stale repository-memory taxonomy. Detailed benchmark anchors, pattern matrices, validation methods, and graph/memory/trajectory coupling belong in references so the body stays efficient.
+
+# Routing Coverage
+
+Route here when content hierarchy, navigation grouping, labels, findability, role visibility, empty-state structure, cross-module wayfinding, search/filter placement, or admin/support IA is primary. Hand off when the primary concern is ordered journey behavior (`user-flow-modeling`), URL guard mechanics (`routing-navigation-design`), component ownership (`page-component-decomposition`), single-screen state (`interaction-state-modeling`), authorization policy (`permission-boundary-modeling` / `authentication-authorization`), visual styling (`design-system-rules`), or executable tests (`quality-test-gate` / `frontend-testing`).
 
 # Quality Gate
 
 The information architecture is complete only when:
 
-1. Every navigation section is named in user task vocabulary (not internal noun or service name).
-2. Cross-module task handoffs are mapped with explicit back-navigation behavior.
-3. Role-based visibility defined for every section: visible / locked / hidden, with reasoning.
-4. Empty states designed for every list, table, and card view with a CTA.
-5. Navigation depth ≤ 3 levels, or search/filter provided as fallback.
-6. Navigation pattern selected and justified per target device (mobile vs desktop).
-7. Labels audited against user vocabulary (not internal terminology).
-8. Deep link behavior defined for permission-restricted destinations (locked, not 404).
-9. Admin IA addressed separately if operational user segment exists.
-10. Validation method specified (card sort, tree test, or first-click test).
+1. Selected mode, IA scope, source evidence, and graph/memory/trajectory reuse judgment are explicit.
+2. Every navigation section is named in user task vocabulary, not internal noun, database table, service, team, or implementation term.
+3. Primary user tasks, user segments, frequency, and criticality drive grouping and priority.
+4. Organization scheme is selected with LATCH/task rationale and rejected alternatives when relevant.
+5. Cross-module task handoffs are mapped with context preservation, breadcrumb/back-navigation behavior, and source/target owner.
+6. Role-based visibility is defined for every section: visible / locked / hidden, with reason and direct-entry behavior.
+7. Empty, filtered-empty, first-run, unavailable, archived/deleted, and no-access states are split where they have different user actions.
+8. Navigation depth is 3 levels or less, or search/filter/faceted recovery is provided as fallback.
+9. Navigation pattern is selected and justified per target device and usage frequency.
+10. Labels are audited against user vocabulary with source or residual risk.
+11. Deep link behavior is defined for permission-restricted destinations so users do not hit unexplained 404/dead ends.
+12. Admin, support, audit, and operational IA are addressed separately when those user segments exist.
+13. Each changed task group, label, nav level, visibility rule, empty state, handoff, search/filter decision, and validation method maps to evidence/test or named residual risk.
+14. Validation obligations name the validator or manual review artifact, pass target or owner, freshness after the final IA edit, and not-run consequence.
+15. Handoff boundaries and evidence limits are explicit so IA evidence is not over-claimed as route guard, component, authorization, accessibility, or live user-research proof.
 
 # Used By
 

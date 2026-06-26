@@ -19,6 +19,10 @@ Use this capability when: a new entity type needs a persistence access point; an
 
 Do not use this capability to: design the underlying database schema (use `relational-database` or `nosql-database`); design the application service orchestration logic (use `service-business-logic`); design the API DTO contract (use `dto-schema-design`); or optimize a slow database query (use `indexing-query-optimization` — the repository interface is already defined, the query implementation needs tuning).
 
+# Stage Fit
+
+Owns backend persistence-boundary design during implementation planning, coding, and review when the primary decision is how application/domain code talks to durable storage without leaking ORM/session/query mechanics. In planning, it turns current repository call sites, domain aggregate boundaries, storage models, and tests into a contract for methods, mapping, transaction participation, and error translation. In review, it rejects ORM entity leakage, query-builder escape hatches, ambiguous not-found semantics, hidden lazy loading, unbounded queries, and transaction behavior that is not visible to the service layer. Repository graph, project memory, and execution trajectory can identify prior persistence conventions or fragile files, but current source, tests, schema/mappers, and validation output must confirm the boundary before reuse.
+
 # Non-Negotiable Rules
 
 - **Repository interfaces must be defined in domain or application language, not storage language.** Method names on a repository interface should read like domain operations: `findByEmail(email)`, `findActiveOrdersForCustomer(customerId)`, `save(order)`, `remove(orderId)`. They must not read like database operations: `executeQuery(sql)`, `findByWhereClause(clause)`, `findAllWithJoin()`. Storage mechanics belong behind the interface implementation, not in the interface contract.
@@ -28,81 +32,19 @@ Do not use this capability to: design the underlying database schema (use `relat
 - **Storage errors must be translated to domain-meaningful outcomes before leaving the repository.** A `UniqueConstraintViolationException` from PostgreSQL is a storage detail. The caller should receive `DuplicateEmailAddressError` or `ConflictError`, not a raw ORM exception with a stack trace referencing database internals. The repository is the translation boundary. Rule: catch all storage-layer exceptions; map to domain or application exceptions; document what the caller can expect.
 - **Query methods must declare their consistency, pagination, and ordering contract.** A `findAll()` method that returns up to 10,000 records is a production risk waiting to materialize. Repository query contracts must state: maximum result size (or require a pagination parameter); default ordering (or require explicit ordering); consistency level (read from primary? read replica?); and behavior when the result set is larger than expected (throw, truncate, paginate automatically).
 
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| New repository contract | New aggregate/entity persistence point, new repository interface, or new data-access port. | Place interface at domain/application boundary, hide storage mechanics, and map domain language to durable storage. | Owning module, aggregate boundary, current naming convention, persistence model, mapper owner, and rejected locations. | `data-model-design`, `implementation-structure-design` | Infrastructure-first interface placement. |
+| Existing method change | New query, changed not-found behavior, pagination, ordering, consistency, or soft-delete treatment. | Preserve callers while making method semantics explicit and testable. | Current callers, method contract, returned type, soft-delete/permission behavior, max result size, and old/new behavior risk. | `service-business-logic`, `indexing-query-optimization` when slow query risk exists | Generic `findAll` or query-builder leakage. |
+| Transaction and unit-of-work boundary | Repository write participates in service transaction, batch write, lock, retry, or ambient session. | Make transaction participation visible to the caller and avoid hidden commits or remote calls inside locks. | Service transaction owner, write methods, lock/isolation expectation, Unit of Work/session scope, and rollback behavior. | `transaction-consistency`, `relational-database` | Repository-started hidden transactions. |
+| Mapping and error translation | ORM entity, row/document, generated model, storage exception, or lazy proxy crosses boundary. | Map persistence records to domain/DTO intentionally and translate storage failures to domain/application outcomes. | Mapper source, field/null/default semantics, exception map, lazy-loading absence, and sensitive-field exclusion. | `model-boundary-mapping`, `failure-contract-design`, `security-privacy-gate` when sensitive | Returning raw ORM entities or raw exceptions. |
+| Persistence integration proof | Repository contract is implemented or reviewed for constraints, queries, rollback, tenant filters, or OSIV absence. | Prove the real persistence boundary, not mocked repository behavior. | Real or equivalent DB test, fixture owner, tenant/soft-delete assertions, rollback/constraint test, and validation command. | `integration-testing`, `quality-test-gate` | Mock-only repository proof. |
+
 # Industry Benchmarks
 
-Anchor against: **Martin Fowler "Patterns of Enterprise Application Architecture" (PoEAA, 2002)** — Repository pattern (p. 322): "mediates between the domain and data mapping layers using a collection-like interface"; Data Mapper pattern (p. 165): maps between in-memory objects and persistent store without coupling the objects to the store. **Domain-Driven Design (Evans, 2003)** — Repository provides access to Aggregate roots only; never provides access to child entities directly; enforces aggregate boundary. **Robert Martin "Clean Architecture" (2017)** — dependency inversion: domain layer defines the repository interface; infrastructure layer implements it; never the reverse. **Spring Data JPA / Hibernate best practices** — `@Transactional` boundary placement; avoiding LazyInitializationException; Open Session In View anti-pattern (disables lazy-loading fix by extending session scope into the view layer — widely considered an anti-pattern). **TypeORM / Prisma / SQLAlchemy documentation** — ORM-specific object lifecycle management; detached entity behavior; session scope. **Unit of Work pattern** — transactional boundary that coordinates multiple repository operations; commit or rollback as an atomic unit. **Integration testing with Testcontainers** — proving persistence behavior against a real database instance, not mocked repositories.
-
-### Repository Method Contract Classification
-
-| Method Type | Returns | Not-Found Behavior | Transaction Participation | Consistency |
-| --- | --- | --- | --- | --- |
-| `findById(id)` | `Option<DomainObject>` or throws `NotFoundError` | None / Option.None / NotFoundError | Read-only; participates in ambient or starts new read | Primary or replica — must be stated |
-| `findBy*(criteria)` single | `Option<DomainObject>` | None / Option.None | Read-only | Primary or replica |
-| `findAll*(criteria)` list | `List<DomainObject>` with pagination | Empty list (not null) | Read-only | Primary or replica |
-| `save(domainObject)` | `DomainObject` (with generated ID) | N/A | Requires ambient transaction or creates one | Primary write |
-| `saveAll(list)` | `List<DomainObject>` | N/A | Requires transaction; documents batch behavior | Primary write |
-| `remove(id)` | `void` or `boolean` | Idempotent OR throws `NotFoundError` — must be stated | Requires ambient transaction | Primary write |
-| `exists(criteria)` | `boolean` | false | Read-only | May be replica |
-| `count(criteria)` | `long` | 0 | Read-only | May be replica (approximate) |
-
-### Repository Implementation Pattern
-
-```typescript
-// Interface: defined in domain/application layer — no ORM types
-interface OrderRepository {
-  findById(id: OrderId): Promise<Order | null>;
-  findActiveByCustomerId(
-    customerId: CustomerId,
-    pagination: Pagination
-  ): Promise<PagedResult<Order>>;
-  save(order: Order): Promise<Order>;
-  remove(id: OrderId): Promise<void>;
-}
-
-// Implementation: defined in infrastructure layer
-class PostgresOrderRepository implements OrderRepository {
-  constructor(private readonly db: DatabaseConnection) {}
-
-  async findById(id: OrderId): Promise<Order | null> {
-    const row = await this.db.query(
-      'SELECT * FROM orders WHERE id = $1 AND deleted_at IS NULL',
-      [id.value]
-    );
-    if (!row) return null;  // explicit null — not undefined, not empty array
-    return OrderMapper.toDomain(row);  // maps DB record to domain object
-  }
-
-  async save(order: Order): Promise<Order> {
-    try {
-      const row = OrderMapper.toRecord(order);  // domain → DB record
-      const saved = await this.db.upsert('orders', row);
-      return OrderMapper.toDomain(saved);
-    } catch (error) {
-      if (isUniqueConstraintViolation(error)) {
-        throw new DuplicateOrderIdError(order.id);  // translate, don't re-throw raw
-      }
-      throw new PersistenceError('Failed to save order', { cause: error });
-    }
-  }
-}
-
-// OrderMapper: bidirectional mapping
-class OrderMapper {
-  static toDomain(row: OrderRecord): Order { /* ... */ }
-  static toRecord(order: Order): OrderRecord { /* ... */ }
-}
-```
-
-### Repository Boundary Anti-examples
-
-| Anti-pattern | Problem | Fix |
-| --- | --- | --- |
-| `userService.getUser(id)` calls `user.orders` on returned ORM entity | LazyInitializationException in production; N+1 queries in dev; ORM session scope leaked to service | Repository returns domain `User` with `orders` as a loaded collection or via separate `OrderRepository.findByUserId()` |
-| Repository returns `TypeORM SelectQueryBuilder` | Caller builds arbitrary queries; repository boundary is useless; query logic scattered across codebase | Repository exposes named methods with specific domain semantics; query builder stays inside implementation |
-| `findAll()` with no pagination | Returns entire table; works in dev (100 rows); OOM or timeout in production (10M rows) | Require `Pagination` parameter; throw if `limit > MAX_LIMIT`; default ordering required |
-| Raw ORM exception propagates to controller: `QueryFailedError: duplicate key value` | Exposes database internals to caller; caller must parse exception message to detect conflict | Catch `QueryFailedError`; re-throw `DuplicateEmailError` in the repository implementation |
-| Repository interface defined in infrastructure layer | Domain layer depends on infrastructure; violates dependency inversion; cannot test domain without database | Define interface in `domain/` or `application/`; implement in `infrastructure/`; inject via DI |
-| `save(user)` starts a new transaction, ignoring ambient transaction | Multi-step write: `userRepo.save()` + `auditRepo.save()` are in separate transactions; audit record saved even if user save rolls back | Participate in ambient Unit of Work; or require explicit transaction to be passed as parameter |
+Anchor against Fowler's Repository and Data Mapper patterns, Evans DDD aggregate repositories, Clean Architecture dependency inversion, Unit of Work, ORM session/lazy-loading best practices, OSIV avoidance, and Testcontainers-style persistence integration testing. Keep this body focused on selection and evidence rules; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for method-contract matrices, implementation pattern examples, and detailed anti-pattern review.
 
 # Selection Rules
 
@@ -112,12 +54,24 @@ Select this capability when **persistence boundary design is the primary concern
 
 Escalate when: a repository method touches financial balances, inventory counts, or any invariant that can be violated by concurrent writes (requires explicit transaction and locking strategy from `transaction-consistency`); a repository serves multiple tenants and row-level filtering is required (requires tenant isolation verification — every query must have a tenant predicate); a soft-delete pattern is used and the filtering convention is not uniformly enforced (requires audit of all repository methods for `deleted_at IS NULL` filter coverage); bulk repository operations (`saveAll`, `deleteAll`) affect > 10k records (requires batching strategy and performance impact assessment); a repository is accessed from a background job without a scoped session or transaction boundary (requires session scope design for the job execution context).
 
+# Proactive Professional Triggers
+
+- **Signal:** Service, controller, or domain code imports ORM/session/query-builder types directly. **Hidden risk:** persistence mechanics leak into business flow and create unreviewed lazy queries or storage coupling. **Required professional action:** introduce or repair repository boundary and map inside implementation. **Route to:** `repository-persistence`, `implementation-structure-design`. **Evidence required:** import/caller scan, owner boundary, rejected direct-ORM access, and validation plan.
+- **Signal:** Project memory, repository graph, or prior trajectory suggests a repository pattern to copy. **Hidden risk:** stale convention or fragile file gets reused without current-source confirmation. **Required professional action:** confirm current callers, tests, mappers, and conventions before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, freshness limit, accepted/rejected pattern, and evidence limits.
+- **Signal:** A repository method returns `null`, empty list, `Option`, or exception without distinguishing not-found, soft-delete, permission filtering, and tenant filtering. **Hidden risk:** callers infer policy from absence and may leak existence, retry incorrectly, or create duplicate writes. **Required professional action:** document outcome taxonomy and translate it consistently. **Route to:** `failure-contract-design`, `security-privacy-gate` when access-controlled data is involved. **Evidence required:** method outcome table, caller expectation, and denied/filtered test obligation.
+- **Signal:** A write method starts its own transaction, ignores ambient Unit of Work, or commits inside a service workflow. **Hidden risk:** partial commits and rollback mismatch across repositories. **Required professional action:** make transaction ownership explicit and hand off isolation/lock decisions. **Route to:** `transaction-consistency`, `service-business-logic`. **Evidence required:** service transaction owner, repository participation, rollback behavior, and concurrency risk.
+- **Signal:** Repository proof relies on mocked repository tests while the risk is SQL, constraints, lazy loading, soft-delete, tenant predicate, or rollback. **Hidden risk:** tests validate fake behavior while production persistence fails. **Required professional action:** require real or equivalent DB integration coverage. **Route to:** `integration-testing`, `quality-test-gate`. **Evidence required:** test boundary, fixture isolation, DB/container, assertions, and residual untested path.
+
 # Critical Details
 
 - **Aggregate roots only.** DDD repositories provide access to Aggregate roots only, not to child entities. If `Order` is an aggregate root and `OrderLineItem` is a child entity, there is no `OrderLineItemRepository`. Line items are accessed via `OrderRepository.findById(orderId)` and mutated through the `Order` aggregate. This enforces the aggregate consistency boundary: all changes to `Order` and its children happen within one transaction via one repository.
 - **Read models do not need repositories.** In CQRS or read-optimized paths, a "read model" (a denormalized projection for a query page) does not need a domain repository interface. A simple `OrderSummaryQuery` class that executes a SQL query and returns a DTO is acceptable — it is not pretending to be a domain repository. The repository pattern is for aggregate persistence; read models are for query optimization.
 - **Integration tests must use a real database, not a mocked repository.** Mocking a repository in an integration test proves nothing about the actual persistence behavior. Constraint enforcement, transaction rollback, lazy-loading behavior, and soft-delete filtering must all be tested against a real (or in-memory equivalent: SQLite, H2, Testcontainers) database. Unit tests mock repositories; integration tests do not.
 - **The "Open Session In View" anti-pattern must be disabled.** Many web frameworks (Spring MVC, Django) enable a pattern where the database session/connection remains open through the view rendering phase, allowing lazy-loaded relationships to be fetched during serialization. This causes N+1 queries during HTTP response serialization, makes query behavior dependent on serialization order, and complicates transaction boundary reasoning. Disable OSIV; load all required data explicitly in the service/repository layer.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries normal L1/L2 repository-boundary selection and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete repository contract, when mapper/transaction/not-found coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when method contract classification, implementation examples, ORM leakage patterns, or anti-pattern details are needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load these references for pure routing or trivial wording work where the output contract and quality gate are enough.
 
 # Failure Modes
 
@@ -132,16 +86,36 @@ Escalate when: a repository method touches financial balances, inventory counts,
 
 Return a repository contract with:
 
+- `mode_selected` (new contract, existing method change, transaction boundary, mapping/error translation, or integration proof)
+- `boundary_scope` (owning module, aggregate/root, caller boundary, and rejected direct persistence access)
+- `source_evidence` (current files, callers, mappers, tests, schema/config, repository graph, memory, or trajectory evidence inspected, with freshness limits)
 - `interface_owner` (domain or application layer; package / module location)
 - `methods` (per method: name, parameters with types, return type, not-found behavior, transaction participation)
 - `domain_mapping` (mapper class/function; domain object ↔ persistence record conversion; field mapping rules)
 - `query_semantics` (pagination requirement; max result size; ordering default; consistency level)
 - `not_found_behavior` (per method: null / Option / exception; soft-delete vs non-existent distinction)
 - `transaction_expectations` (ambient / new / caller-provided; Unit of Work participation; batch commit behavior)
+- `session_and_lazy_loading_policy` (OSIV/session scope, eager/load plan, and lazy proxy escape prevention)
+- `tenant_and_permission_filtering` (tenant predicate, object-level permission filter, and existence-leak behavior when relevant)
 - `locking_notes` (pessimistic / optimistic; SELECT FOR UPDATE usage; conflict resolution)
 - `error_translation` (storage exceptions → domain/application exceptions mapping)
 - `performance_risks` (identified N+1 risks; query result size risks; missing index warnings)
 - `integration_tests` (per method: test fixture; assertion; database used for test — must be real or equivalent)
+- `changed_repository_to_validation_map` (each changed method/mapper/transaction/error path mapped to validator, integration test, or residual risk)
+- `handoff_boundaries` (what is handed to service, schema, transaction, query tuning, security, or test gates)
+- `evidence_limits` (what was not verified: real DB behavior, concurrency, production data volume, security filters, or query plans)
+
+# Evidence Contract
+
+Close a repository-persistence change only when the output names selected mode, boundary scope, current source evidence inspected, memory/graph/trajectory freshness when used, interface owner, mapper owner, method semantics, not-found/filtered behavior, transaction/session policy, error translation, integration-test or not-verified evidence, changed-repository-to-validation map, evidence limits, residual risk, and next handoff owner. A generic repository interface or "use repository pattern" statement is not sufficient evidence.
+
+# Benchmark Coverage
+
+Behavior improvement should be validated structurally: weak repository plans usually expose ORM entities, define interfaces in infrastructure, conflate absent/filtered records, hide transaction ownership, leave `findAll` unbounded, or prove persistence with mocks only. Improved outputs must name mode, boundary scope, source evidence, method semantics, mapper/error/session policy, validation mapping, and handoff boundaries while keeping detailed benchmark examples in references.
+
+# Routing Coverage
+
+Route here when the primary work is repository interface placement, domain/persistence mapping, query method semantics, transaction participation at the repository boundary, storage error translation, or ORM leakage review. Guard against over-routing by handing off when the primary concern is service orchestration (`service-business-logic`), conceptual schema/invariants (`data-model-design`), relational DDL/constraints (`relational-database`), query tuning (`indexing-query-optimization`), isolation/locking design (`transaction-consistency`), API DTO shape (`dto-schema-design`), or real-seam test planning (`integration-testing` / `quality-test-gate`).
 
 # Quality Gate
 
@@ -157,6 +131,10 @@ The repository design is complete only when:
 8. Integration tests use a real (or equivalent) database — not mocks.
 9. OSIV is disabled; lazy-loading behavior outside repository is verified absent.
 10. Multi-tenant repositories have tenant predicate coverage verified across all methods.
+11. Selected mode, boundary scope, source evidence, and rejected locations are explicit.
+12. Repository graph, project memory, and execution trajectory evidence are source-confirmed or marked not verified.
+13. Each changed method, mapper, transaction policy, or error translation maps to a validator, integration test, or named residual risk.
+14. Handoff boundaries and evidence limits are named so repository evidence is not over-claimed as schema, query-plan, service, or production concurrency proof.
 
 # Used By
 
@@ -165,7 +143,7 @@ The repository design is complete only when:
 
 # Handoff
 
-Hand off to `data-model-design` for schema design; `transaction-consistency` for isolation level and locking strategy; `indexing-query-optimization` for query performance tuning; `service-business-logic` for application service orchestration that calls the repository.
+Hand off to `service-business-logic` for application orchestration and authorization-before-read ordering; `data-model-design` for conceptual schema and aggregate boundaries; `relational-database` for constraints, SQL DDL, and migration-sensitive relational design; `transaction-consistency` for isolation level, locking, and rollback semantics; `indexing-query-optimization` for query performance tuning; `integration-testing` for real database seam coverage; `security-privacy-gate` for tenant/object permission filtering or sensitive-data exposure; and `dto-schema-design` when API-visible shape must be separated from persistence internals.
 
 # Completion Criteria
 

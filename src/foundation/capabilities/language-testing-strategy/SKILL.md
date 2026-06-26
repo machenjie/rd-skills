@@ -77,6 +77,14 @@ Shell (Bash 4+)     | 60%  | 30%         | n/a      | 10%      | shellcheck + ba
 - Escalate to `concurrency-control` for race-detector and stress-test design for concurrency primitives.
 - Escalate to `ai-code-review-refactor` when tests are AI-generated and may be testing mocks rather than behavior.
 
+# Proactive Professional Triggers
+
+- **Signal:** a change touches goroutines, threads, async tasks, locks, channels, event loops, cancellation, or shared mutable state without a race/stress/cancellation test. **Hidden risk:** the test suite passes a single scheduler path while a race, deadlock, leaked task, or stale cancellation path fails under load. **Required professional action:** require runtime-specific concurrency evidence before closure. **Route to:** `concurrency-control`, `language-performance-safety`, `quality-test-gate`. **Evidence required:** race detector, stress loop, cancellation test, command output, exit code, and residual interleaving risk.
+- **Signal:** C, C++, Rust unsafe/FFI/native extension, parser, serializer, or binary boundary changes with no sanitizer, fuzz, property, or memory-safety lane. **Hidden risk:** undefined behavior, memory corruption, panic/exception boundary, or malformed-input crash survives ordinary unit tests. **Required professional action:** select sanitizer/fuzz/property coverage or block release with a named owner. **Route to:** `language-performance-safety`, `security-privacy-gate`, `quality-test-gate`. **Evidence required:** ASan/UBSan/TSan/MSan, miri, fuzz/property command, artifact/report path, and what remains unproven.
+- **Signal:** TypeScript, Python, Java, Rust, Go, SQL, or Shell code accepts HTTP bodies, queue messages, files, environment values, CLI args, generated types, or database rows with only compile-time/type-hint confidence. **Hidden risk:** runtime boundary drift or hostile input bypasses types and breaks production. **Required professional action:** require boundary validation and negative fixtures at the language boundary. **Route to:** `input-validation`, `contract-testing`, matching `<lang>-professional-usage`. **Evidence required:** invalid/malformed fixture, validator location, contract or schema test, command, and report/artifact freshness.
+- **Signal:** AI-generated or heavily mocked tests assert calls, snapshots, private helpers, or fixture shape without public behavior or contract proof. **Hidden risk:** tests verify the mock or implementation shape while real behavior remains wrong. **Required professional action:** replace or pair with public behavior, contract, integration, or mutation-sensitive assertions. **Route to:** `ai-code-review-refactor`, `testability-seam-design`, `quality-test-gate`. **Evidence required:** public behavior boundary, rejected private-helper assertion, real/fake/mock contract, mutation-style failure expectation, and validation output.
+- **Signal:** CI reports coverage, lint, typecheck, or one green test as release evidence for runtime-sensitive language behavior. **Hidden risk:** coverage theater hides missing race, sanitizer, fuzz, mutation, boundary, contract, or flake evidence. **Required professional action:** map changed paths to language-specific validators through `validation-broker` and downgrade stale or partial checks. **Route to:** `validation-broker`, `agent-execution-discipline`, `quality-test-gate`. **Evidence required:** changed-path map, selected validator depth, command, exit code, relevant output, report/artifact path, freshness, and what evidence does not prove.
+
 # Critical Details
 
 - **Tests verify behavior at runtime, not source shape.** Snapshot tests that compare serialized object structure pass while the rendered behavior is broken. Behavior tests (rendered output, side-effect observed, downstream state) catch real defects.
@@ -109,11 +117,12 @@ Return a **Language Test Plan** containing:
 - **Test types selected** per risk area (unit / integration / contract / property / fuzz / race / sanitizer / E2E / accessibility / load) with rationale
 - **Per-language tool pins** (test runner, race detector, sanitizer, fuzzer, mutation-testing, contract-testing, coverage tool) with versions
 - **Fixtures / fakes / contract pairings** with ownership
-- **CI command list** (exact commands as runnable in CI, with flags `-race`, `-fuzz=`, sanitizer flags, mutation-score floor)
+- **CI command list** (exact commands as runnable in CI, with flags `-race`, `-fuzz=`, sanitizer flags, mutation-score floor, validator/report/artifact path, exit code, and relevant output)
 - **Coverage targets** (line floor + mutation-score target on critical modules)
 - **Acceptance-evidence mapping** — which acceptance criterion is proved by which test
 - **Coverage gaps** explicitly listed with owner and resolution plan
 - **Flake protocol** — quarantine path, root-cause SLA
+- **Decision and next gate** — approved, blocked, not verified, release-gated, or handoff required, with residual risk owner
 
 # Evidence Contract
 
@@ -124,9 +133,10 @@ A language testing strategy is complete only when the output includes:
 - **Framework fit**: selected test framework and why it matches the language/runtime.
 - **Fixture ownership**: setup/teardown, isolation, parallelism, deterministic data, and cleanup.
 - **Language-specific validation**: typecheck, race detector, sanitizer, mutation test, async test harness, or equivalent.
+- **Validation evidence**: command, test or validator name, working directory, exit code, relevant output, report or artifact path, and freshness after final edit.
 - **What evidence proves**: the language-specific failure mode is covered.
 - **What evidence does not prove**: cross-language boundary, production runtime, external dependency, performance behavior, or platform-specific behavior.
-- **Residual risk**: untested runtime behavior, owner, and next gate.
+- **Residual risk**: untested runtime behavior, owner, rollback or rerun note, and next gate.
 
 # Quality Gate
 
@@ -137,6 +147,7 @@ A language testing strategy is complete only when the output includes:
 5. Contract tests present for every public API / SDK / cross-service interface; `buf breaking` / `openapi-diff` in CI for IDL-defined contracts.
 6. No CI test-retry / flake-tolerance flag; flakes go to quarantine with root-cause SLA.
 7. CI is reproducible: same command, same result, on any machine.
+8. Validation evidence records validator command, exit code, output, report/artifact, freshness, what evidence proves, and what evidence does not prove.
 
 # Used By
 

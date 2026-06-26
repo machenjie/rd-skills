@@ -19,6 +19,10 @@ Use this capability when a production-facing change: affects user-visible flows 
 
 Do not use this capability to: log sensitive payloads, PII, secrets, or credentials into any log sink (use `logging-error-handling` for sensitive data redaction rules); create dashboard metrics that do not have alert owners or thresholds; replace correct error handling and testing; or add observability for dead code paths that will never execute in production.
 
+# Stage Fit
+
+Use during planning when user impact, SLI/SLO, signal ownership, telemetry privacy, or release-watch evidence is being decided. Use during implementation and code review when logs, metrics, traces, dashboards, alert rules, runbooks, correlation propagation, or metric labels change. Use during testing and release when validator commands, dashboard queries, synthetic events, alert-rule checks, project memory, repository graph, or prior incident evidence must prove observability is fresh enough to support rollout or incident response.
+
 # Non-Negotiable Rules
 
 - **Every production-facing change requires: structured logs, relevant metrics, distributed trace spans, and at least one alert — or an explicit rationale for why each is unnecessary.** "We'll add observability later" has historically been false. Observability must be designed before release, not after the first incident.
@@ -32,80 +36,19 @@ Do not use this capability to: log sensitive payloads, PII, secrets, or credenti
 
 # Industry Benchmarks
 
-Anchor against: **Google SRE Book (Beyer et al., 2016)** — Four Golden Signals (Latency, Traffic, Errors, Saturation); SLI/SLO/Error Budget framework; alerting on symptoms, not causes. **OpenTelemetry (CNCF)** — unified observability framework: traces, metrics, logs; `OTel SDK` + `OTel Collector` + backends; `traceparent` propagation; semantic conventions for HTTP, DB, messaging. **W3C Trace Context (traceparent)** — distributed tracing header standard; `00-{traceId}-{spanId}-{flags}`. **Prometheus data model** — `Counter`, `Gauge`, `Histogram`, `Summary`; label cardinality discipline; `histogram_quantile(0.99, ...)` for P99 latency. **Grafana / Grafana Loki** — dashboard best practices; USE method (Utilization, Saturation, Errors) for infrastructure; RED method (Rate, Errors, Duration) for services; structured log queries with label filters. **Jaeger / Zipkin / AWS X-Ray** — distributed trace visualization; root span identification; service dependency map. **Elastic Common Schema (ECS)** — standardized log field names: `http.request.method`, `error.message`, `user.id`; enables cross-service log queries. **NIST SP 800-92** — log management; retention (90 days online / 1 year archive baseline); log integrity. **Alertmanager best practices (Robustness Principle)** — alert on symptoms (user-facing error rate elevated) rather than causes (CPU high); inhibition rules to suppress downstream alerts when upstream is alerting; dead-man's switch for critical pipelines.
-
-### Observability Signal Matrix (Four Signals per Layer)
-
-| Layer | Latency | Traffic / Rate | Errors | Saturation |
-| --- | --- | --- | --- | --- |
-| HTTP API | `p99(http_request_duration_seconds)` | `rate(http_requests_total[5m])` | `rate(http_requests_total{status=~"5.."}[5m])` | Connection pool utilization |
-| Background Job | `p99(job_duration_seconds)` | `rate(job_executions_total[5m])` | `rate(job_failures_total[5m])` | Worker thread utilization |
-| Queue Consumer | Consumer processing latency (end-to-end) | Messages consumed/sec | `rate(consumer_errors_total[5m])` | Consumer lag (messages behind) |
-| Database | `p99(db_query_duration_seconds)` | `rate(db_queries_total[5m])` | `rate(db_errors_total[5m])` | Connection pool active/max |
-| External Dependency | `p99(external_call_duration_seconds)` | `rate(external_calls_total[5m])` | `rate(external_call_errors_total[5m])` by partner | Circuit breaker state |
-| Frontend (browser) | Core Web Vitals (LCP, INP, CLS) | Page loads / session starts | JS error rate (`window.onerror`) | Long task count |
-
-### SLI/SLO Definition Template
-
-```
-Service: orders-api
-User Journey: Place Order
-
-SLI:
-  Name: Order API Availability
-  Definition: Percentage of HTTP POST /orders requests completing
-              with status 2xx or 4xx (user error), NOT 5xx
-  Measurement: rate(http_requests_total{route="/orders",status!~"5.."}[28d])
-             / rate(http_requests_total{route="/orders"}[28d])
-
-SLO: 99.5% over 28-day rolling window
-Error Budget: 0.5% of requests may fail (= ~3.5 hours of 100% error rate / 28 days)
-
-Alert: SLO burn rate > 2× for 1 hour → PagerDuty → oncall
-Alert: SLO burn rate > 10× for 5 minutes → PagerDuty CRITICAL → oncall + manager
-
-Dashboard: https://grafana.internal/d/orders-slo
-Runbook: https://wiki.internal/runbooks/orders-api-high-error-rate
-```
-
-### Distributed Trace Span Coverage
-
-```
-Mandatory span boundaries:
-  ┌─────────────────────────────────────────────────────┐
-  │ HTTP Server (root span)                             │
-  │   traceparent: 00-{traceId}-{spanId}-01             │
-  │                                                     │
-  │  ├── Application Service (child span)               │
-  │  │    name: "OrderService.createOrder"              │
-  │  │                                                  │
-  │  │   ├── Database Query (child span)                │
-  │  │   │    name: "db.query orders.insert"            │
-  │  │   │    attributes: db.system, db.name, db.operation
-  │  │   │                                              │
-  │  │   ├── External HTTP Call (child span)            │
-  │  │        name: "HTTP POST payment-service/charges" │
-  │  │        propagate traceparent in outbound headers  │
-  │  │                                                  │
-  │  └── Queue Publish (child span)                     │
-  │       name: "messaging publish order.created"       │
-  │       inject traceparent into message header        │
-  └─────────────────────────────────────────────────────┘
-
-Queue Consumer side:
-  ├── Extract traceparent from message header
-  ├── Create new root span linked to producer span
-  └── All log statements within consumer carry traceId
-
-Anti-patterns:
-  ❌ span name = "/api/v1/orders/o-{orderId}" (high-cardinality → breaks trace aggregation)
-  ❌ No outbound traceparent header → separate traces for request + downstream calls
-  ❌ Span created but never closed (resource leak in long-running processes)
-```
+Anchor against Google SRE Four Golden Signals, SLI/SLO/error-budget practice, multi-window burn-rate alerting, OpenTelemetry logs/metrics/traces, W3C Trace Context, Prometheus label-cardinality discipline, RED/USE methods, dashboard and runbook ownership, NIST log-management integrity, and privacy-safe telemetry design. Keep the default body focused on routing, evidence, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when signal matrices, SLO templates, trace coverage, burn-rate examples, or validation checklists need detail.
 
 # Selection Rules
 
 Select this capability when: **production diagnosis, SLI/SLO definition, alert design, distributed tracing, or dashboard construction** is the primary concern. Route elsewhere when: **logging-error-handling** is primary (error taxonomy, exception mapping, sensitive data redaction rules, RFC 7807 response design); **performance-budgeting** is primary (defining latency and throughput thresholds for a specific change); **degradation-circuit-breaking** is primary (circuit breaker thresholds, fallback behavior, shed load strategy); **reliability-observability-gate** is primary (gate review of whether observability requirements are met for a change).
+
+# Proactive Professional Triggers
+
+- **Signal:** a new or changed endpoint, job, queue consumer, dependency, data pipeline, or critical user journey lacks an SLI/SLO, RED/USE metrics, dashboard, alert owner, or release-watch signal. **Hidden risk:** degradation is invisible until users report it, and rollback has no objective trigger. **Required professional action:** define user-impact SLI, signal inventory, dashboard owner, alert threshold, and watch/rollback evidence before handoff. **Route to:** `reliability-observability-gate`, `performance-budgeting`, `delivery-release-gate`. **Evidence required:** metric names, SLO target, dashboard/runbook owner, alert query or not-verified disclosure, and changed-path validation map.
+- **Signal:** log fields, metric labels, span attributes, dashboard filters, or alert group-by dimensions include user ID, tenant ID, request ID, raw URL, email, token, error message, payload, or other unbounded/sensitive values. **Hidden risk:** telemetry cost/cardinality explosion, backend outage, privacy leak, or unusable queries during incidents. **Required professional action:** bound labels, move high-cardinality data to logs/traces, pseudonymize where needed, and exclude secrets/PII at the source. **Route to:** `logging-error-handling`, `security-privacy-gate`, `performance-budgeting`. **Evidence required:** approved field list, rejected fields, cardinality estimate, privacy/redaction decision, and validation query.
+- **Signal:** trace or correlation context crosses HTTP, queue, job, database, cache, file, or external-provider boundaries without current source proof. **Hidden risk:** logs, metrics, and traces cannot join the incident path, especially across async handoff. **Required professional action:** inspect current ingress, outbound injection, message headers, job metadata, and logging context binding before accepting trace continuity. **Route to:** `repository-graph-analysis`, `logging-error-handling`, `message-queue-design`. **Evidence required:** boundary paths inspected, traceparent/correlation propagation point, sample trace/log lookup, and stale/not-verified limit.
+- **Signal:** alert, dashboard, runbook, or dead-man switch is copied from project memory, old incident notes, generated docs, or repository graph without current query and owner confirmation. **Hidden risk:** stale observability says a system is safe while alerts page the wrong team, query deleted metrics, or miss the changed path. **Required professional action:** reconcile memory and graph against current source, telemetry names, runbook owner, and validator timing. **Route to:** `project-memory-governance`, `repository-context-map`, `execution-trajectory-analysis`, `validation-broker`. **Evidence required:** accepted/rejected memory, current metric/query path, owner freshness, command/output timestamp, and unknown signals.
+- **Signal:** a failure mode is named but no metric/log/trace/dashboard/runbook path shows how an operator detects, diagnoses, and verifies it. **Hidden risk:** instrumentation exists as disconnected noise rather than an investigation workflow. **Required professional action:** build investigation paths from symptom to root-cause candidate and map each signal to validation evidence. **Route to:** `failure-contract-design`, `quality-test-gate`, `reliability-observability-gate`. **Evidence required:** failure-mode-to-signal map, synthetic event or query, alert test, dashboard path, runbook action, and evidence limits.
 
 # Risk Escalation Rules
 
@@ -141,7 +84,7 @@ Escalate when: a change affects a user flow covered by an SLO and the SLI metric
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when the change affects a production-facing path, SLO, alert, job, queue, external dependency, or post-release validation. Do not load it for local-only instrumentation in non-production code with no operator surface.
+The `SKILL.md` body carries L1/L2 routing, stage, trigger, and evidence rules. Load [references/checklist.md](references/checklist.md) when the change affects a production-facing path, SLO, alert, job, queue, external dependency, incident investigation path, or post-release validation. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed signal matrices, SLI/SLO examples, trace-span coverage, burn-rate alerting, graph/memory/trajectory coupling, or validation checklists are needed. Use [examples/example-output.md](examples/example-output.md) only when the final observability plan shape is unclear. Do not load references for local-only instrumentation in non-production code with no operator surface.
 
 # Output Contract
 
@@ -158,6 +101,10 @@ Return an observability plan with:
 - `privacy_review` (fields audited for PII/PAN/PHI; confirmed excluded from logs and traces; encryption in transit for telemetry)
 - `cardinality_review` (metric labels audited for bounded cardinality; high-cardinality fields moved to traces/logs)
 - `investigation_paths` (for each failure mode: which metrics/logs/traces reveal it; runbook reference)
+- `graph_memory_execution_validation` (repository graph, project memory, incident notes, generated docs, prior validation, dashboards, and runbooks accepted/rejected/stale/not verified)
+- `changed_signal_to_validation_map` (each changed log, metric, span, label, alert, dashboard, runbook, SLO, synthetic event, and release-watch signal mapped to validator command, query, manual check, or residual risk)
+- `validation_evidence` (commands, metric/log/trace queries, alert rule checks, dashboard paths, synthetic events, screenshots if relevant, exit codes/outcomes, and freshness after final edit)
+- `evidence_limits` (what remains unproven about production cardinality, rare failure modes, incident actionability, historical baselines, sampling, or provider-specific telemetry)
 
 # Evidence Contract
 
@@ -165,6 +112,7 @@ Close observability work only when the output includes:
 
 - **Boundaries inspected**: user journey, service/API/job/queue/dependency boundary, dashboard, alert, runbook, owner, and privacy boundary inspected or explicitly ruled out.
 - **Signal inventory**: structured log fields, metric names, trace spans, dashboard panels, alert expressions, and runbook links named.
+- **Graph/memory/execution judgment**: repository graph, project memory, generated docs, incident notes, prior validations, and dashboard/runbook claims accepted, rejected, stale, or not verified.
 - **Validation evidence**: metric query, log query, trace lookup, dashboard path, alert rule validation, synthetic event, local config check, or explicit not-verified disclosure.
 - **What evidence proves**: which SLI/SLO, diagnostic path, alert path, trace correlation, or operator workflow is observable.
 - **What evidence does not prove**: production-scale cardinality, rare failure paths, historical baseline accuracy, alert actionability under load, or incident-response effectiveness.
@@ -184,6 +132,8 @@ The plan is complete only when:
 8. Dead-man's switch configured for every scheduled job and critical pipeline.
 9. Sensitive field exclusion confirmed — no PII/PAN/credentials in any log or trace attribute.
 10. Investigation paths documented: for each known failure mode, which signal reveals it.
+11. Project memory, repository graph, generated docs, dashboards, runbooks, and prior validations are reconciled with current source/config/query evidence or marked stale/not verified.
+12. Every changed observability signal maps to a fresh validator command, metric/log/trace query, alert rule check, synthetic event, manual review artifact, or explicit residual risk.
 
 # Used By
 
