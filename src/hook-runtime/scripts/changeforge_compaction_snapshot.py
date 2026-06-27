@@ -20,6 +20,7 @@ from changeforge_compaction_contract import (
     missing_required_fields,
     snapshot_from_state,
 )
+from changeforge_context_control_policy import compaction_budget_mode
 from changeforge_executor_adapter_core import (
     snapshot_from_event_state,
     state_update_from_snapshot,
@@ -77,6 +78,7 @@ def _record_generic_compaction(repo, runtime: str, state: dict, phase: str) -> N
     context = state.get("active_skill_context") if isinstance(state.get("active_skill_context"), dict) else {}
     restored_context = merge_active_context(context, snapshot) if snapshot else context
     support = "degraded" if snapshot else "unsupported"
+    degraded = phase in {"compact", "session_compact"}
     merge_state(
         repo,
         runtime,
@@ -98,7 +100,10 @@ def _record_generic_compaction(repo, runtime: str, state: dict, phase: str) -> N
             {
                 "route_id": "active-runtime-route",
                 "current_stage": "compaction",
-                "budget_mode": "staged-plan",
+                "budget_mode": compaction_budget_mode(degraded=degraded),
+                "budget_exception_reason": (
+                    "degraded compaction without pre_compact snapshot requires staged-plan continuity review"
+                ),
                 "selected_reference_count": 0,
                 "skipped_reference_count": 0,
                 "over_budget_findings": [],

@@ -94,6 +94,35 @@ class ToolOutputBoundaryTests(unittest.TestCase):
         self.assertEqual(record["llm_context_policy"], "unsupported_runtime")
         self.assertIn("output metadata not available", record["unsupported_reason"])
         self.assertIn("unsupported_runtime", result.stdout)
+        self.assertFalse(state["validation_seen"])
+
+    def test_small_inline_output_does_not_emit_advisory(self) -> None:
+        event = {
+            "hook_event_name": "PostToolUse",
+            "tool_name": "Bash",
+            "tool_result": {"stdout": "ok"},
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            result = run_gate(event, Path(cwd_s), Path(cache_s))
+            state = load_cache_state(Path(cache_s))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "")
+        record = state["tool_output_boundaries"][0]
+        self.assertEqual(record["output_size_class"], "small")
+        self.assertEqual(record["privacy_status"], "pass")
+        self.assertEqual(record["llm_context_policy"], "inline_bounded")
+
+    def test_unknown_output_emits_advisory_without_validation_success(self) -> None:
+        gate = load_module("changeforge_tool_output_boundary_gate")
+        self.assertTrue(
+            gate._should_emit(
+                {
+                    "output_size_class": "unknown",
+                    "llm_context_policy": "inline_bounded",
+                    "privacy_status": "pass",
+                }
+            )
+        )
 
     def test_secret_like_output_fails_privacy_without_raw_retention(self) -> None:
         event = {
@@ -106,6 +135,34 @@ class ToolOutputBoundaryTests(unittest.TestCase):
         self.assertEqual(record["privacy_status"], "fail")
         self.assertNotIn("ABCDEFGHIJK", rendered)
         self.assertNotIn("stdout", rendered)
+
+    def test_large_output_with_artifact_emits_artifact_reference_advisory(self) -> None:
+        event = {
+            "hook_event_name": "PostToolUse",
+            "tool_name": "Bash",
+            "tool_result": {
+                "artifact_path": "artifacts/validation/pytest.log",
+                "output_bytes": 64000,
+            },
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            result = run_gate(event, Path(cwd_s), Path(cache_s))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("artifact_reference_only", result.stdout)
+        self.assertIn("artifacts/validation/pytest.log", result.stdout)
+
+    def test_large_output_without_artifact_emits_redirect_advisory(self) -> None:
+        payload = "\n".join(f"line-{index}" for index in range(500))
+        event = {
+            "hook_event_name": "PostToolUse",
+            "tool_name": "Bash",
+            "tool_result": {"stdout": payload},
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            result = run_gate(event, Path(cwd_s), Path(cache_s))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("rerun_with_redirect", result.stdout)
+        self.assertNotIn("line-499", result.stdout)
 
     def test_compaction_snapshot_keeps_safe_boundary_only(self) -> None:
         compaction = load_module("changeforge_compaction_contract")

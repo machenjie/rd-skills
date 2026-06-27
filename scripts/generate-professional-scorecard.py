@@ -448,13 +448,15 @@ def context_control_overhead_status(root: Path) -> tuple[str, str]:
     summary = report.get("summary") if isinstance(report.get("summary"), dict) else {}
     structural_fixture_status = (
         "pass"
-        if report.get("status") == "pass" and summary.get("failed") == 0
+        if report.get("status") in {"pass", "partial"} and summary.get("failed") == 0
         else "fail"
         if report.get("status") == "fail" or isinstance(summary.get("failed"), int)
         else "unknown"
     )
     detail = {
         "eval_status": report.get("status", "unknown"),
+        "fixture_status": report.get("fixture_status", "unknown"),
+        "release_status": report.get("release_status", "unknown"),
         "structural_fixture_status": structural_fixture_status,
         "structural_fixture_failed_count": summary.get("failed", "unknown"),
         "status": "fail",
@@ -468,6 +470,7 @@ def context_control_overhead_status(root: Path) -> tuple[str, str]:
         "token_overhead": {"status": "not_collected", "input_pct": None, "output_pct": None},
         "turn_overhead_detail": {"status": "not_collected", "turn_overhead": None},
         "runtime_telemetry": {"status": "not_collected"},
+        "quality_improvement_claim_allowed": False,
         "overhead_policy_verdict": "context_control_overhead missing",
         "evidence_boundary": "missing",
     }
@@ -485,11 +488,16 @@ def context_control_overhead_status(root: Path) -> tuple[str, str]:
                 "token_overhead": overhead.get("token_overhead", detail["token_overhead"]),
                 "turn_overhead_detail": overhead.get("turn_overhead_detail", detail["turn_overhead_detail"]),
                 "runtime_telemetry": overhead.get("runtime_telemetry", detail["runtime_telemetry"]),
+                "quality_improvement_claim_allowed": bool(overhead.get("quality_improvement_claim_allowed")),
                 "overhead_policy_verdict": overhead.get("overhead_policy_verdict"),
                 "evidence_boundary": overhead.get("evidence_boundary"),
             }
         )
-    if report.get("status") != "pass":
+    report_status = str(report.get("status") or "unknown")
+    if report_status == "fail":
+        return "fail", json.dumps(detail, sort_keys=True)
+    if report_status not in {"pass", "partial"}:
+        detail["invalid_status"] = report_status
         return "fail", json.dumps(detail, sort_keys=True)
     status = str(detail.get("status") or "unknown")
     if status not in STATUSES:
@@ -497,6 +505,14 @@ def context_control_overhead_status(root: Path) -> tuple[str, str]:
         return "fail", json.dumps(detail, sort_keys=True)
     if _context_control_high_neutral_overhead(detail) and status == "pass":
         detail["invalid_status"] = "pass_with_high_overhead_neutral_pass_rate"
+        return "fail", json.dumps(detail, sort_keys=True)
+    release_status = str(detail.get("release_status") or report_status)
+    if release_status == "fail":
+        return "fail", json.dumps(detail, sort_keys=True)
+    if release_status == "partial" and status != "fail":
+        return "partial", json.dumps(detail, sort_keys=True)
+    if release_status == "pass" and status != "pass":
+        detail["invalid_status"] = f"eval_pass_with_{status}_overhead"
         return "fail", json.dumps(detail, sort_keys=True)
     return status, json.dumps(detail, sort_keys=True)
 
@@ -1239,9 +1255,13 @@ def _append_context_control_overhead_detail(lines: list[str], payload: dict[str,
         detail = _json_detail(str(dimension.get("detail", "")))
         lines.extend(["", "## Context Control Overhead", ""])
         for field in (
+            "eval_status",
+            "fixture_status",
             "structural_fixture_status",
             "overhead_status",
+            "release_status",
             "status",
+            "quality_improvement_claim_allowed",
             "input_token_overhead_pct",
             "output_token_overhead_pct",
             "turn_overhead",

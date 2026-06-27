@@ -32,6 +32,7 @@
         "reuse_candidates",
         "rejected_locations",
         "anti_bloat_decision",
+        "omitted_context_summary",
         "omitted_nodes",
         "residual_risk",
         "graph_validation_candidates"
@@ -63,6 +64,15 @@
         "reuse_candidates": {"type": "array"},
         "rejected_locations": {"type": "array"},
         "anti_bloat_decision": {"type": "object"},
+        "omitted_context_summary": {
+          "type": "object",
+          "required": ["omitted_node_count", "reason", "selection_basis"],
+          "properties": {
+            "omitted_node_count": {"type": "integer", "minimum": 0},
+            "reason": {"type": "string", "minLength": 1},
+            "selection_basis": {"type": "string", "minLength": 1}
+          }
+        },
         "omitted_nodes": {"type": "array"},
         "residual_risk": {"type": "array"},
         "graph_validation_candidates": {"type": "array"}

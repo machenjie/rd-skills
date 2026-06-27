@@ -92,6 +92,7 @@ STATE_LIST_FIELDS = (
     "command_risks",
     "closure_risk_surfaces",
     "professional_injections",
+    "professional_injection_digests",
     "permission_decisions",
     "rollback_points",
     "reference_loads",
@@ -116,6 +117,8 @@ STATE_SCALAR_STRING_FIELDS = (
     "turn_stage",
     "owner_skill",
     "reviewer_skill",
+    "professional_injection_digest",
+    "last_professional_injection_event",
 )
 STATE_SCALAR_INT_FIELDS = (
     "event_index",
@@ -769,6 +772,9 @@ def merge_state(
     command_risks: Iterable[str] = (),
     closure_risk_surfaces: Iterable[str] = (),
     professional_injections: Iterable[str] = (),
+    professional_injection_digests: Iterable[str] = (),
+    professional_injection_digest: str | None = None,
+    last_professional_injection_event: str | None = None,
     permission_decisions: Iterable[str] = (),
     rollback_points: Iterable[str] = (),
     reference_loads: Iterable[str] = (),
@@ -864,6 +870,9 @@ def merge_state(
         "command_risks": command_risks,
         "closure_risk_surfaces": closure_risk_surfaces,
         "professional_injections": professional_injections,
+        "professional_injection_digests": professional_injection_digests,
+        "professional_injection_digest": professional_injection_digest,
+        "last_professional_injection_event": last_professional_injection_event,
         "permission_decisions": permission_decisions,
         "rollback_points": rollback_points,
         "reference_loads": reference_loads,
@@ -2630,6 +2639,9 @@ def _empty_state() -> dict:
         "command_risks": [],
         "closure_risk_surfaces": [],
         "professional_injections": [],
+        "professional_injection_digests": [],
+        "professional_injection_digest": "",
+        "last_professional_injection_event": "",
         "permission_decisions": [],
         "rollback_points": [],
         "reference_loads": [],
@@ -2878,6 +2890,15 @@ def _capped_branch_route_repair_summaries(values: Iterable[object]) -> list[dict
         route = route if isinstance(route, dict) else {}
         new_route = stripped.get("new_route")
         new_route = new_route if isinstance(new_route, dict) else {}
+        source_findings = _state_summary_items(stripped.get("source_privacy_findings", []))
+        if privacy_failed and "forbidden_raw_field" not in source_findings:
+            source_findings.append("forbidden_raw_field")
+        retained_findings = _state_summary_items(stripped.get("retained_summary_privacy_findings", []))
+        retained_status = (
+            "fail"
+            if retained_findings or str(stripped.get("retained_summary_privacy_status") or "").strip() == "fail"
+            else "pass"
+        )
         record = {
             "schema_version": 1,
             "summary_id": _state_summary_text(stripped.get("summary_id")),
@@ -2898,9 +2919,14 @@ def _capped_branch_route_repair_summaries(values: Iterable[object]) -> list[dict
                 "validation_plan": _state_summary_items(new_route.get("validation_plan", [])),
             },
             "residual_risk": _state_summary_items(stripped.get("residual_risk", [])),
-            "privacy_status": "fail"
-            if privacy_failed or str(stripped.get("privacy_status") or "").strip() == "fail"
+            "source_privacy_findings": source_findings,
+            "source_privacy_status": "fail"
+            if source_findings or str(stripped.get("source_privacy_status") or "").strip() == "fail"
             else "pass",
+            "retained_summary_privacy_findings": retained_findings,
+            "retained_summary_privacy_status": retained_status,
+            "privacy_redaction_status": "pass" if retained_status == "pass" else "fail",
+            "privacy_status": retained_status,
         }
         if not record["summary_id"]:
             record["summary_id"] = _hash_text(json.dumps(record, sort_keys=True))

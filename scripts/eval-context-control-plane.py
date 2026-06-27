@@ -467,6 +467,7 @@ def _context_control_overhead(
             "source": "reports/codex-live-benchmark-summary.json",
             "live_codex_executed": False,
         },
+        "quality_improvement_claim_allowed": False,
         "overhead_policy_verdict": "",
         "evidence_boundary": (
             "Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, "
@@ -551,6 +552,7 @@ def _context_control_overhead(
     elif collected:
         base["status"] = "pass"
         base["overhead_status"] = "pass"
+        base["quality_improvement_claim_allowed"] = True
         base["overhead_policy_verdict"] = "pass: structural fixtures pass and collected overhead is within policy threshold"
     else:
         base["status"] = "partial"
@@ -623,11 +625,13 @@ def evaluate(root: Path = ROOT) -> tuple[dict[str, Any], list[str]]:
         raw_leak_count=raw_leak_count,
         live_summary=live_summary if isinstance(live_summary, dict) else None,
     )
-    status = "pass" if fixtures_pass and overhead.get("status") != "fail" else "fail"
+    status_fields = _status_fields(fixtures_pass=fixtures_pass, overhead_status=overhead.get("status"))
+    status = status_fields["status"]
     report = {
         "schema_version": 1,
         "generated_by": "scripts/eval-context-control-plane.py",
         "status": status,
+        **status_fields,
         "summary": {
             "case_count": len(cases),
             "passed": passed,
@@ -649,6 +653,38 @@ def evaluate(root: Path = ROOT) -> tuple[dict[str, Any], list[str]]:
     return report, errors
 
 
+def _status_fields(*, fixtures_pass: bool, overhead_status: Any) -> dict[str, str]:
+    """Return aggregate status fields without promoting partial evidence to pass."""
+    status = str(overhead_status or "unknown")
+    if not fixtures_pass or status == "fail":
+        fixture_status = "fail" if not fixtures_pass else "pass"
+        overhead = status if status in {"pass", "partial", "fail", "not_collected"} else "fail"
+        return {
+            "fixture_status": fixture_status,
+            "overhead_status": overhead,
+            "release_status": "fail",
+            "status": "fail",
+        }
+    if status == "pass":
+        return {
+            "fixture_status": "pass",
+            "overhead_status": "pass",
+            "release_status": "pass",
+            "status": "pass",
+        }
+    overhead = status if status in {"partial", "not_collected"} else "partial"
+    return {
+        "fixture_status": "pass",
+        "overhead_status": overhead,
+        "release_status": "partial",
+        "status": "partial",
+    }
+
+
+def _overall_status(*, fixtures_pass: bool, overhead_status: Any) -> str:
+    return _status_fields(fixtures_pass=fixtures_pass, overhead_status=overhead_status)["status"]
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     summary = report.get("summary", {})
     overhead = report.get("context_control_overhead", {})
@@ -656,6 +692,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "# Context Control Plane Eval",
         "",
         f"- status: `{report.get('status')}`",
+        f"- fixture_status: `{report.get('fixture_status')}`",
+        f"- overhead_status: `{report.get('overhead_status')}`",
+        f"- release_status: `{report.get('release_status')}`",
         f"- structural_fixture_status: `{overhead.get('structural_fixture_status')}`",
         f"- cases: `{summary.get('passed')}/{summary.get('case_count')}`",
         f"- raw_leak_count: `{summary.get('raw_leak_count')}`",
@@ -710,7 +749,11 @@ def main(argv: list[str] | None = None) -> int:
     args.out.write_text(render_markdown(report), encoding="utf-8")
     if errors:
         return fail_many("eval-context-control-plane", errors)
-    print(f"eval-context-control-plane: pass ({report['summary']['passed']}/{report['summary']['case_count']} cases)")
+    print(
+        f"eval-context-control-plane: {report['status']} "
+        f"({report['summary']['passed']}/{report['summary']['case_count']} fixtures pass; "
+        f"overhead {report.get('overhead_status')})"
+    )
     return 0
 
 

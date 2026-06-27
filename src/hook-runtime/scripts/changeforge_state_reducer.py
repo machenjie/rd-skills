@@ -81,6 +81,7 @@ STATE_REDUCERS = {
     "command_risks": "additive_unique",
     "closure_risk_surfaces": "additive_unique",
     "professional_injections": "additive_unique",
+    "professional_injection_digests": "additive_unique",
     "permission_decisions": "additive_unique",
     "rollback_points": "additive_unique",
     "reference_loads": "additive_unique",
@@ -132,6 +133,8 @@ STATE_REDUCERS = {
     "turn_stage": "last_non_empty",
     "owner_skill": "last_non_empty",
     "reviewer_skill": "last_non_empty",
+    "professional_injection_digest": "last_non_empty",
+    "last_professional_injection_event": "last_non_empty",
     "active_skill_context": "merge_preserve_required_fields",
 }
 

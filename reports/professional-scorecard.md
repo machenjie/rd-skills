@@ -56,9 +56,13 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 
 ## Context Control Overhead
 
+- eval_status: `partial`
+- fixture_status: `pass`
 - structural_fixture_status: `pass`
 - overhead_status: `partial`
+- release_status: `partial`
 - status: `partial`
+- quality_improvement_claim_allowed: `False`
 - input_token_overhead_pct: `234.06`
 - output_token_overhead_pct: `45.63`
 - turn_overhead: `None`

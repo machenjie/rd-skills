@@ -716,7 +716,8 @@ def _targeted_reads(
 def _deferred_reads(
     *,
     reuse_candidates: list[dict[str, str]],
-    omitted_nodes: list[dict[str, object]],
+    related_tests: list[dict[str, object]],
+    generated_artifacts: list[dict[str, object]],
     selected_paths: set[str],
 ) -> list[dict[str, str]]:
     deferred: list[dict[str, str]] = []
@@ -725,12 +726,19 @@ def _deferred_reads(
         path = str(item.get("path") or "")
         if path and path not in seen:
             seen.add(path)
-            deferred.append({"path": path, "reason": str(item.get("reason") or "reuse candidate")})
-    for item in omitted_nodes[:8]:
+            deferred.append({"path": path, "reason": f"reuse candidate: {str(item.get('reason') or 'same owner module')}"})
+    for item in related_tests[:8]:
         path = str(item.get("path") or "")
-        if path and not path.startswith("<") and path not in seen:
+        if path and path not in seen:
             seen.add(path)
-            deferred.append({"path": path, "reason": str(item.get("reason") or "omitted by context budget")})
+            deferred.append({"path": path, "reason": str(item.get("reason") or "related test")})
+    for item in generated_artifacts[:8]:
+        for source in item.get("source_of_truth", []) or []:
+            path = str(source or "")
+            if path and path not in seen:
+                seen.add(path)
+                deferred.append({"path": path, "reason": "generated source-of-truth counterpart"})
+                break
     return deferred
 
 
@@ -931,8 +939,13 @@ def build_context_pack(
         "skipped_graph_node_count": len(skipped_graph_nodes),
         "signal_density_rationale": (
             "selected files are bounded by changed paths, graph distance, task relevance, "
-            "freshness, confidence, and token budget; omitted graph nodes remain deferred reads"
+            "freshness, confidence, and token budget; deferred reads are limited to reuse candidates"
         ),
+    }
+    omitted_context_summary = {
+        "omitted_node_count": max(0, len(files_by_path) - len(selected_files)),
+        "reason": "omitted_by_context_budget",
+        "selection_basis": "changed paths, graph distance, freshness, confidence, task relevance",
     }
     jit_retrieval_plan = {
         "discovery": _jit_discovery_plan(graph_path=graph_path, context_pack_path=context_pack_path),
@@ -943,7 +956,8 @@ def build_context_pack(
         ),
         "deferred_reads": _deferred_reads(
             reuse_candidates=reuse_candidates,
-            omitted_nodes=omitted_nodes,
+            related_tests=related_tests,
+            generated_artifacts=generated_artifacts,
             selected_paths=set(relevant_paths),
         ),
         "forbidden_reads": _forbidden_reads(excluded_context=excluded_context, generated_artifacts=generated_artifacts),
@@ -999,6 +1013,7 @@ def build_context_pack(
                 "skipped_graph_node_count": len(skipped_graph_nodes),
                 "decision": "bounded graph slice selected by changed paths, graph distance, freshness, confidence, and task relevance",
             },
+            "omitted_context_summary": omitted_context_summary,
             "omitted_nodes": omitted_nodes,
             "residual_risk": residual_risk,
             "relevant_files": selected_files,

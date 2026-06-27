@@ -50,16 +50,26 @@ def _context_control_expected_status(report: dict[str, Any] | None) -> str:
     if not isinstance(report, dict):
         return "not_collected"
     overhead = report.get("context_control_overhead")
-    if report.get("status") != "pass":
-        return "fail"
     if not isinstance(overhead, dict):
         return "fail"
-    status = str(overhead.get("status") or "unknown")
-    if status not in {"pass", "partial", "fail", "not_collected"}:
+    report_status = str(report.get("status") or "unknown")
+    release_status = str(report.get("release_status") or report_status)
+    overhead_status = str(overhead.get("status") or "unknown")
+    if report_status not in {"pass", "partial", "fail"} or release_status not in {"pass", "partial", "fail"}:
         return "fail"
-    if _high_overhead_neutral_pass_rate(overhead) and status == "pass":
+    if overhead_status not in {"pass", "partial", "fail", "not_collected"}:
         return "fail"
-    return status
+    if _high_overhead_neutral_pass_rate(overhead) and overhead_status == "pass":
+        return "fail"
+    if report_status == "fail" or overhead_status == "fail":
+        return "fail"
+    if report_status != release_status:
+        return "fail"
+    if release_status == "partial":
+        return "partial"
+    if overhead_status != "pass":
+        return "fail"
+    return "pass"
 
 
 def _high_overhead_neutral_pass_rate(overhead: dict[str, Any]) -> bool:
@@ -92,6 +102,14 @@ def context_control_report_consistency_errors(
                 errors.append("context_control_overhead high-overhead neutral case must document no-success boundary")
         if expected_status == "fail":
             errors.append("context-control eval failure blocks pass")
+        if isinstance(overhead, dict):
+            report_status = str(report.get("status") or "unknown")
+            release_status = str(report.get("release_status") or report_status)
+            overhead_status = str(overhead.get("status") or "unknown")
+            if report_status == "pass" and overhead_status != "pass":
+                errors.append("context-control overhead partial/fail must not be wrapped as pass")
+            if report_status != release_status:
+                errors.append("context-control eval status and release_status conflict")
 
     if scorecard_path is not None and scorecard_path.exists():
         scorecard = _read_json(scorecard_path)

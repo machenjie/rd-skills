@@ -216,6 +216,11 @@ class CompactionSnapshotV2Tests(unittest.TestCase):
         self.assertEqual(state["compaction_snapshots"][0]["snapshot_id"], snapshot["snapshot_id"])
         self.assertEqual(state["active_skill_context"]["route_id"], "context-control-phase-4")
         self.assertIn("compaction_degraded:session_compact", state["runtime_adapter"]["active_degradation"])
+        self.assertEqual(state["context_control_records"][0]["budget_mode"], "staged-plan")
+        self.assertEqual(
+            state["context_control_records"][0]["budget_exception_reason"],
+            "degraded compaction without pre_compact snapshot requires staged-plan continuity review",
+        )
 
 
 class BranchRouteSummaryTests(unittest.TestCase):
@@ -240,12 +245,37 @@ class BranchRouteSummaryTests(unittest.TestCase):
         rendered = json.dumps(summary, sort_keys=True)
 
         self.assertEqual(summary["trigger"], "repeated_same_path_retry")
-        self.assertEqual(summary["privacy_status"], "fail")
+        self.assertEqual(summary["source_privacy_status"], "fail")
+        self.assertIn("absolute_path", summary["source_privacy_findings"])
+        self.assertEqual(summary["privacy_status"], "pass")
+        self.assertEqual(summary["retained_summary_privacy_status"], "pass")
+        self.assertEqual(summary["privacy_redaction_status"], "pass")
         self.assertTrue(summary["forbidden_retries"])
         self.assertNotIn("/Users/example", rendered)
         self.assertNotIn("raw_output", rendered)
         self.assertNotIn("line 1", rendered)
         self.assertIn("<local-path>", rendered)
+
+    def test_route_repair_sanitizer_redacts_secret_like_source(self) -> None:
+        summary_mod = load_module("changeforge_branch_route_summary")
+        summary = summary_mod.build_route_repair_summary(
+            {
+                "owner_skill": "quality-test-gate",
+                "repair_events": ["route repair after sk-ABCDEFGHIJK123456789"],
+                "active_skill_context": {"selected_capabilities": ["context-control-plane"]},
+            },
+            event={"cwd": "/Users/alice/project"},
+        )
+        rendered = json.dumps(summary, sort_keys=True)
+
+        self.assertEqual(summary["source_privacy_status"], "fail")
+        self.assertIn("secret_like_value", summary["source_privacy_findings"])
+        self.assertEqual(summary["retained_summary_privacy_status"], "pass")
+        self.assertEqual(summary["privacy_redaction_status"], "pass")
+        self.assertEqual(summary["privacy_status"], "pass")
+        self.assertNotIn("sk-ABCDEFGHIJK", rendered)
+        self.assertNotIn("/Users/alice", rendered)
+        self.assertNotIn("raw_output", rendered)
 
     def test_state_reducer_keeps_latest_route_repair_summaries_and_forbidden_retries(self) -> None:
         reducer = load_module("changeforge_state_reducer")

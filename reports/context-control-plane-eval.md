@@ -1,6 +1,9 @@
 # Context Control Plane Eval
 
-- status: `pass`
+- status: `partial`
+- fixture_status: `pass`
+- overhead_status: `partial`
+- release_status: `partial`
 - structural_fixture_status: `pass`
 - cases: `8/8`
 - raw_leak_count: `0`

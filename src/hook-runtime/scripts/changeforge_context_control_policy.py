@@ -144,6 +144,11 @@ def context_budget_limits(mode: str) -> dict[str, int]:
     return dict(BUDGET_LIMITS.get(str(mode or ""), BUDGET_LIMITS["minimal"]))
 
 
+def compaction_budget_mode(*, degraded: bool) -> str:
+    """Return the compaction budget mode, including degraded continuity review."""
+    return "staged-plan" if degraded else "minimal"
+
+
 def build_context_control_record(
     active_context: dict,
     state: dict | None = None,

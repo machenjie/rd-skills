@@ -21,6 +21,14 @@ CONTEXT_BUDGET_MODES = {"minimal", "single-stage", "staged-plan", "full"}
 EXPECTED_OUTPUT_POLICIES = {"bounded_summary", "artifact_reference", "read_slice"}
 READ_POLICIES = {"read_slice", "read_full_if_small", "read_heading_only"}
 SOURCE_TRUTH_STATUSES = {"source", "generated", "unknown"}
+DEFERRED_READ_REASON_PREFIXES = (
+    "reuse candidate:",
+    "same owner module",
+    "related test",
+    "generated source-of-truth counterpart",
+    "validation candidate",
+    "graph neighbor",
+)
 
 
 def _payload(document: dict[str, Any]) -> dict[str, Any]:
@@ -118,6 +126,20 @@ def _validate_v3_context_control(pack: dict[str, Any], errors: list[str]) -> Non
         errors.append("context_control.skipped_graph_node_count must match skipped_graph_nodes length")
 
     anti_bloat = pack.get("anti_bloat_decision") if isinstance(pack.get("anti_bloat_decision"), dict) else {}
+    omitted_summary = pack.get("omitted_context_summary") if isinstance(pack.get("omitted_context_summary"), dict) else {}
+    if not omitted_summary:
+        errors.append("omitted_context_summary is required for schema_version=3")
+    else:
+        omitted_count = omitted_summary.get("omitted_node_count")
+        if not isinstance(omitted_count, int) or omitted_count < 0:
+            errors.append("omitted_context_summary.omitted_node_count must be a non-negative integer")
+        if not isinstance(omitted_summary.get("reason"), str) or not omitted_summary.get("reason"):
+            errors.append("omitted_context_summary.reason must be non-empty")
+        if isinstance(omitted_count, int):
+            if isinstance(context_control.get("omitted_file_count"), int) and context_control["omitted_file_count"] != omitted_count:
+                errors.append("omitted_context_summary.omitted_node_count must match context_control.omitted_file_count")
+            if isinstance(anti_bloat.get("omitted_node_count"), int) and anti_bloat["omitted_node_count"] != omitted_count:
+                errors.append("omitted_context_summary.omitted_node_count must match anti_bloat_decision.omitted_node_count")
     max_file_count = context_control.get("max_file_count", anti_bloat.get("max_files"))
     if not isinstance(max_file_count, int):
         errors.append("context_control.max_file_count or anti_bloat_decision.max_files is required for budget validation")
@@ -173,6 +195,12 @@ def _validate_v3_jit_retrieval_plan(pack: dict[str, Any], errors: list[str]) -> 
             _validate_repo_relative_path(errors, item.get("path"), f"jit_retrieval_plan.{field}[{index}]")
             if not isinstance(item.get("reason"), str) or not item.get("reason"):
                 errors.append(f"jit_retrieval_plan.{field}[{index}].reason is required")
+            if field == "deferred_reads":
+                reason = str(item.get("reason") or "")
+                if reason in {"omitted_by_context_budget", "omitted by context budget"}:
+                    errors.append("jit_retrieval_plan.deferred_reads must not be sourced from omitted context budget")
+                if reason and not any(reason.startswith(prefix) for prefix in DEFERRED_READ_REASON_PREFIXES):
+                    errors.append(f"jit_retrieval_plan.deferred_reads[{index}].reason must describe an allowed high-signal source")
 
     generated_involved = bool(pack.get("generated_artifacts")) or any(
         isinstance(path, str) and path.startswith("dist/") for path in pack.get("changed_paths", [])
@@ -300,6 +328,7 @@ def validate_context_pack(document: dict[str, Any]) -> list[str]:
             "reuse_candidates",
             "rejected_locations",
             "anti_bloat_decision",
+            "omitted_context_summary",
             "omitted_nodes",
             "residual_risk",
             "graph_validation_candidates",

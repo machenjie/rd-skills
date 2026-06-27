@@ -1085,7 +1085,7 @@ def context_lines(context: dict[str, Any]) -> list[str]:
         )
     refs = context.get("required_references", [])
     if isinstance(refs, list) and refs:
-        shown = refs[:6]
+        shown = refs[:4]
         more = len(refs) - len(shown)
         suffix = f", +{more} more" if more > 0 else ""
         lines.append(f"- required_references: {', '.join(shown)}{suffix}")
@@ -1093,13 +1093,13 @@ def context_lines(context: dict[str, Any]) -> list[str]:
     if isinstance(skipped_refs, list) and skipped_refs:
         rendered = [
             str(item.get("reference") or "unknown")
-            for item in skipped_refs[:3]
+            for item in skipped_refs[:2]
             if isinstance(item, dict)
         ]
         more = len(skipped_refs) - len(rendered)
         suffix = f"; +{more} more" if more > 0 else ""
         if rendered:
-            lines.append(f"- skipped_references: {'; '.join(rendered)}{suffix}")
+            lines.append(f"- skipped_references: {len(skipped_refs)} skipped; {'; '.join(rendered)}{suffix}")
     skipped = context.get("skipped_capabilities", [])
     if isinstance(skipped, list) and skipped:
         rendered = [
@@ -1137,7 +1137,8 @@ def _summary_count(context: dict[str, Any], name: str) -> str:
         return str(values or "")
     if len(values) <= 4:
         return ", ".join(str(value) for value in values)
-    return f"{len(values)} selected"
+    shown = ", ".join(str(value) for value in values[:3])
+    return f"{len(values)} selected ({shown}, +{len(values) - 3} more)"
 
 
 def _professional_focus_lines(context: dict[str, Any]) -> list[str]:
@@ -1150,21 +1151,21 @@ def _professional_focus_lines(context: dict[str, Any]) -> list[str]:
     lines: list[str] = []
     if "security" in risk_surfaces or {"input-validation", "web-security"} & capabilities:
         lines.append(
-            "- security_focus: for server-side URL fetches, canonicalize scheme/host/port/resolved addresses before fetch, enforce exact allowlist, reject loopback/private/link-local/metadata targets, revalidate every redirect, and redact userinfo/query/fragment plus token/key/secret values from errors and logs."
+            "- security_focus: canonicalize before fetch, enforce allowlists, block private/metadata targets, recheck redirects, and redact secrets in errors/logs."
         )
     if "cache" in product_surfaces or "cache-design" in capabilities:
         lines.append(
             "- Reliability Gate: for Redis/cache stampede work, prove per-key coordination, bounded timeout, jittered TTL, degraded fallback, no live Redis/network dependency, and concurrent local tests before claiming completion."
         )
         lines.append(
-            "- cache_focus: implement executable local proof for per-key single-flight or short lease, bounded lock timeout, TTL jitter/range, tenant+permission+variant cache key, Redis-down fallback/backpressure, hot/miss/fallback/contention metrics, and deterministic fake cache plus FakeBackend/source-of-truth concurrent tests that assert backend calls == 1; keep local proofs free of network clients, URLs, and live Redis."
+            "- cache_focus: prove per-key coordination, TTL jitter, safe fallback, metrics, and concurrent fake-cache tests; no live Redis/network."
         )
     if (
         "implementation-structure-design" in capabilities
         or current_stage in {"implementation-planning", "refactoring", "code-review"}
     ):
         lines.append(
-            "- structure_focus: keep public API importable and test through it; add a candidate-visible `Object-Method Encapsulation Decision` section with object candidates, value object/domain object ownership, rejected alternatives or module-local helpers, and the exact phrase `no side effects` for pure decisions; keep payment/network/cache/queue/clock side effects in services/adapters, keep private helpers private, and make public test names/text visibly include the exact words allowed, denied, expired, refund hold, and payment failure."
+            "- structure_focus: keep public API tests, document object-method ownership/rejected alternatives, keep side effects in adapters, and keep helpers private."
         )
     return lines
 

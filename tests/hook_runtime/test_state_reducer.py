@@ -108,6 +108,24 @@ class StateReducerTests(unittest.TestCase):
         self.assertEqual(result["validation_results"], ["pass:current:pytest"])
         self.assertEqual(result["post_edit_structure_findings"], ["file_naming:count=0"])
 
+    def test_professional_injection_digest_fields_are_bounded_and_redacted(self) -> None:
+        result = self.reducer.reduce_state_update(
+            {"professional_injection_digest": "sha256:old"},
+            {
+                "professional_injection_digests": ["sha256:new", "sha256:new"],
+                "professional_injection_digest": "sha256:new",
+                "last_professional_injection_event": "UserPromptSubmit",
+                "raw_prompt": "must not persist",
+                "stdout": "must not persist",
+            },
+        )
+
+        self.assertEqual(result["professional_injection_digests"], ["sha256:new"])
+        self.assertEqual(result["professional_injection_digest"], "sha256:new")
+        self.assertEqual(result["last_professional_injection_event"], "UserPromptSubmit")
+        self.assertNotIn("raw_prompt", result)
+        self.assertNotIn("stdout", result)
+
     def test_context_control_records_latest_by_route_stage_and_redacted(self) -> None:
         result = self.reducer.reduce_state_update(
             {

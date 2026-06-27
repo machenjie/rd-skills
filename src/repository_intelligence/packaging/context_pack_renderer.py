@@ -116,11 +116,15 @@ def render_context_pack_markdown(context_pack: dict[str, Any]) -> str:
 
     omitted_nodes = pack.get("omitted_nodes", [])
     lines.append("## Omitted Nodes")
-    if not omitted_nodes:
+    summary = pack.get("omitted_context_summary") if isinstance(pack.get("omitted_context_summary"), dict) else {}
+    if summary:
+        lines.append(f"- omitted_node_count: {summary.get('omitted_node_count')}")
+        lines.append(f"- reason: {summary.get('reason')}")
+        lines.append(f"- selection_basis: {summary.get('selection_basis')}")
+    elif not omitted_nodes:
         lines.append("- None")
     else:
         lines.append(f"- total_count: {len(omitted_nodes)}")
-        lines.extend(_lines_for_items("Omitted Node Examples", omitted_nodes, ["path", "count", "reason"], max_items=8)[1:])
     lines.append("")
 
     lines.append("## Anti Bloat Decision")

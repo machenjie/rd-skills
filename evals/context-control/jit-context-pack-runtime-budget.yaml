@@ -102,7 +102,7 @@ jit_context_pack:
             source_truth_status: source
         deferred_reads:
           - path: scripts/validate-context-pack.py
-            reason: read only if schema validation fails
+            reason: "validation candidate: read only if schema validation fails"
         forbidden_reads:
           - path: dist/
             reason: generated output must not be used as source truth
@@ -130,6 +130,10 @@ jit_context_pack:
       rejected_locations: []
       anti_bloat_decision:
         status: pass
+      omitted_context_summary:
+        omitted_node_count: 2
+        reason: omitted_by_context_budget
+        selection_basis: changed paths, graph distance, freshness, confidence, task relevance
       omitted_nodes: []
       residual_risk: []
       graph_validation_candidates: []

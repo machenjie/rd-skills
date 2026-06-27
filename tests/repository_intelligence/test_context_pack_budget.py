@@ -39,6 +39,16 @@ class ContextPackBudgetTests(unittest.TestCase):
         self.assertLessEqual(len(pack["selected_symbols"]), 2)
         self.assertGreater(pack["anti_bloat_decision"]["omitted_node_count"], 0)
         self.assertTrue(pack["omitted_nodes"])
+        self.assertEqual(
+            pack["omitted_context_summary"]["omitted_node_count"],
+            pack["anti_bloat_decision"]["omitted_node_count"],
+        )
+        deferred_reasons = {
+            item["reason"]
+            for item in pack["jit_retrieval_plan"]["deferred_reads"]
+        }
+        self.assertNotIn("omitted by context budget", deferred_reasons)
+        self.assertTrue(any(reason.startswith("reuse candidate:") for reason in deferred_reasons))
 
     def test_stale_graph_is_residual_risk(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

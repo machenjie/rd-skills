@@ -31,14 +31,18 @@ CONTEXT_EVAL = _load_script("eval_context_control_plane", "eval-context-control-
 REPORT_CONSISTENCY = _load_script("validate_report_consistency", "validate-report-consistency.py")
 
 
-def _context_report(status: str = "pass", overhead_status: str = "partial") -> dict[str, object]:
+def _context_report(status: str = "partial", overhead_status: str = "partial") -> dict[str, object]:
+    structural_status = "pass" if status in {"pass", "partial"} else "fail"
     return {
         "schema_version": 1,
         "status": status,
-        "summary": {"failed": 0 if status == "pass" else 1},
+        "fixture_status": structural_status,
+        "overhead_status": overhead_status,
+        "release_status": "partial" if status == "partial" else status,
+        "summary": {"failed": 0 if structural_status == "pass" else 1},
         "context_control_overhead": {
             "status": overhead_status,
-            "structural_fixture_status": "pass" if status == "pass" else "fail",
+            "structural_fixture_status": structural_status,
             "overhead_status": overhead_status,
             "input_token_overhead_pct": 234.06,
             "output_token_overhead_pct": 45.63,
@@ -54,6 +58,7 @@ def _context_report(status: str = "pass", overhead_status: str = "partial") -> d
                 "live_codex_executed": False,
                 "command_delta": 22.61,
             },
+            "quality_improvement_claim_allowed": False,
             "overhead_policy_verdict": "partial: high overhead without pass-rate improvement is not success",
             "evidence_boundary": "Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead.",
         },
@@ -99,7 +104,10 @@ class ContextControlOverheadReportingTests(unittest.TestCase):
         self.assertIn("input_token_overhead_pct", row["detail"])
         detail = json.loads(row["detail"])
         self.assertEqual(detail["structural_fixture_status"], "pass")
+        self.assertEqual(detail["fixture_status"], "pass")
         self.assertEqual(detail["overhead_status"], "partial")
+        self.assertEqual(detail["release_status"], "partial")
+        self.assertFalse(detail["quality_improvement_claim_allowed"])
         self.assertEqual(detail["live_pass_rate"]["status"], "collected")
         self.assertEqual(detail["token_overhead"]["status"], "collected")
         self.assertEqual(detail["turn_overhead_detail"]["status"], "not_collected")
@@ -133,6 +141,7 @@ class ContextControlOverheadReportingTests(unittest.TestCase):
         self.assertNotEqual(overhead["status"], "pass")
         self.assertEqual(overhead["structural_fixture_status"], "pass")
         self.assertEqual(overhead["overhead_status"], "partial")
+        self.assertFalse(overhead["quality_improvement_claim_allowed"])
         self.assertEqual(overhead["live_pass_rate"], {"status": "collected", "pass_rate_delta": 0.0})
         self.assertEqual(overhead["token_overhead"]["status"], "collected")
         self.assertEqual(overhead["turn_overhead_detail"]["status"], "not_collected")
@@ -157,11 +166,30 @@ class ContextControlOverheadReportingTests(unittest.TestCase):
                 "refresh_commands": [],
             }
         )
-        self.assertIn("high overhead without pass-rate improvement is not success", markdown)
-        self.assertIn("live benchmark commands are opt-in and not default validation", markdown)
+        self.assertIn("High overhead without pass-rate improvement is not success.", markdown)
+        self.assertIn("Live benchmark commands remain opt-in.", markdown)
         self.assertIn("- structural_fixture_status: `pass`", markdown)
         self.assertIn("- overhead_status: `partial`", markdown)
+        self.assertIn("Structural fixture pass is not live quality improvement", markdown)
         self.assertIn('"live_codex_executed": false', markdown)
+
+    def test_context_control_eval_partial_overhead_keeps_top_level_partial(self) -> None:
+        self.assertEqual(
+            CONTEXT_EVAL._overall_status(fixtures_pass=True, overhead_status="partial"),
+            "partial",
+        )
+        self.assertEqual(
+            CONTEXT_EVAL._overall_status(fixtures_pass=True, overhead_status="not_collected"),
+            "partial",
+        )
+        self.assertEqual(
+            CONTEXT_EVAL._overall_status(fixtures_pass=True, overhead_status="pass"),
+            "pass",
+        )
+        self.assertEqual(
+            CONTEXT_EVAL._overall_status(fixtures_pass=False, overhead_status="pass"),
+            "fail",
+        )
 
     def test_professional_scorecard_markdown_renders_context_control_evidence_split(self) -> None:
         markdown = SCORECARD.render_markdown(
@@ -234,6 +262,41 @@ class ContextControlOverheadReportingTests(unittest.TestCase):
 
         self.assertEqual(status, "fail")
         self.assertTrue(any("blocks pass" in error for error in errors), errors)
+
+    def test_context_control_eval_pass_with_partial_overhead_blocks_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            report_path = reports / "context-control-plane-eval.json"
+            report_path.write_text(json.dumps(_context_report(status="pass", overhead_status="partial")), encoding="utf-8")
+
+            status, _detail = SCORECARD.context_control_overhead_status(root)
+            errors = REPORT_CONSISTENCY.context_control_report_consistency_errors(
+                context_report_path=report_path,
+            )
+
+        self.assertEqual(status, "fail")
+        self.assertTrue(any("blocks pass" in error for error in errors), errors)
+
+    def test_context_control_eval_partial_with_partial_overhead_is_partial(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            report_path = reports / "context-control-plane-eval.json"
+            report = _context_report(status="partial", overhead_status="partial")
+            report["summary"] = {"failed": 0}
+            report["context_control_overhead"]["structural_fixture_status"] = "pass"
+            report_path.write_text(json.dumps(report), encoding="utf-8")
+
+            status, _detail = SCORECARD.context_control_overhead_status(root)
+            errors = REPORT_CONSISTENCY.context_control_report_consistency_errors(
+                context_report_path=report_path,
+            )
+
+        self.assertEqual(status, "partial")
+        self.assertEqual(errors, [])
 
 
 if __name__ == "__main__":

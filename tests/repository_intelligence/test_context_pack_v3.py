@@ -60,6 +60,11 @@ class ContextPackV3Tests(unittest.TestCase):
         self.assertEqual(pack["context_control"]["max_file_count"], 16)
         self.assertEqual(pack["context_control"]["max_symbol_count"], 48)
         self.assertEqual(pack["context_control"]["context_budget_tokens"], 900)
+        self.assertIn("omitted_context_summary", pack)
+        self.assertEqual(
+            pack["omitted_context_summary"]["omitted_node_count"],
+            pack["anti_bloat_decision"]["omitted_node_count"],
+        )
         targeted = {item["path"]: item for item in pack["jit_retrieval_plan"]["targeted_reads"]}
         self.assertEqual(targeted["src/pkg/app.py"]["line_hint"], "1-2")
         self.assertEqual(targeted["src/pkg/app.py"]["read_policy"], "read_slice")

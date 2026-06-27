@@ -644,8 +644,24 @@ def _clean_branch_route_repair_summaries(value: Any) -> list[dict[str, Any]]:
                 "validation_plan": _clean_list(new_route.get("validation_plan"), max_items=MAX_ITEMS),
             },
             "residual_risk": _clean_list(raw.get("residual_risk"), max_items=MAX_ITEMS),
+            "source_privacy_findings": _clean_list(raw.get("source_privacy_findings"), max_items=MAX_ITEMS),
+            "source_privacy_status": "fail"
+            if str(raw.get("source_privacy_status") or "").strip() == "fail"
+            else "pass",
+            "retained_summary_privacy_findings": _clean_list(
+                raw.get("retained_summary_privacy_findings"),
+                max_items=MAX_ITEMS,
+            ),
+            "retained_summary_privacy_status": "fail"
+            if str(raw.get("retained_summary_privacy_status") or "").strip() == "fail"
+            else ("fail" if str(raw.get("privacy_status") or "").strip() == "fail" else "pass"),
+            "privacy_redaction_status": "fail"
+            if str(raw.get("privacy_redaction_status") or "").strip() == "fail"
+            else "pass",
             "privacy_status": "fail" if str(raw.get("privacy_status") or "").strip() == "fail" else "pass",
         }
+        if summary["retained_summary_privacy_status"] == "pass":
+            summary["privacy_status"] = "pass"
         key = str(summary.get("summary_id") or "")
         if not key or key in seen:
             continue

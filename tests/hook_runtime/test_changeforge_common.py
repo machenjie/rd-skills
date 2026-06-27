@@ -341,7 +341,9 @@ class ChangeForgeCommonTests(unittest.TestCase):
             state["branch_route_repair_summaries"][0]["abandoned_or_repaired_route"]["files_touched"],
             ["<local-path>"],
         )
-        self.assertEqual(state["branch_route_repair_summaries"][0]["privacy_status"], "fail")
+        self.assertEqual(state["branch_route_repair_summaries"][0]["source_privacy_status"], "fail")
+        self.assertEqual(state["branch_route_repair_summaries"][0]["retained_summary_privacy_status"], "pass")
+        self.assertEqual(state["branch_route_repair_summaries"][0]["privacy_status"], "pass")
         self.assertEqual(state["route_repair_forbidden_retries"], ["same-path retry"])
         self.assertEqual(state["context_budget_findings"], ["selected_capabilities 9/8 over budget"])
         self.assertEqual(

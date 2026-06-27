@@ -60,7 +60,7 @@ def build_route_repair_summary(state: dict, *, event: dict | None = None) -> dic
     """
     state = state if isinstance(state, dict) else {}
     event = event if isinstance(event, dict) else {}
-    raw_sources = [state, event]
+    source_findings = _privacy_findings([state, event])
     forbidden_retries = _forbidden_retries(state, event)
     summary = {
         "schema_version": SCHEMA_VERSION,
@@ -127,7 +127,12 @@ def build_route_repair_summary(state: dict, *, event: dict | None = None) -> dic
             ],
             max_items=MAX_ITEMS,
         ),
-        "privacy_status": "fail" if _privacy_failed(raw_sources) else "pass",
+        "source_privacy_findings": source_findings,
+        "source_privacy_status": "fail" if source_findings else "pass",
+        "retained_summary_privacy_findings": [],
+        "retained_summary_privacy_status": "pass",
+        "privacy_redaction_status": "pass",
+        "privacy_status": "pass",
     }
     summary = sanitize_route_repair_summary(summary)
     summary["summary_id"] = _summary_id(summary)
@@ -170,10 +175,12 @@ def sanitize_route_repair_summary(summary: dict) -> dict:
     route = route if isinstance(route, dict) else {}
     new_route = source.get("new_route")
     new_route = new_route if isinstance(new_route, dict) else {}
-    privacy_failed = (
-        _privacy_failed([source])
-        or str(source.get("privacy_status") or "").strip() == "fail"
-    )
+    source_findings = _clean_list(source.get("source_privacy_findings"), max_items=MAX_ITEMS)
+    for finding in _privacy_findings([source]):
+        if finding not in source_findings:
+            source_findings.append(finding)
+    if not source_findings and str(source.get("source_privacy_status") or "").strip() == "fail":
+        source_findings = ["legacy_source_privacy_fail"]
     clean = {
         "schema_version": SCHEMA_VERSION,
         "summary_id": _clean_text(source.get("summary_id"), limit=80),
@@ -194,8 +201,18 @@ def sanitize_route_repair_summary(summary: dict) -> dict:
             "validation_plan": _clean_list(new_route.get("validation_plan"), max_items=MAX_ITEMS),
         },
         "residual_risk": _clean_list(source.get("residual_risk"), max_items=MAX_ITEMS),
-        "privacy_status": "fail" if privacy_failed else "pass",
+        "source_privacy_findings": source_findings,
+        "source_privacy_status": "fail" if source_findings else "pass",
+        "retained_summary_privacy_findings": [],
+        "retained_summary_privacy_status": "pass",
+        "privacy_redaction_status": "pass",
+        "privacy_status": "pass",
     }
+    retained_findings = _privacy_findings([_summary_core(clean)])
+    clean["retained_summary_privacy_findings"] = retained_findings
+    clean["retained_summary_privacy_status"] = "fail" if retained_findings else "pass"
+    clean["privacy_redaction_status"] = "pass" if not retained_findings else "fail"
+    clean["privacy_status"] = clean["retained_summary_privacy_status"]
     if not clean["summary_id"]:
         clean["summary_id"] = _summary_id(clean)
     return clean
@@ -325,16 +342,40 @@ def _clean_text(value: Any, *, limit: int = MAX_TEXT) -> str:
 
 
 def _privacy_failed(values: list[Any]) -> bool:
+    return bool(_privacy_findings(values))
+
+
+def _privacy_findings(values: list[Any]) -> list[str]:
+    findings: list[str] = []
     for value in values:
         if _contains_forbidden_key(value):
-            return True
+            findings.append("forbidden_raw_field")
         try:
             text = json.dumps(value, sort_keys=True, ensure_ascii=False)
         except TypeError:
             text = str(value)
-        if SECRET_RE.search(text) or ABSOLUTE_PATH_RE.search(text):
-            return True
-    return False
+        if SECRET_RE.search(text):
+            findings.append("secret_like_value")
+        if ABSOLUTE_PATH_RE.search(text):
+            findings.append("absolute_path")
+    deduped: list[str] = []
+    for finding in findings:
+        if finding not in deduped:
+            deduped.append(finding)
+    return deduped[:MAX_ITEMS]
+
+
+def _summary_core(summary: dict) -> dict:
+    return {
+        "schema_version": summary.get("schema_version"),
+        "summary_id": summary.get("summary_id"),
+        "trigger": summary.get("trigger"),
+        "abandoned_or_repaired_route": summary.get("abandoned_or_repaired_route"),
+        "reusable_findings": summary.get("reusable_findings"),
+        "forbidden_retries": summary.get("forbidden_retries"),
+        "new_route": summary.get("new_route"),
+        "residual_risk": summary.get("residual_risk"),
+    }
 
 
 def _contains_forbidden_key(value: Any) -> bool:

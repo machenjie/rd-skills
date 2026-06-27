@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 from pathlib import Path
 
@@ -67,11 +69,17 @@ def _main() -> int:
     message = "\n".join(context_lines(context))
     if contract_text and hook_event in {"SessionStart", "SubagentStart"}:
         message = f"{message}\n\n{contract_text}"
+    digest = _active_context_digest(context, hook_event=hook_event)
+    if not _force_emit_context(context, state, hook_event) and digest == state.get("professional_injection_digest"):
+        return 0
 
     merge_state(
         repo,
         runtime,
         professional_injections=[f"{hook_event}:{context['stage']}"],
+        professional_injection_digests=[digest],
+        professional_injection_digest=digest,
+        last_professional_injection_event=hook_event,
         prompt_signals=classification.get("prompt_signals", []),
         suggested_skills=context.get("selected_skills", []),
         suggested_capabilities=context.get("selected_capabilities", []),
@@ -114,6 +122,54 @@ def _main() -> int:
     if mode != "monitor":
         adapter_for(runtime).emit_context(hook_event, message)
     return 0
+
+
+def _active_context_digest(context: dict, *, hook_event: str) -> str:
+    """Hash bounded active-context facts without raw prompt or command output."""
+    control = context.get("context_control") if isinstance(context.get("context_control"), dict) else {}
+    allowed = {
+        "current_stage",
+        "owner_skill",
+        "reviewer_skill",
+        "selected_skills",
+        "selected_capabilities",
+        "required_quality_gates",
+        "required_references",
+        "skipped_references",
+        "risk_surfaces",
+    }
+    payload = {key: context.get(key) for key in sorted(allowed) if key in context}
+    payload["hook_event"] = hook_event
+    payload["context_budget_mode"] = control.get("budget_mode") or context.get("context_budget_mode")
+    payload["context_control"] = {
+        "budget_mode": control.get("budget_mode"),
+        "selected_reference_count": control.get("selected_reference_count", 0),
+        "skipped_reference_count": control.get("skipped_reference_count", 0),
+    }
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+    return "sha256:" + hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:24]
+
+
+def _force_emit_context(context: dict, state: dict, hook_event: str) -> bool:
+    if hook_event in {"SessionStart", "SubagentStart"}:
+        return True
+    control = context.get("context_control") if isinstance(context.get("context_control"), dict) else {}
+    if control.get("over_budget_findings"):
+        return True
+    if state.get("turn_stage") and context.get("current_stage") != state.get("turn_stage"):
+        return True
+    if state.get("owner_skill") and context.get("owner_skill") != state.get("owner_skill"):
+        return True
+    if state.get("reviewer_skill") and context.get("reviewer_skill") != state.get("reviewer_skill"):
+        return True
+    previous_risks = {str(item) for item in state.get("risk_surfaces", []) if isinstance(item, str)}
+    current_risks = {str(item) for item in context.get("risk_surfaces", []) if isinstance(item, str)}
+    if previous_risks and previous_risks != current_risks:
+        return True
+    adapter = state.get("runtime_adapter") if isinstance(state.get("runtime_adapter"), dict) else {}
+    if adapter.get("active_degradation") and hook_event != state.get("last_professional_injection_event"):
+        return True
+    return False
 
 
 def _write_degraded_telemetry(exc: Exception) -> None:

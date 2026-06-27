@@ -106,6 +106,9 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
         self.assertEqual(state["owner_skill"], "security-privacy-gate")
         self.assertNotIn("auth token handling", json.dumps(state))
         self.assertIn("security_or_permission", state["prompt_signals"])
+        self.assertEqual(len(state["professional_injection_digests"]), 1)
+        self.assertTrue(state["professional_injection_digest"].startswith("sha256:"))
+        self.assertEqual(state["last_professional_injection_event"], "UserPromptSubmit")
 
     def test_professional_injector_fail_opens_when_internal_context_builder_raises(self) -> None:
         injector = load_injector()
@@ -185,12 +188,10 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
         context = additional_context(result.stdout).casefold()
         self.assertIn("reliability gate", context)
         self.assertIn("cache_focus", context)
-        self.assertIn("single-flight", context)
+        self.assertIn("per-key coordination", context)
         self.assertIn("ttl jitter", context)
-        self.assertIn("no live redis", context)
-        self.assertIn("fake cache plus fakebackend", context)
-        self.assertIn("backend calls == 1", context)
-        self.assertIn("network clients", context)
+        self.assertIn("no live redis/network", context)
+        self.assertIn("fake-cache tests", context)
 
     def test_structure_focus_guidance_covers_object_method_placement(self) -> None:
         event = {
@@ -212,15 +213,10 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         context = additional_context(result.stdout).casefold()
         self.assertIn("structure_focus", context)
-        self.assertIn("object-method encapsulation decision", context)
-        self.assertIn("object candidates", context)
-        self.assertIn("public api", context)
-        self.assertIn("value object/domain object", context)
-        self.assertIn("no side effects", context)
+        self.assertIn("object-method ownership", context)
+        self.assertIn("public api tests", context)
         self.assertIn("adapters", context)
-        self.assertIn("private helpers", context)
-        self.assertIn("allowed", context)
-        self.assertIn("denied", context)
+        self.assertIn("helpers private", context)
 
     def test_question_prompt_does_not_create_closure_surface(self) -> None:
         prompts = (
@@ -307,6 +303,38 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0)
         self.assertFalse(state["stage_route_present"])
+
+    def test_professional_injector_suppresses_duplicate_active_context(self) -> None:
+        event = {
+            "hook_event_name": "PostToolUse",
+            "tool_name": "Bash",
+            "tool_input": {"command": "python3 -m unittest discover -s tests"},
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            first = run_hook(
+                "changeforge_professional_injector.py",
+                event,
+                cwd,
+                cache,
+                CHANGEFORGE_AGENT="codex",
+            )
+            second = run_hook(
+                "changeforge_professional_injector.py",
+                event,
+                cwd,
+                cache,
+                CHANGEFORGE_AGENT="codex",
+            )
+            state = load_state(cwd, cache)
+
+        self.assertEqual(first.returncode, 0)
+        self.assertIn("ChangeForge Professional Skill Injection", first.stdout)
+        self.assertEqual(second.returncode, 0)
+        self.assertEqual(second.stdout, "")
+        self.assertEqual(len(state["professional_injections"]), 1)
+        self.assertEqual(len(state["professional_injection_digests"]), 1)
+        self.assertTrue(state["professional_injection_digest"].startswith("sha256:"))
 
     def test_read_gate_detects_mcp_filesystem_read_file(self) -> None:
         event = {
