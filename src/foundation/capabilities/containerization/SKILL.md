@@ -24,9 +24,10 @@ Do not use this capability to design cluster scheduling, service mesh, or ingres
 # Stage Fit
 
 - **Planning / design:** choose base image, build/runtime separation, secret strategy, runtime user, health/shutdown contract, and artifact evidence before image work starts.
-- **Implementation / repair:** update Dockerfile/Containerfile, `.dockerignore`, entrypoint, runtime config, and verification checks together.
-- **Review:** reject image changes that lack digest pinning, non-root runtime, secret exclusion, SBOM/scan evidence, and same-pattern scan for other images.
-- **Release:** verify the exact image digest, provenance, vulnerability gate, registry scan, runtime probes, and rollback/promote path before handoff.
+- **Coding / implementation:** update Dockerfile/Containerfile, `.dockerignore`, entrypoint, runtime config, lockfile installation, ownership, and verification checks together.
+- **Bug-fix / debugging / repair:** reproduce build, startup, permission, health, shutdown, CVE, or registry failures before changing Dockerfile layers; preserve the prior working digest as rollback evidence.
+- **Code-review / refactoring:** reject image changes that lack digest pinning, non-root runtime, secret exclusion, SBOM/scan evidence, behavior preservation for existing startup paths, and same-pattern scan for other images.
+- **Testing / release / handoff:** verify the exact image digest, provenance, vulnerability gate, registry scan, runtime probes, rollback/promote path, and validation freshness before handoff.
 
 # Non-Negotiable Rules
 
@@ -46,21 +47,7 @@ Do not use this capability to design cluster scheduling, service mesh, or ingres
 
 # Industry Benchmarks
 
-Anchor against OCI Image Specification, NIST SP 800-190, OWASP Docker Security Cheat Sheet, CIS Docker/Kubernetes benchmarks, SLSA provenance, Sigstore/Cosign signing, Syft/Grype/Trivy/Snyk scanning, Distroless and Chainguard minimal images, Docker/BuildKit multi-stage and secret-mount patterns, Twelve-Factor runtime config, Hadolint/Dockle linting, registry-integrated scanning, and daemonless CI builders. Keep this body focused on routing, evidence, and gates; load `references/checklist.md` for concrete checklist output and `examples/example-output.md` for response shape.
-
-### Base Image Selection Matrix
-
-| Base image | OS size | Shell | Package manager | CVE surface | Pick when |
-| --- | --- | --- | --- | --- | --- |
-| **`gcr.io/distroless/base-nossl`** | ~2 MB | None | None | Minimal | Compiled binaries (Go, Rust, C++); nothing else needed |
-| **`gcr.io/distroless/java21`** | ~85 MB | None | None | Low | JVM apps; no shell exploitability |
-| **`gcr.io/distroless/python3`** | ~50 MB | None | None | Low | Python apps; no pip at runtime |
-| **`alpine:3.x`** | ~5 MB | `ash` | `apk` | Low | Lightweight; shell available if debug tools needed; musl libc edge cases |
-| **`debian:bookworm-slim`** | ~75 MB | `bash` | `apt` | Medium | glibc required; familiarity; `apt` for runtime deps |
-| **`ubuntu:24.04-minimal`** | ~30 MB | `bash` | `apt` | Medium | Requires Ubuntu userland specifically |
-| **`chainguard/*`** | 5–100 MB | None/optional | None | Very low | Hardened distroless with daily updates |
-| **Language official slim** (`python:3.x-slim`) | 50–200 MB | `bash` | `apt` | Medium | Prototyping; developer familiarity |
-| **Full official** (`python:3.x`, `node:20`) | 300–900 MB | Yes | Yes | High | **Only** build stage; never runtime stage |
+Anchor against OCI Image Specification, NIST SP 800-190, OWASP Docker Security Cheat Sheet, CIS Docker/Kubernetes benchmarks, SLSA provenance, Sigstore/Cosign signing, Syft/Grype/Trivy/Snyk scanning, Distroless and Chainguard minimal images, Docker/BuildKit multi-stage and secret-mount patterns, Twelve-Factor runtime config, Hadolint/Dockle linting, registry-integrated scanning, and daemonless CI builders. Keep this body focused on routing, evidence, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for base-image matrices, build/runtime patterns, graph/memory/execution coupling, validation evidence, and anti-pattern detail.
 
 # Mode Matrix
 
@@ -86,17 +73,17 @@ Select this capability when **image construction, runtime safety, or container a
 # Proactive Professional Triggers
 
 - **Signal:** Dockerfile, Containerfile, build context, base image, runtime stage, entrypoint, `.dockerignore`, or deployment image reference changes.
-  **Hidden risk:** the produced image differs from the reviewed artifact, ships extra files, runs as root, or pulls a mutable base at release time.
+  **Hidden risk:** the produced image differs from the reviewed artifact, ships extra files, runs as root, or pulls a mutable base, creating a wrong runtime artifact at release time.
   **Required professional action:** map every image definition and deployment reference, pin digests, verify runtime contents, and scan for same-pattern image drift.
   **Route to:** `containerization`, `repository-graph-analysis`, `delivery-release-gate`.
   **Evidence required:** image-definition graph, digest reference, runtime file/user inspection, and same-pattern scan result.
 - **Signal:** Secrets, tokens, `.env`, SSH keys, package registry credentials, build args, cache mounts, or runtime configuration appear near Docker build logic.
-  **Hidden risk:** credentials are baked into image layers, build cache, history, logs, or registry artifacts.
+  **Hidden risk:** credentials leak into image layers, build cache, history, logs, or registry artifacts.
   **Required professional action:** remove baked secrets, use BuildKit secret mounts or runtime secret sources, and verify layer/history/context exclusion.
   **Route to:** `containerization`, `secret-configuration-security`, `security-privacy-gate`.
   **Evidence required:** `.dockerignore` review, secret-scan output, `docker history` or equivalent inspection, and residual secret-handling owner.
 - **Signal:** Base image, OS package, language runtime, native dependency, SBOM, CVE report, or registry scan changes.
-  **Hidden risk:** a runtime CVE, EOL base, native ABI mismatch, or untracked dependency surface ships into production.
+  **Hidden risk:** a missing runtime CVE gate, EOL base, native ABI mismatch, or untracked dependency surface ships into production.
   **Required professional action:** compare minimal base options, enforce lockfile/digest policy, generate SBOM, scan runtime image, and record accepted exceptions.
   **Route to:** `containerization`, `dependency-vulnerability-scanning`, `package-dependency-management`.
   **Evidence required:** base-image rationale, SBOM path, scan summary, exception owner, and compatibility/runtime smoke result.
@@ -117,10 +104,7 @@ Escalate when: the image runs in privileged mode or requires `SYS_ADMIN` / `NET_
 
 # Reference Loading Policy
 
-- **L1:** Read this `SKILL.md` only for routing, small reviews, or concise containerization plans.
-- **L2:** Read `references/checklist.md` when producing a concrete Dockerfile/Containerfile review, image hardening checklist, release checklist, or validation checklist.
-- **L3:** Read `examples/example-output.md` when the user needs a structured response shape or when the container plan format is underspecified.
-- **Do not load adjacent skills by default.** Load `secret-configuration-security`, `dependency-vulnerability-scanning`, `kubernetes-gateway`, `ci-cd`, or `delivery-release-gate` only when the task crosses into secret rotation, CVE triage, cluster manifest design, pipeline automation, or release governance.
+The `SKILL.md` body carries normal L1/L2 container image routing, evidence, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete Dockerfile/Containerfile plan, image hardening checklist, release checklist, or validation checklist. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when base-image choice, BuildKit secret/cache behavior, SBOM/signing/provenance, graph/memory/execution coupling, validation evidence, or anti-pattern detail needs depth. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load adjacent skills by default; load `secret-configuration-security`, `dependency-vulnerability-scanning`, `kubernetes-gateway`, `ci-cd`, or `delivery-release-gate` only when the task crosses into secret rotation, CVE triage, cluster manifest design, pipeline automation, or release governance.
 
 # Critical Details
 
@@ -157,20 +141,20 @@ Container security is about **minimizing exploitable surface at build time and e
 
 # Failure Modes
 
-- Runtime image ships compilers, package managers, dev certs, or test tooling → attack surface enlarged; CVE count inflated.
-- Container runs as root without documented platform need → any RCE gives attacker root.
-- `DB_PASSWORD` as `ENV` in Dockerfile → secret visible in registry image history and `docker inspect`.
-- `FROM node:20-alpine` without digest → upstream tag re-pointed → different image ships silently.
-- `CMD ["sh", "-c", "app"]` wraps in shell → SIGTERM captured by `sh` → graceful shutdown timeout → requests dropped on scale-down.
-- No `HEALTHCHECK` / readiness probe → traffic routed to starting or unhealthy containers.
-- `.dockerignore` absent → `.env` file, `.git`, `node_modules` copied into build context → secrets in layers or multi-GB image.
-- SBOM not generated → cannot answer "does any deployed image contain libxyz < 1.2.3?" when CVE is disclosed.
-- Build not reproducible → staging and production run different images if rebuilt from the same tag.
-- Container has read-write root filesystem → exploited container can modify binaries, write malware.
-- Init process absent → zombie children accumulate under worker manager → OOM or PID exhaustion.
-- Health endpoint authenticates or queries DB expensively → health check kills healthy container under load.
-- `COPY --chown` missing → files unreadable by non-root runtime user → crash on startup.
-- Port declared in Kubernetes spec not `EXPOSE`d → operators and auto-detection miss it; misconfiguration undetected.
+- **Bloated runtime:** runtime image ships compilers, package managers, dev certs, or test tooling; attack surface enlarges and CVE count inflates.
+- **Root runtime:** container runs as root without documented platform need; any RCE can escalate to root inside the container and exposed mounts.
+- **Secret in layer:** `DB_PASSWORD` as `ENV` in Dockerfile; secret is visible in registry image history and `docker inspect`.
+- **Mutable base:** `FROM node:20-alpine` without digest; upstream tag re-points and a different image ships silently.
+- **Signal loss:** `CMD ["sh", "-c", "app"]` wraps in shell; SIGTERM is captured by `sh` and requests drop on scale-down.
+- **Missing readiness:** no `HEALTHCHECK` or readiness probe; traffic routes to starting or unhealthy containers.
+- **Context leak:** `.dockerignore` absent; `.env`, `.git`, and `node_modules` enter build context, causing secrets in layers or multi-GB images.
+- **Missing SBOM:** SBOM not generated; team cannot answer whether deployed images contain a vulnerable library when a CVE is disclosed.
+- **Non-reproducible build:** staging and production run different images after rebuilding from the same mutable tag.
+- **Writable rootfs:** exploited container can modify binaries or write malware into the runtime filesystem.
+- **No init:** zombie children accumulate under worker manager, causing OOM or PID exhaustion.
+- **Expensive health:** health endpoint authenticates or queries DB expensively; health checks kill healthy containers under load.
+- **Ownership mismatch:** `COPY --chown` missing; files become unreadable by non-root runtime user and crash on startup.
+- **Port mismatch:** port declared in Kubernetes spec is not `EXPOSE`d; operators and auto-detection miss the mismatch.
 
 # Output Contract
 
@@ -208,6 +192,8 @@ An acceptable answer names:
 - Evidence limits: what local checks cannot prove, such as live registry admission, future CVE disclosure, production runtime load, or cluster policy unless separately verified.
 - Handoff evidence: adjacent gate needed next, residual risk owner, and rollback to prior digest or previous Dockerfile/config state.
 
+Validation evidence must name each command, validator, artifact/report path, exit code, inspected output, image digest, and freshness after the final Dockerfile/config/lockfile change. State what evidence proves, what evidence does not prove, the reuse and placement rationale for graph/memory/execution claims, behavior preservation for existing build/startup/deploy paths, residual risk, and the next gate or handoff owner.
+
 # Benchmark Coverage
 
 - **Image security:** minimal runtime contents, non-root user, read-only/writable path design, no secrets in layers, and layer/context hygiene.
@@ -238,6 +224,7 @@ The containerization plan passes only when:
 13. Repository graph scan covers every Dockerfile/Containerfile, compose/orchestrator image reference, entrypoint, `.dockerignore`, and CI image-build definition in scope.
 14. Verification evidence maps each changed image artifact to build, inspect, run, scan, SBOM, signature/provenance, and deploy-reference checks or marks the gap with owner.
 15. Release handoff names prior digest or rollback image, promotion path, registry/admission evidence limits, and residual CVE or platform risk.
+16. Validation commands, validators, artifacts/reports, exit codes, inspected output, image digest, owner, and freshness are recorded for each accepted containerization claim after the final material edit.
 
 # Used By
 

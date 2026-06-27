@@ -6,3 +6,4 @@
 - Use representative profiling tools and preserve artifacts.
 - Compare after the change with the same scenario.
 - Protect sensitive fields in profiles, traces, and logs.
+- Map each profiled route, query, job, render path, dependency, cost driver, repository graph edge, accepted/rejected memory item, and validation command to freshness, owner, rollback trigger, handoff gate, or residual risk.

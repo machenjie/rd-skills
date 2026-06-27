@@ -28,7 +28,7 @@ Use when responsibility is unclear, similar logic may already exist, AI-generate
 
 # Stage Fit
 
-Owns implementation-planning; informs coding, code-review, and refactoring. Use it during implementation-planning for reuse, naming, placement, visibility, and test placement; during coding to keep new structure aligned to planned boundaries; and during code-review/refactoring to check reuse, placement, dependency direction, and behavior-preserving movement against the plan.
+Owns implementation-planning; informs coding, code-review, refactoring, testing, release, and handoff. Use it during implementation-planning for reuse, naming, placement, visibility, and test placement; during coding to keep new structure aligned to planned boundaries; and during code-review/refactoring to check reuse, placement, dependency direction, and behavior-preserving movement against the plan before handoff.
 
 # Non-Negotiable Rules
 
@@ -86,21 +86,9 @@ Prefer adjacent capabilities when the main question is broader: `module-boundary
 
 # Proactive Professional Triggers
 
-- **Signal:** New function, class, file, directory, helper, shared utility, export, or dependency is proposed before local pattern discovery and reuse search.
-  **Hidden risk:** duplicate logic, wrong owner, circular dependency, or shared/common pollution becomes permanent structure.
-  **Required professional action:** require repository inspection, same-pattern scan, and reuse ladder decision before editing.
-  **Route to:** `repository-context-map`, `repository-graph-analysis`, `quality-test-gate`.
-  **Evidence required:** inspected paths, search scope, reuse candidates, rejected locations, dependency direction, test boundary.
-- **Signal:** Object, method, interface, inheritance, factory, strategy, adapter, or wrapper is accepted because it seems cleaner or future-proof.
-  **Hidden risk:** speculative abstraction hides current force, weakens encapsulation, or makes tests preserve implementation shape.
-  **Required professional action:** prove object responsibility, relationship direction, simpler alternative rejection, and public behavior validation.
-  **Route to:** `code-clarity-maintainability`, `design-pattern-selection`, `testability-seam-design`.
-  **Evidence required:** object-method decision, relationship map, current variants or rejected inheritance, test output or not-verified residual risk.
-- **Signal:** Repository graph, project memory, compaction summary, prior validation, or previous review is used as placement proof after later source, report, generated, or registry edits.
-  **Hidden risk:** stale graph or memory sends code to the wrong owner and closure overclaims validation freshness.
-  **Required professional action:** downgrade stale context to selector-only, reread current source, rerun stale validators, and record residual risk.
-  **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`.
-  **Evidence required:** accepted/rejected graph or memory claim, current-source comparison, command/report path, freshness verdict, rollback note.
+- **Signal:** New function, class, file, directory, helper, shared utility, export, or dependency is proposed before local pattern discovery and reuse search. **Hidden risk:** duplicate logic, wrong owner, circular dependency, or shared/common pollution becomes permanent structure. **Required professional action:** require repository inspection, same-pattern scan, and reuse ladder decision before editing. **Route to:** `repository-context-map`, `repository-graph-analysis`, `quality-test-gate`. **Evidence required:** inspected paths, search scope, reuse candidates, rejected locations, dependency direction, and public-behavior test boundary.
+- **Signal:** Object, method, interface, inheritance, factory, strategy, adapter, or wrapper is accepted because it seems cleaner or future-proof. **Hidden risk:** hidden wrong object boundary or speculative abstraction makes tests preserve implementation shape instead of observable behavior. **Required professional action:** require object responsibility proof, relationship-direction comparison, simpler alternative rejection, and public behavior validation. **Route to:** `code-clarity-maintainability`, `design-pattern-selection`, `testability-seam-design`. **Evidence required:** object-method decision, relationship map, current variants or rejected inheritance, test output, and not-verified residual risk.
+- **Signal:** Repository graph, project memory, compaction summary, prior validation, or previous review is used as placement proof after later source, report, generated, or registry edits. **Hidden risk:** stale graph or memory sends code to the wrong owner and closure overclaims validation freshness. **Required professional action:** verify current source, downgrade stale context to selector-only, rerun stale validators, and record residual risk. **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`. **Evidence required:** accepted/rejected graph or memory claim, current-source comparison, command/report path, validation freshness verdict, and rollback note.
 
 # Risk Escalation Rules
 
@@ -138,12 +126,14 @@ The output contract below is inline-only and must be satisfied in the handoff ev
 
 # Failure Modes
 
-- Reuse/search failures: duplicate code, invented synonyms, public exports for one module, shared/common business logic, helper placed in `common` to avoid ownership, and tests coupled to private helpers instead of public behavior.
-- Object failures: class before object responsibility, anemic object, helper-bag object, god object, getter/setter data bag, generic manager/processor/helper, inheritance for code sharing without substitutability/base contract/subtype tests, and caller branching on subclasses.
-- Split failures: object boundary missing during file split, one-function file, tiny helper file, trivial class file, pass-through glue, micro-file sprawl, line-count-only split, navigation cost regression, and private helper export only for tests.
-- Merge failures: reckless file merge, object boundary lost during file merge, lost small-file boundary, adapter/repository side effect hidden in service, value object invariant folded into procedural code, policy with tests collapsed into orchestration, and fewer files producing mixed responsibility.
-- Module failures: module public facade and module private internals not separated, module object graph unclear, internal dependency direction unclear, arbitrary directory collection, unrelated object families in one module, and internals imported from outside.
-- Placement failures: new directory without boundary, frontend feature-local behavior globalized with hidden assumptions, backend service importing forbidden infrastructure, and refactor extraction leaving duplication or naming drift.
+- **Reuse/search failure:** duplicate code, invented synonyms, public exports for one module, shared/common business logic, helper placed in `common` to avoid ownership, and tests coupled to private helpers instead of public behavior.
+- **Object responsibility failure:** class before object responsibility, anemic object, helper-bag object, god object, getter/setter data bag, generic manager/processor/helper, inheritance for code sharing without substitutability/base contract/subtype tests, and caller branching on subclasses.
+- **Split failure:** object boundary missing during file split, one-function file, tiny helper file, trivial class file, pass-through glue, micro-file sprawl, line-count-only split, navigation cost regression, and private helper export only for tests.
+- **Merge failure:** reckless file merge, object boundary lost during file merge, lost small-file boundary, adapter/repository side effect hidden in service, value object invariant folded into procedural code, policy with tests collapsed into orchestration, and fewer files producing mixed responsibility.
+- **Module graph failure:** module public facade and module private internals not separated, module object graph unclear, internal dependency direction unclear, arbitrary directory collection, unrelated object families in one module, and internals imported from outside.
+- **Placement failure:** new directory without boundary, frontend feature-local behavior globalized with hidden assumptions, backend service importing forbidden infrastructure, and refactor extraction leaving duplication or naming drift.
+- **Execution-coupling failure:** reuse, placement, or split evidence comes from stale memory, stale graph output, or validation that predates final edits, so handoff claims completion for unverified structure.
+- **Pattern-runtime failure:** factory, repository, proxy, observer, singleton, worker, pool, or command structure hides IO, locks, lifecycle, retries, cleanup, backpressure, or cancellation from the caller and from tests.
 
 # Output Contract
 

@@ -88,11 +88,31 @@ Escalate when: any scenario exposes an irreversible side effect without a define
 
 # Proactive Professional Triggers
 
-- **Signal:** A brief, use case, PR, issue, or review only describes the normal success path. **Hidden risk:** implementation and tests silently omit negative, edge, abuse, recovery, and operational behavior. **Required professional action:** produce a seven-category scenario matrix before task planning. **Route to:** `scenario-decomposition`, then `acceptance-standard-definition` or `quality-test-gate`. **Evidence required:** scenario IDs mapped to requirement IDs, validation methods, and release criticality.
-- **Signal:** Repository graph, project memory, a previous scenario set, or execution trajectory appears reusable. **Hidden risk:** stale behavior, renamed surfaces, changed permission models, or old tests are treated as current truth. **Required professional action:** confirm reuse against current source, tests, docs, or registry evidence and mark unverified evidence as a limit. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected reuse decision, freshness limit, and changed-scenario delta.
-- **Signal:** A scenario includes retry, refresh, duplicate webhook delivery, queue reprocessing, import/export rerun, payment attempt, or side-effecting submit. **Hidden risk:** recovery creates duplicate records, double charges, repeated notifications, or inconsistent state. **Required professional action:** classify recovery as MUST-HANDLE unless idempotency or compensation is explicit. **Route to:** `idempotency-retry-design`, `transaction-consistency`, `quality-test-gate`. **Evidence required:** idempotency key/source, duplicate detection rule, partial-state outcome, and validator.
-- **Signal:** Actor, role, tenant, object owner, admin, support user, service account, or external caller varies by scenario. **Hidden risk:** alternate valid paths and denied/abuse paths are collapsed, hiding authorization defects. **Required professional action:** split valid alternate paths from permission-denied and abuse scenarios. **Route to:** `user-role-identification`, `permission-boundary-modeling`, `security-privacy-gate`. **Evidence required:** actor/resource/action/scope rows, allowed and denied outcomes, abuse validator or residual risk.
-- **Signal:** Operational handling is described as "monitor it", "support fixes it", "manual cleanup", or absent for a failing workflow. **Hidden risk:** incidents are unobservable or unrecoverable after release. **Required professional action:** add diagnosis, alert, runbook, backfill, rollback, and manual-correction scenarios. **Route to:** `reliability-observability-gate`, `delivery-release-gate`, `change-documentation-gate`. **Evidence required:** operator action, observable signal, recovery owner, and release-blocking decision.
+- **Signal:** a brief, use case, PR, issue, or review only describes the normal success path.
+  **Hidden risk:** implementation and tests silently omit negative, edge, abuse, recovery, and operational behavior until production or review discovers them.
+  **Required professional action:** require a seven-category scenario matrix before task planning and block handoff when category gaps lack owner and release decision.
+  **Route to:** `scenario-decomposition`, `acceptance-standard-definition`, `quality-test-gate`.
+  **Evidence required:** scenario IDs mapped to requirement IDs, validation methods, release criticality, blocker status, and residual risk owner.
+- **Signal:** repository graph, project memory, a previous scenario set, or execution trajectory appears reusable.
+  **Hidden risk:** stale behavior, renamed surfaces, changed permission models, or old tests are treated as current truth for the wrong scenario boundary.
+  **Required professional action:** inspect current source/tests/docs/registry evidence, accept or reject reuse, and mark unverified evidence as a limit.
+  **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`.
+  **Evidence required:** inspected paths, accepted/rejected reuse decision, freshness timestamp, changed-scenario delta, validation report, and unknown surfaces.
+- **Signal:** a scenario includes retry, refresh, duplicate webhook delivery, queue reprocessing, import/export rerun, payment attempt, or side-effecting submit.
+  **Hidden risk:** recovery creates duplicate records, double charges, repeated notifications, inconsistent state, or partial writes that tests never exercise.
+  **Required professional action:** classify recovery as MUST-HANDLE unless idempotency, compensation, terminal state, and validation artifact are explicit.
+  **Route to:** `idempotency-retry-design`, `transaction-consistency`, `quality-test-gate`.
+  **Evidence required:** idempotency key/source, duplicate detection rule, partial-state outcome, validator command/report, and owner.
+- **Signal:** actor, role, tenant, object owner, admin, support user, service account, or external caller varies by scenario.
+  **Hidden risk:** alternate valid paths and denied/abuse paths collapse into one happy path, hiding authorization defects and support/operator gaps.
+  **Required professional action:** split valid alternate paths from permission-denied, abuse, support, and operational scenarios before acceptance or test planning.
+  **Route to:** `user-role-identification`, `permission-boundary-modeling`, `security-privacy-gate`.
+  **Evidence required:** actor/resource/action/scope rows, allowed and denied outcomes, abuse validator, support/operator path, and residual risk.
+- **Signal:** operational handling is described as "monitor it", "support fixes it", "manual cleanup", or absent for a failing workflow.
+  **Hidden risk:** hidden incidents are unobservable, unrecoverable, unaudited, or missing repair paths without ad hoc engineering intervention after release.
+  **Required professional action:** add diagnosis, alert, runbook, backfill, rollback, manual-correction, and release-blocking scenarios with owners.
+  **Route to:** `reliability-observability-gate`, `delivery-release-gate`, `change-documentation-gate`.
+  **Evidence required:** operator action, observable signal, runbook/report artifact, recovery owner, release-blocking decision, and residual risk.
 
 # Critical Details
 
@@ -118,12 +138,14 @@ The `SKILL.md` body carries normal L1/L2 selection, trigger, output, and evidenc
 
 # Failure Modes
 
-- Happy-path-only implementation: 6 of 7 scenario categories absent from matrix; failure and abuse scenarios discovered in production.
-- Retry implemented without idempotency check: 2,000 duplicate charges in production; rollback requires manual data correction.
-- Operational scenarios omitted: production incident has no runbook; 4-hour MTTR instead of 30 minutes.
-- Abuse scenario classified as edge condition: account enumeration via response timing is "handled" by input validation — timing side channel remains.
-- Recovery scenario requires rollback that was never designed: partial write leaves data in inconsistent state; no compensation transaction defined.
-- Scenario with irreversible side effect (email sent) classified as DEFERRED: user receives email during incident; emails cannot be unsent.
+- **Happy-path matrix:** 6 of 7 categories are absent; failure, abuse, recovery, and operational behavior are discovered only after production users hit them.
+- **Duplicate recovery:** retry path lacks idempotency and creates 2,000 duplicate charges; rollback requires manual financial correction.
+- **Operational blind spot:** no alert, dashboard, runbook, or support scenario exists; MTTR stretches to 4 hours because operators cannot diagnose the failed workflow.
+- **Abuse-as-edge collapse:** account enumeration through timing is classified as invalid input; validation passes while the adversarial path remains exploitable.
+- **Rollback illusion:** recovery scenario says "rollback" but partial writes cross two stores with no compensation transaction or terminal state.
+- **Irreversible deferral:** email, webhook, refund, or delete side effect is marked DEFERRED; the side effect occurs during an incident and cannot be undone.
+- **Stale scenario reuse:** old project memory names an admin path as safe, but current repository graph added tenant isolation; copied scenarios miss cross-tenant denial.
+- **Unmapped validation:** scenarios have IDs and expected outcomes but no command, test, report, artifact, owner, or release decision, so implementation planning cannot prove coverage.
 
 # Output Contract
 
@@ -144,7 +166,7 @@ Return a scenario decomposition artifact with:
 
 # Evidence Contract
 
-Close a scenario-decomposition change only when the output names the selected mode, scenario scope, current source evidence inspected, graph/memory/execution reuse judgment, seven-category coverage, actor and role boundaries, failure and recovery assumptions, operational paths, scenario-to-acceptance map, scenario-to-validation map, handoff boundaries, release criticality, residual risk, and evidence limits. A scenario matrix that lists only examples or lacks validation mapping is not sufficient evidence.
+Close a scenario-decomposition change only when the output names the selected mode, scenario scope, current source evidence inspected, graph/memory/execution reuse judgment, seven-category coverage, actor and role boundaries, failure and recovery assumptions, operational paths, scenario-to-acceptance map, scenario-to-validation map, handoff boundaries, release criticality, residual risk, and evidence limits. The evidence record must include the validator command, test/report/artifact path, owner, freshness timestamp or exit code when available, what the evidence proves, and what it does not prove. A scenario matrix that lists only examples or lacks validation mapping is not sufficient evidence.
 
 # Benchmark Coverage
 
@@ -171,7 +193,8 @@ The scenario matrix is complete only when:
 11. Selected mode, scenario scope, and source evidence are explicit.
 12. Repository graph, project memory, and execution trajectory evidence are source-confirmed or marked not verified.
 13. Every scenario maps to acceptance or validation evidence, or has a named owner for the gap.
-14. Handoff boundaries and evidence limits are explicit so scenario decomposition is not over-claimed as acceptance, threat modeling, detailed design, or test execution proof.
+14. Validator commands, test/report/artifact paths, freshness, and exit code or not-run reason are recorded for evidence used to close release-critical scenarios.
+15. Handoff boundaries and evidence limits are explicit so scenario decomposition is not over-claimed as acceptance, threat modeling, detailed design, or test execution proof.
 
 # Used By
 

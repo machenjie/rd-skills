@@ -31,6 +31,8 @@ Do not use to invent the architecture rule itself, approve a new dependency with
 
 Use during design when rules are being converted into executable checks, during implementation when lint or graph tooling is wired into scripts/CI, during review when a boundary rule has no representative failing example, during validation when report-only baselines or ratchets decide release evidence, and during cleanup when old violations are removed. Repository graph and project memory can identify likely drift, but current source, current CI configuration, and fresh command output decide closure.
 
+Use during coding, debugging, code-review, refactoring, testing, and release stages when the enforcement rule, skipped boundary, validation evidence, handoff owner, or residual architecture risk determines whether a change is safe to accept.
+
 # Non-Negotiable Rules
 
 - Every enforced rule must map to an architecture or module-boundary decision.
@@ -66,6 +68,8 @@ Select this capability when the primary gap is enforcement tooling. Use `module-
 
 Keep ownership narrow. This capability owns executable enforcement design: rule-to-tool mapping, command, CI placement, exception policy, baseline, failure sample, and validation freshness. It does not own architecture rule creation, consumer migration, dependency approval, cleanup deletion, or release gate approval; it hands those surfaces off after naming the enforcement boundary.
 
+Selection records the lifecycle stage, skipped sibling capability rationale, evidence required for handoff, and the next gate when rule definition, pipeline placement, package approval, consumer migration, cleanup, or release approval is primary.
+
 # Technical Selection Criteria
 
 Evaluate enforcement by rule expressiveness, language/framework fit, graph visibility, generated-source policy, public API surface, package/workspace topology, CI determinism, cache invalidation inputs, baseline size, expected false positives, suppressions, local developer feedback, failure messaging, and ratchet path. Prefer the smallest existing tool that can express the rule and run deterministically in CI; add a new tool only when standard lint/type/build/test commands cannot enforce the rule.
@@ -100,11 +104,11 @@ Do not load deep references for L1/L2 local checks where the inline output contr
 
 # Proactive Professional Triggers
 
-- **Signal:** an ADR, README, CODEOWNERS note, or review comment states an import, layer, export, or dependency rule with no executable check. **Hidden risk:** architecture drift returns after memory of the decision fades. **Required professional action:** convert the rule to a tool-backed check or staged report-only baseline. **Route to:** `architecture-enforcement-tooling`, `ci-cd`. **Evidence required:** accepted rule, tool command, CI location, failure example, and owner.
+- **Signal:** an ADR, README, CODEOWNERS note, or review comment states an import, layer, export, or dependency rule with no executable check. **Hidden risk:** wrong dependency direction, hidden coupling, and architecture drift return after memory of the decision fades. **Required professional action:** convert the rule to a tool-backed check or staged report-only baseline. **Route to:** `architecture-enforcement-tooling`, `ci-cd`. **Evidence required:** accepted rule, tool command, CI location, failure example, and owner.
 - **Signal:** a boundary rule is enforced by a broad glob, blanket ignore, or generated-code exemption. **Hidden risk:** the exception hides real violations. **Required professional action:** narrow the exception to source-of-truth paths, generated outputs, or framework entry points. **Route to:** `architecture-enforcement-tooling`, `package-dependency-management`. **Evidence required:** exception pattern, source/generated authority, drift check, and residual uncovered rule.
 - **Signal:** public exports, package barrels, SDK surfaces, or generated clients are gated without consumer inventory. **Hidden risk:** enforcement breaks real downstream consumers or locks in an accidental public API. **Required professional action:** run consumer impact before blocking or removing exports. **Route to:** `consumer-impact-analysis`, `version-compatibility`. **Evidence required:** export diff, known/unknown consumers, compatibility path, and rollback.
-- **Signal:** a new lint, graph, dead-code, or complexity tool is added because it is popular rather than because it expresses the accepted rule. **Hidden risk:** dependency and CI cost without real enforcement. **Required professional action:** compare existing commands and dependency cost before adding the tool. **Route to:** `package-dependency-management`, `quality-test-gate`. **Evidence required:** rejected existing option, dependency review, command, and proof of a violation it catches.
-- **Signal:** CI gate is switched from report-only to blocking while existing violations remain. **Hidden risk:** all teams are blocked or the gate is disabled under pressure. **Required professional action:** classify baseline, ownership, ratchet threshold, and unblock path before enforcing. **Route to:** `ci-cd`, `cleanup-deletion-governance`. **Evidence required:** baseline count, owner list, suppression policy, ratchet rule, and cleanup issue.
+- **Signal:** a new lint, graph, dead-code, or complexity tool is added because it is popular rather than because it expresses the accepted rule. **Hidden risk:** dependency and CI cost hide a wrong enforcement gap without real boundary protection. **Required professional action:** compare existing commands and dependency cost before adding the tool. **Route to:** `package-dependency-management`, `quality-test-gate`. **Evidence required:** rejected existing option, dependency review, command, and proof of a violation it catches.
+- **Signal:** CI gate is switched from report-only to blocking while existing violations remain. **Hidden risk:** all teams are blocked, rollback is unclear, or the gate is disabled under pressure. **Required professional action:** classify baseline, ownership, ratchet threshold, and unblock path before enforcing. **Route to:** `ci-cd`, `cleanup-deletion-governance`. **Evidence required:** baseline count, owner list, suppression policy, ratchet rule, and cleanup issue.
 - **Signal:** affected-test selection, build cache, or generated-file freshness depends on module graph rules. **Hidden risk:** tests are skipped because graph edges or generated inputs are invisible. **Required professional action:** include graph edges, generated inputs, lockfiles, and full-suite fallback in enforcement evidence. **Route to:** `quality-test-gate`, `validation-broker`. **Evidence required:** changed-path map, cache inputs, affected-test proof, and fallback cadence.
 - **Signal:** dead-code enforcement proposes deletion where reflection, registration, migrations, config, scripts, or docs may reference the artifact. **Hidden risk:** static success deletes runtime behavior. **Required professional action:** require caller search and rollback before cleanup. **Route to:** `cleanup-deletion-governance`. **Evidence required:** static/runtime/generated/reference search, deletion test, and rollback path.
 
@@ -117,15 +121,15 @@ Do not load deep references for L1/L2 local checks where the inline output contr
 
 # Failure Modes
 
-- Architecture rule exists only in README or ADR and has no CI gate.
-- Tool blocks generated code or framework conventions without an exception model.
-- Rule is so broad that developers disable it locally.
-- Existing violations are ignored without baseline or cleanup owner.
-- Dead-code tool deletes reflection, registration, migration, or generated references.
-- Public export check breaks consumers without consumer impact analysis.
-- New dependency is added for enforcement without lockfile, license, or CVE review.
-- CI cache or affected-test selection omits generated inputs and silently skips consumers.
-- A blanket suppression converts a real boundary violation into permanent debt.
+- **Documentation-only rule drift:** architecture rule exists only in README, ADR, or review memory and has no CI gate. Detection: current CI/script scan plus missing representative failing example. Impact: import, layer, or export drift returns after review.
+- **Generated-code false positive:** tool blocks codegen, framework registration, reflection, CLI entry points, or migrations without a narrow exception model. Detection: generated/source-of-truth path map and failing example. Impact: developers disable the rule or suppress real violations.
+- **Overbroad rule fatigue:** rule is so broad that local development is noisy or unrelated teams are blocked. Detection: baseline count, false-positive sample, and owner review. Impact: enforcement is bypassed under pressure and architecture evidence becomes unreliable.
+- **Unowned baseline debt:** existing violations are ignored without baseline, ratchet threshold, cleanup owner, or review date. Detection: violation inventory and suppression policy check. Impact: report-only mode becomes permanent.
+- **Static-only deletion break:** dead-code tool deletes reflection, registration, migration, config, script, or generated references. Detection: static/runtime/generated/docs caller search plus rollback path. Impact: runtime behavior disappears despite green static checks.
+- **Public export consumer break:** public/private export check blocks or removes a consumed API without consumer inventory. Detection: export diff, consumer impact review, and compatibility owner. Impact: downstream packages, SDKs, or generated clients fail.
+- **Supply-chain enforcement cost:** new dependency, plugin, action, binary, or container image is added without lockfile, license, install-script, or CVE review. Detection: dependency review and reproducible install command. Impact: enforcement introduces security or build reliability risk.
+- **Affected-test blind spot:** CI cache or affected-test selection omits generated inputs, lockfiles, tool versions, or transitive graph edges. Detection: changed-path map, cache-key review, and full-suite fallback cadence. Impact: consumers are silently skipped.
+- **Permanent blanket suppression:** broad ignore converts a real boundary violation into permanent debt. Detection: suppression scope, owner, reason, expiry, and residual uncovered rule. Impact: architecture rule appears enforced while the riskiest path is exempt.
 
 # Output Contract
 
@@ -145,7 +149,7 @@ Return an Architecture Enforcement Plan:
 
 # Evidence Contract
 
-Close the plan only when each rule maps to an accepted architecture decision; graph, exports, generated inputs, CI placement, and current violations are inspected or explicitly marked not verified; the tool command is named; generated/runtime exceptions are listed with owners; at least one expected failure example exists; CI blocking or report-only migration is defined; validation output is fresh after the final material edit; and residual unenforced rules have owners, rollback/unblock path, and evidence limits.
+Close the plan only when each rule maps to an accepted architecture decision; graph, exports, generated inputs, CI placement, and current violations are inspected or explicitly marked not verified; reuse and placement rationale explains the selected existing command or new tool; behavior preservation for public exports, generated paths, and local development is stated; the tool command, output/artifact, and validation result are named; generated/runtime exceptions are listed with owners; at least one expected failure example exists; CI blocking or report-only migration is defined; what the evidence proves and what it does not prove are recorded; validation output is fresh after the final material edit; residual risk and residual unenforced rules have owners, rollback/unblock path, evidence limits, and next gate.
 
 # Benchmark Coverage
 

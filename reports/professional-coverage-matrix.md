@@ -1,6 +1,6 @@
 # Professional Coverage Matrix
 
-- Generated: 2026-06-27T01:15:39.203298+00:00
+- Generated: 2026-06-27T12:53:42.520572+00:00
 - Rows checked: 61
 
 | Item | Kind | Mode Matrix | Proactive Triggers | Evidence Contract | Output Contract | Failure Modes | Quality Gate | Reference Loading Hint | Routing Coverage | Benchmark Coverage | Anti-bloat Status | Status |
@@ -11,7 +11,7 @@
 | `cache-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (5) | yes (2) | ok | sample-grade |
 | `cleanup-deletion-governance` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (3) | no | ok | sample-grade |
 | `code-review` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (9) | yes (2) | ok | sample-grade |
-| `configuration-runtime-policy` | foundation-capability | n/a | n/a | partial | yes | yes | yes | yes | no | no | ok | sample-grade |
+| `configuration-runtime-policy` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | no | no | ok | sample-grade |
 | `consumer-impact-analysis` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | no | no | ok | sample-grade |
 | `contract-testing` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (9) | yes (1) | ok | sample-grade |
 | `cpp-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (3) | yes (1) | ok | sample-grade |
@@ -32,7 +32,7 @@
 | `minimal-correct-implementation` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (9) | no | ok | sample-grade |
 | `model-boundary-mapping` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | no | no | ok | sample-grade |
 | `observability` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (28) | yes (3) | ok | sample-grade |
-| `python-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (1) | yes (1) | ok | acceptable |
+| `python-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (1) | yes (1) | ok | sample-grade |
 | `refactoring` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (11) | yes (2) | ok | sample-grade |
 | `regression-testing` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (35) | yes (3) | ok | sample-grade |
 | `relational-database` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (3) | yes (1) | ok | sample-grade |
@@ -42,7 +42,7 @@
 | `sql-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (2) | yes (1) | ok | sample-grade |
 | `test-strategy` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (7) | no | ok | sample-grade |
 | `testability-seam-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | no | no | ok | sample-grade |
-| `transaction-consistency` | foundation-capability | n/a | n/a | partial | yes | yes | yes | yes | yes (8) | yes (1) | ok | sample-grade |
+| `transaction-consistency` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (8) | yes (1) | ok | sample-grade |
 | `typescript-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (3) | yes (1) | ok | sample-grade |
 | `unit-testing` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (17) | yes (2) | ok | sample-grade |
 | `acceptance-criteria-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (6) | no | ok | sample-grade |
@@ -56,12 +56,12 @@
 | `data-api-contract-changer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (15) | yes (1) | ok | sample-grade |
 | `data-middleware-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (16) | yes (4) | ok | sample-grade |
 | `delivery-release-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (28) | yes (3) | ok | sample-grade |
-| `development-process-orchestrator` | professional-skill | yes | yes | yes | partial | yes | yes | yes | no | no | ok | sample-grade |
+| `development-process-orchestrator` | professional-skill | yes | yes | yes | yes | yes | yes | yes | no | no | ok | sample-grade |
 | `domain-impact-modeler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (6) | no | ok | sample-grade |
 | `experience-impact-modeler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (6) | no | ok | sample-grade |
 | `frontend-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (14) | yes (2) | ok | sample-grade |
 | `integration-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (12) | yes (1) | ok | sample-grade |
-| `logging-design-gate` | professional-skill | yes | yes | yes | partial | yes | yes | yes | no | no | ok | sample-grade |
+| `logging-design-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | no | no | ok | sample-grade |
 | `quality-test-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (107) | yes (5) | ok | sample-grade |
 | `reliability-observability-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (33) | no | ok | sample-grade |
 | `security-privacy-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (28) | no | ok | sample-grade |

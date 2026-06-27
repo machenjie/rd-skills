@@ -36,10 +36,11 @@ Do not use this capability for application-only code with no reusable contract. 
 
 # Stage Fit
 
-- **Planning / design:** define the contract surface, compatibility promise, version class, consumer inventory, generator source, runtime floors, and deprecation/migration path before implementation.
-- **Implementation / repair:** update exported APIs, generated clients, package metadata, docs, examples, and compatibility tests together.
-- **Review:** reject changes that alter public surface, runtime floor, package metadata, generated output, or error taxonomy without diff evidence and consumer validation.
-- **Release:** verify artifact packaging, signatures/provenance, SBOM, changelog, migration guide, examples, downstream smoke tests, and rollback/yank path before publish.
+- **Planning / design:** define the contract surface, compatibility promise, version class, consumer inventory, generator source, runtime floors, and deprecation/migration path before coding.
+- **Bug-fix / debugging / repair:** reproduce the consumer breakage, identify the contract drift, scan sibling exports/generated files/examples, and repair compatibility evidence with the code change.
+- **Coding / implementation:** update exported APIs, generated clients, package metadata, docs, examples, and compatibility tests together.
+- **Code-review / refactoring:** reject public-surface, runtime-floor, package-metadata, generated-output, or error-taxonomy changes without diff evidence and consumer validation.
+- **Testing / release / handoff:** verify packaging, signatures/provenance, SBOM, changelog, migration guide, examples, downstream smoke tests, rollback/yank path, and residual risk owner before publish.
 
 # Non-Negotiable Rules
 
@@ -59,18 +60,7 @@ Do not use this capability for application-only code with no reusable contract. 
 
 # Industry Benchmarks
 
-- Semantic Versioning 2.0.0 (semver.org).
-- Keep a Changelog 1.1.0 (keepachangelog.com).
-- Cargo SemVer Compatibility (Rust Reference, doc.rust-lang.org/cargo/reference/semver.html) — distinguishes major / minor / patch with type-system precision.
-- npm provenance (RFC 9162) and Sigstore for SDK supply chain.
-- SLSA v1.0 build levels.
-- OpenSSF Scorecard and Best Practices Badge.
-- Stripe API SDK versioning policy (date-based API, semver SDK, multi-year deprecation window).
-- Google Cloud Client Libraries `release-please` automation and `googleapis` API improvement proposals (AIPs).
-- Microsoft .NET `ApiCompat` and `Microsoft.CodeAnalysis.PublicApiAnalyzers` (`PublicAPI.Shipped.txt` / `Unshipped.txt`).
-- Eclipse PDE API Tools for OSGi.
-- Pact Consumer-Driven Contracts (pact.io) for HTTP / gRPC SDKs.
-- OWASP Software Component Verification Standard (SCVS) for SDK supply-chain controls.
+Anchor decisions in SemVer 2.0.0, Keep a Changelog 1.1.0, Cargo SemVer, npm/PyPI/Maven/NuGet/crates/Go provenance norms, SLSA, OpenSSF, Pact, Microsoft ApiCompat/PublicAPI analyzers, Eclipse PDE API Tools, Stripe/Google SDK release practices, and OWASP SCVS. Keep the body focused on routing and evidence; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for benchmark details, surface matrices, and coupling patterns.
 
 # Selection Rules
 
@@ -84,33 +74,34 @@ Use **with** `repository-graph-analysis`, `project-memory-governance`, `executio
   **Hidden risk:** a local compile pass hides a breaking SDK/library contract change for downstream consumers.
   **Required professional action:** classify the change class, run public-surface diffing, map consumers, and add compatibility or snapshot tests.
   **Route to:** `sdk-library-contract-design`, `api-contract-design`, `version-compatibility`.
-  **Evidence required:** contract surface diff, change-class rationale, consumer inventory, and compatibility test output.
+  **Evidence required:** API-diff command/report, change-class rationale, consumer inventory, compatibility test output, and residual compatibility risk.
 - **Signal:** OpenAPI/AsyncAPI/Protobuf/source spec, generator version, template, generated tree, package metadata, lockfile, or runtime floor changes.
   **Hidden risk:** nondeterministic generation or a silent runtime/dependency floor bump breaks installs and generated clients.
   **Required professional action:** pin source hash/generator digest/config, review generated diff, verify runtime matrix, and classify dependency risk.
   **Route to:** `sdk-library-contract-design`, `package-dependency-management`, `quality-test-gate`.
-  **Evidence required:** source spec hash, generator pin, generated diff review, matrix result, and package/dependency compatibility note.
+  **Evidence required:** source spec hash, generator pin, reproducible generation command, generated diff review, runtime matrix result, freshness timestamp, and package/dependency compatibility note.
 - **Signal:** README, docs, examples, migration guide, changelog, deprecation marker, warning, or removal version changes near an SDK/library release.
   **Hidden risk:** docs and examples promise a contract that the packed artifact does not provide, or consumers miss a migration window.
-  **Required professional action:** run examples against the packed/installed artifact and align changelog, migration, deprecation, and removal policy.
+  **Required professional action:** verify examples against the packed/installed artifact and require aligned changelog, migration, deprecation, removal policy, and docs generation command.
   **Route to:** `sdk-library-contract-design`, `change-documentation-gate`, `quality-test-gate`.
-  **Evidence required:** packed-artifact example run, changelog entry, migration/deprecation map, and docs/versioned reference output.
+  **Evidence required:** packed-artifact example run, changelog entry, migration/deprecation map, docs/versioned reference output, and validator report.
 - **Signal:** Package publishing, registry metadata, signature, provenance, SBOM, yanking, rollback, license, or security contact changes.
   **Hidden risk:** artifact provenance or rollback is unverifiable after publication, especially for immutable registries.
   **Required professional action:** record release artifact evidence, registry policy, provenance/SBOM/signature checks, and yank/hotfix plan.
   **Route to:** `sdk-library-contract-design`, `delivery-release-gate`, `package-dependency-management`.
-  **Evidence required:** artifact digest/version, signature/provenance/SBOM verification, registry rollback/yank path, and release owner.
+  **Evidence required:** artifact digest/version, signature/provenance/SBOM verification with exit code and freshness, registry rollback/yank path, and release owner.
 - **Signal:** Project memory, prior migration policy, consumer fixture, previous validation, or downstream smoke matrix is reused for a new SDK/library change.
   **Hidden risk:** stale consumer assumptions or old validation results are treated as current compatibility proof.
-  **Required professional action:** confirm reused evidence against current source, current generated output, package graph, and consumer fixtures.
+  **Required professional action:** inspect reused evidence against current source, current generated output, package graph, and consumer fixtures before accepting compatibility proof.
   **Route to:** `sdk-library-contract-design`, `project-memory-governance`, `execution-trajectory-analysis`.
-  **Evidence required:** accepted/rejected memory table, freshness limit, changed-consumer delta, and re-run or not-verified disclosure.
+  **Evidence required:** accepted/rejected memory table, validation freshness timestamp, changed-consumer delta, unknown consumer surfaces, and re-run or not-verified disclosure.
 
 # Reference Loading Policy
 
 - **L1:** Read this `SKILL.md` only for routing, small reviews, or compact SDK/library plans.
-- **L2:** Read `references/checklist.md` when drafting/reviewing a concrete SDK/library contract plan, release checklist, consumer-compatibility review, or generated-client review.
-- **L3:** Read `examples/example-output.md` when output shape is unclear or the user needs a filled SDK contract plan.
+- **L2:** Read [references/checklist.md](references/checklist.md) when drafting/reviewing a concrete SDK/library contract plan, release checklist, consumer-compatibility review, or generated-client review.
+- **L3:** Read [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when benchmark selection, graph-memory-execution coupling, or release-pattern evidence is material.
+- **L3 output shape:** Read [examples/example-output.md](examples/example-output.md) when the user needs a filled SDK contract plan.
 - **Do not load adjacent skills by default.** Load `api-contract-design`, `version-compatibility`, `package-dependency-management`, `quality-test-gate`, or language professional usage only when server API semantics, rollout sequencing, dependency graph risk, validation strategy, or language-specific exported API idioms are the primary concern.
 
 # Risk Escalation Rules
@@ -139,35 +130,35 @@ Use **with** `repository-graph-analysis`, `project-memory-governance`, `executio
 
 # Failure Modes
 
-- Symptom: strict-mode TypeScript consumers fail to compile after a minor release.
+- **Minor-breaking surface drift:** Symptom: strict-mode TypeScript consumers fail to compile after a minor release.
   Cause: an exported interface field was renamed; classified as minor.
   Detection: `api-extractor` diff in CI flags the rename; release blocked.
   Impact: forced rollback or emergency major release.
-- Symptom: nightly downstream build flips between two generated client shapes.
+- **Floating generator drift:** Symptom: nightly downstream build flips between two generated client shapes.
   Cause: OpenAPI generator pulled `latest` tag.
   Detection: pin generator by digest; assert checksum of generated tree.
   Impact: nondeterministic SDK output, lost trust.
-- Symptom: README example throws on `require('pkg')` after release.
+- **Example artifact mismatch:** Symptom: README example throws on `require('pkg')` after release.
   Cause: package added ESM-only `exports` map; README still shows CJS.
   Detection: example test installs packed artifact and runs both module systems if both are advertised.
   Impact: every onboarding fails.
-- Symptom: install fails for Node 18 consumers.
+- **Runtime-floor break:** Symptom: install fails for Node 18 consumers.
   Cause: minor release raised `engines.node` to ≥ 20.
   Detection: matrix CI on declared runtime floors; CHANGELOG check.
   Impact: broken installs across the consumer base.
-- Symptom: downstream service errors out on new exception subclass.
+- **Error taxonomy drift:** Symptom: downstream service errors out on new exception subclass.
   Cause: error taxonomy added a new subclass that downstream `instanceof` checks did not recognize.
   Detection: contract test enumerates throwable types and asserts hierarchy stability.
   Impact: production exception leak.
-- Symptom: deprecated API used in production with no warning.
+- **Deprecation without signal:** Symptom: deprecated API used in production with no warning.
   Cause: deprecation marker (`@deprecated`, `DeprecationWarning`, `#[deprecated]`) missing; only README mentioned it.
   Detection: lint rule requires runtime / build-time deprecation marker on any item flagged for removal.
   Impact: consumer surprise at major bump.
-- Symptom: artifact unsigned, no provenance.
+- **Unsigned artifact gap:** Symptom: artifact unsigned, no provenance.
   Cause: release pipeline skipped sigstore step when key rotation failed.
   Detection: post-publish gate verifies signature and SLSA attestation; release marked failed.
   Impact: supply-chain compliance gap, partner audit failure.
-- Symptom: cannot rollback a published bug.
+- **No rollback path:** Symptom: cannot rollback a published bug.
   Cause: no yank policy; or the registry is immutable (Maven Central).
   Detection: pre-release checklist requires yank / hotfix path per registry; for Maven, requires immediate fixed-version path.
   Impact: prolonged customer breakage.
@@ -198,6 +189,7 @@ An acceptable answer names:
 - Memory evidence: previous semver decisions, migration/deprecation windows, supported runtime floors, consumer commitments, and known compatibility exceptions accepted or changed.
 - Graph evidence: package dependency graph, generated-client source graph, top consumers, fixture projects, downstream smoke matrix, and public/private export boundaries.
 - Execution evidence: API-diff, generated diff review, packed-artifact install/example run, consumer fixture build, contract/smoke tests, SBOM/signature/provenance checks, and freshness after final edit.
+- Boundaries inspected and limits: state package/export/generated/docs/consumer/release boundaries inspected, what evidence proves, what it does not prove, validation freshness, residual risk, and next handoff gate.
 - Handoff evidence: next owner for API semantics, language idioms, docs, release, dependency/security review, residual risk, and rollback/yank/hotfix path.
 
 # Benchmark Coverage

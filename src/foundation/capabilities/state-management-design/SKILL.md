@@ -21,7 +21,7 @@ Do not use this capability for: server-side session and token management (use `a
 
 # Stage Fit
 
-Use during experience-definition, implementation-planning, coding, review, and testing when frontend values need source-of-truth, lifecycle, invalidation, persistence, or reset decisions. In planning, produce the state inventory before choosing storage. In coding/review, reject stale project-memory or repository-graph claims unless current source, owners, cache keys, auth paths, and tests confirm the pattern is still valid. Hand off when the primary question is server identity/session design, request lifecycle, form validation, route guards, or executable frontend test strategy.
+Use during experience-definition, implementation-planning, coding, bug-fix, debugging, code-review, refactoring, testing, release-readiness, and handoff when frontend values need source-of-truth, lifecycle, invalidation, persistence, or reset decisions. In planning, produce the state inventory before choosing storage. In coding/code-review, reject stale project-memory or repository-graph claims unless current source, owners, cache keys, auth paths, and tests confirm the pattern is still valid. During testing, release-readiness, and handoff, reconcile final state claims with validation freshness, browser-session limits, and residual evidence boundaries. Hand off when the primary question is server identity/session design, request lifecycle, form validation, route guards, or executable frontend test strategy.
 
 # Non-Negotiable Rules
 
@@ -85,13 +85,14 @@ Escalate when auth or permission state can remain stale after logout or role cha
 
 # Failure Modes
 
-- Server data copied to local state shows a stale profile or stale permission for minutes after the source changes.
-- Auth state not cleared on logout exposes previous-user data on a shared device or after a quick re-login.
-- Permission state is not revalidated after role revocation, so privileged controls remain visible.
-- Optimistic delete fails on the server but the item remains removed in the UI.
-- JWT or session token in localStorage is exfiltrated through XSS.
-- Sensitive form draft survives navigation or logout and is submitted later with outdated or wrong data.
-- Global store has no owner, so unrelated pages mutate shared state and create nondeterministic regressions.
+- **Stale copied server truth:** server data copied into component, global, or persisted state shows an old profile, permission, or balance after the query source changes.
+- **Logout data leak:** logout clears React state but leaves query cache, persisted draft, subscription, or user-specific storage visible to the next user on a shared device.
+- **Revoked-role drift:** permission state is not revalidated after role revocation, 401, or session expiry, so privileged controls remain visible and protected cache entries stay readable.
+- **Optimistic delete ghost:** an item is removed before durable server confirmation; the API rejects the delete, rollback is missing, and the user believes an irreversible action succeeded.
+- **Token in client-writable storage:** JWT, refresh token, session identifier, or entitlement value in localStorage/sessionStorage is exposed to same-origin JavaScript and XSS theft.
+- **Sensitive draft persistence:** payment, health, regulated, or free-text draft state survives navigation, logout, or user switch and later submits stale or wrong data.
+- **Global-store dumping ground:** a global store has no owner, so unrelated routes mutate filters, modals, auth-derived flags, or server snapshots and create nondeterministic regressions.
+- **Stale graph or memory reuse:** project memory or repository graph points to an old store, query key, persistence helper, or logout pattern after framework, auth, cache, route, or test ownership changed.
 
 # Reference Loading Policy
 
@@ -122,7 +123,7 @@ Return a state ownership map with:
 
 # Evidence Contract
 
-Close a state-management-design output only when it names selected mode, current source evidence inspected, graph/memory/trajectory reuse judgment, every client-side value classification, source of truth, owner, lifecycle, reset/expiry/invalidation rule, auth and persistence privacy decisions, optimistic rollback and race handling, state-to-validation map, handoff boundaries, residual risk, and evidence limits. A generic "use React Query" or "put it in Zustand" statement is not sufficient evidence.
+Close a state-management-design output only when it names selected mode, boundaries inspected, current source evidence inspected, graph/memory/trajectory reuse judgment, every client-side value classification, source of truth, owner, lifecycle, reset/expiry/invalidation rule, auth and persistence privacy decisions, optimistic rollback and race handling, state-to-validation map, validation commands or report artifacts with exit codes, what evidence proves, what evidence does not prove, validation freshness, handoff boundaries, rollback or reroute note, next gate, residual risk, and evidence limits. A generic "use React Query" or "put it in Zustand" statement is not sufficient evidence.
 
 # Benchmark Coverage
 

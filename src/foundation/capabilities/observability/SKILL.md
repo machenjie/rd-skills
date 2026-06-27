@@ -21,7 +21,7 @@ Do not use this capability to: log sensitive payloads, PII, secrets, or credenti
 
 # Stage Fit
 
-Use during planning when user impact, SLI/SLO, signal ownership, telemetry privacy, or release-watch evidence is being decided. Use during implementation and code review when logs, metrics, traces, dashboards, alert rules, runbooks, correlation propagation, or metric labels change. Use during testing and release when validator commands, dashboard queries, synthetic events, alert-rule checks, project memory, repository graph, or prior incident evidence must prove observability is fresh enough to support rollout or incident response.
+Use during planning when user impact, SLI/SLO, signal ownership, telemetry privacy, or release-watch evidence is being decided. Use during coding, debugging, bug-fix repair, implementation, and code-review when logs, metrics, traces, dashboards, alert rules, runbooks, correlation propagation, or metric labels change. Use during testing, release, and handoff when validator commands, dashboard queries, synthetic events, alert-rule checks, project memory, repository graph, or prior incident evidence must prove observability is fresh enough to support rollout or incident response.
 
 # Non-Negotiable Rules
 
@@ -74,17 +74,19 @@ Escalate when: a change affects a user flow covered by an SLO and the SLI metric
 
 # Failure Modes
 
-- Service deployed without latency histogram — first incident reveals P99 latency is 8 seconds; no historical data to determine when regression was introduced.
-- Alert fires for `http_error_rate > 1%` with no owner assigned — alert silenced by everyone on-call; real 3% error rate runs undetected for 48 hours.
-- `traceId` not propagated from HTTP handler to queue consumer — payment confirmed at HTTP layer; fulfillment failure in queue consumer; no trace link between them; root cause takes 6 hours to diagnose.
-- Metric label includes `tenantId` (10,000+ tenants) — Prometheus cardinality explosion; metrics backend crashes; all dashboards return `no data` during incident.
-- Background job fails silently for 3 days — no error metric, no dead-man's switch alert — data inconsistency discovered only in customer complaint.
-- Dashboard shows infrastructure is healthy (CPU 30%, memory 40%) while 15% of user requests are failing — no user-facing SLI panel; engineers spend 30 minutes diagnosing infrastructure before checking application error rate.
-- Log volume triples after adding debug-level request body logging — log storage costs exceed monthly budget; ops disables all logging for the service; production goes dark.
+- **Missing latency history:** service deploys without a latency histogram; first incident reveals P99 latency is 8 seconds, and no historical data shows when the regression started.
+- **Unowned alert:** `http_error_rate > 1%` fires with no owner assigned; alert is silenced by everyone on-call, and the real 3% error rate runs undetected for 48 hours.
+- **Broken async trace:** `traceId` is not propagated from HTTP handler to queue consumer; payment is confirmed at HTTP layer, fulfillment fails in the worker, and root cause takes 6 hours to diagnose.
+- **Cardinality explosion:** metric label includes `tenantId` for 10,000+ tenants; Prometheus or Mimir degrades, dashboards return `no data`, and incident response loses its primary signal.
+- **Silent job failure:** background job fails to run for 3 days; no error metric, heartbeat, or dead-man's switch alert exists, so data inconsistency is discovered only through a customer complaint.
+- **Infrastructure-only dashboard:** CPU and memory look healthy while 15% of user requests fail; no user-facing SLI panel exists, so engineers spend 30 minutes on the wrong diagnosis path.
+- **Unsafe debug logging:** request-body logging triples volume and exposes sensitive fields; ops disables logging for the service to control cost, and production diagnosis goes dark.
+- **Stale memory accepted as coverage:** an old incident note says a dashboard and runbook exist, but the current metric name changed; rollout proceeds on false green evidence and the alert never matches emitted series.
+- **Stale execution evidence:** alert validation ran before the final metric-label edit; handoff claims fresh observability, but the deployed alert groups on a label that no longer exists.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 routing, stage, trigger, and evidence rules. Load [references/checklist.md](references/checklist.md) when the change affects a production-facing path, SLO, alert, job, queue, external dependency, incident investigation path, or post-release validation. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed signal matrices, SLI/SLO examples, trace-span coverage, burn-rate alerting, graph/memory/trajectory coupling, or validation checklists are needed. Use [examples/example-output.md](examples/example-output.md) only when the final observability plan shape is unclear. Do not load references for local-only instrumentation in non-production code with no operator surface.
+The `SKILL.md` body carries L1/L2 routing, stage, trigger, and evidence rules. Load [references/checklist.md](references/checklist.md) when the change affects a production-facing path, SLO, alert, job, queue, external dependency, incident investigation path, or post-release validation. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed signal matrices, SLI/SLO examples, trace-span coverage, burn-rate alerting, graph/memory/trajectory coupling, or validation checklists are needed. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on repository graph, project memory, execution trajectory, dashboard/runbook freshness, tool permission boundaries, or a changed-signal-to-validation map. Use [examples/example-output.md](examples/example-output.md) only when the final observability plan shape is unclear. Do not load references for local-only instrumentation in non-production code with no operator surface.
 
 # Output Contract
 

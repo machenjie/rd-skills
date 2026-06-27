@@ -21,7 +21,7 @@ Do not use this capability to add broad table locks without identifying the spec
 
 # Stage Fit
 
-Own concurrency design during planning, implementation review, testing, and repair when simultaneous execution can break an invariant, duplicate a side effect, deadlock, starve a worker pool, or make conflict handling nondeterministic. In planning, turn current source, transaction boundaries, queues, workers, locks, repository graph, project memory, execution trajectory, and validation history into a scoped concurrency plan before implementation. In review, reject stale memory about "safe" locks, serial-only tests, lock choices without named invariants, hidden side effects before commit, unbounded fan-out, and conflict behavior that callers cannot act on. Hand off when the unresolved question is transaction atomicity, retry/idempotency lifecycle, async worker state, profiling, observability, or language-specific runtime safety.
+Own concurrency design during planning, coding, bug-fix, debugging, code-review, refactoring, testing, release review, and handoff when simultaneous execution can break an invariant, duplicate a side effect, deadlock, starve a worker pool, or make conflict handling nondeterministic. In planning, turn current source, transaction boundaries, queues, workers, locks, repository graph, project memory, execution trajectory, and validation history into a scoped concurrency plan before implementation. In coding and code-review, reject stale memory about "safe" locks, serial-only tests, lock choices without named invariants, hidden side effects before commit, unbounded fan-out, and conflict behavior that callers cannot act on. Hand off when the unresolved question is transaction atomicity, retry/idempotency lifecycle, async worker state, profiling, observability, or language-specific runtime safety.
 
 # Non-Negotiable Rules
 
@@ -72,12 +72,36 @@ Escalate when races affect: money or financial balances, inventory or reservatio
 
 # Proactive Professional Triggers
 
-- **Signal:** project memory, repository graph, or prior execution says a path is "already locked", "idempotent", "single worker", or "safe to retry" without current source/test confirmation. **Hidden risk:** stale concurrency assumptions preserve a race introduced after the remembered design. **Required professional action:** confirm current lock, idempotency store, worker topology, tests, and validation freshness. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected memory, current-source proof, and freshness limits.
-- **Signal:** code reads state, decides, then writes (`read-check-act`) under possible overlap. **Hidden risk:** TOCTOU race or lost update. **Required professional action:** collapse check-and-act into atomic statement, lock before read, or add optimistic version conflict handling. **Route to:** `transaction-consistency`, `data-middleware-change-builder`. **Evidence required:** atomic SQL/CAS/version check and concurrent test.
-- **Signal:** duplicate-submit, retry, redelivery, `SKIP LOCKED`, or worker reprocessing can repeat a side effect. **Hidden risk:** duplicate charge, duplicate email, duplicate order, or replayed webhook. **Required professional action:** require durable idempotency and handler-level duplicate safety. **Route to:** `idempotency-retry-design`, `async-job-design`. **Evidence required:** unique-indexed dedupe, payload fingerprint, duplicate/replay test, DLQ or terminal state.
-- **Signal:** multiple resources are locked, lock ordering is implicit, or a lock spans network/storage/user I/O. **Hidden risk:** deadlock, pool starvation, or cascading latency under load. **Required professional action:** define canonical lock order, shorten critical section, add timeout, and measure lock waits. **Route to:** `language-performance-safety`, `profiling`, `reliability-observability-gate`. **Evidence required:** lock-order map, timeout, contention metric, deadlock/stress test.
-- **Signal:** distributed lock, leader election, or lease controls correctness, ownership, singleton work, or cross-process mutation. **Hidden risk:** stale leader writes after lease expiry or split-brain. **Required professional action:** use linearizable lease or document advisory-only risk; require fencing-token enforcement for correctness-critical writes. **Route to:** `low-level-systems-extension`, `security-privacy-gate` when privilege or data exposure is in scope. **Evidence required:** provider guarantee, fence token source, stale-token rejection test.
-- **Signal:** hot counter, quota, rate limit, pool, queue, or partition key is shared by high traffic. **Hidden risk:** hot row/partition serializes throughput and hides as latency. **Required professional action:** model contention and choose sharding, partition routing, atomic operation, or approximate aggregate. **Route to:** `performance-budgeting`, `profiling`, `observability`. **Evidence required:** conflict rate, p95/p99 lock wait, queue depth, benchmark/profile or not-verified limit.
+- **Signal:** project memory, repository graph, or prior execution says a path is "already locked", "idempotent", "single worker", or "safe to retry" without current source/test confirmation.
+  **Hidden risk:** stale concurrency assumptions preserve a race introduced after the remembered design.
+  **Required professional action:** inspect current lock, idempotency store, worker topology, tests, and validation freshness before accepting the claim.
+  **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`.
+  **Evidence required:** inspected path map, accepted/rejected memory note, current-source proof, validator command or log, and freshness limits.
+- **Signal:** code reads state, decides, then writes (`read-check-act`) under possible overlap.
+  **Hidden risk:** TOCTOU race creates stale decisions, lost updates, or wrong final state.
+  **Required professional action:** require check-and-act to collapse into atomic statement, lock before read, or add optimistic version conflict handling.
+  **Route to:** `transaction-consistency`, `data-middleware-change-builder`.
+  **Evidence required:** atomic SQL/CAS/version check, concurrent test command, output, and residual interleaving risk.
+- **Signal:** duplicate-submit, retry, redelivery, `SKIP LOCKED`, or worker reprocessing can repeat a side effect.
+  **Hidden risk:** duplicate charge, duplicate email, duplicate order, or replayed webhook.
+  **Required professional action:** require durable idempotency and handler-level duplicate safety.
+  **Route to:** `idempotency-retry-design`, `async-job-design`.
+  **Evidence required:** unique-indexed dedupe, payload fingerprint, duplicate/replay fixture, test report, DLQ or terminal state.
+- **Signal:** multiple resources are locked, lock ordering is implicit, or a lock spans network/storage/user I/O.
+  **Hidden risk:** hidden deadlock, pool starvation, or cascading latency can break unrelated work under load.
+  **Required professional action:** require canonical lock order, shorten critical section, add timeout, and measure lock waits.
+  **Route to:** `language-performance-safety`, `profiling`, `reliability-observability-gate`.
+  **Evidence required:** lock-order map, timeout, contention metric, deadlock/stress test log, and exit code.
+- **Signal:** distributed lock, leader election, or lease controls correctness, ownership, singleton work, or cross-process mutation.
+  **Hidden risk:** stale leader writes after lease expiry or split-brain.
+  **Required professional action:** use linearizable lease or document advisory-only risk; require fencing-token enforcement for correctness-critical writes.
+  **Route to:** `low-level-systems-extension`, `security-privacy-gate` when privilege or data exposure is in scope.
+  **Evidence required:** provider guarantee, fence token source, stale-token rejection fixture, validator output, and artifact path.
+- **Signal:** hot counter, quota, rate limit, pool, queue, or partition key is shared by high traffic.
+  **Hidden risk:** hot row/partition serializes throughput, creates hidden capacity loss, and hides as latency.
+  **Required professional action:** model contention and choose sharding, partition routing, atomic operation, or approximate aggregate.
+  **Route to:** `performance-budgeting`, `profiling`, `observability`.
+  **Evidence required:** conflict-rate metric, p95/p99 lock-wait report, queue-depth graph or log, benchmark/profile command, and not-verified limit.
 
 # Critical Details
 
@@ -98,20 +122,20 @@ Concurrency control is about **preserving a named invariant under overlap**. The
 
 # Failure Modes
 
-- Two concurrent withdrawals both pass the balance check; both succeed; balance goes negative.
-- Duplicate form submission creates two orders for one intended purchase; no idempotency key.
-- Lock ordering inconsistent across two code paths; infrequent but reproducible deadlock under load.
-- Redis distributed lock has no expiry; service crashes holding lock; all workers stall permanently.
-- Worker retries a message; handler side effects (email, charge, webhook) fire on every retry without idempotency.
-- Event published before transaction commits; transaction rolls back; consumer receives a phantom event.
-- Optimistic lock conflict returns 500; caller cannot retry correctly; data left in stale state.
-- `SKIP LOCKED` queue worker re-fetches a failed row; non-idempotent handler causes duplicate billing.
-- Distributed lock acquired but no fencing token; stale leader writes after lease expiry; split-brain data corruption.
-- Sharded counter not used; single hot row serializes writes; p99 latency degrades 10× under load.
-- Serializable isolation not used for read-modify-write; write-skew anomaly allows two concurrent operations to each read consistent but together produce a forbidden state.
-- Saga compensation not implemented; reservation succeeds, payment fails, inventory permanently reserved.
-- Test only runs operations serially; race never triggered in CI; ships to production.
-- Lease held across external API call; external API times out; lease held for minutes; all other lease seekers queue.
+- **Lost update:** two concurrent withdrawals both pass the balance check; both succeed; balance goes negative.
+- **Duplicate submit:** form submission creates two orders for one intended purchase; no idempotency key.
+- **Deadlock:** lock ordering inconsistent across two code paths; infrequent but reproducible deadlock under load.
+- **Permanent stall:** Redis distributed lock has no expiry; service crashes holding lock; all workers stall permanently.
+- **Duplicate side effect:** worker retries a message; handler side effects (email, charge, webhook) fire on every retry without idempotency.
+- **Phantom event:** event published before transaction commits; transaction rolls back; consumer receives an event for state that never committed.
+- **Non-actionable conflict:** optimistic lock conflict returns 500; caller cannot retry correctly; data left in stale state.
+- **Unsafe worker claim:** `SKIP LOCKED` queue worker re-fetches a failed row; non-idempotent handler causes duplicate billing.
+- **Stale leader write:** distributed lock acquired but no fencing token; stale leader writes after lease expiry; split-brain data corruption.
+- **Hot row bottleneck:** sharded counter not used; single hot row serializes writes; p99 latency degrades 10x under load.
+- **Write skew:** Serializable isolation not used for read-modify-write; two concurrent operations each read consistent state but together produce a forbidden state.
+- **Missing compensation:** saga compensation not implemented; reservation succeeds, payment fails, inventory remains permanently reserved.
+- **Serial-only validation:** test only runs operations serially; race never triggers in CI; change ships without overlap evidence.
+- **Lease across I/O:** lease held across external API call; external API times out; lease remains held for minutes; all other lease seekers queue.
 
 # Reference Loading Policy
 
@@ -148,6 +172,8 @@ Return a concurrency design with, per shared resource or invariant:
 
 Close a concurrency design only when the output names selected mode, current concurrency evidence inspected, graph/memory/execution reuse judgment, each shared resource and invariant, overlap scenarios, chosen mechanism and rejected alternatives, lock/lease scope and timeout, conflict behavior, duplicate-submit handling, event-publish safety, deadlock/hot-spot analysis, changed-concurrency-to-validation map, handoff boundaries, residual risk, and evidence limits. A lock choice or "add idempotency" statement is not sufficient evidence.
 
+Validation evidence must name the command, validator, artifact/report path, exit code, output inspected, timestamp or freshness window, and the boundaries inspected. State what evidence proves, what evidence does not prove, the reuse and placement rationale for graph/memory/trajectory claims, behavior preservation for existing serial callers and retry paths, residual risk, and the next gate or handoff owner.
+
 # Benchmark Coverage
 
 Improved concurrency plans should reject common weak patterns: read-check-act without atomicity, full-table `SELECT FOR UPDATE`, Redis lock without expiry, correctness-critical lease without fencing, app-only idempotency without unique storage, event publish before commit, serial-only tests for race-sensitive paths, lock held across I/O, and hot counters on a single row. Detailed matrices and examples belong in references so this body stays efficient.
@@ -175,6 +201,7 @@ The concurrency design passes only when:
 13. Repository graph, project memory, and execution trajectory inputs are current-source confirmed or marked not verified before they shape concurrency decisions.
 14. Every resource, invariant, mechanism, lock, lease, idempotency, worker, and event-publish decision maps to validation evidence or named residual risk.
 15. Handoff boundaries and evidence limits are explicit so concurrency design is not over-claimed as transaction atomicity, idempotency lifecycle, async worker readiness, production observability, or language runtime proof.
+16. Validation commands, validators, artifacts/reports, exit codes, inspected output, and freshness are recorded for each accepted concurrency claim after the final material edit.
 
 # Used By
 

@@ -21,6 +21,8 @@ Do not use this capability to mirror a UI form directly into a database table â€
 
 # Stage Fit
 
+Use during planning, coding, bug-fix, debugging, code-review, refactoring, testing, release, and handoff when persisted data shape, source-of-truth ownership, invariant enforcement, model boundary mapping, or a remembered model claim can affect correctness, compatibility, migration safety, privacy, or downstream query behavior.
+
 Use during planning when source-of-truth data shape, entity ownership, relationship cardinality, invariants, lifecycle states, retention, query/write pattern fit, or storage-family choice is unresolved. Use during implementation review when a patch changes persisted fields, constraints, aggregate boundaries, derived read models, or persistence/API separation. Use during testing when invariants, null/default semantics, referential integrity, retention/deletion behavior, or model-boundary mapping need validation evidence. Hand off before release to `data-migration-design` for live stored-data change sequencing, to `dto-schema-design`/`api-contract-design` for client-visible shapes, and to `repository-persistence` for application persistence boundary placement. Skip for pure DTO wording, physical index tuning, or migration runbook execution when the conceptual model is already accepted.
 
 # Non-Negotiable Rules
@@ -44,6 +46,7 @@ Use during planning when source-of-truth data shape, entity ownership, relations
 | Boundary separation repair | Persistence table leaks into API/event/DTO, or DTO/domain/persistence semantics drift. | Reassert source-of-truth model and mapping boundaries without exposing internals. | Boundary map, internal/public field split, mapper owner, generated/client impact. | `dto-schema-design`, `api-contract-design`, `model-boundary-mapping` | Returning ORM/persistence objects as contracts. |
 | Read model or denormalization decision | Materialized view, projection, snapshot, JSON field, or copied data is proposed. | Decide source-of-truth vs derived data, staleness tolerance, rebuild path, and write amplification. | Critical queries, staleness policy, rebuild strategy, owner of derived data, rejected normalized alternative. | `search-analytics-design`, `indexing-query-optimization`, `repository-persistence` | Cache/search as source of truth. |
 | Regulated, temporal, or destructive data | PII/PHI/PCI, financial ledger, audit, retention, erasure, archival, temporal history. | Model retention, deletion, auditability, reversibility, and historical truth before implementation. | Data classification, retention/deletion rule, temporal strategy, audit owner, validation report. | `security-privacy-gate`, `backup-recovery`, `data-migration-design` | Unowned soft-delete default. |
+| Model closure / handoff | Final answer, review, ADR, or release note says the model is accepted, safe, compatible, or migration-ready. | Tie every model-safety claim to fresh source, graph, memory, execution, and validation evidence. | changed model-to-validation map, accepted/rejected memory, stale evidence limits, next gate. | `plan-execution-consistency`, `validation-broker`, `quality-test-gate` | Completion language without evidence mapping. |
 
 # Industry Benchmarks
 
@@ -71,6 +74,7 @@ Escalate when: the model stores regulated data (PII/PHI/PCI/PSD2 financial); the
 - **Signal:** two services, jobs, integrations, or support tools can write the same record or attribute. **Hidden risk:** source-of-truth ambiguity, last-write-wins data loss, and graph ownership drift. **Required professional action:** assign per-attribute write authority and cross-service access protocol before model approval. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`. **Evidence required:** writer inventory, current-source confirmation, accepted/rejected prior memory, and event/API access path.
 - **Signal:** denormalized read model, materialized view, copied snapshot, JSON column, or search/analytics projection is proposed as authoritative. **Hidden risk:** derived state becomes stale source of truth and writes need unowned reconciliation. **Required professional action:** decide source-of-truth vs derived data, staleness tolerance, rebuild strategy, and write amplification. **Route to:** `search-analytics-design`, `indexing-query-optimization`, `data-side-effect-flow-tracing`. **Evidence required:** query/write pattern map, staleness policy, rebuild command or report artifact, and owner.
 - **Signal:** a model proposal relies on prior project memory, repository graph proximity, or a previous agent trajectory as proof of accepted data shape. **Hidden risk:** stale context misses current callers, generated artifacts, migrations, or downstream contract dependencies. **Required professional action:** confirm with current source, registry/config, tests, generated artifacts, and validation output before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, freshness limit, accepted/rejected prior evidence, and remaining unknowns.
+- **Signal:** a review or handoff claims the model is safe, compatible, migration-ready, or source-of-truth aligned without a changed model-to-validation map. **Hidden risk:** silent invalid states, stale generated clients, direct DB consumers, or unverified reports survive because design reasoning is mistaken for proof. **Required professional action:** map each changed entity, attribute, relationship, constraint, read model, and ownership decision to a validator, test, report, reviewed artifact, or explicit residual risk before closure. **Route to:** `validation-broker`, `contract-testing`, `data-migration-design`, `agent-execution-discipline`. **Evidence required:** changed model-to-validation map, validator command or artifact, exit code when runnable, what evidence proves, what it does not prove, next gate, and residual risk owner.
 
 # Critical Details
 
@@ -101,21 +105,21 @@ The most expensive data model mistakes are invisible at design time and catastro
 
 # Failure Modes
 
-- Table designed from screen mockup; domain invariant `order must have at least one line item` not enforced; empty orders possible.
-- Nullable overloaded: `completed_at IS NULL` means both "not started" and "cancelled" depending on undocumented convention; query logic branches diverge.
-- Two services write to the same column with no authority rule; last-write-wins causes data loss during concurrent updates.
-- `status` stored as `VARCHAR` with no constraint; typo `'shiped'` stored; dashboard aggregation silently drops 2% of orders.
-- Soft-delete added without partial unique index; re-registration fails for deleted users; support tickets.
-- Model ships without migration plan; column add requires NOT NULL DEFAULT on PG 10; outage during deployment.
-- External API returns `user_id`, `table_name`, `db_schema` fields (persistence internals); API versioning required immediately after shipping.
-- Aggregate boundary too large: `order` aggregate includes `customer`; write contention; deadlocks under concurrent order placement.
-- Aggregate boundary too small: `order_item` is a separate aggregate; placing an order requires 2-phase commit; distributed transaction bug.
-- Temporal query ("what was the price on 2025-01-01?") impossible because price column is overwritten in place; historical records lost.
-- UUID v4 clustered PK with 200K inserts/s; index fragmentation grows; query performance degrades 3Ã— over 6 months.
+- **Screen-shaped source of truth:** table designed from screen mockup; domain invariant `order must have at least one line item` is not enforced; empty orders become possible.
+- **Overloaded nullability:** `completed_at IS NULL` means both "not started" and "cancelled" depending on undocumented convention; query logic branches diverge.
+- **Unowned writer conflict:** two services write to the same column with no authority rule; last-write-wins causes data loss during concurrent updates.
+- **Unconstrained state:** `status` stored as `VARCHAR` with no constraint; typo `'shiped'` is stored and dashboard aggregation silently drops 2% of orders.
+- **Soft-delete uniqueness break:** soft-delete is added without partial unique index; re-registration fails for deleted users and support tickets rise.
+- **Unsafe evolution:** model ships without migration plan; column add requires NOT NULL DEFAULT on PG 10 and causes deployment outage.
+- **Persistence leak:** external API returns `user_id`, `table_name`, `db_schema` fields; persistence internals become public and require immediate API versioning.
+- **Oversized aggregate:** `order` aggregate includes `customer`; write contention causes deadlocks under concurrent order placement.
+- **Undersized aggregate:** `order_item` is a separate aggregate; placing an order requires 2-phase commit and exposes a distributed transaction bug.
+- **Lost temporal truth:** temporal query ("what was the price on 2025-01-01?") is impossible because price is overwritten in place; historical records are lost.
+- **Poor key locality:** UUID v4 clustered PK with 200K inserts/s fragments indexes; query performance degrades 3x over 6 months.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries normal L1/L2 data-model selection, boundary, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete model proposal, when invariants/ownership/migration coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when storage-family choice, normalization tradeoff, constraint pattern, ownership map, temporal model, retention/deletion, or anti-pattern detail is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected proposal shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are sufficient.
+The `SKILL.md` body carries normal L1/L2 data-model selection, boundary, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete model proposal, when invariants/ownership/migration coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when storage-family choice, normalization tradeoff, constraint pattern, ownership map, temporal model, retention/deletion, or anti-pattern detail is needed. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on changed model-to-validation mapping, graph/memory/execution freshness, tool permission boundaries, old/new reader compatibility, or final handoff readiness. Use [examples/example-output.md](examples/example-output.md) only when the expected proposal shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are sufficient.
 
 # Output Contract
 

@@ -23,7 +23,7 @@ Do not use this capability to approve implementation scope, invent product requi
 
 # Stage Fit
 
-Use in planning to establish falsifiable done standards before decomposition, design, or implementation; in read/review to inspect requirement, scenario, repository graph, memory, tests, docs, operations, and validation history; in edit/test/release to map each standard to evidence, release condition, and residual-risk owner; and in repair/regression to define recurrence, non-recurrence, and verification evidence.
+Use during planning, coding, bug-fix, debugging, code-review, refactoring, testing, release-readiness, and handoff when "done" needs falsifiable standards before decomposition, design, implementation, or closure. In read/review, inspect requirement, scenario, repository graph, memory, tests, docs, operations, and validation history. In edit/test/release, map each standard to evidence, release condition, validation freshness, and residual-risk owner. In repair/regression, define recurrence, non-recurrence, rollback or rejection condition, and verification evidence before claiming completion.
 
 # Non-Negotiable Rules
 
@@ -86,6 +86,7 @@ Use this capability proactively, even when the request does not ask for acceptan
 
 - **L1:** Use only this `SKILL.md` for quick routing or rewriting a single low-risk vague standard when no specialist domain, test strategy, or release condition is involved.
 - **L2:** Load [references/checklist.md](references/checklist.md) when producing or reviewing a criteria set for a real change, bug fix, regression, release gate, or stakeholder handoff.
+- **L3:** Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when benchmark anchors, acceptance-to-validation mapping, graph/memory/execution coupling, rejection-condition depth, or anti-pattern review needs more detail than this body should carry.
 - **L3:** Load [examples/example-output.md](examples/example-output.md) when creating a user-facing acceptance table, evaluation fixture, release checklist, or review template.
 - **L4:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when acceptance depends on current implementation reachability, prior criteria freshness, command output, dashboards, or executed tests.
 - **L5:** Pair with security, reliability, delivery, data, frontend, backend, or payment/domain gates when criteria must prove specialist obligations; do not load unrelated specialist references unless that risk surface is selected.
@@ -120,16 +121,16 @@ A strong standard can fail. That is the test. If a criterion cannot describe a s
 
 # Failure Modes
 
-- Criteria restate the requirement ("the user can log in") without defining evidence or boundary conditions.
-- Acceptance covers the success path but not denials, validation failures, partial outages, or regressions.
-- A manual reviewer is named without decision authority, checklist, or a deadline — acceptance stalls.
-- Non-functional claims ("fast", "secure", "scalable") have no metric, threshold, or named control.
-- Criteria are implementation-prescriptive ("use Redis cache") instead of behavior-prescriptive, blocking valid alternative designs.
-- "Tested" is treated as evidence — without the test id and assertion it is unverifiable.
-- Subjective sign-off is delegated to a group, producing diffusion of responsibility and indefinite acceptance.
-- Operational acceptance (alerts, dashboards, runbooks, rollback) is omitted, treating production as someone else's problem.
-- Regression scope is undefined, so any later defect is contested as "out of scope".
-- Performance criteria omit load profile, dataset size, or percentile — making the number meaningless.
+- **Restated requirement:** criteria say "the user can log in" but omit actor, precondition, evidence, boundary values, and observable rejection condition.
+- **Happy-path-only acceptance:** success path is accepted while denials, validation failures, partial outages, abuse cases, and regression paths are unowned.
+- **Authority-free manual review:** a reviewer is named without decision authority, checklist, due date, or artifact, so subjective acceptance stalls.
+- **Metric-free non-functional claim:** "fast", "secure", "accessible", "scalable", or "reliable" has no threshold, control, environment, or measurement owner.
+- **Implementation-prescriptive criterion:** "use Redis cache" or "add a service" blocks valid designs while failing to specify user-visible or contract-visible behavior.
+- **Unverifiable test claim:** "tested" is treated as evidence without test id, assertion, command, exit code, artifact, or what the evidence does not prove.
+- **Diffused subjective sign-off:** visual polish, copy tone, or stakeholder satisfaction is delegated to a group instead of one accountable accepter with a recorded decision.
+- **Operational acceptance gap:** alerts, dashboards, logs, runbooks, rollback, backfill, or support diagnosis are omitted for a production-facing change.
+- **Undefined regression scope:** existing scenarios that must continue to pass are unnamed, so later defects are contested as out of scope.
+- **Stale graph or memory proof:** prior tickets, project memory, repository graph, or old validation output is used as acceptance evidence after current paths, owners, or tests changed.
 
 # Output Contract
 
@@ -166,7 +167,7 @@ Acceptable evidence includes current requirement/scenario IDs, affected reposito
 
 # Benchmark Coverage
 
-Use ISO/IEC/IEEE 29148 for verifiability and traceability, Gherkin/BDD for actor-state-action-result structure, INVEST for independent and testable slices, ATDD/specification-by-example for shared examples, Pact or contract-testing discipline for API compatibility, WCAG for accessibility, SRE SLI/SLO practice for reliability thresholds, OWASP ASVS for security acceptance, and audit-control evidence practices where regulated. Benchmark references must change a criterion, threshold, evidence type, or blocking decision.
+Use ISO/IEC/IEEE 29148 for verifiability and traceability, Gherkin/BDD for actor-state-action-result structure, INVEST for independent and testable slices, ATDD/specification-by-example for shared examples, Pact or contract-testing discipline for API compatibility, WCAG for accessibility, SRE SLI/SLO practice for reliability thresholds, OWASP ASVS for security acceptance, and audit-control evidence practices where regulated. Benchmark references must change a criterion, threshold, evidence type, or blocking decision. Keep detailed matrices in [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) so this body stays efficient.
 
 # Routing Coverage
 

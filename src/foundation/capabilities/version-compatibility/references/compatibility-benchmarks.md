@@ -90,8 +90,6 @@ Anchor against: **Semantic Versioning (semver.org)** - MAJOR.MINOR.PATCH; breaki
 
 ## Rollback Safety Decision Tree
 
-## Rollback Safety Decision Tree
-
 ```
 Before approving a release containing a migration:
 

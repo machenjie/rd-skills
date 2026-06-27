@@ -25,7 +25,7 @@ Do not use to introduce a dependency injection framework where direct constructi
 
 # Stage Fit
 
-Use during implementation planning before new collaborators or resources are introduced, during code review when a diff adds clients, pools, providers, service locators, globals, background loops, or test seams, during reliability/release review when startup and shutdown behavior matters, and during repair when leaks, circular graphs, hidden dependencies, stale project-memory claims, or flaky tests trace back to wiring. Re-enter after config, generated clients, module boundaries, graph evidence, validation commands, or test overrides change.
+Own dependency wiring decisions during planning, coding, bug-fix, debugging, code-review, refactoring, testing, release preparation, and incident repair when collaborators, resources, graph shape, or test seams can affect correctness or lifecycle safety. Treat this capability as the stage selection and launch guard for construction owner, lifecycle scope, composition root, reusable client, service locator, singleton/global, startup validation, shutdown cleanup, and test override decisions. In planning, turn current source, dependency graph, project memory, execution trajectory, config, generated artifacts, tests, and validation freshness into bounded wiring decisions. In review, reject stale "graph is acyclic", "singleton is safe", "test override is equivalent", or "container handles cleanup" claims unless current source and validation confirm them. Re-enter after config, generated clients, module boundaries, graph evidence, validation commands, or test overrides change; hand off with the unresolved boundary and next gate when placement, performance, config, security, reliability, testability, architecture, or release approval owns the remaining question.
 
 # Non-Negotiable Rules
 
@@ -39,6 +39,8 @@ Use during implementation planning before new collaborators or resources are int
 - **Config-driven wiring is typed and bounded.** Provider, mode, region, tenant, experiment, or flag choices must be validated before graph construction and must not become hidden strategy registries.
 
 # Mode Matrix
+
+Select the wiring mode before choosing constructor, factory, provider, container, singleton, lazy lookup, config variant, or test override mechanics; record skipped mode rationale when more than one mode is plausible.
 
 | Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
 | --- | --- | --- | --- | --- | --- |
@@ -78,7 +80,7 @@ Current mode is inline-only: this capability has no deep reference files today, 
 
 If deep references are added later, load them only for L3+ work, cross-module composition roots, service locator risk, reusable client or pool lifecycle changes, shutdown cleanup gaps, or circular dependency evidence.
 
-Do not load deep references for L1/L2 local collaborator changes where the inline output contract can name the construction owner, lifecycle scope, and cleanup decision.
+Do not create or load deep references for L1/L2 local collaborator changes where the inline output contract can name the construction owner, lifecycle scope, and cleanup decision. If a future reference is added, keep it focused on reusable matrices or examples; do not duplicate this body or use references as a dumping ground for generic dependency injection advice.
 
 # Critical Details
 
@@ -100,16 +102,16 @@ Do not load deep references for L1/L2 local collaborator changes where the inlin
 
 # Failure Modes
 
-- Creating a new HTTP, DB, Redis, Kafka, or SDK client inside every request or loop iteration.
-- Hiding dependencies behind a service locator so tests and reviewers cannot see the graph.
-- Adding a singleton with mutable state and no reset, synchronization, or shutdown path.
-- Introducing circular service dependencies resolved by lazy lookup instead of fixing ownership.
-- Letting tests patch globals in ways production wiring cannot reproduce.
-- Forgetting to close pools, timers, subscriptions, streams, or sockets on shutdown.
-- Binding untyped config late and discovering invalid wiring only after traffic starts.
-- Caching tenant, credential, locale, transaction, or request context in an app-scoped singleton.
-- Introducing lazy lookup to break a circular dependency instead of fixing ownership.
-- Reusing stale graph or memory evidence after config, generated client, or module wiring changed.
+- **Per-operation client churn:** creating a new HTTP, DB, Redis, Kafka, or SDK client inside every request or loop iteration.
+- **Hidden service locator:** hiding dependencies behind a service locator so tests and reviewers cannot see the graph.
+- **Unowned mutable singleton:** adding a singleton with mutable state and no reset, synchronization, or shutdown path.
+- **Lazy cycle masking:** introducing circular service dependencies resolved by lazy lookup instead of fixing ownership.
+- **Impossible test graph:** letting tests patch globals in ways production wiring cannot reproduce.
+- **Shutdown leak:** forgetting to close pools, timers, subscriptions, streams, or sockets on shutdown.
+- **Late untyped config:** binding untyped config late and discovering invalid wiring only after traffic starts.
+- **Cross-request state leak:** caching tenant, credential, locale, transaction, or request context in an app-scoped singleton.
+- **Cycle workaround relapse:** introducing lazy lookup to break a circular dependency instead of fixing ownership.
+- **Stale graph acceptance:** reusing stale graph or memory evidence after config, generated client, or module wiring changed.
 
 # Output Contract
 
@@ -128,16 +130,21 @@ Return a `dependency_wiring_plan` with:
 - `changed_dependency_to_validation_map` (each changed dependency, graph edge, scope, config variant, shutdown path, test override, generated artifact, and memory/graph claim mapped to validator, review, owner response, or residual risk).
 - `handoff_boundaries` (what belongs to structure, config, performance, concurrency, security, reliability, testability, architecture, or release).
 - `evidence_limits` and `residual_lifecycle_risk` (unknown dynamic edges, untested cleanup, missing telemetry, stale memory, partial graph, unsupported runtime profile, or unverified override with owner and next gate).
+- `what_evidence_proves` and `what_evidence_does_not_prove` for each source read, graph query, test, validator, startup check, leak check, and manual review artifact.
+- `validation_freshness` (whether evidence was collected after the final material wiring/config/test/generated-artifact edit, or why it is stale/not verified).
+- `next_gate` and rollback or reroute note when lifecycle evidence is partial, graph freshness is uncertain, or ownership moves across a module/release boundary.
 
 # Evidence Contract
 
 Close the plan only when these answers are concrete:
 
 - **Basis:** selected mode, changed dependency surface, lifecycle risk, and why wiring affects implementation, reliability, security, validation, or testability.
-- **Current evidence:** source/config/test/generated/registry evidence inspected, graph slice, dynamic or omitted edges, project-memory signals, execution-order freshness, and skipped boundaries.
+- **Current evidence:** source/config/test/generated/registry files and boundaries inspected, graph slice, dynamic or omitted edges, project-memory signals, execution-order freshness, and skipped boundaries.
 - **Wiring judgment:** dependency inventory, construction owner, lifecycle scope, dependency direction, cycle result, service-locator/global/singleton decision, config binding, startup validation, shutdown cleanup, and test override semantics.
 - **Validation mapping:** every changed dependency, graph edge, lifecycle scope, config variant, startup/shutdown path, test override, generated artifact, memory claim, and cleanup criterion maps to executable proof, owner review, or named residual risk.
-- **Evidence limits and handoff:** what source reads, graph evidence, memory, trajectory, tests, startup validation, leak checks, and manual review prove; what they do not prove; rollback note; residual risk owner; and next gate.
+- **Reuse and placement rationale:** existing composition roots, factories, providers, facades, or test harness seams reused or rejected, why no new framework/container/global/reference is introduced, and how behavior preservation is protected.
+- **Validation evidence:** commands, reports, tests, graph queries, startup checks, or manual artifacts include exit code or outcome, what evidence proves, what evidence does not prove, and freshness after the final material edit.
+- **Evidence limits and handoff:** what source reads, graph evidence, memory, trajectory, tests, startup validation, leak checks, and manual review do not prove; rollback or reroute note; residual risk owner; and next gate.
 
 # Benchmark Coverage
 
@@ -151,19 +158,20 @@ Routes from `backend-change-builder`, `integration-change-builder`, `data-middle
 
 The dependency wiring plan is complete only when:
 
-1. Selected mode, changed dependency surface, and source evidence are explicit.
-2. Every new or changed dependency has construction owner, lifecycle scope, consumers, config inputs, and cleanup owner.
-3. Reusable external clients, pools, token refreshers, verifiers, workers, timers, subscriptions, and handles are not constructed per operation.
-4. Service locator, container lookup, global mutable state, and singleton usage are rejected or justified with framework convention, test control, synchronization/reset, and shutdown evidence.
-5. Dependency graph is acyclic, or the exception is bounded, reviewed, observable, and has an exit plan.
-6. Startup validation covers required config, graph construction, client/pool setup, safe credential reference checks, and failure behavior.
-7. Shutdown cleanup covers pools, timers, subscriptions, streams, sockets, response bodies, background loops, workers, and test teardown where present.
-8. Config-driven graph variation is typed, validated before use, bounded by variant matrix, and mapped to rollout/rollback.
-9. Lazy initialization states race behavior, error caching, retry behavior, first-use latency, observability, and test override behavior.
-10. Test overrides use explicit seams, preserve production wiring semantics, and avoid private/global patching unless justified and owned.
-11. Graph freshness, project-memory reuse, execution trajectory, and validation freshness are recorded for any reused wiring claim.
-12. Every changed dependency, graph edge, lifecycle scope, config variant, startup/shutdown path, and override seam maps to validator, review, owner response, or residual risk.
-13. Handoff boundaries, evidence limits, rollback note, residual lifecycle risk, and next gate are explicit.
+1. **Mode and surface:** selected mode, changed dependency surface, and source evidence are explicit.
+2. **Construction ownership:** every new or changed dependency has construction owner, lifecycle scope, consumers, config inputs, and cleanup owner.
+3. **Reusable resource scope:** reusable external clients, pools, token refreshers, verifiers, workers, timers, subscriptions, and handles are not constructed per operation.
+4. **Hidden dependency guard:** service locator, container lookup, global mutable state, and singleton usage are rejected or justified with framework convention, test control, synchronization/reset, and shutdown evidence.
+5. **Cycle decision:** dependency graph is acyclic, or the exception is bounded, reviewed, observable, and has an exit plan.
+6. **Startup validation:** startup validation covers required config, graph construction, client/pool setup, safe credential reference checks, and failure behavior.
+7. **Shutdown cleanup:** shutdown cleanup covers pools, timers, subscriptions, streams, sockets, response bodies, background loops, workers, and test teardown where present.
+8. **Config variant control:** config-driven graph variation is typed, validated before use, bounded by variant matrix, and mapped to rollout/rollback.
+9. **Lazy/provider safety:** lazy initialization states race behavior, error caching, retry behavior, first-use latency, observability, and test override behavior.
+10. **Test override fidelity:** test overrides use explicit seams, preserve production wiring semantics, and avoid private/global patching unless justified and owned.
+11. **Graph-memory freshness:** graph freshness, project-memory reuse, execution trajectory, and validation freshness are recorded for any reused wiring claim.
+12. **Validation map:** every changed dependency, graph edge, lifecycle scope, config variant, startup/shutdown path, and override seam maps to validator, review, owner response, or residual risk.
+13. **Evidence freshness:** validation commands, reports, graph queries, startup checks, leak checks, and manual reviews state outcome, what evidence proves, what evidence does not prove, and whether evidence was collected after the final material edit.
+14. **Handoff limits:** handoff boundaries, evidence limits, rollback or reroute note, residual lifecycle risk, and next gate are explicit so wiring design is not over-claimed as placement, performance, config, security, release, or production-readiness approval.
 
 # Used By
 

@@ -26,6 +26,15 @@ Map the full user experience impact of a proposed change — from entry point th
 - The change is purely backend, data-model, or infrastructure with zero user-visible behavior change.
 - The experience impact was already fully modeled in a prior artifact that is current and accurate.
 
+## Stage Fit
+Use this skill whenever the user-visible path can change across planning, coding, bug-fix, debugging, code-review, refactoring, testing, release preparation, or handoff. It is strongest before implementation and during review, but it also applies after a defect report when the verified cause points to a missing state, inaccessible interaction, stale instrumentation, or broken recovery path.
+
+- **Planning stage**: turn raw feature intent into actors, entry points, state coverage, accessibility obligations, analytics impact, and acceptance criteria before implementation starts.
+- **Coding stage**: keep component work aligned with the modeled flow, and stop implementation when a required state, content decision, permission path, or measurement contract is missing.
+- **Bug-fix and debugging stage**: verify the reported symptom against the full journey, not only the failing component; identify whether the defect is missing UX state, broken focus, stale analytics, or server/client contract drift.
+- **Code-review and refactoring stage**: confirm behavior preservation, route ownership, design-system reuse, and no regression in empty/loading/error/success/disabled/focus states.
+- **Testing and release stage**: map each experience risk to test, validator, command, screenshot, report, artifact, and exit code evidence, then hand off only with residual risk and next gate named.
+
 ## Non-Negotiable Rules
 - **Direct use still runs the runtime prompt flow.** When `experience-impact-modeler` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - **Cover the full user flow, not only the changed component**: every upstream entry point and downstream exit state must be enumerated.
@@ -159,15 +168,17 @@ Does this change only affect layout or spacing with no interactive element chang
 - **Empty state blank screen**: A section with zero data renders as an empty container with no explanation — users think the page is broken.
 - **Analytics event rename breaks funnel**: An event renamed without a migration plan causes historical funnel data to go to zero, invalidating A/B tests and growth metrics.
 - **Color-only status indication**: A red/green status badge is the only differentiator — colorblind users cannot distinguish states.
+- **Stale experience evidence**: screenshots, flow diagrams, analytics reports, or accessibility checks predate the final UI, copy, routing, or instrumentation edit.
+- **Graph and memory blind spot**: the model ignores existing repository ownership, prior product decisions, or execution trajectory, so the proposed flow conflicts with established navigation, content, or event taxonomy.
 
 ## Reference Loading Policy
 Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
 
-- L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
-- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
-- L3 changes: read all selected capability references and `references/checklist.md` when present.
-- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
-- Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
+- L1 changes: use the body only unless the request needs a quick state checklist; then load [references/checklist.md](references/checklist.md).
+- L2 changes: read `references/capabilities/index.md` when present in a built skill, then load [references/checklist.md](references/checklist.md) when a page, form, modal, navigation, copy, accessibility, or analytics state must be enumerated.
+- L3 changes: load [references/experience-output-and-gates.md](references/experience-output-and-gates.md) when the work needs state-to-validation mapping, graph/memory/trajectory coupling, analytics or experiment proof, or evidence freshness rules.
+- L4/L5 changes: load [references/checklist.md](references/checklist.md), [references/experience-output-and-gates.md](references/experience-output-and-gates.md), all router-selected capability references, and selected domain extension references.
+- Generated selected capability reference path format, when present in a built skill: `references/capabilities/<capability-id>-<capability-name>.md`. Read only the files selected by `change-forge-router`.
 
 Examples:
 - `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md`
@@ -187,9 +198,11 @@ Return an experience impact model with:
 - **Risk classification**: Flows with payment, destruction, permission-denial, or onboarding that require escalation.
 - **Boundaries inspected**: screens, routes, components, state surfaces, content, analytics events, accessibility paths, permissions, and docs inspected or skipped with reason.
 - **Professional judgment**: user confusion/dead-end risks ruled out, states accepted/deferred, and why the flow is handoff-ready.
+- **Graph, memory, and trajectory judgment**: existing repository ownership, prior decisions, route graph, design-system conventions, event taxonomy, and latest execution trajectory accepted or flagged as stale.
 - **Reuse and placement rationale**: existing design system, content pattern, event taxonomy, component ownership, and route placement considered.
 - **Behavior preservation statement**: existing navigation, input persistence, analytics, and accessibility behavior preserved or intentionally changed.
-- **Validation evidence**: keyboard walk, screen-reader check, visual/E2E plan, analytics assertion, or not-verified disclosure.
+- **State-to-validation map**: each state, breakpoint, accessibility obligation, analytics event, and experiment guardrail mapped to a test, validator, command, screenshot, report, artifact, exit code, or explicit not-run risk.
+- **Validation evidence**: keyboard walk, screen-reader check, visual/E2E test, analytics assertion, command output, validator report, screenshot artifact, exit code, or not-verified disclosure.
 - **Evidence limits**: what the experience evidence proves and does not prove about production data, assistive tech coverage, experiments, and breakpoints.
 - **Residual risk and next gate**: unresolved state, breakpoint, accessibility, analytics, or release risk with owner.
 
@@ -198,8 +211,8 @@ Close an experience impact model only when all five canonical answers are concre
 - **Basis**: the user flow and the WCAG criteria the change is judged against.
 - **Files and boundaries inspected**: every interactive screen's full state matrix — loading, empty, error, permission-denied, partial-success, timeout, retry, cancel, and back-navigation — with each state's content and behavior named or marked not-applicable.
 - **Placement rationale**: why each analytics event, A/B exposure, and guardrail metric binds to the UI behavior it does, with the naming taxonomy.
-- **Validation commands**: the accessibility checks, keyboard walkthrough, and exposure/guardrail assertions that will verify the flow, each with its expected signal.
-- **Experience judgment and evidence limits**: mode selected, user confusion/dead-end risk, behavior preservation, what evidence proves, what it does not prove, residual risk, and next gate.
+- **Validation commands**: the accessibility checks, keyboard walkthrough, test suite, validator, screenshot capture, and exposure/guardrail assertions that will verify the flow, each with command, expected output, exit code, report or artifact path, and expected signal.
+- **Experience judgment and evidence limits**: mode selected, user confusion/dead-end risk, graph/memory/trajectory freshness, behavior preservation, what evidence proves, what it does not prove, residual risk, and next gate.
 - **Residual risk**: the unhandled state, untested breakpoint, or guardrail-regression path that remains, with the named owner.
 
 ## Quality Gate
@@ -214,6 +227,9 @@ Close an experience impact model only when all five canonical answers are concre
 9. Form design follows label-above-field, blur-triggered inline validation, and specific error copy.
 10. Empty states have contextual messaging and a primary call-to-action.
 11. Experiments define exposure event, assignment unit, primary metric, guardrails, conflict rules, dashboard migration, and rollback condition.
+12. Graph, repository memory, design-system precedent, route ownership, and execution trajectory are checked for stale assumptions before implementation or handoff.
+13. Validation evidence is fresh after the final material edit and names command, test, validator, output, exit code, screenshot/report/artifact, and not-run obligations.
+14. The skill output stays efficient: reuse existing repository patterns first, avoid new dependency or new component ownership unless justified, and shrink duplicated detail into targeted references.
 
 ## Handoff
 - **frontend-change-builder** — for component implementation from experience specification.

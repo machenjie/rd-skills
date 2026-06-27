@@ -21,7 +21,7 @@ Do not use this capability for: single-screen, stateless interactions with no br
 
 # Stage Fit
 
-Owns experience-definition, implementation-planning, and review when the primary concern is the ordered path through a user or actor workflow across steps, screens, redirects, async waits, permission branches, interruption, retry, and exits. In planning, it turns product intent, current routes, screens, state models, analytics or support signals, and test paths into a flow graph with explicit user and system outcomes. In review, it rejects happy-path-only journeys, dead ends, unsafe retries, ambiguous back navigation, unverified permission branches, stale deep links, and flow evidence copied from project memory or repository graph without current-source confirmation. Hand off when the primary question is page hierarchy, component state, route guard implementation, backend idempotency, or acceptance test strategy.
+Owns experience-definition, implementation-planning, coding, bug-fix, debugging, code-review, refactoring, testing, release-readiness, and final handoff when the primary concern is the ordered path through a user or actor workflow across steps, screens, redirects, async waits, permission branches, interruption, retry, and exits. In planning, it turns product intent, current routes, screens, state models, analytics or support signals, and test paths into a flow graph with explicit user and system outcomes. In coding and refactoring, it keeps route, state, permission, retry, and async implementation aligned with the accepted flow graph instead of letting individual screens invent branches. In debugging, separate flow-order defects, route-guard defects, state-model defects, backend idempotency gaps, and stale deep-link evidence before changing the journey. In review and testing, reject happy-path-only journeys, dead ends, unsafe retries, ambiguous back navigation, unverified permission branches, stale deep links, and flow evidence copied from project memory or repository graph without current-source confirmation. In release-readiness, require fresh validation after the final entry, branch, exit, retry, permission, async, interruption, or back-navigation edit. Hand off when the primary question is page hierarchy, component state, route guard implementation, backend idempotency, or acceptance test strategy.
 
 # Non-Negotiable Rules
 
@@ -31,6 +31,7 @@ Owns experience-definition, implementation-planning, and review when the primary
 - **Define what the user can safely do after partial completion.** If step 3 of a 5-step flow has completed and the user navigates away or is interrupted, they must have a defined re-entry path that brings them back to step 4 without repeating steps 1–3. If re-entering from step 1 would cause a duplicate side effect (duplicate payment, duplicate record creation), the flow must detect the partial state and route the user appropriately. "Partial completion" is not an edge case — it is the most common state for abandoned multi-step flows.
 - **Tie every branch condition to a testable assertion.** A branch labeled "if authorized" is not testable — it is a vague label. A branch labeled "if `user.role === 'admin'` AND `feature_flag.bulk_export === true`" is testable: it specifies the exact condition, enabling a permission matrix test. Every branch condition in the flow must be expressible as a boolean predicate on system state.
 - **Retry paths must specify idempotency behavior and intermediate state handling.** A retry that re-executes a payment charge without idempotency protection causes a double charge. A retry that re-submits a form that has already been partially processed may create duplicate records. The retry design must specify: is the retried action idempotent by design (same result if executed twice)? Is an idempotency key required? What is the maximum retry count? What state is the record in between the initial attempt and the retry?
+- **Closure evidence must name the flow validator or test command, validator/tool, artifact or report path, output and exit code or manual review result, changed entry/step/branch/exit/retry/permission/async scope, and freshness after the final flow-related edit.** Repository graph, project memory, analytics snippets, or old E2E results are search leads, not proof of the current flow.
 
 # Mode Matrix
 
@@ -61,6 +62,7 @@ Escalate when: a flow branch can lose user-entered data without warning (data lo
 - **Signal:** A step submits, creates, pays, imports, exports, sends, or starts a job and then offers retry, refresh, or back navigation. **Hidden risk:** duplicate side effects, orphaned records, or misleading completion. **Required professional action:** define idempotency, intermediate state, safe retry, and compensation or cleanup. **Route to:** `idempotency-retry-design`, `data-side-effect-flow-tracing`, `backend-change-builder`. **Evidence required:** idempotency key/source, operation status, rollback/compensation owner, and not-verified residual risk.
 - **Signal:** Direct URLs, notifications, email links, OAuth redirects, or permission-specific entry points can enter mid-flow. **Hidden risk:** broken deep links, unauthorized state disclosure, or lost return intent. **Required professional action:** map entry preconditions and non-leaking denied/unavailable/not-found outcomes. **Route to:** `routing-navigation-design`, `permission-boundary-modeling`, `security-privacy-gate` when sensitive. **Evidence required:** entry table, guard condition, return path, disclosure policy, and denied-path test.
 - **Signal:** Async completion can occur while the user is in-flow, away, timed out, or returning later. **Hidden risk:** user cannot tell whether work completed, failed, or is safe to retry. **Required professional action:** model in-flow progress, away notification, timeout wording, failure exit, and return-to-result path. **Route to:** `interaction-state-modeling`, `async-job-design`. **Evidence required:** status source, timeout threshold, notification/deep-link behavior, and completion verification.
+- **Signal:** Prior validation, repository graph, analytics, support notes, project memory, or execution trajectory says a journey is proven before route, screen, guard, retry, async, or cancellation behavior changes. **Hidden risk:** stale evidence preserves a dead end, unsafe retry, or permission leak in the new flow. **Required professional action:** rerun, replace, or downgrade the proof and record validation freshness. **Route to:** `validation-broker`, `plan-execution-consistency`. **Evidence required:** changed path, validator/report path, exit code or manual artifact, what the stale evidence no longer proves, and residual risk owner.
 
 # Critical Details
 
@@ -86,12 +88,14 @@ The `SKILL.md` body carries normal L1/L2 flow-modeling selection and evidence ru
 
 # Failure Modes
 
-- User submits form; network error; clicks retry; duplicate record created; duplicate charge.
-- User is mid-checkout; session expires; re-logs in; cart is empty; abandons purchase.
-- Permission branch returns 403 with role name in error message; attacker maps permission model.
-- Async export job runs for 20 minutes; user navigated away; job completes; no notification; user re-runs job; duplicate export.
-- Back navigation on step 3 does not revert server action from step 3; user experiences unexpected state on resubmission.
-- Cancellation at step 4 leaves a PENDING subscription record; user cannot re-subscribe.
+- **Unsafe retry:** User submits form, sees a network error, clicks retry, and creates a duplicate record or duplicate charge because the flow lacked idempotency and intermediate state handling.
+- **Interrupted checkout loss:** User is mid-checkout, session expires, re-authenticates, finds the cart or draft empty, and abandons because interruption and re-entry were not designed.
+- **Permission disclosure:** Permission branch returns `403` with a role name or resource-specific message, allowing an attacker to map restricted resources and privilege boundaries.
+- **Async away-state gap:** Export job runs for 20 minutes, user navigates away, job completes without notification or result route, and the user starts a duplicate export.
+- **Back-navigation replay:** Browser back or in-app back reaches a side-effecting step after submission, causing stale state, duplicate action, or inconsistent confirmation.
+- **Cancellation orphan:** Cancellation at step 4 leaves a `PENDING` subscription, uploaded file, or job record that blocks the user from restarting safely.
+- **Stale journey proof:** Project memory or old E2E output says the flow is covered, but new route guards, deep links, or async states were added after that validation.
+- **Validation map gap:** Changed entry, branch, cancellation, retry, or permission path has no validator, manual review artifact, or named residual owner, so handoff over-claims flow safety.
 
 # Output Contract
 
@@ -114,12 +118,15 @@ Return a flow model with:
 - `interruption_handling` (unsaved changes dialog trigger, draft auto-save strategy)
 - `verification_points` (testable assertions at each decision branch)
 - `changed_flow_to_validation_map` (each changed entry, step, branch, exit, retry, permission, or async state mapped to test/validator or residual risk)
+- `validation_commands` (flow, route, accessibility, E2E, or manual-review command; validator/tool; artifact/report path; relevant output; exit code or manual result; changed flow scope; and freshness verdict)
 - `handoff_boundaries` (what belongs to IA, prototype, state modeling, route design, backend idempotency, security, or test gates)
 - `evidence_limits` (what was not verified: live analytics, production routes, real browser behavior, backend idempotency, permission enforcement, or E2E coverage)
 
 # Evidence Contract
 
-Close a user-flow-modeling change only when the output names selected mode, flow scope, current source evidence inspected, repository graph/project memory/execution trajectory freshness when used, actor goal, all entries, all exits, branch predicates, retry/idempotency behavior, back/cancel/interrupt behavior, async completion states, permission disclosure policy, changed-flow-to-validation map, evidence limits, residual risk, and next handoff owner. A linear happy path or "user can complete the flow" statement is not sufficient evidence.
+Close a user-flow-modeling change only when the output names selected mode, flow scope, current source evidence inspected, boundaries inspected, repository graph/project memory/execution trajectory freshness when used, actor goal, all entries, all exits, branch predicates, retry/idempotency behavior, back/cancel/interrupt behavior, async completion states, permission disclosure policy, changed-flow-to-validation map, validation evidence, evidence limits, residual risk, and next handoff owner. A linear happy path or "user can complete the flow" statement is not sufficient evidence.
+
+State what evidence proves, what evidence does not prove, reuse and placement rationale for any route graph, journey pattern, analytics/support signal, project memory, or execution trajectory claim, behavior preservation for existing entry points/deep links/tests, and the next gate before handoff. Validation evidence must include command names, validator/tool, artifact/report path, relevant output, exit code or manual review result, changed flow scope, and freshness after the final material edit; stale journey maps, graph-only evidence, or happy-path-only E2E proof must be downgraded to residual risk.
 
 # Benchmark Coverage
 
@@ -146,7 +153,8 @@ The flow model is complete only when:
 11. Selected mode, flow scope, current source evidence, and excluded surfaces are explicit.
 12. Repository graph, project memory, and execution trajectory evidence are source-confirmed or marked not verified.
 13. Each changed entry, branch, exit, retry, permission, async, interruption, or back-navigation path maps to a validator, test, or named residual risk.
-14. Handoff boundaries and evidence limits are named so flow evidence is not over-claimed as IA, component state, route guard, backend idempotency, security, or E2E proof.
+14. Validation commands, validators, artifacts/reports, output and exit code or manual result, changed flow scope, and freshness are recorded for every accepted entry, step, branch, exit, retry, permission, async, interruption, and back-navigation claim.
+15. Handoff boundaries and evidence limits are named so flow evidence is not over-claimed as IA, component state, route guard, backend idempotency, security, or E2E proof.
 
 # Used By
 

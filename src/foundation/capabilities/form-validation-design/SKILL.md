@@ -21,7 +21,7 @@ Do not use this capability to document form library configuration (React Hook Fo
 
 # Stage Fit
 
-Use during experience-definition, implementation-planning, coding, review, and testing when a user-facing form has validation rules, async checks, submission side effects, duplicate-submit risk, partial failure, or recoverable backend errors. In planning, define authority, timing, state machine, security controls, error mapping, and test obligations before implementation. In coding/review, reject stale project-memory or repository-graph claims unless current source, schemas, tests, and validation output confirm the form contract. Hand off when the primary question is generic API schema, server controller implementation, request lifecycle/caching, full frontend test strategy, or security review.
+Use during experience-definition, implementation-planning, coding, bug-fix, debugging, code-review, refactoring, testing, release, and handoff when a user-facing form has validation rules, async checks, submission side effects, duplicate-submit risk, partial failure, or recoverable backend errors. In planning, define authority, timing, state machine, security controls, error mapping, and test obligations before implementation. In coding/review, reject stale project-memory or repository-graph claims unless current source, schemas, tests, and validation output confirm the form contract. In release and handoff, require fresh validation evidence and residual risk before claims about backend authority, browser accessibility, or production race behavior. Hand off when the primary question is generic API schema, server controller implementation, request lifecycle/caching, full frontend test strategy, or security review.
 
 # Non-Negotiable Rules
 
@@ -101,14 +101,15 @@ The `SKILL.md` body carries normal L1/L2 form validation selection, authority, e
 
 # Failure Modes
 
-- Frontend-only email format check bypassed; invalid email stored in DB; marketing email sending failure; CSV export breaks.
-- Stale username availability check passes; submit accepted by frontend; server returns 409 conflict; user shown generic error with no field mapping; can't tell which field to fix.
-- Double submit on slow connection creates two orders; customer charged twice; refund process required; reputation damage.
-- CSRF attack transfers $500 from user account via malicious link; no CSRF token on banking form.
-- Partial bulk import: 500 rows, 50 failed; no per-row status shown; user re-uploads all 500; 450 duplicates created.
-- Password field cleared on failed login; user retyped password 5 times due to CapsLock; frustration; account lockout triggered.
-- Internal SQL error message displayed to user; schema information disclosed; security finding in pentest.
-- Multi-step wizard state lost on back-navigation; user must re-enter step 1 data; abandons checkout.
+- **Frontend-only authority:** email format check is bypassed; invalid email is stored in DB; marketing email sending fails; CSV export breaks.
+- **Stale async result:** username availability check passes; submit is accepted by frontend; server returns 409 conflict; user sees generic error with no field mapping.
+- **Duplicate side effect:** double submit on slow connection creates two orders; customer is charged twice; refund process is required.
+- **Missing CSRF control:** malicious site submits a banking form; session cookie is sent; no CSRF token blocks the transfer.
+- **Partial bulk retry:** 500 rows submitted, 50 fail, no per-row status shown; user re-uploads all 500 and creates 450 duplicates.
+- **Input loss on failure:** password or form data is cleared after recoverable failure; repeated attempts trigger abandonment or account lockout.
+- **Raw backend leak:** internal SQL or schema error is displayed to the user; schema information becomes a security finding.
+- **Wizard state loss:** multi-step form loses step state on back-navigation; user must re-enter data and abandons checkout.
+- **Stale graph or memory reuse:** prior form pattern is copied after schema, validation library, CSRF, or error-contract changes; evidence predates the final edit.
 
 # Output Contract
 
@@ -133,11 +134,12 @@ Return a form validation contract with:
 - `changed_form_to_validation_map` (each field, rule, async check, submit state, backend error, CSRF/idempotency control, and partial failure path mapped to validator/test or residual risk)
 - `handoff_boundaries` (what belongs to API schema, backend validation, error taxonomy, frontend API integration, security review, frontend testing, or product/legal review)
 - `tests` (bypass frontend validation test, double-submit test, stale async result test, CSRF protection test, partial failure recovery test, field preservation test)
+- `validation_evidence` (command, test, validator, output, report, artifact, screenshot when visual/a11y behavior is material, exit code, freshness after final edit, and not-run disclosure)
 - `evidence_limits` (what was not inspected or not run: real backend handlers, API schema, browser assistive tech, production race behavior, payment provider, legal copy, or full E2E flow)
 
 # Evidence Contract
 
-Close a form-validation-design output only when it names selected mode, current source evidence inspected, graph/memory/trajectory reuse judgment, backend authority for every rule, timing, async stale-result policy, submit state machine, CSRF/idempotency controls, error mapping, field preservation, accessibility, changed-form-to-validation map, handoff boundaries, residual risk, and evidence limits. A generic "validate the form" or "use client and server validation" statement is not sufficient evidence.
+Close a form-validation-design output only when it names selected mode, current source evidence inspected, boundaries inspected, graph/memory/trajectory reuse judgment, backend authority for every rule, timing, async stale-result policy, submit state machine, CSRF/idempotency controls, error mapping, field preservation, accessibility, changed-form-to-validation map, handoff boundaries, what evidence proves, what evidence does not prove, residual risk, and evidence limits. A generic "validate the form" or "use client and server validation" statement is not sufficient evidence.
 
 # Benchmark Coverage
 
@@ -164,6 +166,7 @@ The form design is complete only when:
 11. Selected mode, source evidence, and graph/memory/trajectory reuse judgment are explicit.
 12. Every field rule, async check, submit transition, backend error mapping, CSRF/idempotency control, and partial failure path maps to validation evidence or named residual risk.
 13. Handoff boundaries and evidence limits are explicit so form-design evidence is not over-claimed as backend implementation, real browser/a11y validation, legal approval, or production race proof.
+14. Validation evidence names the command, test or validator, output, report or artifact, screenshot when relevant, exit code, and freshness after the final material edit.
 
 # Used By
 

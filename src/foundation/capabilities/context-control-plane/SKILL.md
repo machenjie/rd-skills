@@ -21,7 +21,7 @@ Do not use this capability for ordinary small edits where the selected professio
 
 # Stage Fit
 
-Use during routing, planning, skill-authoring, hook-runtime review, eval design, validation, code review, compaction recovery, branch handoff, and final closure when route context must be bounded and auditable. Re-enter after material edits that change selected skills, selected capabilities, required references, generated route outputs, benchmark evidence, or validation status. Skip when no context-risk signal exists and the route can stay L1/L2 without additional control.
+Use during routing, planning, coding, bug-fix, debugging, code-review, refactoring, testing, release readiness, skill-authoring, hook-runtime review, eval design, validation, compaction recovery, branch handoff, and final closure when route context must be bounded and auditable. Treat it as the selection gate before launching broader context collection, live benchmark execution, or route repair. Re-enter after material edits that change selected skills, selected capabilities, required references, generated route outputs, benchmark evidence, or validation status. Skip when no context-risk signal exists and the route can stay L1/L2 without additional control; hand off once budget, retrieval, output-boundary, and closure evidence are recorded.
 
 # Non-Negotiable Rules
 
@@ -65,10 +65,10 @@ Escalate when: a selected route requires many foundation references; a generated
 
 # Proactive Professional Triggers
 
-- **Signal:** Selected capabilities or references exceed the route budget. **Hidden risk:** context bloat hides the decisive source facts. **Required professional action:** switch to staged-plan or full mode only with rationale, record skipped references, and keep JIT reads. **Route to:** `skill-efficacy-benchmark`, `plan-execution-consistency`. **Evidence required:** budget mode, selected/skipped counts, over-budget reason, residual risk.
-- **Signal:** A repository graph, context pack, or generated report is available. **Hidden risk:** the graph becomes a dumped corpus. **Required professional action:** use it as a selector and read only source files needed by the route. **Route to:** `repository-graph-analysis`, `repository-context-map`. **Evidence required:** selected nodes, omitted nodes, freshness, direct reads.
+- **Signal:** Selected capabilities or references exceed the route budget. **Hidden risk:** wrong route selection and silent under-validation because context bloat hides the decisive source facts. **Required professional action:** switch to staged-plan or full mode only with rationale, record skipped references, and keep JIT reads. **Route to:** `skill-efficacy-benchmark`, `plan-execution-consistency`. **Evidence required:** budget report, selected/skipped reference matrix, over-budget reason, owner, and residual risk.
+- **Signal:** A repository graph, context pack, or generated report is available. **Hidden risk:** the graph becomes a dumped corpus or stale selector, causing unverified source claims to leak into implementation. **Required professional action:** use it as a selector and read only source files needed by the route. **Route to:** `repository-graph-analysis`, `repository-context-map`. **Evidence required:** selected-node map, omitted-node reason, freshness marker, source-read list, and skipped-path report.
 - **Signal:** Tool output is long, sensitive, or mostly irrelevant. **Hidden risk:** logs, secrets, environment values, or full outputs enter handoff context. **Required professional action:** keep outcome, relevant excerpt, artifact path, and excluded-output rationale. **Route to:** `agent-tool-permission-sandbox`, `validation-broker`. **Evidence required:** command, outcome, bounded summary, privacy exclusions.
-- **Signal:** Context was compacted or a prior summary is reused. **Hidden risk:** route, validation, review, and open risks are silently stale. **Required professional action:** create a compaction snapshot and verify final material edits after the snapshot. **Route to:** `execution-trajectory-analysis`, `validation-broker`. **Evidence required:** snapshot fields, stale claims, rerun or not-run validators.
+- **Signal:** Context was compacted or a prior summary is reused. **Hidden risk:** route, validation, review, and open risks are silently stale or wrong after final material edits. **Required professional action:** create a compaction snapshot and verify final material edits after the snapshot. **Route to:** `execution-trajectory-analysis`, `validation-broker`. **Evidence required:** snapshot report, stale-claim list, validator command output, rerun/not-run matrix, and freshness owner.
 - **Signal:** A branch, rebase, merge, or route repair changed the working context. **Hidden risk:** previous routing decisions no longer match files or fixtures. **Required professional action:** write a branch route-repair summary and rerun mapped route/registry validators. **Route to:** `agent-execution-discipline`, `quality-test-gate`. **Evidence required:** changed paths, previous route, repaired route, validation delta.
 
 # Critical Details
@@ -79,13 +79,14 @@ The control plane does not make repository facts true. It records why a source, 
 
 # Failure Modes
 
-- A route selects every plausible foundation capability and the decisive validation rule is lost in a long context window.
-- A context package includes an entire repository graph instead of selected files, tests, and contracts.
-- A command log with secrets, environment values, or unrelated failures is pasted into a handoff.
-- A compaction summary preserves the goal but omits changed files, route state, validation status, and open risks.
-- A branch switch keeps stale selected references and misses a new registry or fixture requirement.
-- A benchmark claims reduced overhead while token, turn, selected-reference, and skipped-reference fields are absent.
-- A hook runtime prompt stores raw user text or full command output as persistent state.
+- **Route bloat:** a route selects every plausible foundation capability and the decisive validation rule is lost in a long context window.
+- **Under-routing:** a minimal context pack skips the selected security, data, reliability, or quality gate reference without a residual-risk owner.
+- **Graph dumping:** a context package includes an entire repository graph instead of selected files, tests, contracts, skipped nodes, and JIT reads.
+- **Output leakage:** a command log with secrets, environment values, raw prompts, unrelated failures, or full stdout is pasted into a handoff.
+- **Compaction drift:** a compaction summary preserves the goal but omits changed files, route state, validation status, review findings, and open risks.
+- **Branch staleness:** a branch switch keeps stale selected references and misses a new registry, fixture, generated report, or route-repair requirement.
+- **Overhead claim gap:** a benchmark claims reduced overhead while token, turn, selected-reference, skipped-reference, fixture id, and caveat fields are absent.
+- **Hook state pollution:** a hook runtime prompt stores raw user text, full command output, secrets, or environment values as persistent state.
 
 # Reference Loading Policy
 

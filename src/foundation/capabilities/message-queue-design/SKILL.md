@@ -21,7 +21,7 @@ Do not use this capability to design synchronous RPC patterns as queues (use `ap
 
 # Stage Fit
 
-Use during planning when queue topology, broker choice, producer durability, partition key, delivery guarantee, or retry/DLQ ownership is being decided. Use during implementation and code review when producers, consumers, ack/offset commits, visibility timeouts, outbox/relay, inbox/dedupe stores, schema validation, or message headers change. Use during testing and release when duplicate delivery, poison-message handling, replay, lag/backpressure, operator runbook, and validation freshness must prove the queue behavior is safe. Treat repository graph, project memory, runbooks, dashboards, and prior incidents as selectors until current producer/consumer code, broker config, schemas, tests, and execution results confirm or reject them.
+Use during planning, coding, bug-fix, debugging, code-review, refactoring, testing, release, and handoff when queue topology, broker choice, producer durability, partition key, delivery guarantee, retry/DLQ ownership, or consumer observability is being decided or changed. In planning, define queue stage, producer/consumer boundary, delivery semantics, ack/commit point, idempotency key, retry/DLQ policy, ordering scope, backpressure, replay, observability, validation method, and handoff boundaries before implementation. In coding, code-review, and refactoring, keep producers, consumers, ack/offset commits, visibility timeouts, outbox/relay, inbox/dedupe stores, schema validation, headers, and broker config aligned with the accepted queue design instead of letting handlers grow local retry or ack behavior. In bug-fix and debugging, separate duplicate-delivery, lost-work, poison-message, ordering, lag/backpressure, replay, schema, and stale-memory causes before changing queue behavior. In testing, release, and handoff, require fresh duplicate, poison, crash-before-ack, replay, lag, DLQ, and observability evidence after the final producer, consumer, broker config, schema, or runbook edit. Treat repository graph, project memory, runbooks, dashboards, and prior incidents as selectors until current producer/consumer code, broker config, schemas, tests, and execution results confirm or reject them.
 
 # Non-Negotiable Rules
 
@@ -92,16 +92,16 @@ On failure:
 
 # Failure Modes
 
-- Consumer does not check idempotency key — duplicate delivery creates duplicate payment charges, duplicate emails, or duplicate inventory deductions.
-- Ack before DB commit — consumer crashes after ack but before commit; message is lost; event never processed; no alert.
-- Poison message `NACK` with `requeue=true` — message immediately requeued; consumer crashes again; thousands of attempts per minute; CPU spike; downstream DB overwhelmed; other messages on partition blocked.
-- No DLQ configured — after `maxDeliveryAttempts`, message is silently dropped; no recovery path; data loss undetected.
-- Kafka `enable.auto.commit=true` — periodic offset commit marks messages as processed before processing completes; consumer crash between auto-commit and processing completion skips messages permanently.
-- SQS visibility timeout shorter than processing time — message becomes visible to second consumer mid-processing; duplicate processing; idempotency failure if not implemented.
-- Consumer lag grows to millions of messages with no alert — 4-hour message processing backlog on payment events; customers receive payment confirmations hours late; SLO breach.
-- Retry storm: retryable error causes immediate requeue without backoff — 500 messages retry at 100/second; downstream dependency receives 50,000 req/min; cascading failure.
-- Transactional outbox not used: queue publish outside DB transaction — DB commit succeeds; queue publish fails; event permanently lost; downstream service never receives state change; data inconsistency.
-- Partition key set to constant value — all messages route to one partition; one consumer handles 100% of load; other consumers idle; throughput capped at single consumer capacity.
+- **Missing idempotency:** consumer does not check idempotency key; duplicate delivery creates duplicate payment charges, duplicate emails, or duplicate inventory deductions.
+- **Ack-before-commit loss:** ack before DB commit; consumer crashes after ack but before commit; message is lost; event never processed; no alert.
+- **Poison requeue loop:** poison message `NACK` with `requeue=true`; message immediately requeued; consumer crashes again; thousands of attempts per minute; CPU spike; downstream DB overwhelmed; other messages on partition blocked.
+- **Missing DLQ:** no DLQ configured; after `maxDeliveryAttempts`, message is silently dropped; no recovery path; data loss undetected.
+- **Kafka auto-commit skip:** Kafka `enable.auto.commit=true`; periodic offset commit marks messages as processed before processing completes; consumer crash between auto-commit and processing completion skips messages permanently.
+- **Short visibility timeout:** SQS visibility timeout shorter than processing time; message becomes visible to second consumer mid-processing; duplicate processing; idempotency failure if not implemented.
+- **Unalerted consumer lag:** consumer lag grows to millions of messages with no alert; 4-hour message processing backlog on payment events; customers receive payment confirmations hours late; SLO breach.
+- **Retry storm:** retryable error causes immediate requeue without backoff; 500 messages retry at 100/second; downstream dependency receives 50,000 req/min; cascading failure.
+- **Dual-write publish loss:** transactional outbox not used for queue publish outside DB transaction; DB commit succeeds; queue publish fails; event permanently lost; downstream service never receives state change; data inconsistency.
+- **Constant partition key:** partition key set to constant value; all messages route to one partition; one consumer handles 100% of load; other consumers idle; throughput capped at single consumer capacity.
 
 # Reference Loading Policy
 
@@ -125,6 +125,7 @@ Return a queue design with:
 - `graph_memory_execution_validation` (repository graph, project memory, topology docs, dashboards, runbooks, and prior validation accepted/rejected/stale/not verified)
 - `changed_queue_to_validation_map` (each producer, consumer, ack/commit point, retry/DLQ policy, partition key, schema, replay path, metric, alert, and runbook mapped to validation or residual risk)
 - `test_strategy` (assert: duplicate message → idempotent; poison message → DLQ after N attempts; consumer crash mid-processing → no message lost; lag alert fires when threshold exceeded)
+- `validation_evidence` (command, test, validator, output, report or artifact, screenshot when dashboard/runbook/alert UI evidence is material, exit code or manual result, freshness after the final queue-related edit, and not-run disclosure)
 - `evidence_limits` (untested broker outage, partition skew, large replay, downstream idempotency, unknown consumers, stale memory, or environment-specific broker config)
 
 # Evidence Contract
@@ -147,6 +148,7 @@ The design is complete only when:
 10. Consumer visibility timeout / lock duration validated against p99 processing time.
 11. Project memory, repository graph, dashboards, runbooks, and prior validations are reconciled with current source/config or marked stale/not verified.
 12. Every changed queue behavior maps to duplicate, poison, crash, replay, lag, contract, integration, or manual validation evidence.
+13. Validation evidence names the command, test or validator, output, report or artifact, screenshot when dashboard/alert/runbook UI evidence is material, exit code or manual result, and freshness after the final material edit.
 
 # Used By
 

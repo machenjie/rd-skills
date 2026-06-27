@@ -57,10 +57,10 @@ Escalate immediately when: an illegal transition can cause a double charge, dupl
 
 # Proactive Professional Triggers
 
-- **Signal:** A status or enum field is added without a transition table. **Hidden risk:** the enum becomes a bag of labels and illegal transitions stay implicit. **Required professional action:** build states, legal transitions, illegal transitions, and enforcement source before code review. **Route to:** `state-machine-modeling`, `domain-object-identification`. **Evidence required:** source of truth, owner, state list, transition table, and rejected display-only interpretation.
-- **Signal:** Lifecycle behavior is scattered across services, controllers, jobs, SQL, support scripts, or tests. **Hidden risk:** each entry point enforces a different state model. **Required professional action:** centralize transition authority or document delegated command boundaries. **Route to:** `business-rule-extraction`, `domain-logic-implementation`, `repository-graph-analysis`. **Evidence required:** writer scan, delegated callers, enforcement layer, and same-pattern review.
-- **Signal:** Project memory or a previous state machine is reused for a new object. **Hidden risk:** stale lifecycle assumptions override current source, migrations, events, or actors. **Required professional action:** confirm current code, data, events, tests, and owner before reuse. **Route to:** `project-memory-governance`, `repository-context-map`. **Evidence required:** accepted/rejected memory, inspected paths, graph freshness, and unverified areas.
-- **Signal:** A transition emits an event or external side effect. **Hidden risk:** retries, rollback, or dual-write failures produce duplicate or ghost effects. **Required professional action:** bind the side effect to committed state and design idempotency. **Route to:** `domain-event-modeling`, `idempotency-retry-design`, `transaction-consistency`. **Evidence required:** commit boundary, outbox/event handoff, deduplication key, and failure behavior.
+- **Signal:** A status or enum field is added without a transition table. **Hidden risk:** the enum becomes a bag of labels and illegal transitions stay implicit. **Required professional action:** require states, legal transitions, illegal transitions, and enforcement source before code review. **Route to:** `state-machine-modeling`, `domain-object-identification`. **Evidence required:** source of truth, owner, state list, transition table, validation command or report, and rejected display-only interpretation.
+- **Signal:** Lifecycle behavior is scattered across services, controllers, jobs, SQL, support scripts, or tests. **Hidden risk:** each entry point enforces a different state model. **Required professional action:** scan writer paths and centralize transition authority or document delegated command boundaries. **Route to:** `business-rule-extraction`, `domain-logic-implementation`, `repository-graph-analysis`. **Evidence required:** writer scan output, delegated caller map, enforcement layer, same-pattern review, and residual bypass risk.
+- **Signal:** Project memory or a previous state machine is reused for a new object. **Hidden risk:** stale lifecycle assumptions override current source, migrations, events, or actors. **Required professional action:** verify current code, data, events, tests, and owner before reuse. **Route to:** `project-memory-governance`, `repository-context-map`. **Evidence required:** accepted/rejected memory map, inspected path list, graph freshness, validation output, and unverified areas.
+- **Signal:** A transition emits an event or external side effect. **Hidden risk:** retries, rollback, or dual-write failures produce duplicate or ghost effects. **Required professional action:** require committed-state side-effect binding and idempotency design. **Route to:** `domain-event-modeling`, `idempotency-retry-design`, `transaction-consistency`. **Evidence required:** commit boundary, outbox/event handoff, deduplication key, failure-behavior test, and what the test does not prove.
 - **Signal:** A state is renamed, removed, split, merged, or newly terminal for stored records. **Hidden risk:** old data, reports, consumers, and rollback cannot interpret the lifecycle. **Required professional action:** require migration and compatibility review. **Route to:** `data-migration-design`, `version-compatibility`, `delivery-release-gate`. **Evidence required:** record mapping, compatibility window, rollback behavior, and validation query.
 
 # Critical Details
@@ -87,12 +87,14 @@ The `SKILL.md` body carries normal L1/L2 lifecycle routing, ownership, and evide
 
 # Failure Modes
 
-- Double charge: `PENDING -> PROCESSING` transition retried without idempotency key; payment charged twice.
-- Stuck order: `PROCESSING` has no timeout exit; external dependency outage leaves records permanently in progress.
-- Illegal cancel: `SHIPPED -> CANCELLED` not rejected; refund and delivery both complete.
-- Race condition: two actors read the same old state and execute duplicate side effects without a lock or version check.
-- Silent failure: illegal transition attempt is swallowed; object remains in progress with no audit record.
-- Missing migration: new state added but existing records, reports, consumers, or old code cannot interpret it.
+- **Double charge:** `PENDING -> PROCESSING` transition is retried without an idempotency key; the payment provider charges twice while the aggregate records one transition.
+- **Stuck in-progress state:** `PROCESSING` has no timeout or failure exit; an external dependency outage leaves records permanently in progress until manual database edits.
+- **Illegal terminal transition:** `SHIPPED -> CANCELLED` is not rejected; refund and delivery both complete because terminal-state enforcement lives only in caller convention.
+- **Concurrent duplicate side effect:** two actors read the same old state and execute duplicate shipments, charges, or notifications without a row lock or optimistic version check.
+- **Swallowed illegal transition:** invalid transition attempts return success or no-op, leaving the object unchanged with no audit event, denial reason, or operator-visible failure.
+- **Missing state migration:** a new state is added but existing records, reports, consumers, exports, or old code cannot interpret it during rollout or rollback.
+- **Stale graph reuse:** project memory copies a similar workflow's transition table after actors, event consumers, support tools, or migration assumptions changed.
+- **Audit/privacy gap:** a privileged deletion, retention, or export transition lacks actor authority, audit fields, and privacy classification, so regulated evidence cannot be reconstructed.
 
 # Output Contract
 
@@ -127,6 +129,7 @@ Return a state machine model with:
 - **Memory evidence:** project memory, prior state machines, and previous agent trajectories are suggestions only until current source, tests, data, and owners confirm they still apply.
 - **Execution evidence:** map lifecycle decisions to unit, integration, state-transition, invalid-transition, timeout/recovery, migration, event/audit, concurrency, or regression tests, or explicitly mark unrun validation and residual risk.
 - **Boundary evidence:** every transition states what it owns and what it hands off to rules, authorization, idempotency, events, migrations, release, or test execution.
+- **Closure evidence:** name boundaries inspected, validation commands or report artifacts with exit codes, what evidence proves, what evidence does not prove, validation freshness, residual risk, rollback or reroute note, and the next handoff gate.
 
 # Benchmark Coverage
 

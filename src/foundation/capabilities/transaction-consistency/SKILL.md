@@ -36,7 +36,7 @@ Do not let this capability become a general database design review. Hand off to 
 
 # Industry Benchmarks
 
-Anchor against ACID, ANSI SQL isolation, MVCC anomaly analysis, transactional outbox, saga compensation, optimistic and pessimistic locking, PostgreSQL/MySQL lock behavior, Two-Phase Commit availability trade-offs, CAP/PACELC consistency choices, and SRE-style reconciliation evidence. Keep this body focused on route selection, closure, and validation; load [references/checklist.md](references/checklist.md) for a lightweight execution checklist and [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for anomaly matrices, pattern decisions, graph/memory/execution coupling, and validation maps.
+Anchor against ACID, ANSI SQL isolation, MVCC anomaly analysis, transactional outbox, saga compensation, optimistic and pessimistic locking, PostgreSQL/MySQL lock behavior, Two-Phase Commit availability trade-offs, CAP/PACELC consistency choices, and SRE-style reconciliation evidence. Keep this body focused on route selection, closure, and validation; load [references/checklist.md](references/checklist.md) for a lightweight execution checklist, [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for anomaly matrices and pattern decisions, and [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on graph/memory/execution freshness, tool boundaries, or production-evidence limits.
 
 # Mode Matrix
 
@@ -84,16 +84,19 @@ Escalate when: the invariant involves money movement, inventory, quota enforceme
 
 # Failure Modes
 
-- Payment charged but account record not updated: lock timeout during step 3; partial completion; financial discrepancy.
-- Lost update: two concurrent stock decrements both pass the `stock > 0` check; stock goes negative; oversold.
-- Deadlock: Transaction A locks rows 1 then 2; Transaction B locks rows 2 then 1; deadlock; one transaction aborted.
-- Stuck Saga: compensation step fails; no retry or runbook; system left in partial state indefinitely.
-- Phantom booking: two users book the last seat concurrently; both pass the `seats > 0` check at Read Committed; both succeed; negative seat count.
-- Outbox relay not running: forward transaction succeeds; outbox event never published; downstream service never notified; silent inconsistency.
+- **Payment charged but account record not updated:** lock timeout during step 3 leaves partial completion and financial discrepancy.
+- **Lost update:** two concurrent stock decrements both pass the `stock > 0` check; stock goes negative and inventory is oversold.
+- **Deadlock without bounded retry:** Transaction A locks rows 1 then 2 while Transaction B locks rows 2 then 1; one aborts and the caller sees an ambiguous failure.
+- **Stuck Saga:** compensation step fails without retry, alert, or runbook, so the system remains in partial state indefinitely.
+- **Phantom booking:** two users book the last seat concurrently; both pass the range check at Read Committed and the capacity invariant is violated.
+- **Outbox relay not running:** forward transaction succeeds, the outbox event is never published, and downstream state silently diverges.
+- **Serialization retry gap:** Serializable or optimistic conflict is caught but lacks bounded retry, terminal response, or operator-visible classification.
+- **Stale topology claim:** memory or repository graph says publish-after-commit is safe, but current source moved event publication, retry, cache, or remote-call ordering.
+- **Compensation evidence gap:** compensation parameters are reconstructed from mutable current state instead of a durable log written with the forward step.
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when the change touches multi-step writes, money/inventory/quota/account invariants, distributed consistency, saga/outbox behavior, or concurrent writers. Read `references/benchmarks-and-patterns.md` when the decision needs anomaly tables, isolation/locking choices, outbox-vs-saga tradeoffs, compensation failure paths, graph-memory-execution coupling, or validation mapping. Do not load references for a single-row write with no named invariant, no concurrency risk, no side effect, and no stale evidence concern.
+Read `references/checklist.md` when the change touches multi-step writes, money/inventory/quota/account invariants, distributed consistency, saga/outbox behavior, or concurrent writers. Read `references/benchmarks-and-patterns.md` when the decision needs anomaly tables, isolation/locking choices, outbox-vs-saga tradeoffs, compensation failure paths, graph-memory-execution coupling, or validation mapping. Read `references/evidence-patterns.md` when handoff depends on current-source proof, same-pattern write-path scans, accepted or rejected memory/graph claims, tool permission boundaries, or what evidence proves versus what evidence does not prove. Do not load references for a single-row write with no named invariant, no concurrency risk, no side effect, and no stale evidence concern.
 
 # Output Contract
 
@@ -119,7 +122,7 @@ Return a consistency design with:
 
 # Evidence Contract
 
-Close consistency design only when the output names each invariant, current source paths inspected, same-pattern write-path scan, transaction boundary, isolation level, lock/concurrency control, remote-call placement, compensation/outbox path, graph-memory-execution freshness, validation commands, what concurrency evidence proves, what it does not prove under production load, tool permission/sandbox boundary, residual consistency risk, rollback note, and next gate.
+Close consistency design only when the output names each invariant, the boundaries inspected, current source paths inspected, same-pattern write-path scan, transaction boundary, isolation level, lock/concurrency control, remote-call placement, compensation/outbox path, graph-memory-execution freshness, validation commands, what evidence proves, what evidence does not prove under production load, tool permission/sandbox boundary, residual consistency risk, rollback note, handoff, and next gate.
 
 # Quality Gate
 

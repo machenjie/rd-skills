@@ -21,7 +21,7 @@ Do not use this capability to rename an existing architecture for marketing reas
 
 # Stage Fit
 
-Use during architecture planning when the style, deployable unit, runtime topology, team boundary, compliance perimeter, or migration path is still being chosen. Use during review when a proposal adds services, events, serverless functions, cells, regions, or edge/runtime boundaries and claims the complexity is justified. Treat repository graph, project memory, and execution trajectory as discovery inputs only: current source, tests, deploy topology, ownership files, ADRs, runbooks, and validation output must confirm or reject that evidence before it influences the decision. Hand off when the style is chosen and the remaining work is internal module design, concrete service extraction, event-flow design, ADR wording, release sequencing, or production readiness.
+Use during architecture planning when the style, deployable unit, runtime topology, team boundary, compliance perimeter, or migration path is still being chosen. Use during review when a proposal adds services, events, serverless functions, cells, regions, or edge/runtime boundaries and claims the complexity is justified. Treat repository graph, project memory, and execution trajectory as discovery inputs only: current source, tests, deploy topology, ownership files, ADRs, runbooks, and validation output must confirm or reject that evidence before it influences the decision. Skip during ordinary coding, bug-fix, debugging, code-review, refactoring, or testing work when the style is already chosen and no deployable-unit, data-owner, runtime-topology, or compliance boundary changes; hand off when the style is chosen and the remaining work is internal module design, concrete service extraction, event-flow design, ADR wording, release stage sequencing, or production readiness.
 
 # Non-Negotiable Rules
 
@@ -36,7 +36,7 @@ Use during architecture planning when the style, deployable unit, runtime topolo
 
 # Mode Matrix
 
-Select the architecture-style mode before recommending topology or migration.
+Select the architecture-style mode before recommending topology or migration. For each mode, record the current stage, selection evidence, skip guidance, and handoff boundary so style selection does not absorb module design, service extraction, event topology, release, or testing work.
 
 | Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
 | --- | --- | --- | --- | --- | --- |
@@ -60,6 +60,7 @@ Select this capability when the primary decision is **the architecture style its
 - Prefer `architecture-tradeoff-analysis` when the question is how to record the decision, not which to choose.
 - Prefer `extensibility-design` when the question is plugin/extension points, not topology.
 - Use **with** `domain-impact-modeler` to align bounded contexts with style boundaries before splitting.
+- Skip this capability when coding, bug-fix, debugging, code-review, refactoring, or testing changes only preserve the accepted style; hand off to the narrower capability and keep this decision as evidence instead of reopening the architecture.
 
 # Risk Escalation Rules
 
@@ -67,12 +68,12 @@ Escalate when the selected style changes: deployment topology, data ownership, a
 
 # Proactive Professional Triggers
 
-- **Signal:** A microservice, serverless, event-driven, edge, cell, or multi-region style is proposed before current deployability, scaling, ownership, latency, compliance, and reliability constraints are measured. **Hidden risk:** architecture adds operational premium without solving a real force. **Required professional action:** score the forces and disqualify the simpler option with evidence. **Route to:** `architecture-impact-reviewer`, `reliability-observability-gate`. **Evidence required:** force scorecard, rejected simpler option, operating model and cost impact.
-- **Signal:** Repository graph or project memory suggests the system is "already modular", "already service-oriented", or "ready to split" but current source, ownership, tests, CI, deploy topology, or runbooks were not inspected. **Hidden risk:** stale architecture memory turns into unverified service boundaries. **Required professional action:** confirm graph/memory/trajectory against current source and generated artifacts before decision. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected memory, freshness limit, unknown boundary list.
+- **Signal:** A microservice, serverless, event-driven, edge, cell, or multi-region style is proposed before current deployability, scaling, ownership, latency, compliance, and reliability constraints are measured. **Hidden risk:** wrong topology adds hidden rollback, on-call, and cost burden without solving a real force. **Required professional action:** score the forces and disqualify the simpler option with evidence. **Route to:** `architecture-impact-reviewer`, `reliability-observability-gate`. **Evidence required:** force scorecard report, rejected simpler option, operating model, cost metric, and owner.
+- **Signal:** Repository graph or project memory suggests the system is "already modular", "already service-oriented", or "ready to split" but current source, ownership, tests, CI, deploy topology, or runbooks were not inspected. **Hidden risk:** stale architecture memory turns into unverified service boundaries and missing generated-consumer impact. **Required professional action:** confirm graph/memory/trajectory against current source and generated artifacts before decision. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected path list, graph report, accepted/rejected memory, validation output, freshness limit, and unknown boundary list.
 - **Signal:** A distributed boundary is introduced while module boundaries, public contracts, data ownership, or transaction ownership are unclear. **Hidden risk:** a network boundary hides a modularity defect and creates a distributed monolith. **Required professional action:** repair or explicitly defer module/data boundary design before style approval. **Route to:** `module-boundary-design`, `data-model-design`, `transaction-consistency`. **Evidence required:** boundary map, public contracts, data owner, shared-database decision, residual risk.
 - **Signal:** Style migration has no phased migration, rollback, dual-run, freeze point, or old-system retirement trigger. **Hidden risk:** legacy and new architectures run indefinitely with doubled cost and unclear ownership. **Required professional action:** define migration pattern and reversibility class. **Route to:** `release-rollback`, `delivery-release-gate`, `architecture-tradeoff-analysis`. **Evidence required:** phases, rollback/containment, dual-run owner, retirement trigger.
 - **Signal:** Architecture choice changes compliance perimeter, sensitive data flow, tenant isolation, public exposure, or AI/agent tool execution boundary. **Hidden risk:** style change silently expands privacy, security, or prompt/tool attack surface. **Required professional action:** run security/privacy and domain-extension review before approval. **Route to:** `security-privacy-gate`, `threat-modeling`, `ai-product-extension` when model/tool behavior is in scope. **Evidence required:** data classification, trust boundary, allowed actors/tools, redaction and permission evidence.
-- **Signal:** New runtime components, queues, regions, cells, functions, or services lack SLOs, alerts, traces, dashboards, runbooks, capacity plan, or on-call ownership. **Hidden risk:** architecture looks clean on paper but is not operable. **Required professional action:** block readiness or mark explicit residual risk until operations evidence exists. **Route to:** `reliability-observability-gate`, `performance-budgeting`, `concurrency-control`. **Evidence required:** SLI/SLO, telemetry, runbook, capacity/cost guardrail, owner.
+- **Signal:** New runtime components, queues, regions, cells, functions, or services lack SLOs, alerts, traces, dashboards, runbooks, capacity plan, or on-call ownership. **Hidden risk:** hidden outage path, missing owner, and wrong capacity assumption make the architecture non-operable. **Required professional action:** block readiness or mark explicit residual risk until operations evidence exists. **Route to:** `reliability-observability-gate`, `performance-budgeting`, `concurrency-control`. **Evidence required:** SLI/SLO, telemetry report, runbook, capacity/cost guardrail, validation command or dashboard, and owner.
 
 # Critical Details
 
@@ -108,7 +109,13 @@ The right style is constrained by the **team and operating model** as much as by
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 architecture-style selection, boundary, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete style decision, when constraints or migration coverage are uncertain, or before implementation planning depends on the style. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when style comparison, force scoring, migration/reversibility, operational readiness, graph/memory/trajectory reuse, or anti-pattern depth is needed. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are sufficient.
+- **L1:** Use only this `SKILL.md` for routing, quick rejection of vague distributed complexity, or a local reversible style question with no real migration decision.
+- **L2:** Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete style decision, when constraints or migration coverage are uncertain, or before implementation planning depends on the style.
+- **L3:** Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when style comparison, force scoring, migration/reversibility, operational readiness, graph/memory/trajectory reuse, or anti-pattern depth is needed.
+- **L4:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the decision depends on current graph reachability, prior ADRs, command output, telemetry, tests, deploy topology, or validation freshness.
+- **L5:** Add only the selected specialist gate (`security-privacy-gate`, `reliability-observability-gate`, `delivery-release-gate`, `data-api-contract-changer`, or a domain extension) when the style changes trust boundaries, operational SLOs, rollout topology, public contracts, data ownership, or regulated scope.
+
+Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are sufficient.
 
 # Output Contract
 
@@ -133,6 +140,7 @@ Return an architecture style decision document containing:
 - `fitness_functions` (automated checks that detect drift from the decision)
 - `reassessment_trigger` (concrete signal that requires re-deciding: traffic, team count, compliance change, cost threshold)
 - `changed_decision_to_validation_map` (each style, boundary, migration, reliability, security, cost, and fitness-function decision mapped to evidence or residual risk)
+- `validation_evidence` (command, validator, artifact/report path, exit code or manual result, changed path scope, and freshness after the final material decision)
 - `handoff_boundaries` (what moves to module boundary, microservice split, event-driven design, domain impact, security/privacy, reliability, delivery, or ADR formalization)
 - `evidence_limits` (what was not verified: production load, unknown consumers, runtime topology, current dashboards, incident history, cost model, or organizational commitment)
 - `review_owner` (named individual + escalation chain)
@@ -141,6 +149,8 @@ Return an architecture style decision document containing:
 # Evidence Contract
 
 Close an architecture-style decision only when the output names the selected mode, current architecture evidence, force ranking, simpler option rejected by measured constraint, graph/memory/execution freshness judgment, data ownership impact, deployment impact, operational obligations, migration and rollback path, reversibility class, validation map, handoff boundaries, residual risk, and evidence limits. A style label or "use microservices/modular monolith" statement is not sufficient evidence.
+
+Validation evidence must name boundaries inspected, command or validator, artifact/report path, exit code or manual result, changed path scope, and freshness after the final material style, migration, or fitness-function decision. State what evidence proves, what evidence does not prove, reuse and placement rationale for any graph/memory/trajectory claim, behavior preservation for existing architecture conventions, residual risk owner, and next gate/handoff.
 
 # Benchmark Coverage
 

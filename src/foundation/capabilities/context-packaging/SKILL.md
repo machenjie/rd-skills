@@ -40,7 +40,7 @@ Use during planning, review handoff, repair handoff, validation freshness review
 
 # Industry Benchmarks
 
-Anchor context packaging on minimal sufficient context, source-grounded facts, freshness markers, explicit exclusions, and verifiable completion criteria. Use [references/checklist.md](references/checklist.md) as the quick checklist; load [references/context-package-checklist.md](references/context-package-checklist.md) only when preparing large multi-file handoff context, cross-agent review packets, or L4/L5 change packages.
+Anchor context packaging on minimal sufficient context, source-grounded facts, freshness markers, explicit exclusions, and verifiable completion criteria. Use [references/checklist.md](references/checklist.md) as the quick checklist; load [references/context-package-checklist.md](references/context-package-checklist.md) only when preparing large multi-file handoff context, cross-agent review packets, or L4/L5 change packages. Load [references/evidence-patterns.md](references/evidence-patterns.md) when graph, memory, execution trajectory, validation freshness, or tool-output boundaries decide whether a package is trustworthy.
 
 # Mode Matrix
 
@@ -73,11 +73,11 @@ Escalate when the context package: includes security-sensitive details (auth flo
 
 # Proactive Professional Triggers
 
-- **Signal:** A handoff names files or decisions but omits searched paths, files read, source-of-truth status, or owners. **Hidden risk:** the next agent treats prompt memory as repository evidence. **Required professional action:** rebuild a bounded context package from current source and mark omitted areas. **Route to:** `repository-context-map`, `repository-graph-analysis`. **Evidence required:** inspected paths, searches run, accepted/rejected claims, owner or unknown-owner note.
+- **Signal:** A handoff names files or decisions but omits searched paths, files read, source-of-truth status, or owners. **Hidden risk:** stale or unverified prompt memory is treated as repository evidence. **Required professional action:** inspect current source, rebuild a bounded context package, and document omitted areas. **Route to:** `repository-context-map`, `repository-graph-analysis`. **Evidence required:** inspected paths, searches run, accepted/rejected claims, owner or unknown-owner note.
 - **Signal:** A prior summary, graph, report, validation pass, or compaction note is reused after later edits. **Hidden risk:** stale context drives planning, review, or completion. **Required professional action:** compare freshness, downgrade stale claims, and rerun or map validators after the final material edit. **Route to:** `execution-trajectory-analysis`, `validation-broker`. **Evidence required:** event order, changed paths, validation command, exit code or not-run status, residual risk.
 - **Signal:** Project memory says a file is fragile, a path failed before, or context is stale. **Hidden risk:** memory either overrules source truth or is ignored when it should widen validation. **Required professional action:** classify memory as experience input, confirm or reject it against current source, and map any accepted signal to tests or review. **Route to:** `project-memory-governance`, `quality-test-gate`. **Evidence required:** memory signal, current-source check, accepted/rejected/stale verdict, affected test or review gate.
-- **Signal:** A package includes raw repository graph, full command output, environment values, production examples, or broad private data. **Hidden risk:** context bloat and sensitive data leak into logs, memory, or downstream agents. **Required professional action:** redact, summarize as bounded facts, and keep graph output as selected nodes plus omissions. **Route to:** `security-privacy-gate`, `agent-tool-permission-sandbox`. **Evidence required:** retained fields, excluded sensitive fields, graph slice, telemetry boundary.
-- **Signal:** Parallel agents, generated clients, contracts, or shared boundaries are involved but no conflict protocol is stated. **Hidden risk:** agents make incompatible edits or regenerate hand-written code. **Required professional action:** package producer/consumer ownership, contract version, permitted change zones, and merge/conflict protocol. **Route to:** `task-dag-decomposition`, `code-review`. **Evidence required:** boundary contract, owner, permitted files, do-not-touch zones, next handoff gate.
+- **Signal:** A package includes raw repository graph, full command output, environment values, production examples, or broad private data. **Hidden risk:** context bloat and sensitive data leak into logs, memory, or downstream agents. **Required professional action:** redact, summarize as bounded facts, and keep graph output as selected nodes plus omissions. **Route to:** `security-privacy-gate`, `agent-tool-permission-sandbox`. **Evidence required:** retained fields, excluded sensitive fields, graph slice, telemetry boundary, redaction scan report.
+- **Signal:** Parallel agents, generated clients, contracts, or shared boundaries are involved but no conflict protocol is stated. **Hidden risk:** boundary collision creates wrong shared contracts or regenerates hand-written code. **Required professional action:** document producer/consumer ownership, contract version, permitted change zones, and merge/conflict protocol. **Route to:** `task-dag-decomposition`, `code-review`. **Evidence required:** boundary contract, owner, permitted files, do-not-touch zones, next handoff gate.
 
 # Critical Details
 
@@ -99,25 +99,25 @@ A context package is both a **knowledge transfer artifact and a commitment about
 
 # Failure Modes
 
-- Agent invents API response shape because no contract was cited; integration test discovers mismatch at end of implementation sprint.
-- Critical constraint buried in paragraph 12 of a long background section; agent never applies it; bug ships.
-- Open question ("which database should new table live in?") not marked; agent picks one arbitrarily; decision causes data-tier policy violation.
-- Context contains schema from 8 months ago; migration has happened; agent writes code against dropped columns.
-- "Do Not Touch" not stated; agent helpfully refactors shared infrastructure; 5 unrelated tests break.
-- Stale ADR included (superseded but not noted); agent implements a deprecated pattern.
-- Completion criterion is "implement this feature"; agent declares done after first passing test; incomplete behavior ships.
-- Secret (database password) included in context for "realism"; context stored in session logs; credential exposed.
-- "Latest version" assumed; agent uses API from library v4; project pins v3; runtime error.
-- Two parallel agents receive overlapping change zones; both modify the same file; changes conflict at merge.
-- INFERENCE presented as FACT; agent builds further inferences on top of it; error compounds silently.
-- Context package for AI agent reused 3 sprints later without refreshing; freshness dates not checked; stale.
-- Completion criterion references a test file that was renamed; agent cannot verify completion; declares done anyway.
+- **Uncited contract:** Agent invents API response shape because no contract was cited; integration test discovers mismatch at end of implementation sprint.
+- **Buried constraint:** Critical constraint buried in paragraph 12 of a long background section; agent never applies it; bug ships.
+- **Unmarked open question:** Open question ("which database should new table live in?") not marked; agent picks one arbitrarily; decision causes data-tier policy violation.
+- **Stale schema:** Context contains schema from 8 months ago; migration has happened; agent writes code against dropped columns.
+- **Missing do-not-touch zone:** "Do Not Touch" not stated; agent helpfully refactors shared infrastructure; 5 unrelated tests break.
+- **Superseded ADR:** Stale ADR included (superseded but not noted); agent implements a deprecated pattern.
+- **Unverifiable completion:** Completion criterion is "implement this feature"; agent declares done after first passing test; incomplete behavior ships.
+- **Secret exposure:** Secret (database password) included in context for "realism"; context stored in session logs; credential exposed.
+- **Version drift:** "Latest version" assumed; agent uses API from library v4; project pins v3; runtime error.
+- **Parallel overlap:** Two parallel agents receive overlapping change zones; both modify the same file; changes conflict at merge.
+- **Fact-class collapse:** INFERENCE presented as FACT; agent builds further inferences on top of it; error compounds silently.
+- **Unrefreshed reuse:** Context package for AI agent reused 3 sprints later without refreshing; freshness dates not checked; stale.
+- **Renamed validator:** Completion criterion references a test file that was renamed; agent cannot verify completion; declares done anyway.
 
 # Reference Loading Policy
 
 - **L1 quick package:** Use this `SKILL.md` plus [references/checklist.md](references/checklist.md) for ordinary single-task handoff, compaction recovery, or review transfer.
 - **L2 deep package:** Load [references/context-package-checklist.md](references/context-package-checklist.md) for large multi-file packages, cross-agent packets, high-risk boundary work, or L4/L5 changes.
-- **L3 coupling:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `agent-tool-permission-sandbox` when graph freshness, memory projection, validation order, or tool-output sensitivity affects package trust.
+- **L3 coupling:** Load [references/evidence-patterns.md](references/evidence-patterns.md) and pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `agent-tool-permission-sandbox` when graph freshness, memory projection, validation order, or tool-output sensitivity affects package trust.
 - **Anti-bloat rule:** Do not load unrelated references, copy whole graphs, include personal corpora, or package user-specific archives; cite only task-relevant sources, omissions, validators, and residual risk.
 
 # Output Contract

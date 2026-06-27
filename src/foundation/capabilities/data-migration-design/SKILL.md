@@ -21,6 +21,8 @@ Do not use this capability for application-level business logic changes that do 
 
 # Stage Fit
 
+Use during planning, coding, bug-fix, debugging, code-review, refactoring, testing, release, and handoff when stored data, migration evidence, or a remembered migration claim can affect compatibility, rollback, lock risk, partial application, or production release safety.
+
 Own migration design during planning, implementation review, testing, and release preparation when stored data, schema, indexes, constraints, partitions, backfills, purges, or cross-system cutovers change. In planning, turn current schema, migrations, generated clients, repository graph, project memory, execution trajectory, row-count evidence, deployment topology, and validation history into an expand/migrate/contract plan before implementation. In review, reject stale "no readers", "safe DDL", "already backfilled", "rollback is restore", or "migration passed once" claims unless current source, telemetry, and validation confirm them. Hand off when the unresolved decision is target data model, API/DTO compatibility, storage-engine execution, release sequencing, backup restore, security/privacy, or production observability.
 
 # Non-Negotiable Rules
@@ -46,6 +48,7 @@ Select the migration mode before choosing DDL, backfill, cutover, validation, or
 | Destructive contract cleanup | Drop/rename column, remove table/index, add NOT NULL, tighten constraint, or delete data. | Prove all old readers/writers are gone and rollback point is explicit. | Telemetry zero-use gate, backup/restore proof, owner signoff, rollback tier. | `release-rollback`, `delivery-release-gate`, `backup-recovery` | Destructive change before telemetry. |
 | Cross-system migration or cutover | CDC, dual-write, dual-read, source-to-target copy, service split, cloud migration, or sharding. | Keep source of truth, reconciliation, cutover, and rollback clear. | Source/target ownership, CDC lag, consistency check, cutover criteria, forward-fix plan. | `data-api-contract-changer`, `message-queue-design`, `reliability-observability-gate` | Big-bang cutover without dual-read or reconciliation. |
 | Operational migration repair | Failed, partial, slow, duplicate, checksum-mismatched, or interrupted migration. | Verify actual state before repair and avoid repeated blind reruns. | Migration ledger, partial row counts, same-pattern scan, repair script, revalidation output. | `failure-diagnosis`, `agent-execution-discipline`, `regression-testing` | Third same-path retry. |
+| Handoff closure | final answer, review, release note, or incident closure claims migration readiness. | Map every migration claim to fresh validator/test/report evidence and explicit unknowns. | changed migration-to-validation map, exit codes, artifact/report paths, evidence limits. | `plan-execution-consistency`, `validation-broker`, `quality-test-gate` | Completion language without migration claim. |
 
 # Industry Benchmarks
 
@@ -100,22 +103,23 @@ Data migrations are among the highest-risk operations in a production system. Pr
 
 # Failure Modes
 
-- DDL on hot table causes metadata lock; application requests queue; timeout cascade.
-- New column deployed without backfill; code reads NULL unexpectedly; NullPointerException in production.
-- Old column dropped before all service instances upgraded; instances on old code crash.
-- Backfill not resumable; interrupted at row 500K of 2M; restarts from row 0; double-processes 500K rows.
-- Migration runs twice (re-deploy scenario); duplicate unique key; migration fails mid-flight; DB in partial state.
-- Validation check samples 1K rows; 200K rows for specific tenant failed backfill; discovered 3 months later.
-- `CREATE INDEX` takes share lock; deploys during peak traffic; 2-minute outage.
-- Compensating rollback migration does not match forward migration; data left in inconsistent state.
-- Replication lag grows during backfill; replica-connected reporting service serves stale data; reports silently wrong.
-- Feature flag not set; new-column reads deployed before backfill complete; returns NULL for 30% of users.
-- `pg_dump` backup taken before migration but not verified; restore fails; point-of-no-return with no rollback.
-- Cross-service migration: service A drops column before service B is updated; service B crashes on reads.
+- **Hot-table lock:** DDL on hot table causes metadata lock; application requests queue; timeout cascade.
+- **Unbackfilled read:** new column deploys without backfill; code reads NULL unexpectedly; NullPointerException in production.
+- **Mixed-version crash:** old column drops before all service instances upgrade; old code crashes.
+- **Non-resumable backfill:** interrupted at row 500K of 2M; restart begins at row 0 and double-processes 500K rows.
+- **Duplicate execution:** migration runs twice during redeploy; duplicate unique key fails mid-flight and leaves partial state.
+- **Sample-only validation:** 1K sampled rows pass while 200K rows for one tenant failed backfill; defect is discovered months later.
+- **Blocking index build:** `CREATE INDEX` takes a share lock during peak traffic and causes outage.
+- **Bad compensation:** rollback migration does not match forward migration; data remains inconsistent.
+- **Replica lag:** backfill grows replication lag; replica-connected reporting service serves stale data and reports silently wrong.
+- **Premature flag enablement:** new-column reads deploy before backfill completes; 30% of users receive NULL-derived behavior.
+- **Untested restore:** `pg_dump` backup exists but restore fails; point-of-no-return has no credible rollback.
+- **Cross-service ordering break:** service A drops column before service B is updated; service B crashes on reads.
 
 # Reference Loading Policy
 
 The `SKILL.md` body carries normal L1/L2 migration selection, safety, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete migration plan, before implementation starts, or when batching, rollback, observability, cleanup, or owner signoff is uncertain. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when migration-type selection, EMC phase detail, checkpoint SQL, rollback tiers, graph/memory/trajectory reuse, validation evidence, or anti-pattern detail needs depth. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are enough.
+Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on migration-to-validation mapping, stale graph/memory/execution claims, tool permission boundaries, production evidence limits, or final handoff readiness.
 
 # Output Contract
 
@@ -146,7 +150,7 @@ Return a migration plan with:
 
 # Evidence Contract
 
-Close a migration plan only when the output names selected mode, current migration evidence inspected, graph/memory/execution reuse judgment, affected objects and volumes, old/new reader-writer compatibility, phase order, guard/idempotency strategy, lock and batch analysis, validation queries, rollback tier and steps, backup/restore proof when destructive, observability and abort criteria, changed-migration-to-validation map, handoff boundaries, residual risk, and evidence limits. A migration plan that says "run migration, monitor logs, restore backup if needed" is not sufficient evidence.
+Close a migration plan only when the output names selected mode, current migration evidence inspected, graph/memory/execution reuse judgment, affected objects and volumes, old/new reader-writer compatibility, phase order, guard/idempotency strategy, lock and batch analysis, validation queries, rollback tier and steps, backup/restore proof when destructive, observability and abort criteria, changed-migration-to-validation map, reuse / placement rationale, behavior preservation, what evidence proves, what evidence does not prove, next gate, handoff boundaries, residual risk, and evidence limits. A migration plan that says "run migration, monitor logs, restore backup if needed" is not sufficient evidence.
 
 # Benchmark Coverage
 

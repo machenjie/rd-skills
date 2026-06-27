@@ -50,6 +50,8 @@ Anchor against twelve-factor configuration, typed config binding, JSON Schema/Op
 
 # Mode Matrix
 
+Select the mode for the current stage before recommending a config or flag policy. Record selection evidence, skip guidance, and handoff boundary so configuration review does not absorb secret storage, dependency wiring, release execution, or cleanup work.
+
 | Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Exit risk |
 | --- | --- | --- | --- | --- | --- |
 | Build/deploy config | Env var, values file, build arg, CLI option, config file, deploy profile, or platform setting changes behavior. | Source of truth, schema, default, environment precedence, deploy validation. | Key name, owner, type, allowed values, default, env/profile matrix, validation command. | `delivery-release-gate`, `secret-configuration-security` | Build artifact or environment starts with unsafe default. |
@@ -72,9 +74,9 @@ Use `secret-configuration-security` when the value is a secret, credential, publ
 - **Signal:** A flag has no expiry, cleanup issue, removal condition, or telemetry for old/new path usage. **Hidden risk:** temporary rollout state becomes permanent architecture. **Required professional action:** add lifecycle, cleanup owner, and usage evidence. **Route to:** `cleanup-deletion-governance`. **Evidence required:** flag type, owner, expiry/removal condition, cleanup issue, telemetry.
 - **Signal:** A mode/kind/provider string controls many branches, adapters, factories, or dependency graphs. **Hidden risk:** hidden strategy registry bypasses architecture review. **Required professional action:** bound enum values, map graph variants, and route true strategy variation. **Route to:** `design-pattern-selection`, `dependency-wiring-lifecycle`. **Evidence required:** allowed values, variant matrix, rejected alternatives, tests.
 - **Signal:** Runtime config, remote config, or hot reload applies without validation-before-apply and last-good rollback. **Hidden risk:** invalid or partial config fails under traffic. **Required professional action:** make reload atomic and observable. **Route to:** `reliability-observability-gate`, `validation-broker`. **Evidence required:** versioned load path, rollback value, current-state reporting, alert/log/metric.
-- **Signal:** Config can affect auth, tenant isolation, data visibility, encryption, rate limits, URLs, secrets, logging redaction, or frontend exposure. **Hidden risk:** a non-code change changes security posture. **Required professional action:** escalate security review and fail-closed default analysis. **Route to:** `security-privacy-gate`, `secret-configuration-security`. **Evidence required:** security-sensitive fields, default posture, owner review, tests.
-- **Signal:** Memory or previous run notes say a config or flag is fragile, stale, or repeatedly broken. **Hidden risk:** stale memory substitutes for current evidence. **Required professional action:** reconcile current source, graph, reports, telemetry, and validation order. **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected memory claim, current source proof, validator freshness.
-- **Signal:** Validation claims "config covered" without enumerating changed keys, variants, owners, or affected tests. **Hidden risk:** single happy path misses unsafe combinations. **Required professional action:** broker config matrix validation or disclose partial evidence. **Route to:** `validation-broker`, `quality-test-gate`. **Evidence required:** key-to-test map, skipped variants, evidence limits.
+- **Signal:** Config can affect auth, tenant isolation, data visibility, encryption, rate limits, URLs, secrets, logging redaction, or frontend exposure. **Hidden risk:** wrong or silent fail-open config changes security posture outside code review. **Required professional action:** escalate security review and fail-closed default analysis. **Route to:** `security-privacy-gate`, `secret-configuration-security`. **Evidence required:** security-sensitive fields, default posture, owner review, denied/invalid test output.
+- **Signal:** Memory or previous run notes say a config or flag is fragile, stale, or repeatedly broken. **Hidden risk:** stale memory substitutes for current evidence and preserves a missing or wrong config boundary. **Required professional action:** reconcile current source, graph, reports, telemetry, and validation order. **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected memory claim, current source proof, validator output, and freshness report.
+- **Signal:** Validation claims "config covered" without enumerating changed keys, variants, owners, or affected tests. **Hidden risk:** missing variant coverage lets a single happy path hide unsafe combinations. **Required professional action:** broker config matrix validation or disclose partial evidence. **Route to:** `validation-broker`, `quality-test-gate`. **Evidence required:** key-to-test map, skipped variants, validation command, evidence limits.
 
 # Risk Escalation Rules
 
@@ -105,17 +107,17 @@ Do not load deep references for L1/L2 local config edits where the inline output
 
 # Failure Modes
 
-- Permanent feature flag with no owner, removal condition, telemetry, or cleanup issue.
-- Boolean flag bypasses permission, validation, transaction, tenant isolation, audit, or domain invariant.
-- Invalid config starts successfully and fails later under traffic.
-- Mode parameter grows into a hidden strategy registry with unclear ownership.
-- Hot reload applies partially and leaves mixed behavior across workers, threads, tenants, or requests.
-- Default points to production dependency in tests or unsafe development behavior in production.
-- Security-sensitive default fails open when the key is missing.
-- Config precedence is undocumented, so tenant, user, experiment, env, and operator values fight silently.
-- Config-driven dependency graph changes without affected test or rollback mapping.
-- Validation covers only the happy default and misses invalid, missing, stale, or conflicting values.
-- Config change has no test matrix, rollout path, rollback path, observability, or cleanup path.
+- **Permanent flag debt:** Feature flag has no owner, removal condition, telemetry, or cleanup issue, so temporary rollout state becomes permanent behavior.
+- **Invariant bypass:** Boolean flag bypasses permission, validation, transaction, tenant isolation, audit, or domain invariant.
+- **Late config failure:** Invalid config starts successfully and fails later under traffic instead of failing at load/deploy time.
+- **Hidden strategy registry:** Mode parameter grows into an unowned strategy system with unclear construction, graph, and test ownership.
+- **Partial hot reload:** Reload applies partially and leaves mixed behavior across workers, threads, tenants, or requests.
+- **Unsafe environment default:** Default points to production dependency in tests or unsafe development behavior in production.
+- **Fail-open sensitive default:** Security-sensitive default fails open when the key is missing.
+- **Silent precedence fight:** Tenant, user, experiment, env, and operator values override each other without visible precedence.
+- **Unmapped graph variant:** Config-driven dependency graph changes without affected test or rollback mapping.
+- **Happy-path-only validation:** Validation covers only the default and misses invalid, missing, stale, or conflicting values.
+- **No closure path:** Config change has no test matrix, rollout path, rollback path, observability, or cleanup path.
 
 # Output Contract
 
@@ -141,6 +143,8 @@ Close the policy only when these answers are concrete:
 - **Graph and memory:** config-driven graph variants, affected paths/tests, current-source proof, accepted/rejected memory claims, and stale-context limits.
 - **Execution and validation:** command order, validation freshness, test matrix, skipped combinations, negative evidence, and residual risk.
 - **Closure:** rollback note, cleanup owner, documentation/operator impact, validation command or review artifact, and next gate.
+
+Validation evidence must name boundaries inspected, command or validator, artifact/report path, exit code or manual result, changed config scope, and freshness after the final material config or flag decision. State what evidence proves, what evidence does not prove, reuse and placement rationale for graph/memory/trajectory claims, behavior preservation for existing defaults and invariants, residual risk owner, and next gate/handoff.
 
 # Benchmark Coverage
 

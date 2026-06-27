@@ -21,7 +21,7 @@ Do not use this capability for pure logic utilities with no DOM output — use u
 
 # Stage Fit
 
-Owns frontend test-design and review when a user-facing surface, component tree, route, API state, permission branch, or accessibility behavior needs executable proof. In planning, it turns behavior and state obligations into component/integration/E2E boundaries. In review, it rejects tests that pass through implementation details while missing user-visible outcomes, role variants, recovery actions, accessibility semantics, or contract-aligned API fixtures. Repository graph, project memory, and execution trajectory can locate prior frontend test patterns, but current source, stories, tests, API schemas, and validation output must confirm that a pattern is still authoritative.
+Owns frontend test-design and review when a user-facing surface, component tree, route, API state, permission branch, or accessibility behavior needs executable proof. Use during planning, coding, debugging, bug-fix repair, code-review, testing, release, and handoff when frontend test evidence must prove visible behavior rather than component internals. In planning, it turns behavior and state obligations into component/integration/E2E boundaries. In review, it rejects tests that pass through implementation details while missing user-visible outcomes, role variants, recovery actions, accessibility semantics, or contract-aligned API fixtures. Repository graph, project memory, and execution trajectory can locate prior frontend test patterns, but current source, stories, tests, API schemas, and validation output must confirm that a pattern is still authoritative.
 
 # Non-Negotiable Rules
 
@@ -80,7 +80,7 @@ Frontend tests fail for the wrong reasons when anchored to implementation. Preci
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries normal L1/L2 frontend test selection and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete frontend test plan, when role/state/accessibility/API mock coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when test-level selection, state coverage detail, or mock alignment examples are needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load these references for pure routing or trivial wording work where the output contract and quality gate are enough.
+The `SKILL.md` body carries normal L1/L2 frontend test selection and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete frontend test plan, when role/state/accessibility/API mock coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when test-level selection, state coverage detail, or mock alignment examples are needed. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on repository graph, project memory, execution trajectory, validation freshness, tool permission boundaries, or a changed-behavior-to-test map. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load these references for pure routing or trivial wording work where the output contract and quality gate are enough.
 
 ### Anti-examples
 
@@ -97,14 +97,16 @@ The `SKILL.md` body carries normal L1/L2 frontend test selection and evidence ru
 
 # Failure Modes
 
-- Snapshot test of error state passes; retry button removed in refactor; users cannot recover from errors in production.
-- Only happy path tested; permission-denied view shows admin content to viewer; security bypass discovered in pentest.
-- Mock returns hand-crafted object missing required `role` field; component crashes in production on `user.role.toUpperCase()`.
-- `setTimeout(500)` in tests causes 1 in 10 CI runs to fail; PR blocked for flaky test investigation; engineering time wasted.
-- MSW handler pollution across tests; test suite passes in isolation; fails 30% of the time in full CI run.
-- CSS class-based selectors break when design system migrates from BEM to CSS Modules; 200 tests fail; all require rewrite.
-- No keyboard navigation test; Tab order broken by new modal implementation; WCAG 2.4.3 failure found in audit.
-- No axe-core assertion; form field label `for` attribute mismatched to field `id`; screen reader users cannot identify field purpose.
+- **Snapshot-only error state:** snapshot test passes after a retry button is removed in a refactor; users cannot recover from errors in production.
+- **Happy-path permission gap:** only admin behavior is tested; permission-denied view shows admin content to a viewer, and the bypass is discovered in a pentest.
+- **Contract-drifting mock:** hand-crafted API mock omits required `role`; component crashes in production on `user.role.toUpperCase()` while tests stay green.
+- **Arbitrary async wait:** `setTimeout(500)` causes 1 in 10 CI runs to fail; PRs block on flake investigation instead of behavior evidence.
+- **MSW handler pollution:** a 500 handler leaks into later tests; suite passes in isolation but fails 30% of the time in full CI.
+- **CSS selector coupling:** class-based selectors break when the design system moves from BEM to CSS Modules; 200 tests fail without any user-visible regression.
+- **Keyboard path blind spot:** modal tab order breaks because no keyboard navigation test exists; WCAG 2.4.3 failure appears during audit.
+- **Accessibility assertion gap:** no axe-core or label assertion catches a mismatched `for` / `id`; screen reader users cannot identify field purpose.
+- **Stale memory copied as coverage:** an old story or prior test pattern is reused after the component contract changed; the selected test never covers the current denied state.
+- **Stale validation evidence:** test output predates the final fixture or MSW handler edit; handoff claims behavior coverage for a state no current test exercises.
 
 # Output Contract
 
@@ -131,7 +133,16 @@ Return a frontend test plan with:
 
 # Evidence Contract
 
-Close a frontend-testing change only when the output names selected mode, behavior scope, current-source evidence inspected, memory/graph/trajectory evidence freshness when used, test level decision, query strategy, role/state/accessibility/API mock coverage, changed-behavior-to-test map, validation commands or not-verified disclosure, evidence limits, residual risk, and next handoff owner. A coverage percentage, snapshot update, or "test the component" statement is not sufficient evidence.
+Close a frontend-testing change only when the output names:
+
+- **Boundaries inspected:** component/route/story source, current tests, API schema or fixture source, role/permission model, accessibility surface, repository graph, project memory, and execution trajectory accepted, rejected, stale, or not verified.
+- **Behavior-to-test map:** every changed visible behavior, role branch, state transition, API condition, keyboard/focus path, and recovery action mapped to a component, integration, E2E, visual, accessibility, or contract test.
+- **Validation evidence:** command, working directory, exit code or outcome, report/artifact path, and freshness after the final material edit.
+- **What evidence proves:** the exact visible behavior, state, permission branch, API mock contract, query strategy, flake control, or accessibility obligation covered.
+- **What evidence does not prove:** untested browsers/devices, backend contract enforcement, production data, real assistive technology behavior, visual regressions, or journeys outside the selected level.
+- **Residual risk and handoff:** accepted gaps, owner, review date or reopen trigger, and next gate such as `frontend-api-integration`, `contract-testing`, `e2e-testing`, or `quality-test-gate`.
+
+A coverage percentage, snapshot update, or "test the component" statement is not sufficient evidence.
 
 # Benchmark Coverage
 

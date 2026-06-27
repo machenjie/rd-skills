@@ -75,6 +75,7 @@ Use `refactoring` for behavior-preserving movement before or instead of deletion
 - **Signal:** Cleanup removes fallback, degraded path, security fallback, bypass guard, emergency mitigation, or kill switch. **Hidden risk:** incident recovery or safety posture regresses. **Required professional action:** escalate reliability/security review and prove safe replacement or re-enable path. **Route to:** `reliability-observability-gate`, `security-privacy-gate`. **Evidence required:** safety analysis, telemetry, runbook, rollback.
 - **Signal:** Memory or previous run claims a file is fragile, cleanup failed before, or a stale branch caused a defect. **Hidden risk:** stale memory overrules current source or misses new callers. **Required professional action:** reconcile memory with current graph, source, and validation order. **Route to:** `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected memory claim, current-source proof, validator freshness.
 - **Signal:** Validation passes after deletion but no absence test, contract test, generated rebuild, or affected integration path is mapped. **Hidden risk:** tests did not exercise the removed path or generated artifact. **Required professional action:** map deletion to affected validators or disclose partial proof. **Route to:** `quality-test-gate`, `validation-broker`. **Evidence required:** deleted path map, commands, uncovered consumers, residual risk.
+- **Signal:** Deletion closure depends on repository graph output, context packs, generated reports, command logs, or prior validation created before the final edit. **Hidden risk:** stale or overbroad evidence is treated as proof that callers, generated artifacts, or runtime registrations are absent. **Required professional action:** classify the graph/report/command as selector evidence, verify current source, compare execution order, and rerun or downgrade mapped validators before handoff. **Route to:** `context-control-plane`, `execution-trajectory-analysis`, `validation-broker`. **Evidence required:** selected graph slice, report or command artifact path, final-edit freshness, what evidence proves/does not prove, and tool permission boundary.
 
 # Risk Escalation Rules
 
@@ -95,22 +96,23 @@ Escalate to `data-api-contract-changer` when deleting API, schema, event, migrat
 
 # Failure Modes
 
-- Feature flag remains forever after rollout, preserving old and new behavior in the same function.
-- Compatibility branch stays without owner and accumulates bugs.
-- Fallback path hides production failures and is never removed, or is removed before a safe degraded path exists.
-- Dead code deletion misses reflection, generated client, cron, CLI, script, config, or documentation reference.
-- Deprecated API is removed without telemetry, migration notice, or unknown-consumer residual risk.
-- Expand/contract migration leaves dual-write code permanently, or deletes old state before rollback is impossible.
-- Generated artifact is deleted without changing the generator, so build restores stale output or package/install validation fails.
-- Cleanup removes a metric, alert, or log field used by operators or external automation.
-- Shortcut comment remains after the ceiling is exceeded because no `changeforge-shortcut` ledger, trigger, or owner exists.
-- Validation passes only default unit tests while integration, contract, generated rebuild, or public consumer paths remain untested.
+- **Permanent flag:** Feature flag remains forever after rollout, preserving old and new behavior in the same function.
+- **Ownerless compatibility:** Compatibility branch stays without owner and accumulates bugs.
+- **Unsafe fallback removal:** Fallback path hides production failures and is never removed, or is removed before a safe degraded path exists.
+- **Hidden dynamic caller:** Dead code deletion misses reflection, generated client, cron, CLI, script, config, or documentation reference.
+- **Unknown consumer break:** Deprecated API is removed without telemetry, migration notice, or unknown-consumer residual risk.
+- **Unsafe contraction:** Expand/contract migration leaves dual-write code permanently, or deletes old state before rollback is impossible.
+- **Generated drift:** Generated artifact is deleted without changing the generator, so build restores stale output or package/install validation fails.
+- **Operational signal loss:** Cleanup removes a metric, alert, or log field used by operators or external automation.
+- **Shortcut debt:** Shortcut comment remains after the ceiling is exceeded because no `changeforge-shortcut` ledger, trigger, or owner exists.
+- **Partial validation overclaim:** Validation passes only default unit tests while integration, contract, generated rebuild, or public consumer paths remain untested.
+- **Stale graph proof:** A graph, report, memory note, or command output from before the final edit is treated as current deletion evidence.
 
 # Reference Loading Policy
 
-Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active cleanup and deletion governance rules.
+Default mode is inline-only: the body carries the active deletion governance rules. Load [references/checklist.md](references/checklist.md) for L3+ public/runtime deletion, stale flags/fallbacks/deprecated APIs, generated/reflection references, telemetry-driven removal, rollback-sensitive cleanup, expand/contract cleanup, shortcut ledger review, or validation freshness disputes.
 
-If deep references are added later, load them only for L3+ work, public or runtime deletion, stale flags/fallbacks/deprecated APIs, generated/reflection references, telemetry-driven removal, rollback-sensitive cleanup, expand/contract cleanup, shortcut ledger review, or validation freshness disputes.
+Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when a cleanup decision needs benchmark-backed deletion lifecycle, anti-pattern, rollback, generated-artifact, or public-contract calibration. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on repository graph, project memory, execution trajectory, validation freshness, command output, generated reports, or a deletion-to-validation map.
 
 Do not load deep references for L1/L2 local deletions where caller search, owner, removal condition, tests, rollback risk, and residual risk can be handled from the inline output contract.
 

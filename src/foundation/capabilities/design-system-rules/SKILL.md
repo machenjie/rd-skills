@@ -42,6 +42,7 @@ Use during experience-definition, implementation-planning, coding, and review wh
 | Accessibility-critical UI | Modal, menu, combobox, data grid, form error, disabled action, live update, or keyboard path. | Name/role/value, focus, target size, live regions, contrast, reduced motion. | WCAG SC list, keyboard path, axe/manual coverage, unresolved specialist review. | `interaction-state-modeling`, `security-privacy-gate` when permission copy leaks | Accessibility as a later pass. |
 | Responsive or dense surface | Mobile/tablet/desktop/wide layout, data table, sticky action, overflow, truncation, or compact density. | Preserve task completion and readability at each breakpoint. | Breakpoint map, overflow strategy, touch target, text wrapping/truncation rule. | `prototype-description`, `frontend-testing` | Desktop-only design proof. |
 | New component proposal | Existing primitives cannot express semantics and reuse pressure is real. | Govern API, ownership, stories, docs, deprecation, and reuse criteria. | ≥ 3 surfaces or approved exception, owner, API, a11y spec, Storybook/test plan. | `implementation-structure-design`, `page-component-decomposition` | Future hypothetical reuse. |
+| Design-system closure | Review, handoff, release note, or final answer claims design-system readiness. | Tie every component, variant, token, state, breakpoint, and accessibility claim to fresh source and validation evidence. | Changed-design-system-to-validation map, what evidence proves, what it does not prove, residual owner. | `validation-broker`, `quality-test-gate`, `agent-execution-discipline` | Completion language without evidence. |
 
 # Industry Benchmarks
 
@@ -65,6 +66,7 @@ Select this capability when **component choice, variant governance, accessibilit
 - **Signal:** accessibility is described generically as "use ARIA", "make accessible", or "run axe" without component-specific criteria. **Hidden risk:** keyboard, focus, status, and name/role/value defects survive automation. **Required professional action:** map WCAG SC and ARIA/APG obligations to each interactive state. **Route to:** `interaction-state-modeling`, `quality-test-gate`. **Evidence required:** keyboard path, focus behavior, live regions, manual gaps.
 - **Signal:** responsive behavior is verified only at a desktop viewport or by visual fit. **Hidden risk:** primary task, text, overflow, or touch targets fail on mobile/dense contexts. **Required professional action:** define breakpoint behavior and overflow/truncation policy. **Route to:** `prototype-description`, `frontend-testing`. **Evidence required:** mobile/tablet/desktop/wide map and residual device risk.
 - **Signal:** project memory, repository graph, or prior agent trajectory suggests a component pattern. **Hidden risk:** stale or locally-specialized UI pattern is copied into the wrong surface. **Required professional action:** current-source-confirm reuse before trusting memory. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected files/stories/tests, accepted or rejected pattern, freshness limit.
+- **Signal:** a review, final response, release checklist, or story signoff claims "design-system compliant", "accessible", or "responsive" without a changed-design-system-to-validation map. **Hidden risk:** visual approval hides stale Storybook evidence, missing keyboard/focus/contrast checks, untested breakpoints, or token drift. **Required professional action:** map each component, variant, token, state, breakpoint, accessibility obligation, and new-component decision to a validator, artifact, or residual owner. **Route to:** `validation-broker`, `frontend-testing`, `quality-test-gate`, `agent-execution-discipline`. **Evidence required:** command or artifact path, exit code when runnable, what evidence proves, what it does not prove, next gate, residual risk.
 
 # Risk Escalation Rules
 
@@ -84,7 +86,7 @@ Design systems accumulate technical and visual debt at the component level. Prec
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries normal L1/L2 design-system selection, governance, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete component/variant/token decision, accessibility requirement, responsive rule, or new component proposal. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when benchmark detail, WCAG criteria, component selection trees, variant matrices, responsive checklists, or proposal evidence packs are needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are enough.
+The `SKILL.md` body carries normal L1/L2 design-system selection, governance, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete component/variant/token decision, accessibility requirement, responsive rule, or new component proposal. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when benchmark detail, WCAG criteria, component selection trees, variant matrices, responsive checklists, or proposal evidence packs are needed. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on changed-design-system-to-validation mapping, graph/memory/execution freshness, tool permission boundaries, visual/accessibility/responsive proof limits, or final handoff readiness. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are enough.
 
 ### Anti-examples
 
@@ -101,16 +103,16 @@ The `SKILL.md` body carries normal L1/L2 design-system selection, governance, an
 
 # Failure Modes
 
-- One-off component introduced for a single screen duplicates an existing pattern; proliferates to 12 variants; no owner; becomes unmaintained.
-- Hard-coded hex color bypasses token system; dark mode fails with low contrast ratio 1.8:1; WCAG violation.
-- Focus not trapped in modal; keyboard users can reach background page controls; screen reader users confused.
-- `aria-live` region missing on async search results; screen reader users do not learn that results have updated.
-- Touch target 20×20 CSS px on mobile action buttons; error rate in usability testing > 30%.
-- Variant prop explosion: Button has 14 boolean modifiers; combinatorial test matrix exceeds 16,384 states; not tested.
-- Animation without `prefers-reduced-motion`; vestibular disorder complaint; accessibility legal notice issued.
-- Design token renamed in minor version; all consumer teams' builds break with undefined token value.
-- Empty state not implemented; data table shows blank screen after filter returns zero results; users assume bug.
-- Form labels implemented visually with placeholder text only; screen reader reads "Edit text" instead of field purpose.
+- **One-off primitive:** component introduced for a single screen duplicates an existing pattern; proliferates to 12 variants; no owner; becomes unmaintained.
+- **Token bypass:** hard-coded hex color bypasses token system; dark mode fails with low contrast ratio 1.8:1; WCAG violation.
+- **Focus escape:** focus not trapped in modal; keyboard users can reach background page controls; screen reader users confused.
+- **Silent async update:** `aria-live` region missing on async search results; screen reader users do not learn that results have updated.
+- **Mobile target miss:** touch target 20×20 CSS px on mobile action buttons; error rate in usability testing > 30%.
+- **Variant explosion:** Button has 14 boolean modifiers; combinatorial test matrix exceeds 16,384 states; not tested.
+- **Motion preference violation:** animation without `prefers-reduced-motion`; vestibular disorder complaint; accessibility legal notice issued.
+- **Token compatibility break:** design token renamed in minor version; all consumer teams' builds break with undefined token value.
+- **Blank data surface:** empty state not implemented; data table shows blank screen after filter returns zero results; users assume bug.
+- **Placeholder-only label:** form labels implemented visually with placeholder text only; screen reader reads "Edit text" instead of field purpose.
 
 # Output Contract
 
@@ -135,7 +137,7 @@ Return design-system rules with:
 
 # Evidence Contract
 
-Close a design-system-rules change only when the output names selected mode, current source evidence inspected, graph/memory/trajectory reuse judgment, accepted components and rejected alternatives, variant/token decisions, accessibility and responsive obligations, new-component justification or rejection, changed-design-system-to-validation map, handoff boundaries, residual risk, and evidence limits. A generic "follow the design system" or "run accessibility checks" statement is not sufficient evidence.
+Close a design-system-rules change only when the output names selected mode, current source evidence inspected, boundaries inspected, graph/memory/trajectory reuse judgment, accepted components and rejected alternatives, variant/token decisions, accessibility and responsive obligations, new-component justification or rejection, changed-design-system-to-validation map, validation commands or artifacts with results, handoff boundaries, residual risk, and evidence limits. Each material claim must state what evidence proves and what it does not prove. A generic "follow the design system" or "run accessibility checks" statement is not sufficient evidence.
 
 # Benchmark Coverage
 

@@ -10,3 +10,4 @@
 - Mark release-critical scenarios.
 - Map each scenario to verification evidence.
 - Preserve non-goals to prevent scenario-driven scope expansion.
+- Map repository graph, accepted/rejected memory, execution trajectory, validator command, report/artifact path, freshness, owner, and residual risk to every scenario that is release-critical or reused from prior evidence.

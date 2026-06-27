@@ -17,11 +17,11 @@ Use this capability when a change: adds or modifies database indexes; introduces
 
 # Do Not Use When
 
-Do not use this capability for non-relational data store optimization (use `nosql-database` for DynamoDB/MongoDB partition and index design). Do not use it for full-text search optimization (use `search-analytics-design` for Elasticsearch/Solr relevance tuning). Do not add indexes "just in case" — every index has a write amplification cost, a storage cost, and a maintenance burden; justification is mandatory.
+Do not use this capability for non-relational data store optimization (use `nosql-database` for DynamoDB/MongoDB partition and index design). Do not use it for full-text search optimization (use `search-analytics-design` for Elasticsearch/Solr relevance tuning). Do not add indexes "just in case" — every index has a write amplification cost, a storage cost, and a maintenance burden; justification is mandatory. Boundary: repository graph, project memory, execution trajectory, and old validation reports are path selectors, not trusted production proof; current source, schema, plan, telemetry, owner, and ownership evidence must close the claim. This capability does not own permission, tenant, or API contract semantics except where those predicates change query shape; route those boundaries to the owning capability.
 
 # Stage Fit
 
-Owns query/index optimization during data-middleware planning, implementation review, and performance repair when the primary risk is a concrete SQL/ORM read path, execution plan, pagination strategy, or physical index lifecycle. In planning, it turns current query evidence into index/query/pagination decisions and migration-safe validation obligations. In review, it rejects blind index additions, dev-data-only plans, N+1 misdiagnosis, unsafe offset pagination, or build/drop decisions without write-cost and rollback evidence. Repository graph, project memory, and execution trajectory may point to slow queries or prior fixes, but current SQL/ORM call sites, schema/index definitions, telemetry, and execution plans must confirm the optimization target before the output treats that evidence as authoritative.
+Owns query/index optimization during data-middleware planning, coding, debugging, bug-fix repair, code-review, refactoring, testing, release readiness, and handoff when the primary risk is a concrete SQL/ORM read path, execution plan, pagination strategy, or physical index lifecycle. In planning, it turns current query evidence into index/query/pagination decisions and migration-safe validation obligations. During coding and review, it rejects blind index additions, dev-data-only plans, N+1 misdiagnosis, unsafe offset pagination, or build/drop decisions without write-cost and rollback evidence. Repository graph, project memory, and execution trajectory may point to slow queries or prior fixes, but current SQL/ORM call sites, schema/index definitions, telemetry, and execution plans must confirm the optimization target before the output treats that evidence as authoritative.
 
 # Non-Negotiable Rules
 
@@ -81,7 +81,7 @@ Execution plan estimates on development data diverge significantly from producti
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries normal L1/L2 query/index selection and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete optimization plan, when plan evidence or write-cost coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when index-type choice, plan-reading detail, pagination tradeoffs, or benchmark examples are needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load these references for pure routing or trivial wording work where the output contract and quality gate are enough.
+The `SKILL.md` body carries normal L1/L2 query/index selection and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete optimization plan, when plan evidence or write-cost coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when index-type choice, plan-reading detail, pagination tradeoffs, or benchmark examples are needed. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on project memory, repository graph, execution trajectory, validation freshness, tool permission boundaries, or a changed-query-to-validation map. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load these references for pure routing or trivial wording work where the output contract and quality gate are enough.
 
 ### Anti-examples
 
@@ -98,14 +98,15 @@ The `SKILL.md` body carries normal L1/L2 query/index selection and evidence rule
 
 # Failure Modes
 
-- Index added in wrong column order; planner falls back to sequential scan; query 100x slower than expected; detected only in production load test.
-- Blocking `CREATE INDEX` on orders table; table locked for 8 minutes; all checkout requests timeout; P0 incident.
-- `OFFSET` pagination on audit log table (50M rows); user navigates to page 2,500; query scans 50,000 rows; timeout; CSAT impact.
-- N+1 ORM query on customer dashboard; 200 customers loaded + 200 individual account queries; dashboard latency 8s; misdiagnosed as missing index; root cause (eager loading) unaddressed.
-- Unused index on write-heavy table; 6 unused indexes on `events` table; INSERT latency increased from 2ms to 12ms; discovered during load test.
-- Statistics staleness after bulk import; planner chooses wrong join order; reporting query 30x slower than expected; `ANALYZE` not run post-import.
-- Low-cardinality index on `status` column; status = 'active' matches 80% of rows; planner uses sequential scan; index never used; write cost paid with no benefit.
-- ORM `DISTINCT` on large result set with filesort; no index on sort column; P99 = 15s; feature shipped to production without load testing.
+- **Wrong column order:** index added in wrong column order; planner falls back to sequential scan; query 100x slower than expected; detected only in production load test.
+- **Blocking build:** blocking `CREATE INDEX` on orders table; table locked for 8 minutes; all checkout requests timeout; P0 incident.
+- **Deep offset pagination:** `OFFSET` pagination on audit log table (50M rows); user navigates to page 2,500; query scans 50,000 rows; timeout; CSAT impact.
+- **N+1 misdiagnosis:** ORM query on customer dashboard loads 200 customers plus 200 individual account queries; dashboard latency 8s; misdiagnosed as missing index; eager loading root cause unaddressed.
+- **Write-heavy unused index:** unused index on write-heavy table; 6 unused indexes on `events` table; INSERT latency increased from 2ms to 12ms; discovered during load test.
+- **Stale statistics:** statistics staleness after bulk import; planner chooses wrong join order; reporting query 30x slower than expected; `ANALYZE` not run post-import.
+- **Low-cardinality leading column:** index on `status` column where status = 'active' matches 80% of rows; planner uses sequential scan; index never used; write cost paid with no benefit.
+- **Large filesort:** ORM `DISTINCT` on large result set with filesort; no index on sort column; P99 = 15s; feature shipped to production without load testing.
+- **Stale graph or memory claim:** prior agent trajectory says an index already covers the query, but current ORM SQL changed predicates and sort order; output trusts the old claim, skips plan evidence, and ships a regression.
 
 # Output Contract
 

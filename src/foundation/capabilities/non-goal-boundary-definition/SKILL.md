@@ -21,7 +21,7 @@ Do not use this capability to avoid required risk work by labeling it a non-goal
 
 # Stage Fit
 
-Use during requirement intake, implementation planning, review, and quality gate preparation when scope pressure, version staging, deferred decisions, or boundary disputes could affect implementation. In planning, define exact inclusions, exclusions, forbidden artifacts, safe future compatibility constraints, and acceptance exclusions before task sequencing. In review, reject speculative endpoints, nullable fields, reserved roles, hidden UI, feature flags, migrations, metrics, jobs, or adapters added for deferred work. Hand off when the primary issue is unclear authority, scenario coverage, test-layer selection, architecture sequencing, release governance, or specialist security/reliability validation.
+Use during requirement intake, implementation planning, coding, code-review, refactoring, debugging, testing, quality gate preparation, and release-readiness when scope pressure, version staging, deferred decisions, or boundary disputes could affect implementation. In planning, define exact inclusions, exclusions, forbidden artifacts, safe future compatibility constraints, and acceptance exclusions before task sequencing. In coding/review, reject speculative endpoints, nullable fields, reserved roles, hidden UI, feature flags, migrations, metrics, jobs, or adapters added for deferred work. In debugging or repair, distinguish the smallest required fix from adjacent cleanup, redesign, migration, and "while here" work. Hand off when the primary issue is unclear authority, scenario coverage, test-layer selection, architecture sequencing, release governance, or specialist security/reliability validation.
 
 # Non-Negotiable Rules
 
@@ -55,11 +55,36 @@ Select this capability when the primary need is **containing scope and making ex
 
 # Proactive Professional Triggers
 
-- **Signal:** A plan says "later", "future-proof", "while here", "coming soon", "v2", "for now", or "placeholder". **Hidden risk:** deferred scope enters the codebase as untested surface area. **Required professional action:** list forbidden artifacts and acceptance exclusions. **Route to:** `non-goal-boundary-definition`, `acceptance-standard-definition`. **Evidence required:** excluded endpoints/fields/UI/jobs/flags and not-present checks.
-- **Signal:** A proposed non-goal touches auth, security, privacy, compliance, money, data loss, reliability, accessibility, or compatibility. **Hidden risk:** baseline safety is removed from the release. **Required professional action:** reject the non-goal, move the control into scope, or require explicit risk acceptance and specialist gate. **Route to:** owning professional gate plus `quality-test-gate`. **Evidence required:** control decision, owner, compensating control, residual risk.
-- **Signal:** Repository graph or project memory suggests an old boundary. **Hidden risk:** stale scope, renamed routes, changed consumers, or retired assumptions become current requirements. **Required professional action:** inspect current source/registry/tests/docs before reuse and mark stale evidence. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected reuse judgment and freshness limit.
-- **Signal:** Implementation adds nullable columns, reserved enum values, no-op endpoints, permission bits, hidden tabs, event topics, or feature flags for future work. **Hidden risk:** current contract is polluted by unapproved future behavior. **Required professional action:** remove speculative surface or re-scope formally. **Route to:** `data-api-contract-changer`, `architecture-impact-reviewer`. **Evidence required:** diff search, removed/preserved artifact decision, compatibility note.
-- **Signal:** A non-goal has no QA/review exclusion check. **Hidden risk:** scope creep is invisible because only in-scope success is tested. **Required professional action:** add negative acceptance checks and changed-scope-to-validation mapping. **Route to:** `acceptance-standard-definition`, `quality-test-gate`. **Evidence required:** not-present validator, review checklist, residual risk for manual-only checks.
+- **Signal:** A plan says "later", "future-proof", "while here", "coming soon", "v2", "for now", or "placeholder".
+  **Hidden risk:** hidden placeholder endpoints, fields, jobs, or flags create contract pollution and missing validation.
+  **Required professional action:** require a forbidden-artifact scan and document acceptance exclusions.
+  **Route to:** `non-goal-boundary-definition`, `acceptance-standard-definition`.
+  **Evidence required:** route scan, schema diff, UI/job/flag review, and not-present validation checks.
+- **Signal:** A proposed non-goal touches auth, security, privacy, compliance, money, data loss, reliability, accessibility, or compatibility.
+  **Hidden risk:** hidden auth, privacy, reliability, accessibility, or compatibility control gap reaches release.
+  **Required professional action:** reject the non-goal, move the control into scope, or require explicit risk acceptance and specialist gate.
+  **Route to:** `security-privacy-gate`, `reliability-observability-gate`, `quality-test-gate`.
+  **Evidence required:** control decision, owner, compensating control, residual risk.
+- **Signal:** Repository graph or project memory suggests an old boundary.
+  **Hidden risk:** stale scope, renamed routes, changed consumers, or retired assumptions become current requirements.
+  **Required professional action:** inspect current source/registry/tests/docs before reuse and mark stale evidence.
+  **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`.
+  **Evidence required:** source path scan, docs/tests review, accepted/rejected reuse judgment, and freshness report.
+- **Signal:** Implementation adds nullable columns, reserved enum values, no-op endpoints, permission bits, hidden tabs, event topics, or feature flags for future work.
+  **Hidden risk:** current contract is polluted by unapproved future behavior.
+  **Required professional action:** scan the diff, require removal of speculative surface, or route formal re-scope.
+  **Route to:** `data-api-contract-changer`, `architecture-impact-reviewer`.
+  **Evidence required:** diff search, removed/preserved artifact decision, compatibility note.
+- **Signal:** A non-goal has no QA/review exclusion check.
+  **Hidden risk:** missing validation evidence lets hidden scope creep pass while only in-scope success is tested.
+  **Required professional action:** require not-present acceptance checks and changed-scope-to-validation mapping.
+  **Route to:** `acceptance-standard-definition`, `quality-test-gate`.
+  **Evidence required:** not-present validator, review checklist, validation command or manual report, and residual risk.
+- **Signal:** Final validation proves only in-scope happy paths after scope-related edits.
+  **Hidden risk:** unverified out-of-scope artifacts ship because validation evidence is stale or incomplete.
+  **Required professional action:** verify exclusion checks after the final scope edit and record what the evidence does not prove.
+  **Route to:** `validation-broker`, `plan-execution-consistency`.
+  **Evidence required:** command/report path, exit code or manual review result, changed scope, freshness, and residual risk.
 
 # Risk Escalation Rules
 
@@ -79,12 +104,14 @@ The `SKILL.md` body carries normal L1/L2 selection, stage fit, routing, evidence
 
 # Failure Modes
 
-- A vague non-goal such as "no admin features" lets user-management endpoints appear because no excluded surfaces were named.
-- GDPR, auth, rate limiting, or data retention is deferred as a non-goal even though the in-scope feature processes protected data.
-- Nullable future fields, reserved roles, or hidden UI are added for v2 and become permanent ambiguous contract surface.
-- Non-goals have no acceptance exclusions, so QA verifies only the included behavior and misses deployed out-of-scope endpoints.
-- Project memory from an old plan is reused after routes, roles, schema, or customer commitments changed.
-- "No pagination in v1" is accepted without volume assumption, and the current release times out under realistic data growth.
+- **Vague exclusion:** "no admin features" lets user-management endpoints appear because no excluded surfaces were named.
+- **Invalid risk deferral:** GDPR, auth, rate limiting, or data retention is deferred as a non-goal even though the in-scope feature processes protected data.
+- **Speculative contract surface:** nullable future fields, reserved roles, or hidden UI are added for v2 and become permanent ambiguous contract surface.
+- **Missing exclusion evidence:** non-goals have no acceptance exclusions, so QA verifies only the included behavior and misses deployed out-of-scope endpoints.
+- **Stale memory expansion:** project memory from an old plan is reused after routes, roles, schema, or customer commitments changed.
+- **Unbounded volume assumption:** "No pagination in v1" is accepted without volume assumption, and the current release times out under realistic data growth.
+- **Hidden release promise:** placeholder docs, roadmap copy, or help text promises an excluded capability and support treats it as committed behavior.
+- **Stale validation closure:** final evidence predates a route, schema, UI, job, flag, or docs edit, so the handoff overclaims scope containment.
 
 # Output Contract
 
@@ -103,13 +130,16 @@ Return a scope boundary record with:
 - `acceptance_exclusions` (not-present checks for each non-goal: API/schema/UI/route/migration/permission/job/event/metric/doc/review evidence)
 - `anti_scope_creep_checklist` (PR review checks for out-of-scope endpoints, fields, migrations, permissions, flags, UI, events, jobs, tests, and docs)
 - `risk_acknowledgement` (for deferred security/compliance/reliability/accessibility/money/data work: owner, date, compensating control, and why it is acceptable or blocked)
+- `validation_commands` (command or review procedure, validator/tool, artifact/report path, output/exit code or manual result, changed scope, and freshness after the final scope-related edit)
 - `changed_scope_to_validation_map` (each included behavior, excluded surface, forbidden artifact, compatibility constraint, deferred decision, and risk acknowledgement mapped to a test, validator, review check, or residual risk)
 - `handoff_boundaries` (what belongs to clarification, structuring, scenarios, acceptance, quality tests, security, reliability, data/API contracts, release, or task planning)
 - `evidence_limits` (what was not inspected or validated: live system, production data, customer contracts, current permissions, generated specs, UI routes, migrations, docs, tests, or final validation freshness)
 
 # Evidence Contract
 
-Close a scope-boundary output only when it names the selected mode, current scope boundary, source evidence, graph/memory/trajectory reuse judgment, exact inclusions, exact exclusions, version contract, deferred decisions, forbidden assumptions/artifacts, future compatibility judgment, acceptance exclusions, changed-scope-to-validation map, handoff boundaries, residual risk, and evidence limits. A non-goal list without "not present" checks, source evidence, and forbidden artifacts is not sufficient evidence.
+Close a scope-boundary output only when it names the selected mode, current scope boundary, source evidence, graph/memory/trajectory reuse judgment, boundaries inspected, exact inclusions, exact exclusions, version contract, deferred decisions, forbidden assumptions/artifacts, future compatibility judgment, acceptance exclusions, changed-scope-to-validation map, handoff boundaries, residual risk, and evidence limits. A non-goal list without "not present" checks, source evidence, and forbidden artifacts is not sufficient evidence.
+
+Validation evidence must name command or review procedure, validator, artifact/report path, output and exit code or manual result, changed scope, and freshness after the final scope-related edit. State what evidence proves, what evidence does not prove, reuse and placement rationale for graph/memory/trajectory claims, behavior preservation for existing in-scope contracts, and next gate or handoff owner.
 
 # Benchmark Coverage
 
@@ -132,7 +162,8 @@ The scope boundary is complete only when:
 7. Every deferred decision has an owner, trigger or deadline, blocking/non-blocking classification, and "must not assume" constraint.
 8. Non-goals are reviewed against customer, legal, security, platform, SLA, release, and migration commitments.
 9. Changed-scope-to-validation mapping covers every included behavior, excluded surface, forbidden artifact, deferred decision, compatibility constraint, and risk acknowledgement.
-10. Handoff boundaries and evidence limits are explicit so non-goal definition is not over-claimed as clarification, acceptance, test execution, security sign-off, reliability sign-off, or release approval.
+10. Validation commands or review procedures, validators, artifacts/reports, output/exit code or manual result, changed scope, and freshness are recorded for every exclusion, forbidden artifact, and accepted residual risk.
+11. Handoff boundaries and evidence limits are explicit so non-goal definition is not over-claimed as clarification, acceptance, test execution, security sign-off, reliability sign-off, or release approval.
 
 # Used By
 

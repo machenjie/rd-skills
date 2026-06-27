@@ -1,6 +1,6 @@
 # Professionalism Release Readiness
 
-- Generated: 2026-06-27T01:15:39.475040+00:00
+- Generated: 2026-06-27T12:53:42.819586+00:00
 - Status: strict-release-ready
 - Authoring ready: ready
 - Release ready: ready
@@ -20,7 +20,7 @@
 
 ## Key Foundation Capability Coverage Summary
 
-- Count: 40; Statuses: acceptable: 1, sample-grade: 39
+- Count: 40; Statuses: sample-grade: 40
 
 ## Release Checklist
 
@@ -116,7 +116,7 @@
 - promoted_agent_sample_strict_warnings: 0
 - promoted_agent_samples_strict_checked: 5
 - release_blocking_professionalism_warnings: 0
-- skill_professionalism_average_score: 55.62
+- skill_professionalism_average_score: 57.72
 - skill_professionalism_warnings: 0
 
 ## Release Blockers

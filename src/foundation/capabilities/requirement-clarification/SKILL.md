@@ -66,8 +66,8 @@ Escalate immediately when the unanswered decision can affect authorization, tena
 # Proactive Professional Triggers
 
 - **Signal:** The request says "just", "quick", "simple", or names a solution but omits current behavior, desired behavior, actor, or done evidence. **Hidden risk:** downstream work optimizes the wrong contract. **Required professional action:** classify gaps before planning. **Route to:** `requirement-structuring`, `acceptance-standard-definition`. **Evidence required:** fact/unknown map and proceed/block decision.
-- **Signal:** A permission, tenant, billing, migration, deletion, compliance, or rollback behavior is unstated. **Hidden risk:** implementation embeds an authority decision. **Required professional action:** mark blocking and name the authority owner. **Route to:** relevant specialist gate. **Evidence required:** decision owner, decision shape, and downstream gate.
-- **Signal:** Source, ticket, stakeholder, project memory, repository graph, or previous run disagree. **Hidden risk:** stale or conflicting evidence becomes the requirement. **Required professional action:** preserve conflict and verify current source before proceeding. **Route to:** `repository-context-map`, `project-memory-governance`. **Evidence required:** accepted/rejected evidence and freshness limit.
+- **Signal:** A permission, tenant, billing, migration, deletion, compliance, or rollback behavior is unstated. **Hidden risk:** implementation embeds an authority decision. **Required professional action:** mark blocking and name the authority owner. **Route to:** `security-privacy-gate`, `data-api-contract-changer`, or `delivery-release-gate` according to the authority surface. **Evidence required:** decision owner, decision shape, downstream gate, and rollback or reversal note.
+- **Signal:** Source, ticket, stakeholder, project memory, repository graph, or previous run disagree. **Hidden risk:** stale or conflicting evidence becomes the requirement. **Required professional action:** preserve conflict and verify current source before proceeding. **Route to:** `repository-context-map`, `project-memory-governance`. **Evidence required:** accepted/rejected evidence map, current-source inspection command or report, and freshness limit.
 - **Signal:** Non-blocking unknown has no safe default, isolation method, follow-up owner, or not-present check. **Hidden risk:** deferred decision becomes hidden behavior. **Required professional action:** reclassify as blocking or define isolation. **Route to:** `non-goal-boundary-definition`, `quality-test-gate`. **Evidence required:** safe default, forbidden assumption, validation hook.
 - **Signal:** Bug report supplies symptom/log/screenshot but no expected restored behavior. **Hidden risk:** diagnosis solves the wrong problem. **Required professional action:** clarify observed vs expected behavior before root cause. **Route to:** `failure-diagnosis`, `regression-testing`. **Evidence required:** reproduction condition, expected output, acceptance signal.
 
@@ -94,17 +94,24 @@ Escalate immediately when the unanswered decision can affect authorization, tena
 
 # Failure Modes
 
-- Blocking authorization, billing, compliance, migration, or rollback question is classified as non-blocking to maintain velocity.
-- Stakeholder claim is treated as verified fact and later contradicts source, data, telemetry, or generated contracts.
-- Project memory or prior validation is stale, but implementation trusts it without current-source inspection.
-- Clarification asks questions but does not name owners, deadlines/triggers, or decision shape.
-- Partial proceed authorizes too much and lets unapproved schema, endpoint, UI, job, flag, or permission behavior appear.
-- Bug diagnosis starts from symptoms without expected restored behavior, so the fix passes tests but misses the real requirement.
-- Non-blocking unknowns have no follow-up owner and become permanent hidden defaults.
+- **Authority downgrade:** Blocking authorization, billing, compliance, migration, or rollback question is classified as non-blocking to maintain velocity.
+- **Stakeholder-claim drift:** Stakeholder claim is treated as verified fact and later contradicts source, data, telemetry, or generated contracts.
+- **Stale memory trust:** Project memory or prior validation is stale, but implementation trusts it without current-source inspection.
+- **Ownerless question:** Clarification asks questions but does not name owners, deadlines/triggers, or decision shape.
+- **Overbroad partial proceed:** Partial proceed authorizes too much and lets unapproved schema, endpoint, UI, job, flag, or permission behavior appear.
+- **Symptom-only diagnosis:** Bug diagnosis starts from symptoms without expected restored behavior, so the fix passes tests but misses the real requirement.
+- **Permanent hidden default:** Non-blocking unknowns have no follow-up owner and become permanent hidden defaults.
+- **Unmapped validation gap:** A safe assumption, owner answer, or forbidden artifact is not mapped to a validation command, review check, not-present scan, or residual-risk owner.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 selection, rules, output, and gates. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete clarification record. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when blocking/non-blocking classification, safe-default reasoning, graph-memory-trajectory reuse, stakeholder conflict, partial proceed boundaries, or template detail needs more depth. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or metadata-only edits with no clarification decision.
+The `SKILL.md` body carries L1/L2 selection, rules, output, and gates. Load only the reference needed for the active clarification decision:
+
+- Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete clarification record.
+- Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when blocking/non-blocking classification, safe-default reasoning, stakeholder conflict, partial proceed boundaries, owner response shape, or template detail needs more depth.
+- Load [references/evidence-patterns.md](references/evidence-patterns.md) when the clarification depends on current-source proof, repository graph, project memory, execution trajectory, validation freshness, forbidden-artifact scans, tool permission boundaries, or evidence limits.
+
+Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or metadata-only edits with no clarification decision.
 
 # Output Contract
 

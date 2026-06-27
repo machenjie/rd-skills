@@ -176,17 +176,17 @@ The compact trace parser supports a bounded YAML-like subset: `key: value`, `key
 Use `present` only when concrete evidence exists in final.md compact trace, hook telemetry, explicit trace artifacts, or grading evidence. Use `inferred` for case metadata fallback, `degraded` for partial evidence, `missing` for no evidence, and `not_applicable` only with a specific reason.
 
 ## Failure Modes
-- The runner marks every phase `present` without parsed evidence.
-- `process_facts` use generic template claims that could fit any case.
-- PDD acceptance criteria do not map to TDD tests.
-- DDD invariants do not map to tests or code constraints.
-- SDD public API does not map to tests.
-- Failure modes lack tests.
-- Logging is required but redaction, fields, cardinality controls, and log/security tests are missing.
-- Reports claim Level 1 actual coverage when only registration exists.
+- **Synthetic present phase**: the runner marks every phase `present` without parsed evidence.
+- **Generic process facts**: `process_facts` use template claims that could fit any case.
+- **Unmapped acceptance**: PDD acceptance criteria do not map to TDD tests.
+- **Unproved invariant**: DDD invariants do not map to tests or code constraints.
+- **Private or absent API proof**: SDD public API does not map to tests.
+- **Untested failure mode**: failure modes lack tests.
+- **Unsafe logging gap**: logging is required but redaction, fields, cardinality controls, and log/security tests are missing.
+- **Coverage overclaim**: reports claim Level 1 actual coverage when only registration exists.
 
 ## Reference Loading Policy
-Read `references/capabilities/index.md` only after the route selects the capabilities needed for this change. Load only the selected capability references for the active L1, L2, L3, L4, or L5 route. Do not load all references by default. For deeper capability detail, read `references/capabilities/<capability-id>-<capability-name>.md` for the selected capability and any explicitly named companion reference.
+Read `references/capabilities/index.md` only after the route selects the capabilities needed for this change. Load only the selected capability references for the active L1, L2, L3, L4, or L5 route. Do not load all references by default. Load [references/process-phase-contracts.md](references/process-phase-contracts.md) when authoring or grading detailed phase evidence. Load [references/process-output-and-gates.md](references/process-output-and-gates.md) when the full output fields, handoff routing, or closure gate are needed. Load [references/checklist.md](references/checklist.md) for a fast self-review before handoff. For deeper capability detail, read `references/capabilities/<capability-id>-<capability-name>.md` for the selected capability and any explicitly named companion reference.
 
 ## Output Contract
 Produce a compact process trace with `phase_status`, `process_facts`, and `traceability` for pdd, ddd, sdd, and tdd.
@@ -194,12 +194,17 @@ Produce a compact process trace with `phase_status`, `process_facts`, and `trace
 Booleans are not proof. The mappings inside `process_facts.tdd` are the proof.
 
 - **Phase status:** return `present`, `inferred`, `degraded`, `missing`, or `not_applicable` for each core phase with evidence source.
+- **Evidence sources:** name final.md, process-trace.json, hook telemetry, run.log, case metadata, report artifact, validator output, or explicit unavailable source.
+- **Phase dependency chain:** show which PDD fact feeds which DDD owner/invariant, which SDD file/API/logging decision, and which TDD validator.
 - **PDD fields required:** include problem, impact, acceptance criteria, constraints, non-goals, risk surfaces, and validation signal.
 - **DDD fields required:** include domain terms, ownership decision, invariants, and side-effect boundaries.
 - **SDD fields required:** include modules, files, public API, data flow, error contract, failure modes, and logging decision.
 - **TDD fields required:** include acceptance, invariant, public API, failure-mode, logging/security, and validation command mappings.
+- **Validation commands:** name command, exit code or not-run status, freshness, what evidence proves, and what it does not prove.
+- **Coverage run status:** separate registered cases, dry-run cases, promoted cases, and actual live-run coverage.
 - **Residual risk:** state inferred fields, missing evidence, unsupported final.md formatting, and coverage limits.
-- **Handoff:** name the next gate for mapping gaps, logging gaps, or report consistency gaps.
+- **Handoff boundaries:** name process owner, independent review owner, skipped surfaces, and evidence limits.
+- **Handoff:** name the next gate for mapping gaps, logging gaps, report consistency gaps, or release-evidence gaps.
 
 ## Evidence Contract
 Close process orchestration only when the trace answers these evidence questions:

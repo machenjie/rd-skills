@@ -29,6 +29,8 @@ Do not use this capability to generalize a single concrete implementation in hop
 - **Test/release:** require compatibility tests, malformed input tests, invariant-bypass tests, failure isolation, performance budget, migration/deprecation evidence, and owner acceptance.
 - **Cleanup/repair:** remove speculative extension points when variation did not materialize, or route breaking contract changes through versioning and deprecation rather than silent mutation.
 
+Use this capability during coding, bug-fix, debugging, code-review, refactoring, testing, release, and handoff whenever an extension mechanism or compatibility claim can outlive the local implementation.
+
 # Non-Negotiable Rules
 
 - **Extension points require proven variation, not hoped-for variation.** "We might need this later" is not justification. Required evidence: (1) at least two concrete known variation cases currently needed; (2) the variation is owned by different teams, tenants, or external parties; OR (3) the variation is explicitly documented in product roadmap with a committed delivery date.
@@ -76,8 +78,9 @@ Use this capability proactively, even when the request does not ask for extensib
 
 - **L1:** Use only this `SKILL.md` for routing or rejecting a simple speculative abstraction when no concrete extension contract is being designed.
 - **L2:** Load `references/checklist.md` for any actual extension point, plugin/hook/provider registry, webhook/callback, config-driven variation, feature flag governance, or compatibility review.
-- **L3:** Load `examples/example-output.md` when producing a user-facing extensibility plan, evaluation fixture, or structured review table.
-- **L4:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the design depends on current graph reachability, existing implementers, prior compatibility decisions, generated artifacts, command output, or test freshness.
+- **L3:** Load `references/benchmarks-and-patterns.md` when selecting plugin, hook, provider, webhook, configuration, or feature-flag patterns; compatibility class; sandbox shape; or anti-pattern correction.
+- **L4:** Load `references/evidence-patterns.md` when closure depends on current graph reachability, existing implementers, prior compatibility decisions, generated artifacts, command output, validation artifact, validator result, exit code, or test freshness.
+- **L4 output:** Load `examples/example-output.md` when producing a user-facing extensibility plan, evaluation fixture, or structured review table.
 - **L5:** Pair with security, reliability, delivery, API/contract, or domain gates only when the extension executes privileged behavior, exposes external contracts, affects release rollout, or crosses regulated/tenant boundaries.
 
 # Risk Escalation Rules
@@ -137,10 +140,11 @@ Return `extensibility_design_plan` with:
 - `lifecycle_policy` (creation approval, review cycle, deprecation notice period, removal criteria)
 - `observability` (per-invocation: extension ID, duration, success/failure, input/output summary)
 - `test_matrix` (invariant bypass attempt, malformed extension input, extension failure isolation, perf impact)
+- `validation_commands` (command or validator, output summary, exit code when runnable, artifact/report path, freshness, what it proves, and what it does not prove)
 - `rejected_alternatives` (simpler direct implementations considered; why extension point chosen)
 - `owner` (team, on-call rotation, decision authority for new implementers)
 - `graph_memory_execution_validation` (callers/implementers/generated artifacts inspected, project-memory claims accepted or rejected, execution evidence, validation freshness, and unknowns)
-- `extension_to_validation_map` (extension point -> variation proof, contract compatibility test, invariant/security test, failure/performance test, owner, and next gate)
+- `extension_to_validation_map` (extension point -> variation proof, contract compatibility test, invariant/security test, failure/performance test, validator or artifact, exit code, owner, and next gate)
 - `evidence_limits` (uninspected implementers, stale roadmap claims, missing consumers, unavailable sandbox evidence, and residual uncertainty owner/date)
 
 # Evidence Contract
@@ -161,6 +165,7 @@ Acceptable evidence names:
 - Variation proof must be backed by caller/implementer graph, generated artifacts, docs, tests, or a dated roadmap owner; unsupported variation routes to reject/cleanup mode.
 - Contract changes require compatibility classification and old/new implementer validation before approval.
 - Trust-boundary extensions require schema, sandbox, SSRF/injection denial, redaction, and failure-isolation evidence.
+- Validation evidence must name the command, validator, output, exit code, artifact or report, freshness after final edit, what it proves, what it does not prove, and the residual owner.
 - Final handoff must state stale/not-run validations and what later source, graph, generated, or config changes would invalidate the evidence.
 
 # Benchmark Coverage

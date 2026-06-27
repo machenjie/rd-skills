@@ -24,10 +24,11 @@ Do not use this capability to collect every implementation conditional without d
 # Stage Fit
 
 - **Planning:** extract candidate rules, owners, entry points, historical meaning, exceptions, and evidence before implementation chooses a placement.
-- **Read/review:** inspect current code, SQL, tests, jobs, scripts, docs, support flows, spreadsheets, and prior decisions before declaring the authoritative rule.
-- **Edit/implementation:** keep one enforcement layer authoritative while allowing UI hints, DB constraints, audit logs, and API pre-checks to reference the same source.
+- **Read/review / code-review:** inspect current code, SQL, tests, jobs, scripts, docs, support flows, spreadsheets, and prior decisions before declaring the authoritative rule.
+- **Edit/implementation / coding:** keep one enforcement layer authoritative while allowing UI hints, DB constraints, audit logs, and API pre-checks to reference the same source.
 - **Test/release:** require rule-id-based unit/tabular tests, entry-point coverage, historical replay evidence, audit fields, and owner acceptance for release-blocking rules.
-- **Repair/regression:** turn the verified inconsistent decision into a named rule, scan same-pattern branches, and add regression evidence that the decision is now consistent.
+- **Debugging / repair/regression:** turn the verified inconsistent decision into a named rule, scan same-pattern branches, and add regression evidence that the decision is now consistent.
+- **Handoff:** close only with current source, graph, memory, execution, validation freshness, owner, and residual-risk evidence for the rule catalog.
 
 # Non-Negotiable Rules
 
@@ -47,7 +48,7 @@ Do not use this capability to collect every implementation conditional without d
 
 # Industry Benchmarks
 
-Anchor against DDD policy/specification/invariant patterns, DMN 1.4 decision tables and hit policies, Business Rules Manifesto/SBVR semantic rule discipline, Clean/Hexagonal Architecture for policy placement, OPA/Rego and Cedar when the rule is authorization policy, event sourcing/decider patterns for reproducible history, and regulated traceability matrices where clauses, controls, tests, audit fields, and owners must align.
+Anchor against DDD policy/specification/invariant patterns, DMN 1.4 decision tables and hit policies, Business Rules Manifesto/SBVR semantic rule discipline, Clean/Hexagonal Architecture for policy placement, OPA/Rego and Cedar when the rule is authorization policy, event sourcing/decider patterns for reproducible history, and regulated traceability matrices where clauses, controls, tests, audit fields, and owners must align. Keep this body focused on rule authority, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for evidence matrices, rule-authority decision tables, graph/memory/execution coupling, validation mapping, and anti-pattern review.
 
 ### Rule-Type Classification
 
@@ -96,7 +97,8 @@ Use this capability proactively, even when the request does not ask for business
 - **L1:** Use only this `SKILL.md` for routing or a quick rule-authority review when no concrete rule catalog or implementation handoff is needed.
 - **L2:** Load `references/checklist.md` for any real rule catalog, domain review, bug repair, audit preparation, or implementation plan involving rule authority, owner, entry point, exception, or evidence.
 - **L3:** Load `examples/example-output.md` when producing a user-facing rule catalog, evaluation fixture, or structured handoff table.
-- **L4:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the rule source depends on current code reachability, prior decisions, external artifacts, command output, tests, or audit evidence.
+- **L4:** Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when rule authority, duplicate decision sites, graph/memory/execution reuse, decision-table shape, audit traceability, historical replay, or rule-to-validation mapping needs deeper detail.
+- **L4/L5:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the rule source depends on current code reachability, prior decisions, external artifacts, command output, tests, or audit evidence.
 - **L5:** Pair with security, payment/trading, big-data, reliability, delivery, or compliance gates only when the selected rules touch those domain surfaces; do not load unrelated domain references for ordinary domain policy extraction.
 
 # Risk Escalation Rules
@@ -139,9 +141,9 @@ Rules have scope, authority, exceptions, precedence, and enforcement timing. Mis
 
 # Failure Modes
 
-- A rule is enforced in the UI but bypassed via API, job, import, admin override, retry, or migration paths.
-- Multiple controllers/services duplicate a policy decision with subtle differences; same input → different outputs by route.
-- Tests encode expected rule behavior without naming the rule, so rule changes break unrelated-looking tests.
+- **Entry-point bypass:** A rule is enforced in the UI but bypassed via API, job, import, admin override, retry, or migration paths.
+- **Duplicate authority:** Multiple controllers/services duplicate a policy decision with subtle differences; same input → different outputs by route.
+- **Test-hidden policy:** Tests encode expected rule behavior without naming the rule, so rule changes break unrelated-looking tests.
 - SQL `WHERE`/`JOIN` filters become the only authoritative definition of "active", "billable", "eligible", "visible".
 - Exceptions handled as one-off `if` branches without owner, audit, expiry, or precedence — exception list silently grows.
 - Replays / backfills / refunds use today's rule version against historical events → incorrect history and audit failure.
@@ -182,6 +184,8 @@ Return `business_rule_catalog` with, per rule:
 # Evidence Contract
 
 Acceptable evidence includes current source paths, SQL/stored procedures, route/job/import/admin/script inventories, tests, generated artifacts, support macros, spreadsheets or external rule sources, owner confirmation, audit/log schemas, rule-version data, replay evidence, and validation command output. Project memory and old requirements may guide discovery, but they cannot close a rule unless their date, source, and unchanged graph boundary are stated. Every cataloged rule must state what the evidence proves, what it does not prove, and which owner accepts any remaining ambiguity.
+
+Close a business-rule extraction only when the handoff names boundaries inspected, current rule-source evidence, graph paths accepted or rejected, project-memory freshness, execution/validation commands, entry-point coverage, owner approval, stale or uninspected artifacts, what the rule evidence proves, what it does not prove, residual risk, and the next gate. If validation ran before the final rule/source/catalog edit, treat it as stale.
 
 # Benchmark Coverage
 

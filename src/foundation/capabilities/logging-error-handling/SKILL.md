@@ -21,7 +21,7 @@ Do not use this capability to log raw request or response payloads, credentials,
 
 # Stage Fit
 
-Use this capability during planning, implementation, review, testing, and release when the change modifies error taxonomy, log fields, client-visible error behavior, correlation propagation, audit events, or sensitive diagnostic handling. It is especially relevant when memory, graph context, or prior execution notes claim logging is already safe: those signals may identify patterns, but current source, tests, logger configuration, and sink behavior must provide the closing evidence.
+Use this capability during planning, coding, bug-fix, debugging, code-review, refactoring, testing, release, and handoff when the change modifies error taxonomy, log fields, client-visible error behavior, correlation propagation, audit events, or sensitive diagnostic handling. It is especially relevant when memory, graph context, or prior execution notes claim logging is already safe: those signals may identify patterns, but current source, tests, logger configuration, and sink behavior must provide the closing evidence.
 
 Do not expand it into general observability, alerting, or dashboard design unless log-derived signals are the primary decision. Pair it with `observability` only when log events feed alerts, SLOs, dashboards, or incident response workflows.
 
@@ -88,20 +88,20 @@ Escalate when: any log statement may contain PII, PAN, password, token, or priva
 
 # Failure Modes
 
-- Logs lack correlation IDs — an error in a queue consumer cannot be linked to the triggering HTTP request; root cause analysis requires code reading rather than log search.
-- Password, token, or credit card number appears in log during a new feature debug session; credential is harvested from log aggregation system.
-- `500 Internal Server Error` response body contains raw `NullPointerException: Cannot read property 'id' of undefined at OrderService.confirm:57` — attacker learns internal class structure and file paths.
-- `ERROR` log for every `404` resource lookup generates 10,000 error events per hour; real `500` system failures are buried; on-call engineer misses the actual incident.
-- Third-party payment API timeout logged as generic "payment failed" — no distinction between timeout/5xx/auth-failure; wrong remediation applied.
-- Security denial events (invalid token, permission denied) not written to audit log — SOC 2 audit finds no evidence of access control event logging; compliance failure.
-- Async job processing fails silently (`except Exception: pass`) — messages are lost; dead-letter queue never fills; no alert fires; data inconsistency accumulates undetected.
-- Infrastructure exception (`psycopg2.errors.UniqueViolation`) propagates to application service — application imports `psycopg2`; switching to a different database requires changes in application layer.
-- Log sink is also used as audit log — log rotation policy deletes 30-day-old entries; regulatory requirement mandates 1-year audit retention; compliance gap discovered at audit.
-- `traceId` not included in error response body — user reports error with screenshot; support cannot find the log entry without full timestamp correlation.
+- **Missing correlation context** — logs lack correlation IDs, so an error in a queue consumer cannot be linked to the triggering HTTP request and root cause analysis requires code reading rather than log search.
+- **Secret-bearing diagnostic leak** — password, token, or credit card number appears in log during a new feature debug session and is harvested from the log aggregation system.
+- **Client-facing internal detail leak** — `500 Internal Server Error` response body contains raw `NullPointerException: Cannot read property 'id' of undefined at OrderService.confirm:57`, exposing internal class structure and file paths.
+- **Expected-error alert noise** — `ERROR` log for every `404` resource lookup generates 10,000 error events per hour, burying real `500` system failures.
+- **Third-party failure ambiguity** — payment API timeout is logged as generic "payment failed", so timeout/5xx/auth-failure remediation is misclassified.
+- **Missing security audit trail** — invalid-token or permission-denied events are not written to the audit log, leaving SOC 2 access-control evidence incomplete.
+- **Silent async failure** — async job processing catches `Exception` and passes, losing messages while the dead-letter queue and alerts stay quiet.
+- **Infrastructure exception leak across layers** — `psycopg2.errors.UniqueViolation` propagates to application service, coupling application code to a database adapter.
+- **Audit and diagnostic sink collision** — application log rotation deletes entries that regulatory audit policy required to retain for one year.
+- **Support handoff gap** — `traceId` is missing from the error response body, so support cannot find the corresponding log entry from a user screenshot.
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when the change touches client-visible errors, audit events, third-party failure handling, async/queue correlation, or sensitive-data logging risk. Read `references/benchmarks-and-patterns.md` when the decision needs benchmark mapping, taxonomy tables, structured schema, trace propagation, redaction boundaries, audit/diagnostic split, or graph-memory-execution coupling rules. Do not load references for a pure log-message copy change that preserves fields, levels, correlation behavior, sink configuration, and client output.
+Read `references/checklist.md` when the change touches client-visible errors, audit events, third-party failure handling, async/queue correlation, or sensitive-data logging risk. Read `references/benchmarks-and-patterns.md` when the decision needs benchmark mapping, taxonomy tables, structured schema, trace propagation, redaction boundaries, audit/diagnostic split, or graph-memory-execution coupling rules. Read `references/evidence-patterns.md` when approval depends on repository graph, project memory, same-pattern scan, execution trajectory, validation freshness, tool permission boundaries, or evidence limits. Do not load references for a pure log-message copy change that preserves fields, levels, correlation behavior, sink configuration, and client output.
 
 # Output Contract
 
@@ -128,7 +128,7 @@ Return a logging and error handling design with:
 
 # Evidence Contract
 
-Close logging/error design only when the output states the error taxonomy boundary, inspected log/error/audit paths, same-pattern scan, sensitive-field exclusion evidence, correlation propagation, client-visible behavior preservation, audit sink boundary, validation command or not-verified disclosure, graph-memory-execution consistency, tool permission/sandbox record, what evidence proves, what it does not prove, residual privacy/diagnosis risk, and handoff to observability or security when needed.
+Close logging/error design only when the output states the error taxonomy boundary, inspected log/error/audit paths, same-pattern scan, sensitive-field exclusion evidence, correlation propagation, client-visible behavior preservation, audit sink boundary, validation command with exit code and artifact or report path, graph-memory-execution consistency, tool permission/sandbox record, what evidence proves, what it does not prove, residual privacy/diagnosis risk, and handoff to observability or security when needed.
 
 # Quality Gate
 

@@ -34,7 +34,7 @@ Use during planning, implementation, bug-fix repair, refactoring, code review, a
 
 # Industry Benchmarks
 
-Anchor against TDD red-green-refactor, FIRST test principles, xUnit Test Patterns, Boundary Value Analysis, Equivalence Partitioning, mutation testing, property-based testing, behavior-focused Google testing guidance, and framework-native parameterization in pytest, JUnit, Jest, Vitest, RSpec, and similar runners. Use [references/checklist.md](references/checklist.md) for quick planning and [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for case matrices, test-double choices, determinism controls, mutation/property triggers, and validation freshness patterns.
+Anchor against TDD red-green-refactor, FIRST test principles, xUnit Test Patterns, Boundary Value Analysis, Equivalence Partitioning, mutation testing, property-based testing, behavior-focused Google testing guidance, and framework-native parameterization in pytest, JUnit, Jest, Vitest, RSpec, and similar runners. Use [references/checklist.md](references/checklist.md) for quick planning, [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for case matrices and test-double choices, and [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on graph/memory/execution freshness, changed-code-to-unit-test mapping, tool boundaries, or evidence scope limits.
 
 # Mode Matrix
 
@@ -63,6 +63,7 @@ Escalate when: unit tests are the only test level for a change that involves a d
 - **Signal:** A bug fix is unit-testable but no test is shown red before the fix or linked to the defect. **Hidden risk:** the test may never have reproduced the recurrence path. **Required professional action:** capture the exact trigger and verify red/green evidence or document why red-before-fix cannot be produced. **Route to:** `regression-testing`, `execution-trajectory-analysis`. **Evidence required:** defect reference, input/state, pre-fix failure or limitation, final green command.
 - **Signal:** A mock replaces the collaborator that carries the risk, such as persistence constraints, auth, queue semantics, provider payloads, or generated clients. **Hidden risk:** the unit test proves only the fake behavior and overclaims integration or contract safety. **Required professional action:** narrow the unit claim and add integration or contract proof for the real seam. **Route to:** `integration-testing`, `contract-testing`. **Evidence required:** mocked boundary, what the mock proves, what remains unverified, and next gate.
 - **Signal:** Repository graph, project memory, prior validation, or generated reports say unit coverage exists after source, fixtures, doubles, generated inputs, or test commands changed. **Hidden risk:** stale evidence is reused for a different execution graph. **Required professional action:** reconcile current source and changed paths with fresh validation before closure. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `validation-broker`. **Evidence required:** accepted/rejected prior claim, changed-path-to-test map, command result, freshness verdict.
+- **Signal:** Fixture, factory, generated input, snapshot, feature flag, or environment default changes while unit tests still pass through broad defaults. **Hidden risk:** branch-specific behavior becomes untested because the fixture no longer represents the rule boundary. **Required professional action:** localize fixture ownership, add explicit boundary rows, and map changed inputs to the affected unit command. **Route to:** `test-data-management`, `validation-broker`. **Evidence required:** fixture owner, changed input, behavior branch, validation command, and stale/not-run scope.
 
 # Critical Details
 
@@ -84,16 +85,19 @@ Escalate when: unit tests are the only test level for a change that involves a d
 
 # Failure Modes
 
-- Business rule has only happy-path test: boundary bug ships to production uncaught.
-- Test mocks internal calculation: refactor changes calculation; mocked test still passes; bug ships.
-- Flaky test due to `Date.now()`: fails 1 in 100 runs; marked as flaky; ignored; real regression sneaks through.
-- Error path not tested: error handler returns wrong HTTP status code; discovered in production by monitoring.
-- No regression test on bug fix: same bug re-introduced 3 months later in a refactor.
-- Over-broad mock: mock covers the validation logic; the validation is broken; test cannot detect it.
+- **Happy-path-only rule test:** boundary bug ships because no just-below, exact-boundary, just-above, invalid, or error case protects the rule.
+- **Internal calculation mocked:** refactor changes the real calculation while the mocked unit test still passes and cannot detect the wrong output.
+- **Flaky clock or random dependency:** uncontrolled `Date.now()`, timezone, UUID, random seed, or scheduler timing fails intermittently and gets ignored.
+- **Error path untested:** local handler, parser, or validator returns the wrong exception/status/message and production monitoring finds it first.
+- **No regression unit for a fix:** the exact input/state that triggered the defect is not captured, so a later refactor reintroduces it silently.
+- **Over-broad mock hides the rule:** the mock covers validation, permission, mapping, or policy logic that should be inside the unit boundary.
+- **Fixture default masks branch behavior:** a shared factory default changes and tests still pass without exercising the denied, missing, null, or edge branch.
+- **Assertion only checks existence:** a snapshot, truthy value, or call count survives when the comparison, rounding, branch, or state transition is inverted.
+- **Stale unit coverage claim:** repository graph, memory, or old report says a unit is covered after source, fixture, generated input, or command selection changed.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 routing, mode selection, output, and gates. Read [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete unit test plan. Read [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when selecting case matrices, comparing test-double choices, designing deterministic controls, deciding mutation/property triggers, reconciling graph-memory-execution evidence, or documenting validation freshness. Do not load deep references for a trivial pure-function assertion with obvious inputs, no fixture, no mock, no defect context, and no stale-validation dispute.
+The `SKILL.md` body carries L1/L2 routing, mode selection, output, and gates. Read [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete unit test plan. Read [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when selecting case matrices, comparing test-double choices, designing deterministic controls, or deciding mutation/property triggers. Read [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on changed-code-to-unit-test mapping, accepted or rejected graph/memory claims, validation freshness, fixture ownership, tool permission boundaries, or what unit evidence proves versus what it does not prove. Do not load deep references for a trivial pure-function assertion with obvious inputs, no fixture, no mock, no defect context, and no stale-validation dispute.
 
 # Output Contract
 

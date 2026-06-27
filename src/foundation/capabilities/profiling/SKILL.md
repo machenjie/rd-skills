@@ -21,10 +21,11 @@ Do not use this capability to: justify speculative optimization of code that is 
 
 # Stage Fit
 
-- **Discovery / diagnosis** — define symptom, performance budget, affected path, and representative workload before naming the bottleneck.
-- **Implementation / repair** — require a locked baseline and bottleneck classification before optimization code is changed.
-- **Code review** — reject performance claims that lack a before/after measurement, artifact link, workload definition, or correctness guard.
-- **Testing / release** — compare the same workload and profiling method after the fix, with privacy review and rollback trigger documented.
+- **Discovery / diagnosis:** define symptom, performance budget, affected path, candidate bottleneck classes, data volume, concurrency, and profiler overhead before naming the bottleneck.
+- **Bug-fix / debugging / repair:** reproduce the regression, cost spike, RSS growth, query fan-out, lock wait, event-loop lag, or rendering stall with a locked baseline before changing code or thresholds.
+- **Coding / implementation:** keep optimization changes tied to the confirmed bottleneck, current repository graph, correctness guard, privacy-safe artifact policy, and after-measurement command.
+- **Code-review / refactoring:** reject performance claims that lack before/after measurement, artifact freshness, workload parity, graph/memory/execution agreement, and behavior-preservation evidence.
+- **Testing / release / handoff:** compare the same workload and profiling method after the fix, classify residual bottlenecks, document rollback trigger, and hand off to the exact specialist gate.
 
 # Non-Negotiable Rules
 
@@ -38,11 +39,7 @@ Do not use this capability to: justify speculative optimization of code that is 
 
 # Industry Benchmarks
 
-- **Systems Performance / USE method** for utilization, saturation, errors, CPU flame graphs, off-CPU waits, and Linux `perf`.
-- **Google SRE** for distinguishing load-induced, dependency-induced, and code-induced resource collapse before tuning.
-- **Runtime profilers** such as Java Flight Recorder / async-profiler, Go `pprof`, Python `py-spy`, Node/V8 CPU profiler, Clinic.js, and Chrome DevTools.
-- **Data and query tools** such as `EXPLAIN ANALYZE`, MySQL JSON plans, `pg_stat_statements`, trace span counts, and warehouse dry-runs.
-- **Load and cost tools** such as k6/JMeter, billing exports, autoscaling events, egress metrics, and per-request or per-tenant unit-cost breakdowns.
+Anchor against Systems Performance / USE method, Google SRE incident and capacity practice, runtime profilers, query-plan tools, distributed tracing, browser profiling, load tools, and FinOps attribution. Keep this body focused on routing, evidence, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for profiler/tool selection, benchmark anchors, privacy-safe capture patterns, cost attribution patterns, and graph/memory/execution coupling details.
 
 # Bottleneck Classification Matrix
 
@@ -103,19 +100,39 @@ Select this capability when the primary need is to **identify where time, resour
 
 Use this capability proactively, even when the request does not ask for profiling:
 
-- **Signal:** a change claims "faster", "optimized", "reduced cost", "lower memory", "lower latency", or "scales better" without a locked baseline. **Hidden risk:** the fix may target a cold path or change workload shape, making the performance claim unverifiable. **Required professional action:** require before/after measurements from the same workload before accepting the optimization. **Route to:** `profiling`, `performance-budgeting`, and `validation-broker`. **Evidence required:** baseline metric, workload definition, profiling artifact, after-measurement command, and residual risk.
-- **Signal:** repository graph shows a new hot path, query, cache, worker, batch job, rendering path, fan-out, object pool, or concurrency primitive. **Hidden risk:** new resource consumption can shift the bottleneck to CPU, locks, memory, DB, network, or cloud spend without visible correctness failures. **Required professional action:** map the affected path to likely bottleneck classes and require representative measurement if the path is performance-sensitive. **Route to:** `repository-graph-analysis`, `language-performance-safety`, `concurrency-control`, and this capability. **Evidence required:** changed paths, caller/route/job graph, expected traffic/concurrency, and selected profiling tool.
-- **Signal:** project memory, old benchmark notes, prior incident summaries, or generated reports are reused as performance proof. **Hidden risk:** stale memory can certify a bottleneck that disappeared, miss a new bottleneck, or reuse non-representative load data. **Required professional action:** compare memory with current telemetry, code paths, data volume, and execution trajectory before trusting it. **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `observability`, and this capability. **Evidence required:** source date, accepted/rejected memory, current telemetry or command output, graph delta, and unknowns.
-- **Signal:** a profiler, heap dump, trace, query plan, or billing export may include request bodies, SQL parameters, user IDs, tokens, payment data, tenant identifiers, or secrets. **Hidden risk:** profiling artifacts become sensitive data leaks or violate production access boundaries. **Required professional action:** define redaction, sampling, storage, and access policy before capture or sharing. **Route to:** `security-privacy-gate`, `agent-tool-permission-sandbox`, `secret-configuration-security`, and this capability. **Evidence required:** redaction rule, safe artifact location, sampling scope, access owner, and privacy review.
-- **Signal:** the bottleneck points to a schema, index, API contract, external dependency, runtime, deployment, or rollback-sensitive fix. **Hidden risk:** a performance repair can break correctness, consumers, rollout safety, or production recovery. **Required professional action:** split profiling evidence from implementation approval and route to the exact specialist gate. **Route to:** `indexing-query-optimization`, `api-contract-design`, `delivery-release-gate`, `reliability-observability-gate`, and this capability. **Evidence required:** profile-to-fix map, affected boundary, validation command, rollback trigger, and handoff owner.
+- **Signal:** a change claims "faster", "optimized", "reduced cost", "lower memory", "lower latency", or "scales better" without a locked baseline.
+  **Hidden risk:** the fix may target a cold path, stale workload, or wrong bottleneck, making the performance claim unverifiable after release.
+  **Required professional action:** require before/after measurements from the same workload, classify the bottleneck, and block approval when the measurement is stale or absent.
+  **Route to:** `profiling`, `performance-budgeting`, `validation-broker`.
+  **Evidence required:** baseline metric, workload definition, profiling artifact, after-measurement command, freshness timestamp, and residual risk.
+- **Signal:** repository graph shows a new hot path, query, cache, worker, batch job, rendering path, fan-out, object pool, or concurrency primitive.
+  **Hidden risk:** silent resource consumption can shift the bottleneck to CPU, locks, memory, DB, network, event-loop lag, or cloud spend without correctness failures.
+  **Required professional action:** inspect caller/route/job graph, map the affected path to bottleneck classes, and require representative measurement if the path is performance-sensitive.
+  **Route to:** `repository-graph-analysis`, `language-performance-safety`, `concurrency-control`, `profiling`.
+  **Evidence required:** changed paths, graph edge, expected traffic/concurrency metric, selected profiling tool, profile report, and not-measured boundary.
+- **Signal:** project memory, old benchmark notes, prior incident summaries, or generated reports are reused as performance proof.
+  **Hidden risk:** stale memory can certify the wrong bottleneck, miss a new graph edge, or reuse non-representative data volume and command output.
+  **Required professional action:** compare memory with current source, telemetry, data volume, execution trajectory, and report freshness before trusting it.
+  **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `observability`, `profiling`.
+  **Evidence required:** source date, accepted/rejected memory, current telemetry or command output, graph delta, and residual unknowns.
+- **Signal:** a profiler, heap dump, trace, query plan, or billing export may include request bodies, SQL parameters, user IDs, tokens, payment data, tenant identifiers, or secrets.
+  **Hidden risk:** profiling artifacts leak sensitive data, violate production access boundaries, or preserve secrets in reports that outlive the incident.
+  **Required professional action:** require and document redaction, sampling, storage, access owner, retention, and sandbox policy before capture or sharing.
+  **Route to:** `security-privacy-gate`, `agent-tool-permission-sandbox`, `secret-configuration-security`, `profiling`.
+  **Evidence required:** redaction rule, safe artifact location, sampling scope, access owner, privacy review, and retention limit.
+- **Signal:** the confirmed bottleneck points to a schema, index, API contract, external dependency, runtime, deployment, or rollback-sensitive fix.
+  **Hidden risk:** a local performance repair can silently break correctness, consumers, rollout safety, dependency contracts, or production recovery.
+  **Required professional action:** split profiling evidence from implementation approval, preserve correctness guards, and route the fix to the exact specialist gate.
+  **Route to:** `indexing-query-optimization`, `api-contract-design`, `delivery-release-gate`, `reliability-observability-gate`.
+  **Evidence required:** profile-to-fix map, affected boundary, validation command, rollback trigger, owner, and residual handoff risk.
 
 # Reference Loading Policy
 
 - **L1:** Use only this `SKILL.md` for routing, rejecting speculative optimization, or requesting a missing baseline.
-- **L2:** Load `references/checklist.md` when drafting or reviewing a real profiling plan, regression diagnosis, privacy-safe artifact capture, or before/after comparison.
-- **L3:** Load `examples/example-output.md` when the output contract shape is unclear or a user-facing profiling report is required.
-- **L4:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when bottleneck proof depends on changed paths, prior measurements, command output, telemetry, traces, or report freshness.
-- **L5:** Pair with performance, reliability, security, data/API, delivery, or language/runtime gates only for the selected bottleneck class; do not load unrelated references for a simple missing-baseline rejection.
+- **L2:** Load [references/checklist.md](references/checklist.md) when drafting or reviewing a real profiling plan, regression diagnosis, privacy-safe artifact capture, or before/after comparison.
+- **L3:** Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when profiler/tool selection, benchmark anchors, cost attribution, privacy-safe capture patterns, or graph/memory/execution coupling need more detail than the body carries.
+- **L4:** Load [examples/example-output.md](examples/example-output.md) when the output contract shape is unclear or a user-facing profiling report is required.
+- **L5:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`, performance, reliability, security, data/API, delivery, or language/runtime gates only for the selected bottleneck class; do not load unrelated references for a simple missing-baseline rejection.
 
 # Risk Escalation Rules
 
@@ -142,12 +159,14 @@ Escalate when: profiling is performed on a production system during business hou
 
 # Failure Modes
 
-- Optimization targets the wrong layer: CPU-level optimization implemented while distributed trace reveals 80% of latency is an external HTTP dependency with no timeout — P99 unchanged.
-- Microbenchmark shows 3× improvement; production shows no improvement because the microbenchmark was not on the hot path at production concurrency.
-- Memory leak diagnosed as "GC pressure" — heap size increased, GC tuned, service still OOMs every 6 hours because the leak is retained references in a static HashMap.
-- N+1 query pattern generates 300 SQL queries per page render; slow query log threshold is 100ms; each query is 5ms; total = 1.5s latency; no slow query log entry; bottleneck invisible without trace-level query counting.
-- Heap dump captured from primary database replica during peak load causes 45-second JVM pause; cascades to service timeout spike.
-- Before/after comparison uses different concurrency levels: baseline at 50 VU, post-optimization at 20 VU; "60% improvement" is entirely explained by the 60% reduction in concurrency.
+- **Wrong-layer optimization:** CPU-level rewrite ships while distributed trace shows 80% of elapsed time is an external HTTP dependency with no timeout; P99 remains unchanged.
+- **Microbenchmark theater:** local benchmark shows 3x speedup, but production shows no improvement because the measured function is not on the hot path at production concurrency.
+- **Leak misdiagnosed as GC tuning:** heap size increases and GC flags change while retained references in a static map still drive OOM every 6 hours.
+- **N+1 invisibility:** 300 SQL queries at 5ms each create 1.5s page latency, but no single query crosses the slow-query threshold; trace-level query counts were not inspected.
+- **Unsafe artifact capture:** heap dump from a live primary during peak load pauses the JVM for 45 seconds and stores request/session data in a shared incident folder.
+- **Concurrency mismatch:** baseline at 50 VU and after-measurement at 20 VU claim 60% improvement that is entirely explained by the lower load.
+- **Stale memory proof:** prior incident note names serialization as the bottleneck, but the current graph added a new warehouse scan; optimization lands on the wrong component.
+- **Cost driver blind spot:** billing export shows a spend spike, but no trace/query/autoscaling join is performed; retry storm and cross-region egress continue after a cosmetic query tweak.
 
 # Output Contract
 

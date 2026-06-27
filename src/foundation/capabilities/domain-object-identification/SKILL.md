@@ -25,7 +25,7 @@ Do not use it when the objects are already accepted and the current question is 
 
 # Stage Fit
 
-Owns domain-discovery and implementation-planning inputs. In review, it checks whether a diff changed domain language, identity, ownership, aggregate boundaries, or resource exposure without updating the object inventory and downstream tests.
+Use during planning, coding, bug-fix, debugging, code-review, refactoring, testing, release preparation, and incident repair when domain language, identity, ownership, aggregate boundaries, lifecycle, or resource exposure can drift. Treat this capability as the stage launch guard before persistence, permission, API, event, and implementation placement decisions. In planning, name the candidate terms, current source paths, repository graph slice, project-memory verdict, accepted or rejected prior object claims, validation signal, and downstream handoff. During review, reject diffs that change domain language, identity, ownership, aggregate boundaries, writer authority, or exposed resources without updating the object inventory and downstream tests.
 
 # Non-Negotiable Rules
 
@@ -42,9 +42,11 @@ Owns domain-discovery and implementation-planning inputs. In review, it checks w
 
 # Industry Benchmarks
 
-Use domain-driven design tactical modeling, bounded-context and ubiquitous-language review, aggregate consistency review, entity/value-object identity rules, resource modeling, lifecycle analysis, data ownership review, API contract design, event storming, and context-mapping practices as benchmarks.
+Use domain-driven design tactical modeling, bounded-context and ubiquitous-language review, aggregate consistency review, entity/value-object identity rules, resource modeling, lifecycle analysis, data ownership review, API contract design, event storming, and context-mapping practices as benchmarks. Keep the body focused on route-time selection, output evidence, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for category decision matrices, graph/memory/trajectory coupling, object-to-validation mapping, and anti-pattern review.
 
 # Mode Matrix
+
+Select the object-identification mode before choosing persistence schema, API resource shape, permission owner, event contract, or implementation placement; record skipped adjacent modes and handoff targets when evidence is partial.
 
 | Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
 | --- | --- | --- | --- | --- | --- |
@@ -67,11 +69,36 @@ Escalate when a rename or reuse of a term can change permission checks, data own
 
 # Proactive Professional Triggers
 
-- **Signal:** A request uses a broad business term such as account, customer, order, tenant, subscription, balance, status, entitlement, profile, or resource without owner context. **Hidden risk:** two bounded contexts reuse one word with different identity, lifecycle, or mutation authority. **Required professional action:** build a term/context map before implementation. **Route to:** `domain-object-identification`, `repository-context-map`. **Evidence required:** affected contexts, owning context, old/new term boundary, and rejected ambiguous meanings.
-- **Signal:** A table, ORM entity, generated schema, API DTO, event payload, or provider model is treated as the domain object. **Hidden risk:** persistence or external contract details become the business model and leak into permissions, tests, and APIs. **Required professional action:** separate domain object from boundary model and assign mapping owner. **Route to:** `model-boundary-mapping`, `dto-schema-design`. **Evidence required:** source/target model map, identity/equality decision, mapping tests, and rejected direct reuse.
-- **Signal:** A new invariant references multiple entities without naming an aggregate root. **Hidden risk:** transaction boundaries cannot enforce the invariant and concurrent writes create invalid state. **Required professional action:** choose aggregate ownership or explicit eventual-consistency design. **Route to:** `transaction-consistency`, `domain-logic-implementation`. **Evidence required:** invariant owner, consistency boundary, allowed cross-aggregate references, and tests for violating writes.
-- **Signal:** Two services, jobs, admin tools, imports, or event consumers can mutate the same object or status. **Hidden risk:** ownership is split and behavior depends on timing or entry point. **Required professional action:** assign mutation authority and route other writers through contract, command, event, or ACL. **Route to:** `architecture-impact-reviewer`, `permission-boundary-modeling`. **Evidence required:** writer scan, authority decision, dependency direction, and denied mutation cases.
-- **Signal:** A domain event or API resource name changes because an internal object was renamed. **Hidden risk:** internal ubiquitous-language cleanup becomes an external contract break. **Required professional action:** separate internal rename from resource/event compatibility plan. **Route to:** `domain-event-modeling`, `data-api-contract-changer`. **Evidence required:** consumer list, compatibility decision, versioning or alias plan, and residual external-contract risk.
+- **Signal:** A request uses a broad business term such as account, customer, order, tenant, subscription, balance, status, entitlement, profile, or resource without owner context.
+  **Hidden risk:** two bounded contexts reuse one word with different identity, lifecycle, or mutation authority, causing wrong owner decisions.
+  **Required professional action:** inspect current source, model a term/context map before implementation, and reject ambiguous meanings.
+  **Route to:** `domain-object-identification`, `repository-context-map`.
+  **Evidence required:** affected contexts, owning context, old/new term boundary, searched source paths, and rejected ambiguous meanings.
+- **Signal:** A table, ORM entity, generated schema, API DTO, event payload, or provider model is treated as the domain object.
+  **Hidden risk:** persistence or external contract details become the business model and leak into permissions, tests, and APIs.
+  **Required professional action:** compare domain object and boundary model, document the mapping owner, and require mapping tests before placement.
+  **Route to:** `model-boundary-mapping`, `dto-schema-design`.
+  **Evidence required:** source/target model map, identity/equality decision, mapping tests, and rejected direct reuse.
+- **Signal:** A new invariant references multiple entities without naming an aggregate root.
+  **Hidden risk:** transaction boundaries cannot enforce the invariant and concurrent writes create inconsistent invalid state.
+  **Required professional action:** model aggregate ownership and verify transaction or eventual-consistency design before coding.
+  **Route to:** `transaction-consistency`, `domain-logic-implementation`.
+  **Evidence required:** invariant owner, consistency boundary, allowed cross-aggregate references, and tests for violating writes.
+- **Signal:** Two services, jobs, admin tools, imports, or event consumers can mutate the same object or status.
+  **Hidden risk:** ownership is split and behavior becomes inconsistent across timing, retries, or entry point.
+  **Required professional action:** scan writer entry points, document mutation authority, and route other writers through contract, command, event, or ACL.
+  **Route to:** `architecture-impact-reviewer`, `permission-boundary-modeling`.
+  **Evidence required:** writer scan, authority decision, dependency direction, and denied mutation cases.
+- **Signal:** A domain event or API resource name changes because an internal object was renamed.
+  **Hidden risk:** internal ubiquitous-language cleanup becomes an external contract break.
+  **Required professional action:** document the internal rename separately from the resource/event compatibility plan and verify consumers.
+  **Route to:** `domain-event-modeling`, `data-api-contract-changer`.
+  **Evidence required:** consumer list, compatibility decision, versioning or alias plan, and residual external-contract risk.
+- **Signal:** Repository graph or project memory claims an object owner, legacy name, or writer path without current source confirmation.
+  **Hidden risk:** stale memory or generated artifacts become semantic proof and send implementation to the wrong owner.
+  **Required professional action:** inspect current source, compare memory timestamp, and document accepted or rejected claims.
+  **Route to:** `repository-graph-analysis`, `project-memory-governance`.
+  **Evidence required:** graph nodes inspected, memory timestamp, accepted/rejected claim, validation freshness, and uninspected paths.
 
 # Critical Details
 
@@ -85,16 +112,17 @@ Aggregate boundaries are consistency boundaries: keep references across aggregat
 
 # Failure Modes
 
-- Database tables are accepted as domain objects without behavior analysis.
-- Value objects gain hidden identity and lifecycle.
-- Aggregate boundaries are too large, creating lock contention and broad transactions.
-- Aggregate boundaries are too small, allowing invariants to be violated.
-- External resource names overwrite internal domain language without review.
-- One term is reused across modules with different owner, identity, or lifecycle semantics.
-- API DTOs or ORM entities become domain objects and force contract or storage changes into business behavior.
-- Read models or reporting projections become write-side authority.
-- Cross-aggregate references use nested object graphs and bypass aggregate invariants.
-- Permission, persistence, event, and test implications are left as "later" and no downstream owner receives them.
+- **Table-as-domain shortcut:** database tables are accepted as domain objects without behavior analysis.
+- **Hidden identity in values:** value objects gain hidden identity and lifecycle.
+- **Oversized aggregate:** aggregate boundaries are too large, creating lock contention and broad transactions.
+- **Undersized aggregate:** aggregate boundaries are too small, allowing invariants to be violated.
+- **Resource language takeover:** external resource names overwrite internal domain language without review.
+- **Same-term drift:** one term is reused across modules with different owner, identity, or lifecycle semantics.
+- **Boundary model leak:** API DTOs or ORM entities become domain objects and force contract or storage changes into business behavior.
+- **Read-model authority:** read models or reporting projections become write-side authority.
+- **Deep cross-aggregate graph:** cross-aggregate references use nested object graphs and bypass aggregate invariants.
+- **Ownerless downstream risk:** permission, persistence, event, and test implications are left as "later" and no downstream owner receives them.
+- **Stale graph or memory proof:** old project memory, generated clients, or graph proximity are treated as semantic proof without current-source confirmation.
 
 # Output Contract
 
@@ -113,6 +141,10 @@ Return a domain object inventory with, per object:
 - `persistence_implications`, `permission_implications`, and `event_implications`
 - `tests` covering identity, equality, invariant, lifecycle, permission, persistence mapping, and event/resource mapping risks
 - `open_questions`, rejected ambiguous meanings, and downstream handoffs
+- `graph_memory_trajectory_judgment` for accepted, rejected, stale, or not-verified object claims
+- `object_to_validation_map` linking identity, equality, ownership, lifecycle, relationship, permission, persistence, and event/resource claims to validator, owner review, or residual risk
+- `evidence_limits` naming what source reads, graph scans, project memory, owner review, and validation prove and do not prove
+- `next_gate` when rule extraction, state modeling, permission, persistence, API contract, event, transaction, or release evidence remains outside this capability
 
 # Quality Gate
 
@@ -134,14 +166,14 @@ Return a domain object inventory with, per object:
 Close a domain object identification decision only when the handoff states:
 
 - **Basis:** request, domain vocabulary, existing code/docs/tests/registry evidence, and why object identification is the right depth.
-- **Boundaries inspected:** source paths, search terms, owning contexts, tables/resources/DTOs/events/read models checked, and uninspected areas.
+- **Boundaries inspected:** source paths, search terms, repository graph slice, project-memory claims, owning contexts, tables/resources/DTOs/events/read models checked, and uninspected areas.
 - **Placement rationale:** why each concept is entity, value object, aggregate, resource, read model, policy, or service; rejected table/DTO/UI-label alternatives.
-- **Validation evidence:** validator commands or review artifacts run, what they prove, what they do not prove, and any stale/not-run evidence.
-- **Residual risk:** ambiguous terms, unresolved owners, missing writer scan, unverified consumer/event impact, or open downstream handoff.
+- **Validation evidence:** validator commands, graph scans, owner reviews, or review artifacts run after the final material edit, what they prove, what they do not prove, and any stale/not-run evidence.
+- **Residual risk:** ambiguous terms, unresolved owners, stale memory, missing writer scan, unverified consumer/event impact, or open downstream handoff.
 
 # Reference Loading Policy
 
-The body holds high-frequency domain object decisions. Load [references/checklist.md](references/checklist.md) when building or reviewing a full inventory. Use [examples/example-output.md](examples/example-output.md) only as an output-shape example, not as a domain template.
+The body holds high-frequency domain object decisions. Load [references/checklist.md](references/checklist.md) when building or reviewing a full inventory. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when category selection, aggregate/resource boundary, graph/memory/trajectory reuse, validation mapping, or anti-pattern detail needs more depth than this body should carry. Use [examples/example-output.md](examples/example-output.md) only as an output-shape example, not as a domain template. Do not load references for pure routing or trivial wording work where the output contract and quality gate are sufficient.
 
 # Used By
 
@@ -151,7 +183,7 @@ The body holds high-frequency domain object decisions. Load [references/checklis
 
 # Handoff
 
-Hand off to business-rule-extraction for invariants, state-machine-modeling for lifecycle, permission-boundary-modeling for authorization, or data-model-design for persistence.
+Hand off to `business-rule-extraction` for invariants, `state-machine-modeling` for lifecycle, `permission-boundary-modeling` for authorization, `data-model-design` for persistence, `dto-schema-design` or `model-boundary-mapping` for external schemas, `domain-event-modeling` for events, and `transaction-consistency` when aggregate ownership depends on concurrency or distributed consistency.
 
 # Completion Criteria
 

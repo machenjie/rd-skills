@@ -21,7 +21,7 @@ Do not use this capability to: design the underlying database schema (use `relat
 
 # Stage Fit
 
-Owns backend persistence-boundary design during implementation planning, coding, and review when the primary decision is how application/domain code talks to durable storage without leaking ORM/session/query mechanics. In planning, it turns current repository call sites, domain aggregate boundaries, storage models, and tests into a contract for methods, mapping, transaction participation, and error translation. In review, it rejects ORM entity leakage, query-builder escape hatches, ambiguous not-found semantics, hidden lazy loading, unbounded queries, and transaction behavior that is not visible to the service layer. Repository graph, project memory, and execution trajectory can identify prior persistence conventions or fragile files, but current source, tests, schema/mappers, and validation output must confirm the boundary before reuse.
+Owns backend persistence-boundary design during implementation planning, coding, code-review, refactoring, debugging, testing, release-readiness, and final handoff when the primary decision is how application/domain code talks to durable storage without leaking ORM/session/query mechanics. In planning, it turns current repository call sites, domain aggregate boundaries, storage models, and tests into a contract for methods, mapping, transaction participation, and error translation. In debugging or repair, separate mapper defects, repository method semantics, transaction scope, tenant/permission filters, query plans, and service orchestration before widening the boundary. In review and refactoring, reject ORM entity leakage, query-builder escape hatches, ambiguous not-found semantics, hidden lazy loading, unbounded queries, and transaction behavior that is not visible to the service layer. In testing and release-readiness, require fresh integration or validator evidence after the final repository, mapper, transaction, tenant-filter, or error-translation edit. Repository graph, project memory, and execution trajectory can identify prior persistence conventions or fragile files, but current source, tests, schema/mappers, and validation output must confirm the boundary before reuse.
 
 # Non-Negotiable Rules
 
@@ -31,6 +31,7 @@ Owns backend persistence-boundary design during implementation planning, coding,
 - **Transaction participation must be explicit in the repository contract.** Does this repository method participate in the current ambient transaction (Unit of Work pattern)? Does it create its own transaction? Does it require a transaction to be provided by the caller? The default behavior must be documented. A repository that silently starts a new transaction on every call will break transactional invariants when the caller expects the save to participate in an outer transaction. Explicit transaction scope (passed as parameter, or via Unit of Work / session scoping) is required for any repository used in multi-step write operations.
 - **Storage errors must be translated to domain-meaningful outcomes before leaving the repository.** A `UniqueConstraintViolationException` from PostgreSQL is a storage detail. The caller should receive `DuplicateEmailAddressError` or `ConflictError`, not a raw ORM exception with a stack trace referencing database internals. The repository is the translation boundary. Rule: catch all storage-layer exceptions; map to domain or application exceptions; document what the caller can expect.
 - **Query methods must declare their consistency, pagination, and ordering contract.** A `findAll()` method that returns up to 10,000 records is a production risk waiting to materialize. Repository query contracts must state: maximum result size (or require a pagination parameter); default ordering (or require explicit ordering); consistency level (read from primary? read replica?); and behavior when the result set is larger than expected (throw, truncate, paginate automatically).
+- **Closure evidence must name the repository validator or integration-test command, validator/tool, artifact or report path, output and exit code or manual review result, changed repository/method/mapper scope, and freshness after the final repository-related edit.** Mock-only service tests, stale integration runs, or graph memory are not persistence-boundary proof.
 
 # Mode Matrix
 
@@ -61,6 +62,7 @@ Escalate when: a repository method touches financial balances, inventory counts,
 - **Signal:** A repository method returns `null`, empty list, `Option`, or exception without distinguishing not-found, soft-delete, permission filtering, and tenant filtering. **Hidden risk:** callers infer policy from absence and may leak existence, retry incorrectly, or create duplicate writes. **Required professional action:** document outcome taxonomy and translate it consistently. **Route to:** `failure-contract-design`, `security-privacy-gate` when access-controlled data is involved. **Evidence required:** method outcome table, caller expectation, and denied/filtered test obligation.
 - **Signal:** A write method starts its own transaction, ignores ambient Unit of Work, or commits inside a service workflow. **Hidden risk:** partial commits and rollback mismatch across repositories. **Required professional action:** make transaction ownership explicit and hand off isolation/lock decisions. **Route to:** `transaction-consistency`, `service-business-logic`. **Evidence required:** service transaction owner, repository participation, rollback behavior, and concurrency risk.
 - **Signal:** Repository proof relies on mocked repository tests while the risk is SQL, constraints, lazy loading, soft-delete, tenant predicate, or rollback. **Hidden risk:** tests validate fake behavior while production persistence fails. **Required professional action:** require real or equivalent DB integration coverage. **Route to:** `integration-testing`, `quality-test-gate`. **Evidence required:** test boundary, fixture isolation, DB/container, assertions, and residual untested path.
+- **Signal:** Prior validation, project memory, or repository graph claims the persistence boundary is proven before a mapper, transaction policy, tenant filter, method return type, or error translation changes. **Hidden risk:** stale evidence hides a new boundary leak or untested persistence path. **Required professional action:** rerun or downgrade the repository proof and record validation freshness. **Route to:** `validation-broker`, `plan-execution-consistency`. **Evidence required:** command/report path, validator name, exit code, changed path, and what the stale evidence no longer proves.
 
 # Critical Details
 
@@ -75,12 +77,14 @@ The `SKILL.md` body carries normal L1/L2 repository-boundary selection and evide
 
 # Failure Modes
 
-- Domain service receives ORM entity; calls `user.orders` in a loop during HTTP request — N+1 queries; works in dev (10 users); 10-second latency in production (10,000 users).
-- Repository returns `SelectQueryBuilder` — 5 different callers build 5 different queries — one omits the `deleted_at IS NULL` filter — soft-deleted data leaks into a customer-facing report.
-- `findAll()` without pagination — scheduled report runs at midnight — 2M rows returned — OOM crash — report service unavailable for 20 minutes.
-- Raw `UniqueConstraintViolationException` propagates to API handler — handler has no catch for it — unhandled exception returns 500 — client cannot distinguish "email taken" from "server broken".
-- Repository `save()` starts its own transaction — outer service transaction rolls back — `save()` was already committed — partial state in database.
-- Repository interface defined in `infrastructure/` package — domain tests must import infrastructure — circular dependency — build fails.
+- **ORM entity leak:** Domain service receives ORM entity; calls `user.orders` in a loop during HTTP request, triggering N+1 queries that work in dev with 10 users but cause 10-second latency in production.
+- **Query-builder escape:** Repository returns `SelectQueryBuilder`; five callers build five different queries, one omits the `deleted_at IS NULL` filter, and soft-deleted data leaks into a customer-facing report.
+- **Unbounded result contract:** `findAll()` without pagination runs in a scheduled report, returns 2M rows, causes an OOM crash, and leaves the report service unavailable.
+- **Raw storage exception leak:** `UniqueConstraintViolationException` propagates to the API handler, returns a generic 500, and prevents clients from distinguishing "email taken" from "server broken".
+- **Hidden transaction commit:** Repository `save()` starts its own transaction; the outer service transaction rolls back, but the repository commit already persisted partial state.
+- **Infrastructure-owned interface:** Repository interface lives in `infrastructure/`; domain tests import infrastructure, dependency direction reverses, and the build develops circular dependencies.
+- **Tenant predicate drift:** One repository method omits tenant or object-permission filtering while sibling methods include it, making absence semantics and existence-leak behavior inconsistent.
+- **Stale integration proof:** Validation predates mapper, transaction, tenant-filter, or error-translation edits, so the handoff over-claims persistence proof that no longer matches the executed code path.
 
 # Output Contract
 
@@ -102,12 +106,15 @@ Return a repository contract with:
 - `performance_risks` (identified N+1 risks; query result size risks; missing index warnings)
 - `integration_tests` (per method: test fixture; assertion; database used for test — must be real or equivalent)
 - `changed_repository_to_validation_map` (each changed method/mapper/transaction/error path mapped to validator, integration test, or residual risk)
+- `validation_commands` (repository or integration validator command, validator/tool, artifact/report path, relevant output, exit code or manual result, changed repository/method/mapper scope, and freshness verdict)
 - `handoff_boundaries` (what is handed to service, schema, transaction, query tuning, security, or test gates)
 - `evidence_limits` (what was not verified: real DB behavior, concurrency, production data volume, security filters, or query plans)
 
 # Evidence Contract
 
-Close a repository-persistence change only when the output names selected mode, boundary scope, current source evidence inspected, memory/graph/trajectory freshness when used, interface owner, mapper owner, method semantics, not-found/filtered behavior, transaction/session policy, error translation, integration-test or not-verified evidence, changed-repository-to-validation map, evidence limits, residual risk, and next handoff owner. A generic repository interface or "use repository pattern" statement is not sufficient evidence.
+Close a repository-persistence change only when the output names selected mode, boundary scope, current source evidence inspected, boundaries inspected, memory/graph/trajectory freshness when used, interface owner, mapper owner, method semantics, not-found/filtered behavior, transaction/session policy, error translation, integration-test or not-verified evidence, changed-repository-to-validation map, validation evidence, evidence limits, residual risk, and next handoff owner. A generic repository interface or "use repository pattern" statement is not sufficient evidence.
+
+State what evidence proves, what evidence does not prove, reuse and placement rationale for repository graph, project memory, and execution trajectory claims, behavior preservation for existing callers/contracts, and the next gate before handoff. Validation evidence must include command names, validator/tool, artifact/report path, relevant output, exit code or manual review result, changed repository/method/mapper scope, and freshness after the final material edit; stale, mock-only, or graph-only proof must be downgraded to residual risk.
 
 # Benchmark Coverage
 
@@ -134,7 +141,8 @@ The repository design is complete only when:
 11. Selected mode, boundary scope, source evidence, and rejected locations are explicit.
 12. Repository graph, project memory, and execution trajectory evidence are source-confirmed or marked not verified.
 13. Each changed method, mapper, transaction policy, or error translation maps to a validator, integration test, or named residual risk.
-14. Handoff boundaries and evidence limits are named so repository evidence is not over-claimed as schema, query-plan, service, or production concurrency proof.
+14. Validation commands, validators, artifacts/reports, output and exit code or manual result, changed repository/method/mapper scope, and freshness are recorded for every accepted method, mapper, transaction, tenant-filter, error-translation, and integration-proof claim.
+15. Handoff boundaries and evidence limits are named so repository evidence is not over-claimed as schema, query-plan, service, or production concurrency proof.
 
 # Used By
 

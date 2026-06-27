@@ -57,6 +57,7 @@ Select this capability when: the primary concern is **which modules may import w
 - **Signal:** Project memory, an ADR, generated context, or prior trajectory claims a boundary already exists or is safe. **Hidden risk:** stale memory hides current cycles, private imports, or unowned modules. **Required professional action:** treat memory as a hypothesis and reconcile it against current source, graph, owners, tests, and validation freshness. **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`, this capability. **Evidence required:** memory source/date, accepted and rejected claims, current graph delta.
 - **Signal:** A public API, barrel export, DTO, event, SDK contract, or module facade expands. **Hidden risk:** accidental downstream compatibility commitment. **Required professional action:** inventory current consumers, minimize the facade, add contract or boundary tests, and record rollback/deprecation impact. **Route to:** `consumer-impact-analysis`, `contract-testing`, `architecture-impact-reviewer`, this capability. **Evidence required:** consumer inventory, export diff, contract tests, rollback path.
 - **Signal:** A small requirement touches many modules, shared code, or tests outside the supposed owner. **Hidden risk:** boundary defect disguised as normal implementation spread. **Required professional action:** decide whether the spread is inherent product behavior or boundary repair. **Route to:** `repository-context-map`, `plan-execution-consistency`, this capability. **Evidence required:** changed path map, owning module, spread rationale, rejected repair or repair plan.
+- **Signal:** A boundary rule is documented but no Dependency Cruiser, import-linter, ArchUnit, NDepend, CI job, or representative failure exists. **Hidden risk:** architecture drift silently returns; forbidden imports, public API leaks, or shared/common pollution merge without a failing check. **Required professional action:** require an enforcement baseline or explicit staged adoption plan before approving the boundary. **Route to:** `architecture-enforcement-tooling`, `quality-test-gate`, `ci-cd`, this capability. **Evidence required:** rule list, command and exit code, report or CI artifact, representative failure or not-run owner, generated-code exception map.
 
 # Reference Loading Policy
 
@@ -94,12 +95,14 @@ Escalate when: a proposed import would create a circular dependency; a change mo
 
 # Failure Modes
 
-- `shared/utils` grows to 12,000 lines and contains business validation logic for orders, payments, and notifications — every capability is coupled to every other capability's business rules through a single import.
-- `payments/` imports `orders/internal/OrderRepository` — a refactor of the orders internal persistence layer breaks payments; change requires coordinating two teams; module boundary provides no isolation.
-- Circular import: `orders` → `notifications` → `orders` — Python import error at startup; `orders` module partially initialized when `notifications` imports it; runtime `AttributeError` in one of three call paths.
-- Module renamed internally (`OrderAggregate` → `OrderEntity`) — since external modules imported `orders/internal/OrderAggregate.ts` directly (not through `orders/api`), all three external importers break.
-- No dependency direction enforcement in CI — over 18 months, 47 cross-capability imports accumulate silently; a team attempts to extract `payments` into a microservice and finds 47 import sites to unpick first.
-- Shared `PricingCalculator` utility imported by `orders`, `subscriptions`, and `promotions` — a bug fix to promotions pricing logic in the shared utility changes behavior for orders and subscriptions unexpectedly.
+- **Shared utility business sink:** `shared/utils` grows to 12,000 lines and contains business validation logic for orders, payments, and notifications — every capability is coupled to every other capability's business rules through a single import.
+- **Private internal import:** `payments/` imports `orders/internal/OrderRepository` — a refactor of the orders internal persistence layer breaks payments; change requires coordinating two teams; module boundary provides no isolation.
+- **Circular import:** `orders` -> `notifications` -> `orders` — Python import error at startup; `orders` module partially initialized when `notifications` imports it; runtime `AttributeError` in one of three call paths.
+- **Leaky internal rename:** module renamed internally (`OrderAggregate` -> `OrderEntity`) — since external modules imported `orders/internal/OrderAggregate.ts` directly (not through `orders/api`), all three external importers break.
+- **Unenforced dependency drift:** no dependency direction enforcement in CI — over 18 months, 47 cross-capability imports accumulate silently; a team attempts to extract `payments` into a microservice and finds 47 import sites to unpick first.
+- **Shared calculator blast radius:** shared `PricingCalculator` utility imported by `orders`, `subscriptions`, and `promotions` — a bug fix to promotions pricing logic in the shared utility changes behavior for orders and subscriptions unexpectedly.
+- **Speculative public facade:** a barrel export exposes repositories, mappers, and concrete child objects for one future consumer — downstream code imports them immediately; the owning module cannot refactor without a breaking change.
+- **Unowned split:** a large directory is split by file type into `api/`, `domain/`, `jobs/`, and `helpers/` without an owner or relationship type — every small business rule now needs cross-folder review and boundary decisions become arbitrary.
 
 # Output Contract
 
@@ -164,7 +167,18 @@ The boundary design is complete only when:
 
 # Evidence Contract
 
-Do not approve a module boundary from names alone. The minimum evidence set is: current repository paths, current imports or dependency graph, public export surface, private internal paths, owner or review authority, tests that exercise the public facade, shared/common inventory, project memory or ADR freshness if used, and validation commands with outcomes. If graph tooling is missing, state the fallback scan, confidence limit, and the exact rule that still needs automated enforcement.
+Close a module boundary design only when these answers are concrete:
+
+- **Basis:** selected mode, boundary decision scope, business capability owner, module relationship type, and whether the work is a new boundary, split, merge, import change, public API change, shared/common audit, or repair.
+- **Boundaries inspected:** current repository paths, current imports or dependency graph, public export surface, private internal paths, owner or review authority, tests that exercise the public facade, shared/common inventory, generated artifacts, and project memory or ADR freshness if used.
+- **Graph, memory, and trajectory judgment:** repository graph, project memory, ADR, generated context, and prior execution claims are accepted, rejected, stale, partial, or not verified against current source and validation freshness.
+- **Boundary proof:** public facade, private internals, internal object graph, allowed and forbidden dependency directions, change-locality result, public API consumer evidence, and shared/common classification are explicit.
+- **Validation proof:** boundary-to-validation map, graph/cycle command, import rule, contract or module test, owner review, report or artifact, exit code or manual result, and freshness after the final boundary-related edit are named.
+- **What evidence proves:** the inspected source, graph, exports, owners, tests, and validation output prove the stated boundary rule for the inspected modules and changed paths only.
+- **What evidence does not prove:** uninspected modules, unavailable graph tooling, generated artifact exclusions, stale diagrams, production deployability, team ownership outside reviewed files, and future consumer behavior remain unproven unless explicitly inspected.
+- **Residual risk and handoff:** remaining coupling risk, missing enforcement, migration impact, unavailable owners, rollback or repair path, next gate, and handoff owner are explicit.
+
+A module name, folder diagram, old ADR, or "no cycles found" claim without inspected current source, validation output, and evidence limits is not sufficient evidence.
 
 # Benchmark Coverage
 

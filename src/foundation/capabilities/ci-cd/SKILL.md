@@ -23,7 +23,7 @@ Do not use this capability to bypass local verification (`pre-commit`, unit test
 
 - **Planning / design:** use when pipeline triggers, artifact identity, required checks, environment promotion, or release evidence are being designed.
 - **Implementation / review:** use when workflow files, build jobs, test gates, image publishing, IaC plan/apply gates, Helm chart jobs, or monorepo affected-test logic change.
-- **Validation / release:** use when a pipeline result must prove build/test/security/artifact/rollback readiness before promotion.
+- **Testing / validation / release:** use when a pipeline result must prove build/test/security/artifact/rollback readiness before promotion.
 - **Repair / incident:** use when flaky checks, failed deploys, retry-to-green behavior, missing rollback hooks, or stale pipeline evidence are blocking a release.
 - **Graph / memory / execution coupling:** treat old pipeline knowledge, generated reports, and prior green runs as leads only; reconcile current workflow files, registry, reports, dist output, and validation commands before closure.
 
@@ -46,7 +46,7 @@ Do not use this capability to bypass local verification (`pre-commit`, unit test
 
 # Industry Benchmarks
 
-Anchor against DORA four key metrics, SLSA v1.0, OpenSSF Scorecard, Sigstore/Cosign, CycloneDX/SPDX, NIST SSDF, OWASP SAMM, GitHub/GitLab CI security guidance, Tekton Chains, cloud OIDC federation, hermetic build discipline, GitOps, SemVer, and release-note automation. Keep the body focused on routing, gates, and evidence; load [references/checklist.md](references/checklist.md) for concise planning and [references/pipeline-benchmarks.md](references/pipeline-benchmarks.md) for stage ordering, deployment strategy, supply-chain hardening, gate-blocking decisions, graph/memory/execution coupling, and anti-pattern detail.
+Anchor against DORA four key metrics, SLSA v1.0, OpenSSF Scorecard, Sigstore/Cosign, CycloneDX/SPDX, NIST SSDF, OWASP SAMM, GitHub/GitLab CI security guidance, Tekton Chains, cloud OIDC federation, hermetic build discipline, GitOps, SemVer, and release-note automation. Keep the body focused on routing, gates, and evidence; load [references/checklist.md](references/checklist.md) for concise planning, [references/pipeline-benchmarks.md](references/pipeline-benchmarks.md) for stage ordering, deployment strategy, supply-chain hardening, gate-blocking decisions, graph/memory/execution coupling, and anti-pattern detail, and [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on changed-pipeline validation, freshness, or tool boundaries.
 
 # Mode Matrix
 
@@ -99,26 +99,27 @@ The CI/CD pipeline is both a **quality enforcement mechanism and a supply-chain 
 
 # Failure Modes
 
-- Image rebuilt per environment; production runs a different binary than staging tested.
-- Mutable tag (`latest`) promotes without digest pin; a silent upstream change ships.
-- Required SAST or scan check bypassed with `continue-on-error` or admin override; finding ships.
-- Long-lived static deploy credentials exposed in logs or leaked in a PR.
-- Flaky test silently retried to green; underlying race condition ships to production.
-- `terraform apply` runs without plan review; unintended destructive change executes.
-- Database migration ships simultaneously with app, breaking N-1 compatibility during rolling deploy.
-- Post-deploy health check absent; degraded deploy runs undetected until user reports.
-- SBOM not generated; unable to triage which releases contain a newly disclosed CVE.
-- Self-hosted runner shared across environments; lateral movement from compromised dev pipeline reaches prod secrets.
-- Pipeline has no owner; configuration drifts; checks silently removed or no longer run.
-- Canary promoted to 100% with no automated rollback decision; bad canary completes full rollout.
-- Approval gate bypassed in emergency; no async notification to security/engineering lead.
-- Build cache keyed only on branch name; dependency update not reflected in cached build.
+- **Environment rebuild drift:** image rebuilt per environment; production runs a different binary than staging tested.
+- **Mutable artifact:** mutable tag (`latest`) promotes without digest pin; a silent upstream change ships.
+- **Bypassed required check:** required SAST or scan check uses `continue-on-error` or admin override; finding ships.
+- **Credential exposure:** long-lived static deploy credentials are exposed in logs or leaked in a PR.
+- **Retry-to-green flake:** flaky test silently retries to green; underlying race condition ships to production.
+- **Unreviewed IaC mutation:** `terraform apply` runs without plan review; unintended destructive change executes.
+- **Migration/version skew:** database migration ships simultaneously with app, breaking N-1 compatibility during rolling deploy.
+- **Missing health gate:** post-deploy health check is absent; degraded deploy runs undetected until user reports.
+- **Missing SBOM:** SBOM is not generated; a newly disclosed CVE cannot be traced to affected releases.
+- **Runner trust leak:** self-hosted runner is shared across environments; lateral movement from dev reaches prod secrets.
+- **Ownerless pipeline:** pipeline has no owner; configuration drifts and checks are silently removed.
+- **Ungated canary promotion:** canary promotes to 100% with no automated rollback decision.
+- **Emergency bypass without notice:** approval gate is bypassed without async notification to security or engineering lead.
+- **Weak cache key:** build cache is keyed only on branch name; dependency update is not reflected in the cached build.
 
 # Reference Loading Policy
 
 - Use the `SKILL.md` body for routing, mode selection, triggers, output contract, evidence, quality gates, and handoff.
 - Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete CI/CD plan and a compact checklist is enough.
 - Load [references/pipeline-benchmarks.md](references/pipeline-benchmarks.md) when stage ordering, deployment strategy, gate-blocking decisions, supply-chain hardening, IaC/Helm/monorepo detail, graph/memory/execution coupling, or anti-pattern review needs depth.
+- Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on changed-pipeline-to-validation mapping, graph/memory/execution freshness, generated report or dist evidence, tool permission boundaries, or what local validation proves versus what live CI/cloud evidence still does not prove.
 - Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear.
 - Do not load references for a pure routing decision or a local wording edit with no pipeline behavior claim.
 

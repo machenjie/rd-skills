@@ -103,18 +103,18 @@ Use this decision sequence:
 - **TDD**: test log fields, redaction, security denial, retry/fallback/error paths, and trace_id propagation when logging is required.
 
 ## Failure Modes
-- Expected 404 or validation errors are logged as ERROR.
-- Every cache miss or retry attempt emits ERROR.
-- INFO is emitted inside a hot loop without sampling or rate limits.
-- Raw exception plus raw request body, webhook body, URL query, token, password, cookie, or authorization header is logged.
-- Audit evidence is mixed with short-retention diagnostic logs.
-- Logs use raw IDs or arbitrary user input as metric labels.
-- Security denials omit policy category or record secret-bearing input.
-- Retry logs cannot distinguish intermediate retryable failure from final failure.
-- Logs are added with no tests for redaction or required fields.
+- **Expected error noise**: expected 404 or validation errors are logged as ERROR.
+- **Retry alert fatigue**: every cache miss or retry attempt emits ERROR.
+- **Hot-path volume spike**: INFO is emitted inside a hot loop without sampling or rate limits.
+- **Secret-bearing diagnostic leak**: raw exception plus raw request body, webhook body, URL query, token, password, cookie, or authorization header is logged.
+- **Audit retention collision**: audit evidence is mixed with short-retention diagnostic logs.
+- **Metric cardinality leak**: logs use raw IDs or arbitrary user input as metric labels.
+- **Security denial ambiguity**: security denials omit policy category or record secret-bearing input.
+- **Retry/final failure ambiguity**: retry logs cannot distinguish intermediate retryable failure from final failure.
+- **Untested log schema**: logs are added with no tests for redaction or required fields.
 
 ## Reference Loading Policy
-Read `references/logging-selection-criteria.md` when detailed log taxonomy, level policy, structured field, redaction, or placement guidance is needed. Read `references/capabilities/index.md` only when the selected capability list is available and the task needs deeper foundation detail. Load only the selected capability references for the active L1, L2, L3, L4, or L5 route. Do not read all references by default. When a selected capability needs more detail, read `references/capabilities/<capability-id>-<capability-name>.md` and only the adjacent references explicitly named there.
+Read [references/logging-selection-criteria.md](references/logging-selection-criteria.md) when detailed log taxonomy, level policy, structured field, redaction, or placement guidance is needed. Load [references/logging-output-and-gates.md](references/logging-output-and-gates.md) when the full output fields, closure gate, or handoff routing table is needed. Load [references/checklist.md](references/checklist.md) for a compact self-review before handoff. Read `references/capabilities/index.md` only when the selected capability list is available and the task needs deeper foundation detail. Load only the selected capability references for the active L1, L2, L3, L4, or L5 route. Do not read all references by default. When a selected capability needs more detail, read `references/capabilities/<capability-id>-<capability-name>.md` and only the adjacent references explicitly named there.
 
 ## Output Contract
 Return or embed a logging decision with this shape when logs are relevant:
@@ -146,10 +146,17 @@ When logs are not needed, return:
 ```
 
 - **Decision status:** return `needed=true` with the complete logging design, or `needed=false` with a concrete metric, trace, test, or public-behavior alternative.
+- **Mode selected:** no-log, diagnostic/error logging, security/access/audit logging, or hot-path signal design, with trigger signal.
+- **Boundaries inspected:** entry/controller, domain, application service, adapter, queue/worker, security boundary, logger helpers, config sinks, and tests inspected or skipped.
+- **Graph/memory/trajectory judgment:** current logger convention, field naming, trace context, and redaction utility reuse accepted, rejected, or not verified.
 - **Required fields:** include log_types, placement, events, levels, fields, redaction, correlation, cardinality_controls, tests_or_validation, and rationale when logging is needed.
 - **Forbidden fields:** list raw request body, raw webhook body, raw URL query, authorization header, cookie, token, password, signature, and PII exclusions.
 - **Level decision:** state why expected validation errors, retry attempts, fallback, degradation, and terminal failures use their selected levels.
+- **Signal split:** state whether logs, metrics, traces, alerts, or no-log alternatives own the operational question.
+- **Audit/diagnostic split:** state sink, retention, actor/action/resource/result fields, and diagnostic-only fields when audit evidence is required.
 - **Validation evidence:** map required fields, redaction, denial category, retry/fallback distinction, and trace propagation to tests or validation commands.
+- **Tool permission/sandbox:** classify shell, connector, log export, production telemetry, or secret-bearing evidence actions before use.
+- **Behavior preservation:** state compatibility with existing error contract, retry/fallback semantics, audit retention, redaction policy, and hot-path performance.
 - **Residual risk:** state any sink, retention, downstream processor, or traffic-volume assumption not proven by local validation.
 - **Handoff:** name the next gate for security, reliability, audit, or test follow-up.
 

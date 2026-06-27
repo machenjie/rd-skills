@@ -21,6 +21,8 @@ Do not use this capability to **make cache the source of truth**, to mask a slow
 
 # Stage Fit
 
+Use during planning, coding, bug-fix, debugging, code-review, refactoring, testing, release, and handoff when cache behavior, cache evidence, or a remembered cache claim can change source load, freshness, tenant isolation, or fallback behavior.
+
 - **Discovery / planning:** use when a proposal introduces a cache tier, edge cache rule, request memoization, materialized read projection, or stale fallback and the source of truth, staleness budget, and invalidation owner are not yet explicit.
 - **Implementation / review:** use when cache keys, value schemas, TTLs, invalidation events, negative caches, hot-key controls, or HTTP cache headers are being added or changed.
 - **Testing / verification:** use when evidence must prove key isolation, invalidation, stale-window bounds, stampede protection, cache-down fallback, and observability without depending on live cache infrastructure.
@@ -60,6 +62,7 @@ Anchor against RFC 9111 / 7232 / 5861 / 8246 / 9211 for HTTP freshness, validati
 | Correctness-sensitive cache | auth, pricing, inventory, finance | event invalidation and stale SLA | revoke/update test and owner acceptance | `authentication-authorization`, `transaction-consistency` | skip if source rechecks before action |
 | Degradation cache | stale-if-error, cache outage | source backpressure and kill switch | cache-down drill or scripted fallback test | `reliability-observability-gate`, `release-rollback` | skip when cache failure cannot affect users |
 | Evidence freshness | old graph, memory, report, telemetry | current path and validation reconciliation | command exit status and explicit unknowns | `validation-broker`, `agent-tool-permission-sandbox` | skip only for pure wording with no claim change |
+| Handoff closure | final answer, PR review, release note, or incident closeout claims cache safety | map final cache claims to fresh validator/test/report evidence and residual unknowns | changed cache-to-validation map, exit codes, artifact/report paths | `plan-execution-consistency`, `quality-test-gate` | skip only when no cache claim is made |
 
 # Selection Rules
 
@@ -104,27 +107,28 @@ Cache correctness is defined by **what staleness is acceptable, for how long, un
 
 # Failure Modes
 
-- Stale cache shows revoked permissions, old pricing, deleted records, or cancelled orders.
-- Popular key expires; thousands of requests stampede the database simultaneously → cascading outage.
-- Missing-key flood lets attackers force repeated expensive lookups; no negative cache or bloom filter in place.
-- Cache keys omit tenant or permission scope → cross-tenant or cross-user data leak when keys collide.
-- Synchronized TTL expiry (no jitter) coordinates a wave of misses every N seconds.
-- Cache cluster restart / failover triggers cold-cache origin meltdown.
-- Web cache deception serves user A's private response to user B from a shared CDN.
-- Cache poisoning via unkeyed header rewrites poisons the response served to all subsequent users.
-- Write-behind cache loses last-N writes when Redis crashes → data loss masquerading as cache loss.
-- Hit rate looks healthy (e.g., 95%) but a single hot key drives 80% of misses → invisible source pressure.
-- Cache value schema rolled out without key versioning; old pods crash on new shape during rolling deploy.
-- Negative cache without TTL turns transient miss into permanent "not found".
-- Permission-decision cache TTL longer than admin's expectation → revoked admin still acts.
-- Eviction policy, purge granularity, or `Vary` cardinality mismatch collapses hit rate or spreads stale content globally.
-- PII cached beyond erasure SLA creates a privacy and compliance failure.
+- **Stale correctness:** cache shows revoked permissions, old pricing, deleted records, or cancelled orders.
+- **Stampede:** popular key expires; thousands of requests stampede the database simultaneously -> cascading outage.
+- **Penetration:** missing-key flood lets attackers force repeated expensive lookups; no negative cache or bloom filter in place.
+- **Isolation leak:** cache keys omit tenant or permission scope -> cross-tenant or cross-user data leak when keys collide.
+- **Coordinated expiry:** synchronized TTL expiry (no jitter) coordinates a wave of misses every N seconds.
+- **Avalanche:** cache cluster restart / failover triggers cold-cache origin meltdown.
+- **Web cache deception:** user A's private response is served to user B from a shared CDN.
+- **Cache poisoning:** unkeyed header rewrites poison the response served to all subsequent users.
+- **Write-behind data loss:** cache loses last-N writes when Redis crashes -> data loss masquerading as cache loss.
+- **Hidden hot key:** hit rate looks healthy (e.g., 95%) but a single hot key drives 80% of misses -> invisible source pressure.
+- **Mixed schema:** cache value schema rolls out without key versioning; old pods crash on new shape during rolling deploy.
+- **Permanent negative:** negative cache without TTL turns transient miss into permanent "not found".
+- **Overlong PDP TTL:** permission-decision cache TTL exceeds admin expectation -> revoked admin still acts.
+- **Edge cardinality drift:** eviction policy, purge granularity, or `Vary` cardinality mismatch collapses hit rate or spreads stale content globally.
+- **Erasure failure:** PII cached beyond erasure SLA creates a privacy and compliance failure.
 
 # Reference Loading Policy
 
 - Use the `SKILL.md` body for L1/L2 routing, stage fit, mode selection, trigger detection, output contract, and quality gate.
 - Load [references/checklist.md](references/checklist.md) for concrete cache plans involving distributed caches, HTTP/CDN caches, tenant or permission scoped data, mutable entitlements, pricing, inventory, negative caching, stampede protection, cache-down fallback, or production observability.
 - Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when selecting cache pattern/technology, reviewing stampede/penetration/avalanche defenses, handling HTTP cache security, mapping observability and validation evidence, or reconciling graph/memory/execution evidence.
+- Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on graph/memory/execution coupling, changed cache-to-validation mapping, stale prior evidence, tool permission boundaries, or final handoff claims.
 - Do not load references for isolated request-local memoization with no shared state, no sensitive data, and no stale-read consequence unless the cache behavior is disputed.
 
 # Output Contract
@@ -141,7 +145,7 @@ Return a cache strategy with, per cached value class:
 - `observability_contract` (hit/miss/stale/eviction/refresh-failure/source-load/hot-key/memory metrics, alerts, `Cache-Status`)
 - `validation_contract` (tests for stale, miss flood, stampede, cache-down, mixed schema, permission revoke, invalidation race)
 - `graph_memory_execution_coupling` (current graph/memory facts used, current files/config/tests/telemetry that confirm or reject them)
-- `validation_freshness` (commands, timestamps or run identifiers, exit status, and stale evidence called out)
+- `validation_freshness` (validator/test commands, timestamps or run identifiers, exit code, artifact/report or screenshot path when applicable, and stale evidence called out)
 - `tool_permission_boundary` (read-only vs state-mutating cache/tool actions, sandbox, approval requirement, redaction rule)
 - `evidence_scope` (what the evidence covers, what remains unproven, residual owner/risk)
 

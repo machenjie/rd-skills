@@ -50,7 +50,7 @@ Source truth is current job/worker code, enqueue call sites, scheduler or broker
 
 # Industry Benchmarks
 
-Anchor against at-least-once delivery, idempotent consumers, transactional outbox/inbox, DLQ and poison-message handling, Saga and compensating transactions, workflow-engine replay/versioning, OpenTelemetry trace propagation, full-jitter retry, SRE error budgets, Little's Law for worker capacity, and runbook-backed recovery. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for runtime selection, retry/failure matrices, idempotency decision trees, scheduling/backfill patterns, graph-memory-execution coupling, validation matrices, and anti-pattern review.
+Anchor against at-least-once delivery, idempotent consumers, transactional outbox/inbox, DLQ and poison-message handling, Saga and compensating transactions, workflow-engine replay/versioning, OpenTelemetry trace propagation, full-jitter retry, SRE error budgets, Little's Law for worker capacity, and runbook-backed recovery. Use [references/checklist.md](references/checklist.md) for quick design review, [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for runtime selection and failure matrices, and [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on graph/memory/execution freshness, tool permission boundaries, validation artifacts, or evidence limits.
 
 # Mode Matrix
 
@@ -97,20 +97,20 @@ Async work changes the failure model: the initiating request can succeed while t
 
 # Failure Modes
 
-- Worker retries a non-idempotent charge, email, webhook, or inventory update and creates duplicate customer-visible effects.
-- Request returns success before durable enqueue; producer crashes and the job never exists.
-- Job status is invisible; users retry repeatedly and support cannot answer whether work ran.
-- Payload snapshot is stale after a multi-day retry and commits obsolete data.
-- Permanent validation failure loops through max retries and floods the DLQ with the same defect.
-- Cancellation stops the process mid-step; partial external effects remain with no compensation.
-- DLQ accumulates silently because no alert, triage owner, or oldest-age metric exists.
-- Visibility timeout expires during execution and a second worker runs the same job concurrently.
-- Rolling deploy changes payload or activity code while old work is in flight and replay fails.
-- One tenant's bulk job starves all other tenants or melts a shared dependency during replay.
+- **Duplicate side effect:** worker retries a non-idempotent charge, email, webhook, or inventory update and creates customer-visible duplicates.
+- **Lost durable handoff:** request returns success before durable enqueue; producer crashes and the job never exists.
+- **Invisible terminal state:** job status is not queryable, so users retry repeatedly and support cannot answer whether work ran.
+- **Stale payload snapshot:** multi-day retry uses obsolete payload data after source state or schema changed.
+- **Poison retry loop:** permanent validation failure burns retries and floods the DLQ with the same defect.
+- **Partial cancellation:** cancellation stops the process mid-step while committed external effects have no compensation.
+- **Silent DLQ backlog:** DLQ accumulates because no alert, triage owner, retention, replay throttle, or oldest-age metric exists.
+- **Lease overlap:** visibility timeout expires during execution and a second worker runs the same job concurrently.
+- **Deploy-skew replay break:** rolling deploy changes payload or activity code while old work is in flight and replay fails.
+- **Tenant replay starvation:** one tenant's bulk job starves other tenants or melts a shared dependency during replay.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 routing, boundaries, mode selection, output shape, and quality gates. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete job design, worker change, scheduled job, transactional enqueue, retry/DLQ/replay policy, cancellation, compensation, deploy skew, or production observability. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed runtime selection, retry/failure matrices, idempotency trees, scheduling/backfill patterns, observability/runbook matrices, graph-memory-execution coupling, or validation matrices are needed. Use [examples/example-output.md](examples/example-output.md) only when the output shape is unclear. Do not load deep references for isolated best-effort tasks where loss is accepted and no external side effect exists.
+The `SKILL.md` body carries L1/L2 routing, boundaries, mode selection, output shape, and quality gates. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete job design, worker change, scheduled job, transactional enqueue, retry/DLQ/replay policy, cancellation, compensation, deploy skew, or production observability. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when detailed runtime selection, retry/failure matrices, idempotency trees, scheduling/backfill patterns, observability/runbook matrices, graph-memory-execution coupling, or validation matrices are needed. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on accepted or rejected graph/memory claims, tool permission boundaries, validator output, exit code, report/artifact paths, validation freshness, or what async evidence does and does not prove. Use [examples/example-output.md](examples/example-output.md) only when the output shape is unclear. Do not load deep references for isolated best-effort tasks where loss is accepted and no external side effect exists.
 
 # Output Contract
 
@@ -144,7 +144,7 @@ Close an async job design only when these answers are concrete:
 - **Basis:** mode selected, job boundary, trigger, owner, side effects, tenant/resource scope, and why async execution is required instead of synchronous completion.
 - **Current evidence:** source paths, config, status schema, idempotency store, runbooks, dashboards, graph slice, memory signals, and validation trajectory inspected with freshness status.
 - **Lifecycle judgment:** durable enqueue, delivery semantics, ack/nack, retry/DLQ, replay, ordering/concurrency, cancellation, compensation, deploy skew, observability, and cost/capacity decisions.
-- **Validation evidence:** commands, tests, fixtures, reports, or explicit not-run disclosures mapped to duplicate delivery, enqueue atomicity, retry exhaustion, DLQ, replay, cancellation, compensation, status visibility, and stale-validation repair.
+- **Validation evidence:** validation commands, tests, fixtures, validator output, exit code, artifact or report path, or explicit not-run disclosures mapped to duplicate delivery, enqueue atomicity, retry exhaustion, DLQ, replay, cancellation, compensation, status visibility, and stale-validation repair.
 - **What evidence proves / does not prove:** bounded retries, visible terminal states, owned recovery, and tested failure paths; plus unproven production broker behavior, clock skew, ordering, downstream idempotency, replay scale, or tenant skew.
 - **Handoff and residual risk:** unresolved queue topology, retry math, transaction consistency, security/privacy, performance budget, release rollback, or observability readiness assigned to the next gate with owner.
 
@@ -167,6 +167,7 @@ The job design passes only when:
 13. Cost and capacity are modeled for projected volume, backlog drain, and retry storm.
 14. Job-to-validation map covers success plus failure-injection paths or names not-verified residual risk.
 15. Graph, memory, runbook, generated report, and prior validation claims are reconciled against current source and post-edit command order.
+16. Validation evidence includes command, validator output, exit code, artifact/report path, what the evidence proves, what it does not prove, and residual owner when a check is not run.
 
 # Benchmark Coverage
 

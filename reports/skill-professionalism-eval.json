@@ -1,7 +1,7 @@
 {
-  "average_score": 55.62,
+  "average_score": 57.72,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-27T01:15:38.100304+00:00",
+  "generated_at": "2026-06-27T12:53:41.393470+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -279,17 +279,17 @@
       "warnings": []
     },
     {
-      "body_lines": 226,
+      "body_lines": 231,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 5,
-        "output_actionability": 3,
+        "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -300,7 +300,7 @@
       "path": "src/professional-skills/development-process-orchestrator/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 55,
+      "total": 60,
       "warnings": []
     },
     {
@@ -329,20 +329,20 @@
       "warnings": []
     },
     {
-      "body_lines": 220,
+      "body_lines": 236,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 5,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
-        "stage_fit": 4,
+        "reference_precision": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 3
+        "validation_obligation": 5
       },
       "kind": "professional-skill",
       "likely_missing_sections": [],
@@ -350,7 +350,7 @@
       "path": "src/professional-skills/experience-impact-modeler/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 54,
+      "total": 59,
       "warnings": []
     },
     {
@@ -404,17 +404,17 @@
       "warnings": []
     },
     {
-      "body_lines": 176,
+      "body_lines": 183,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 5,
-        "output_actionability": 3,
+        "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -425,7 +425,7 @@
       "path": "src/professional-skills/logging-design-gate/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 55,
+      "total": 60,
       "warnings": []
     },
     {
@@ -529,18 +529,18 @@
       "warnings": []
     },
     {
-      "body_lines": 198,
+      "body_lines": 199,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
-        "stage_fit": 4,
+        "reference_precision": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -550,7 +550,7 @@
       "path": "src/foundation/capabilities/acceptance-standard-definition/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 58,
       "warnings": []
     },
     {
@@ -629,17 +629,17 @@
       "warnings": []
     },
     {
-      "body_lines": 173,
+      "body_lines": 172,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -650,22 +650,22 @@
       "path": "src/foundation/capabilities/algorithm-data-structure-selection/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 56,
+      "total": 59,
       "warnings": []
     },
     {
-      "body_lines": 195,
+      "body_lines": 193,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 3,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -675,22 +675,22 @@
       "path": "src/foundation/capabilities/api-contract-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 183,
+      "body_lines": 187,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -700,24 +700,24 @@
       "path": "src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 173,
+      "body_lines": 183,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
+        "evidence_contract_strength": 5,
         "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -725,22 +725,22 @@
       "path": "src/foundation/capabilities/architecture-style-selection/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 184,
+      "body_lines": 189,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
-        "stage_fit": 4,
+        "reference_precision": 5,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -750,24 +750,24 @@
       "path": "src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
-      "body_lines": 183,
+      "body_lines": 184,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -775,22 +775,22 @@
       "path": "src/foundation/capabilities/async-job-design/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 56,
+      "total": 59,
       "warnings": []
     },
     {
-      "body_lines": 218,
+      "body_lines": 221,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
-        "stage_fit": 4,
+        "reference_precision": 5,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -800,7 +800,7 @@
       "path": "src/foundation/capabilities/authentication-authorization/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
@@ -809,12 +809,12 @@
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -825,7 +825,7 @@
       "path": "src/foundation/capabilities/authentication-security/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 56,
+      "total": 59,
       "warnings": []
     },
     {
@@ -854,18 +854,18 @@
       "warnings": []
     },
     {
-      "body_lines": 220,
+      "body_lines": 224,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 3,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
-        "stage_fit": 4,
+        "reference_precision": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -875,32 +875,7 @@
       "path": "src/foundation/capabilities/business-rule-extraction/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 53,
-      "warnings": []
-    },
-    {
-      "body_lines": 194,
-      "dimensions": {
-        "anti_bloat_control": 5,
-        "boundary_clarity": 5,
-        "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
-        "mode_coverage": 4,
-        "output_actionability": 5,
-        "proactive_trigger_quality": 5,
-        "professional_depth": 5,
-        "reference_precision": 4,
-        "stage_fit": 4,
-        "trigger_accuracy": 5,
-        "validation_obligation": 4
-      },
-      "kind": "foundation-capability",
-      "likely_missing_sections": [],
-      "name": "cache-design",
-      "path": "src/foundation/capabilities/cache-design/SKILL.md",
-      "recommended_fixes": [],
-      "status": "sample-grade",
-      "total": 55,
+      "total": 58,
       "warnings": []
     },
     {
@@ -909,13 +884,38 @@
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
-        "stage_fit": 4,
+        "reference_precision": 5,
+        "stage_fit": 5,
+        "trigger_accuracy": 5,
+        "validation_obligation": 5
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "cache-design",
+      "path": "src/foundation/capabilities/cache-design/SKILL.md",
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 59,
+      "warnings": []
+    },
+    {
+      "body_lines": 199,
+      "dimensions": {
+        "anti_bloat_control": 5,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
+        "mode_coverage": 4,
+        "output_actionability": 5,
+        "proactive_trigger_quality": 5,
+        "professional_depth": 5,
+        "reference_precision": 5,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -925,21 +925,21 @@
       "path": "src/foundation/capabilities/ci-cd/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 56,
+      "total": 59,
       "warnings": []
     },
     {
-      "body_lines": 174,
+      "body_lines": 176,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -950,21 +950,21 @@
       "path": "src/foundation/capabilities/cleanup-deletion-governance/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 56,
+      "total": 59,
       "warnings": []
     },
     {
-      "body_lines": 200,
+      "body_lines": 210,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -975,21 +975,21 @@
       "path": "src/foundation/capabilities/cli-daemon-interface-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 56,
+      "total": 59,
       "warnings": []
     },
     {
-      "body_lines": 197,
+      "body_lines": 198,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -1000,7 +1000,7 @@
       "path": "src/foundation/capabilities/code-clarity-maintainability/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 56,
+      "total": 59,
       "warnings": []
     },
     {
@@ -1029,20 +1029,20 @@
       "warnings": []
     },
     {
-      "body_lines": 183,
+      "body_lines": 210,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -1050,19 +1050,19 @@
       "path": "src/foundation/capabilities/concurrency-control/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 53,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 178,
+      "body_lines": 182,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 3,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
         "stage_fit": 5,
@@ -1075,16 +1075,41 @@
       "path": "src/foundation/capabilities/configuration-runtime-policy/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 165,
+      "body_lines": 166,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
+        "mode_coverage": 4,
+        "output_actionability": 5,
+        "proactive_trigger_quality": 5,
+        "professional_depth": 5,
+        "reference_precision": 5,
+        "stage_fit": 5,
+        "trigger_accuracy": 5,
+        "validation_obligation": 5
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "consumer-impact-analysis",
+      "path": "src/foundation/capabilities/consumer-impact-analysis/SKILL.md",
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 59,
+      "warnings": []
+    },
+    {
+      "body_lines": 231,
+      "dimensions": {
+        "anti_bloat_control": 5,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
@@ -1096,51 +1121,26 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
-      "name": "consumer-impact-analysis",
-      "path": "src/foundation/capabilities/consumer-impact-analysis/SKILL.md",
-      "recommended_fixes": [],
-      "status": "sample-grade",
-      "total": 56,
-      "warnings": []
-    },
-    {
-      "body_lines": 244,
-      "dimensions": {
-        "anti_bloat_control": 5,
-        "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
-        "mode_coverage": 4,
-        "output_actionability": 5,
-        "proactive_trigger_quality": 4,
-        "professional_depth": 5,
-        "reference_precision": 3,
-        "stage_fit": 4,
-        "trigger_accuracy": 5,
-        "validation_obligation": 5
-      },
-      "kind": "foundation-capability",
-      "likely_missing_sections": [],
       "name": "containerization",
       "path": "src/foundation/capabilities/containerization/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 53,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 147,
+      "body_lines": 148,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 3,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 3,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 5,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -1150,7 +1150,7 @@
       "path": "src/foundation/capabilities/context-control-plane/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 59,
       "warnings": []
     },
     {
@@ -1159,12 +1159,12 @@
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -1175,7 +1175,7 @@
       "path": "src/foundation/capabilities/context-packaging/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 56,
+      "total": 59,
       "warnings": []
     },
     {
@@ -1254,18 +1254,18 @@
       "warnings": []
     },
     {
-      "body_lines": 183,
+      "body_lines": 187,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
-        "stage_fit": 4,
+        "reference_precision": 5,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -1275,22 +1275,22 @@
       "path": "src/foundation/capabilities/data-migration-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
-      "body_lines": 179,
+      "body_lines": 183,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
-        "stage_fit": 4,
+        "reference_precision": 5,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -1300,7 +1300,7 @@
       "path": "src/foundation/capabilities/data-model-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
@@ -1329,20 +1329,20 @@
       "warnings": []
     },
     {
-      "body_lines": 170,
+      "body_lines": 173,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -1350,22 +1350,22 @@
       "path": "src/foundation/capabilities/degradation-circuit-breaking/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 183,
+      "body_lines": 210,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 3,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -1375,24 +1375,24 @@
       "path": "src/foundation/capabilities/dependency-vulnerability-scanning/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 53,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 176,
+      "body_lines": 184,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -1400,7 +1400,7 @@
       "path": "src/foundation/capabilities/dependency-wiring-lifecycle/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
@@ -1429,17 +1429,17 @@
       "warnings": []
     },
     {
-      "body_lines": 170,
+      "body_lines": 172,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -1450,21 +1450,21 @@
       "path": "src/foundation/capabilities/design-system-rules/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
-      "body_lines": 153,
+      "body_lines": 160,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 3,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 3,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
+        "reference_precision": 4,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -1475,7 +1475,7 @@
       "path": "src/foundation/capabilities/documentation-generation/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 53,
+      "total": 58,
       "warnings": []
     },
     {
@@ -1504,20 +1504,20 @@
       "warnings": []
     },
     {
-      "body_lines": 139,
+      "body_lines": 147,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
+        "reference_precision": 4,
         "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -1525,22 +1525,22 @@
       "path": "src/foundation/capabilities/domain-logic-implementation/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 150,
+      "body_lines": 182,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
-        "stage_fit": 4,
+        "reference_precision": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -1550,7 +1550,7 @@
       "path": "src/foundation/capabilities/domain-object-identification/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
@@ -1729,7 +1729,7 @@
       "warnings": []
     },
     {
-      "body_lines": 200,
+      "body_lines": 205,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1739,10 +1739,10 @@
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
-        "stage_fit": 4,
+        "reference_precision": 5,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -1750,7 +1750,7 @@
       "path": "src/foundation/capabilities/extensibility-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
@@ -1804,20 +1804,20 @@
       "warnings": []
     },
     {
-      "body_lines": 188,
+      "body_lines": 215,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -1825,24 +1825,24 @@
       "path": "src/foundation/capabilities/file-storage-processing/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 53,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 171,
+      "body_lines": 174,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -1850,24 +1850,24 @@
       "path": "src/foundation/capabilities/form-validation-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 169,
+      "body_lines": 172,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -1875,22 +1875,22 @@
       "path": "src/foundation/capabilities/frontend-api-integration/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 166,
+      "body_lines": 177,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
-        "stage_fit": 4,
+        "reference_precision": 5,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -1900,7 +1900,7 @@
       "path": "src/foundation/capabilities/frontend-testing/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
@@ -1979,15 +1979,15 @@
       "warnings": []
     },
     {
-      "body_lines": 195,
+      "body_lines": 185,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 3,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 3,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 5,
         "stage_fit": 5,
@@ -2000,22 +2000,22 @@
       "path": "src/foundation/capabilities/implementation-structure-design/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
-      "body_lines": 168,
+      "body_lines": 169,
       "dimensions": {
         "anti_bloat_control": 5,
-        "boundary_clarity": 4,
+        "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
-        "stage_fit": 4,
+        "reference_precision": 5,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -2025,7 +2025,7 @@
       "path": "src/foundation/capabilities/indexing-query-optimization/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
@@ -2034,13 +2034,13 @@
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 3,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -2050,21 +2050,21 @@
       "path": "src/foundation/capabilities/information-architecture/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 184,
+      "body_lines": 187,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -2075,7 +2075,7 @@
       "path": "src/foundation/capabilities/input-validation/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
@@ -2309,15 +2309,15 @@
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
-        "stage_fit": 4,
+        "reference_precision": 5,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -2325,24 +2325,24 @@
       "path": "src/foundation/capabilities/logging-error-handling/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
-      "body_lines": 155,
+      "body_lines": 157,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 3
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -2350,7 +2350,7 @@
       "path": "src/foundation/capabilities/message-queue-design/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
@@ -2429,12 +2429,12 @@
       "warnings": []
     },
     {
-      "body_lines": 183,
+      "body_lines": 197,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 3,
-        "failure_mode_coverage": 3,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 4,
@@ -2450,22 +2450,22 @@
       "path": "src/foundation/capabilities/module-boundary-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 141,
+      "body_lines": 172,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 3,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 3,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -2475,22 +2475,22 @@
       "path": "src/foundation/capabilities/non-goal-boundary-definition/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 52,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 161,
+      "body_lines": 189,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 3,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -2500,22 +2500,22 @@
       "path": "src/foundation/capabilities/nosql-database/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 53,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 141,
+      "body_lines": 143,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 3,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
-        "stage_fit": 4,
+        "reference_precision": 5,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -2525,11 +2525,11 @@
       "path": "src/foundation/capabilities/observability/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
-      "body_lines": 221,
+      "body_lines": 224,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -2537,10 +2537,10 @@
         "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
-        "stage_fit": 4,
+        "reference_precision": 5,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -2550,7 +2550,7 @@
       "path": "src/foundation/capabilities/package-dependency-management/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
@@ -2579,18 +2579,18 @@
       "warnings": []
     },
     {
-      "body_lines": 165,
+      "body_lines": 199,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 3,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 3,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -2600,22 +2600,22 @@
       "path": "src/foundation/capabilities/performance-budgeting/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 53,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 160,
+      "body_lines": 161,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 3,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
-        "stage_fit": 4,
+        "reference_precision": 5,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -2625,22 +2625,22 @@
       "path": "src/foundation/capabilities/permission-boundary-modeling/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
-      "body_lines": 141,
+      "body_lines": 143,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
+        "evidence_contract_strength": 5,
         "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 3,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -2650,22 +2650,22 @@
       "path": "src/foundation/capabilities/plan-execution-consistency/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 57,
       "warnings": []
     },
     {
-      "body_lines": 210,
+      "body_lines": 229,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 3,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
-        "stage_fit": 4,
+        "reference_precision": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -2675,16 +2675,16 @@
       "path": "src/foundation/capabilities/profiling/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 53,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 208,
+      "body_lines": 211,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 3,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
@@ -2692,7 +2692,7 @@
         "reference_precision": 3,
         "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -2700,7 +2700,7 @@
       "path": "src/foundation/capabilities/project-initialization/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 57,
       "warnings": []
     },
     {
@@ -2754,7 +2754,7 @@
       "warnings": []
     },
     {
-      "body_lines": 159,
+      "body_lines": 177,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -2762,9 +2762,9 @@
         "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 1,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
+        "reference_precision": 4,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -2774,22 +2774,22 @@
       "name": "python-professional-usage",
       "path": "src/foundation/capabilities/python-professional-usage/SKILL.md",
       "recommended_fixes": [],
-      "status": "acceptable",
-      "total": 53,
+      "status": "sample-grade",
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 185,
+      "body_lines": 221,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -2800,7 +2800,7 @@
       "path": "src/foundation/capabilities/refactoring/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
@@ -2829,18 +2829,18 @@
       "warnings": []
     },
     {
-      "body_lines": 147,
+      "body_lines": 159,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 3,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -2850,7 +2850,7 @@
       "path": "src/foundation/capabilities/relational-database/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
@@ -2929,20 +2929,20 @@
       "warnings": []
     },
     {
-      "body_lines": 142,
+      "body_lines": 150,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 3,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -2950,21 +2950,21 @@
       "path": "src/foundation/capabilities/repository-persistence/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 52,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 165,
+      "body_lines": 172,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 3,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -2975,7 +2975,7 @@
       "path": "src/foundation/capabilities/requirement-clarification/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
@@ -3054,20 +3054,20 @@
       "warnings": []
     },
     {
-      "body_lines": 179,
+      "body_lines": 202,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 3,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
         "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -3075,22 +3075,22 @@
       "path": "src/foundation/capabilities/scenario-decomposition/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 53,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 237,
+      "body_lines": 229,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
-        "stage_fit": 4,
+        "reference_precision": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -3100,24 +3100,24 @@
       "path": "src/foundation/capabilities/sdk-library-contract-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 53,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 193,
+      "body_lines": 208,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 3,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -3125,22 +3125,22 @@
       "path": "src/foundation/capabilities/search-analytics-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 52,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 198,
+      "body_lines": 214,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 3,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
-        "stage_fit": 4,
+        "reference_precision": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -3150,7 +3150,7 @@
       "path": "src/foundation/capabilities/secret-configuration-security/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 52,
+      "total": 58,
       "warnings": []
     },
     {
@@ -3158,14 +3158,14 @@
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 4,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -3175,7 +3175,7 @@
       "path": "src/foundation/capabilities/service-business-logic/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
@@ -3304,15 +3304,15 @@
       "warnings": []
     },
     {
-      "body_lines": 162,
+      "body_lines": 165,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 3,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
         "stage_fit": 5,
@@ -3325,22 +3325,22 @@
       "path": "src/foundation/capabilities/state-machine-modeling/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 156,
+      "body_lines": 157,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 3,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
       },
@@ -3350,7 +3350,7 @@
       "path": "src/foundation/capabilities/state-management-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 54,
+      "total": 58,
       "warnings": []
     },
     {
@@ -3404,20 +3404,20 @@
       "warnings": []
     },
     {
-      "body_lines": 186,
+      "body_lines": 195,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 3,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -3425,21 +3425,21 @@
       "path": "src/foundation/capabilities/test-data-management/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 52,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 177,
+      "body_lines": 178,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
         "failure_mode_coverage": 5,
         "mode_coverage": 4,
-        "output_actionability": 4,
-        "proactive_trigger_quality": 4,
+        "output_actionability": 5,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -3450,7 +3450,7 @@
       "path": "src/foundation/capabilities/test-strategy/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
@@ -3479,7 +3479,7 @@
       "warnings": []
     },
     {
-      "body_lines": 215,
+      "body_lines": 216,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -3487,9 +3487,9 @@
         "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 3,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -3500,21 +3500,21 @@
       "path": "src/foundation/capabilities/threat-modeling/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
-      "body_lines": 154,
+      "body_lines": 157,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 3,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -3525,7 +3525,7 @@
       "path": "src/foundation/capabilities/transaction-consistency/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
@@ -3554,17 +3554,17 @@
       "warnings": []
     },
     {
-      "body_lines": 167,
+      "body_lines": 171,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 3,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -3575,7 +3575,7 @@
       "path": "src/foundation/capabilities/unit-testing/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 55,
+      "total": 59,
       "warnings": []
     },
     {
@@ -3604,20 +3604,20 @@
       "warnings": []
     },
     {
-      "body_lines": 154,
+      "body_lines": 162,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 3,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -3625,7 +3625,7 @@
       "path": "src/foundation/capabilities/user-flow-modeling/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 52,
+      "total": 58,
       "warnings": []
     },
     {
@@ -3679,20 +3679,20 @@
       "warnings": []
     },
     {
-      "body_lines": 167,
+      "body_lines": 183,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
-        "failure_mode_coverage": 3,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
-        "stage_fit": 4,
+        "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -3700,24 +3700,24 @@
       "path": "src/foundation/capabilities/version-compatibility/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 53,
+      "total": 58,
       "warnings": []
     },
     {
-      "body_lines": 182,
+      "body_lines": 186,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 3,
+        "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 3,
+        "reference_precision": 4,
         "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -3725,7 +3725,7 @@
       "path": "src/foundation/capabilities/web-security/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 53,
+      "total": 58,
       "warnings": []
     }
   ],

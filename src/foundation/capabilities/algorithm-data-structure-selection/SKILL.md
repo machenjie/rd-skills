@@ -41,7 +41,7 @@ Use during design when the implementation shape is still selectable, during codi
 
 # Industry Benchmarks
 
-Anchor against Knuth algorithm analysis, CLRS data structure selection, database query planning principles, streaming processing practice, external sort and chunked processing, probabilistic data structures such as Bloom filters, cache eviction policies such as LRU/LFU, and benchmark-before-optimization discipline.
+Anchor against Knuth algorithm analysis, CLRS data structure selection, database query planning principles, streaming processing practice, external sort and chunked processing, probabilistic data structures such as Bloom filters, cache eviction policies such as LRU/LFU, and benchmark-before-optimization discipline. Use [references/checklist.md](references/checklist.md) for quick selection checks, [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for complexity matrices and decision patterns, and [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on graph/memory/execution freshness, benchmark scope, or evidence limits.
 
 # Mode Matrix
 
@@ -65,11 +65,7 @@ Escalate to `reliability-observability-gate` when the algorithm affects SLOs, ba
 
 # Reference Loading Policy
 
-Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active algorithm and data-structure decision rules.
-
-If deep references are added later, load them only for L3+ work, production-scale inputs, hot paths, unbounded load-all processing, unclear complexity, memory-budget risk, or benchmark/profile interpretation.
-
-Do not load deep references for L1/L2 local changes where input size is bounded and the inline output contract for time, space, memory, and rejected alternatives is enough.
+The `SKILL.md` body carries L1/L2 routing, mode selection, output, and gates. Use inline-only mode for L1/L2 bounded local choices where the output contract for time, space, memory, and rejected alternatives is enough. Read `references/checklist.md` when drafting or reviewing a concrete algorithm/data-structure decision. Read `references/benchmarks-and-patterns.md` for L3+ work, production-scale inputs, hot paths, unbounded load-all processing, unclear complexity, memory-budget risk, candidate comparison, or benchmark/profile interpretation. Read `references/evidence-patterns.md` when closure depends on accepted or rejected graph/memory claims, validation freshness, tool permission boundaries, benchmark scope, or what scale evidence proves versus what it does not prove. Do not load deep references for L1/L2 local changes where input size is bounded and the inline output contract is enough.
 
 # Critical Details
 
@@ -100,6 +96,9 @@ Do not load deep references for L1/L2 local changes where input size is bounded 
 - **Signal:** graph traversal, dependency walk, tree recursion, or route expansion lacks a visited set or frontier cap. **Hidden risk:** cycle, exponential expansion, or stack/memory failure. **Required professional action:** choose BFS/DFS/priority traversal with cycle handling and frontier bounds. **Route to:** `algorithm-data-structure-selection`, `regression-testing`. **Evidence required:** max nodes/edges/depth, cycle behavior, visited-set memory, and traversal test.
 - **Signal:** optimization claim comes from intuition, project memory, or micro input tests only. **Hidden risk:** stale assumption closes the wrong performance gate. **Required professional action:** confirm current caller and production-like scale, or state not verified. **Route to:** `repository-graph-analysis`, `project-memory-governance`. **Evidence required:** repository graph path, test/benchmark command, freshness, and limits.
 - **Signal:** probabilistic, approximate, parallel, or concurrent structure is proposed. **Hidden risk:** exactness drift, race, nondeterminism, or operational complexity. **Required professional action:** prove exact/approximate acceptance, concurrency safety, and fallback. **Route to:** `algorithm-data-structure-selection`, `concurrency-control`. **Evidence required:** false-positive rate, determinism requirement, stress/benchmark plan, rejected exact alternative.
+- **Signal:** application code mirrors database, search, cache, or queue state into an in-memory map/set/list for every request or worker tick. **Hidden risk:** stale data, memory leak, wrong ownership, and duplicated index behavior outside the source of truth. **Required professional action:** inspect storage owner, compare query/index/cache alternatives, and prove lifecycle plus memory bound before accepting the in-memory structure. **Route to:** `indexing-query-optimization`, `cache-design`. **Evidence required:** caller path, source-of-truth owner, item/byte estimate, validation command, and residual stale-data owner.
+- **Signal:** stable ordering for pagination, replay, dedupe, or user-visible ranking depends on unordered map/set iteration or a sort without deterministic tie-breakers. **Hidden risk:** duplicate pages, missing records, inconsistent ranking, and silent replay drift. **Required professional action:** inspect the ordering contract, require deterministic tie-breaker fields, and verify fixture or golden ordering. **Route to:** `algorithm-data-structure-selection`, `regression-testing`. **Evidence required:** ordering contract, tie-breaker field, fixture path, validation command, exit code, and residual ordering owner.
+- **Signal:** benchmark or profile evidence uses a tiny fixture, random data without skew, or a command run before the final source edit. **Hidden risk:** stale or unverified evidence hides production memory, latency, hot-key, or skew failure. **Required professional action:** compare the workload matrix with the current caller, rerun affected commands after the final edit, or document the not-run limit. **Route to:** `profiling`, `validation-broker`. **Evidence required:** workload matrix, command, exit code, report path, and what the evidence does not prove.
 
 # Execution Coupling
 
@@ -110,16 +109,16 @@ Do not load deep references for L1/L2 local changes where input size is bounded 
 
 # Failure Modes
 
-- Loading 10M records into memory because the unit test used 20 records.
-- Nested scanning two large collections when a map, set, sort-merge, or index would bound work.
-- Sorting a full list to return top 20 items.
-- Grouping unbounded keys without memory budget or spill strategy.
-- Using a list for membership checks in a hot path.
-- Ignoring worst-case graph cycles, skewed keys, adversarial input, or stable ordering.
-- Adding a complex probabilistic structure without explaining approximate versus exact semantics.
-- Adding a cache to hide an O(n squared) path without eviction, source-of-truth, or invalidation ownership.
-- Choosing parallel workers for a mostly sequential pipeline and increasing contention.
-- Trusting project memory that says "this list is small" while the current caller now accepts paged external data.
+- **Load-all memory failure:** implementation reads millions of records into memory because the unit test used 20 records and no byte ceiling existed.
+- **Nested-scan blowup:** two large collections are compared with nested loops when a map, set, sort-merge, or storage index would bound work.
+- **Full-sort top-K waste:** code sorts an entire list to return the first page, latest N, or top 20 items.
+- **Unbounded grouping growth:** grouping keys are user-, tenant-, event-, or file-derived with no cardinality, spill, chunking, or rejection strategy.
+- **Hot-path list membership:** repeated membership checks use a list in a request, render, worker, or batch path where a set/map is required.
+- **Traversal explosion:** graph/tree/dependency traversal lacks visited set, depth cap, frontier cap, or stable ordering.
+- **Approximation drift:** probabilistic or approximate structure is added without false-positive rate, exactness acceptance, or fallback.
+- **Cache masks complexity:** cache hides an O(n squared) path without eviction, source-of-truth, invalidation, or cold-cache behavior.
+- **Parallelism increases contention:** workers are added to a mostly sequential or shared-state pipeline and raise coordination cost.
+- **Stale small-input memory:** project memory says "this list is small" while the current caller now accepts paged, external, or generated data.
 
 # Output Contract
 

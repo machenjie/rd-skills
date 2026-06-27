@@ -21,7 +21,7 @@ Do not use this capability to design application-service orchestration, transact
 
 # Stage Fit
 
-Use during implementation planning, coding, review, and repair for backend/domain behavior. In planning, name the rule authority and failure outcomes before code. During coding, keep domain logic pure from transport, persistence, framework, network, cache, queue, clock, and UI concerns unless an explicit domain service boundary owns the policy. During review, reject anemic domain objects, duplicate guards, direct field mutation, and tests that only prove the happy path.
+Use during planning, coding, bug-fix, debugging, code-review, refactoring, testing, release preparation, and incident repair for backend/domain behavior. Treat this capability as the stage selection and launch guard for rule authority, invariant placement, value object validity, lifecycle transition enforcement, calculation contract, and layer cleanup decisions. In planning, name the rule authority, failure outcomes, current source paths, repository graph slice, project-memory verdict, and validation signal before code. During coding, keep domain logic pure from transport, persistence, framework, network, cache, queue, clock, and UI concerns unless an explicit domain service boundary owns the policy. During review, reject anemic domain objects, duplicate guards, direct field mutation, stale "existing rule covers it" claims, and tests that only prove the happy path; hand off with the unresolved boundary and next gate when orchestration, persistence, transaction, API contract, security, or release owns the remaining question.
 
 # Non-Negotiable Rules
 
@@ -37,6 +37,8 @@ Use during implementation planning, coding, review, and repair for backend/domai
 - **Tests exercise public domain behavior.** Cover allowed behavior, denied behavior, boundary values, transition matrix rows, calculation boundaries, and failure outcomes without depending on private helpers.
 
 # Mode Matrix
+
+Select the domain implementation mode before choosing aggregate method, value object, domain service, policy/specification, transition table, calculation object, or layer cleanup mechanics.
 
 | Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
 | --- | --- | --- | --- | --- | --- |
@@ -58,7 +60,7 @@ Use during implementation planning, coding, review, and repair for backend/domai
 
 # Industry Benchmarks
 
-Anchor against Domain-Driven Design tactical patterns, aggregate consistency boundaries, value object validation, domain service and specification/policy placement, Clean Architecture dependency rules, state machine transition discipline, ubiquitous language, property/boundary testing, and persistence constraints as defense in depth.
+Anchor against Domain-Driven Design tactical patterns, aggregate consistency boundaries, value object validation, domain service and specification/policy placement, Clean Architecture dependency rules, state machine transition discipline, ubiquitous language, property/boundary testing, and persistence constraints as defense in depth. Keep the body focused on route-time decisions, output evidence, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for authority matrices, graph/memory/trajectory coupling, validation maps, and anti-pattern review.
 
 # Selection Rules
 
@@ -80,20 +82,20 @@ Escalate when domain rules affect money, inventory, entitlement, permissions, co
 
 # Reference Loading Policy
 
-The body carries the decision-critical rules for normal L1/L2 use. Load [references/checklist.md](references/checklist.md) for L2+ implementation planning, review, repair, or any change touching money, permissions, terminal states, cross-aggregate consistency, rule cleanup, or unclear rule authority. Use [examples/example-output.md](examples/example-output.md) only when the expected domain implementation contract shape is unclear. Do not load references for trivial local wording changes where the inline quality gate is sufficient.
+The body carries the decision-critical rules for normal L1/L2 use. Load [references/checklist.md](references/checklist.md) for L2+ implementation planning, review, repair, or any change touching money, permissions, terminal states, cross-aggregate consistency, rule cleanup, or unclear rule authority. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when authority selection, calculation/versioning, graph/memory/trajectory reuse, validation mapping, or anti-pattern detail needs more depth than this body should carry. Use [examples/example-output.md](examples/example-output.md) only when the expected domain implementation contract shape is unclear. Do not load references for trivial local wording changes where the inline quality gate is sufficient.
 
 # Failure Modes
 
-- The same rule exists in frontend, controller, service, and database with different edge cases.
-- Domain objects are passive data bags while services mutate fields directly.
-- Invalid lifecycle transitions persist because only UI controls were hidden.
-- Domain code accepts ORM objects and becomes tied to storage behavior.
-- Tests prove happy paths but miss denied transitions and boundary values.
-- A value object allows invalid construction and relies on later service validation.
-- A calculation is copied into reporting, billing, and UI code with different rounding.
-- A domain service becomes a procedural god object that both decides and performs side effects.
-- Persistence constraints throw late generic errors that leak through the API as domain behavior.
-- Cross-aggregate rules are implemented synchronously with no transaction, lock, retry, outbox, or eventual-consistency decision.
+- **Divergent duplicate rule:** the same rule exists in frontend, controller, service, and database with different edge cases.
+- **Anemic domain mutation:** domain objects are passive data bags while services mutate fields directly.
+- **UI-only transition guard:** invalid lifecycle transitions persist because only UI controls were hidden.
+- **Persistence-coupled domain:** domain code accepts ORM objects and becomes tied to storage behavior.
+- **Happy-path-only proof:** tests prove happy paths but miss denied transitions and boundary values.
+- **Invalid value object:** a value object allows invalid construction and relies on later service validation.
+- **Formula drift:** a calculation is copied into reporting, billing, and UI code with different rounding.
+- **God domain service:** a domain service becomes a procedural god object that both decides and performs side effects.
+- **Late storage failure:** persistence constraints throw late generic errors that leak through the API as domain behavior.
+- **Unowned consistency boundary:** cross-aggregate rules are implemented synchronously with no transaction, lock, retry, outbox, or eventual-consistency decision.
 
 # Output Contract
 
@@ -111,27 +113,33 @@ Return a Domain Implementation Contract with:
 - **Persistence reinforcement:** constraints/indexes/locks/idempotency or transaction requirements that reinforce domain behavior.
 - **Tests:** allowed cases, denied cases, boundary/property cases, transition matrix, concurrency or retry cases when relevant.
 - **Handoff:** service, repository, transaction, API contract, or state-machine work that remains outside this capability.
+- **Graph memory trajectory judgment:** accepted, rejected, stale, or not verified for prior rule authority, duplicated-rule, caller, transition, and validation claims.
+- **Changed rule to validation map:** every invariant, value rule, transition, calculation, failure outcome, bypass path, and non-authoritative check mapped to validator, owner review, or residual risk.
+- **Evidence limits:** what source reads, graph scans, project memory, tests, owner review, and validation prove and do not prove.
+- **Next gate and rollback/reroute:** where to continue when authority, transaction, API contract, release, security, or historical-data evidence is partial.
 
 # Evidence Contract
 
-Close a domain-logic change only when the handoff states the selected mode, source files and related entry points inspected, same-pattern or bypass scan, selected domain authority and rejected placement alternatives, behavior preserved for existing callers, validation commands run with outcomes, what the evidence proves and does not prove, untested concurrency/versioning/backfill risk, and next gate. A prose-only domain plan without denied-case or boundary evidence is not sufficient.
+Close a domain-logic change only when the handoff states the selected mode, source files and boundaries inspected, related entry points inspected, same-pattern or bypass scan, selected domain authority and rejected placement alternatives, graph/memory/trajectory judgment, behavior preserved for existing callers, validation commands run with outcomes, what the evidence proves, what the evidence does not prove, validation freshness after the final material edit, untested concurrency/versioning/backfill risk, rollback or reroute note, residual risk, and next gate. A prose-only domain plan without denied-case or boundary evidence is not sufficient.
 
 # Quality Gate
 
-1. Every invariant has exactly one authority in the domain; it is not duplicated across controller, service, SQL, and frontend.
-2. Invalid states are rejected as close to the domain as possible, before persistence, not after.
-3. Each allowed and each forbidden state transition is enumerated, with the rejection outcome for forbidden ones.
-4. Tests prove both allowed behavior and forbidden behavior (the rejection path), not just the happy path.
-5. Value objects enforce their own validity at construction; no partially-valid value object can exist.
-6. Domain logic does not import controller, transport, ORM, or UI concerns; dependency direction points inward.
-7. Persistence constraints reinforce the invariants rather than being the only place they are enforced.
-8. Failure outcomes are explicit domain results or typed errors, not silent nulls or swallowed exceptions.
-9. All mutating entry points invoke the same domain authority, including imports, admin paths, jobs, and tests.
-10. Domain services contain pure domain decisions and do not perform persistence, network, queue, cache, log, metric, email, or payment effects.
-11. Calculations state precision, rounding, timezone, currency, effective-date/version, and externally visible contract impact when relevant.
-12. Cross-aggregate, concurrent, retry, or eventual-consistency risks have a transaction/idempotency/outbox/compensation decision or explicit handoff.
-13. The implementation has a same-pattern scan for duplicated rules and a plan for removing or demoting non-authoritative checks.
-14. Public behavior tests cover the domain API and failure outcomes without importing private helpers.
+1. **Single authority:** every invariant has exactly one authority in the domain; it is not duplicated across controller, service, SQL, and frontend.
+2. **Pre-persistence rejection:** invalid states are rejected as close to the domain as possible, before persistence, not after.
+3. **Transition completeness:** each allowed and each forbidden state transition is enumerated, with the rejection outcome for forbidden ones.
+4. **Denied-case proof:** tests prove both allowed behavior and forbidden behavior, not just the happy path.
+5. **Value construction safety:** value objects enforce their own validity at construction; no partially-valid value object can exist.
+6. **Dependency direction:** domain logic does not import controller, transport, ORM, or UI concerns; dependency direction points inward.
+7. **Persistence reinforcement:** persistence constraints reinforce the invariants rather than being the only place they are enforced.
+8. **Typed failure outcomes:** failure outcomes are explicit domain results or typed errors, not silent nulls or swallowed exceptions.
+9. **Entry-point coverage:** all mutating entry points invoke the same domain authority, including imports, admin paths, jobs, and tests.
+10. **Pure domain services:** domain services contain pure domain decisions and do not perform persistence, network, queue, cache, log, metric, email, or payment effects.
+11. **Calculation contract:** calculations state precision, rounding, timezone, currency, effective-date/version, and externally visible contract impact when relevant.
+12. **Consistency handoff:** cross-aggregate, concurrent, retry, or eventual-consistency risks have a transaction/idempotency/outbox/compensation decision or explicit handoff.
+13. **Duplicate-rule scan:** implementation has a same-pattern scan for duplicated rules and a plan for removing or demoting non-authoritative checks.
+14. **Public behavior tests:** public behavior tests cover the domain API and failure outcomes without importing private helpers.
+15. **Evidence freshness:** validation commands, graph scans, source reads, owner reviews, and manual artifacts state outcome, what evidence proves, what evidence does not prove, and whether evidence is fresh after the final material edit.
+16. **Handoff limits:** handoff boundaries, evidence limits, rollback or reroute note, residual risk, and next gate are explicit so domain implementation is not over-claimed as orchestration, persistence, transaction, API, release, or security approval.
 
 # Used By
 

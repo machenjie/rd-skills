@@ -45,7 +45,7 @@ Use during requirement and planning when documentation is an explicit deliverabl
 
 # Industry Benchmarks
 
-Anchor on docs-as-code, OpenAPI/AsyncAPI contract documentation, Keep a Changelog, RFC 7807 error documentation, runbook/SRE procedure standards, ADR traceability, migration-guide structure, compliance evidence ownership, and Google developer-documentation clarity. Keep this body focused on routing, evidence, and closure; load [references/checklist.md](references/checklist.md) for the compact documentation-generation checklist and use `examples/example-output.md` when output shape is unclear in source-authoring context.
+Anchor on docs-as-code, OpenAPI/AsyncAPI contract documentation, Keep a Changelog, RFC 7807 error documentation, runbook/SRE procedure standards, ADR traceability, migration-guide structure, compliance evidence ownership, and Google developer-documentation clarity. Keep this body focused on routing, evidence, and closure; load [references/checklist.md](references/checklist.md) for the compact documentation-generation checklist, [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for evidence matrices, graph/memory/execution coupling, generated-doc validation, and failure-pattern review, and `examples/example-output.md` when output shape is unclear in source-authoring context.
 
 # Selection Rules
 
@@ -63,6 +63,9 @@ Escalate when docs describe public APIs, auth/security posture, privacy/complian
 - **Signal:** Release notes summarize "misc fixes" or hide breaking/operational impact. **Hidden risk:** users, support, and operators cannot plan adoption or rollback. **Required professional action:** write reader-impact categories and migration/rollback notes. **Route to:** `delivery-release-gate`, `release-rollback`. **Evidence required:** changelog category, affected audience, upgrade action, rollback/forward-fix.
 - **Signal:** Runbook or incident docs lack expected outputs or escalation. **Hidden risk:** on-call cannot distinguish success from failure under pressure. **Required professional action:** add trigger, triage, expected result, failure indicator, escalation, and owner. **Route to:** `reliability-observability-gate`, `observability`. **Evidence required:** alert/signal, runbook path, validation method, owner.
 - **Signal:** Public docs mention secrets, internal hostnames, security control internals, production identifiers, or real user data. **Hidden risk:** documentation creates an exposure path. **Required professional action:** redact or re-scope the doc and run security review. **Route to:** `security-privacy-gate`, `secret-configuration-security`. **Evidence required:** redaction decision, safe placeholder, residual risk.
+- **Signal:** Generated docs, API references, changelogs, or release notes are accepted from a generator, AI summary, or previous artifact without source/spec diff evidence. **Hidden risk:** polished generated prose can preserve stale contracts after source changes. **Required professional action:** compare against authoritative source, generated inputs, and validation output after the final material edit. **Route to:** `validation-broker`, `repository-graph-analysis`. **Evidence required:** source/spec paths, generator input, diff or validator, freshness.
+- **Signal:** Setup, install, migration, rollback, or troubleshooting docs include commands that mutate files, data, infrastructure, or credentials. **Hidden risk:** readers can execute unsafe or irreversible steps from documentation. **Required professional action:** add preconditions, dry-run/revert path, expected output, owner, and permission/sandbox boundary. **Route to:** `agent-tool-permission-sandbox`, `delivery-release-gate`. **Evidence required:** command class, environment scope, rollback/forward-fix, redaction rule.
+- **Signal:** A no-docs decision is made after source, config, public contract, release behavior, or operator flow changed. **Hidden risk:** documentation debt is hidden as absence of work. **Required professional action:** run an audience/artifact search and record why each likely artifact is updated, not required, or blocked. **Route to:** `change-documentation-gate`, `plan-execution-consistency`. **Evidence required:** changed paths, searched docs, audience matrix, stale-doc trigger.
 
 # Critical Details
 
@@ -74,7 +77,7 @@ Escalate when docs describe public APIs, auth/security posture, privacy/complian
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 routing, evidence, and output rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete documentation update. Use `examples/example-output.md` in source-authoring context only when a caller needs a sample documentation update plan. Do not load references for pure routing or trivial wording changes where the output contract and quality gate are sufficient.
+The `SKILL.md` body carries L1/L2 routing, evidence, and output rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete documentation update. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when source/doc evidence mapping, generated-doc validation, graph/memory/execution coupling, command safety, no-docs proof, or failure-pattern review needs more depth. Use `examples/example-output.md` in source-authoring context only when a caller needs a sample documentation update plan. Do not load references for pure routing or trivial wording changes where the output contract and quality gate are sufficient.
 
 # Anti-Examples
 
@@ -95,6 +98,9 @@ The `SKILL.md` body carries L1/L2 routing, evidence, and output rules. Load [ref
 - Release notes hide breaking changes, operational impact, customer-visible behavior, or support burden.
 - Runbooks lack trigger, expected output, failure indicator, escalation, or verification method.
 - Agent handoff docs over-claim validation or omit residual risk and stale evidence.
+- **Generated-doc false confidence:** Generated docs are trusted because the generator ran, even though inputs, schemas, or changed paths were not compared.
+- **No-docs false negative:** No-docs decisions skip audience and artifact search after behavior, config, contract, or release-impact changes.
+- **Unsafe operational command:** Troubleshooting docs include state-mutating commands without preconditions, expected output, permission boundary, or rollback/forward-fix path.
 
 # Output Contract
 
@@ -144,9 +150,10 @@ The documentation decision is complete only when:
 7. Operational docs include trigger, impact, triage, expected output, failure signal, escalation, and verification method.
 8. No secrets, credentials, production PII, private topology, or unsafe shortcuts are exposed.
 9. Project memory and prior agent summaries are confirmed against current source or labeled stale/unverified.
-10. Every updated artifact has an owner, review path, validation method, residual-risk statement, and stale-doc trigger.
-11. No-docs decisions list the audiences and artifacts considered, with evidence-backed rationale.
-12. Deferred documentation debt names owner, due date, release consequence, and whether it blocks handoff.
+10. Generated docs, examples, links, and command snippets are validated after the final material edit, or their stale/unverified scope is explicit.
+11. Every updated artifact has an owner, review path, validation method, residual-risk statement, and stale-doc trigger.
+12. No-docs decisions list the audiences and artifacts considered, with evidence-backed rationale.
+13. Deferred documentation debt names owner, due date, release consequence, and whether it blocks handoff.
 
 # Used By
 

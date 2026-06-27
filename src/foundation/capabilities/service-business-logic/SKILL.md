@@ -21,7 +21,7 @@ Do not use this capability to define domain invariants themselves (use `domain-l
 
 # Stage Fit
 
-Use during backend implementation planning, coding, review, and repair when application-layer orchestration is the primary decision. In planning, name the use case, actor, authorization order, transaction boundary, domain authority, repository participation, side-effect sequencing, idempotency, compensation, and validation evidence before code shape is accepted. In review, reject pass-through wrappers, god services, data access before authorization, domain rule duplication, framework-coupled services, external calls inside transactions, pre-commit event publishing, and stale graph/memory claims not confirmed against current source and tests.
+Use during backend implementation planning, coding, testing, code-review, repair, and release-readiness when application-layer orchestration is the primary decision. In planning, name the use case, actor, authorization order, transaction boundary, domain authority, repository participation, side-effect sequencing, idempotency, compensation, and validation evidence before code shape is accepted. In review, reject pass-through wrappers, god services, data access before authorization, domain rule duplication, framework-coupled services, external calls inside transactions, pre-commit event publishing, and stale graph/memory claims not confirmed against current source and tests.
 
 # Non-Negotiable Rules
 
@@ -61,8 +61,8 @@ Select this capability when application-layer orchestration is primary: authoriz
 - **Signal:** External API, payment, email, file, webhook, queue, or cache effect occurs inside a DB transaction. **Hidden risk:** rollback cannot undo external side effect. **Required professional action:** move effect boundary, add outbox/idempotency/compensation. **Route to:** `transaction-consistency`, `idempotency-retry-design`, `data-side-effect-flow-tracing`. **Evidence required:** transaction map, effect timing, retry and compensation path.
 - **Signal:** Service checks lifecycle, price, entitlement, or status invariant directly. **Hidden risk:** duplicated business rule drifts from domain authority. **Required professional action:** call domain operation/policy and map typed outcome. **Route to:** `domain-logic-implementation`, `state-machine-modeling`. **Evidence required:** rule owner, rejected service branch, domain denied-case test.
 - **Signal:** Service has many unrelated public methods or constructor dependencies. **Hidden risk:** god service with hidden coupling and broad regression blast radius. **Required professional action:** inventory use cases and split by actor/policy/transaction boundary. **Route to:** `implementation-structure-design`, `refactoring`. **Evidence required:** method/caller map, preserved behavior tests, rollout path.
-- **Signal:** Repository graph or project memory is used to justify service placement. **Hidden risk:** stale convention, removed policy, or old transaction behavior copied forward. **Required professional action:** confirm current callers/imports/tests and mark stale evidence. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected reuse judgment and freshness limit.
-- **Signal:** Service test starts full web framework or real infrastructure for local orchestration logic. **Hidden risk:** application layer is coupled to delivery/infrastructure and tests become slow or skipped. **Required professional action:** define constructor-injected ports and service-level tests. **Route to:** `test-strategy`, `quality-test-gate`. **Evidence required:** unit seam, mock/fake boundary, integration proof for real adapters.
+- **Signal:** Repository graph or project memory is used to justify service placement. **Hidden risk:** stale convention, removed policy, or old transaction behavior copied forward. **Required professional action:** inspect current callers/imports/tests, compare the pattern to the changed service, and mark stale evidence. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected reuse map, inspected path list, validation command or report, and freshness limit.
+- **Signal:** Service test starts full web framework or real infrastructure for local orchestration logic. **Hidden risk:** application layer is coupled to delivery/infrastructure and tests become slow or skipped. **Required professional action:** define constructor-injected ports, service-level tests, and a separate adapter integration proof. **Route to:** `test-strategy`, `quality-test-gate`. **Evidence required:** unit test output, mock/fake boundary, integration test or report for real adapters, and residual unverified seam.
 
 # Risk Escalation Rules
 
@@ -83,14 +83,14 @@ The `SKILL.md` body carries normal L1/L2 selection, stage fit, routing, evidence
 
 # Failure Modes
 
-- God service grows unrelated methods and every change risks unrelated workflows.
-- Authorization check happens after repository fetch, leaking existence or timing.
-- Payment/webhook/email effect succeeds while the DB transaction rolls back.
-- Service duplicates a domain lifecycle guard and diverges when new states are added.
-- Integration event is emitted before commit and consumers observe missing source data.
-- Query handler performs a hidden write such as view-count mutation or audit update without command semantics.
-- Service tests require full framework startup, so orchestration logic is slow to verify and easy to skip.
-- Project memory copies an old transaction pattern after repositories or event timing changed.
+- **God service blast radius:** unrelated methods accumulate in one service, so a change to cancellation risks placement, invoicing, returns, and fulfillment workflows.
+- **Authorization-after-fetch leak:** repository fetch runs before actor/resource scope is proven, letting timing or not-found behavior reveal protected records.
+- **Rollback cannot undo provider effect:** payment, webhook, or email succeeds while the DB transaction rolls back, leaving source state and external reality inconsistent.
+- **Duplicated domain guard drift:** service `if` branches copy lifecycle or entitlement rules and diverge when the domain model adds a state or policy.
+- **Pre-commit event ghost:** integration event is emitted before durable commit, so consumers observe missing or later-rolled-back source data.
+- **Query-side hidden write:** query handler updates view counts, audit rows, or cache state without command semantics, tests, or transaction review.
+- **Framework-bound service tests:** orchestration tests require full web framework startup, become slow or skipped, and stop proving service behavior directly.
+- **Stale memory reuse:** project memory copies an old transaction or event timing pattern after repositories, policies, or outbox behavior changed.
 
 # Output Contract
 
@@ -116,7 +116,7 @@ Return a service logic plan with:
 
 # Evidence Contract
 
-Close a service-business-logic output only when it names selected mode, service scope, current source evidence, graph/memory/trajectory reuse judgment, service responsibility, input/output contract, authorization order, transaction boundary, domain and repository operations, external effects, emitted events, failure handling, service-level tests, changed-service-to-validation map, handoff boundaries, residual risk, and evidence limits. A generic "put logic in a service" or "use clean architecture" statement is not sufficient evidence.
+Close a service-business-logic output only when it names selected mode, service scope, boundaries inspected, current source evidence, graph/memory/trajectory reuse judgment, service responsibility, input/output contract, authorization order, transaction boundary, domain and repository operations, external effects, emitted events, failure handling, service-level tests, changed-service-to-validation map, validation commands or report artifacts with exit codes, what evidence proves, what evidence does not prove, handoff boundaries, residual risk, validation freshness, and evidence limits. A generic "put logic in a service" or "use clean architecture" statement is not sufficient evidence.
 
 # Benchmark Coverage
 

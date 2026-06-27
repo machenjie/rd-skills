@@ -21,7 +21,11 @@ Do not use this capability to: certify that a change is compatible solely becaus
 
 # Stage Fit
 
-Use during planning, implementation review, release preparation, and post-deprecation cleanup when a contract surface must survive old/new code, client, schema, event, configuration, package, SDK, or data-version skew. In planning, classify compatibility before implementation chooses a migration strategy. In review, reject stale project-memory or repository-graph claims about "no consumers", "internal only", "safe enum", or "rollback works" unless current source, generated artifacts, telemetry, and validation confirm them. Hand off when the unresolved decision is contract shape, DTO schema, data migration execution, consumer inventory, contract test implementation, release clearance, or documentation.
+- **Planning / design:** classify structure, meaning, validation, default, behavior, persistence, and rollback compatibility before coding or choosing versioning, bridge, or expand-contract.
+- **Bug-fix / debugging / repair:** reproduce the compatibility break, scan sibling API/schema/event/config/package surfaces, and verify old/new behavior before narrowing the fix.
+- **Coding / implementation:** keep old and new producers, consumers, generated clients, config keys, and stored data readable while bridge or migration code is added.
+- **Code-review / refactoring:** reject removals, enum changes, validation tightening, default flips, stale "no consumers" claims, and cleanup branches without graph, memory, telemetry, and execution evidence.
+- **Testing / release / handoff:** map each changed surface to old/new contract tests, generated-client checks, rollback validation, telemetry gate, release owner, documentation owner, and residual risk.
 
 # Non-Negotiable Rules
 
@@ -88,12 +92,14 @@ Escalate when: mobile or partner clients exist that cannot be upgraded atomicall
 
 # Failure Modes
 
-- New required request field breaks all clients that haven't updated simultaneously.
-- New enum value in event stream causes consumer exhaustive-match to throw unhandled exception.
-- Rollback after migration: old ORM cannot read new table schema; service enters error state.
-- Deprecation window closed without telemetry confirmation; undiscovered partner still using deprecated endpoint.
-- Mobile client version from 12 months ago calls renamed field; receives null; silent data corruption.
-- Config key renamed; some pods restart on new config; others run on old config; split-brain behavior.
+- **Required-field lockstep break:** New required request field breaks all clients that have not updated simultaneously. Cause: provider assumes coordinated deployment. Detection: old-client contract fixture fails. Impact: broad 400/422 errors.
+- **Enum expansion crash:** New enum value in event stream causes consumer exhaustive-match to throw unhandled exception. Cause: closed enum handling in consumers or generated SDKs. Detection: unknown-value fixture and generated-client compile fail. Impact: event processing halt.
+- **Rollback unreadable data:** Rollback after migration leaves old ORM unable to read new table schema. Cause: contract phase shipped before expand/read bridge. Detection: old-code/new-data reader test fails. Impact: service error state or data loss.
+- **Calendar-only deprecation:** Deprecation window closes without telemetry confirmation while an undiscovered partner still uses the endpoint. Cause: docs treated as migration proof. Detection: usage metric or partner owner review shows remaining calls. Impact: external outage.
+- **Mobile lag corruption:** Mobile client from 12 months ago calls renamed field and receives null. Cause: server removed bridge before supported app versions migrated. Detection: app-version telemetry and old mobile fixture. Impact: silent client data corruption.
+- **Rolling config split:** Config key rename leaves some pods on old key and others on new key. Cause: no old/new key bridge during restart skew. Detection: old/new binary plus old/new config matrix. Impact: inconsistent behavior.
+- **Generated-client drift:** Server schema diff passes but generated Java/Kotlin/TypeScript clients fail to compile or narrow behavior. Cause: generated artifacts not rebuilt as compatibility evidence. Detection: generated-client diff and downstream compile. Impact: release blocks or runtime client failures.
+- **Queue replay incompatibility:** New producer writes retained messages old consumers cannot deserialize after rollback or lag. Cause: schema registry mode, upcaster, or replay fixture missing. Detection: retained-message replay test fails. Impact: DLQ growth and delayed outage.
 
 # Reference Loading Policy
 
@@ -130,7 +136,16 @@ Return a compatibility assessment with:
 
 # Evidence Contract
 
-Close a compatibility assessment only when it names selected mode, source evidence inspected, graph/memory/trajectory reuse judgment, affected contract surfaces, known and unknown consumers, old/new producer-consumer and rollback matrix, compatibility classification by structure/meaning/validation/default/behavior, mitigation strategy, rollout order, rollback behavior, deprecation telemetry, generated-client impact, contract-test plan, changed-compatibility-to-validation map, handoff boundaries, residual risk, and evidence limits. A generic "backward compatible" assertion or "no callers found" statement is not sufficient evidence.
+Close a compatibility assessment only when it names:
+
+- Basis: selected mode, affected contract surfaces, compatibility classification by structure, meaning, validation, default, timing, ordering, error behavior, and persistence.
+- Boundaries inspected: current source files, generated artifacts, consumers, schemas/topics/configs/packages, tests, telemetry, repository graph, project memory, and execution trajectory with skipped boundaries.
+- Compatibility proof: old/new producer-consumer matrix, old/new data-reader matrix, immediate rollback state, mitigation strategy, rollout order, deprecation telemetry, generated-client impact, and contract-test plan.
+- Validation evidence: changed-compatibility-to-validation map with command/report, exit code or recorded outcome, freshness after final edit, and what evidence proves.
+- Evidence limits: what evidence does not prove about unknown consumers, mobile/partner lag, production telemetry, schema registry state, generated-client rebuilds, or rollback rehearsal.
+- Handoff: API/DTO, event, data migration, consumer impact, contract testing, release, documentation, security/privacy owner, residual risk, and next gate.
+
+A generic "backward compatible" assertion or "no callers found" statement is not sufficient evidence.
 
 # Benchmark Coverage
 
@@ -160,6 +175,7 @@ The compatibility assessment is complete only when:
 14. Every changed surface, compatibility direction, migration phase, telemetry gate, rollback path, and removal criterion maps to contract tests, schema diff, generated-client compile, fixture replay, runtime telemetry, manual review, or named residual risk.
 15. Breaking change approval is recorded for any change that cannot be made backward-compatible.
 16. Handoff boundaries and evidence limits are explicit so compatibility evidence is not over-claimed as target contract design, data migration safety, production release approval, or documentation completion.
+17. Validation evidence records validator command/report, outcome or exit code, freshness after final edit, what the evidence proves, what it does not prove, and residual-risk owner for any unverified direction.
 
 # Used By
 

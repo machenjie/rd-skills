@@ -7,5 +7,6 @@
 - Define supported runtimes, package managers, server/API versions, and dependency floors.
 - Provide runnable examples for primary usage and at least one error path.
 - Add consumer contract tests, fixture projects, or downstream smoke tests.
+- Map repository graph, project memory, and execution evidence for exports, generated output, package metadata, docs/examples, consumers, validators, and stale assumptions.
 - Document deprecation, migration, removal version, and rollback or yanking policy.
 - Verify package metadata, changelog, release notes, license, provenance, and security contact.

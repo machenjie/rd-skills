@@ -21,7 +21,11 @@ Do not use this capability to avoid relational modeling, constraints, referentia
 
 # Stage Fit
 
-Use during data-middleware planning when choosing a non-relational store or shaping collections/tables/items; during implementation review when key design, document growth, consistency, TTL, indexes, or denormalization are introduced; during repair when incidents trace to hot partitions, stale reads, item/document overflow, drift, or cross-partition assumptions; and during release review when migrations, backfills, capacity, cost, or rollback affect stored NoSQL data. Hand off when the primary decision is conceptual domain modeling, relational constraints, query-plan tuning, cache-only behavior, search relevance, or migration execution sequencing.
+- **Planning / design:** choose the store role, access patterns, key/index layout, consistency boundaries, schemaVersion policy, TTL/retention, capacity budget, and rejected relational/cache/search alternatives before implementation.
+- **Coding / implementation:** update collection/table definitions, validators, indexes, partition keys, write/read repositories, migration/backfill scripts, denormalized writers, and observability together.
+- **Bug-fix / debugging / repair:** reproduce hot partition, stale read, item overflow, shape drift, TTL deletion, cross-partition partial write, or denormalization drift before changing the physical model.
+- **Code-review / refactoring:** reject NoSQL changes that lack access-pattern evidence, cardinality/skew proof, consistency contract, reader compatibility, source-of-truth ownership, graph/memory freshness, and behavior preservation.
+- **Testing / release / handoff:** verify access-pattern tests, old/new schema reads, capacity/cost checks, drift repair, migration/backfill validation, rollback behavior, evidence freshness, and data/security/reliability handoff before release.
 
 # Non-Negotiable Rules
 
@@ -58,11 +62,31 @@ Escalate when NoSQL is proposed for financial records, ledger data, permissions,
 
 # Proactive Professional Triggers
 
-- **Signal:** A NoSQL table or collection is designed from entity shape without listing access patterns. **Hidden risk:** keys cannot serve required queries without scans or backfills. **Required professional action:** build an access-pattern inventory before accepting keys. **Route to:** `nosql-database`, `repository-context-map`. **Evidence required:** AP list, query shape, key/index map, rejected scan-based design.
-- **Signal:** A partition, shard, or GSI key uses status, type, tenant, category, or date alone. **Hidden risk:** hot partition or unbounded item collection under production skew. **Required professional action:** estimate cardinality and add distribution strategy or alternate access path. **Route to:** `performance-budgeting`, `reliability-observability-gate`. **Evidence required:** cardinality, top-tenant/time skew, write rate, throttle limit, monitoring.
-- **Signal:** A document shape gains a required field without schema versioning. **Hidden risk:** old documents break readers after deploy. **Required professional action:** require schemaVersion, backward-compatible reader, and migration/backfill plan. **Route to:** `data-migration-design`, `version-compatibility`. **Evidence required:** version map, old/new reader behavior, validation query, rollback.
-- **Signal:** Denormalized fields are copied across items or collections. **Hidden risk:** source-of-truth drift and silent stale reads. **Required professional action:** name writer authority, propagation, accepted lag, drift detection, and repair. **Route to:** `data-side-effect-flow-tracing`, `domain-event-modeling`. **Evidence required:** writer, event/outbox/replay path, reconciliation check.
-- **Signal:** Prior project memory says a NoSQL pattern worked elsewhere. **Hidden risk:** stale pattern ignores current access patterns, tenant skew, store limits, or consistency invariants. **Required professional action:** confirm against current source, volume, store version, and tests before reuse. **Route to:** `project-memory-governance`, `repository-graph-analysis`. **Evidence required:** inspected current paths, accepted/rejected memory, freshness limits.
+- **Signal:** A NoSQL table or collection is designed from entity shape without listing access patterns.
+  **Hidden risk:** keys cannot serve required queries without scans, backfills, duplicate projections, or wrong store selection.
+  **Required professional action:** require and document an access-pattern inventory, compare relational/cache/search alternatives, and verify each accepted key/index against a caller query.
+  **Route to:** `nosql-database`, `repository-context-map`.
+  **Evidence required:** AP list, query shape, key/index map, rejected scan-based design, command/report path, and residual query risk.
+- **Signal:** A partition, shard, or GSI key uses status, type, tenant, category, or date alone.
+  **Hidden risk:** hot partition, unbounded item collection, hidden write amplification, or throttle collapse appears only under production skew.
+  **Required professional action:** inspect and compare cardinality, top-tenant/time skew, write rate, distribution strategy, alternate access path, and monitoring.
+  **Route to:** `performance-budgeting`, `reliability-observability-gate`.
+  **Evidence required:** cardinality report, skew estimate, write-rate math, throttle limit, monitoring/alert plan, and residual capacity risk.
+- **Signal:** A document shape gains a required field without schema versioning.
+  **Hidden risk:** old documents break readers after deploy, mixed-version code corrupts data, or rollback cannot read newly shaped records.
+  **Required professional action:** require schemaVersion, backward-compatible reader/upcaster, migration or backfill plan, validation query, and rollback behavior.
+  **Route to:** `data-migration-design`, `version-compatibility`.
+  **Evidence required:** version map, old/new reader test, validation query output, rollback plan, and stale-document residual risk.
+- **Signal:** Denormalized fields are copied across items or collections.
+  **Hidden risk:** source-of-truth drift, stale reads, replay gaps, or silent dual-write loss breaks product invariants.
+  **Required professional action:** model writer authority, propagation trigger, accepted lag, drift detection, replay/repair path, and consumer impact.
+  **Route to:** `data-side-effect-flow-tracing`, `domain-event-modeling`.
+  **Evidence required:** writer owner, event/outbox/replay path, reconciliation check, drift metric, repair command, and residual staleness owner.
+- **Signal:** Prior project memory says a NoSQL pattern worked elsewhere.
+  **Hidden risk:** stale pattern ignores current access patterns, tenant skew, store version, limits, consistency invariants, or execution trajectory.
+  **Required professional action:** inspect and verify current source, repository graph, workload volume, store version, tests, telemetry, and validation freshness before reuse.
+  **Route to:** `project-memory-governance`, `repository-graph-analysis`.
+  **Evidence required:** inspected current paths, accepted/rejected memory, command/report timestamp, freshness limits, graph boundary, and residual risk.
 
 # Critical Details
 
@@ -89,13 +113,14 @@ The `SKILL.md` body carries normal L1/L2 NoSQL routing, ownership, and evidence 
 
 # Failure Modes
 
-- Hot partition: one tenant, status, or time bucket receives most writes and exhausts partition throughput.
-- Shape drift: years of schema-free writes produce incompatible document variants and branching readers.
-- Item overflow: unbounded list/map grows past item or document size limit and write path fails.
-- Cross-partition partial write: one update succeeds and the matching invariant update fails, leaving inconsistent business state.
-- Stale read: eventually consistent secondary index hides a just-written permission, inventory, or lock change.
-- TTL mistake: ephemeral counters or sessions never expire, or required records expire because TTL field semantics were not documented.
-- Denormalization drift: projected fields diverge from their authoritative source and no reconciliation detects it.
+- **Hot partition:** one tenant, status, or time bucket receives most writes and exhausts partition throughput.
+- **Shape drift:** years of schema-free writes produce incompatible document variants and branching readers.
+- **Item overflow:** unbounded list/map grows past item or document size limit and write path fails.
+- **Cross-partition partial write:** one update succeeds and the matching invariant update fails, leaving inconsistent business state.
+- **Stale read:** eventually consistent secondary index hides a just-written permission, inventory, or lock change.
+- **TTL mistake:** ephemeral counters or sessions never expire, or required records expire because TTL field semantics were not documented.
+- **Denormalization drift:** projected fields diverge from their authoritative source and no reconciliation detects it.
+- **Rollback-incompatible shape:** new code writes a required field or index format that old code cannot read after rollback.
 
 # Output Contract
 
@@ -129,6 +154,8 @@ Return a NoSQL design with:
 - **Execution evidence:** map NoSQL decisions to validators, tests, load/capacity checks, migration dry runs, schema-version compatibility checks, monitoring, or explicit not-verified residual risk.
 - **Boundary evidence:** distinguish source-of-truth data, derived projections, caches, search indexes, and migration artifacts so the NoSQL design is not over-claimed as conceptual model, cache policy, search relevance, or release approval.
 
+Validation evidence must name boundaries inspected, command or manual-review procedure, validator, artifact/report path, exit code or manual result, inspected output, store/version scope, owner, and freshness after the final table, collection, key, index, schemaVersion, TTL, denormalization, or migration edit. State what evidence proves, what evidence does not prove, reuse and placement rationale for graph/memory/execution claims, behavior preservation for existing readers/writers/backfills/rollbacks, residual risk, and next gate or handoff owner. Repository graph proves only current code topology; project memory proves only prior context; local access-pattern tests do not prove live cardinality, tenant skew, cloud quota, cost, or production latency unless those validators ran.
+
 # Benchmark Coverage
 
 Professional NoSQL design covers access-pattern completeness, store fit, source-of-truth role, key cardinality, hot-partition resistance, consistency and atomicity, denormalization ownership, schema versioning, TTL/retention, capacity and cost limits, security/retention classification, observability, graph/memory freshness, and validation mapping. A key-value or document shape without production access-pattern and consistency evidence is incomplete.
@@ -155,6 +182,7 @@ The design is complete only when:
 12. Repository graph, project memory, and prior execution trajectory evidence are confirmed against current source or marked stale/not verified.
 13. Every changed key, index, schemaVersion, TTL, consistency, denormalization, migration, and retention decision maps to validation evidence or named residual risk.
 14. Evidence limits are stated so the design is not over-claimed as live performance, production cardinality, security certification, migration execution, or release approval.
+15. Validation records include command/tool or manual-review procedure, artifact or report path, exit code or manual result, inspected output, changed store scope, owner, freshness after final edit, what the evidence proves, and what it cannot prove.
 
 # Used By
 

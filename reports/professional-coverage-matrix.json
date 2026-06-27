@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-27T01:15:39.203298+00:00",
+  "generated_at": "2026-06-27T12:53:42.520572+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -15,7 +15,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 56,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -33,7 +33,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 54,
+      "score": 58,
       "status": "sample-grade",
       "warnings": []
     },
@@ -51,7 +51,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (1)",
-      "score": 56,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -69,7 +69,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (5)",
-      "score": 55,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -87,7 +87,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (3)",
-      "score": 56,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -112,7 +112,7 @@
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "no",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
@@ -123,7 +123,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 54,
+      "score": 58,
       "status": "sample-grade",
       "warnings": []
     },
@@ -141,7 +141,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 56,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -213,7 +213,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 54,
+      "score": 58,
       "status": "sample-grade",
       "warnings": []
     },
@@ -411,7 +411,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (7)",
-      "score": 55,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -429,7 +429,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (4)",
-      "score": 54,
+      "score": 58,
       "status": "sample-grade",
       "warnings": []
     },
@@ -483,7 +483,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (28)",
-      "score": 55,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -501,8 +501,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (1)",
-      "score": 53,
-      "status": "acceptable",
+      "score": 58,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -519,7 +519,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (11)",
-      "score": 55,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -555,7 +555,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (3)",
-      "score": 54,
+      "score": 58,
       "status": "sample-grade",
       "warnings": []
     },
@@ -645,7 +645,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (7)",
-      "score": 55,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -670,7 +670,7 @@
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "yes (1)",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
@@ -681,7 +681,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (8)",
-      "score": 55,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -717,7 +717,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (17)",
-      "score": 55,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -927,13 +927,13 @@
       "kind": "professional-skill",
       "mode_matrix": "yes",
       "name": "development-process-orchestrator",
-      "output_contract": "partial",
+      "output_contract": "yes",
       "path": "src/professional-skills/development-process-orchestrator/SKILL.md",
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 55,
+      "score": 60,
       "status": "sample-grade",
       "warnings": []
     },
@@ -969,7 +969,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (6)",
-      "score": 54,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -1017,13 +1017,13 @@
       "kind": "professional-skill",
       "mode_matrix": "yes",
       "name": "logging-design-gate",
-      "output_contract": "partial",
+      "output_contract": "yes",
       "path": "src/professional-skills/logging-design-gate/SKILL.md",
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 55,
+      "score": 60,
       "status": "sample-grade",
       "warnings": []
     },

@@ -21,7 +21,7 @@ Do not use this capability to: model authentication mechanisms (credential verif
 
 # Stage Fit
 
-Use during domain modeling when a feature introduces protected subjects, resources, actions, ownership, tenant scope, lifecycle-gated behavior, support/admin access, service-account access, or cross-tenant sharing. Use during implementation review when authorization checks, query filters, denial behavior, audit events, bulk operations, background jobs, or policy exceptions are added or changed. Use during testing when allowed, denied, cross-tenant, wrong-owner, bulk, service-account, support/admin, and resource-existence cases need explicit proof. Repository graph, project memory, and previous incident notes may suggest permission-sensitive paths, but current source, current routes, policy definitions, tests, and generated contracts must confirm the active boundary before the model treats that evidence as authoritative.
+Use during domain modeling, coding, bug-fix, debugging, code-review, refactoring, testing, release, and handoff when a feature introduces protected subjects, resources, actions, ownership, tenant scope, lifecycle-gated behavior, support/admin access, service-account access, or cross-tenant sharing. Use during implementation review when authorization checks, query filters, denial behavior, audit events, bulk operations, background jobs, or policy exceptions are added or changed. Repository graph, project memory, and previous incident notes may suggest permission-sensitive paths, but current source, current routes, policy definitions, tests, and generated contracts must confirm the active boundary before the model treats that evidence as authoritative.
 
 # Non-Negotiable Rules
 
@@ -87,17 +87,18 @@ Escalate when: any permission crosses tenant boundaries (e.g., a shared resource
 
 # Failure Modes
 
-- IDOR on `GET /invoices/{id}` — no tenantId filter; any authenticated user can download any invoice by guessing ID; discovered in security penetration test 6 months post-launch.
-- Bulk export `POST /export?userIds=[...]` — checks `canExport` role; does not verify that each userId belongs to caller's tenant; cross-tenant PII export.
-- Support agent impersonation tool grants full write access — support ticket resolves billing dispute by directly modifying payment record; no audit trail; discovered in SOC 2 audit.
-- Background job `recalculate-invoices` runs with `admin` service account — due to a bug, overwrites invoices for ALL tenants when given a single tenant's job ID; blast radius is total platform.
-- Soft-deleted resource still returned in list — `status !== 'deleted'` filter missing; permission check passes for a resource that should be inaccessible; deleted users' data visible to others.
-- Permission change adds `viewer` role without updating bulk export guard — `viewer` role users gain export access because `canExport` check was `role !== 'guest'` (not `role === 'exporter'`); logical flaw in deny-by-exception design.
-- Frontend-only permission check — React component hides delete button for non-admins; the API endpoint has no backend check; curl DELETE as a non-admin succeeds.
+- **IDOR object read** — `GET /invoices/{id}` has no tenantId filter; any authenticated user can download any invoice by guessing ID, discovered in security penetration test 6 months post-launch.
+- **Bulk export tenant leak** — `POST /export?userIds=[...]` checks `canExport` role but does not verify that each userId belongs to caller's tenant, causing cross-tenant PII export.
+- **Support impersonation overreach** — support agent impersonation grants full write access, lets a support ticket mutate payment records directly, and leaves no audit trail for SOC 2 review.
+- **Overbroad service account blast radius** — background job `recalculate-invoices` runs with `admin` service account and overwrites invoices for all tenants when given one tenant's job ID.
+- **Lifecycle filter omission** — soft-deleted resource still appears in list because `status !== 'deleted'` is missing, so deleted users' data remains visible to others.
+- **Deny-by-exception role drift** — adding `viewer` without updating bulk export guard grants export access because `canExport` checks `role !== 'guest'` rather than explicit allow.
+- **Frontend-only permission check** — React hides delete button for non-admins, but the API endpoint has no backend check and `curl DELETE` succeeds as a non-admin.
+- **Stale memory approval** — project memory says "authorization checked in service" but a new route, job, generated client, or policy exception bypasses that service path.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 permission-boundary routing, non-negotiable rules, and output requirements. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete permission matrix, endpoint, job, bulk operation, support/admin flow, service account, or denial/audit behavior. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when authorization-model choice, permission matrix detail, enforcement placement, denial semantics, audit fields, service-account/support access, or graph/memory/trajectory evidence needs more depth. Use [examples/example-output.md](examples/example-output.md) only when the expected matrix shape is unclear. Do not load references for pure routing or metadata-only edits with no permission model output.
+The `SKILL.md` body carries L1/L2 permission-boundary routing, non-negotiable rules, and output requirements. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete permission matrix, endpoint, job, bulk operation, support/admin flow, service account, or denial/audit behavior. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when authorization-model choice, permission matrix detail, enforcement placement, denial semantics, audit fields, service-account/support access, or graph/memory/trajectory evidence needs more depth. Load [references/evidence-patterns.md](references/evidence-patterns.md) when approval depends on repository graph, project memory, execution trajectory, generated clients, validation freshness, same-pattern scans, or tool permission boundaries. Use [examples/example-output.md](examples/example-output.md) only when the expected matrix shape is unclear. Do not load references for pure routing or metadata-only edits with no permission model output.
 
 # Output Contract
 

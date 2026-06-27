@@ -15,3 +15,4 @@
 - Map every file class, state transition, URL scope, scan gate, processor, lifecycle rule, cleanup path, and storage policy to validation evidence or residual risk.
 - Add tests for unauthorized access, malicious files, oversized files, failed scans, metadata stripping, streaming memory ceiling, sandbox timeout, and cleanup.
 - Name handoff boundaries and evidence limits so design output is not over-claimed as implementation, real cloud policy proof, legal retention approval, or production load validation.
+- Record command/tool or manual review procedure, artifact/report path, exit code or manual result, inspected output, freshness after final edit, what the evidence proves, what it does not prove, rollback/containment path, and next handoff owner.

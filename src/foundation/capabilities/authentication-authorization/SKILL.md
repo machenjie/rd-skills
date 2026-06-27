@@ -23,10 +23,11 @@ Do not use this capability to treat authentication as authorization (the most co
 
 # Stage Fit
 
-- **Planning / design:** map subjects, actions, resources, tenants, privileged paths, and deny semantics before APIs or data access are finalized.
-- **Implementation / repair:** place enforcement at every entry point and keep policy evaluation centralized enough to review, test, and audit.
-- **Review:** reject changes that add a protected operation without object-level rules, negative permission tests, and audit evidence.
-- **Release / migration:** verify rollout keeps existing denials, invalidates stale claims/caches, and preserves audit continuity across old and new paths.
+- **Planning / design:** map subjects, actions, resources, tenants, privileged paths, bypass-capable entry points, and deny semantics before APIs or data access are finalized.
+- **Coding / implementation:** place PDP/PEP enforcement at every entry point, repository/query boundary, worker, resolver, and support/admin path while keeping policy evaluation centralized enough to review, test, and audit.
+- **Bug-fix / debugging / repair:** verify the failed enforcement path, stale claim/cache, graph gap, or policy drift; scan same-pattern entry points before accepting a local fix.
+- **Code-review / refactoring:** reject changes that add or move protected operations without object-level rules, negative permission tests, behavior-preservation evidence, and audit continuity.
+- **Testing / release / handoff:** prove rollout keeps existing denials, invalidates stale claims/caches, maps protected operations to validation evidence, and records residual policy risk before closure.
 
 # Non-Negotiable Rules
 
@@ -96,8 +97,10 @@ Escalate when access decisions affect: sensitive personal data (PII/PHI/financia
 # Reference Loading Policy
 
 - **L1:** Read this `SKILL.md` only for ordinary route, plan, review, or small implementation work.
-- **L2:** Read `references/checklist.md` when producing a concrete implementation/review checklist or checking denial, audit, cache, tenant, and test completeness.
-- **L3:** Read `examples/example-output.md` when the user needs a structured auth plan or when output shape is underspecified.
+- **L2:** Read [references/checklist.md](references/checklist.md) when producing a concrete implementation/review checklist or checking denial, audit, cache, tenant, and test completeness.
+- **L3:** Read [references/evidence-patterns.md](references/evidence-patterns.md) when graph reachability, project memory, execution trajectory, validation freshness, generated contracts, or authorization-to-validation mapping needs more detail than this body should carry.
+- **L3:** Read [examples/example-output.md](examples/example-output.md) only when the user needs a structured auth plan or when output shape is underspecified.
+- **L4:** Read [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for access-control model choice, PDP/PEP placement, bypass path review, cache/claim invalidation, support/service-account flows, or complex protected-operation matrices.
 - **Do not load adjacent skills by default.** Load `permission-boundary-modeling`, `authentication-security`, `threat-modeling`, or `secret-configuration-security` only when the task crosses into policy design, credential lifecycle, broader abuse analysis, or key/secret handling.
 
 # Critical Details
@@ -128,20 +131,20 @@ Role checks are rarely enough for resource-specific operations. A user with role
 
 # Failure Modes
 
-- Authenticated users access objects by changing the id in URL / body (BOLA / IDOR).
-- UI hides a button but the backend endpoint still performs the action.
-- Tenant scope is checked on list queries but not on detail/mutation/export queries.
-- Admin bypass paths (support tools, SQL console, batch jobs) are undocumented and unaudited.
-- Denial responses reveal whether a private resource exists (403 vs 404 leak).
-- Mass-assignment via PATCH accepts `tenant_id`, `owner_id`, `role` from the client body.
-- Role embedded in long-lived JWT outlives the revocation by hours/days.
-- Service accounts run with human-superuser scopes "for convenience".
-- Background jobs run as `system` with no scope checks because "the system did it".
-- GraphQL field-level checks missed; deep query exposes related entities through nested resolvers.
-- Audit logs missing: action succeeded but no record of who/why/when; investigation impossible.
-- Permission cache invalidation forgotten on role demotion; demoted user retains access until TTL expires.
-- Impersonation flow logs the impersonated user as the actor, hiding the support agent's identity.
-- "Soft delete" returns hidden records to admin queries without re-authorization.
+- **BOLA / IDOR by identifier change:** authenticated users access another subject's object by changing an id in URL, body, event, cache key, or downstream call.
+- **UI-only enforcement:** UI hides a button but the backend endpoint, resolver, worker, or support tool still performs the action.
+- **Partial tenant coverage:** tenant scope is checked on list queries but missing on detail, mutation, export, cache, report, or bulk paths.
+- **Unaudited bypass path:** support tools, SQL consoles, admin jobs, batch imports, or service-to-service calls perform privileged actions outside the normal policy path.
+- **Existence leak denial:** inconsistent 403/404 or verbose denial messages reveal whether a private resource, tenant, account, or document exists.
+- **Mass-assignment privilege escalation:** PATCH or import accepts `tenant_id`, `owner_id`, `role`, `scope`, `is_admin`, or policy attributes from caller-controlled input.
+- **Stale claim authorization:** role, tenant, group, or scope embedded in a long-lived token outlives revocation, demotion, tenant suspension, or policy update.
+- **Overbroad service account:** machine identity runs with human-superuser or all-tenant scopes because narrowing the policy was deferred.
+- **Unscoped background worker:** jobs run as `system` with no resource, tenant, actor, run, replay, or audit context.
+- **Resolver or field leak:** GraphQL and nested resolvers check the top-level object but expose related entities or fields without field/object rules.
+- **Missing audit reconstruction:** an allow or deny decision cannot later prove who acted, under which policy version, for which purpose, and why it was allowed.
+- **Cache invalidation gap:** permission cache or materialized visibility table is not invalidated on role, membership, ownership, tenant, or policy change.
+- **Impersonation accountability loss:** support-as-user flow logs only the impersonated user, hiding the real support actor, ticket, approval, and time box.
+- **Soft-delete visibility leak:** hidden, deleted, archived, suspended, or private records reappear in admin/search/export paths without renewed authorization.
 
 # Output Contract
 

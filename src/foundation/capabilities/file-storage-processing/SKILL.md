@@ -25,7 +25,11 @@ Do not use this capability for database-only binary fields with no file lifecycl
 
 # Stage Fit
 
-Use during experience-definition, implementation-planning, coding, review, and release-readiness when files cross trust, tenant, storage, processing, or lifecycle boundaries. In planning, define the file classes, state machine, storage layout, access-control path, scanning path, transfer strategy, and cleanup ownership before implementation. In coding/review, reject stale assumptions from project memory or repository graph unless current source, storage policy, tests, and validation output confirm them. Hand off when the primary question is generic validation, browser exploit class, service implementation, storage pipeline implementation, production observability, or disaster recovery.
+- **Planning / design:** define file classes, state machine, storage layout, access-control path, scanning path, transfer strategy, processor sandbox, lifecycle, and cleanup ownership before implementation.
+- **Coding / implementation:** update upload/download routes, object keys, storage policy, signed-URL issuance, scan gates, processors, cleanup jobs, metrics, and validation fixtures together.
+- **Bug-fix / debugging / repair:** reproduce failed scan, leaked download, stale CDN object, OOM, zip-slip, processor timeout, cleanup miss, or public-policy drift before changing storage behavior.
+- **Code-review / refactoring:** reject file changes that lack tenant authorization, scan-before-available proof, streaming limits, sandbox/resource caps, lifecycle ownership, graph/memory freshness, and behavior preservation.
+- **Testing / release / handoff:** verify malicious fixtures, denied tenant access, URL scope, load/resource ceilings, cleanup observability, rollback/containment path, evidence freshness, and security/reliability handoff before release.
 
 # Non-Negotiable Rules
 
@@ -61,11 +65,31 @@ Select this capability when the primary risk is file lifecycle, object storage, 
 
 # Proactive Professional Triggers
 
-- **Signal:** upload or import path trusts extension, browser `Content-Type`, filename, object key, archive path, or client-declared size. **Hidden risk:** malware, type confusion, path traversal, decompression bomb, or tenant collision reaches storage. **Required professional action:** require server-side size, magic-byte, allowlist, archive-structure, and scan-before-publish gates. **Route to:** `input-validation`, `threat-modeling`. **Evidence required:** malicious fixture test, rejected mismatch, state transition proof.
-- **Signal:** signed URL, CDN URL, public bucket, or object key is generated without actor/object authorization evidence. **Hidden risk:** cross-tenant read/write, unrevocable broad access, or private content caching. **Required professional action:** scope URL and cache policy to actor, object, method, TTL, content bounds, and containment path. **Route to:** `security-privacy-gate`, `web-security`. **Evidence required:** denied tenant test, TTL/scope assertion, cache-header proof.
-- **Signal:** handler buffers whole files, processes media inline, extracts archives without caps, or runs converters with network/credential access. **Hidden risk:** OOM, RCE, disk exhaustion, credential exfiltration, or shared pool starvation. **Required professional action:** require streaming, sandbox, resource caps, timeout, cancellation, and no-network execution. **Route to:** `language-performance-safety`, `reliability-observability-gate`. **Evidence required:** memory ceiling, timeout kill, malicious fixture/fuzz result.
-- **Signal:** quarantine, failed transform, deleted owner, expired export, or abandoned multipart cleanup is unspecified. **Hidden risk:** stale private data, legal erasure failure, storage cost leak, or user-visible deleted content. **Required professional action:** define lifecycle states and cleanup owner with metrics. **Route to:** `backup-recovery`, `observability`. **Evidence required:** retention/deletion matrix, cleanup command/job, metric, residual backup/CDN limit.
-- **Signal:** repository graph or project memory says a bucket, processor, scanner, or cleanup job already exists. **Hidden risk:** stale storage topology or old validator path hides changed tenancy, policy, or SDK behavior. **Required professional action:** current-source-confirm storage policy, call sites, tests, and validation freshness before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`. **Evidence required:** inspected paths, accepted/rejected pattern, freshness limit.
+- **Signal:** upload or import path trusts extension, browser `Content-Type`, filename, object key, archive path, or client-declared size.
+  **Hidden risk:** malware, type confusion, path traversal, decompression bomb, or tenant collision reaches storage before validation blocks it.
+  **Required professional action:** require and verify server-side size, magic-byte, allowlist, archive-structure, and scan-before-publish gates.
+  **Route to:** `input-validation`, `threat-modeling`.
+  **Evidence required:** malicious fixture test, rejected mismatch, state transition proof, command/report path, and residual scanner limit.
+- **Signal:** signed URL, CDN URL, public bucket, or object key is generated without actor/object authorization evidence.
+  **Hidden risk:** cross-tenant read/write, unrevocable broad access, private content caching, or stale deleted content leaks across tenants.
+  **Required professional action:** inspect and verify URL/cache policy against actor, object, method, TTL, content bounds, and containment path.
+  **Route to:** `security-privacy-gate`, `web-security`.
+  **Evidence required:** denied tenant test, TTL/scope assertion, cache-header proof, policy diff, and rollback/containment owner.
+- **Signal:** handler buffers whole files, processes media inline, extracts archives without caps, or runs converters with network/credential access.
+  **Hidden risk:** OOM, RCE, disk exhaustion, credential leak, or shared pool starvation corrupts service availability and data safety.
+  **Required professional action:** require streaming, sandbox, resource caps, timeout, cancellation, no-network execution, and compare against configured budgets.
+  **Route to:** `language-performance-safety`, `reliability-observability-gate`.
+  **Evidence required:** memory ceiling metric, timeout kill result, malicious fixture/fuzz report, command output, and residual load-test gap.
+- **Signal:** quarantine, failed transform, deleted owner, expired export, or abandoned multipart cleanup is unspecified.
+  **Hidden risk:** stale private data, legal erasure failure, storage cost leak, or user-visible deleted content survives without an owner.
+  **Required professional action:** model lifecycle states, document cleanup owner, verify cleanup command/job, and map metrics or alerts to terminal states.
+  **Route to:** `backup-recovery`, `observability`.
+  **Evidence required:** retention/deletion matrix, cleanup command/job, storage-growth metric, residual backup/CDN limit, and next handoff owner.
+- **Signal:** repository graph or project memory says a bucket, processor, scanner, or cleanup job already exists.
+  **Hidden risk:** stale storage topology or old validator path hides changed tenancy, policy, scanner signature, SDK, or execution behavior.
+  **Required professional action:** inspect and verify current storage policy, call sites, tests, validation freshness, and same-pattern graph before reuse.
+  **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`.
+  **Evidence required:** inspected paths, accepted/rejected pattern, command/report timestamp, freshness limit, graph boundary, and residual risk.
 
 # Risk Escalation Rules
 
@@ -94,35 +118,35 @@ The `SKILL.md` body carries normal L1/L2 file-storage selection, risk, and evide
 
 # Failure Modes
 
-- Symptom: malware download links served to other users.
+- **Scan-after-publish malware:** Symptom: malware download links served to other users.
   Cause: file extension allowlist only; no magic-byte check; no scan gate before object becomes referenceable.
   Detection: integration test uploads EICAR test string and asserts quarantine; CI lint requires scan-before-publish state transition.
   Impact: distribution of malware via trusted domain, takedown / SOC incident.
-- Symptom: bucket exposed publicly.
+- **Public bucket exposure:** Symptom: bucket exposed publicly.
   Cause: signed URL with 7-day TTL or wildcard prefix; or bucket policy allowed `s3:GetObject` to `*`.
   Detection: AWS Config rule `s3-bucket-public-read-prohibited`; presigned-URL TTL lint.
   Impact: data exfiltration, compliance breach.
-- Symptom: photo upload leaks GPS coordinates.
+- **Metadata leakage:** Symptom: photo upload leaks GPS coordinates.
   Cause: EXIF metadata not stripped before serving processed image.
   Detection: unit test asserts EXIF orientation only is preserved and GPS/Maker tags are stripped.
   Impact: user-location disclosure, GDPR incident.
-- Symptom: service OOM during large upload.
+- **Buffer-all OOM:** Symptom: service OOM during large upload.
   Cause: handler reads entire request into memory (`request.body.read()`); no streaming multipart.
   Detection: load test with 1 GiB upload; memory ceiling assertion.
   Impact: pod restart loop, ingestion outage.
-- Symptom: malicious zip exhausts disk.
+- **Archive bomb exhaustion:** Symptom: malicious zip exhausts disk.
   Cause: no decompression-ratio or output-size cap.
   Detection: fuzz with 42.zip / nested zip bomb; assert abort within bound.
   Impact: disk exhaustion, node failure.
-- Symptom: storage bill spike.
+- **Abandoned upload cost leak:** Symptom: storage bill spike.
   Cause: abandoned multipart uploads accumulate; no lifecycle rule.
   Detection: weekly metric on incomplete-multipart-upload bytes; lifecycle policy review.
   Impact: 10-100x cost overrun.
-- Symptom: deleted file still served via CDN.
+- **Stale CDN deletion:** Symptom: deleted file still served via CDN.
   Cause: CDN cache TTL exceeds deletion latency; no invalidation on delete.
   Detection: integration test deletes object and asserts CDN 404 within SLA, or signed-URL based access bypassing CDN cache.
   Impact: failure to honor deletion / right-to-erasure.
-- Symptom: ImageMagick RCE.
+- **Processor RCE:** Symptom: ImageMagick RCE.
   Cause: default `policy.xml` allows MVG/MSL/HTTPS coders on untrusted input.
   Detection: pin hardened policy; CVE scan; sandbox exec.
   Impact: full host compromise.
@@ -154,6 +178,8 @@ Return a file storage and processing design with:
 
 Close a file-storage-processing design only when the output names selected mode, current source evidence inspected, graph/memory/trajectory reuse judgment, file classes, state machine, access controls, scan gates, transfer strategy, processor sandbox, lifecycle cleanup, observability, changed-file-storage-to-validation map, handoff boundaries, residual risk, and evidence limits. A generic "validate uploads" or "store in S3" statement is not sufficient evidence.
 
+Validation evidence must name boundaries inspected, command or manual review procedure, validator, artifact/report path, exit code or manual result, inspected output, storage/provider scope, owner, and freshness after the final route, policy, processor, lifecycle, or cleanup edit. State what evidence proves, what evidence does not prove, reuse and placement rationale for graph/memory/execution claims, behavior preservation for existing upload/download/processing/deletion paths, rollback or containment path, residual risk, and next gate or handoff owner. Repository graph proves only current code topology; project memory proves only prior context; local fixtures do not prove live bucket policy, scanner availability, CDN invalidation, legal retention approval, or production large-file load unless those validators ran.
+
 # Benchmark Coverage
 
 Improved file-storage designs reject common weak patterns: extension-only allowlists, public buckets, broad signed URLs, buffer-all handlers, scan-after-publish, in-process media parsers with credentials, archive extraction without caps, user-derived object keys, no orphan cleanup, CDN deletion gaps, and stale graph/memory claims about buckets or scanners. Detailed provider limits, tooling baselines, malicious fixture catalog, and resource matrices belong in references so this body stays efficient.
@@ -178,6 +204,7 @@ Route here when file lifecycle, object storage, upload/download access, scanning
 12. Every file class, state transition, URL scope, scan gate, processor, lifecycle rule, cleanup path, and storage policy maps to validation evidence or named residual risk.
 13. Streaming, temp disk, worker/pool, timeout, cancellation, and backpressure limits are defined for large files or processing pipelines.
 14. Handoff boundaries and evidence limits are explicit so design evidence is not over-claimed as implementation, real cloud policy proof, legal retention approval, or production load validation.
+15. Validation records include command/tool or manual-review procedure, artifact or report path, exit code or manual result, inspected output, changed storage scope, owner, freshness after final edit, what the evidence proves, and what it cannot prove.
 
 # Used By
 

@@ -73,6 +73,7 @@ Escalate when input can affect financial amounts, billing, permissions, roles, t
 - **Signal:** path, URL, redirect, filename, object key, archive entry, template, query, shell argument, selector, or AI/tool parameter comes from caller-controlled input. **Hidden risk:** SSRF, path traversal, open redirect, injection, RCE, prompt injection, or data exfiltration. **Required professional action:** canonicalize before use, constrain destination/grammar, fail closed, and redact diagnostics. **Route to:** `web-security`, `threat-modeling`. **Evidence required:** malicious-input test, deny-before-use proof, and safe log/error sample.
 - **Signal:** request includes `user_id`, `tenant_id`, `owner_id`, `resource_id`, role, permission, status, classification, price, quota, or state transition fields. **Hidden risk:** IDOR, tenant spoofing, client-controlled policy, or business invariant bypass. **Required professional action:** derive authority from trusted server state and validate identifier ownership/scope. **Route to:** `permission-boundary-modeling`, `business-rule-extraction`. **Evidence required:** trusted source, ownership query, denied wrong-owner/tenant case.
 - **Signal:** validation tightening changes required fields, enum values, length/range, unknown-field handling, parser strictness, or accepted file/payload types on an existing public path. **Hidden risk:** deployed clients, mobile apps, partners, fixtures, or replayed events break after release. **Required professional action:** classify compatibility and provide rollout or deprecation path. **Route to:** `version-compatibility`, `consumer-impact-analysis`. **Evidence required:** old/new rule diff, consumer inventory, compatibility tests or residual risk.
+- **Signal:** a validation change lists field constraints but has no changed-validation-to-test map, validator command, artifact path, or freshness statement. **Hidden risk:** invalid, malformed, unauthorized, hostile, compatibility, or error-contract regressions remain untested while the contract looks complete. **Required professional action:** map every changed rule to a runnable validator, test, manual proof, or named residual risk before handoff. **Route to:** `quality-test-gate`, `validation-broker`. **Evidence required:** changed rule, validator/test name, exit code or not-run status, what evidence proves, what evidence does not prove, and residual-risk owner.
 - **Signal:** memory, repository graph, generated docs, or prior test reports claim validation coverage without current source inspection. **Hidden risk:** stale validators, missing new entry points, or generated-client drift. **Required professional action:** confirm current validator, caller graph, schema source, tests, and report freshness. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, accepted/rejected memory, freshness limit.
 
 # Critical Details
@@ -100,19 +101,19 @@ Validation precision failures usually arise from boundary confusion:
 
 # Failure Modes
 
-- Direct API calls bypass frontend validation and store invalid data because the server boundary lacks the same rule.
-- Raw request bodies map into commands, ORM models, jobs, prompts, or provider calls and mutate privileged fields.
-- Encoded, Unicode, or path-normalized payloads pass late blocklists and trigger injection, traversal, SSRF, or unsafe parser behavior.
-- Valid-looking identifiers reference another tenant, owner, deleted resource, forbidden state, or invisible object.
-- File uploads trust extension, browser MIME, filename, archive path, or client size and publish unsafe content.
-- Webhooks are parsed or processed before signature, freshness, replay, schema, or idempotency checks.
-- Validation tightening breaks deployed clients, mobile apps, generated SDKs, partner payloads, imports, or replayed events without a rollout path.
-- Error responses, logs, metrics, or traces leak regexes, stack traces, raw URLs, secrets, tenant existence, or provider/parser internals.
-- Project memory says validation already exists, but current repository graph exposes a new route, job, import, or generated client path without coverage.
+- **Frontend-only bypass:** direct API calls bypass frontend validation and store invalid data because the server boundary lacks the same rule.
+- **Raw binding / mass assignment:** raw request bodies map into commands, ORM models, jobs, prompts, or provider calls and mutate privileged fields.
+- **Canonicalization gap:** encoded, Unicode, or path-normalized payloads pass late blocklists and trigger injection, traversal, SSRF, or unsafe parser behavior.
+- **Identifier authority gap:** valid-looking identifiers reference another tenant, owner, deleted resource, forbidden state, or invisible object.
+- **Unsafe file intake:** file uploads trust extension, browser MIME, filename, archive path, or client size and publish unsafe content.
+- **Webhook parse-before-verify:** webhooks are parsed or processed before signature, freshness, replay, schema, or idempotency checks.
+- **Compatibility break:** validation tightening breaks deployed clients, mobile apps, generated SDKs, partner payloads, imports, or replayed events without a rollout path.
+- **Leaky diagnostics:** error responses, logs, metrics, or traces leak regexes, stack traces, raw URLs, secrets, tenant existence, or provider/parser internals.
+- **Stale graph or memory claim:** project memory says validation already exists, but current repository graph exposes a new route, job, import, or generated client path without coverage.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 routing, non-negotiable rules, triggers, and output requirements. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete validator, field table, parser, upload, webhook, URL/fetch rule, identifier guard, or validation test plan. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when layer responsibility, constraint taxonomy, file/upload rules, SSRF/path/canonicalization, webhook authenticity, graph-memory-trajectory evidence, compatibility, or changed-validation-to-test mapping needs deeper detail. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or metadata-only edits with no validation decision.
+The `SKILL.md` body carries L1/L2 routing, non-negotiable rules, triggers, and output requirements. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete validator, field table, parser, upload, webhook, URL/fetch rule, identifier guard, or validation test plan. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when layer responsibility, constraint taxonomy, file/upload rules, SSRF/path/canonicalization, webhook authenticity, graph-memory-trajectory evidence, compatibility, or changed-validation-to-test mapping needs deeper detail. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on boundaries inspected, graph/memory/execution freshness, tool permission boundaries, validation evidence quality, what evidence proves, what evidence does not prove, or residual risk ownership. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or metadata-only edits with no validation decision.
 
 # Output Contract
 
@@ -148,6 +149,8 @@ Close an input-validation design only when these answers are concrete:
 - **Validation proof:** each changed rule maps to valid, invalid, boundary, malformed, canonicalization, unauthorized, unknown-field, malicious payload, file/webhook/fetch, compatibility, and error-contract evidence where applicable.
 - **Behavior preservation:** old valid inputs, public clients, generated clients, replayed events, imports, error semantics, and rollback stay valid or have a migration path.
 - **Evidence limits and residual risk:** unknown consumers, untested parsers, unavailable telemetry, stale project memory, unverified generated clients, or manual security review gaps have owner and next gate.
+
+The final handoff must name the boundaries inspected, the validator/test/report artifacts used, what evidence proves, what evidence does not prove, residual risk, and the next handoff owner; a field-rule table without that evidence contract is not closure.
 
 # Benchmark Coverage
 

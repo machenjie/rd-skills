@@ -107,42 +107,42 @@ Select this capability when the primary design risk is an operator or automation
 
 # Failure Modes
 
-- Symptom: automation breaks after a CLI release.
+- **Human-output parsing:** automation breaks after a CLI release.
   Cause: scripts parse human stdout (column alignment, prose).
   Detection: golden-output diff in CI plus `--output json` schema test.
   Impact: silent pipeline failure, wrong downstream data.
-- Symptom: jq fails parsing output.
+- **Stdout contamination:** `jq` fails parsing output.
   Cause: progress bar or warnings written to stdout instead of stderr.
   Detection: integration test runs `cmd --output json | jq .` with stderr discarded.
   Impact: every CI consumer breaks simultaneously.
-- Symptom: production deploy ran with the wrong cluster.
+- **Wrong target mutation:** production deploy ran with the wrong cluster.
   Cause: config file silently overrode flag, or default profile was unscoped.
   Detection: precedence unit tests; require `--cluster` for production.
   Impact: cross-environment data loss.
-- Symptom: `rm`-style command had no dry-run and removed user data.
+- **Missing dry-run boundary:** `rm`-style command had no dry-run and removed user data.
   Cause: only `--force` guard; no scoped selector.
   Detection: code review checklist; presence of `--dry-run` test.
   Impact: irrecoverable user data loss.
-- Symptom: daemon hangs on shutdown and is killed by orchestrator.
+- **Unbounded shutdown:** daemon hangs on shutdown and is killed by orchestrator.
   Cause: no SIGTERM handler, blocking I/O without cancellation.
   Detection: shutdown integration test with `kill -TERM` and timeout assertion.
   Impact: in-flight requests dropped, transaction inconsistency, on-call paging.
-- Symptom: load balancer routes to dead replica.
+- **False readiness:** load balancer routes to dead replica.
   Cause: daemon reports ready before downstream connections established.
   Detection: readiness probe distinct from liveness; integration test.
   Impact: 5xx burst during rollout.
-- Symptom: every failure exits `1`, retry logic re-runs validation errors forever.
+- **Collapsed exit taxonomy:** every failure exits `1`, retry logic re-runs validation errors forever.
   Cause: collapsed exit-code taxonomy.
   Detection: exit-code unit tests per failure class.
   Impact: runaway retry storms, alert noise.
-- Symptom: secret leaked to shell history and process listing.
+- **Secret in argv:** secret leaked to shell history and process listing.
   Cause: secret accepted as `--token <value>`.
   Detection: lint rule banning secret-named flags; require `--token-file` / `<NAME>_TOKEN` env.
   Impact: credential disclosure on shared hosts.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries normal L1/L2 command, TUI, and daemon interface selection, evidence, and quality-gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete command or daemon interface, when dry-run/config/output/signal coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when command grammar, output compatibility, daemon lifecycle, destructive-action safety, TUI/non-TTY behavior, graph/memory/trajectory reuse, or anti-pattern detail needs depth. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are enough.
+The `SKILL.md` body carries normal L1/L2 command, TUI, and daemon interface selection, evidence, and quality-gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete command or daemon interface, when dry-run/config/output/signal coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when command grammar, output compatibility, daemon lifecycle, destructive-action safety, TUI/non-TTY behavior, graph/memory/trajectory reuse, or anti-pattern detail needs depth. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on repository graph, project memory, execution trajectory, validation freshness, command output, generated help/docs, automation consumers, or a changed-interface-to-validation map. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are enough.
 
 # Output Contract
 
@@ -166,7 +166,17 @@ Return a CLI/TUI/daemon interface design with:
 
 # Evidence Contract
 
-Close a CLI/TUI/daemon interface design only when the output names selected mode, current interface evidence inspected, graph/memory/execution reuse judgment, command model, config precedence, stdout/stderr and machine-output schema, exit-code taxonomy, destructive-action safety, daemon/TUI lifecycle when applicable, changed-interface-to-validation map, handoff boundaries, residual risk, and evidence limits. A command list, help text, or "add --json" statement is not sufficient evidence.
+Close a CLI/TUI/daemon interface design only when these answers are concrete:
+
+- **Basis:** selected mode, interface owner, changed command/daemon/TUI boundary, compatibility tier, and why the interface decision is needed.
+- **Boundaries inspected:** current commands, generated help, docs, tests, scripts, service units, config files, automation consumers, repository graph, project memory, execution trajectory, and skipped surfaces with reason.
+- **Safety and compatibility:** command model, config precedence, stdout/stderr split, machine-output schema, exit-code taxonomy, destructive-action controls, daemon/TUI lifecycle when applicable, and security/privacy handoff.
+- **Validation:** changed-interface-to-validation map, commands or artifacts, exit code/status, freshness after final edit, skipped coverage, and negative evidence.
+- **What evidence proves:** the exact command, flag, output schema, exit code, dry-run, config, signal, daemon, or TUI behavior covered by each proof.
+- **What evidence does not prove:** unknown external scripts, uninspected OS supervisors, production service managers, terminal emulators, hidden automation consumers, and real signal timing unless tested.
+- **Closure:** handoff boundaries, rollback or compatibility note, residual risk, and next gate or owner.
+
+A command list, help text, or "add --json" statement is not sufficient evidence.
 
 # Benchmark Coverage
 

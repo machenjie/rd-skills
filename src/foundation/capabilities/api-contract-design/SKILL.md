@@ -23,6 +23,8 @@ Do not use this capability to expose internal functions, ORM entities, database 
 
 Use during planning when a client-visible operation, method, endpoint, RPC, event callback, webhook, pagination model, idempotency behavior, error surface, auth requirement, or versioning path is introduced or changed. Use during implementation and review when controllers, specs, generated clients, SDKs, examples, docs, route handlers, or compatibility bridges must stay aligned. Use during testing and release when contract validation, consumer compatibility, generated artifact freshness, deprecation, security posture, or rollback behavior needs proof. Treat repository graph, project memory, generated docs, and prior validation as selectors only until current source/spec files, consumers, generated artifacts, and validation outcomes confirm or reject them.
 
+At each coding, debugging, code-review, refactoring, testing, and release stage, handoff only after the changed contract behavior, skipped surfaces, validation evidence, and residual consumer risk are explicit.
+
 # Non-Negotiable Rules
 
 - Define request shape, response shape, status codes, error model, and auth/authorization requirements explicitly — defaults are not a contract.
@@ -54,6 +56,8 @@ Select this capability when **client-visible API behavior** is the primary decis
 - Prefer `authentication-authorization` for policy modeling and enforcement.
 - Prefer `idempotency-retry-design` when duplicate side effects are the headline risk.
 - Use **with** `frontend-api-integration` to ensure the contract is consumable, not just specifiable.
+
+Selection must record the lifecycle stage, why sibling API/data capabilities were skipped, the evidence required for handoff, and whether the next gate is DTO/schema, error taxonomy, compatibility, contract testing, release, security, or implementation.
 
 # Proactive Professional Triggers
 
@@ -114,21 +118,15 @@ Is the change additive-optional (new optional field, new endpoint)?
 
 # Failure Modes
 
-- Response shape changes break clients because fields were treated informally; no schema registry; no contract test.
-- Collection endpoints lack pagination, return unbounded arrays, or use offset pagination over mutating data → duplicate/missing rows.
-- Retried POST requests duplicate side effects because `Idempotency-Key` is undocumented or not enforced.
-- Errors are raw stack traces or inconsistent strings; clients string-match on `message` and break on every change.
-- API docs are reverse-derived from code annotations and drift from runtime behavior; no contract test verifies them.
-- `200 OK` is returned with an `error` field in the body → defeats HTTP semantics, breaks caches, breaks observability.
-- `403` vs `404` policy is undocumented, leaking resource existence.
-- Floats used for money → silent rounding loss.
-- Surrogate database ids exposed → cannot change storage, cannot shard, leaks row counts via enumeration.
-- Enum values added without compatibility mode → strict clients (gRPC, code-generated) reject responses.
-- Filtering uses ad-hoc string DSL parsed by `eval` or unbounded RegExp → injection / ReDoS.
-- Webhook lacks signature or timestamp → forgery and replay.
-- Long-running operation returns `200` with `status: "pending"` → clients confuse async with sync; cannot cancel.
-- Deprecation is announced in a blog post, not in `Deprecation`/`Sunset` headers and the spec.
-- "Wrapper" envelope (`{ data, meta, error }`) is added inconsistently — some endpoints, not others.
+- **Undeclared response-shape break:** fields change type, name, nullability, or meaning because the contract lived only in code comments. Detection: old/new schema diff, generated-client diff, and consumer contract test. Impact: deployed clients crash or silently corrupt data.
+- **Unbounded or unstable collection contract:** list endpoints omit max page size, cursor semantics, stable sort, or tiebreaker. Detection: pagination boundary test under concurrent inserts plus contract examples. Impact: duplicate/missing records, slow deep pages, and broken dashboards.
+- **Retry duplicate side effect:** POST/PATCH/create webhook lacks idempotency key scope, retention, replay, and conflict semantics. Detection: same-key replay and same-key-different-payload tests. Impact: duplicate orders, refunds, notifications, or irreversible side effects.
+- **Unsafe error contract:** raw strings, stack traces, `200` error bodies, or ambiguous 401/403/404/409/422 semantics reach clients. Detection: error matrix, negative contract tests, and safe public problem-detail examples. Impact: unsafe retries, existence leaks, brittle client string matching, and noisy observability.
+- **Stale generated/spec evidence:** generated docs, SDKs, examples, or prior validation predate the final route/controller/spec change. Detection: repository graph delta, generated artifact diff, validation command output, and freshness timestamp. Impact: agents or reviewers approve behavior that no client can reliably implement.
+- **Persistence model leakage:** surrogate database ids, ORM relation graphs, internal status enums, or transaction-only fields become public. Detection: model-boundary map and DTO/domain/persistence split review. Impact: storage changes become breaking API changes and enumeration leaks row counts.
+- **Incompatible enum/filter/query semantics:** enum values, filter grammar, sparse fields, or ad-hoc query DSLs evolve without compatibility mode. Detection: strict-client fixture, unknown-filter rejection test, and generated schema comparison. Impact: strict clients reject responses, filters inject unsafe expressions, or old dashboards misread data.
+- **Webhook or async operation ambiguity:** unsigned callbacks, missing replay window, `200 pending` long-running operations, or undocumented retry horizon are accepted. Detection: signature/replay tests, `202` operation-resource example, and timeout/retry matrix. Impact: forgery, replay, lost callbacks, and clients confusing async with sync.
+- **Deprecation without protocol evidence:** removal is announced outside the spec and lacks `Deprecation`/`Sunset`, migration examples, telemetry, owner, or rollback path. Detection: spec headers, consumer inventory, cleanup ticket, and old-path usage evidence. Impact: pinned or unknown consumers break after release.
 
 # Output Contract
 
@@ -179,7 +177,7 @@ The contract passes only when:
 
 # Evidence Contract
 
-Close an API contract design only when these answers are concrete: selected mode, standards/style chosen, current source/spec/generated artifacts inspected, consumers and unknown-consumer risk, old/new compatibility class, auth/error/DTO/idempotency/pagination/version boundaries, graph-memory-trajectory freshness judgment, changed-contract-to-validation map, reuse and placement rationale, behavior preservation for existing clients, evidence limits, residual risk owner, and validation results or explicit not-verified disclosure. A generic "OpenAPI updated" or "no callers found" claim is not sufficient evidence.
+Close an API contract design only when these answers are concrete: selected mode, standards/style chosen, boundaries inspected, current source/spec/generated artifacts inspected, consumers and unknown-consumer risk, old/new compatibility class, auth/error/DTO/idempotency/pagination/version boundaries, graph-memory-trajectory freshness judgment, changed-contract-to-validation map, reuse and placement rationale, behavior preservation for existing clients, validation evidence with command/output/artifact and validation results, what evidence proves, what evidence does not prove, evidence limits, residual risk owner, and next gate or explicit not-verified disclosure. A generic "OpenAPI updated" or "no callers found" claim is not sufficient evidence.
 
 # Benchmark Coverage
 

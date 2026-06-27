@@ -54,7 +54,7 @@ Use during planning when a login, MFA, account recovery, identity-provider, cook
 
 # Industry Benchmarks
 
-Anchor against NIST SP 800-63B AAL1/2/3, OWASP Authentication and Session Management guidance, OWASP ASVS V2/V3/V6, FIDO2/WebAuthn, OAuth 2.0 Security BCP, OIDC Core and Session Management, JWT BCP, RFC 7009 token revocation, RFC 8693 token exchange, and regulated authentication expectations such as PCI-DSS v4 section 8, HIPAA technical safeguards, and GDPR Article 32. Keep this body focused on routing, lifecycle decisions, evidence, and closure; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for MFA method ranking, session/token strategy matrices, refresh-token rotation logic, cookie attributes, federation traps, and detailed anti-patterns.
+Anchor against NIST SP 800-63B AAL1/2/3, OWASP Authentication and Session Management guidance, OWASP ASVS V2/V3/V6, FIDO2/WebAuthn, OAuth 2.0 Security BCP, OIDC Core and Session Management, JWT BCP, RFC 7009 token revocation, RFC 8693 token exchange, and regulated authentication expectations such as PCI-DSS v4 section 8, HIPAA technical safeguards, and GDPR Article 32. Keep this body focused on routing, lifecycle decisions, evidence, and closure; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for MFA method ranking, session/token strategy matrices, refresh-token rotation logic, cookie attributes, federation traps, and detailed anti-patterns. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on repository graph, project memory, execution trajectory, validation freshness, or tool permission boundaries.
 
 # Selection Rules
 
@@ -76,7 +76,7 @@ Escalate when authentication affects: admin access, payment actions, regulated d
 - **Signal:** Session id or equivalent bearer credential is preserved through login, MFA, role elevation, password reset, or email change. **Hidden risk:** session fixation or stale authentication lets an attacker inherit a privileged session. **Required professional action:** map every privilege transition and require regeneration or invalidation at each point. **Route to:** `web-security`, `logging-error-handling`. **Evidence required:** transition map, session regeneration test, audit event, and what the test does not prove about all clients.
 - **Signal:** MFA is offered only as optional UX, SMS/email is the strongest factor, or recovery bypasses enrolled MFA. **Hidden risk:** sensitive actions remain protected by the weakest recovery path. **Required professional action:** define AAL target, factor hierarchy, step-up freshness, fallback rules, and recovery invalidation. **Route to:** `threat-modeling`, `frontend-testing`. **Evidence required:** MFA policy matrix, bypass/regression tests, user-notification artifact, and accepted fallback risk.
 - **Signal:** OAuth/OIDC/SAML integration uses wildcard redirect URIs, missing state/nonce, public client secret, automatic email-based account linking, or unreviewed IdP-initiated SSO. **Hidden risk:** code/token theft, auth-flow CSRF, id-token replay, or account takeover via stale provider email. **Required professional action:** enforce exact redirect matching, PKCE for public clients, state/nonce validation, explicit linking, and hardened library/cert validation. **Route to:** `web-security`, `threat-modeling`, `integration-change-builder`. **Evidence required:** provider config, redirect allowlist, negative callback tests, and certificate/key rotation notes.
-- **Signal:** Project memory, repository graph, or previous incident notes claim authentication is already handled. **Hidden risk:** stale memory hides current code paths, new clients, rotated keys, or untested recovery flows. **Required professional action:** confirm against current source, registry/config, tests, audit events, and execution trajectory before relying on prior evidence. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** inspected current paths, freshness limit, accepted/rejected prior evidence, and remaining unknowns.
+- **Signal:** Project memory, repository graph, or previous incident notes claim login, refresh tokens, recovery, MFA, OAuth callbacks, or service credentials are already handled. **Hidden risk:** stale memory hides new clients, rotated keys, unverified callback paths, leaked token logs, or replayable recovery flows. **Required professional action:** inspect current issuers, verifiers, session stores, IdP callbacks, config, tests, audit events, and execution trajectory; compare each prior claim before reuse. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** source path map, validation command or report, freshness limit, accepted/rejected prior evidence, and remaining unknown auth surfaces.
 
 # Critical Details
 
@@ -109,31 +109,31 @@ Authentication security is **lifecycle control**. Issuing a token safely is not 
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries normal L1/L2 authentication routing, lifecycle decision, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete authentication security plan, when lifecycle coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when MFA strength, session-vs-token strategy, refresh-token rotation, cookie attributes, OAuth/OIDC/SAML, or anti-pattern detail is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected review shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are sufficient.
+The `SKILL.md` body carries normal L1/L2 authentication routing, lifecycle decision, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete authentication security plan, when lifecycle coverage is uncertain, or before implementation starts. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when MFA strength, session-vs-token strategy, refresh-token rotation, cookie attributes, OAuth/OIDC/SAML, or anti-pattern detail is needed. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on repository graph, project memory, execution trajectory, validation freshness, changed-auth-surface mapping, or tool permission boundaries. Use [examples/example-output.md](examples/example-output.md) only when the expected review shape is unclear. Do not load references for pure routing or trivial wording work where the output contract and quality gate are sufficient.
 
 # Failure Modes
 
-- Refresh tokens never rotate and remain usable after theft.
-- Logout clears the browser cookie but does not revoke server-side session/refresh.
-- Session id is not regenerated after login or privilege elevation → session fixation.
-- Cookies lack `Secure`, `HttpOnly`, or appropriate `SameSite` → XSS exfil or CSRF.
-- Password reset grants access without invalidating old sessions; attacker holding stolen session remains in.
-- Tokens appear in logs, URLs, query strings, analytics, crash reports, `Referer` headers.
-- Password storage uses SHA-256, MD5, unsalted, or low-cost bcrypt → cracking on breach is hours.
-- "User not found" vs "wrong password" differ in response or timing → username enumeration.
-- Brute force protection per-IP only → attacker rotates IPs; per-account only → distributed credential stuffing succeeds.
-- MFA is offered but not enforced for sensitive actions; bypassable via recovery flow.
-- SMS OTP used as primary MFA; sim-swap takes over high-value accounts.
-- Social login automatically links accounts by email without verification → takeover via email reclaim.
-- Magic link sent to wrong email or reused; token leaks via mail forwarder.
-- JWT verifier accepts `alg: none` or HS256-with-RSA-public-key (classic).
-- `aud` claim not validated → token issued for service A accepted by service B.
-- Refresh token absolute lifetime never enforced → token issued in 2022 still valid.
-- Service account credentials never rotated; embedded in code; leaked in public repo.
-- OAuth `redirect_uri` allows path-prefix or wildcard → token exfil via open redirect.
-- IdP-initiated SAML without signature validation hardening → assertion forgery.
-- Logout endpoint reachable via `GET` and CSRF-able → forced-logout DoS.
-- Concurrent session policy undefined → leaked credential remains usable indefinitely.
+- **Refresh replay:** refresh tokens never rotate and remain usable after theft.
+- **Partial logout:** logout clears the browser cookie but does not revoke server-side session/refresh.
+- **Session fixation:** session id is not regenerated after login or privilege elevation.
+- **Cookie exposure:** cookies lack `Secure`, `HttpOnly`, or appropriate `SameSite`, enabling XSS exfiltration or CSRF.
+- **Recovery persistence:** password reset grants access without invalidating old sessions; attacker holding stolen session remains in.
+- **Token leakage:** tokens appear in logs, URLs, query strings, analytics, crash reports, or `Referer` headers.
+- **Weak password storage:** password storage uses SHA-256, MD5, unsalted, or low-cost bcrypt, making breach cracking fast.
+- **Enumeration:** "user not found" vs "wrong password" differ in response or timing.
+- **Credential stuffing gap:** brute force protection is per-IP only or per-account only, so distributed attacks still succeed.
+- **MFA bypass:** MFA is offered but not enforced for sensitive actions or is bypassable through recovery.
+- **Weak factor default:** SMS OTP is used as primary MFA; sim-swap takes over high-value accounts.
+- **Unsafe social linking:** social login automatically links accounts by email without verification, enabling takeover via email reclaim.
+- **Magic-link replay:** magic link is sent to the wrong email, reused, or leaked via mail forwarder.
+- **JWT confusion:** verifier accepts `alg: none` or HS256-with-RSA-public-key.
+- **Audience drift:** `aud` claim is not validated, so a token issued for service A is accepted by service B.
+- **Unbounded token life:** refresh token absolute lifetime is never enforced.
+- **Machine credential staleness:** service account credentials never rotate, are embedded in code, or leak in a public repo.
+- **Redirect token theft:** OAuth `redirect_uri` allows path-prefix or wildcard matching.
+- **SAML assertion forgery:** IdP-initiated SAML lacks signature validation hardening.
+- **Logout CSRF:** logout endpoint is reachable via `GET` and CSRF-able.
+- **Undefined concurrency:** concurrent session policy is undefined, so leaked credentials remain usable indefinitely.
 
 # Output Contract
 

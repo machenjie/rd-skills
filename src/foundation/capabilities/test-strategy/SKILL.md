@@ -79,9 +79,9 @@ Skip when local convention already dictates the only meaningful check and no ris
 
 # Proactive Professional Triggers
 
-- **Signal:** A high-risk change proposes only unit tests, only E2E tests, or an unspecified "add tests" task.
-  **Hidden risk:** hidden permission, contract, rollback, or failure-path gap can ship while one green layer creates false confidence.
-  **Required professional action:** require layered verification and map each level to the risk it proves before implementation or release.
+- **Signal:** A high-risk change proposes only unit tests, only E2E tests, or an unspecified verification task.
+  **Hidden risk:** missing permission, contract, rollback, or failure-path coverage can ship while one green layer creates false confidence.
+  **Required professional action:** require layered verification, compare cheaper and heavier levels, and verify each level maps to the risk it proves before implementation or release.
   **Route to:** `quality-test-gate`, `unit-testing`, `integration-testing`, `contract-testing`, `e2e-testing`.
   **Evidence required:** risk-to-test matrix, changed behavior map, required command, exit code or not-run disclosure, and residual risk owner.
 - **Signal:** Unit, integration, contract, E2E, migration, security, or performance testing is omitted with no technical rationale.
@@ -100,8 +100,8 @@ Skip when local convention already dictates the only meaningful check and no ris
   **Route to:** `contract-testing`, `data-api-contract-changer`, `backup-recovery`.
   **Evidence required:** consumer/contract map, schema or migration command, rollback result, compatibility fixture, and residual data risk.
 - **Signal:** Validation evidence predates final source, fixture, config, migration, generated artifact, or report changes.
-  **Hidden risk:** stale green output is reported as current test confidence.
-  **Required professional action:** rerun mapped validators or mark the strategy partial/not verified with next command and owner.
+  **Hidden risk:** stale green output is reported as current test confidence and missing reruns can hide changed-path coverage gaps.
+  **Required professional action:** verify freshness, rerun mapped validators, or mark the strategy partial/not verified with next command and owner.
   **Route to:** `validation-broker`, `quality-test-gate`, `plan-execution-consistency`.
   **Evidence required:** changed paths, command freshness, report/artifact path, exit code, coverage alignment, and stale-check disclosure.
 
@@ -117,7 +117,7 @@ Skip when local convention already dictates the only meaningful check and no ris
 
 # Reference Loading Policy
 
-The body carries layer selection, risk, evidence, and closure rules. Load [references/checklist.md](references/checklist.md) when the change is high-risk, cross-layer, security-sensitive, migration/release-sensitive, has omitted levels, or needs a compact operator checklist. Use [examples/example-output.md](examples/example-output.md) only when sample output shape is needed.
+The body carries layer selection, risk, evidence, and closure rules. Load [references/checklist.md](references/checklist.md) when the change is high-risk, cross-layer, security-sensitive, migration/release-sensitive, has omitted levels, or needs a compact operator checklist. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when benchmark-backed layer selection, omission review, affected-test strategy, mutation-style assertion quality, or anti-pattern detail is needed. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on repository graph, project memory, execution trajectory, validation freshness, command output, artifact/report evidence, or a changed-code-to-test map. Use [examples/example-output.md](examples/example-output.md) only when sample output shape is needed.
 
 # Failure Modes
 
@@ -152,6 +152,7 @@ Return a **Test Strategy** with:
 - **Risk rating:** low/medium/high/critical with failure consequence.
 - **Required test levels:** unit, integration, contract, E2E, migration, regression, performance, security, manual; each with behavior, cases, owner, acceptance trace, and command.
 - **Negative and boundary coverage:** denied, invalid, rollback, timeout, conflict, duplicate, partial failure, permission, and regression cases.
+- **Changed-code-to-test map:** changed path or contract -> behavior/risk -> test level -> command/artifact -> owner -> stale/not-run status.
 - **Omitted levels:** technical reason, residual risk, compensating evidence, sign-off owner, and release consequence.
 - **Validation broker plan:** changed paths, command level, stale checks, skipped full validators, and freshness expectation.
 - **Decision:** approved, blocked, not verified, release-gated, or handoff required.

@@ -36,13 +36,14 @@ Do not use for syntax lessons. Do not use to bless ad-hoc scripts that mutate pr
 
 # Stage Fit
 
-Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+Launched in coding, bug-fix, debugging, code-review, refactoring, testing, release-readiness, and final handoff. Per-stage focus:
 
 - **coding**: type hints, runtime validation, packaging, async/sync boundary, context manager.
 - **debugging-diagnosis**: blocking call in async, fixture leakage, import side effects, GIL/concurrency.
 - **code-review**: dynamic boundary validation, mutable defaults, broad `except`.
 - **refactoring**: module/package boundary, public `__all__` surface, dependency-injection seams.
 - **testing**: pytest fixtures, monkeypatch boundaries, deterministic data.
+- **release / handoff**: validation freshness, lockfile/tooling evidence, graph/memory/execution reuse judgment, residual runtime risk, and next gate.
 
 # Non-Negotiable Rules
 
@@ -55,6 +56,8 @@ Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage fo
 - **Scripts that touch production are idempotent and support `--dry-run`.** A re-run after partial failure must not duplicate, double-charge, or corrupt. Use checksums / idempotency keys / upsert-with-condition.
 - **Logging via `logging` module with structured fields** (JSON or `structlog`); never `print()` in services; secrets never logged.
 - **Exception handling**: no bare `except:`; narrow exception classes; chain causes with `raise X(...) from err`.
+- **Python claims require current repository and execution evidence.** Project memory, old CI output, prior `mypy`/`ruff`/`pytest` runs, generated summaries, or package-lock assumptions are only discovery inputs until current `pyproject.toml`, lockfile, imports, tests, generated artifacts, and validation output confirm them after the final material edit.
+- **Python tool runs that can mutate files or expose data need permission and output boundaries.** Formatters, codemods, package installers, lockfile updates, notebook/data scripts, migration scripts, and production-affecting CLIs must record tool/action class, permission state, sandbox or dry-run boundary, rollback/revert path, and redaction rule before execution.
 
 # Industry Benchmarks
 
@@ -69,6 +72,14 @@ Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage fo
 # Selection Rules
 
 Select when Python services, libraries, scripts, automation, data pipelines, AI tooling, package metadata, or pytest tests are part of the request. Pair with `language-idiom-enforcement`, `language-testing-strategy`, `language-performance-safety`, and `package-dependency-management`.
+
+# Proactive Professional Triggers
+
+- **Signal:** A Python file, test, notebook, script, CLI, worker, package config, or generated client is edited based on repository graph proximity, project memory, prior CI output, or execution trajectory. **Hidden risk:** stale imports, tool versions, lockfiles, generated artifacts, or validation runs are treated as current proof. **Required professional action:** inspect current source, `pyproject.toml`, lockfile, tests, and generated artifacts before reuse, then rerun or downgrade stale validation. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`, and this capability. **Evidence required:** inspected paths, accepted/rejected reuse, command/report path, exit code or manual artifact, freshness limit, and residual risk owner.
+- **Signal:** HTTP body, queue message, CLI arg, env var, file content, pandas/CSV row, notebook cell output, model payload, or external SDK response enters Python code without runtime validation. **Hidden risk:** type hints and dataframe schemas are mistaken for runtime guards, causing malformed input, data corruption, or unsafe deserialization. **Required professional action:** require pydantic v2/msgspec/Click/typed parser or equivalent validation at the boundary plus negative fixtures. **Route to:** `language-idiom-enforcement`, `quality-test-gate`, and `security-privacy-gate` when untrusted input is involved. **Evidence required:** boundary list, validator location, invalid-input test, and what static typing does not prove.
+- **Signal:** Async Python code calls sync IO, CPU-heavy work, blocking SDKs, `time.sleep`, sync DB clients, or broad `gather` fan-out. **Hidden risk:** event-loop blocking, cancellation leaks, thread-pool exhaustion, or GIL contention survives unit tests and appears as p99 latency failure. **Required professional action:** classify async/sync boundary, move work to bounded executor or async client, and require lag/cancellation/load evidence or a not-verified disclosure. **Route to:** `language-performance-safety`, `concurrency-control`, and `quality-test-gate`. **Evidence required:** call site, executor/async choice, cancellation/timeout test, profile or lag command, and residual runtime risk.
+- **Signal:** Python tooling, dependency, lockfile, formatter, type checker, test runner, package metadata, import path, or environment manager changes. **Hidden risk:** local success hides CI drift, dependency confusion, non-reproducible installs, or package import breakage. **Required professional action:** verify frozen install path, lockfile freshness, package metadata, import surface, and dependency/security scan proportional to risk. **Route to:** `package-dependency-management`, `validation-broker`, and this capability. **Evidence required:** config paths, lockfile state, install command, type/lint/test/security command, and what the command does not prove.
+- **Signal:** A Python script, notebook, migration, data repair, filesystem operation, subprocess call, or automation can mutate external state, write broad paths, run shell commands, or process sensitive data. **Hidden risk:** a "simple script" becomes non-idempotent, non-repeatable, or leaks secrets/PII through prints, logs, notebooks, reports, or stack traces. **Required professional action:** require `--dry-run`, idempotency key/checksum/upsert guard, narrow path scope, safe subprocess argv, redaction, and rollback or compensation. **Route to:** `agent-tool-permission-sandbox`, `security-privacy-gate`, `quality-test-gate`, and this capability. **Evidence required:** command/action class, permission state, dry-run output, rollback path, redaction rule, and rerun-safety test or residual risk.
 
 # Risk Escalation Rules
 
@@ -107,7 +118,7 @@ Select when Python services, libraries, scripts, automation, data pipelines, AI 
 
 # Reference Loading Policy
 
-Read `references/checklist.md` when Python changes touch async/sync boundaries, IO/API validation, resource lifecycle, shared mutable state, imports/packaging, pytest fixtures, monkeypatching, or runtime typing gaps. Do not load it for a trivial local script copy edit.
+The `SKILL.md` body carries normal L1/L2 Python selection, rules, output, and gates. Read [references/checklist.md](references/checklist.md) when Python changes touch async/sync boundaries, IO/API validation, resource lifecycle, shared mutable state, imports/packaging, pytest fixtures, monkeypatching, or runtime typing gaps. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when tooling/version selection, validation matrices, graph/memory/execution reuse, async/GIL/runtime patterns, packaging evidence, or anti-pattern depth is needed. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for a trivial local script copy edit.
 
 # Output Contract
 
@@ -123,6 +134,9 @@ Return a **Python Usage Review** containing:
 - **Script idempotency**: `--dry-run` present? idempotency key / upsert / rollback path?
 - **Security**: bandit clean? pip-audit clean? deserialization / subprocess / SQL parametrization audited?
 - **Logging**: structured + no secrets?
+- **source_evidence**: current Python files, `pyproject.toml`, lockfile, imports, repository graph, project memory, execution trajectory, generated artifacts, CI/test history, and freshness limits
+- **validation_commands**: ruff, mypy/pyright, pytest, coverage/mutation, bandit/pip-audit/osv, lockfile/install, async/profile/manual-review command; validator/tool; artifact/report path; output/exit code or manual result; changed Python scope; freshness after final edit
+- **changed_python_to_validation_map**: each type/runtime boundary, async/sync choice, dependency/tooling decision, fixture/script/security/runtime-risk decision mapped to validator, test, review, or residual risk
 - **Accepted exceptions** with owner / scope / expiration
 
 # Evidence Contract
@@ -139,6 +153,8 @@ A Python change is professionally complete only when the output includes:
 - **What evidence does not prove**: production load, all interpreter versions, external dependency behavior, or cross-language clients.
 - **Residual risk**: untested runtime behavior, owner, and next gate.
 
+Close a Python usage review only when it names selected mode, Python/runtime/tooling scope, current source evidence inspected, boundaries inspected, graph/memory/execution reuse judgment, type/runtime validation boundary, async/sync and GIL decision, packaging/import boundary, fixture/script safety, changed-Python-to-validation map, validation evidence, behavior preservation, residual risk, and next gate. State what evidence proves, what evidence does not prove, reuse and placement rationale for repository graph/project memory/execution trajectory claims, and validation freshness after the final material edit. A local `pytest` pass does not prove type safety, packaging reproducibility, security scan status, or production event-loop behavior unless those surfaces were actually validated.
+
 # Quality Gate
 
 1. Python version ≥ 3.11 (or documented exception); not EOL.
@@ -149,6 +165,8 @@ A Python change is professionally complete only when the output includes:
 6. Lockfile present and CI installs with frozen lockfile + hashes.
 7. `bandit -ll` and `pip-audit` (or `osv-scanner`) green or triaged.
 8. Operational scripts have `--dry-run` and idempotency mechanism.
+9. Repository graph, project memory, and execution trajectory evidence are current-source confirmed or explicitly marked stale/not verified.
+10. Validation commands or manual review procedures record validator/tool, report/artifact, output and exit code or manual result, changed scope, freshness, what evidence proves, and what evidence does not prove.
 
 # Used By
 

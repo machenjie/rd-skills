@@ -78,17 +78,17 @@ Use this capability proactively, even when the request does not ask for threat m
 
 - **Signal:** a diff or design adds an endpoint, webhook, callback, file upload, admin action, AI/tool action, background worker, external integration, public gateway, IAM/policy change, or data export.
   **Hidden risk:** a missing entry-point model can hide a data leak, wrong-boundary privilege path, or unverified abuse path not covered by existing controls.
-  **Required professional action:** enumerate assets, actors, data flows, boundaries, STRIDE threats, mitigations, tests, and monitoring before implementation approval.
+  **Required professional action:** model assets, actors, data flows, boundaries, STRIDE threats, mitigations, tests, and monitoring before implementation approval.
   **Route to:** `threat-modeling`, `security-privacy-gate`, and the domain capability for the changed boundary.
   **Evidence required:** graph paths, entry point list, data-flow map, trust boundary list, and validation plan.
 - **Signal:** project memory, old architecture notes, a previous threat model, or generated summary claims an area is already safe.
   **Hidden risk:** stale design memory can miss new callers, permissions, data flows, or deployment exposure.
   **Required professional action:** compare memory against current repository graph and execution evidence, then record accepted/rejected assumptions.
   **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`, and this capability.
-  **Evidence required:** memory source date, current graph delta, unchanged boundary proof, and explicit unknowns.
+  **Evidence required:** memory source date, current graph delta report, unchanged boundary proof, accepted/rejected assumptions, explicit unknowns, and owner.
 - **Signal:** a mitigation is named without an implementation location, test, monitoring signal, owner, or release gate.
   **Hidden risk:** an unverified paper mitigation is mistaken for an implemented control, leaving the threat silently open.
-  **Required professional action:** map the threat to concrete code/config, verification, alerting, rollback, and residual-risk acceptance.
+  **Required professional action:** verify and map the threat to concrete code/config, validation command or review artifact, alerting, rollback, and residual-risk acceptance.
   **Route to:** `validation-broker`, `quality-test-gate`, `reliability-observability-gate`, and this capability.
   **Evidence required:** `threat_to_validation_map`, passing evidence, monitoring source, and owner.
 - **Signal:** a user-controlled value reaches a parser, renderer, query, shell, prompt, path, URL fetch, serializer, queue, file store, or third-party API.
@@ -106,9 +106,10 @@ Use this capability proactively, even when the request does not ask for threat m
 
 - **L1:** Use only this `SKILL.md` for routing when the change clearly has no trust boundary, protected asset, actor, entry point, or security behavior change.
 - **L2:** Load [references/checklist.md](references/checklist.md) for any actual threat model, security review, design review, incident repair, or release decision involving new or changed assets, actors, data flows, boundaries, mitigations, or residual risk.
-- **L3:** Load [examples/example-output.md](examples/example-output.md) when producing a handoff, evaluation fixture, user-facing threat model, or structured mitigation plan.
-- **L4:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the threat model depends on current code reachability, prior decision freshness, command output, generated artifacts, or validation evidence.
-- **L5:** Pair with `agent-tool-permission-sandbox` before tool runs that can read sensitive code/config, print secrets, mutate security state, call external connectors, or generate evidence from untrusted output.
+- **L3:** Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when STRIDE/PASTA/OWASP/NIST calibration, threat-to-control mapping, residual-risk acceptance, or anti-pattern detail is needed.
+- **L4:** Load [references/evidence-patterns.md](references/evidence-patterns.md) when the threat model depends on current code reachability, prior decision freshness, command output, generated artifacts, validation evidence, tool permission boundaries, or a threat-to-validation map.
+- **L5:** Use [examples/example-output.md](examples/example-output.md) when producing a handoff, evaluation fixture, user-facing threat model, or structured mitigation plan.
+- **Tool boundary:** Pair with `agent-tool-permission-sandbox` before tool runs that can read sensitive code/config, print secrets, mutate security state, call external connectors, or generate evidence from untrusted output.
 
 # Risk Escalation Rules
 

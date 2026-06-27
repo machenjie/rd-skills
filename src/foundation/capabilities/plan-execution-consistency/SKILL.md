@@ -24,7 +24,7 @@ Reconcile planned work, actual repository changes, validation evidence, review s
 - The primary need is validation command selection, source graph extraction, memory projection, or trajectory reconstruction without a final reconciliation decision.
 
 # Stage Fit
-Use at plan acceptance, before review, after repair, after validation, after build/install/package generation, before final handoff, and after compaction resume when closure depends on earlier plan evidence. Re-enter after any material source, registry, reference, report, generated artifact, package, install-output, documentation, review, or validation-input change that occurs after a prior consistency check.
+Use during planning, coding, bug-fix, debugging, code-review, refactoring, testing, release, and handoff when closure depends on accepted plan evidence, changed paths, validation freshness, review scope, generated/source alignment, graph-memory-trajectory coupling, or final wording. At plan acceptance, record planned files/actions, owner/reviewer split, validation signal, non-goals, rollback expectation, and skipped surfaces before implementation starts. During coding, bug-fix, debugging, and refactoring, re-enter whenever source, registry, reference, report, generated artifact, package, install-output, documentation, fixture, review, or validation-input changes after a prior consistency check. During code-review, testing, release, and handoff, compare final diff, command ledger, review/repair state, graph/memory/trajectory claims, and final answer before allowing ready/done language.
 
 # Non-Negotiable Rules
 - Compare accepted plan, planned files/actions, actual changed files/actions, generated outputs, validation commands, review scope, and final handoff file list.
@@ -40,14 +40,14 @@ Use at plan acceptance, before review, after repair, after validation, after bui
 Anchor against change control variance analysis, code review scope control, CI/test freshness discipline, generated artifact provenance, release readiness review, audit evidence integrity, incident handoff, and least-surprise closure. Keep the body focused on closure-time decisions; load the reference only when a concrete reconciliation table or handoff template is needed.
 
 # Mode Matrix
-| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities |
-| --- | --- | --- | --- | --- |
-| Plan-vs-diff reconciliation | Plan, task DAG, route, or stage manifest exists and files changed. | Match planned actions to final diff. | Planned items, actual files, variance status, rationale. | `repository-context-map` |
-| Validation freshness reconciliation | Commands ran before later edits or scope is partial. | Prevent stale or inflated proof. | Command ledger, covered paths, later edits, broker result. | `validation-broker`, `quality-test-gate` |
-| Review/repair reconciliation | Review findings, repair edits, or approval scope exists. | Ensure final diff is reviewed. | Reviewer, findings, repaired files, re-review result. | `ai-code-review-refactor` |
-| Generated/source reconciliation | Reports, dist, packages, docs, or install outputs changed. | Tie generated outputs to source and build command. | Source path, generated path, build command, runtime profile. | `repository-graph-analysis` |
-| Graph-memory-trajectory closure | Prior context, memory, graph, or execution order affects claim. | Accept, reject, or downgrade evidence before closure. | Freshness, accepted/rejected claims, closure consequence. | `project-memory-governance`, `execution-trajectory-analysis` |
-| Handoff decision | Final answer says ready/done/blocked/not verified. | Align final claim with evidence and risk. | Closure decision, unknowns, validation limits, rollback, next owner. | `agent-execution-discipline` |
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Plan-vs-diff reconciliation | Plan, task DAG, route, or stage manifest exists and files changed. | Match planned actions to final diff. | Planned items, actual files, variance status, rationale. | `repository-context-map` | Deep validation design unless a changed path lacks mapped evidence. |
+| Validation freshness reconciliation | Commands ran before later edits or scope is partial. | Prevent stale or inflated proof. | Command ledger, covered paths, later edits, broker result. | `validation-broker`, `quality-test-gate` | New tests unless existing evidence is stale or insufficient. |
+| Review/repair reconciliation | Review findings, repair edits, or approval scope exists. | Ensure final diff is reviewed. | Reviewer, findings, repaired files, re-review result. | `ai-code-review-refactor` | Broad refactor review when no repair or review-scope gap exists. |
+| Generated/source reconciliation | Reports, dist, packages, docs, or install outputs changed. | Tie generated outputs to source and build command. | Source path, generated path, build command, runtime profile. | `repository-graph-analysis` | Runtime release approval unless deploy/package readiness is claimed. |
+| Graph-memory-trajectory closure | Prior context, memory, graph, or execution order affects claim. | Accept, reject, or downgrade evidence before closure. | Freshness, accepted/rejected claims, closure consequence. | `project-memory-governance`, `execution-trajectory-analysis` | Full graph extraction when direct source/final diff answers the closure question. |
+| Handoff decision | Final answer says ready/done/blocked/not verified. | Align final claim with evidence and risk. | Closure decision, unknowns, validation limits, rollback, next owner. | `agent-execution-discipline` | Extra process narration once evidence limits and next owner are explicit. |
 
 # Selection Rules
 - Select this capability for L2 or higher engineering work at final handoff, and for any work with a plan, route, task DAG, review, repair, validation, generated artifact, or release/install evidence.
@@ -64,10 +64,10 @@ Evaluate consistency by accepted plan source, plan freshness, actual changed pat
 # Proactive Professional Triggers
 - **Signal:** Final diff includes a file, generated artifact, report, registry entry, hook support file, package, or docs file not in the accepted plan. **Hidden risk:** scope drift bypasses review and validation. **Required professional action:** classify the variance, name rationale, route owner/reviewer, and map validation. **Route to:** `repository-context-map`, `validation-broker`. **Evidence required:** planned item, actual path, status, owner, validation impact.
 - **Signal:** Validation passed before later source, registry, generated artifact, report, package, install-output, fixture, or documentation edits. **Hidden risk:** final state is reported as verified by stale evidence. **Required professional action:** rerun mapped validators or downgrade closure. **Route to:** `validation-broker`, `execution-trajectory-analysis`. **Evidence required:** command order, covered paths, later edits, freshness verdict.
-- **Signal:** Review approval predates repair or does not name changed files. **Hidden risk:** approval covers an old or narrower diff. **Required professional action:** require targeted re-review or mark closure needs re-review. **Route to:** `ai-code-review-refactor`, `quality-test-gate`. **Evidence required:** reviewer, approval scope, repair files, re-review status.
-- **Signal:** Memory, graph, or compaction summary is used as proof of current state. **Hidden risk:** stale selector evidence becomes source truth. **Required professional action:** reconcile with current source, diff, reports, validation, and trajectory before accepting. **Route to:** `project-memory-governance`, `repository-graph-analysis`. **Evidence required:** accepted/rejected claims, direct-source fallback, closure consequence.
+- **Signal:** Review approval predates repair or does not name changed files. **Hidden risk:** stale approval covers the wrong or narrower diff. **Required professional action:** require targeted re-review or mark closure needs re-review. **Route to:** `ai-code-review-refactor`, `quality-test-gate`. **Evidence required:** reviewer, approval scope, repair file map, re-review command/output or report, re-review status.
+- **Signal:** Memory, graph, or compaction summary is used as proof of current state. **Hidden risk:** stale selector evidence becomes source truth. **Required professional action:** verify and reconcile with current source, diff, reports, validation, and trajectory before accepting. **Route to:** `project-memory-governance`, `repository-graph-analysis`. **Evidence required:** accepted/rejected claims, direct-source fallback, diff map, validation output, closure consequence.
 - **Signal:** Final response says done, ready, validated, no residual risk, or all tests passed after partial or targeted checks. **Hidden risk:** user receives a stronger claim than evidence supports. **Required professional action:** rewrite closure to evidence-limited status and name not-run/stale scope. **Route to:** `agent-execution-discipline`, `quality-test-gate`. **Evidence required:** exact commands, outcomes, proof limits, residual risk.
-- **Signal:** Generated outputs or runtime install artifacts changed without source/build proof. **Hidden risk:** generated-only drift enters runtime packages. **Required professional action:** identify source-of-truth and rebuild/validate or mark not verified. **Route to:** `repository-graph-analysis`, `delivery-release-gate`. **Evidence required:** source file, generator/build command, generated freshness.
+- **Signal:** Generated outputs or runtime install artifacts changed without source/build proof. **Hidden risk:** generated-only drift enters runtime packages. **Required professional action:** verify source-of-truth and rebuild/validate or mark not verified. **Route to:** `repository-graph-analysis`, `delivery-release-gate`. **Evidence required:** source file, generator/build command, generated freshness.
 
 # Risk Escalation Rules
 - Escalate when actual changed files include unplanned source, registry, hook runtime, release, migration, generated, package, install, security-sensitive, or cross-module artifacts.
@@ -97,7 +97,7 @@ Evaluate consistency by accepted plan source, plan freshness, actual changed pat
 - **Final-answer drift:** The final response omits residual risk, unknowns, failed commands, skipped validators, or changed-file variance.
 
 # Reference Loading Policy
-The `SKILL.md` body carries selection, gates, output, and closure rules. Load [references/consistency-reconciliation-matrix.md](references/consistency-reconciliation-matrix.md) when drafting a concrete consistency report, building a variance table, reconciling generated/source artifacts, comparing validation order, deciding repair/re-review status, or preparing final handoff.
+The `SKILL.md` body carries L1/L2 selection, gates, output, and closure rules. Load [references/consistency-reconciliation-matrix.md](references/consistency-reconciliation-matrix.md) when drafting a concrete consistency report, building a variance table, reconciling generated/source artifacts, comparing validation order, deciding repair/re-review status, or preparing final handoff. Do not add or load extra references for ordinary closure wording when the body can name the changed paths, validator result, proof limits, rollback note, and residual risk.
 
 # Output Contract
 Return a `plan_execution_consistency_report` with:
@@ -116,9 +116,11 @@ Return a `plan_execution_consistency_report` with:
 # Evidence Contract
 Close consistency review only when these answers are concrete:
 - **Basis:** accepted plan, changed boundary, route/stage signal, and why closure could drift.
-- **Current evidence:** plan, source, registry/config/docs, reports, generated outputs, tests, validation output, graph, memory, trajectory, review, tool permission, and final diff inspected.
+- **Boundaries inspected:** request, accepted plan, source files, registry/config/docs, reports, generated outputs, tests, validation output, graph, memory, trajectory, review scope, tool permission, final diff, and skipped boundaries with reason.
 - **Variance and behavior:** planned-vs-actual table, changed behavior/contract/docs mapping, generated/source status, skipped/deferred work, and non-goal reconciliation.
 - **Freshness and review:** validation broker status, later edits, review scope, repair/re-review status, stale/partial/not-run limits, and negative evidence.
+- **What evidence proves:** the inspected plan, final diff, command output, reports, generated artifacts, graph/memory/trajectory judgment, and review scope prove only the named closure decision for the changed paths and artifacts.
+- **What evidence does not prove:** uninspected paths, skipped validators, stale external state, unavailable reviewers, unrun release/deploy behavior, hidden generated consumers, and future changes remain outside proof.
 - **Closure:** final decision, evidence limit, rollback note, residual risk, next owner, and final handoff wording that does not exceed proof.
 
 # Benchmark Coverage

@@ -72,12 +72,11 @@
     "split_candidates": 0
   },
   "default_regression_status": "pass",
-  "generated_at": "2026-06-27T01:15:39.475040+00:00",
+  "generated_at": "2026-06-27T12:53:42.819586+00:00",
   "key_foundation_capability_coverage_summary": {
     "count": 40,
     "statuses": {
-      "acceptable": 1,
-      "sample-grade": 39
+      "sample-grade": 40
     }
   },
   "known_accepted_warnings": [],
@@ -89,7 +88,7 @@
     "promoted_agent_sample_strict_warnings": 0,
     "promoted_agent_samples_strict_checked": 5,
     "release_blocking_professionalism_warnings": 0,
-    "skill_professionalism_average_score": 55.62,
+    "skill_professionalism_average_score": 57.72,
     "skill_professionalism_warnings": 0
   },
   "non_blocking_followups": [],

@@ -21,7 +21,11 @@ Do not use this capability to: define SLI/SLO alert thresholds and operational e
 
 # Stage Fit
 
-Use during planning when a production-facing change needs latency, throughput, payload, bundle, query, memory, CPU, or cloud unit-cost thresholds before implementation. Use during implementation review when code, query, frontend route, job, worker, dependency fan-out, or resource usage changes might exceed an existing budget. Use during testing and release when CI/load/canary evidence must prove budget compliance, explain budget exceptions, or block promotion. Repository graph, project memory, and prior execution trajectory can suggest known hot paths or historical baselines, but current source, current telemetry, or explicit not-verified disclosure must confirm them before a budget is treated as authoritative.
+- **Planning / design:** define latency, throughput, payload, bundle, query, memory, CPU, capacity, and unit-cost budgets before implementation locks in scale shape.
+- **Coding / implementation:** update endpoints, routes, jobs, workers, queries, dependency fan-out, bundle splits, resource limits, and enforcement hooks together with the changed path.
+- **Bug-fix / debugging / repair:** reproduce failed budget, SLO burn, bill spike, load-test miss, bundle growth, query scan, RSS growth, or queue saturation before changing thresholds or code.
+- **Code-review / refactoring:** reject performance claims that lack current-source inspection, baseline freshness, changed-path-to-budget mapping, enforcement evidence, and behavior preservation for existing gates.
+- **Testing / release / handoff:** verify CI/load/canary/query/bundle/cost evidence, exception owner/expiry, rollback threshold, residual not-verified limits, and reliability/release handoff before promotion.
 
 # Non-Negotiable Rules
 
@@ -59,13 +63,41 @@ Escalate when: a change removes or changes an existing budget threshold without 
 
 # Proactive Professional Triggers
 
-- **Signal:** a change adds an endpoint, route, job, worker, query, external call, or batch path with no P95/P99, throughput, payload, memory, or unit-cost threshold. **Hidden risk:** regressions are subjective until users, SLO burn, or bills reveal them. **Required professional action:** define mode, budget dimensions, baseline source, and enforcement gate before handoff. **Route to:** `performance-budgeting`, `quality-test-gate`. **Evidence required:** baseline or industry anchor, expected load/data volume, threshold, and command/canary gate.
-- **Signal:** budget numbers come from project memory, prior reports, or repository graph without current source or telemetry confirmation. **Hidden risk:** stale baselines under-budget or over-budget the wrong path. **Required professional action:** confirm current route/query/job/source ownership or disclose not-verified limits. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`. **Evidence required:** inspected paths, accepted/rejected memory, freshness limit, and unknowns.
-- **Signal:** implementation uses nested scans, load-all, unbounded fan-out, large batch, broad `Promise.all`, or growing cache while the budget only names latency. **Hidden risk:** memory, CPU, pool, and cost failure modes are uncapped even if a small test passes. **Required professional action:** add algorithm/runtime bounds and changed-path-to-budget mapping. **Route to:** `algorithm-data-structure-selection`, `language-performance-safety`, `concurrency-control`. **Evidence required:** input size, complexity, memory/item cap, pool/fan-out ceiling, and benchmark/profile plan.
-- **Signal:** a frontend budget is total bundle only or measured on a fast developer machine. **Hidden risk:** route-specific users pay for unused code and median devices miss Core Web Vitals. **Required professional action:** set route/chunk budgets and representative device/network profile. **Route to:** `frontend-testing`, `frontend-change-builder`. **Evidence required:** Lighthouse/device profile, per-route chunk delta, CWV thresholds, and exception owner.
-- **Signal:** database or warehouse budget lacks production-scale data volume, plan/scan evidence, or rows examined/returned limit. **Hidden risk:** dev-data timing hides full scans, N+1 fan-out, and query-scan cost. **Required professional action:** require representative plan, scan budget, and handoff for query repair if needed. **Route to:** `indexing-query-optimization`, `data-middleware-change-builder`. **Evidence required:** query scope, data volume, EXPLAIN/scan bytes, and validation gap.
-- **Signal:** cost budget is a monthly total with no per-request, tenant, job, query, storage, egress, or autoscaling driver. **Hidden risk:** launch scales cost nonlinearly and invoice evidence arrives too late. **Required professional action:** express cost as unit economics and anomaly thresholds. **Route to:** `reliability-observability-gate`, `delivery-release-gate`. **Evidence required:** unit driver, ceiling owner, anomaly threshold, rollback/revisit condition.
-- **Signal:** CI/load/canary validation predates the final edit or covers only a smoke path while claiming budget readiness. **Hidden risk:** stale evidence closes the gate for untested code. **Required professional action:** rerun or mark stale and map every material changed path to validation. **Route to:** `validation-broker`, `agent-execution-discipline`, `quality-test-gate`. **Evidence required:** changed path, validator, outcome, freshness, and residual risk.
+- **Signal:** a change adds an endpoint, route, job, worker, query, external call, or batch path with no P95/P99, throughput, payload, memory, or unit-cost threshold.
+  **Hidden risk:** regressions are subjective until users, SLO burn, queue backlog, or bills reveal missing budget ownership.
+  **Required professional action:** require and document mode, budget dimensions, baseline source, blocking threshold, and enforcement gate before handoff.
+  **Route to:** `performance-budgeting`, `quality-test-gate`.
+  **Evidence required:** baseline or industry anchor, expected load/data volume, threshold matrix, command/canary gate, and residual not-verified scope.
+- **Signal:** budget numbers come from project memory, prior reports, or repository graph without current source or telemetry confirmation.
+  **Hidden risk:** stale baselines under-budget or over-budget the wrong route, query, job, traffic shape, pricing tier, or release gate.
+  **Required professional action:** inspect and verify current route/query/job/source ownership, telemetry window, pricing driver, and validation freshness or disclose not-verified limits.
+  **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`.
+  **Evidence required:** inspected paths, accepted/rejected memory, telemetry/report timestamp, freshness limit, and residual unknowns.
+- **Signal:** implementation uses nested scans, load-all, unbounded fan-out, large batch, broad `Promise.all`, or growing cache while the budget only names latency.
+  **Hidden risk:** memory, CPU, pool, fan-out, retry, and cost failure modes remain uncapped even if a small test passes.
+  **Required professional action:** require algorithm/runtime bounds, compare input-size assumptions, and map every growth surface to a budget and validator.
+  **Route to:** `algorithm-data-structure-selection`, `language-performance-safety`, `concurrency-control`.
+  **Evidence required:** input size, complexity, memory/item cap, pool/fan-out ceiling, benchmark/profile plan, and residual saturation risk.
+- **Signal:** a frontend budget is total bundle only or measured on a fast developer machine.
+  **Hidden risk:** route-specific users pay for unused code and median devices silently miss Core Web Vitals.
+  **Required professional action:** require route/chunk budgets, representative device/network profile, and exception owner before treating the frontend budget as valid.
+  **Route to:** `frontend-testing`, `frontend-change-builder`.
+  **Evidence required:** Lighthouse/device profile, per-route chunk delta, CWV thresholds, report path, and exception owner/expiry.
+- **Signal:** database or warehouse budget lacks production-scale data volume, plan/scan evidence, or rows examined/returned limit.
+  **Hidden risk:** dev-data timing hides full scans, N+1 fan-out, stale statistics, and query-scan cost until production load.
+  **Required professional action:** inspect representative plan, require scan budget, document data volume, and hand off query repair when the plan is not acceptable.
+  **Route to:** `indexing-query-optimization`, `data-middleware-change-builder`.
+  **Evidence required:** query scope, data volume, EXPLAIN/scan bytes, rows examined/returned, validator output, and validation gap.
+- **Signal:** cost budget is a monthly total with no per-request, tenant, job, query, storage, egress, or autoscaling driver.
+  **Hidden risk:** launch scales cost nonlinearly and invoice evidence arrives too late for rollback.
+  **Required professional action:** express cost as unit economics, classify the driver, set anomaly thresholds, and document rollback or revisit condition.
+  **Route to:** `reliability-observability-gate`, `delivery-release-gate`.
+  **Evidence required:** unit driver, ceiling owner, anomaly threshold, billing/export report, rollback/revisit condition, and residual cost risk.
+- **Signal:** CI/load/canary validation predates the final edit or covers only a smoke path while claiming budget readiness.
+  **Hidden risk:** stale evidence closes the gate for untested code, changed paths, device profiles, or cost drivers.
+  **Required professional action:** rerun, mark stale, or block; map every material changed path to a validator and preserve what the evidence cannot prove.
+  **Route to:** `validation-broker`, `agent-execution-discipline`, `quality-test-gate`.
+  **Evidence required:** changed path, validator, outcome, freshness timestamp, artifact/report path, and residual risk owner.
 
 # Critical Details
 
@@ -88,12 +120,14 @@ Escalate when: a change removes or changes an existing budget threshold without 
 
 # Failure Modes
 
-- Change ships without a latency budget; P99 in production is 2.4 seconds; three months of incident reports reference "slow checkout" before the regression is identified as the change.
-- Load test runs at 10 VU; production peak is 800 VU; P95 at 10 VU is 120ms; at 800 VU it is 1.8 seconds; database connection pool exhaustion not discovered until production traffic spike.
-- Frontend bundle grows from 180 KB to 420 KB over 6 feature releases — no per-chunk budget enforcement; LCP degrades from 1.8s to 4.2s on 4G; user conversion drops 12%.
-- Background job defined without wall-clock budget; data volume doubles; job runs 8 hours and overlaps with business hours; API P99 degrades as database CPU is dominated by the batch job.
-- Memory leak in Node.js worker: RSS grows 50 MB per hour; no memory budget or monitoring; OOM kill occurs every 18 hours; restarts cause 30-second availability gaps.
-- Cold-start latency budget ignored: Kubernetes pod cold start takes 8 seconds; during a rollout, 15% of requests hit cold pods; P99 spikes to 9 seconds; rollout not automatically blocked.
+- **Missing latency budget:** change ships without a latency budget; P99 in production is 2.4 seconds; three months of incident reports reference "slow checkout" before the regression is identified as the change.
+- **Underpowered load test:** load test runs at 10 VU; production peak is 800 VU; P95 at 10 VU is 120ms; at 800 VU it is 1.8 seconds; database connection pool exhaustion not discovered until production traffic spike.
+- **Route bundle creep:** frontend bundle grows from 180 KB to 420 KB over 6 feature releases; no per-chunk budget enforcement; LCP degrades from 1.8s to 4.2s on 4G; user conversion drops 12%.
+- **Batch-window collision:** background job defined without wall-clock budget; data volume doubles; job runs 8 hours and overlaps with business hours; API P99 degrades as database CPU is dominated by the batch job.
+- **Unbounded RSS growth:** memory leak in Node.js worker grows RSS 50 MB per hour; no memory budget or monitoring; OOM kill occurs every 18 hours; restarts cause 30-second availability gaps.
+- **Cold-start blind spot:** Kubernetes pod cold start takes 8 seconds; during a rollout, 15% of requests hit cold pods; P99 spikes to 9 seconds; rollout not automatically blocked.
+- **Unit-cost surprise:** monthly budget looked safe, but per-tenant query scans and cross-region egress scale nonlinearly after launch; rollback happens after invoice close instead of at anomaly threshold.
+- **Stale validation closure:** load test passed before the final dependency fan-out edit; release proceeds with green evidence that never exercised the shipped path.
 
 # Reference Loading Policy
 

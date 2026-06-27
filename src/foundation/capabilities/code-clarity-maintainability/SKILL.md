@@ -79,11 +79,12 @@ Use with:
 
 # Proactive Professional Triggers
 
-- **Signal:** A review says code is "readable enough" without naming the public entry point and normal path. **Hidden risk:** buried fallback, retry, logging, or side-effect branches can hide the behavior future maintainers must change. **Required professional action:** run a main-flow pass and name any branch that obscures the primary behavior. **Route to:** `code-clarity-maintainability`, `implementation-structure-design`. **Evidence required:** entry point, obscuring branches, guard/extraction decision, and validation or review artifact.
-- **Signal:** A diff splits or merges files and the rationale is line count, file count, or "cleanup". **Hidden risk:** navigation cost, public boundaries, side effects, lost small-file boundary, or test ownership can regress while the diff looks simpler. **Required professional action:** require file granularity and split/merge readability evidence before acceptance. **Route to:** `implementation-structure-design`, `module-boundary-design`, `refactoring`. **Evidence required:** files opened before/after, owner boundary, import/export impact, next-change location, and behavior-preservation proof.
+- **Signal:** A review says code is "readable enough" without naming the public entry point and normal path. **Hidden risk:** hidden fallback, retry, logging, or side-effect branches can leave the behavior future maintainers must change unverified. **Required professional action:** run a main-flow pass and name any branch that obscures the primary behavior. **Route to:** `code-clarity-maintainability`, `implementation-structure-design`. **Evidence required:** entry point, obscuring branches, guard/extraction decision, and validation or review artifact.
+- **Signal:** A diff splits or merges files and the rationale is line count, file count, or "cleanup". **Hidden risk:** hidden navigation cost, public boundaries, side effects, lost small-file boundary, or test ownership can regress while the diff looks simpler. **Required professional action:** require file granularity and split/merge readability evidence before acceptance. **Route to:** `implementation-structure-design`, `module-boundary-design`, `refactoring`. **Evidence required:** files opened before/after, owner boundary, import/export impact, next-change location, and behavior-preservation proof.
 - **Signal:** A repeated condition, boolean flag, `mode`, `kind`, or magic value controls business behavior. **Hidden risk:** an unnamed policy becomes a hidden strategy system that callers cannot read at the call site. **Required professional action:** name the policy or route to signature/pattern review before adding branches. **Route to:** `implementation-structure-design`, `design-pattern-selection`, `state-machine-modeling`. **Evidence required:** condition inventory, selected domain name, current variants, rejected abstraction, and tests or review proof.
 - **Signal:** Tests read as mock-call checks, snapshots, private helper calls, or shared fixture setup. **Hidden risk:** tests stop documenting public behavior and preserve implementation shape instead of user-visible outcomes. **Required professional action:** move the assertion to a public behavior boundary or document why no public seam exists. **Route to:** `quality-test-gate`, `testability-seam-design`. **Evidence required:** public behavior assertion, fixture owner, regression purpose, and evidence limits.
 - **Signal:** An agent or AI patch claims clarity improved after edits without source freshness, same-pattern scan, or command output. **Hidden risk:** a clean-looking diff can approve stale assumptions, missed adjacent cases, or unverified behavior preservation. **Required professional action:** require execution discipline closure before handoff. **Route to:** `agent-execution-discipline`, `ai-code-review-refactor`, `validation-broker`. **Evidence required:** changed paths, current source/graph/memory/trajectory status, validation command with exit code or not-run disclosure, and residual risk.
+- **Signal:** A repository graph, project-memory note, benchmark/report, or previous review is used to approve a clarity refactor, split/merge, helper extraction, or comment cleanup without rereading current source and tests. **Hidden risk:** stale evidence can hide changed callers, new side effects, or degraded navigation after the final edit. **Required professional action:** reconcile graph, memory, execution order, and validation freshness before approval. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`. **Evidence required:** accepted/rejected prior claim, current source paths, changed-file map, command or review artifact, what evidence proves/does not prove, and residual risk.
 
 # Risk Escalation Rules
 
@@ -99,11 +100,11 @@ Escalate to `agent-execution-discipline` when an agent claims clarity is improve
 
 # Reference Loading Policy
 
-Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active code clarity, maintainability, and split/merge readability rules.
+The `SKILL.md` body carries L1/L2 clarity routing, mode selection, output, and gates. Use inline-only mode for L1/L2 local readability decisions where the output contract can state main-flow readability, owning location, deletion path, test clarity, rejected simplifications, and validation evidence.
 
-If deep references are added later, load them only for L3+ work, AI-generated or refactored code with unclear main flow, high cognitive complexity, file split/merge risk, hidden side effects, test clarity or private-helper pressure, or cross-module change locality risk.
+Read [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete clarity, split/merge, comment, or test readability decision. Read [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for L3+ work, AI-generated or refactored code with unclear main flow, high cognitive complexity, file split/merge risk, hidden side effects, test clarity/private-helper pressure, or cross-module change locality risk. Read [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on repository graph, project memory, execution trajectory, validation freshness, command output, review artifacts, or what clarity evidence proves versus does not prove.
 
-Do not load deep references for L1/L2 local clarity edits where the inline output contract can state main-flow readability, owning location, deletion path, test clarity, rejected simplifications, and validation evidence.
+Do not load deep references for L1/L2 local clarity edits where the inline output contract is enough.
 
 # Critical Details
 
@@ -133,15 +134,15 @@ Tests are unclear when they over-mock private internals, assert helper call orde
 
 # Failure Modes
 
-- A happy path is buried under nested validation, retries, metrics, mapping, and fallback code.
-- A long function is split into poorly named helpers that make the call chain harder to follow.
-- A complex condition, boolean flag, `mode`, or `kind` switch is copied instead of named as a policy or domain concept.
-- Comments narrate assignments and loops while missing the compatibility, security, performance, or fallback reason for a branch.
-- A small requirement changes shared utilities, feature modules, tests, and adapters because no owner is clear.
-- Tests pass by over-mocking private helper calls or shared fixture bags while public behavior can regress.
-- Excessive split turns a cohesive flow into micro-file sprawl or hides the next-change location.
-- Reckless file merge turns clear small-boundary files into one mixed-responsibility owner.
-- A one-function file, trivial helper file, pass-through glue file, or file-count reduction hides ownership, side effects, public behavior, or dependency direction.
+- **Buried main path:** A happy path is buried under nested validation, retries, metrics, mapping, and fallback code.
+- **Vague helper chain:** A long function is split into poorly named helpers that make the call chain harder to follow.
+- **Unnamed policy branch:** A complex condition, boolean flag, `mode`, or `kind` switch is copied instead of named as a policy or domain concept.
+- **Narrative comments:** Comments narrate assignments and loops while missing the compatibility, security, performance, or fallback reason for a branch.
+- **Ownerless change path:** A small requirement changes shared utilities, feature modules, tests, and adapters because no owner is clear.
+- **Private-helper test lock-in:** Tests pass by over-mocking private helper calls or shared fixture bags while public behavior can regress.
+- **Micro-file sprawl:** Excessive split turns a cohesive flow into micro-file sprawl or hides the next-change location.
+- **Mixed-responsibility merge:** Reckless file merge turns clear small-boundary files into one mixed-responsibility owner.
+- **Pass-through glue:** A one-function file, trivial helper file, pass-through glue file, or file-count reduction hides ownership, side effects, public behavior, or dependency direction.
 
 # Output Contract
 

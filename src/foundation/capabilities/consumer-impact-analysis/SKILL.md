@@ -51,7 +51,7 @@ Use during planning before the contract shape is finalized, during implementatio
 
 # Industry Benchmarks
 
-Anchor against semantic versioning, API compatibility management, consumer-driven contract testing, OpenAPI/AsyncAPI/Protobuf breaking-change detection, schema registry BACKWARD/FORWARD/FULL compatibility, RFC 8594 Sunset signaling, expand/contract rollout, generated client governance, package API diffing, telemetry-based deprecation, and mobile/partner client lag management. Keep this body focused on routing, evidence, and gates; add deep references only if the benchmark matrices exceed the inline output contract.
+Anchor against semantic versioning, API compatibility management, consumer-driven contract testing, OpenAPI/AsyncAPI/Protobuf breaking-change detection, schema registry BACKWARD/FORWARD/FULL compatibility, RFC 8594 Sunset signaling, expand/contract rollout, generated client governance, package API diffing, telemetry-based deprecation, and mobile/partner client lag management. Keep this body focused on routing, evidence, and gates; load [references/checklist.md](references/checklist.md) for concrete consumer-impact reviews, [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for detailed compatibility/consumer matrices, and [references/evidence-patterns.md](references/evidence-patterns.md) when graph, memory, execution, telemetry, or validation freshness controls closure.
 
 # Selection Rules
 
@@ -72,9 +72,9 @@ Escalate to `data-api-contract-changer` when API, DTO, schema, event, webhook, c
 
 # Reference Loading Policy
 
-Current mode is inline-only: the `SKILL.md` body carries L1/L2 routing, consumer inventory, graph/memory/trajectory coupling, output contract, evidence contract, and quality gate rules. There are no deep references today.
+The `SKILL.md` body carries L1/L2 routing, consumer inventory, graph/memory/trajectory coupling, output contract, evidence contract, and quality gate rules. Use inline-only mode for private or narrow consumer-impact checks where the output contract can name the changed surface, consumer classes, compatibility strategy, validation mapping, evidence limits, and residual risk.
 
-If deep references are added later, load them only for L3+ public API/SDK/schema/event/export changes, generated-client impact, unknown consumers, compatibility migrations, telemetry gates, deprecation/removal, rollout, rollback, or when the output contract cannot be completed from inline rules.
+Read [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete API/DTO, SDK/package/export, event/webhook/schema, CLI/config/output, unknown-consumer, or deprecation/removal report. Read [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for L3+ public API/SDK/schema/event/export changes, generated-client impact, unknown consumers, compatibility migrations, telemetry gates, deprecation/removal, mixed-version rollout, rollback, or mobile/partner lag. Read [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on repository graph, project memory, execution trajectory, telemetry freshness, generated artifact freshness, validation freshness, or what consumer evidence proves versus does not prove.
 
 Do not load deep references for private changes where no public, package, schema, event, CLI, config, generated, documentation, or observable behavior contract is affected and the inline output contract is enough.
 
@@ -91,14 +91,14 @@ Do not load deep references for private changes where no public, package, schema
 
 # Failure Modes
 
-- API field renamed and only server unit tests updated; generated TypeScript and mobile clients fail at runtime.
-- Event payload field removed without schema version, upcaster, replay fixture, or subscriber inventory.
-- SDK regenerated from a changed spec but package semver, examples, public export diff, and downstream build matrix are skipped.
-- "No consumers" is concluded from `rg` while docs, dashboards, dynamic calls, package users, and event subscribers are outside scope.
-- Producer deploys before old consumers can read the new schema; queue retention then replays unreadable messages.
-- Compatibility branch removed because the calendar window elapsed, even though telemetry still shows old usage.
-- Project memory says migration completed, but a later generated client or docs change invalidated the previous validation.
-- Rollback restores old producer while new consumers depend on a contract introduced only in the failed release.
+- **Generated-client breakage:** API field renamed and only server unit tests updated; generated TypeScript and mobile clients fail at runtime.
+- **Unversioned event removal:** Event payload field removed without schema version, upcaster, replay fixture, or subscriber inventory.
+- **SDK/package drift:** SDK regenerated from a changed spec but package semver, examples, public export diff, and downstream build matrix are skipped.
+- **False no-consumer proof:** "No consumers" is concluded from `rg` while docs, dashboards, dynamic calls, package users, and event subscribers are outside scope.
+- **Mixed-version replay failure:** Producer deploys before old consumers can read the new schema; queue retention then replays unreadable messages.
+- **Telemetry-blind cleanup:** Compatibility branch removed because the calendar window elapsed, even though telemetry still shows old usage.
+- **Stale migration memory:** Project memory says migration completed, but a later generated client or docs change invalidated the previous validation.
+- **Rollback contract gap:** Rollback restores old producer while new consumers depend on a contract introduced only in the failed release.
 
 # Output Contract
 
@@ -123,6 +123,7 @@ Return a `consumer_impact_report` with:
 Close the report only when these answers are concrete:
 
 - **Basis:** selected mode, changed contract surface, consumer-visible risk, and why consumer inventory changes the implementation, release, validation, or documentation path.
+- **Boundaries inspected:** provider source, public contract files, generated clients, package/export metadata, schemas, docs/examples, tests/fixtures, telemetry, registries, repository graph, project memory, execution trajectory, and skipped consumer areas with confidence limits.
 - **Current evidence:** source/spec/schema/export/generated/docs/test/telemetry/registry evidence inspected, search scope, graph edges, project-memory signals, execution-order freshness, and skipped boundaries.
 - **Consumer and compatibility judgment:** known/generated/inferred/unknown consumers, compatibility classification, generated-client and semver impact, migration/deprecation strategy, rollout/rollback behavior, and approval state for breaking changes.
 - **Validation mapping:** every changed surface, consumer class, migration phase, telemetry gate, generated artifact, doc update, rollback path, and cleanup criterion maps to executable proof, owner review, or named residual risk.

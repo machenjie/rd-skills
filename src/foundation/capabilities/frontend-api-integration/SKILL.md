@@ -21,7 +21,7 @@ Do not use this capability to define the server-side endpoint contract (use `api
 
 # Stage Fit
 
-Use during experience-definition, implementation-planning, coding, review, and testing when a frontend surface depends on API data, request cancellation, cache freshness, response validation, auth expiry, retries, pagination, optimistic updates, or user-visible API error recovery. In planning, define the operation lifecycle, source evidence, stale-response controls, error mapping, and tests before implementation. In coding/review, reject stale project-memory or repository-graph claims unless current source, API contracts, mocks, and validation output confirm the integration behavior. Hand off when the primary question is server contract design, form submission authority, state ownership, or full frontend test strategy.
+Use during experience-definition, implementation-planning, coding, bug-fix, debugging, code-review, refactoring, testing, release, and handoff when a frontend surface depends on API data, request cancellation, cache freshness, response validation, auth expiry, retries, pagination, optimistic updates, or user-visible API error recovery. In planning, define the operation lifecycle, source evidence, stale-response controls, error mapping, and tests before implementation. In coding/review, reject stale project-memory or repository-graph claims unless current source, API contracts, mocks, and validation output confirm the integration behavior. In release and handoff, require fresh validation evidence and residual risk before claims about deployed auth, browser behavior, server contract, third-party behavior, or production cache/race behavior. Hand off when the primary question is server contract design, form submission authority, state ownership, or full frontend test strategy.
 
 # Non-Negotiable Rules
 
@@ -94,14 +94,15 @@ Frontend API integration fails silently when assumptions about network condition
 
 # Failure Modes
 
-- Search results race: user sees stale "ali" results while "alice" query was faster; no cancellation; UX incorrect.
-- Mutation retry without idempotency: double order creation on slow connection retry; customer charged twice; refund required.
-- Token refresh loop on 401 cascade: infinite retry; app becomes unresponsive; user unable to log in or out.
-- Undefined property access on API change: `TypeError` uncaught; white screen in production; no error boundary; users see blank page.
-- Optimistic delete not rolled back: item appears deleted in UI; server returned 500; item still exists; user confused; support ticket.
-- Auth token in Sentry/Datadog error: full `Authorization` header logged; token harvested from monitoring tool; account takeover.
-- Offset pagination on mutating list: user pages through 200-item list; 10 items inserted during session; items 190-200 duplicated on page 20 and page 21.
-- No timeout on third-party API: payment gateway goes down; frontend request hangs for 60+ seconds; entire checkout flow blocked.
+- **Search race:** user sees stale "ali" results while "alice" query was faster; no cancellation; UX incorrect.
+- **Unsafe mutation retry:** double order creation on slow connection retry; customer charged twice; refund required.
+- **Token refresh loop:** 401 cascade creates infinite retry; app becomes unresponsive; user unable to log in or out.
+- **Unvalidated response:** `TypeError` uncaught after API shape change; white screen in production; no error boundary; users see blank page.
+- **Optimistic rollback gap:** item appears deleted in UI; server returned 500; item still exists; user confused; support ticket.
+- **Sensitive telemetry leak:** full `Authorization` header logged to Sentry/Datadog; token harvested from monitoring tool; account takeover.
+- **Offset pagination instability:** user pages through 200-item list; 10 items inserted during session; items 190-200 duplicated on page 20 and page 21.
+- **Missing timeout:** third-party API hangs for 60+ seconds; loading state never resolves; entire checkout flow blocked.
+- **Stale graph or memory reuse:** prior API client, cache, mock, or validation pattern is copied after schema, auth, cache, or test conventions changed; evidence predates the final edit.
 
 # Reference Loading Policy
 
@@ -130,11 +131,12 @@ Return a frontend API integration plan with:
 - `changed_frontend_api_to_validation_map` (each operation, lifecycle state, retry/idempotency rule, auth expiry branch, response schema, cache invalidation, pagination edge, optimistic update, error mapping, and telemetry rule mapped to validator/test or residual risk)
 - `handoff_boundaries` (what belongs to API contract, DTO/schema, error taxonomy, idempotency/retry, state management, security/privacy, frontend testing, or product copy review)
 - `tests` (race/stale response, timeout, cancellation, retry dedup, auth expiry, permission/denied state, shape validation failure, pagination stability, cache invalidation, optimistic rollback)
+- `validation_evidence` (command, test, validator, output, report, artifact, screenshot when UI/a11y behavior is material, exit code, freshness after final edit, and not-run disclosure)
 - `evidence_limits` (what was not inspected or not run: server contract, real browser, deployed auth, production cache behavior, third-party API, full E2E, or accessibility behavior)
 
 # Evidence Contract
 
-Close a frontend API integration output only when it names selected mode, current source evidence inspected, graph/memory/trajectory reuse judgment, every operation lifecycle, cancellation and timeout policy, retry/idempotency decision, auth expiry behavior, runtime response validation, cache and pagination freshness, error mapping, security/privacy controls, changed-frontend-api-to-validation map, handoff boundaries, residual risk, and evidence limits. A generic "fetch with loading/error handling" or "use React Query" statement is not sufficient evidence.
+Close a frontend API integration output only when it names selected mode, current source evidence inspected, boundaries inspected, graph/memory/trajectory reuse judgment, every operation lifecycle, cancellation and timeout policy, retry/idempotency decision, auth expiry behavior, runtime response validation, cache and pagination freshness, error mapping, security/privacy controls, changed-frontend-api-to-validation map, handoff boundaries, what evidence proves, what evidence does not prove, residual risk, and evidence limits. A generic "fetch with loading/error handling" or "use React Query" statement is not sufficient evidence.
 
 # Benchmark Coverage
 
@@ -162,6 +164,7 @@ The integration plan is complete only when:
 12. Selected mode, source evidence, and graph/memory/trajectory reuse judgment are explicit.
 13. Every operation, lifecycle state, retry/idempotency rule, auth branch, response schema, cache invalidation, pagination edge, optimistic update, error mapping, and telemetry rule maps to validation evidence or named residual risk.
 14. Handoff boundaries and evidence limits are explicit so integration evidence is not over-claimed as server contract, deployed auth behavior, real-browser E2E coverage, or production third-party behavior.
+15. Validation evidence names the command, test or validator, output, report or artifact, screenshot when relevant, exit code, and freshness after the final material edit.
 
 # Used By
 

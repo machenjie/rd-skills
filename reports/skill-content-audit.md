@@ -16,7 +16,7 @@
 | Split candidates (score ≥ 60) | 0 |
 | Low-professionalism candidates (< 70) | 0 |
 | Move-to-reference candidates | 0 |
-| Shared duplicated lines (≥ 3 files) | 18 |
+| Shared duplicated lines (≥ 3 files) | 19 |
 
 Suggested-action distribution:
 
@@ -45,7 +45,7 @@ Suggested-action distribution:
 | `backend-change-builder` | professional-skill | 232 | 82 | - |
 | `data-api-contract-changer` | professional-skill | 231 | 82 | - |
 | `architecture-impact-reviewer` | professional-skill | 227 | 82 | - |
-| `experience-impact-modeler` | professional-skill | 220 | 82 | - |
+| `acceptance-criteria-builder` | professional-skill | 217 | 82 | - |
 
 ### 2.2 Lowest Professionalism
 
@@ -55,12 +55,12 @@ Suggested-action distribution:
 | `repository-context-map` | foundation-capability | 100 | - |
 | `project-memory-governance` | foundation-capability | 100 | - |
 | `validation-broker` | foundation-capability | 100 | - |
-| `domain-logic-implementation` | foundation-capability | 100 | - |
-| `non-goal-boundary-definition` | foundation-capability | 100 | - |
 | `observability` | foundation-capability | 100 | - |
 | `plan-execution-consistency` | foundation-capability | 100 | - |
-| `repository-persistence` | foundation-capability | 100 | - |
 | `iot-embedded-extension` | domain-extension | 100 | - |
+| `domain-logic-implementation` | foundation-capability | 100 | - |
+| `low-level-systems-extension` | domain-extension | 100 | - |
+| `context-control-plane` | foundation-capability | 100 | - |
 
 ### 2.3 Weakest Routing Boundaries
 
@@ -70,12 +70,12 @@ Suggested-action distribution:
 | `repository-context-map` | foundation-capability | 100 | - |
 | `project-memory-governance` | foundation-capability | 100 | - |
 | `validation-broker` | foundation-capability | 100 | - |
-| `domain-logic-implementation` | foundation-capability | 100 | - |
-| `non-goal-boundary-definition` | foundation-capability | 100 | - |
 | `observability` | foundation-capability | 100 | - |
 | `plan-execution-consistency` | foundation-capability | 100 | - |
-| `repository-persistence` | foundation-capability | 100 | - |
 | `iot-embedded-extension` | domain-extension | 100 | - |
+| `domain-logic-implementation` | foundation-capability | 100 | - |
+| `low-level-systems-extension` | domain-extension | 100 | - |
+| `context-control-plane` | foundation-capability | 100 | - |
 
 ### 2.4 Strongest Split Candidates
 
@@ -84,13 +84,13 @@ Suggested-action distribution:
 | `ai-code-review-refactor` | professional-skill | 245 | 0 | - |
 | `frontend-change-builder` | professional-skill | 244 | 0 | - |
 | `task-dag-planner` | professional-skill | 244 | 0 | - |
-| `containerization` | foundation-capability | 244 | 0 | - |
 | `quality-test-gate` | professional-skill | 243 | 0 | - |
 | `security-privacy-gate` | professional-skill | 243 | 0 | - |
 | `change-forge-router` | professional-skill | 242 | 0 | - |
 | `reliability-observability-gate` | professional-skill | 241 | 0 | - |
 | `integration-change-builder` | professional-skill | 237 | 0 | - |
-| `sdk-library-contract-design` | foundation-capability | 237 | 0 | - |
+| `experience-impact-modeler` | professional-skill | 236 | 0 | - |
+| `change-documentation-gate` | professional-skill | 234 | 0 | - |
 
 ### 2.5 Description Risk (frontmatter triggers)
 
@@ -110,148 +110,148 @@ No frontmatter description risks detected.
 | `change-forge-router` | 242 | 4839 | 100 | 96 | 100 | 0 | KEEP_AS_IS | - | low |
 | `reliability-observability-gate` | 241 | 4498 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `integration-change-builder` | 237 | 4406 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `experience-impact-modeler` | 236 | 3850 | 100 | 92 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-documentation-gate` | 234 | 3792 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `delivery-release-gate` | 234 | 4096 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `data-middleware-change-builder` | 233 | 4208 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `backend-change-builder` | 232 | 4216 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `data-api-contract-changer` | 231 | 3938 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `development-process-orchestrator` | 231 | 2687 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `architecture-impact-reviewer` | 227 | 3684 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `development-process-orchestrator` | 226 | 2544 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `experience-impact-modeler` | 220 | 3429 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `acceptance-criteria-builder` | 217 | 3037 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-impact-analyzer` | 215 | 3386 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `domain-impact-modeler` | 205 | 3336 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-intake-compiler` | 203 | 3337 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `logging-design-gate` | 176 | 2375 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `logging-design-gate` | 183 | 2545 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 
 ### 3.2 Foundation Capabilities (128)
 
 | Skill | Lines | Words | Prof | Ctx | Route | Split | Classification | Phase | Risk |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `containerization` | 244 | 3520 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
-| `sdk-library-contract-design` | 237 | 3022 | 100 | 88 | 100 | 0 | KEEP_AS_IS | - | low |
-| `package-dependency-management` | 221 | 3332 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
-| `business-rule-extraction` | 220 | 3588 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
-| `authentication-authorization` | 218 | 2991 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `containerization` | 231 | 3462 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `profiling` | 229 | 3622 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `sdk-library-contract-design` | 229 | 3070 | 100 | 88 | 100 | 0 | KEEP_AS_IS | - | low |
+| `business-rule-extraction` | 224 | 3728 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `package-dependency-management` | 224 | 3516 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `authentication-authorization` | 221 | 3201 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `refactoring` | 221 | 3922 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `controller-api-implementation` | 218 | 3326 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
-| `threat-modeling` | 215 | 4065 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
-| `profiling` | 210 | 3513 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
-| `project-initialization` | 208 | 3363 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `threat-modeling` | 216 | 4093 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `file-storage-processing` | 215 | 3100 | 100 | 88 | 100 | 0 | KEEP_AS_IS | - | low |
+| `secret-configuration-security` | 214 | 4508 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `project-initialization` | 211 | 3432 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `cli-daemon-interface-design` | 210 | 3087 | 100 | 88 | 100 | 0 | KEEP_AS_IS | - | low |
+| `concurrency-control` | 210 | 3309 | 100 | 88 | 100 | 0 | KEEP_AS_IS | - | low |
+| `dependency-vulnerability-scanning` | 210 | 3558 | 100 | 88 | 100 | 0 | KEEP_AS_IS | - | low |
+| `search-analytics-design` | 208 | 4340 | 100 | 88 | 100 | 0 | KEEP_AS_IS | - | low |
 | `failure-contract-design` | 206 | 3238 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `backup-recovery` | 205 | 3693 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
-| `authentication-security` | 201 | 3260 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `extensibility-design` | 205 | 3196 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `scenario-decomposition` | 202 | 3481 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
+| `authentication-security` | 201 | 3353 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `agent-execution-discipline` | 200 | 2620 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `cli-daemon-interface-design` | 200 | 2934 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `extensibility-design` | 200 | 3091 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `i18n-timezone-money-safety` | 200 | 3114 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `acceptance-standard-definition` | 199 | 2628 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `ci-cd` | 199 | 3121 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `code-review` | 199 | 3035 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `cpp-professional-usage` | 199 | 3187 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `data-side-effect-flow-tracing` | 199 | 2964 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `acceptance-standard-definition` | 198 | 2511 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `ci-cd` | 198 | 3040 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `secret-configuration-security` | 198 | 3699 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `code-clarity-maintainability` | 197 | 3034 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `performance-budgeting` | 199 | 3829 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `cache-design` | 198 | 3377 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `code-clarity-maintainability` | 198 | 3182 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `engineering-stage-professionalism` | 197 | 2178 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `language-performance-safety` | 197 | 2608 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `context-packaging` | 196 | 3462 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `module-boundary-design` | 197 | 3798 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `context-packaging` | 196 | 3517 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `rust-professional-usage` | 196 | 2934 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `api-contract-design` | 195 | 2813 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `implementation-structure-design` | 195 | 4141 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `java-jvm-professional-usage` | 195 | 3264 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `cache-design` | 194 | 3243 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `test-data-management` | 195 | 4006 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `idempotency-retry-design` | 194 | 3179 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `api-contract-design` | 193 | 3009 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `contract-testing` | 193 | 2824 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `minimal-correct-implementation` | 193 | 2472 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `search-analytics-design` | 193 | 3453 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `technology-stack-selection` | 192 | 3083 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `domain-event-modeling` | 191 | 3069 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `go-professional-usage` | 191 | 2814 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `model-boundary-mapping` | 191 | 2903 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `skill-authoring-expert` | 190 | 2297 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `sql-professional-usage` | 190 | 3066 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `architecture-tradeoff-analysis` | 189 | 2729 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `nosql-database` | 189 | 3035 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `dto-schema-design` | 188 | 2876 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `file-storage-processing` | 188 | 2820 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `architecture-enforcement-tooling` | 187 | 2834 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `data-migration-design` | 187 | 3454 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `failure-diagnosis` | 187 | 3258 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `input-validation` | 187 | 3227 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `error-code-design` | 186 | 2735 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `shell-cli-professional-usage` | 186 | 2816 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `test-data-management` | 186 | 3494 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `refactoring` | 185 | 3740 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `architecture-tradeoff-analysis` | 184 | 2514 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `input-validation` | 184 | 3053 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `architecture-enforcement-tooling` | 183 | 2508 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `async-job-design` | 183 | 2884 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `concurrency-control` | 183 | 3141 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `data-migration-design` | 183 | 3322 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `dependency-vulnerability-scanning` | 183 | 3252 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `module-boundary-design` | 183 | 3421 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `information-architecture` | 182 | 3299 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `web-security` | 182 | 3435 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `web-security` | 186 | 3816 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `implementation-structure-design` | 185 | 4212 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `async-job-design` | 184 | 2990 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `dependency-wiring-lifecycle` | 184 | 3144 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `architecture-style-selection` | 183 | 3110 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `data-model-design` | 183 | 3572 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `version-compatibility` | 183 | 3791 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `configuration-runtime-policy` | 182 | 2765 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `domain-object-identification` | 182 | 2398 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `information-architecture` | 182 | 3414 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `e2e-testing` | 181 | 2554 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `typescript-professional-usage` | 181 | 2647 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `data-model-design` | 179 | 3319 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `language-runtime-selection` | 179 | 2820 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `scenario-decomposition` | 179 | 3294 | 100 | 96 | 100 | 0 | KEEP_AS_IS | - | low |
-| `configuration-runtime-policy` | 178 | 2601 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `test-strategy` | 178 | 2245 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `frontend-testing` | 177 | 2948 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `integration-testing` | 177 | 2905 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `python-professional-usage` | 177 | 2748 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `requirement-structuring` | 177 | 2962 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `test-strategy` | 177 | 2171 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `dependency-wiring-lifecycle` | 176 | 2768 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `cleanup-deletion-governance` | 176 | 2810 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `solution-optimality-evaluation` | 176 | 3455 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `task-dag-decomposition` | 175 | 3183 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `cleanup-deletion-governance` | 174 | 2654 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `form-validation-design` | 174 | 3104 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `language-idiom-enforcement` | 174 | 2592 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `algorithm-data-structure-selection` | 173 | 2324 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `architecture-style-selection` | 173 | 2832 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `degradation-circuit-breaking` | 173 | 3472 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `algorithm-data-structure-selection` | 172 | 2678 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `design-system-rules` | 172 | 2925 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `event-driven-architecture` | 172 | 2975 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `frontend-api-integration` | 172 | 3151 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `non-goal-boundary-definition` | 172 | 2758 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `requirement-clarification` | 172 | 2478 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `agent-tool-permission-sandbox` | 171 | 2597 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `form-validation-design` | 171 | 2977 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `testability-seam-design` | 171 | 2768 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `degradation-circuit-breaking` | 170 | 3273 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `design-system-rules` | 170 | 2721 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `frontend-api-integration` | 169 | 3042 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `unit-testing` | 171 | 3368 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `indexing-query-optimization` | 169 | 3169 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `agent-workflow-state-machine` | 168 | 2329 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `executor-adapter-protocol` | 168 | 2466 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `indexing-query-optimization` | 168 | 3028 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `layered-architecture-design` | 168 | 3150 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `unit-testing` | 167 | 3160 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `version-compatibility` | 167 | 3446 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `consumer-impact-analysis` | 166 | 2613 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `execution-trajectory-analysis` | 166 | 2291 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `frontend-testing` | 166 | 2707 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `use-case-modeling` | 166 | 3381 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `consumer-impact-analysis` | 165 | 2503 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `performance-budgeting` | 165 | 3629 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `requirement-clarification` | 165 | 2380 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `state-machine-modeling` | 165 | 2971 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `interaction-state-modeling` | 163 | 2823 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `logging-error-handling` | 163 | 3144 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `state-machine-modeling` | 162 | 2820 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `nosql-database` | 161 | 2736 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `permission-boundary-modeling` | 160 | 3410 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `logging-error-handling` | 163 | 3173 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `user-flow-modeling` | 162 | 3650 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `permission-boundary-modeling` | 161 | 3441 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `documentation-generation` | 160 | 2669 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `repository-graph-analysis` | 160 | 2231 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `python-professional-usage` | 159 | 1949 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `relational-database` | 159 | 3358 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `language-testing-strategy` | 158 | 2341 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `message-queue-design` | 157 | 2930 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `state-management-design` | 157 | 3068 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `transaction-consistency` | 157 | 3263 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `prototype-description` | 156 | 3156 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `state-management-design` | 156 | 2920 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `design-pattern-selection` | 155 | 2549 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `message-queue-design` | 155 | 2776 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `page-component-decomposition` | 155 | 3203 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `routing-navigation-design` | 154 | 3004 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `transaction-consistency` | 154 | 3142 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `user-flow-modeling` | 154 | 3183 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `user-role-identification` | 154 | 2595 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `documentation-generation` | 153 | 2377 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `microservice-splitting` | 152 | 2166 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `regression-testing` | 152 | 2861 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `kubernetes-gateway` | 151 | 2267 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `service-business-logic` | 151 | 2522 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `service-business-logic` | 151 | 2633 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `skill-efficacy-benchmark` | 151 | 2212 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `domain-object-identification` | 150 | 1980 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `context-control-plane` | 147 | 1911 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `relational-database` | 147 | 2940 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `repository-persistence` | 142 | 2870 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `non-goal-boundary-definition` | 141 | 2476 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `observability` | 141 | 2751 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `plan-execution-consistency` | 141 | 2421 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `domain-logic-implementation` | 139 | 2402 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `repository-persistence` | 150 | 3227 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `context-control-plane` | 148 | 2035 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `domain-logic-implementation` | 147 | 2768 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `observability` | 143 | 2850 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `plan-execution-consistency` | 143 | 2647 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `validation-broker` | 138 | 2154 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `project-memory-governance` | 137 | 2174 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `release-rollback` | 129 | 2760 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -285,19 +285,20 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 
 | Files | Excerpt |
 | --- | --- |
-| 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
-| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 18 | do not load every reference by default. treat references as targeted support selected by t |
-| 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
-| 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 18 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
+| 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
+| 17 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
+| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 17 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 17 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 11 | these triggers are hidden-risk escalators, not ordinary checklist items. |
 | 7 | **block/pass decision** with required conditions for approval. |
 | 6 | non-trivial direct use still requires `repository-context-map` before planning when affect |
 | 5 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 4 | **route to:** `validation-broker`, `quality-test-gate`. |
+| 4 | **route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-gover |
 | 4 | selected mode, source evidence, and graph/memory/trajectory reuse judgment are explicit. |
 | 3 | close the plan only when these answers are concrete: |
 | 3 | mode, inspected boundaries, source evidence, graph-memory-trajectory judgment, and evidenc |

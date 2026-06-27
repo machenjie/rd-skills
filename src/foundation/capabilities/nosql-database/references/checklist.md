@@ -8,3 +8,4 @@
 - Review hot partition, unbounded item, index, quota, and cost risks.
 - Define schema versioning, migration, and backfill behavior.
 - Define observability and tests for access patterns and consistency limits.
+- Map every changed key, index, schemaVersion, TTL, consistency, denormalization, migration, and retention decision to validation evidence, command/manual review result, owner, freshness, rollback behavior, or residual risk.

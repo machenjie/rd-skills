@@ -23,7 +23,7 @@ Do not use this capability to: create folders or scaffolding without a clear arc
 
 - **Discovery / intake** — define repository purpose, owner, runtime/deploy target, data classification, and existing conventions before scaffolding.
 - **Design / architecture** — map folders to architectural responsibilities, module graph, generated artifacts, and verification boundaries before files are created.
-- **Implementation / bootstrap** — require clean-checkout setup, placeholder-only configuration, dependency policy, and runnable validation commands.
+- **Implementation / bootstrap** — require clean-checkout setup, placeholder-only configuration, dependency policy, and runnable validation and testing commands.
 - **Review / release readiness** — verify setup evidence, secret scanning, generated artifact policy, docs, ownership, and unresolved handoff gates.
 
 # Non-Negotiable Rules
@@ -141,12 +141,14 @@ Escalate when: initialization affects multiple services being initialized simult
 
 # Failure Modes
 
-- New engineer joins, clones repository, runs `npm start` — fails with "missing DATABASE_URL environment variable" — no setup documentation; required env vars undocumented; 2-hour debugging session on day one.
-- `src/` folder installed directly as runtime content without a build step — production runs uncompiled TypeScript via `ts-node` in a Docker image; startup time 8 seconds; transpilation errors only visible at runtime.
-- Three months after initialization, `src/` directory contains: `api/`, `models/`, `utils/`, `helpers/`, `common/`, `misc/`, `temp/`, `old/`, `new/` — no boundary discipline enforced at initialization; refactoring cost now exceeds initial setup time.
-- API key committed in `tests/fixtures/integration_config.json` — repository is public; key scraped by secret scanning bots within 15 minutes; AWS account compromised.
-- Monorepo initialized without workspace tooling — 8 packages, each with separate `npm install`; CI time 45 minutes; no shared cache; engineers duplicate `eslint.config.js` and `jest.config.ts` in every package.
-- Generated `dist/` committed to repository — git clone is 800 MB; engineers pushing build output create merge conflicts on generated files; PR diffs include 40,000 lines of minified JS.
+- **Clean-checkout failure:** new engineer clones the repository and runs `npm start`; it fails with "missing DATABASE_URL" because setup docs, required env vars, and validation commands were never proven.
+- **Source installed as runtime:** `src/` is installed directly without a build step; production runs uncompiled TypeScript via `ts-node`, with slow startup and transpilation errors visible only at runtime.
+- **Boundaryless folder sprawl:** after three months, `src/` contains `utils/`, `helpers/`, `common/`, `misc/`, `temp/`, `old/`, and `new`; no ownership or module-boundary rule was set at initialization.
+- **Secret-bearing fixture:** an API key is committed in `tests/fixtures/integration_config.json`; public repository scanners find it within minutes and the cloud account is compromised.
+- **Ungoverned monorepo:** eight packages each run separate installs, lint configs, and test commands; CI takes 45 minutes, affected-test selection is impossible, and cache correctness cannot be proven.
+- **Generated artifact drift:** `dist/` is committed; clone size grows, PRs include minified output, and generated diffs no longer prove authored source behavior.
+- **Stale template adoption:** a previous project template is copied without checking current graph, platform policy, or deployment target; unsupported folders, dependencies, and scripts become the default convention.
+- **Validation overclaim:** README says "run tests" but no validator, report artifact, command output, or exit code is captured from a clean checkout; handoff claims readiness without executable proof.
 
 # Output Contract
 
@@ -165,6 +167,7 @@ Return a project initialization plan with:
 - `gitignore_entries` (generated artifacts; local secrets; platform files)
 - `documentation_targets` (README sections; `docs/adr/` first entry; CODEOWNERS)
 - `ci_pipeline_sketch` (jobs: lint, test, build, security scan; trigger conditions)
+- `validation_evidence` (setup/build/lint/test/secret-scan validators, command output summary, report or artifact path, exit code, freshness, and proof limits)
 - `initialization_to_validation_map` (each scaffold decision mapped to setup command, build/test/lint check, secret scan, docs proof, or specialist gate)
 - `monorepo_build_policy` (module graph, workspace manager, affected tests, incremental build tool, cache key inputs, generated file policy, full-test fallback)
 - `local_dev_environment` (devcontainer/Nix/asdf/mise/toolchain pins, bootstrap command, onboarding time target)
@@ -188,12 +191,12 @@ The initialization is complete only when:
 11. Monorepos define module graph, workspace tooling, affected-test policy, cache key inputs, generated-file policy, and full-test fallback.
 12. Reproducible local environment and onboarding time target are documented and testable.
 13. Repository graph, current conventions, prior templates, and project memory are inspected and accepted/rejected with dates or freshness limits.
-14. Initialization-to-validation map links each scaffold choice to a command, file, owner, doc location, or specialist handoff.
+14. Initialization-to-validation map links each scaffold choice to a command, validator, report artifact, exit code, file, owner, doc location, or specialist handoff.
 15. Evidence limits state what was not verified, what remains unresolved, and the next gate before feature work.
 
 # Evidence Contract
 
-The plan must name `boundaries_inspected`, validation commands or artifacts, what evidence proves, what evidence does not prove, residual risk, and the next handoff gate. Clean-checkout setup evidence proves only the documented platform, toolchain, and commands; it does not prove production deployment, all future module boundaries, or organization-wide compliance unless those gates were selected. If current graph, project memory, template source, or execution evidence is missing, return a deferred initialization plan with the smallest next verification step.
+The plan must name `boundaries_inspected`, validation commands, validators, report or artifact paths, exit codes, what evidence proves, what evidence does not prove, residual risk, and the next handoff gate. Clean-checkout setup evidence proves only the documented platform, toolchain, and commands; it does not prove production deployment, all future module boundaries, or organization-wide compliance unless those gates were selected. If current graph, project memory, template source, or execution evidence is missing, return a deferred initialization plan with the smallest next verification step.
 
 # Benchmark Coverage
 

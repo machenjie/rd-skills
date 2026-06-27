@@ -8,4 +8,6 @@
 - Identify risks, mitigations, residual risk, and owner.
 - Define verification evidence and rollout assumptions.
 - Define reassessment trigger or expiry condition.
+- Verify current repository graph, project memory, execution evidence, and validation freshness when they influence the decision.
+- Map each force, residual risk, consequence, and reassessment trigger to a validator, metric, owner review, or explicit evidence limit.
 - Keep the output ADR-ready and concise.

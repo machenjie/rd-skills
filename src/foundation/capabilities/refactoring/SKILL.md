@@ -64,12 +64,41 @@ Select this capability when **structural improvement is the primary goal and beh
 
 # Proactive Professional Triggers
 
-- **Signal:** A refactor moves, extracts, inlines, renames, splits, or merges code without an explicit observable behavior boundary. **Hidden risk:** behavior changes are hidden inside structural movement and reviewers cannot tell whether outputs, side effects, ordering, or errors changed. **Required professional action:** define behavior boundary and split intentional behavior changes into separate work. **Route to:** `implementation-structure-design`, `code-review`. **Evidence required:** preserved outputs/side effects list, excluded behavior-change work item, before/after test command, and rollback step.
-- **Signal:** Untested, branch-heavy, auth, money, data-integrity, concurrency, or external side-effect code is refactored before characterization tests. **Hidden risk:** a mechanical extraction changes critical behavior with no failing signal. **Required professional action:** add or identify characterization and negative-path tests before movement. **Route to:** `quality-test-gate`, `regression-testing`. **Evidence required:** current-behavior fixtures, risky branch map, command output, and assertion-quality note.
-- **Signal:** A helper, file, class, module, `common`, `shared`, or `utils` target is introduced as part of refactoring. **Hidden risk:** ownership moves to a dumping ground, dependency direction drifts, or tests start coupling to private structure. **Required professional action:** run placement/reuse review before accepting the new shape. **Route to:** `implementation-structure-design`, `code-clarity-maintainability`. **Evidence required:** reuse search, owner boundary, rejected locations, dependency-direction proof, and public-behavior tests.
-- **Signal:** Public API, schema, config key, event, metric, log field, generated client, or exported package surface changes during a refactor. **Hidden risk:** a breaking contract ships under a behavior-preserving label. **Required professional action:** stop pure refactor closure and route compatibility or consumer impact. **Route to:** `consumer-impact-analysis`, `data-api-contract-changer`. **Evidence required:** import/export or schema diff, consumer inventory, compatibility plan, migration/rollback note.
-- **Signal:** Dead code, deprecated API, stale feature flag, fallback, compatibility branch, or obsolete abstraction is removed while reshaping code. **Hidden risk:** deletion safety, old/new branch tests, owner, and expiry are skipped. **Required professional action:** separate cleanup governance from movement. **Route to:** `cleanup-deletion-governance`, `minimal-correct-implementation`. **Evidence required:** caller search, removal condition, owner/expiry, old/new behavior tests, and rollback limit.
-- **Signal:** Project memory, prior incident notes, generated references, reflection/dynamic dispatch, or old validation says the refactor is safe without current-source confirmation. **Hidden risk:** stale context misses runtime callers or validation predates final movement. **Required professional action:** reconcile memory and graph before handoff. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `validation-broker`. **Evidence required:** searched graph boundaries, accepted/rejected memory, fresh changed-path validators, remaining unknowns.
+- **Signal:** A refactor moves, extracts, inlines, renames, splits, or merges code without an explicit observable behavior boundary.
+  **Hidden risk:** behavior changes are hidden inside structural movement and reviewers cannot tell whether outputs, side effects, ordering, or errors changed.
+  **Required professional action:** define behavior boundary and split intentional behavior changes into separate work.
+  **Route to:** `implementation-structure-design`, `code-review`.
+  **Evidence required:** preserved outputs/side effects list, excluded behavior-change work item, before/after test command, and rollback step.
+- **Signal:** Untested, branch-heavy, auth, money, data-integrity, concurrency, or external side-effect code is refactored before characterization tests.
+  **Hidden risk:** a mechanical extraction creates silent wrong behavior in a critical branch with no failing signal.
+  **Required professional action:** require characterization and negative-path tests before movement.
+  **Route to:** `quality-test-gate`, `regression-testing`.
+  **Evidence required:** current-behavior fixtures, risky branch map, command output, and assertion-quality note.
+- **Signal:** A helper, file, class, module, `common`, `shared`, or `utils` target is introduced as part of refactoring.
+  **Hidden risk:** ownership moves to a dumping ground, causing shared utility pollution, dependency-direction drift, or private-structure test coupling.
+  **Required professional action:** inspect placement, reuse, and dependency direction before accepting the new shape.
+  **Route to:** `implementation-structure-design`, `code-clarity-maintainability`.
+  **Evidence required:** reuse search, owner boundary, rejected locations, dependency-direction proof, and public-behavior tests.
+- **Signal:** Public API, schema, config key, event, metric, log field, generated client, or exported package surface changes during a refactor.
+  **Hidden risk:** a breaking contract ships under a behavior-preserving label.
+  **Required professional action:** stop pure refactor closure and route compatibility or consumer impact.
+  **Route to:** `consumer-impact-analysis`, `data-api-contract-changer`.
+  **Evidence required:** import/export or schema diff, consumer inventory, compatibility plan, migration/rollback note.
+- **Signal:** Dead code, deprecated API, stale feature flag, fallback, compatibility branch, or obsolete abstraction is removed while reshaping code.
+  **Hidden risk:** missing deletion safety, old/new branch tests, owner, expiry, or rollback path turns cleanup into unverified behavior loss.
+  **Required professional action:** split cleanup governance from movement.
+  **Route to:** `cleanup-deletion-governance`, `minimal-correct-implementation`.
+  **Evidence required:** caller search, removal condition, owner/expiry, old/new behavior tests, and rollback limit.
+- **Signal:** Project memory, prior incident notes, generated references, reflection/dynamic dispatch, or old validation says the refactor is safe without current-source confirmation.
+  **Hidden risk:** stale context misses runtime callers or validation predates final movement.
+  **Required professional action:** verify memory, graph, and validator freshness before handoff.
+  **Route to:** `repository-graph-analysis`, `project-memory-governance`, `validation-broker`.
+  **Evidence required:** searched graph map, accepted/rejected memory verdict, validator command output, report path, and remaining unknowns.
+- **Signal:** Validation, formatter, build, code generation, or report commands run after structural movement but before final plan-vs-diff review.
+  **Hidden risk:** execution order creates stale validation, generated artifact drift, or a tool-permission gap that makes the refactor look safer than it is.
+  **Required professional action:** compare command order, changed paths, generated outputs, and validator freshness before closure.
+  **Route to:** `validation-broker`, `agent-tool-permission-sandbox`.
+  **Evidence required:** command order, changed-path validator map, exit code, generated artifact/report path, stale-validation decision, and rollback note.
 
 # Risk Escalation Rules
 
@@ -86,22 +115,29 @@ Escalate when: the refactoring touches authorization, financial calculation, or 
 
 # Failure Modes
 
-- Refactoring changes a `null` return to an empty list in a shared utility — three callers check `result === null` to detect "not found"; all three now receive an empty list and treat it as "found empty" — silent behavior change; discovered weeks later in production data inconsistency.
-- Extract Method refactoring moves code to a new private method but copies a conditional incorrectly — the condition is negated; no test covers the negated branch; behavior change shipped to production.
-- Service renamed and moved to a new package — gRPC service name changes implicitly — existing clients fail with "service not found"; no compatibility plan; 2-hour production outage.
-- Formatter run mixed with logic changes in same commit — code reviewer sees 800-line diff of whitespace changes plus 10 lines of logic; misses the logic change in the noise.
-- `calculateTotal()` refactored without characterization tests — floating-point rounding behavior changes from `Math.round` to `Math.floor` during extraction — invoice totals off by $0.01; discovered in monthly reconciliation.
-- Authorization check refactored: `if (user.role !== 'guest')` extracted to `isAuthorized(user)` — during extraction, condition inverted: `if (user.role === 'guest')` — all non-guest users lose access; prod incident.
-- Large service split into five files but every change still edits all five because the split followed method names instead of responsibility boundaries.
-- Small files merged into one service to reduce file count, hiding adapter side effects, value-object invariants, policy contracts, and dependency direction.
-- File split changes public exports and tests still pass only because callers use private internals or stale imports.
-- File merge removes a behavior test boundary, so a policy or adapter can regress while the orchestration tests remain green.
-- Deprecated API retained forever with no sunset, so new behavior keeps carrying legacy branches and tests can no longer show which path matters.
-- Feature flag cleanup skipped after rollout, leaving old and new behavior active in the same function for months.
+- **Null/empty semantic drift:** Refactoring changes a `null` return to an empty list in a shared utility; callers that used `result === null` to detect "not found" silently take the wrong branch.
+- **Copied-condition inversion:** Extract Method moves code to a new private method but copies a conditional incorrectly; no test covers the negated branch, so a behavior change ships as structure.
+- **Implicit public-contract rename:** A service is moved to a new package and the generated gRPC service name changes; existing clients fail because no compatibility plan or generated diff was reviewed.
+- **Formatter-noise concealment:** A formatter run is mixed with logic movement, so reviewers miss the three semantic lines hidden inside hundreds of whitespace changes.
+- **Calculation characterization gap:** `calculateTotal()` is refactored without characterization tests; rounding changes from `Math.round` to `Math.floor`, causing invoice reconciliation drift.
+- **Authorization extraction regression:** `if (user.role !== 'guest')` becomes `isAuthorized(user)` and the extracted condition is inverted, creating an access outage or privilege error.
+- **Responsibility-free split:** A large service is split into five files by method name, but every later change still edits all five because no owner, lifecycle, invariant, or collaborator boundary changed.
+- **Unsafe file merge:** Small files are merged to reduce file count, hiding adapter side effects, value-object invariants, policy contracts, public behavior tests, and dependency direction.
+- **Import/export drift:** A file split changes public exports and tests still pass only because callers use private internals, stale imports, or a generated barrel file that was not diffed.
+- **Lost behavior test boundary:** A file merge removes a focused policy or adapter test boundary, so orchestration tests stay green while side-effect or failure semantics regress.
+- **Permanent compatibility debt:** A deprecated API remains forever without owner, expiry, telemetry, or removal trigger, so new behavior keeps carrying legacy branches.
+- **Feature-flag cleanup omission:** Feature flag cleanup is skipped after rollout, leaving old and new behavior active in the same function long after validation evidence is stale.
+- **Stale execution closure:** Validation or generated-reference output predates the final move/merge/delete step, so handoff cites green evidence for code that was never exercised.
 
 # Reference Loading Policy
 
-Load [references/checklist.md](references/checklist.md) when the refactor is high or critical risk, crosses files/modules/contracts, touches auth/financial/data-integrity/concurrency behavior, claims shared/common utility placement, removes cleanup debt, or needs the risk matrix, small-step mechanics, or anti-examples. Use [examples/example-output.md](examples/example-output.md) only when the plan shape is unclear. Do not load references for an isolated private rename with passing local tests and no observable behavior surface.
+Load only the reference needed for the active refactor decision:
+
+- Load [references/checklist.md](references/checklist.md) when the refactor is high or critical risk, crosses files/modules/contracts, touches auth/financial/data-integrity/concurrency behavior, claims shared/common utility placement, removes cleanup debt, or needs the risk matrix, small-step mechanics, or anti-examples.
+- Load [references/behavior-preservation-evidence.md](references/behavior-preservation-evidence.md) when behavior equivalence depends on repository graph freshness, project memory claims, generated references, dynamic callers, validation freshness, tool permission boundaries, or evidence limits.
+- Load [references/split-merge-cleanup-patterns.md](references/split-merge-cleanup-patterns.md) when deciding file/object/module split, small-file merge, merge restraint, dead-code removal, deprecated API exit, feature-flag cleanup, compatibility branch expiry, or before/after complexity evidence.
+
+Use [examples/example-output.md](examples/example-output.md) only when the plan shape is unclear. Do not load references for an isolated private rename with passing local tests and no observable behavior surface.
 
 # Output Contract
 

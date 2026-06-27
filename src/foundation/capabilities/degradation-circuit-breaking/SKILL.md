@@ -21,7 +21,7 @@ Do not use this capability to hide genuine correctness requirements. If a depend
 
 # Stage Fit
 
-Own resilience design during planning, implementation review, testing, release preparation, and incident repair when dependency failure, timeout, overload, or fallback can affect a core flow. In planning, turn current source, dependency graph, project memory, execution trajectory, SLOs, retry budgets, and product criticality into fail-open/closed, timeout, fallback, circuit, bulkhead, and observability decisions. In review, reject stale "safe fallback", "optional dependency", "library default is fine", or "circuit already protects it" claims unless current source, telemetry, and validation confirm them. Hand off when the unresolved question is retry/idempotency, cache freshness, public failure contract, config/kill-switch lifecycle, observability, release readiness, or security/privacy.
+Own resilience design during planning, coding, bug-fix, debugging, code-review, refactoring, testing, release preparation, and incident repair when dependency failure, timeout, overload, or fallback can affect a core flow. Treat this capability as the stage selection and launch guard for fail-open/closed, timeout, fallback, circuit, bulkhead, and observability decisions. In planning, turn current source, dependency graph, project memory, execution trajectory, SLOs, retry budgets, and product criticality into bounded decisions. In review, reject stale "safe fallback", "optional dependency", "library default is fine", or "circuit already protects it" claims unless current source, telemetry, and validation confirm them. Hand off when the unresolved question is retry/idempotency, cache freshness, public failure contract, config/kill-switch lifecycle, observability, release readiness, or security/privacy; record the handoff boundary and next gate.
 
 # Non-Negotiable Rules
 
@@ -90,18 +90,18 @@ Resilience patterns are only as good as their configuration and observability. P
 
 # Failure Modes
 
-- No timeout configured on HTTP client; one dependency starts taking 30s per request; thread pool fills; server stops responding.
-- Retry on non-idempotent POST; transient 503 causes 3 payment charges; customer and bank both charged.
-- Circuit breaker trips on startup cold traffic (3 calls, 2 fail = 66%); healthy service classified as broken for 30s.
-- Auth service configured as fail-open; 15-minute availability incident grants unauthenticated access to all users.
-- Fallback code has bug introduced 8 months ago; never executed; discovered during first actual outage; additional 45 minutes of impact.
-- Retry without jitter; 500 clients all retry after exactly 1s; second wave hits recovering service; re-triggers failure.
-- Downstream timeout = 10s; upstream timeout = 8s; downstream never reaches its timeout; upstream always times out first; downstream connection leaks.
-- Circuit breaker state not exported to metrics; ops unaware circuit is open for 6 hours; all requests absorbing fallback silently.
-- Bulkhead not configured; slow analytics dependency fills shared thread pool; payment processing requests queue behind analytics calls; checkout fails.
-- Stale cache fallback with no max-age; pricing data is 3 weeks old; promotion prices shown after promotion ended; revenue loss.
-- `retry: 10` on HTTP 401; auth service returns 401 for malformed token; 10 auth attempts per request; triggers account lockout for 1000 users.
-- Feature flag service unavailable; default is "feature off"; all new checkout flow gated features disabled; 40% revenue drop for 20 minutes.
+- **Missing timeout:** no timeout configured on HTTP client; one dependency starts taking 30s per request; thread pool fills; server stops responding.
+- **Duplicate mutation:** retry on non-idempotent POST; transient 503 causes 3 payment charges; customer and bank both charged.
+- **False circuit trip:** circuit breaker trips on startup cold traffic (3 calls, 2 fail = 66%); healthy service classified as broken for 30s.
+- **Unsafe fail-open:** auth service configured as fail-open; 15-minute availability incident grants unauthenticated access to all users.
+- **Untested fallback:** fallback code has bug introduced 8 months ago; never executed; discovered during first actual outage; additional 45 minutes of impact.
+- **Retry wave:** retry without jitter; 500 clients all retry after exactly 1s; second wave hits recovering service; re-triggers failure.
+- **Timeout inversion:** downstream timeout = 10s; upstream timeout = 8s; downstream never reaches its timeout; upstream always times out first; downstream connection leaks.
+- **Invisible open circuit:** circuit breaker state not exported to metrics; ops unaware circuit is open for 6 hours; all requests absorbing fallback silently.
+- **Missing bulkhead:** bulkhead not configured; slow analytics dependency fills shared thread pool; payment processing requests queue behind analytics calls; checkout fails.
+- **Stale fallback:** stale cache fallback with no max-age; pricing data is 3 weeks old; promotion prices shown after promotion ended; revenue loss.
+- **Permanent-error retry:** `retry: 10` on HTTP 401; auth service returns 401 for malformed token; 10 auth attempts per request; triggers account lockout for 1000 users.
+- **Unsafe flag default:** feature flag service unavailable; default is "feature off"; all new checkout flow gated features disabled; 40% revenue drop for 20 minutes.
 
 # Reference Loading Policy
 
@@ -131,10 +131,12 @@ Return a resilience plan with:
 - `changed_degradation_to_validation_map` (each timeout, retry, circuit, bulkhead, fallback, degraded response, config, metric, and test mapped to validator or residual risk)
 - `handoff_boundaries` (what belongs to retry/idempotency, cache freshness, failure contract, config, observability, release, security, or no-next-gate rationale)
 - `evidence_limits` (what was not verified, such as production traffic shape, provider behavior, all tenants, chaos environment, SLO baseline, or recovery drill)
+- `what_evidence_proves` and `what_evidence_does_not_prove` for each command, report, test, dashboard, or manual review artifact.
+- `next_gate` and rollback or reroute note when resilience evidence is partial, stale, or depends on release/incident validation.
 
 # Evidence Contract
 
-Close a resilience plan only when the output names selected mode, current resilience evidence inspected, graph/memory/execution reuse judgment, protected flow and dependency criticality, fail-open/closed decision, timeout budget chain, retry/circuit/bulkhead/fallback configuration, typed degraded response, observability signals, chaos or targeted test evidence, changed-degradation-to-validation map, handoff boundaries, residual risk, and evidence limits. A statement like "add circuit breaker and fallback" is not sufficient evidence.
+Close a resilience plan only when the output names selected mode, current resilience evidence inspected, files and boundaries inspected, graph/memory/execution reuse judgment, protected flow and dependency criticality, fail-open/closed decision, timeout budget chain, retry/circuit/bulkhead/fallback configuration, typed degraded response, observability signals, chaos or targeted test evidence, changed-degradation-to-validation map, reuse and placement rationale, behavior preservation, handoff boundaries, residual risk, next gate, and evidence limits. Validation commands, reports, tests, dashboards, or manual artifacts must state exit code or outcome, what evidence proves, what evidence does not prove, freshness after the final material edit, and the rollback or reroute path. A statement like "add circuit breaker and fallback" is not sufficient evidence.
 
 # Benchmark Coverage
 
@@ -148,21 +150,22 @@ Route here when the primary work is dependency failure containment: timeout, fal
 
 The resilience plan passes only when:
 
-1. Every external dependency call has an explicit connection timeout and read timeout.
-2. Retry policies specify: max attempts, backoff + jitter, retryable error conditions, and non-retryable conditions.
-3. Non-idempotent operations are not retried without idempotency key + deduplication.
-4. Fail-open vs fail-closed is explicitly decided per dependency with security/correctness justification.
-5. Circuit breaker thresholds are customized for the service's traffic volume and criticality (not library defaults).
-6. Bulkhead is configured for dependencies at risk of exhausting shared resources.
-7. Fallback behavior has explicit product owner approval and user impact description.
-8. Stale cache fallbacks have a defined maximum staleness.
-9. Circuit breaker state changes, fallback invocations, and timeout events are emitted as metrics.
-10. Fallback paths are covered by a specific test (unit test with stubbed failure or chaos test).
-11. Repository graph, project memory, and execution trajectory inputs are current-source confirmed or marked not verified before they shape fail-open/closed, fallback, circuit, or recovery decisions.
-12. Every timeout, retry, circuit, bulkhead, fallback, degraded response, config, metric, and chaos/test decision maps to validation evidence or named residual risk.
-13. Degraded responses are typed and distinguishable from normal correctness, validation failure, permission denial, and terminal dependency failure.
-14. Config, feature flag, provider-mode, and kill-switch degradation controls have typed validation, safe default, owner, rollout/rollback path, observability, and cleanup path.
-15. Handoff boundaries and evidence limits are explicit so degradation design is not over-claimed as retry safety, cache correctness, public API failure contract, production release readiness, or security approval.
+1. **Timeout bound:** every external dependency call has an explicit connection timeout and read timeout.
+2. **Retry safety:** retry policies specify max attempts, backoff + jitter, retryable error conditions, and non-retryable conditions.
+3. **Idempotency guard:** non-idempotent operations are not retried without idempotency key + deduplication.
+4. **Fail-open decision:** fail-open vs fail-closed is explicitly decided per dependency with security/correctness justification.
+5. **Circuit calibration:** circuit breaker thresholds are customized for the service's traffic volume and criticality, not library defaults.
+6. **Bulkhead isolation:** bulkhead is configured for dependencies at risk of exhausting shared resources.
+7. **Fallback approval:** fallback behavior has explicit product owner approval and user impact description.
+8. **Staleness ceiling:** stale cache fallbacks have a defined maximum staleness.
+9. **Degradation telemetry:** circuit breaker state changes, fallback invocations, and timeout events are emitted as metrics.
+10. **Fallback test:** fallback paths are covered by a specific test, such as a unit test with stubbed failure or chaos test.
+11. **Current-source confirmation:** repository graph, project memory, and execution trajectory inputs are current-source confirmed or marked not verified before they shape fail-open/closed, fallback, circuit, or recovery decisions.
+12. **Validation map:** every timeout, retry, circuit, bulkhead, fallback, degraded response, config, metric, and chaos/test decision maps to validation evidence or named residual risk.
+13. **Typed degraded response:** degraded responses are typed and distinguishable from normal correctness, validation failure, permission denial, and terminal dependency failure.
+14. **Config safety:** config, feature flag, provider-mode, and kill-switch degradation controls have typed validation, safe default, owner, rollout/rollback path, observability, and cleanup path.
+15. **Evidence freshness:** validation commands, reports, tests, dashboards, and manual artifacts record outcome or exit code, what evidence proves, what evidence does not prove, and freshness after the final material edit.
+16. **Handoff limits:** handoff boundaries, next gate, rollback or reroute note, and evidence limits are explicit so degradation design is not over-claimed as retry safety, cache correctness, public API failure contract, production release readiness, or security approval.
 
 # Used By
 
