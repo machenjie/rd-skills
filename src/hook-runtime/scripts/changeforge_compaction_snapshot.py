@@ -79,6 +79,12 @@ def _record_generic_compaction(repo, runtime: str, state: dict, phase: str) -> N
     restored_context = merge_active_context(context, snapshot) if snapshot else context
     support = "degraded" if snapshot else "unsupported"
     degraded = phase in {"compact", "session_compact"}
+    if degraded:
+        budget_exception_reason = (
+            "degraded compaction without pre_compact snapshot requires staged-plan continuity review"
+        )
+    else:
+        budget_exception_reason = "non-precompact compaction event reused existing bounded snapshot"
     merge_state(
         repo,
         runtime,
@@ -101,9 +107,7 @@ def _record_generic_compaction(repo, runtime: str, state: dict, phase: str) -> N
                 "route_id": "active-runtime-route",
                 "current_stage": "compaction",
                 "budget_mode": compaction_budget_mode(degraded=degraded),
-                "budget_exception_reason": (
-                    "degraded compaction without pre_compact snapshot requires staged-plan continuity review"
-                ),
+                "budget_exception_reason": budget_exception_reason,
                 "selected_reference_count": 0,
                 "skipped_reference_count": 0,
                 "over_budget_findings": [],

@@ -222,6 +222,61 @@ class CompactionSnapshotV2Tests(unittest.TestCase):
             "degraded compaction without pre_compact snapshot requires staged-plan continuity review",
         )
 
+    def test_post_compact_reason_matches_minimal_budget_mode(self) -> None:
+        common = load_module("changeforge_common")
+        compaction = load_module("changeforge_compaction_contract")
+        snapshot = compaction.snapshot_from_state(
+            complete_state(),
+            {"hook_event_name": "PreCompact"},
+        )
+
+        # Isolate hook state so the subprocess writes to the cache this test reloads.
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            previous_cache = os.environ.get("XDG_CACHE_HOME")
+            os.environ["XDG_CACHE_HOME"] = str(cache)
+            try:
+                common.merge_state(
+                    cwd,
+                    "codex",
+                    turn_stage="review",
+                    active_skill_context={"stage": "review"},
+                    compaction_snapshots=[snapshot],
+                )
+            finally:
+                if previous_cache is None:
+                    os.environ.pop("XDG_CACHE_HOME", None)
+                else:
+                    os.environ["XDG_CACHE_HOME"] = previous_cache
+
+            result = run_hook(
+                "changeforge_compaction_snapshot.py",
+                {"hook_event_name": "PostCompact"},
+                cwd,
+                cache,
+            )
+
+            previous_cache = os.environ.get("XDG_CACHE_HOME")
+            os.environ["XDG_CACHE_HOME"] = str(cache)
+            try:
+                state = common.load_state(cwd)
+            finally:
+                if previous_cache is None:
+                    os.environ.pop("XDG_CACHE_HOME", None)
+                else:
+                    os.environ["XDG_CACHE_HOME"] = previous_cache
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(state["compaction_snapshots"]), 1)
+        self.assertEqual(state["compaction_snapshots"][0]["snapshot_id"], snapshot["snapshot_id"])
+        self.assertEqual(state["active_skill_context"]["route_id"], "context-control-phase-4")
+        self.assertIn("compaction_degraded:post_compact", state["runtime_adapter"]["active_degradation"])
+        self.assertEqual(state["context_control_records"][0]["budget_mode"], "minimal")
+        self.assertEqual(
+            state["context_control_records"][0]["budget_exception_reason"],
+            "non-precompact compaction event reused existing bounded snapshot",
+        )
+
 
 class BranchRouteSummaryTests(unittest.TestCase):
     def test_repeated_same_path_retry_summary_is_bounded_and_redacted(self) -> None:
