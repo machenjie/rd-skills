@@ -132,6 +132,7 @@ Functions, classes, methods, files, and directories appear in this capability on
 
 Return a Code Element Professionalism Review with:
 
+- **Selected mode**: variable professionalism, expression professionalism, statement/control-flow professionalism, bridge review, or AI-generated code element review.
 - **Element scope inspected**: files, functions, branches, variables, expressions, statements, and tests reviewed.
 - **Variable assessment**: initialization, scope, lifetime, mutability, shadowing, concept reuse, sentinel/default, loop/cursor state, and closure capture decisions.
 - **Expression assessment**: precedence, grouping, truthiness, nullish/default behavior, comparison/coercion, magic constants, hidden assignment/mutation/I/O, and named decision candidates.
@@ -143,7 +144,19 @@ Return a Code Element Professionalism Review with:
 
 # Evidence Contract
 
-Close an element review only when it states the selected mode, current source inspected, element boundaries, local or escalated decision, proof that behavior is preserved or intentionally changed, validation command or review artifact, what the evidence proves, what remains unproven, and residual risk.
+Close an element review only when it records:
+
+- **Selected mode**: variable professionalism, expression professionalism, statement/control-flow professionalism, bridge review, or AI-generated code element review.
+- **Source files inspected**: source files inspected, functions or branches inspected, and tests or fixtures reviewed before the element decision.
+- **Element boundaries inspected**: variables, expressions, and statements in scope, plus any function, class, method, file, or directory bridge that defines the local boundary.
+- **Local decision or escalation**: whether the element was fixed locally or handed off to `implementation-structure-design`, `language-idiom-enforcement`, `code-clarity-maintainability`, `data-side-effect-flow-tracing`, `transaction-consistency`, `security-privacy-gate`, or `quality-test-gate`.
+- **Reuse / placement rationale**: why the element-level fix stays local, reuses an existing owner boundary, or escalates instead of creating a new structure rule here.
+- **Behavior preservation**: whether behavior is preserved or intentionally changed, naming affected default, branch, cleanup, transaction, event, cache, or side-effect semantics.
+- **Validation evidence**: validation command, static analysis, typecheck, linter, test output, or review artifact used as proof.
+- **What evidence proves**: the exact variable initialization/default, expression truthiness/precedence/side-effect, or statement cleanup/event-order behavior covered.
+- **What evidence does not prove**: remaining untested language-runtime, concurrency, transaction, security, integration, or production behavior.
+- **Residual risk**: remaining uncertainty, owner, and whether it blocks completion.
+- **Handoff and next gate**: the handoff target and next gate that must accept or close any remaining risk.
 
 # Quality Gate
 

@@ -1,7 +1,7 @@
 {
-  "average_score": 57.66,
+  "average_score": 57.68,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-29T06:54:14.534637+00:00",
+  "generated_at": "2026-06-29T07:17:57.353478+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -1004,11 +1004,11 @@
       "warnings": []
     },
     {
-      "body_lines": 164,
+      "body_lines": 177,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 3,
+        "evidence_contract_strength": 5,
         "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 4,
@@ -1017,7 +1017,7 @@
         "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 2,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -1025,7 +1025,7 @@
       "path": "src/foundation/capabilities/code-element-professionalism/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 48,
+      "total": 51,
       "warnings": []
     },
     {

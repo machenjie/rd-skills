@@ -97,7 +97,7 @@ These signals are generated or validator-backed local evidence, not external pop
 | Open-source readiness | `partial` | [docs/OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md) |
 <!-- changeforge-scorecard-summary:end -->
 
-Stable profile counts are `recommended=21`, `full=28`, and `dev=156`; these generated manifests are the authoritative runtime profile count source. Local install starts with `python3 scripts/quickstart.py --agent codex --scope user`; official Codex/Claude marketplace publishing is intentionally not implemented.
+Stable profile counts are `recommended=21`, `full=28`, and `dev=157`; these generated manifests are the authoritative runtime profile count source. Local install starts with `python3 scripts/quickstart.py --agent codex --scope user`; official Codex/Claude marketplace publishing is intentionally not implemented.
 
 Optional hook artifacts are also built for Codex, Claude Code, and GitHub
 Copilot. They are execution reminders, not skills and not a replacement for

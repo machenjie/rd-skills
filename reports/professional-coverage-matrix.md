@@ -1,6 +1,6 @@
 # Professional Coverage Matrix
 
-- Generated: 2026-06-29T06:54:25.493821+00:00
+- Generated: 2026-06-29T07:17:57.475408+00:00
 - Rows checked: 62
 
 | Item | Kind | Mode Matrix | Proactive Triggers | Evidence Contract | Output Contract | Failure Modes | Quality Gate | Reference Loading Hint | Routing Coverage | Benchmark Coverage | Anti-bloat Status | Status |
@@ -10,7 +10,7 @@
 | `async-job-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (1) | yes (2) | ok | sample-grade |
 | `cache-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (5) | yes (5) | ok | sample-grade |
 | `cleanup-deletion-governance` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (3) | yes (3) | ok | sample-grade |
-| `code-element-professionalism` | foundation-capability | n/a | n/a | partial | yes | yes | yes | yes | yes (16) | yes (8) | ok | acceptable |
+| `code-element-professionalism` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (16) | yes (8) | ok | acceptable |
 | `code-review` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (13) | yes (21) | ok | sample-grade |
 | `configuration-runtime-policy` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | no | yes (2) | ok | sample-grade |
 | `consumer-impact-analysis` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | no | yes (1) | ok | sample-grade |

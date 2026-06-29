@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-29T06:54:25.493821+00:00",
+  "generated_at": "2026-06-29T07:17:57.475408+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -94,7 +94,7 @@
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "yes (8)",
-      "evidence_contract": "partial",
+      "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "foundation-capability",
       "mode_matrix": "n/a",
@@ -105,7 +105,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (16)",
-      "score": 48,
+      "score": 51,
       "status": "acceptable",
       "warnings": []
     },

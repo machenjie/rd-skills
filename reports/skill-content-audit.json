@@ -1675,7 +1675,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 71,
+      "bullet_count": 83,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -1689,10 +1689,10 @@
       "largest_section_lines": 20,
       "largest_section_title": "Reference Loading Policy",
       "largest_table_rows": 0,
-      "line_count": 164,
+      "line_count": 177,
       "name": "code-element-professionalism",
       "optimality_section_length": 0,
-      "output_contract_length": 13,
+      "output_contract_length": 14,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/code-element-professionalism/SKILL.md",
@@ -1706,7 +1706,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 6,
-      "word_count": 2287
+      "word_count": 2476
     },
     {
       "anti_example_section_length": 13,

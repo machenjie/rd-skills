@@ -199,6 +199,7 @@ No frontmatter description risks detected.
 | `typescript-professional-usage` | 181 | 2647 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `language-runtime-selection` | 179 | 2820 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `test-strategy` | 178 | 2245 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `code-element-professionalism` | 177 | 2476 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `frontend-testing` | 177 | 2948 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `integration-testing` | 177 | 2905 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `python-professional-usage` | 177 | 2748 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -226,7 +227,6 @@ No frontmatter description risks detected.
 | `execution-trajectory-analysis` | 166 | 2291 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `use-case-modeling` | 166 | 3381 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `state-machine-modeling` | 165 | 2971 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `code-element-professionalism` | 164 | 2287 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `interaction-state-modeling` | 163 | 2823 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `logging-error-handling` | 163 | 3173 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `user-flow-modeling` | 162 | 3650 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -286,14 +286,14 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 
 | Files | Excerpt |
 | --- | --- |
-| 18 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
 | 18 | do not load every reference by default. treat references as targeted support selected by t |
-| 17 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
-| 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
-| 17 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
+| 18 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
 | 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 17 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 17 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 17 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 17 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 11 | these triggers are hidden-risk escalators, not ordinary checklist items. |
 | 7 | **block/pass decision** with required conditions for approval. |
 | 6 | non-trivial direct use still requires `repository-context-map` before planning when affect |
