@@ -72,17 +72,18 @@
     "split_candidates": 0
   },
   "default_regression_status": "pass",
-  "generated_at": "2026-06-29T06:12:29.435958+00:00",
+  "generated_at": "2026-06-29T06:54:24.553358+00:00",
   "key_foundation_capability_coverage_summary": {
-    "count": 40,
+    "count": 41,
     "statuses": {
+      "acceptable": 1,
       "sample-grade": 40
     }
   },
   "known_accepted_warnings": [],
   "latest_results_available": {
     "benchmark_errors": 0,
-    "coverage_rows_checked": 61,
+    "coverage_rows_checked": 62,
     "professional_agent_sample_warnings": 0,
     "professional_agent_samples_checked": 5,
     "promoted_agent_sample_strict_warnings": 0,
@@ -134,12 +135,12 @@
     "python3 scripts/eval-professional-agent-samples.py --promoted-only --strict"
   ],
   "routing_coverage_summary": {
-    "cases_checked": 139,
+    "cases_checked": 140,
     "cases_without_forbidden": 0,
     "hidden_risks_checked": 91,
     "hidden_risks_needing_manual_review": 0,
     "hidden_risks_strongly_covered": 87,
-    "l1_anti_over_routing_count": 10
+    "l1_anti_over_routing_count": 11
   },
   "status": "strict-release-ready",
   "strict_regression_status": "pass",

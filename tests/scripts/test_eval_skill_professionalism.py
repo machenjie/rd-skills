@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -416,6 +417,37 @@ class EvalSkillProfessionalismTests(unittest.TestCase):
             router = next(row for row in matrix["rows"] if row["name"] == "change-forge-router")
             self.assertTrue(router["routing_coverage"].startswith("n/a (router owns routing fixture corpus"))
             self.assertTrue(router["benchmark_coverage"].startswith("n/a (covered by eval-routing"))
+
+    def test_benchmark_coverage_counts_codegen_route_hints(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            professional_dir = root / "professional-benchmarks"
+            codegen_case = root / "codegen" / "code-elements" / "sample"
+            codegen_case.mkdir(parents=True)
+            (codegen_case / "expected-qualities.yaml").write_text(
+                "\n".join(
+                    [
+                        "route_hints:",
+                        "  skills:",
+                        "    - quality-test-gate",
+                        "  capabilities:",
+                        "    - code-element-professionalism",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            with patch.object(module, "PROFESSIONAL_BENCHMARKS_DIR", professional_dir), patch.object(
+                module,
+                "CODEGEN_BENCHMARKS_DIR",
+                root / "codegen",
+            ):
+                counts = module._coverage_counts_from_benchmarks()
+
+        self.assertEqual(counts["quality-test-gate"], 1)
+        self.assertEqual(counts["code-element-professionalism"], 1)
 
 
 if __name__ == "__main__":

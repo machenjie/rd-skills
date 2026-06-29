@@ -501,6 +501,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "plan-execution-consistency",
     ),
     "bug-fix": (
+        "code-element-professionalism",
         "minimal-correct-implementation",
         "execution-trajectory-analysis",
         "project-memory-governance",
@@ -607,24 +608,52 @@ CAPABILITY_TRIGGERS: dict[str, tuple[str, ...]] = {
         "under routing",
     ),
     "code-element-professionalism": (
+        "variable uninitialized",
         "uninitialized variable",
-        "shadowed variable",
         "variable shadowing",
-        "mutable default",
+        "shadowed variable",
+        "variable reused for unrelated purpose",
+        "variable reuse",
+        "sentinel null",
         "default sentinel",
+        "mutable default",
+        "null default",
+        "none default",
+        "nil default",
+        "undefined default",
         "nullish",
         "truthiness",
+        "falsey",
+        "falsy",
         "hidden assignment",
+        "assignment expression",
+        "chained assignment",
+        "mixed operator precedence",
+        "operator precedence",
         "magic constant",
+        "nested ternary",
+        "complex conditional",
+        "side effect expression",
+        "side-effect expression",
         "empty loop",
+        "empty branch",
         "empty catch",
+        "no-op catch",
         "switch fallthrough",
+        "fallthrough",
         "loop counter mutation",
+        "missing resource cleanup",
         "broad try",
+        "try scope too wide",
         "missing cleanup",
+        "resource cleanup",
         "event before commit",
+        "cache before commit",
+        "external io before commit",
+        "ignored return",
         "boolean trap",
         "side effect getter",
+        "side-effect getter",
     ),
 }
 
@@ -1199,6 +1228,10 @@ def _professional_focus_lines(context: dict[str, Any]) -> list[str]:
     ):
         lines.append(
             "- structure_focus: keep public API tests, document object-method ownership/rejected alternatives, keep side effects in adapters, and keep helpers private."
+        )
+    if "code-element-professionalism" in capabilities:
+        lines.append(
+            "- code_element_focus: verify variable initialization/default semantics, expression truthiness/precedence/side effects, and statement cleanup/event-order behavior before approving local code."
         )
     return lines
 

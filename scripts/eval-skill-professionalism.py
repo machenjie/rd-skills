@@ -33,6 +33,7 @@ COVERAGE_MARKDOWN_REPORT = "professional-coverage-matrix.md"
 COVERAGE_JSON_REPORT = "professional-coverage-matrix.json"
 ROUTING_EVALS_DIR = ROOT / "evals" / "routing"
 PROFESSIONAL_BENCHMARKS_DIR = ROOT / "evals" / "professional-benchmarks"
+CODEGEN_BENCHMARKS_DIR = ROOT / "evals" / "codegen"
 
 DIMENSIONS = (
     "trigger_accuracy",
@@ -103,6 +104,7 @@ KEY_FOUNDATION_CAPABILITIES = {
     "consumer-impact-analysis",
     "cleanup-deletion-governance",
     "minimal-correct-implementation",
+    "code-element-professionalism",
 }
 
 SECTION_ALIASES = {
@@ -1836,19 +1838,32 @@ def _coverage_counts_from_routing() -> dict[str, int]:
 
 def _coverage_counts_from_benchmarks() -> dict[str, int]:
     counts: dict[str, int] = {}
-    if not PROFESSIONAL_BENCHMARKS_DIR.is_dir():
-        return counts
-    for path in PROFESSIONAL_BENCHMARKS_DIR.rglob("expected.yaml"):
-        try:
-            data = load_yaml_file(path)
-        except ValidationProblem:
-            continue
-        if not isinstance(data, dict):
-            continue
-        for name in _as_string_list(data.get("expected_professional_skill")):
-            counts[name] = counts.get(name, 0) + 1
-        for name in _as_string_list(data.get("expected_capabilities")):
-            counts[name] = counts.get(name, 0) + 1
+    if PROFESSIONAL_BENCHMARKS_DIR.is_dir():
+        for path in PROFESSIONAL_BENCHMARKS_DIR.rglob("expected.yaml"):
+            try:
+                data = load_yaml_file(path)
+            except ValidationProblem:
+                continue
+            if not isinstance(data, dict):
+                continue
+            for name in _as_string_list(data.get("expected_professional_skill")):
+                counts[name] = counts.get(name, 0) + 1
+            for name in _as_string_list(data.get("expected_capabilities")):
+                counts[name] = counts.get(name, 0) + 1
+    if CODEGEN_BENCHMARKS_DIR.is_dir():
+        for path in CODEGEN_BENCHMARKS_DIR.rglob("expected-qualities.yaml"):
+            try:
+                data = load_yaml_file(path)
+            except ValidationProblem:
+                continue
+            if not isinstance(data, dict):
+                continue
+            route_hints = data.get("route_hints")
+            if not isinstance(route_hints, dict):
+                continue
+            for field_name in ("skills", "capabilities"):
+                for name in _as_string_list(route_hints.get(field_name)):
+                    counts[name] = counts.get(name, 0) + 1
     return counts
 
 

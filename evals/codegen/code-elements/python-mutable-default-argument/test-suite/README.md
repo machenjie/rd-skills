@@ -5,6 +5,8 @@
 - Verify two default calls do not share accumulated state.
 - Verify explicit list input keeps the documented behavior.
 - Verify no class or helper module is added for the local fix.
+- Execute the actual Python regression test; smoke mode must observe the
+  starter failure, and candidate mode must pass.
 
 ## Fixtures
 

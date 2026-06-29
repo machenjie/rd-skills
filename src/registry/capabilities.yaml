@@ -1257,7 +1257,6 @@ capabilities:
     group: engineering-workflow
     path: src/foundation/capabilities/code-element-professionalism
     status: implemented
-    route_level_capability: true
     used_by: [backend-change-builder, frontend-change-builder, ai-code-review-refactor, code-review, refactoring, quality-test-gate]
     triggers:
       - code element variable expression statement local element uninitialized variable variable shadowing variable reused unrelated purpose sentinel null default mutable default loop counter mutation

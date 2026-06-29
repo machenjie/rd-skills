@@ -74,15 +74,23 @@ Prefer adjacent capabilities when the problem exceeds a code element: `implement
 
 # Reference Loading Policy
 
-Use inline-only mode for L1/L2 local element review when the Output Contract can be satisfied from the `SKILL.md` body. Load a deep reference only when the route selects that element type or complexity:
+Satisfy the Output Contract from the `SKILL.md` body unless the selected level below requires one or more deep references.
 
-- Read [references/variables.md](references/variables.md) for L2+ initialization, shadowing, reuse, lifetime, mutability, sentinel/default, and loop state decisions.
-- Read [references/expressions.md](references/expressions.md) for L2+ precedence, truthiness, nullish/default, side-effect expression, ternary, comprehension, comparison, coercion, and magic constant decisions.
-- Read [references/statements.md](references/statements.md) for L2+ loops, branches, switch fallthrough, try/catch/finally/defer, cleanup, transaction/event/cache/external I/O ordering, and no-op statements.
-- Read [references/functions.md](references/functions.md), [references/classes.md](references/classes.md), [references/methods.md](references/methods.md), [references/files.md](references/files.md), or [references/directories.md](references/directories.md) only as bridge references before handing ownership to `implementation-structure-design`, `code-clarity-maintainability`, or `refactoring`.
-- Read [references/open-source-benchmark-map.md](references/open-source-benchmark-map.md) for L3+ work, AI-generated patches, security-sensitive code, or benchmark authoring.
+L1 inline-only: ordinary local naming/readability decisions with no initialization, default, side-effect, resource, control-flow, transaction, or concurrency risk.
 
-Do not load every deep reference by default. L3 and higher routes should name the selected element references, the skipped references, and why the skipped references are not needed.
+L2 load exactly one matching element reference:
+
+- Read [references/variables.md](references/variables.md) for initialization, scope, mutability, default, and lifetime risks.
+- Read [references/expressions.md](references/expressions.md) for condition, assignment, operator, nullish, truthiness, cast, magic-value, and side-effect risks.
+- Read [references/statements.md](references/statements.md) for control, resource, error, loop, transaction, and concurrency statement risks.
+
+L3 load multiple selected references for AI-generated patches, code review/refactor, production paths, multi-language edits, side-effect order, resource cleanup, transaction/event/cache ordering, concurrency, or async risk.
+
+L4/L5 routes involving security, regulated, money/trading, backend correctness, data integrity, migration, or production reliability paths must route to the owning safety, reliability, data, integration, or transaction capability and load this capability only for the local element portion.
+
+Read [references/functions.md](references/functions.md), [references/classes.md](references/classes.md), [references/methods.md](references/methods.md), [references/files.md](references/files.md), or [references/directories.md](references/directories.md) only as bridge references before handing ownership to `implementation-structure-design`, `code-clarity-maintainability`, or `refactoring`. Read [references/open-source-benchmark-map.md](references/open-source-benchmark-map.md) for L3+ work, AI-generated patches, security-sensitive code, or benchmark authoring.
+
+Do not load every deep reference by default. L2 and higher routes should name the selected element references, the skipped references, and why the skipped references are not needed.
 
 # Critical Details
 

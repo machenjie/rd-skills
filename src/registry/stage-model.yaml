@@ -191,6 +191,7 @@ stages:
       - regression-testing
       - code-review
     conditional_capabilities:
+      - code-element-professionalism
       - minimal-correct-implementation
       - execution-trajectory-analysis
       - project-memory-governance

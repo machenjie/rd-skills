@@ -5,6 +5,8 @@
 - Verify missing values receive the fallback.
 - Verify zero, false, and empty string remain unchanged.
 - Verify no shared utility is introduced for the local expression.
+- Execute the actual JavaScript regression test; smoke mode must observe the
+  starter failure, and candidate mode must pass.
 
 ## Fixtures
 

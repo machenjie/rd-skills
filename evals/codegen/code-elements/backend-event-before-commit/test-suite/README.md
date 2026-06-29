@@ -6,6 +6,8 @@
 - Verify cache mutation happens after commit.
 - Verify commit failure publishes no event and writes no cache.
 - Verify no duplicate events are created.
+- Execute the actual backend regression test; smoke mode must observe the
+  starter failure, and candidate mode must pass.
 
 ## Fixtures
 

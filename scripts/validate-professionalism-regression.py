@@ -124,6 +124,7 @@ KEY_FOUNDATION_CAPABILITIES = {
     "architecture-enforcement-tooling",
     "consumer-impact-analysis",
     "cleanup-deletion-governance",
+    "code-element-professionalism",
 }
 
 

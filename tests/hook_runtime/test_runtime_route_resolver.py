@@ -18,6 +18,7 @@ from changeforge_runtime_route_resolver import (  # noqa: E402
     _merge_nonempty_tuple_mapping,
     build_active_skill_context,
     context_lines,
+    detect_conditional_capabilities,
 )
 
 
@@ -462,6 +463,102 @@ class RuntimeRouteResolverTests(unittest.TestCase):
         self.assertEqual(context["current_stage"], "implementation-planning")
         self.assertIn("repository-graph-analysis", context["selected_capabilities"])
         self.assertNotIn("validation-broker", context["selected_capabilities"])
+
+    def test_code_element_trigger_vocabulary_matches_routing_rules(self) -> None:
+        prompts = (
+            "variable uninitialized on error branch",
+            "sentinel null and none default handling",
+            "assignment expression with chained assignment",
+            "mixed operator precedence in complex conditional",
+            "side-effect expression with side effect getter",
+            "empty branch and no-op catch",
+            "try scope too wide with missing resource cleanup",
+            "cache before commit and external io before commit",
+            "ignored return and loop counter mutation",
+        )
+        for prompt in prompts:
+            with self.subTest(prompt=prompt):
+                self.assertIn(
+                    "code-element-professionalism",
+                    detect_conditional_capabilities([], text=prompt),
+                )
+
+    def test_bug_fix_stage_can_conditionally_select_code_element_professionalism(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="repair",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state={"repair_evidence_seen": True},
+            classification={
+                "stage": "repair",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+                "conditional_capabilities": ["code-element-professionalism"],
+            },
+        )
+
+        self.assertEqual(context["current_stage"], "bug-fix")
+        self.assertIn("code-element-professionalism", context["selected_capabilities"])
+
+    def test_ordinary_naming_only_does_not_select_code_element_professionalism(self) -> None:
+        self.assertNotIn(
+            "code-element-professionalism",
+            detect_conditional_capabilities([], text="Rename a local variable for clearer naming only."),
+        )
+
+    def test_structure_only_placement_does_not_select_code_element_professionalism(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state={},
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+            },
+        )
+
+        self.assertEqual(context["current_stage"], "implementation-planning")
+        self.assertIn("implementation-structure-design", context["selected_capabilities"])
+        self.assertNotIn("code-element-professionalism", context["selected_capabilities"])
+
+    def test_code_element_focus_line_is_injected_only_when_selected(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state={},
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+                "conditional_capabilities": ["code-element-professionalism"],
+            },
+        )
+        rendered = "\n".join(context_lines(context))
+        self.assertIn("- code_element_focus: verify variable initialization/default semantics", rendered)
+
+        ordinary = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state={},
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+            },
+        )
+        self.assertNotIn("code_element_focus", "\n".join(context_lines(ordinary)))
 
     def test_empty_generated_capability_triggers_preserve_fallback_triggers(self) -> None:
         fallback = {"validation-broker": ("stale validation",)}

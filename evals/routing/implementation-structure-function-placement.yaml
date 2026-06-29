@@ -33,6 +33,7 @@ forbidden:
     - integration-change-builder
     - delivery-release-gate
   capabilities:
+    - code-element-professionalism
     - package-dependency-management
     - data-migration-design
     - release-rollback

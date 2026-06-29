@@ -1,6 +1,6 @@
 # Professionalism Release Readiness
 
-- Generated: 2026-06-29T06:12:29.435958+00:00
+- Generated: 2026-06-29T06:54:24.553358+00:00
 - Status: strict-release-ready
 - Authoring ready: ready
 - Release ready: ready
@@ -20,7 +20,7 @@
 
 ## Key Foundation Capability Coverage Summary
 
-- Count: 40; Statuses: sample-grade: 40
+- Count: 41; Statuses: acceptable: 1, sample-grade: 40
 
 ## Release Checklist
 
@@ -44,12 +44,12 @@
 
 ## Routing Coverage Summary
 
-- cases_checked: 139
+- cases_checked: 140
 - cases_without_forbidden: 0
 - hidden_risks_checked: 91
 - hidden_risks_needing_manual_review: 0
 - hidden_risks_strongly_covered: 87
-- l1_anti_over_routing_count: 10
+- l1_anti_over_routing_count: 11
 
 ## Known Accepted Warnings
 
@@ -110,7 +110,7 @@
 ## Latest Results Available
 
 - benchmark_errors: 0
-- coverage_rows_checked: 61
+- coverage_rows_checked: 62
 - professional_agent_sample_warnings: 0
 - professional_agent_samples_checked: 5
 - promoted_agent_sample_strict_warnings: 0

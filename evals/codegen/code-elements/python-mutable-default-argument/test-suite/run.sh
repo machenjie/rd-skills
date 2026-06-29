@@ -21,3 +21,21 @@ PY
 fi
 python3 "$ROOT_DIR/scripts/codegen_benchmark_harness.py" tests "$CASE_DIR/starter-repo"
 
+TARGET_DIR="${CHANGEFORGE_CODEGEN_CANDIDATE_DIR:-$(pwd)}"
+
+run_actual_tests() {
+  (
+    cd "$TARGET_DIR"
+    PYTHONPATH="$TARGET_DIR${PYTHONPATH:+:$PYTHONPATH}" python3 -m unittest discover -s tests
+  )
+}
+
+if [[ "${CHANGEFORGE_CODEGEN_SMOKE:-}" == "1" && -z "${CHANGEFORGE_CODEGEN_CANDIDATE_DIR:-}" ]]; then
+  if run_actual_tests; then
+    echo "expected starter implementation to fail mutable-default regression tests" >&2
+    exit 1
+  fi
+  echo "observed expected failing starter mutable-default tests"
+else
+  run_actual_tests
+fi
