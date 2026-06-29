@@ -141,13 +141,13 @@ Build outputs are written to `dist/`:
 
 ## Runtime Profiles
 
-- `recommended`: installs 21 professional skills as top-level runtime skills, with 128 foundation capabilities compiled into professional skill `references/`.
-- `full`: installs 21 professional skills plus 7 eligible domain extensions as top-level runtime skills, with 128 foundation capabilities compiled into professional skill `references/`.
-- `dev`: installs 21 professional skills plus 128 foundation capabilities plus 7 domain extensions as top-level runtime skills for authoring and validation work.
+- `recommended`: installs 21 professional skills as top-level runtime skills, with 129 foundation capabilities compiled into professional skill `references/`.
+- `full`: installs 21 professional skills plus 7 eligible domain extensions as top-level runtime skills, with 129 foundation capabilities compiled into professional skill `references/`.
+- `dev`: installs 21 professional skills plus 129 foundation capabilities plus 7 domain extensions as top-level runtime skills for authoring and validation work.
 
 Recommended and full profiles must not install all foundation capabilities as top-level global skills. Foundation capabilities are compiled into professional skill references unless the `dev` profile is explicitly selected.
 
-Runtime top-level counts are 21 for `recommended`, 28 for `full`, and 156 for `dev`.
+Runtime top-level counts are 21 for `recommended`, 28 for `full`, and 157 for `dev`.
 
 ## Reference Loading
 

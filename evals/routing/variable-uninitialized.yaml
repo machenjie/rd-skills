@@ -1,0 +1,43 @@
+---
+id: variable-uninitialized
+description: |
+  A backend bug fix has a variable that can be read before assignment on an error branch.
+prompt: |
+  Review the handler fix. `result` is assigned only inside the happy-path branch,
+  but the error branch still logs and returns `result.id`. Make the route catch
+  the uninitialized variable risk before approval.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - variable uninitialized
+  skills:
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - language-idiom-enforcement
+    - implementation-structure-design
+    - unit-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  This should route to local variable semantics, language rules, and focused regression proof.
+

@@ -36,7 +36,7 @@ quality gates, and the allowed handoff target stage.
 ### implementation-planning
 - Purpose: code placement, reuse decision, object/function/class/file/directory design, naming, readable main flow, public/private/internal boundaries.
 - Launch: `repository-context-map`, `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` (naming only); add `minimal-correct-implementation` when new structure, dependency, file, class, config, or abstraction is proposed.
-- Conditional launch: `repository-graph-analysis` when repo graph, context pack, generated artifact graph, affected-test graph, or source-of-truth uncertainty is part of the plan.
+- Conditional launch: `code-element-professionalism` when variable, expression, statement, default, cleanup, fallthrough, boolean-trap, side-effect-getter, or event-order hazards shape the plan; `repository-graph-analysis` when repo graph, context pack, generated artifact graph, affected-test graph, or source-of-truth uncertainty is part of the plan.
 - Do not launch by default: full architecture review, release gate, deep performance profiling.
 - Required evidence: target boundaries inspected before plan, repository context map with owning surface and caller/callee evidence, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal, SDD public API and module placement.
 - Required quality gates: implementation gate, SDD gate.
@@ -45,6 +45,7 @@ quality gates, and the allowed handoff target stage.
 ### coding
 - Purpose: implement code with language idiom, error handling, resource cleanup, input validation, concurrency, minimal implementation.
 - Launch: matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling`, relevant builder skill; add `minimal-correct-implementation` when the implementation risks unnecessary scope.
+- Conditional launch: `code-element-professionalism` when implementation evidence includes variable, expression, statement, default, cleanup, fallthrough, boolean-trap, side-effect-getter, or event-order hazards.
 - Do not launch by default: architecture deep review, release gate, full regression suite design.
 - Required evidence: inspected implementation context, TDD or validation signal before code, PDD/DDD/SDD/TDD traceability, idiomatic implementation, validated inputs, released resources, minimal scope diff, deleted or rejected complexity when selected, tool permission and sandbox classification when risky tools or commands are used.
 - Required quality gates: implementation gate, TDD gate.
@@ -70,7 +71,7 @@ quality gates, and the allowed handoff target stage.
 ### code-review
 - Purpose: correctness, structure, naming, reuse, readability, security, reliability, test evidence, hallucinated-API check.
 - Launch: `code-review`, `plan-execution-consistency`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `ai-code-review-refactor` for generated code as a professional skill.
-- Conditional launch: `minimal-correct-implementation` when minimal fix, delete/shrink, dependency, abstraction, wrapper-only delegation, shortcut, or overengineering review signal exists; add `execution-trajectory-analysis` or `project-memory-governance` when review must account for trajectory, repeated failure, fragile-file, or stale-context evidence.
+- Conditional launch: `code-element-professionalism` when review evidence includes variable, expression, statement, default, cleanup, fallthrough, boolean-trap, side-effect-getter, or event-order hazards; `minimal-correct-implementation` when minimal fix, delete/shrink, dependency, abstraction, wrapper-only delegation, shortcut, or overengineering review signal exists; add `execution-trajectory-analysis` or `project-memory-governance` when review must account for trajectory, repeated failure, fragile-file, or stale-context evidence.
 - Do not launch by default: release gate, deployment, infrastructure capabilities.
 - Required evidence: findings with severity, complexity-only delete/shrink findings when selected, evidence, impacted file, required fix, validation required, independent reviewer, repair and re-review result, final diff covered by review scope.
 - Required quality gates: implementation gate.
@@ -79,6 +80,7 @@ quality gates, and the allowed handoff target stage.
 ### refactoring
 - Purpose: behavior-preserving structure change — extract, move, inline, merge, split, cleanup, readability, dependency direction, rollback.
 - Launch: `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `code-review`, `regression-testing`; add `minimal-correct-implementation` for delete/shrink or speculative structure collapse.
+- Conditional launch: `code-element-professionalism` when refactoring changes variable lifetime, expression semantics, statement ordering, cleanup, fallthrough, boolean parameters, getter behavior, or event timing.
 - Do not launch by default: feature design, release gate. Add `architecture-impact-reviewer` only when boundaries shift.
 - Required evidence: characterization tests, preserved behavior, selection rationale, deleted or rejected complexity, rollback path.
 - Required quality gates: implementation gate, test gate.

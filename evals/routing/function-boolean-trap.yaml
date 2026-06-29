@@ -1,0 +1,39 @@
+---
+id: function-boolean-trap
+description: |
+  A new backend function uses a boolean parameter that hides behavior at call sites.
+prompt: |
+  A patch adds `applyDiscount(order, true)` where true means skip eligibility
+  checks. Route this as a function boolean trap and local element bridge to structure.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - function boolean trap
+  skills:
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+  domain_extensions:
+    - ai-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  The new capability flags the local call-site hazard while structure owns the signature.
+

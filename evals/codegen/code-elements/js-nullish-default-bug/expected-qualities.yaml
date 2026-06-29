@@ -1,0 +1,39 @@
+id: js-nullish-default-bug
+category: code-elements
+complexity: L2
+focus:
+  - nullish default semantics
+  - falsey value preservation
+  - expression-level regression proof
+route_hints:
+  skills:
+    - frontend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - language-idiom-enforcement
+    - code-review
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+expected_outcomes:
+  - Missing values are defaulted without overwriting valid falsey values.
+  - The changed expression is simple enough to review without hidden coercion.
+  - Tests cover missing, zero, false, and empty-string behavior.
+required_qualities:
+  - Uses nullish or explicit missing checks that match the domain rule.
+  - Names or documents the missing-value distinction when not obvious.
+  - Provides focused test evidence for the expression change.
+forbidden_shortcuts:
+  - Keeping value-or-fallback truthiness defaulting.
+  - Adding a generic helper in shared utils for one local expression.
+  - Reporting completion without a falsey-value regression test.
+evidence:
+  - Code Element Professionalism Review naming the expression and fallback semantics.
+  - Regression test output for missing and falsey values.
+  - Review or lint evidence that no hidden coercive default remains.
+

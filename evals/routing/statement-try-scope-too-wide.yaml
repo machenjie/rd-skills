@@ -1,0 +1,39 @@
+---
+id: statement-try-scope-too-wide
+description: |
+  A broad try block catches validation, permission, write, and notification failures together.
+prompt: |
+  The service wraps validation, authorization, database write, and notification
+  send in one try/catch that returns null for every failure. Route for broad try scope.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - statement try scope too wide
+  skills:
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - failure-contract-design
+    - implementation-structure-design
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+  domain_extensions:
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  The route should narrow statement scope and prove failure semantics.
+

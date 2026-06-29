@@ -79,6 +79,7 @@ stages:
       - code-clarity-maintainability
       - language-idiom-enforcement
     conditional_capabilities:
+      - code-element-professionalism
       - testability-seam-design
       - dependency-wiring-lifecycle
       - algorithm-data-structure-selection
@@ -123,6 +124,7 @@ stages:
       - input-validation
       - logging-error-handling
     conditional_capabilities:
+      - code-element-professionalism
       - dependency-wiring-lifecycle
       - algorithm-data-structure-selection
       - failure-contract-design
@@ -224,6 +226,7 @@ stages:
       - code-clarity-maintainability
       - language-idiom-enforcement
     conditional_capabilities:
+      - code-element-professionalism
       - minimal-correct-implementation
       - agent-workflow-state-machine
     skip_by_default:
@@ -262,6 +265,7 @@ stages:
       - code-review
       - regression-testing
     conditional_capabilities:
+      - code-element-professionalism
       - testability-seam-design
       - model-boundary-mapping
       - data-side-effect-flow-tracing
@@ -301,6 +305,7 @@ stages:
       - e2e-testing
       - regression-testing
       - testability-seam-design
+      - code-element-professionalism
       - algorithm-data-structure-selection
       - failure-contract-design
       - model-boundary-mapping

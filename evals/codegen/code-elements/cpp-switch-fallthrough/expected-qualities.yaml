@@ -1,0 +1,39 @@
+id: cpp-switch-fallthrough
+category: code-elements
+complexity: L2
+focus:
+  - switch fallthrough
+  - branch behavior proof
+  - C++ statement idiom
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - language-idiom-enforcement
+    - code-review
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+expected_outcomes:
+  - Fallthrough behavior is removed or explicitly marked and justified.
+  - Suspended and active status behavior is tested separately.
+  - Public enum/API compatibility is preserved.
+required_qualities:
+  - Uses local language convention for intentional fallthrough if retained.
+  - Adds branch-level regression tests.
+  - Avoids broad status-system rewrites.
+forbidden_shortcuts:
+  - Silencing fallthrough warnings without clarifying behavior.
+  - Rewriting the status system for one switch statement.
+  - Reporting completion without suspended and active branch tests.
+evidence:
+  - Code Element Professionalism Review of the switch statement.
+  - Branch test output for suspended and active statuses.
+  - C++ fallthrough idiom note.
+

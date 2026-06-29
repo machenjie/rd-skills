@@ -1,0 +1,40 @@
+---
+id: variable-reused-for-unrelated-purpose
+description: |
+  One variable changes meaning from request ID to account object to response payload.
+prompt: |
+  A service patch reuses `account` first for the request account ID string,
+  then for the loaded account object, then for the serialized response map.
+  Route this as a code element and clarity risk.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - variable reused for unrelated purpose
+  skills:
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - code-clarity-maintainability
+    - implementation-structure-design
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+  capabilities:
+    - data-migration-design
+  domain_extensions:
+    - ai-product-extension
+  quality_gates:
+    - API/data gate
+notes: |
+  The issue is one local variable's changing concept, not a new module boundary.
+

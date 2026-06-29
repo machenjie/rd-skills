@@ -271,7 +271,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 22,
-      "bullet_count": 131,
+      "bullet_count": 136,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 88,
@@ -282,10 +282,10 @@
       "has_shared_optimality": false,
       "heading_count": 23,
       "kind": "professional-skill",
-      "largest_section_lines": 48,
+      "largest_section_lines": 49,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 245,
+      "line_count": 250,
       "name": "ai-code-review-refactor",
       "optimality_section_length": 5,
       "output_contract_length": 13,
@@ -302,7 +302,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 4346
+      "word_count": 4524
     },
     {
       "anti_example_section_length": 10,
@@ -343,7 +343,7 @@
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 20,
-      "bullet_count": 122,
+      "bullet_count": 127,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 82,
@@ -354,10 +354,10 @@
       "has_shared_optimality": false,
       "heading_count": 23,
       "kind": "professional-skill",
-      "largest_section_lines": 40,
+      "largest_section_lines": 41,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 232,
+      "line_count": 237,
       "name": "backend-change-builder",
       "optimality_section_length": 5,
       "output_contract_length": 13,
@@ -374,7 +374,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4216
+      "word_count": 4383
     },
     {
       "anti_example_section_length": 10,
@@ -739,7 +739,7 @@
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 20,
-      "bullet_count": 145,
+      "bullet_count": 150,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 82,
@@ -750,10 +750,10 @@
       "has_shared_optimality": false,
       "heading_count": 22,
       "kind": "professional-skill",
-      "largest_section_lines": 31,
+      "largest_section_lines": 32,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 8,
-      "line_count": 244,
+      "line_count": 249,
       "name": "frontend-change-builder",
       "optimality_section_length": 5,
       "output_contract_length": 25,
@@ -770,7 +770,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4474
+      "word_count": 4642
     },
     {
       "anti_example_section_length": 10,
@@ -847,7 +847,7 @@
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 22,
-      "bullet_count": 143,
+      "bullet_count": 148,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 84,
@@ -858,10 +858,10 @@
       "has_shared_optimality": false,
       "heading_count": 24,
       "kind": "professional-skill",
-      "largest_section_lines": 27,
+      "largest_section_lines": 28,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 243,
+      "line_count": 248,
       "name": "quality-test-gate",
       "optimality_section_length": 0,
       "output_contract_length": 11,
@@ -878,7 +878,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4807
+      "word_count": 4974
     },
     {
       "anti_example_section_length": 10,
@@ -1673,12 +1673,48 @@
       "word_count": 3182
     },
     {
-      "anti_example_section_length": 13,
+      "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 99,
+      "bullet_count": 73,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
+      "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 234,
+      "findings": [],
+      "has_shared_optimality": false,
+      "heading_count": 20,
+      "kind": "foundation-capability",
+      "largest_section_lines": 18,
+      "largest_section_title": "Critical Details",
+      "largest_table_rows": 0,
+      "line_count": 156,
+      "name": "code-element-professionalism",
+      "optimality_section_length": 0,
+      "output_contract_length": 13,
+      "oversized_sections": [],
+      "oversized_tables": [],
+      "path": "src/foundation/capabilities/code-element-professionalism/SKILL.md",
+      "professionalism_score": 100,
+      "recommended_phase": "-",
+      "reference_link_count": 9,
+      "repeated_phrase_count": 0,
+      "risk_of_change": "low",
+      "routing_clarity_score": 100,
+      "split_candidate_score": 0,
+      "suggested_action": "Compact decision aid within budget; no action required.",
+      "table_count": 0,
+      "used_by_count": 6,
+      "word_count": 2230
+    },
+    {
+      "anti_example_section_length": 13,
+      "benchmark_section_length": 4,
+      "bullet_count": 102,
+      "classification": "KEEP_AS_IS",
+      "code_block_count": 0,
+      "context_efficiency_score": 90,
       "critical_details_length": 38,
       "description_findings": [],
       "description_length": 158,
@@ -1689,7 +1725,7 @@
       "largest_section_lines": 38,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 9,
-      "line_count": 199,
+      "line_count": 206,
       "name": "code-review",
       "optimality_section_length": 0,
       "output_contract_length": 25,
@@ -1706,7 +1742,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 2,
-      "word_count": 3035
+      "word_count": 3156
     },
     {
       "anti_example_section_length": 0,
@@ -2539,11 +2575,11 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 81,
+      "bullet_count": 82,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
-      "critical_details_length": 10,
+      "critical_details_length": 11,
       "description_findings": [],
       "description_length": 338,
       "findings": [],
@@ -2553,7 +2589,7 @@
       "largest_section_lines": 26,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 13,
-      "line_count": 197,
+      "line_count": 198,
       "name": "engineering-stage-professionalism",
       "optimality_section_length": 0,
       "output_contract_length": 26,
@@ -2570,7 +2606,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 8,
-      "word_count": 2178
+      "word_count": 2198
     },
     {
       "anti_example_section_length": 12,
@@ -4231,7 +4267,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 109,
+      "bullet_count": 111,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 90,
@@ -4242,10 +4278,10 @@
       "has_shared_optimality": false,
       "heading_count": 19,
       "kind": "foundation-capability",
-      "largest_section_lines": 38,
+      "largest_section_lines": 43,
       "largest_section_title": "Proactive Professional Triggers",
-      "largest_table_rows": 6,
-      "line_count": 221,
+      "largest_table_rows": 7,
+      "line_count": 228,
       "name": "refactoring",
       "optimality_section_length": 0,
       "output_contract_length": 35,
@@ -4262,7 +4298,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 2,
-      "word_count": 3922
+      "word_count": 4079
     },
     {
       "anti_example_section_length": 11,
@@ -5851,10 +5887,10 @@
   ],
   "summary": {
     "classifications": {
-      "KEEP_AS_IS": 156
+      "KEEP_AS_IS": 157
     },
     "domain_extensions": 7,
-    "foundation_capabilities": 128,
+    "foundation_capabilities": 129,
     "heavy_domain": 0,
     "heavy_foundation": 0,
     "heavy_professional": 0,

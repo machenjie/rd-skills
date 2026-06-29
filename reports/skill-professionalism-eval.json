@@ -1,7 +1,7 @@
 {
-  "average_score": 57.72,
+  "average_score": 57.66,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-27T12:53:41.393470+00:00",
+  "generated_at": "2026-06-29T06:11:51.701222+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -29,7 +29,7 @@
       "warnings": []
     },
     {
-      "body_lines": 245,
+      "body_lines": 250,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -79,7 +79,7 @@
       "warnings": []
     },
     {
-      "body_lines": 232,
+      "body_lines": 237,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -354,7 +354,7 @@
       "warnings": []
     },
     {
-      "body_lines": 244,
+      "body_lines": 249,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -429,7 +429,7 @@
       "warnings": []
     },
     {
-      "body_lines": 243,
+      "body_lines": 248,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1004,7 +1004,32 @@
       "warnings": []
     },
     {
-      "body_lines": 199,
+      "body_lines": 156,
+      "dimensions": {
+        "anti_bloat_control": 5,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 3,
+        "failure_mode_coverage": 5,
+        "mode_coverage": 4,
+        "output_actionability": 4,
+        "proactive_trigger_quality": 1,
+        "professional_depth": 5,
+        "reference_precision": 5,
+        "stage_fit": 5,
+        "trigger_accuracy": 2,
+        "validation_obligation": 4
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "code-element-professionalism",
+      "path": "src/foundation/capabilities/code-element-professionalism/SKILL.md",
+      "recommended_fixes": [],
+      "status": "acceptable",
+      "total": 48,
+      "warnings": []
+    },
+    {
+      "body_lines": 206,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1604,7 +1629,7 @@
       "warnings": []
     },
     {
-      "body_lines": 197,
+      "body_lines": 198,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -2779,7 +2804,7 @@
       "warnings": []
     },
     {
-      "body_lines": 221,
+      "body_lines": 228,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -3729,6 +3754,6 @@
       "warnings": []
     }
   ],
-  "skills_checked": 149,
+  "skills_checked": 150,
   "warning_count": 0
 }

@@ -1,0 +1,42 @@
+---
+id: method-side-effect-getter
+description: |
+  A method that reads like a getter mutates state and publishes an event.
+prompt: |
+  Review `invoice.getBalance()` after a generated patch. It recalculates, saves,
+  and publishes an event while callers expect a read-only getter. Route to catch
+  method side-effect getter risk.
+expected:
+  complexity: L2
+  risk_level: high
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - method side effect getter
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - implementation-structure-design
+    - data-side-effect-flow-tracing
+    - code-review
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+  domain_extensions:
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  The route should bridge local method semantics to method ownership and side-effect flow.

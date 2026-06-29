@@ -33,14 +33,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 21 professional skills
-    foundation_mode: 128 foundation capabilities compiled into professional references
+    foundation_mode: 129 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 21 professional skills and 7 domain extensions
-    foundation_mode: 128 foundation capabilities compiled into professional references
+    foundation_mode: 129 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 21 professional skills, 128 foundation capabilities, and 7 domain extensions
+    top_level: 21 professional skills, 129 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -143,6 +143,22 @@ risk_escalation_triggers:
   - side effect hidden in mapper
   - event published before commit
   - cache mutation source of truth unclear
+  - variable uninitialized
+  - variable shadowing
+  - variable reused for unrelated purpose
+  - variable default sentinel null
+  - expression hidden assignment
+  - expression mixed operator precedence
+  - expression truthiness nullish
+  - expression magic constant
+  - statement empty loop
+  - statement switch fallthrough
+  - statement loop counter mutation
+  - statement try scope too wide
+  - statement resource cleanup missing
+  - statement event before commit
+  - function boolean trap
+  - method side effect getter
   - architecture rule unenforced
   - public contract consumer impact unknown
   - consumer impact unknown
@@ -741,6 +757,54 @@ risk_trigger_rules:
   - trigger: cache mutation source of truth unclear
     required_capabilities: [data-side-effect-flow-tracing, cache-design]
     required_quality_gates: [implementation gate]
+  - trigger: variable uninitialized
+    required_capabilities: [code-element-professionalism, language-idiom-enforcement]
+    required_quality_gates: [implementation gate, test gate]
+  - trigger: variable shadowing
+    required_capabilities: [code-element-professionalism, language-idiom-enforcement]
+    required_quality_gates: [implementation gate]
+  - trigger: variable reused for unrelated purpose
+    required_capabilities: [code-element-professionalism, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: variable default sentinel null
+    required_capabilities: [code-element-professionalism, failure-contract-design]
+    required_quality_gates: [implementation gate, test gate]
+  - trigger: expression hidden assignment
+    required_capabilities: [code-element-professionalism, code-review]
+    required_quality_gates: [implementation gate]
+  - trigger: expression mixed operator precedence
+    required_capabilities: [code-element-professionalism, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: expression truthiness nullish
+    required_capabilities: [code-element-professionalism, language-idiom-enforcement]
+    required_quality_gates: [implementation gate, test gate]
+  - trigger: expression magic constant
+    required_capabilities: [code-element-professionalism, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: statement empty loop
+    required_capabilities: [code-element-professionalism, code-review]
+    required_quality_gates: [implementation gate]
+  - trigger: statement switch fallthrough
+    required_capabilities: [code-element-professionalism, language-idiom-enforcement]
+    required_quality_gates: [implementation gate, test gate]
+  - trigger: statement loop counter mutation
+    required_capabilities: [code-element-professionalism, algorithm-data-structure-selection]
+    required_quality_gates: [implementation gate, test gate]
+  - trigger: statement try scope too wide
+    required_capabilities: [code-element-professionalism, failure-contract-design]
+    required_quality_gates: [implementation gate, test gate]
+  - trigger: statement resource cleanup missing
+    required_capabilities: [code-element-professionalism, language-idiom-enforcement]
+    required_quality_gates: [implementation gate, test gate]
+  - trigger: statement event before commit
+    required_capabilities: [code-element-professionalism, data-side-effect-flow-tracing, transaction-consistency]
+    required_quality_gates: [implementation gate, test gate]
+  - trigger: function boolean trap
+    required_capabilities: [code-element-professionalism, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: method side effect getter
+    required_capabilities: [code-element-professionalism, implementation-structure-design, data-side-effect-flow-tracing]
+    required_quality_gates: [implementation gate, test gate]
   - trigger: architecture rule unenforced
     required_capabilities: [architecture-enforcement-tooling, module-boundary-design]
     required_quality_gates: [architecture gate, implementation gate]
@@ -1946,6 +2010,13 @@ routing_rules:
       - separate structural cleanup from behavior change and protect risky refactors with tests before after complexity evidence
       - behavior preserving file merge behavior preserving file split small file merge refactor merge split import export preservation public contract preserved dependency direction preserved
     priority: 60
+  - route_to: code-element-professionalism
+    triggers:
+      - code element variable expression statement uninitialized variable variable shadowing variable reused unrelated purpose sentinel null default mutable default
+      - hidden assignment expression mixed operator precedence truthiness nullish default magic constant nested ternary comprehension side effect expression
+      - empty loop empty branch switch fallthrough loop counter mutation broad try scope try scope too wide missing resource cleanup ignored return side effect getter
+      - event before commit cache before commit external io before commit local element generated code defaults shadowing no-op catch
+    priority: 62
   - route_to: implementation-structure-design
     triggers:
       - variable naming function naming method naming class naming file naming directory naming package naming module naming public API naming

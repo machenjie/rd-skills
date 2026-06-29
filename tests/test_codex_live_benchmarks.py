@@ -1950,12 +1950,12 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["coverage_summary"]["tiers"]["core"], 2)
         self.assertEqual(summary["coverage_summary"]["assertion_case_count"], 1)
         self.assertEqual(summary["coverage_summary"]["telemetry_only_case_count"], 1)
-        self.assertEqual(summary["coverage_summary"]["manifest_case_count"], 71)
+        self.assertEqual(summary["coverage_summary"]["manifest_case_count"], 79)
         self.assertEqual(summary["coverage_summary"]["registered_live_case_count"], 24)
         self.assertEqual(summary["coverage_summary"]["registered_publishable_assertion_case_count"], 23)
         self.assertEqual(summary["coverage_summary"]["actual_run_case_count"], 2)
         self.assertEqual(summary["coverage_summary"]["tiers_registered"], {"core": 16, "experimental": 1, "level1": 7})
-        self.assertEqual(summary["coverage_summary"]["actual_run_case_coverage_rate"], 0.0282)
+        self.assertEqual(summary["coverage_summary"]["actual_run_case_coverage_rate"], 0.0253)
         self.assertIn("frontend/accessible-form-error-state", summary["coverage_summary"]["registered_but_not_run_cases"])
         self.assertIn("delivery", summary["coverage_summary"]["missing_manifest_categories"])
         self.assertEqual(summary["cost_summary"]["total_usage"]["input_tokens"], 20)
@@ -4092,13 +4092,13 @@ Residual Risk:
                         "profile_counts": {
                             "recommended": {"detail": "recommended top-level count is 21"},
                             "full": {"detail": "full top-level count is 28"},
-                            "dev": {"detail": "dev top-level count is 156"},
+                            "dev": {"detail": "dev top-level count is 157"},
                         },
                     }
                 ),
                 encoding="utf-8",
             )
-            _write_profile_manifests(root, {"recommended": 21, "full": 28, "dev": 156})
+            _write_profile_manifests(root, {"recommended": 21, "full": 28, "dev": 157})
             dashboard_path.write_text(
                 "\n".join(
                     [

@@ -94,6 +94,7 @@ STRUCTURED_CODE_CORRECTNESS_CAPABILITIES = frozenset(
         "115",
         "116",
         "117",
+        "129",
     }
 )
 REFERENCE_LOADING_POLICY_CAPABILITIES = frozenset(
@@ -111,6 +112,7 @@ REFERENCE_LOADING_POLICY_CAPABILITIES = frozenset(
         "115",
         "116",
         "117",
+        "129",
     }
 )
 REFERENCE_LOADING_POLICY_POSITION_CAPABILITIES = frozenset(
@@ -126,6 +128,7 @@ REFERENCE_LOADING_POLICY_POSITION_CAPABILITIES = frozenset(
         "113",
         "114",
         "117",
+        "129",
     }
 )
 STRUCTURED_CODE_CORRECTNESS_REQUIRED_SECTIONS = ("Evidence Contract",)

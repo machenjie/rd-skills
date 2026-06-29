@@ -56,6 +56,7 @@ Select this capability when **assessing a concrete code change** is primary. Adj
 - Prefer `threat-modeling` when the change introduces a new attack surface requiring full adversarial modeling.
 - Prefer `dependency-vulnerability-scanning` when the question is SCA supply-chain risk across a release.
 - Use **with** `security-privacy-gate` for security-sensitive findings requiring formal sign-off.
+- Use **with** `code-element-professionalism` when findings concern local variables, expressions, statements, defaults, shadowing, fallthrough, cleanup, or event-before-commit order.
 
 # Proactive Professional Triggers
 
@@ -74,6 +75,11 @@ Select this capability when **assessing a concrete code change** is primary. Adj
   **Required professional action:** require structure and clarity review before approval, with owner, deletion path, and behavior-preservation evidence.
   **Route to:** `implementation-structure-design`, `code-clarity-maintainability`, `cleanup-deletion-governance`.
   **Evidence required:** reuse search, owner boundary, rejected locations, tests or validator output, cleanup owner/expiry, and re-review result.
+- **Signal:** a diff changes local variables, expressions, or statements that decide defaults, falsey values, permissions, cleanup, switch fallthrough, try scope, loop state, or side-effect ordering without explicit review evidence.
+  **Hidden risk:** a small element-level bug is hidden inside otherwise acceptable code.
+  **Required professional action:** classify the element issue as a review finding or record a checked non-finding with evidence.
+  **Route to:** `code-element-professionalism`, `quality-test-gate`.
+  **Evidence required:** affected element, expected semantics, test/static-analysis/review proof, severity, and residual risk.
 
 # Risk Escalation Rules
 
@@ -192,6 +198,7 @@ The review is complete only when:
 11. Code clarity and maintainability are reviewed whenever the diff adds branch-heavy flow, long functions/classes/files, boolean flags, weakly typed bags, fallback or compatibility paths, feature flags, shared test helpers, public exports, or cross-module edits.
 12. Feature flags, deprecated APIs, dead code, and compatibility branches have owner and removal evidence or receive a finding.
 13. Stage 1 spec compliance (requirement, acceptance criteria, non-goals, plan, API/schema compatibility, old-behavior preservation) passed before Stage 2 code-quality approval; out-of-order review or implementer self-review in place of independent review is a process finding.
+14. Material variable, expression, statement, default, cleanup, fallthrough, and side-effect-order hazards have findings or explicit non-findings.
 
 # Used By
 
@@ -200,7 +207,7 @@ The review is complete only when:
 
 # Handoff
 
-Hand off to `refactoring` for safe structural changes following findings; `security-privacy-gate` for Critical/High security findings requiring formal sign-off; `test-strategy` for coverage gaps identified in review; `failure-diagnosis` for unresolved production failures; `threat-modeling` for new attack surfaces; `dependency-vulnerability-scanning` for supply-chain risk from new dependencies.
+Hand off to `refactoring` for safe structural changes following findings; `security-privacy-gate` for Critical/High security findings requiring formal sign-off; `test-strategy` for coverage gaps identified in review; `code-element-professionalism` for low-level variable, expression, statement, cleanup, fallthrough, and default semantics; `failure-diagnosis` for unresolved production failures; `threat-modeling` for new attack surfaces; `dependency-vulnerability-scanning` for supply-chain risk from new dependencies.
 
 # Completion Criteria
 

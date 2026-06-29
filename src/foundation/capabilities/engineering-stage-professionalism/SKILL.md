@@ -116,6 +116,7 @@ Stage transitions require the entry evidence for the next stage and the exit evi
 - Skip rationale is part of the output, not a silent omission. "Skipped: release gate (no rollout in this change)" is valid; dropping the gate silently is not.
 - The context budget decision is explicit: `minimal` for L1, `single-stage` for L2, `staged-plan` for L3+ where planning spans stages but execution stays staged.
 - The canonical machine-readable launch matrix lives in the stage model registry. This body keeps only runtime routing rules, and validators reject drift between them. Per-language deep checklists stay in the language professional usage capability bodies.
+- `code-element-professionalism` launches conditionally when evidence mentions variable, expression, statement, default, cleanup, fallthrough, boolean trap, side-effect getter, or event-order hazards.
 - Mode Matrix sections in professional skills refine the active stage: for example, backend `bug-fix` selects bug-fix stage evidence, while backend `performance/reliability fix` stays in coding, debugging, or release depending on whether the work is implementation, diagnosis, or rollout.
 - Anti-pattern examples that must be rejected: loading architecture, coding, testing, and release gates for one local patch; running release-delivery during review because a deployment might happen later; loading all language capabilities for a config-only release; keeping debugging references loaded after root cause has been handed to bug-fix.
 

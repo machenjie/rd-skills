@@ -1,0 +1,40 @@
+---
+id: expression-mixed-operator-precedence
+description: |
+  A UI visibility check mixes operators and changes disabled-state behavior.
+prompt: |
+  A React component uses `isOwner || isAdmin && !isLocked || canOverride` to
+  show a destructive action. Route this as mixed operator precedence and
+  readability risk with a state test.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - expression mixed operator precedence
+  skills:
+    - frontend-change-builder
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - code-clarity-maintainability
+    - implementation-structure-design
+    - frontend-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - backend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+  domain_extensions:
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  The route should prefer naming or grouping the local condition over broad architecture work.
+

@@ -415,7 +415,11 @@ STAGE_CAPABILITIES = {
         "code-clarity-maintainability",
         "language-idiom-enforcement",
     ),
-    "coding": ("language-idiom-enforcement", "input-validation", "logging-error-handling"),
+    "coding": (
+        "language-idiom-enforcement",
+        "input-validation",
+        "logging-error-handling",
+    ),
     "debugging-diagnosis": ("failure-diagnosis", "agent-execution-discipline", "observability"),
     "bug-fix": ("agent-execution-discipline", "regression-testing", "code-review"),
     "code-review": (
@@ -470,6 +474,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "minimal-correct-implementation",
     ),
     "implementation-planning": (
+        "code-element-professionalism",
         "testability-seam-design",
         "dependency-wiring-lifecycle",
         "algorithm-data-structure-selection",
@@ -484,6 +489,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "plan-execution-consistency",
     ),
     "coding": (
+        "code-element-professionalism",
         "dependency-wiring-lifecycle",
         "algorithm-data-structure-selection",
         "failure-contract-design",
@@ -501,8 +507,13 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "plan-execution-consistency",
         "agent-workflow-state-machine",
     ),
-    "code-review": ("minimal-correct-implementation", "agent-workflow-state-machine"),
+    "code-review": (
+        "code-element-professionalism",
+        "minimal-correct-implementation",
+        "agent-workflow-state-machine",
+    ),
     "refactoring": (
+        "code-element-professionalism",
         "testability-seam-design",
         "model-boundary-mapping",
         "data-side-effect-flow-tracing",
@@ -516,6 +527,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "e2e-testing",
         "regression-testing",
         "testability-seam-design",
+        "code-element-professionalism",
         "algorithm-data-structure-selection",
         "failure-contract-design",
         "model-boundary-mapping",
@@ -593,6 +605,26 @@ CAPABILITY_TRIGGERS: dict[str, tuple[str, ...]] = {
         "output truncation",
         "over routing",
         "under routing",
+    ),
+    "code-element-professionalism": (
+        "uninitialized variable",
+        "shadowed variable",
+        "variable shadowing",
+        "mutable default",
+        "default sentinel",
+        "nullish",
+        "truthiness",
+        "hidden assignment",
+        "magic constant",
+        "empty loop",
+        "empty catch",
+        "switch fallthrough",
+        "loop counter mutation",
+        "broad try",
+        "missing cleanup",
+        "event before commit",
+        "boolean trap",
+        "side effect getter",
     ),
 }
 
@@ -725,6 +757,7 @@ CAPABILITY_IDS = {
     "validation-broker": "126",
     "execution-trajectory-analysis": "127",
     "context-control-plane": "128",
+    "code-element-professionalism": "129",
 }
 
 

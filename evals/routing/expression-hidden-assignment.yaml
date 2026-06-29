@@ -1,0 +1,41 @@
+---
+id: expression-hidden-assignment
+description: |
+  A generated condition assigns state while reading as a predicate.
+prompt: |
+  Review generated code with `if (user.active = computeActive(user))`.
+  It looks like a predicate but mutates state in the condition. Route to catch
+  hidden assignment in an expression.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - expression hidden assignment
+  skills:
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - code-review
+    - implementation-structure-design
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - test gate
+forbidden:
+  skills:
+    - delivery-release-gate
+    - data-api-contract-changer
+  capabilities:
+    - data-migration-design
+  domain_extensions:
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Generated-code review should flag the expression before rewriting around it.
+

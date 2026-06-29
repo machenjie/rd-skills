@@ -1,0 +1,39 @@
+---
+id: expression-truthiness-nullish
+description: |
+  A defaulting expression overwrites valid falsey form values.
+prompt: |
+  The UI default now uses `form.limit || 10`, but `0` is a valid user-selected
+  unlimited value. Route for truthiness/nullish semantics and a focused test.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - expression truthiness nullish
+  skills:
+    - frontend-change-builder
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - language-idiom-enforcement
+    - implementation-structure-design
+    - frontend-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - backend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+  domain_extensions:
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Nullish/default semantics should be verified at the user-visible boundary.
+

@@ -1,8 +1,8 @@
 # Professional Routing Coverage
 
-- Generated: 2026-06-27T12:53:43.998141+00:00
+- Generated: 2026-06-29T06:11:36.834176+00:00
 - Status: pass
-- Routing cases checked: 123
+- Routing cases checked: 139
 - Benchmark cases checked: 30
 - Hidden risks checked: 91
 - Strongly covered: 87

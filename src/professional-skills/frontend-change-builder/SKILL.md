@@ -76,6 +76,7 @@ Evaluate every frontend change against:
 - **Frontend structure**: Existing components, hooks, state stores, API clients, validators, and helpers inspected; feature-local vs. shared decision; component/hook/state/API/helper placement; new imports and dependency direction; test placement.
 - **Minimal correctness**: Native element, CSS, design-system component, framework primitive, existing helper, and local state alternatives considered before custom component, shared hook, global store, API wrapper, or dependency.
 - **Code clarity**: Main render/user-action flow is readable; complex conditions are named; hooks avoid mixed side effects and decisions; shared UI/helper abstractions have current consumers.
+- **Code element professionalism**: Component state defaults, form truthiness/nullish handling, disabled/error branch expressions, render-time side effects, async cleanup statements, and loop/key/counter behavior are explicit.
 - **Test strategy**: Are tests written against behavior (user interactions, accessibility queries) rather than implementation details?
 
 ## Mode Matrix
@@ -100,6 +101,7 @@ Select the frontend mode before adding, changing, reviewing, or testing UI code.
 - **Signal:** test uses CSS selectors, component internals, hook return internals, or mock call counts as the primary assertion. **Hidden risk:** tests pass while user behavior regresses. **Required professional action:** rewrite toward accessibility queries and public behavior. **Route to:** `quality-test-gate`, `code-clarity-maintainability`. **Evidence required:** what the test proves / does not prove.
 - **Signal:** frontend tests need fake timers, random IDs, API fakes, or private hook/helper access. **Hidden risk:** hidden private-internal coupling and missing reproducibility. **Required professional action:** require the public behavior seam before adding tests. **Route to:** `testability-seam-design`, `quality-test-gate`. **Evidence required:** seam map, public behavior boundary, test double decision, fixture owner, and deterministic clock/randomness test output.
 - **Signal:** UI code maps API DTOs directly into domain-like client state or view models while changing null/default behavior. **Hidden risk:** model boundary leak and browser-only semantic drift. **Required professional action:** map DTO/view model boundaries explicitly. **Route to:** `model-boundary-mapping`, `data-api-contract-changer`. **Evidence required:** mapping owner, null/default semantics, and mapping tests.
+- **Signal:** UI state, form, route, render, or hook code uses ambiguous truthiness/nullish defaults, nested ternaries, hidden assignment/mutation, stale loop counters, missing async cleanup, or side effects during render. **Hidden risk:** falsey-but-valid user input, inaccessible disabled/error state, stale subscription, or render-time mutation ships behind plausible UI code. **Required professional action:** review the local code elements and prove the user-visible state. **Route to:** `code-element-professionalism`, `quality-test-gate`, `frontend-testing`. **Evidence required:** default/nullish semantics, split expression or named branch, cleanup path, and user-behavior or accessibility assertion.
 - **Signal:** feature flag, mode, kind, or experiment switch changes UI behavior without owner, expiry, or cleanup. **Hidden risk:** hidden frontend strategy system and permanent compatibility branches. **Required professional action:** apply runtime policy before implementation. **Route to:** `configuration-runtime-policy`, `cleanup-deletion-governance`. **Evidence required:** flag owner, default, test matrix, telemetry, and cleanup date.
 - **Signal:** component loads, filters, groups, sorts, dedupes, or renders large client-side collections. **Hidden risk:** wrong O(n squared) UI work, memory loss, or stale Core Web Vitals assumptions. **Required professional action:** require data structure and rendering strategy selection by input scale. **Route to:** `algorithm-data-structure-selection`, `reliability-observability-gate`. **Evidence required:** input size, complexity, memory budget, and benchmark/profile report.
 - **Signal:** `innerHTML`, `dangerouslySetInnerHTML`, `v-html`, raw markdown rendering, or third-party script touches API/user content. **Hidden risk:** XSS, secret leak, or session exposure. **Required professional action:** require sanitizer/CSP/security review before merge. **Route to:** `security-privacy-gate`, `web-security`. **Evidence required:** sanitizer path, CSP impact report, and malicious-content test output.
@@ -137,6 +139,7 @@ Load [references/solution-optimality.md](references/solution-optimality.md) for 
 - Escalate when `innerHTML`, `dangerouslySetInnerHTML`, or `eval()` are being used with any user-controlled or API-sourced content.
 - Escalate when a frontend change would expose internal API structure, error details, or stack traces to the browser console or network response.
 - Escalate to `agent-execution-discipline` when an agent closes frontend work without validation evidence, same-pattern scan, or reuse-and-placement rationale for new shared UI structure.
+- Escalate to `code-element-professionalism` when UI variables, expressions, or statements decide state defaults, falsey values, cleanup, render purity, or disabled/error behavior.
 
 ## Critical Details
 - **XSS prevention is non-negotiable**: React JSX text nodes are auto-escaped. `dangerouslySetInnerHTML` bypasses this — use it only with content sanitized through DOMPurify. Vue's `v-html` has the same risk profile.
@@ -232,6 +235,7 @@ Close a frontend change only when all five canonical answers are concrete (answe
 14. No business logic is added to shared UI, common hooks, or generic utils.
 15. Agent-assisted frontend changes include evidence, same-pattern scan for local fixes, and closure package.
 16. Main render and user-action flows remain readable; large components/hooks, mixed side effects, boolean traps, weak props/options, and stale compatibility branches are split or justified.
+17. State/default expressions, truthiness/nullish checks, nested ternaries, loop/key statements, and async cleanup paths are reviewed when they affect visible UI behavior.
 
 ## Handoff
 - **experience-impact-modeler** — if UX states or user flows are underspecified before implementation begins.
@@ -243,6 +247,7 @@ Close a frontend change only when all five canonical answers are concrete (answe
 - **model-boundary-mapping** — when DTOs, view models, generated clients, or null/default semantics cross UI boundaries.
 - **configuration-runtime-policy** — when feature flags, modes, experiments, or kill switches affect frontend behavior.
 - **consumer-impact-analysis** — when public exports, SDK types, or frontend-consumed contract changes can affect downstream consumers.
+- **code-element-professionalism** — when local variables, expressions, statements, or cleanup paths determine UI state, falsey values, render behavior, or async lifecycle.
 - **failure-contract-design** — when UI-visible error states collapse validation, permission, conflict, timeout, retryable, terminal, or dependency failures.
 - **architecture-enforcement-tooling** — when frontend package, import, export, generated-client, or feature-boundary rules need lint/type/CI enforcement.
 - **agent-execution-discipline** — when frontend validation evidence, same-pattern scan, placement rationale, or handoff boundary is missing.

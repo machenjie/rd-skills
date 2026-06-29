@@ -1252,3 +1252,16 @@ capabilities:
       - context lost after compaction stale context over routing under routing context bloat output truncation live benchmark overhead
     risk_notes: [Context-control changes can reduce signal hide required evidence leak private data or increase token overhead without improving agent behavior]
     expected_outputs: [Context Control Record with budget mode selected skipped references JIT retrieval plan tool-output boundary snapshot requirements branch summary requirements overhead evidence residual context risk and validation commands]
+  - id: "129"
+    name: code-element-professionalism
+    group: engineering-workflow
+    path: src/foundation/capabilities/code-element-professionalism
+    status: implemented
+    route_level_capability: true
+    used_by: [backend-change-builder, frontend-change-builder, ai-code-review-refactor, code-review, refactoring, quality-test-gate]
+    triggers:
+      - code element variable expression statement local element uninitialized variable variable shadowing variable reused unrelated purpose sentinel null default mutable default loop counter mutation
+      - hidden assignment expression mixed operator precedence truthiness nullish default magic constant nested ternary comprehension side effect expression side effect getter
+      - empty loop empty branch switch fallthrough broad try scope missing resource cleanup ignored return event before commit cache before commit external io before commit
+    risk_notes: [Small local variables expressions and statements can silently change permissions defaults cleanup transactions events or generated-code behavior while broader structure review appears satisfied]
+    expected_outputs: [Code Element Professionalism Review with variable expression statement bridge risk fix direction validation evidence and residual risk]

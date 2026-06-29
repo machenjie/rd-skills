@@ -1,0 +1,40 @@
+---
+id: variable-default-sentinel-null
+description: |
+  A null default silently merges missing, denied, and not-yet-loaded states.
+prompt: |
+  The account lookup now initializes `decision = null` and later treats null as
+  both not found and permission denied. Route for sentinel/default semantics
+  and a test that distinguishes the states.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - variable default sentinel null
+  skills:
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - failure-contract-design
+    - implementation-structure-design
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+  domain_extensions:
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Null/default review should happen before broader API redesign is assumed.
+

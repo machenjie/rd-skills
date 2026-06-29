@@ -1,14 +1,15 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-27T12:53:41.393470+00:00
-- Skills/capabilities checked: 149
+- Generated: 2026-06-29T06:11:51.701222+00:00
+- Skills/capabilities checked: 150
 - Warning count: 0
-- Average score: 57.72/60
+- Average score: 57.66/60
 
 ## Scores
 
 | Item | Kind | Score | Status | Missing Sections | Warnings |
 | --- | --- | ---: | --- | ---: | ---: |
+| `src/foundation/capabilities/code-element-professionalism/SKILL.md` | foundation-capability | 48/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/contract-testing/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/controller-api-implementation/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cpp-professional-usage/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |

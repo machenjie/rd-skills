@@ -1,0 +1,40 @@
+---
+id: statement-empty-loop
+description: |
+  Generated code contains an empty polling loop that can spin forever.
+prompt: |
+  Review generated code that contains `while (!ready) {}` before sending a request.
+  Route for empty loop/no-op statement review and test evidence.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - statement empty loop
+  skills:
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - code-review
+    - implementation-structure-design
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - test gate
+forbidden:
+  skills:
+    - delivery-release-gate
+    - data-api-contract-changer
+  capabilities:
+    - data-migration-design
+  domain_extensions:
+    - ai-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Empty statement review should block approval before release or incident routing.
+

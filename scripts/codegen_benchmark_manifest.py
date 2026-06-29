@@ -61,6 +61,16 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
     "low-level": (
         "use-after-free-sanitizer",
     ),
+    "code-elements": (
+        "js-nullish-default-bug",
+        "python-mutable-default-argument",
+        "cpp-uninitialized-variable",
+        "go-shadowed-err",
+        "ts-nested-ternary-truthiness",
+        "python-comprehension-too-complex",
+        "cpp-switch-fallthrough",
+        "backend-event-before-commit",
+    ),
     "devex": (
         "bugfix-same-pattern-scan",
         "dependency-stdlib-native-ladder",

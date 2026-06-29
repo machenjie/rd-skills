@@ -35,6 +35,7 @@ Use during refactoring planning, implementation, bug-fix repair, code-review, va
 | Extract/move/inline local structure | Function, method, class, helper, or file movement with no intended behavior change. | Preserve observable behavior while improving ownership and readability. | Behavior boundary, owner decision, before/after tests, rollback step. | `implementation-structure-design`, `code-review` | Public API redesign. |
 | Split or merge files/modules | Large file/object split, small-file merge, module move, import/export reshaping. | Keep public contracts, dependency direction, side effects, and tests visible. | Import/export diff, dependency-rule check, behavior tests before/after. | `module-boundary-design`, `architecture-enforcement-tooling` | File-count preference as rationale. |
 | Risky behavior seam refactor | Untested, complex, auth, money, data integrity, concurrency, or external side-effect code. | Add characterization tests before movement and preserve failure semantics. | Characterization cases, negative/denied paths, mutation-like assertion quality. | `quality-test-gate`, `regression-testing` | Refactor first, test later. |
+| Local element cleanup | Rename/re-scope variables, split expressions, name constants, narrow try scope, add cleanup, or make fallthrough/default semantics explicit without intended behavior change. | Preserve behavior while making low-level element semantics reviewable. | Before/after element semantics, edge-case proof, static-analysis or focused test. | `code-element-professionalism`, `code-review` | Broad structure movement when a local element fix is enough. |
 | Cleanup inside refactor | Dead code, stale abstraction, deprecated branch, feature flag, compatibility shim. | Separate deletion safety from movement and give cleanup an owner/expiry. | Caller search, removal condition, cleanup issue, old/new tests, rollback. | `cleanup-deletion-governance`, `minimal-correct-implementation` | Silent deletion as cleanup. |
 | Graph/memory/evidence review | Prior incident note, stale memory, generated reference, reflection, dynamic caller, validation drift. | Confirm current source and generated/runtime graph before accepting equivalence. | Accepted/rejected memory, graph search scope, changed-path validator map. | `repository-graph-analysis`, `validation-broker` | Trusting old context. |
 
@@ -84,6 +85,11 @@ Select this capability when **structural improvement is the primary goal and beh
   **Required professional action:** stop pure refactor closure and route compatibility or consumer impact.
   **Route to:** `consumer-impact-analysis`, `data-api-contract-changer`.
   **Evidence required:** import/export or schema diff, consumer inventory, compatibility plan, migration/rollback note.
+- **Signal:** A refactor changes variable scope, default values, expression grouping, condition names, switch fallthrough markers, try/catch/finally/defer scope, cleanup statements, or side-effect ordering.
+  **Hidden risk:** an element cleanup quietly changes observable edge behavior.
+  **Required professional action:** run code-element review and prove old behavior or explicitly split behavior change.
+  **Route to:** `code-element-professionalism`, `quality-test-gate`.
+  **Evidence required:** before/after element semantics, preserved outputs/errors/side effects, focused test or review proof, and rollback step.
 - **Signal:** Dead code, deprecated API, stale feature flag, fallback, compatibility branch, or obsolete abstraction is removed while reshaping code.
   **Hidden risk:** missing deletion safety, old/new branch tests, owner, expiry, or rollback path turns cleanup into unverified behavior loss.
   **Required professional action:** split cleanup governance from movement.
@@ -214,6 +220,7 @@ The refactoring plan is complete only when:
 18. Before/after complexity evidence is recorded or the lack of reduction is justified.
 19. Repository graph, project memory, generated references, reflection/dynamic dispatch, and validation freshness are reconciled before handoff.
 20. Tool permission/sandbox evidence exists for broad move, rename, format, test, build, generated-artifact, or deletion commands.
+21. Local element cleanups preserve variable/default, expression, statement, cleanup, fallthrough, and side-effect-order behavior or are split into behavior-changing work.
 
 # Used By
 
@@ -222,7 +229,7 @@ The refactoring plan is complete only when:
 
 # Handoff
 
-Hand off to `code-review` for diff assessment against the step sequence plan; `test-strategy` for behavior protection on code not yet covered by tests; `module-boundary-design` for target structure design when boundaries are unclear; `profiling` when optimization is needed after refactoring is complete and baseline is re-measured.
+Hand off to `code-review` for diff assessment against the step sequence plan; `code-element-professionalism` for behavior-preserving variable, expression, statement, default, cleanup, and fallthrough changes; `test-strategy` for behavior protection on code not yet covered by tests; `module-boundary-design` for target structure design when boundaries are unclear; `profiling` when optimization is needed after refactoring is complete and baseline is re-measured.
 
 # Completion Criteria
 
