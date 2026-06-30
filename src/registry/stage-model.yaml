@@ -586,7 +586,7 @@ product_surfaces:
   - surface: git-workflow
     signals: [merge conflict, rebase conflict, cherry-pick, conflict, dirty worktree, stash, branch naming, commit message, commit splitting, staged diff, unstaged diff, backup branch, generated file conflict, lease-protected push, signed tag, release tag, bisect, reflog, submodule]
     required_skill: development-process-orchestrator
-    default_capabilities: [git-professional-usage, repository-context-map, validation-broker, plan-execution-consistency, agent-tool-permission-sandbox]
+    default_capabilities: [git-professional-usage, repository-context-map, validation-broker, plan-execution-consistency]
   - surface: skill-authoring
     signals: [skill, capability, skill registry, routing rule, stage model, hook runtime, context control plane, context budget, reference bloat, selected references, skipped references]
     required_skill: change-forge-router

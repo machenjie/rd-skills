@@ -457,7 +457,6 @@ SURFACE_CAPABILITIES = {
         "repository-context-map",
         "validation-broker",
         "plan-execution-consistency",
-        "agent-tool-permission-sandbox",
     ),
     "skill-authoring": (
         "repository-context-map",

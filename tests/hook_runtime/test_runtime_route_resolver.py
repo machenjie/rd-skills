@@ -165,6 +165,43 @@ class RuntimeRouteResolverTests(unittest.TestCase):
             context["required_references"],
         )
 
+    def test_git_workflow_low_risk_signals_do_not_default_tool_permission_sandbox(self) -> None:
+        for prompt in (
+            "Plan branch naming and commit message for this change",
+            "Review staged diff and unstaged diff before splitting the commit",
+        ):
+            with self.subTest(prompt=prompt):
+                event = {"hook_event_name": "UserPromptSubmit", "prompt": prompt}
+                classification = classify_event(event)
+                context = _context_for(event)
+                self.assertIn("git-workflow", classification["product_surfaces"])
+                self.assertIn("git-professional-usage", context["selected_capabilities"])
+                self.assertNotIn("agent-tool-permission-sandbox", context["selected_capabilities"])
+                self.assertNotIn(
+                    "references/capabilities/120-agent-tool-permission-sandbox.md",
+                    context["required_references"],
+                )
+
+    def test_git_workflow_high_risk_state_selects_tool_permission_sandbox(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["git-workflow"],
+            event_name="UserPromptSubmit",
+            state={"command_risk_surfaces": ["tool-permission-sandbox"]},
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["git-workflow"],
+                "risk_surfaces": [],
+            },
+        )
+        self.assertIn("git-professional-usage", context["selected_capabilities"])
+        self.assertIn("agent-tool-permission-sandbox", context["selected_capabilities"])
+        self.assertIn(
+            "references/capabilities/120-agent-tool-permission-sandbox.md",
+            context["required_references"],
+        )
+
     def test_redis_routes_cache_not_kafka_bigdata(self) -> None:
         context = _context_for(_edit_event("src/cache/redis_store.py", "Redis TTL invalidation"))
         self.assertIn("cache", context["product_surfaces"])
