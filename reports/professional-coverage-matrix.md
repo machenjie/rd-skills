@@ -1,6 +1,6 @@
 # Professional Coverage Matrix
 
-- Generated: 2026-06-30T07:06:57.641643+00:00
+- Generated: 2026-06-30T08:12:41.206495+00:00
 - Rows checked: 62
 
 | Item | Kind | Mode Matrix | Proactive Triggers | Evidence Contract | Output Contract | Failure Modes | Quality Gate | Reference Loading Hint | Routing Coverage | Benchmark Coverage | Anti-bloat Status | Status |
@@ -58,7 +58,7 @@
 | `data-middleware-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (18) | yes (12) | ok | sample-grade |
 | `delivery-release-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (33) | yes (10) | ok | sample-grade |
 | `development-process-orchestrator` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (2) | yes (1) | ok | sample-grade |
-| `domain-impact-modeler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (6) | yes (5) | ok | sample-grade |
+| `domain-impact-modeler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (8) | yes (5) | ok | sample-grade |
 | `experience-impact-modeler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (6) | yes (1) | ok | sample-grade |
 | `frontend-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (17) | yes (9) | ok | sample-grade |
 | `integration-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (16) | yes (9) | ok | sample-grade |

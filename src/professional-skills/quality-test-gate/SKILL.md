@@ -104,6 +104,7 @@ Select the testing mode by risk. Do not request tests generically; name the fail
 | Frontend/user behavior/a11y | UI form, route, component, focus, validation, disabled/error states. | User behavior, accessibility semantics, state coverage. | Accessibility-query assertions, axe/keyboard evidence, state matrix. | `frontend-testing`, `frontend-change-builder` | CSS selector/internal hook assertions. |
 | Flaky/performance/security | Flaky CI, load/latency, auth, permission, calculation, race/idempotency. | Stabilize signal, cover negative cases, avoid false confidence. | Flake triage, property/negative cases, load/security evidence. | `security-privacy-gate`, `reliability-observability-gate` | Blind retries as a fix. |
 | Minimal validation decision | L1 local change, simplicity-ladder decision, delete/shrink pass, or deliberate shortcut requests smaller evidence. | Choose the cheapest check that can fail for the real risk and reject under-testing for high-risk paths. | Risk classification, runnable check, what it proves/does not prove. | `minimal-correct-implementation`, `agent-execution-discipline` | Smoke check for security/auth/money/migration/retry/idempotency/reliability. |
+| Business golden case gate | Business rule, workflow, reason code, semantic review, or BSP validation changes. | Map business claims to executable golden cases, owner review, or explicit residual risk. | Rule/workflow claim, positive/negative golden case, validator command, source-backed FACT evidence. | `business-semantic-control-plane`, `validation-broker` | Technical green checks without business behavior cases. |
 
 ## Proactive Professional Triggers
 
@@ -221,6 +222,7 @@ Return a test strategy with actionable evidence:
 - **Risk-to-test mapping:** each material risk paired with required test type, depth, pass criteria, and why cheaper or heavier evidence is insufficient.
 - **Changed-code-to-test map:** every material changed path, branch, public contract, fixture, generated input, and integration seam mapped to tests/validators or residual risk.
 - **Validation broker result:** narrow/module/full validator choice, freshness, stale or unrun commands, negative evidence, and stop-closure consequence.
+- **Business golden cases:** BSP claim-to-test map, rule/workflow/reason-code coverage, owner review, not-run status, and residual semantic risk when business semantics are selected.
 - **Structure and seam plan:** fixture/factory/mock/golden ownership, public-behavior boundary, fake/stub/mock/spy decision, deterministic inputs, and private-helper non-export decision.
 - **Validation evidence:** commands, exit codes, artifacts, what evidence proves, what evidence does not prove, validation freshness, and evidence limits.
 - **Residual risk and next gate:** accepted gaps, flaky classifications, manual evidence, owner, and next gate or no-next-gate rationale.
@@ -243,6 +245,7 @@ Close a test strategy only when the canonical answers from `agent-execution-disc
 - Flaky, skipped, retried, or quarantined tests have signature, owner, risk classification, and remediation path.
 - Validation evidence is fresh against final source, configs, fixtures, generated inputs, migrations, and lockfiles.
 - Partial validation is reported honestly; lint/typecheck/single-test passes are not presented as full-suite or full-coverage success.
+- Business semantic rules, workflows, reason codes, and owner decisions map to golden cases, owner review, or explicit residual risk; graph and memory do not prove business behavior alone.
 
 ## Handoff
 - Hand service/API test obligations to `backend-change-builder`; data/query/migration obligations to `data-middleware-change-builder`; UI/a11y obligations to `frontend-change-builder`; integration/idempotency/failure simulation to `integration-change-builder`.

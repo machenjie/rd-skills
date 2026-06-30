@@ -1,27 +1,60 @@
 ---
-case_id: test-structure-helper-pollution
+case_id: "test-structure-helper-pollution"
 actual:
-  complexity: L2
-  risk_level: medium
-  skills: [backend-change-builder, quality-test-gate]
-  capabilities: [implementation-structure-design, code-clarity-maintainability, module-boundary-design, test-data-management, unit-testing]
-  domain_extensions: []
-  quality_gates: [implementation gate, test gate]
-  required_references: [references/capabilities/101-implementation-structure-design.md, references/capabilities/105-code-clarity-maintainability.md, references/capabilities/19-module-boundary-design.md, references/capabilities/63-test-data-management.md, references/capabilities/59-unit-testing.md, references/capability-index.md, references/domain-extension-index.md, references/routing-rules.md, references/skill-registry.md]
+  complexity: "L2"
+  risk_level: "medium"
+  skills:
+    - "backend-change-builder"
+    - "quality-test-gate"
+  capabilities:
+    - "implementation-structure-design"
+    - "code-clarity-maintainability"
+    - "module-boundary-design"
+    - "test-data-management"
+    - "unit-testing"
+  domain_extensions:
+  quality_gates:
+    - "implementation gate"
+    - "test gate"
+  required_references:
+    - "references/capabilities/101-implementation-structure-design.md"
+    - "references/capabilities/105-code-clarity-maintainability.md"
+    - "references/capabilities/19-module-boundary-design.md"
+    - "references/capabilities/63-test-data-management.md"
+    - "references/capabilities/59-unit-testing.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: testing
-    next_stage: code-review
-    product_surface: backend-product
-    language_surface: none
-    selected_skills: [backend-change-builder, quality-test-gate]
-    selected_capabilities: [test-data-management, unit-testing]
-    selected_domain_extensions: []
+    current_stage: "testing"
+    next_stage: "code-review"
+    product_surface: "backend-product"
+    language_surface: "none"
+    selected_skills:
+      - "backend-change-builder"
+      - "quality-test-gate"
+    selected_capabilities:
+      - "test-data-management"
+      - "unit-testing"
+    selected_domain_extensions:
     skipped_capabilities:
-      - capability: architecture-tradeoff-analysis
-        reason: fixture ownership is tested without architecture redesign
-    context_budget_mode: single-stage
-    context_budget_rationale: L2 test helper pollution is contained to testing and review
-    required_evidence: [validation commands mapped to PDD/DDD/SDD, risk-based layer selection, deterministic data, minimal check rationale when lower-depth validation is selected, observable-behavior assertions, evidence of gaps, validation freshness after final material edits]
-    required_quality_gates: [implementation gate, test gate]
-    handoff_target: code-review
+      -
+        capability: "architecture-tradeoff-analysis"
+        reason: "fixture ownership is tested without architecture redesign"
+    context_budget_mode: "single-stage"
+    context_budget_rationale: "L2 test helper pollution is contained to testing and review"
+    required_evidence:
+      - "validation commands mapped to PDD/DDD/SDD"
+      - "risk-based layer selection"
+      - "deterministic data"
+      - "minimal check rationale when lower-depth validation is selected"
+      - "observable-behavior assertions"
+      - "evidence of gaps"
+      - "validation freshness after final material edits"
+      - "business golden cases or explicit residual risk for material rule, reason-code, permission, and workflow claims"
+    required_quality_gates:
+      - "implementation gate"
+      - "test gate"
+    handoff_target: "code-review"

@@ -1,27 +1,70 @@
 ---
-case_id: ai-generated-api-unverified
+case_id: "ai-generated-api-unverified"
 actual:
-  complexity: L3
-  risk_level: medium
-  skills: [ai-code-review-refactor, backend-change-builder, security-privacy-gate, quality-test-gate]
-  capabilities: [agent-execution-discipline, implementation-structure-design, package-dependency-management, regression-testing]
-  domain_extensions: []
-  quality_gates: [implementation gate, security gate, test gate, AI review gate, execution discipline gate]
-  required_references: [references/capabilities/102-agent-execution-discipline.md, references/capabilities/101-implementation-structure-design.md, references/capabilities/88-package-dependency-management.md, references/capabilities/64-regression-testing.md, references/capability-index.md, references/domain-extension-index.md, references/routing-rules.md, references/skill-registry.md]
+  complexity: "L3"
+  risk_level: "medium"
+  skills:
+    - "ai-code-review-refactor"
+    - "backend-change-builder"
+    - "security-privacy-gate"
+    - "quality-test-gate"
+  capabilities:
+    - "agent-execution-discipline"
+    - "implementation-structure-design"
+    - "package-dependency-management"
+    - "regression-testing"
+  domain_extensions:
+  quality_gates:
+    - "implementation gate"
+    - "security gate"
+    - "test gate"
+    - "AI review gate"
+    - "execution discipline gate"
+  required_references:
+    - "references/capabilities/102-agent-execution-discipline.md"
+    - "references/capabilities/101-implementation-structure-design.md"
+    - "references/capabilities/88-package-dependency-management.md"
+    - "references/capabilities/64-regression-testing.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: code-review
-    next_stage: bug-fix
-    product_surface: backend-product
-    language_surface: none
-    selected_skills: [ai-code-review-refactor, backend-change-builder, security-privacy-gate, quality-test-gate]
-    selected_capabilities: [agent-execution-discipline, implementation-structure-design]
-    selected_domain_extensions: []
+    current_stage: "code-review"
+    next_stage: "bug-fix"
+    product_surface: "backend-product"
+    language_surface: "none"
+    selected_skills:
+      - "ai-code-review-refactor"
+      - "backend-change-builder"
+      - "security-privacy-gate"
+      - "quality-test-gate"
+    selected_capabilities:
+      - "agent-execution-discipline"
+      - "implementation-structure-design"
+    selected_domain_extensions:
     skipped_capabilities:
-      - capability: release-rollback
-        reason: release-delivery is not launched during code-review
-    context_budget_mode: staged-plan
-    context_budget_rationale: L3 generated code review needs staged fix and test gates after findings
-    required_evidence: [findings with severity, evidence, impacted file, required fix, validation required, independent reviewer, repair and re-review result, final diff covered by review scope, complexity-only delete/shrink findings when selected]
-    required_quality_gates: [implementation gate, security gate, test gate, AI review gate, execution discipline gate]
-    handoff_target: bug-fix
+      -
+        capability: "release-rollback"
+        reason: "release-delivery is not launched during code-review"
+    context_budget_mode: "staged-plan"
+    context_budget_rationale: "L3 generated code review needs staged fix and test gates after findings"
+    required_evidence:
+      - "findings with severity"
+      - "evidence"
+      - "impacted file"
+      - "required fix"
+      - "validation required"
+      - "independent reviewer"
+      - "repair and re-review result"
+      - "final diff covered by review scope"
+      - "complexity-only delete/shrink findings when selected"
+      - "semantic review result for changed, hidden, stale, rejected, or untested business behavior"
+    required_quality_gates:
+      - "implementation gate"
+      - "security gate"
+      - "test gate"
+      - "AI review gate"
+      - "execution discipline gate"
+    handoff_target: "bug-fix"

@@ -1,0 +1,11 @@
+case_id: stale-business-memory
+prompt: Use the previous discount owner from memory and implement the same rule.
+expected_route:
+  stage: implementation-planning
+  business_semantic_pack_required: true
+expected_capabilities: [business-semantic-control-plane, project-memory-governance, repository-graph-analysis]
+expected_quality_gates: [domain gate, execution discipline gate, test gate]
+expected_bsp_sections: [memory_projection, business_rules, code_mapping, validation_map]
+expected_review_findings: [memory not FACT, current-source confirmation required]
+forbidden_behavior: [treat memory as current owner, skip source reread]
+scoring: [memory_verdict, source_confirmation, residual_risk, context_control]

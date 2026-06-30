@@ -1,92 +1,94 @@
 ---
-case_id: payment-idempotency
+case_id: "payment-idempotency"
 actual:
-  complexity: L4
-  risk_level: critical
+  complexity: "L4"
+  risk_level: "critical"
   skills:
-    - change-intake-compiler
-    - domain-impact-modeler
-    - data-api-contract-changer
-    - integration-change-builder
-    - backend-change-builder
-    - security-privacy-gate
-    - reliability-observability-gate
-    - quality-test-gate
-    - delivery-release-gate
-    - change-documentation-gate
+    - "change-intake-compiler"
+    - "domain-impact-modeler"
+    - "data-api-contract-changer"
+    - "integration-change-builder"
+    - "backend-change-builder"
+    - "security-privacy-gate"
+    - "reliability-observability-gate"
+    - "quality-test-gate"
+    - "delivery-release-gate"
+    - "change-documentation-gate"
   capabilities:
-    - implementation-structure-design
-    - state-machine-modeling
-    - idempotency-retry-design
-    - transaction-consistency
-    - api-contract-design
-    - integration-testing
-    - observability
-    - release-rollback
+    - "implementation-structure-design"
+    - "state-machine-modeling"
+    - "idempotency-retry-design"
+    - "transaction-consistency"
+    - "api-contract-design"
+    - "integration-testing"
+    - "observability"
+    - "release-rollback"
   domain_extensions:
-    - payment-trading-extension
+    - "payment-trading-extension"
   quality_gates:
-    - requirement gate
-    - domain gate
-    - API/data gate
-    - implementation gate
-    - security gate
-    - reliability gate
-    - test gate
-    - delivery gate
-    - documentation gate
+    - "requirement gate"
+    - "domain gate"
+    - "API/data gate"
+    - "implementation gate"
+    - "security gate"
+    - "reliability gate"
+    - "test gate"
+    - "delivery gate"
+    - "documentation gate"
   required_references:
-    - references/capabilities/101-implementation-structure-design.md
-    - references/capabilities/14-state-machine-modeling.md
-    - references/capabilities/26-api-contract-design.md
-    - references/capabilities/42-idempotency-retry-design.md
-    - references/capabilities/48-transaction-consistency.md
-    - references/capabilities/60-integration-testing.md
-    - references/capabilities/69-observability.md
-    - references/capabilities/75-release-rollback.md
-    - references/capability-index.md
-    - references/domain-extension-index.md
-    - references/routing-rules.md
-    - references/skill-registry.md
+    - "references/capabilities/101-implementation-structure-design.md"
+    - "references/capabilities/14-state-machine-modeling.md"
+    - "references/capabilities/26-api-contract-design.md"
+    - "references/capabilities/42-idempotency-retry-design.md"
+    - "references/capabilities/48-transaction-consistency.md"
+    - "references/capabilities/60-integration-testing.md"
+    - "references/capabilities/69-observability.md"
+    - "references/capabilities/75-release-rollback.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: coding
-    next_stage: testing
-    product_surface: payment-trading
-    language_surface: none
+    current_stage: "coding"
+    next_stage: "testing"
+    product_surface: "payment-trading"
+    language_surface: "none"
     selected_skills:
-      - backend-change-builder
-      - security-privacy-gate
-      - reliability-observability-gate
+      - "backend-change-builder"
+      - "security-privacy-gate"
+      - "reliability-observability-gate"
     selected_capabilities:
-      - idempotency-retry-design
-      - transaction-consistency
+      - "idempotency-retry-design"
+      - "transaction-consistency"
     selected_domain_extensions:
-      - payment-trading-extension
+      - "payment-trading-extension"
     skipped_capabilities:
-      - capability: architecture-tradeoff-analysis
-        reason: architecture deep review is not launched by default during coding
-    context_budget_mode: staged-plan
-    context_budget_rationale: L4 payment coding needs staged risk gates while coding stays minimal
+      -
+        capability: "architecture-tradeoff-analysis"
+        reason: "architecture deep review is not launched by default during coding"
+    context_budget_mode: "staged-plan"
+    context_budget_rationale: "L4 payment coding needs staged risk gates while coding stays minimal"
     required_evidence:
-      - PDD/DDD/SDD/TDD traceability
-      - inspected implementation context
-      - TDD or validation signal before code
-      - idiomatic implementation
-      - validated inputs
-      - released resources
-      - minimal scope diff
-      - deleted or rejected complexity
-      - tool permission and sandbox classification when risky tools or commands are used
+      - "PDD/DDD/SDD/TDD traceability"
+      - "inspected implementation context"
+      - "TDD or validation signal before code"
+      - "idiomatic implementation"
+      - "validated inputs"
+      - "released resources"
+      - "minimal scope diff"
+      - "deleted or rejected complexity"
+      - "tool permission and sandbox classification when risky tools or commands are used"
+      - "business semantic claim-to-code mapping when implementation changes rules, objects, or workflow states"
     required_quality_gates:
-      - TDD gate
-      - requirement gate
-      - domain gate
-      - API/data gate
-      - implementation gate
-      - security gate
-      - reliability gate
-      - test gate
-      - delivery gate
-      - documentation gate
-    handoff_target: testing
+      - "TDD gate"
+      - "requirement gate"
+      - "domain gate"
+      - "API/data gate"
+      - "implementation gate"
+      - "security gate"
+      - "reliability gate"
+      - "test gate"
+      - "delivery gate"
+      - "documentation gate"
+    handoff_target: "testing"

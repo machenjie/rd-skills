@@ -1,58 +1,89 @@
 ---
-case_id: skill-authoring-no-product-coding
+case_id: "skill-authoring-no-product-coding"
 actual:
-  complexity: L2
-  risk_level: medium
-  skills: [change-forge-router, quality-test-gate]
-  capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency, context-control-plane]
-  domain_extensions: []
-  quality_gates: [documentation gate, test gate]
+  complexity: "L2"
+  risk_level: "medium"
+  skills:
+    - "change-forge-router"
+    - "quality-test-gate"
+  capabilities:
+    - "repository-context-map"
+    - "skill-authoring-expert"
+    - "engineering-stage-professionalism"
+    - "skill-efficacy-benchmark"
+    - "plan-execution-consistency"
+    - "context-control-plane"
+  domain_extensions:
+  quality_gates:
+    - "documentation gate"
+    - "test gate"
   required_references:
-    - references/routing-rules.md
-    - references/skill-registry.md
-    - references/capability-index.md
-    - references/domain-extension-index.md
-    - references/capabilities/118-repository-context-map.md
-    - references/capabilities/103-skill-authoring-expert.md
-    - references/capabilities/104-engineering-stage-professionalism.md
-    - references/capabilities/121-skill-efficacy-benchmark.md
-    - references/capabilities/122-plan-execution-consistency.md
-    - references/capabilities/128-context-control-plane.md
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/capabilities/118-repository-context-map.md"
+    - "references/capabilities/103-skill-authoring-expert.md"
+    - "references/capabilities/104-engineering-stage-professionalism.md"
+    - "references/capabilities/121-skill-efficacy-benchmark.md"
+    - "references/capabilities/122-plan-execution-consistency.md"
+    - "references/capabilities/128-context-control-plane.md"
   context_control:
-    budget_mode: single-stage
-    budget_rationale: L2 skill-authoring route keeps router and context-control references bounded.
+    budget_mode: "single-stage"
+    budget_rationale: "L2 skill-authoring route keeps router and context-control references bounded."
     max_selected_capabilities: 8
     max_required_references: 12
     selected_reference_count: 1
     skipped_reference_count: 0
     selected_references:
-      - reference: references/capabilities/128-context-control-plane.md
-        reason: Owns selected and skipped reference budget evidence.
-    skipped_references: []
+      -
+        reference: "references/capabilities/128-context-control-plane.md"
+        reason: "Owns selected and skipped reference budget evidence."
+    skipped_references:
     jit_retrieval_required: false
-    jit_retrieval_plan: not required
+    jit_retrieval_plan: "not required"
     tool_output_boundary_required: false
-    tool_output_boundary: bounded routing fixture summary only
+    tool_output_boundary: "bounded routing fixture summary only"
     compaction_snapshot_required: false
     branch_route_repair_summary_required: false
     overhead_evidence_required: true
-    overhead_evidence: selected=1 skipped=0 token_estimate=not_collected turn_count=not_collected structural fixture only
+    overhead_evidence: "selected=1 skipped=0 token_estimate=not_collected turn_count=not_collected structural fixture only"
     residual_context_risk:
-      - Live Codex overhead benchmark is not run without explicit maintainer flag.
+      - "Live Codex overhead benchmark is not run without explicit maintainer flag."
   stage_route_manifest:
     schema_version: 1
-    current_stage: skill-authoring
-    next_stage: documentation-handoff
-    product_surface: skill-authoring
-    language_surface: none
-    selected_skills: [change-forge-router, quality-test-gate]
-    selected_capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency, context-control-plane]
-    selected_domain_extensions: []
+    current_stage: "skill-authoring"
+    next_stage: "documentation-handoff"
+    product_surface: "skill-authoring"
+    language_surface: "none"
+    selected_skills:
+      - "change-forge-router"
+      - "quality-test-gate"
+    selected_capabilities:
+      - "repository-context-map"
+      - "skill-authoring-expert"
+      - "engineering-stage-professionalism"
+      - "skill-efficacy-benchmark"
+      - "plan-execution-consistency"
+      - "context-control-plane"
+    selected_domain_extensions:
     skipped_capabilities:
-      - capability: implementation-structure-design
-        reason: registry authoring does not change target product code structure
-    context_budget_mode: single-stage
-    context_budget_rationale: L2 skill authoring route selects router authoring and validation only
-    required_evidence: [boundary, trigger precision, output contract, registry/routing/validation impact, skill-efficacy benchmark impact when behavior claims change, minimal scope diff, deleted or rejected complexity, shortcut ceiling and upgrade trigger when shortcuts remain]
-    required_quality_gates: [documentation gate, test gate]
-    handoff_target: documentation-handoff
+      -
+        capability: "implementation-structure-design"
+        reason: "registry authoring does not change target product code structure"
+    context_budget_mode: "single-stage"
+    context_budget_rationale: "L2 skill authoring route selects router authoring and validation only"
+    required_evidence:
+      - "boundary"
+      - "trigger precision"
+      - "output contract"
+      - "registry/routing/validation impact"
+      - "skill-efficacy benchmark impact when behavior claims change"
+      - "minimal scope diff"
+      - "deleted or rejected complexity"
+      - "shortcut ceiling and upgrade trigger when shortcuts remain"
+      - "business semantic schema, fixture, routing, memory, graph, and validation impact when authoring BSP behavior"
+    required_quality_gates:
+      - "documentation gate"
+      - "test gate"
+    handoff_target: "documentation-handoff"

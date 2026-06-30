@@ -44,13 +44,25 @@
             "fragile_files",
             "repeat_failures",
             "validation_hints",
-            "review_patterns"
+            "review_patterns",
+            "business_memory"
           ],
           "properties": {
             "fragile_files": { "$ref": "#/properties/project_memory_projection/$defs/boundedList" },
             "repeat_failures": { "$ref": "#/properties/project_memory_projection/$defs/boundedList" },
             "validation_hints": { "$ref": "#/properties/project_memory_projection/$defs/boundedList" },
-            "review_patterns": { "$ref": "#/properties/project_memory_projection/$defs/boundedList" }
+            "review_patterns": { "$ref": "#/properties/project_memory_projection/$defs/boundedList" },
+            "business_memory": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["accepted", "rejected", "stale", "not_verified"],
+              "properties": {
+                "accepted": { "$ref": "#/properties/project_memory_projection/$defs/boundedList" },
+                "rejected": { "$ref": "#/properties/project_memory_projection/$defs/boundedList" },
+                "stale": { "$ref": "#/properties/project_memory_projection/$defs/boundedList" },
+                "not_verified": { "$ref": "#/properties/project_memory_projection/$defs/boundedList" }
+              }
+            }
           }
         },
         "source_check_required": { "type": "boolean", "const": true },

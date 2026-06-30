@@ -270,6 +270,30 @@ REGISTRY: dict[str, dict[str, object]] = {
             ("python3 scripts/validate-hooks.py", "hook runtime consumes project memory records"),
         ),
     },
+    "business_intelligence": {
+        "path_patterns": (
+            "src/business_intelligence/**",
+            "src/foundation/capabilities/business-semantic-control-plane/**",
+            "evals/business-semantic/**",
+            "scripts/validate-business-semantic-pack.py",
+            "scripts/eval-business-semantic-routing.py",
+            "scripts/eval-business-semantic-review.py",
+        ),
+        "risk_surfaces": ("business-semantics", "context-control-plane", "project-memory", "repository-intelligence"),
+        "narrow": (
+            ("python3 scripts/validate-business-semantic-pack.py", "business semantic schemas and fixtures changed"),
+            ("python3 scripts/eval-business-semantic-routing.py", "business semantic routing fixtures changed"),
+            ("python3 scripts/eval-business-semantic-review.py", "business semantic review fixtures changed"),
+        ),
+        "module": (
+            ("python3 scripts/validate-capabilities.py", "business semantic capability registry must remain valid"),
+            ("python3 scripts/eval-routing.py", "business semantic triggers affect router behavior"),
+        ),
+        "full": (
+            ("python3 -m unittest discover -s tests", "business semantic support touches shared memory and graph contracts"),
+            ("python3 scripts/build.py --profile recommended", "business semantic capability must build into runtime skills"),
+        ),
+    },
     "telemetry": {
         "path_patterns": (
             "scripts/review-agent-telemetry.py",

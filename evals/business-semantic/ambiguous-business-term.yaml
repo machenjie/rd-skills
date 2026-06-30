@@ -1,0 +1,11 @@
+case_id: ambiguous-business-term
+prompt: Rename Account to Customer in billing, identity, and support screens.
+expected_route:
+  stage: requirement-intake
+  business_semantic_pack_required: true
+expected_capabilities: [business-semantic-control-plane, domain-object-identification, context-control-plane]
+expected_quality_gates: [requirement gate, domain gate, documentation gate]
+expected_bsp_sections: [task_business_intent, business_vocabulary, business_objects, code_mapping, validation_map, context_control]
+expected_review_findings: [same term has multiple owning contexts, owner review required]
+forbidden_behavior: [treat term rename as text-only refactor, memory as FACT]
+scoring: [trigger_recall, capability_precision, evidence_classification, residual_risk]

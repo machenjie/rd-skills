@@ -1,27 +1,73 @@
 ---
-case_id: terraform-public-bucket
+case_id: "terraform-public-bucket"
 actual:
-  complexity: L4
-  risk_level: high
-  skills: [security-privacy-gate, reliability-observability-gate, quality-test-gate, delivery-release-gate, change-documentation-gate]
-  capabilities: [ci-cd, secret-configuration-security, web-security, performance-budgeting, observability, release-rollback]
-  domain_extensions: []
-  quality_gates: [security gate, reliability gate, test gate, delivery gate, documentation gate]
-  required_references: [references/capabilities/73-ci-cd.md, references/capabilities/56-secret-configuration-security.md, references/capabilities/54-web-security.md, references/capabilities/65-performance-budgeting.md, references/capabilities/69-observability.md, references/capabilities/75-release-rollback.md, references/capability-index.md, references/domain-extension-index.md, references/routing-rules.md, references/skill-registry.md]
+  complexity: "L4"
+  risk_level: "high"
+  skills:
+    - "security-privacy-gate"
+    - "reliability-observability-gate"
+    - "quality-test-gate"
+    - "delivery-release-gate"
+    - "change-documentation-gate"
+  capabilities:
+    - "ci-cd"
+    - "secret-configuration-security"
+    - "web-security"
+    - "performance-budgeting"
+    - "observability"
+    - "release-rollback"
+  domain_extensions:
+  quality_gates:
+    - "security gate"
+    - "reliability gate"
+    - "test gate"
+    - "delivery gate"
+    - "documentation gate"
+  required_references:
+    - "references/capabilities/73-ci-cd.md"
+    - "references/capabilities/56-secret-configuration-security.md"
+    - "references/capabilities/54-web-security.md"
+    - "references/capabilities/65-performance-budgeting.md"
+    - "references/capabilities/69-observability.md"
+    - "references/capabilities/75-release-rollback.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: release-delivery
-    next_stage: documentation-handoff
-    product_surface: infrastructure-deployment
-    language_surface: none
-    selected_skills: [security-privacy-gate, reliability-observability-gate, delivery-release-gate, change-documentation-gate]
-    selected_capabilities: [ci-cd, observability, release-rollback]
-    selected_domain_extensions: []
+    current_stage: "release-delivery"
+    next_stage: "documentation-handoff"
+    product_surface: "infrastructure-deployment"
+    language_surface: "none"
+    selected_skills:
+      - "security-privacy-gate"
+      - "reliability-observability-gate"
+      - "delivery-release-gate"
+      - "change-documentation-gate"
+    selected_capabilities:
+      - "ci-cd"
+      - "observability"
+      - "release-rollback"
+    selected_domain_extensions:
     skipped_capabilities:
-      - capability: language-idiom-enforcement
-        reason: infrastructure rollout does not launch language deep checks
-    context_budget_mode: staged-plan
-    context_budget_rationale: L4 public cloud exposure needs staged release and documentation evidence
-    required_evidence: [rollout sequence, rollback trigger, shortcut ceiling and upgrade trigger when shortcuts remain, config compatibility, health checks, alert ownership, tool permission and rollback classification for release commands]
-    required_quality_gates: [security gate, reliability gate, test gate, delivery gate, documentation gate]
-    handoff_target: documentation-handoff
+      -
+        capability: "language-idiom-enforcement"
+        reason: "infrastructure rollout does not launch language deep checks"
+    context_budget_mode: "staged-plan"
+    context_budget_rationale: "L4 public cloud exposure needs staged release and documentation evidence"
+    required_evidence:
+      - "rollout sequence"
+      - "rollback trigger"
+      - "shortcut ceiling and upgrade trigger when shortcuts remain"
+      - "config compatibility"
+      - "health checks"
+      - "alert ownership"
+      - "tool permission and rollback classification for release commands"
+    required_quality_gates:
+      - "security gate"
+      - "reliability gate"
+      - "test gate"
+      - "delivery gate"
+      - "documentation gate"
+    handoff_target: "documentation-handoff"

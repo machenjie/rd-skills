@@ -1,93 +1,94 @@
 ---
-case_id: large-table-migration
+case_id: "large-table-migration"
 actual:
-  complexity: L4
-  risk_level: high
+  complexity: "L4"
+  risk_level: "high"
   skills:
-    - change-intake-compiler
-    - change-impact-analyzer
-    - task-dag-planner
-    - data-api-contract-changer
-    - data-middleware-change-builder
-    - backend-change-builder
-    - reliability-observability-gate
-    - quality-test-gate
-    - delivery-release-gate
-    - change-documentation-gate
+    - "change-intake-compiler"
+    - "change-impact-analyzer"
+    - "task-dag-planner"
+    - "data-api-contract-changer"
+    - "data-middleware-change-builder"
+    - "backend-change-builder"
+    - "reliability-observability-gate"
+    - "quality-test-gate"
+    - "delivery-release-gate"
+    - "change-documentation-gate"
   capabilities:
-    - implementation-structure-design
-    - data-migration-design
-    - relational-database
-    - indexing-query-optimization
-    - transaction-consistency
-    - backup-recovery
-    - observability
-    - integration-testing
-    - release-rollback
-    - agent-tool-permission-sandbox
-  domain_extensions: []
+    - "implementation-structure-design"
+    - "data-migration-design"
+    - "relational-database"
+    - "indexing-query-optimization"
+    - "transaction-consistency"
+    - "backup-recovery"
+    - "observability"
+    - "integration-testing"
+    - "release-rollback"
+    - "agent-tool-permission-sandbox"
+  domain_extensions:
   quality_gates:
-    - requirement gate
-    - impact gate
-    - API/data gate
-    - implementation gate
-    - reliability gate
-    - test gate
-    - delivery gate
-    - documentation gate
+    - "requirement gate"
+    - "impact gate"
+    - "API/data gate"
+    - "implementation gate"
+    - "reliability gate"
+    - "test gate"
+    - "delivery gate"
+    - "documentation gate"
   required_references:
-    - references/capabilities/101-implementation-structure-design.md
-    - references/capabilities/30-data-migration-design.md
-    - references/capabilities/45-relational-database.md
-    - references/capabilities/47-indexing-query-optimization.md
-    - references/capabilities/48-transaction-consistency.md
-    - references/capabilities/60-integration-testing.md
-    - references/capabilities/69-observability.md
-    - references/capabilities/70-backup-recovery.md
-    - references/capabilities/75-release-rollback.md
-    - references/capabilities/120-agent-tool-permission-sandbox.md
-    - references/capability-index.md
-    - references/domain-extension-index.md
-    - references/routing-rules.md
-    - references/skill-registry.md
+    - "references/capabilities/101-implementation-structure-design.md"
+    - "references/capabilities/30-data-migration-design.md"
+    - "references/capabilities/45-relational-database.md"
+    - "references/capabilities/47-indexing-query-optimization.md"
+    - "references/capabilities/48-transaction-consistency.md"
+    - "references/capabilities/60-integration-testing.md"
+    - "references/capabilities/69-observability.md"
+    - "references/capabilities/70-backup-recovery.md"
+    - "references/capabilities/75-release-rollback.md"
+    - "references/capabilities/120-agent-tool-permission-sandbox.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: release-delivery
-    next_stage: documentation-handoff
-    product_surface: database-migration
-    language_surface: none
+    current_stage: "release-delivery"
+    next_stage: "documentation-handoff"
+    product_surface: "database-migration"
+    language_surface: "none"
     selected_skills:
-      - data-api-contract-changer
-      - data-middleware-change-builder
-      - reliability-observability-gate
-      - delivery-release-gate
+      - "data-api-contract-changer"
+      - "data-middleware-change-builder"
+      - "reliability-observability-gate"
+      - "delivery-release-gate"
     selected_capabilities:
-      - data-migration-design
-      - transaction-consistency
-      - backup-recovery
-      - observability
-      - release-rollback
-    selected_domain_extensions: []
+      - "data-migration-design"
+      - "transaction-consistency"
+      - "backup-recovery"
+      - "observability"
+      - "release-rollback"
+    selected_domain_extensions:
     skipped_capabilities:
-      - capability: language-idiom-enforcement
-        reason: no language code remains in the active release-delivery stage
-    context_budget_mode: staged-plan
-    context_budget_rationale: L4 migration rollout needs staged release and rollback evidence
+      -
+        capability: "language-idiom-enforcement"
+        reason: "no language code remains in the active release-delivery stage"
+    context_budget_mode: "staged-plan"
+    context_budget_rationale: "L4 migration rollout needs staged release and rollback evidence"
     required_evidence:
-      - rollout sequence
-      - rollback trigger
-      - shortcut ceiling and upgrade trigger when shortcuts remain
-      - config compatibility
-      - health checks
-      - alert ownership
-      - tool permission and rollback classification for release commands
+      - "rollout sequence"
+      - "rollback trigger"
+      - "shortcut ceiling and upgrade trigger when shortcuts remain"
+      - "config compatibility"
+      - "health checks"
+      - "alert ownership"
+      - "tool permission and rollback classification for release commands"
     required_quality_gates:
-      - requirement gate
-      - impact gate
-      - API/data gate
-      - implementation gate
-      - reliability gate
-      - test gate
-      - delivery gate
-      - documentation gate
-    handoff_target: documentation-handoff
+      - "requirement gate"
+      - "impact gate"
+      - "API/data gate"
+      - "implementation gate"
+      - "reliability gate"
+      - "test gate"
+      - "delivery gate"
+      - "documentation gate"
+    handoff_target: "documentation-handoff"

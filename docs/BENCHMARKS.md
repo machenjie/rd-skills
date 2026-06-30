@@ -14,6 +14,7 @@ ChangeForge benchmarks are release evidence, not marketing claims. They are loca
 | Profile build reproducibility | Build manifests for `recommended`, `full`, and `dev`. | `python3 scripts/build.py --profile recommended && python3 scripts/build.py --profile full && python3 scripts/build.py --profile dev` |
 | Installation validation | Installer/doctor validation. | `python3 scripts/validate-installation.py` |
 | Skill efficacy structural fixtures | evals/skill-efficacy | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
+| Business semantic structural fixtures | Business Semantic Pack schemas and deterministic BSP routing/review fixtures under `evals/business-semantic`. | `python3 scripts/validate-business-semantic-pack.py`, `python3 scripts/eval-business-semantic-routing.py`, and `python3 scripts/eval-business-semantic-review.py` |
 | Context Control Plane overhead | Deterministic fixtures for context budget, selected/skipped references, JIT packs, tool-output boundaries, compaction snapshots, route repair summaries, and overhead policy. | `python3 scripts/eval-context-control-plane.py` |
 | Executor adapter structural fixtures | Deterministic adapter fixtures and sanitized telemetry sample under `evals/executor-adapter` and `reports/`. | `python3 scripts/eval-executor-adapters.py` |
 | Activation precision benchmark | Deterministic activation fixtures for stage, skill, capability, reference, language, risk, and overroute precision against the built hook runtime. | `python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks` |
@@ -55,6 +56,12 @@ Skill efficacy benchmarks are currently structural/local evidence. The current
 fixtures validate routing and evidence shape; they do not provide live pass-rate
 evidence, empirical before/after agent performance, or measured token/turn
 overhead.
+
+Business semantic fixtures are structural/local evidence for source-backed
+semantic packs, route selection, overroute avoidance, review findings, memory
+verdict buckets, and golden-case expectations. They do not prove live business
+correctness, and memory or repository graph signals remain selectors until
+current source and validation evidence confirm the claim.
 
 Executor adapter benchmarks are also structural/local evidence. They validate
 canonical event recognition, adapter degradation, privacy redaction, validation

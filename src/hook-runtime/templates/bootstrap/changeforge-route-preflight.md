@@ -34,6 +34,10 @@ skill path:
   (reuse search and placement rationale) before new structure is accepted.
 - A completion claim is coming — bind it to `agent-execution-discipline`: no
   completion claim without fresh validation evidence and residual risk.
+- Business semantics are in scope — business terms, rule authority, workflow
+  state, golden cases, stale business memory, or graph/memory business hints —
+  select `business-semantic-control-plane`; memory and graph are selectors until
+  verified by current source, owner review, or validation evidence.
 - The user already named a narrow skill path and the scope is known — respect it
   and do not re-route, but still run requirement clarification, read-before-plan,
   TDD/validation signal, action/review mapping, repair/re-review, and evidence

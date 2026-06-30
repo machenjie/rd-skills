@@ -51,6 +51,8 @@ Anchor against UML State Machine Diagrams, Harel Statecharts, XState, Fowler Sta
 
 Select this capability when **state transitions carry business rules, authorization constraints, external side effects, or audit obligations**. Route elsewhere when: UI loading/empty/error states are the primary concern (use `interaction-state-modeling`); domain events consumed by downstream handlers are the primary concern (use `domain-event-modeling`); business rule guards need detailed extraction from existing code (use `business-rule-extraction`); the implementation of state transition enforcement needs design (use `domain-logic-implementation`).
 
+Select `business-semantic-control-plane` with this capability when workflow states, allowed/forbidden transitions, guard rules, stale memory, or business golden cases must be represented in a task-scoped Business Semantic Pack.
+
 # Risk Escalation Rules
 
 Escalate immediately when: an illegal transition can cause a double charge, duplicate fulfillment, duplicate shipment, inventory corruption, ledger corruption, or regulated-record corruption; a transition can be triggered by an actor who should not have authority; a state has no recovery/failure exit; a transition involves deletion, export, retention, or privacy-relevant behavior; or a state machine change requires a data migration for existing records in states that no longer exist.
@@ -118,6 +120,7 @@ Return a state machine model with:
 - `migration_and_versioning` (existing record mapping, compatibility window, rollback behavior when states change)
 - `state_machine_diagram` (textual notation or Mermaid stateDiagram-v2)
 - `graph_and_memory_decisions` (current writers/consumers confirmed, reused patterns accepted or rejected, stale memory caveats)
+- `business_semantic_workflow_record` when BSP is selected: workflow id, states, allowed/forbidden transitions, guard rule ids, actor authority, evidence classes, memory/graph selector limits, and residual semantic risk
 - `changed_state_to_validation_map` (each state, transition, guard, event, migration, and side effect mapped to a validator/test or residual risk)
 - `handoff_boundaries` (what belongs to object identification, business rules, events, idempotency, permissions, migration, release, or testing)
 - `evidence_limits` (uninspected code paths, data, migrations, events, runtime behavior, tests not run, or graph freshness limits)

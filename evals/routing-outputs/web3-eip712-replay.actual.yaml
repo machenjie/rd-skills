@@ -1,85 +1,88 @@
 ---
-case_id: web3-eip712-replay
+case_id: "web3-eip712-replay"
 actual:
-  complexity: L4
-  risk_level: critical
+  complexity: "L4"
+  risk_level: "critical"
   skills:
-    - change-intake-compiler
-    - domain-impact-modeler
-    - data-api-contract-changer
-    - integration-change-builder
-    - backend-change-builder
-    - security-privacy-gate
-    - reliability-observability-gate
-    - quality-test-gate
-    - change-documentation-gate
+    - "change-intake-compiler"
+    - "domain-impact-modeler"
+    - "data-api-contract-changer"
+    - "integration-change-builder"
+    - "backend-change-builder"
+    - "security-privacy-gate"
+    - "reliability-observability-gate"
+    - "quality-test-gate"
+    - "change-documentation-gate"
   capabilities:
-    - implementation-structure-design
-    - threat-modeling
-    - permission-boundary-modeling
-    - secret-configuration-security
-    - idempotency-retry-design
-    - state-machine-modeling
-    - contract-testing
-    - observability
+    - "implementation-structure-design"
+    - "threat-modeling"
+    - "permission-boundary-modeling"
+    - "secret-configuration-security"
+    - "idempotency-retry-design"
+    - "state-machine-modeling"
+    - "contract-testing"
+    - "observability"
   domain_extensions:
-    - web3-product-extension
+    - "web3-product-extension"
   quality_gates:
-    - requirement gate
-    - domain gate
-    - API/data gate
-    - implementation gate
-    - security gate
-    - reliability gate
-    - test gate
-    - documentation gate
+    - "requirement gate"
+    - "domain gate"
+    - "API/data gate"
+    - "implementation gate"
+    - "security gate"
+    - "reliability gate"
+    - "test gate"
+    - "documentation gate"
   required_references:
-    - references/capabilities/101-implementation-structure-design.md
-    - references/capabilities/14-state-machine-modeling.md
-    - references/capabilities/16-permission-boundary-modeling.md
-    - references/capabilities/42-idempotency-retry-design.md
-    - references/capabilities/52-threat-modeling.md
-    - references/capabilities/56-secret-configuration-security.md
-    - references/capabilities/61-contract-testing.md
-    - references/capabilities/69-observability.md
-    - references/capability-index.md
-    - references/domain-extension-index.md
-    - references/routing-rules.md
-    - references/skill-registry.md
+    - "references/capabilities/101-implementation-structure-design.md"
+    - "references/capabilities/14-state-machine-modeling.md"
+    - "references/capabilities/16-permission-boundary-modeling.md"
+    - "references/capabilities/42-idempotency-retry-design.md"
+    - "references/capabilities/52-threat-modeling.md"
+    - "references/capabilities/56-secret-configuration-security.md"
+    - "references/capabilities/61-contract-testing.md"
+    - "references/capabilities/69-observability.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: bug-fix
-    next_stage: testing
-    product_surface: web3
-    language_surface: none
+    current_stage: "bug-fix"
+    next_stage: "testing"
+    product_surface: "web3"
+    language_surface: "none"
     selected_skills:
-      - integration-change-builder
-      - backend-change-builder
-      - security-privacy-gate
-      - quality-test-gate
+      - "integration-change-builder"
+      - "backend-change-builder"
+      - "security-privacy-gate"
+      - "quality-test-gate"
     selected_capabilities:
-      - threat-modeling
+      - "threat-modeling"
     selected_domain_extensions:
-      - web3-product-extension
+      - "web3-product-extension"
     skipped_capabilities:
-      - capability: release-rollback
-        reason: release sequencing is deferred until replay fix evidence is produced
-    context_budget_mode: staged-plan
-    context_budget_rationale: L4 Web3 replay bug fix needs staged gates while active work is bug-fix
+      -
+        capability: "release-rollback"
+        reason: "release sequencing is deferred until replay fix evidence is produced"
+    context_budget_mode: "staged-plan"
+    context_budget_rationale: "L4 Web3 replay bug fix needs staged gates while active work is bug-fix"
     required_evidence:
-      - minimal diff
-      - same-pattern scan record
-      - deleted or rejected complexity
-      - regression test
-      - blast-radius note
-      - plan versus actual changed-file consistency
+      - "minimal diff"
+      - "same-pattern scan record"
+      - "deleted or rejected complexity"
+      - "regression test"
+      - "blast-radius note"
+      - "plan versus actual changed-file consistency"
+      - "deleted or rejected complexity when selected"
+      - "business semantic same-pattern scan when the defect is rule, status, permission, or workflow related"
     required_quality_gates:
-      - requirement gate
-      - domain gate
-      - API/data gate
-      - implementation gate
-      - security gate
-      - reliability gate
-      - test gate
-      - documentation gate
-    handoff_target: testing
+      - "requirement gate"
+      - "domain gate"
+      - "API/data gate"
+      - "implementation gate"
+      - "security gate"
+      - "reliability gate"
+      - "test gate"
+      - "documentation gate"
+    handoff_target: "testing"

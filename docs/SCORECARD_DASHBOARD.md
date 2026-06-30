@@ -29,7 +29,7 @@ Context-control overhead evidence separates structural fixture pass, live pass-r
 
 | Evidence | Status | Detail |
 | --- | --- | --- |
-| Profile build reproducibility | `pass` | {"dev": {"detail": "dev top-level count is 157", "manifest": "dist/universal/skills/dev/.changeforge-build-manifest.json", "status": "pass"}, "full": {"detail": "full top-level count is 28", "manifest": "dist/universal/skills/full/.changeforge-build-manifest.json", "status": "pass"}, "recommended": {"detail": "recommended top-level count is 21", "manifest": "dist/universal/skills/recommended/.changeforge-build-manifest.json", "status": "pass"}} |
+| Profile build reproducibility | `pass` | {"dev": {"detail": "dev top-level count is 163", "manifest": "dist/universal/skills/dev/.changeforge-build-manifest.json", "status": "pass"}, "full": {"detail": "full top-level count is 28", "manifest": "dist/universal/skills/full/.changeforge-build-manifest.json", "status": "pass"}, "recommended": {"detail": "recommended top-level count is 21", "manifest": "dist/universal/skills/recommended/.changeforge-build-manifest.json", "status": "pass"}} |
 | Open-source readiness | `partial` | config_present=True, selected_license_non_null=False, selected_license_allowed=True, license_file=False, pyproject_license_not_proprietary=False, contribution_licensing_confirmed=False, contribution_licensing_evidence=False, security_contact_confirmed=False, security_contact_evidence=False, dist_release_policy_explicit=True, dist_release_policy_valid=True |
 | Example coverage | `pass` | showcase examples validate |
 | Executor adapter structural fixtures | `pass` | {"case_count": 20, "coverage_targets": ["closure_verdict", "command_risk", "degradation", "event_recognition", "path_normalization", "permission_decision", "privacy_redaction", "tool_category", "validation_freshness_after_edits", "validation_outcome"], "evidence_boundary": "deterministic local fixtures only; no live runtime pass-rate or overhead measurement", "failed": 0, "live_pass_rate": "not_collected", "passed": 20, "pressure_cases": ["absolute_user_path", "claude_post_tool_failure", "codex_destructive_permission_request", "copilot_unsupported_pre_tool", "edit_after_validation", "failed_validation", "full_command_output_field", "large_path_list_cap", "ready_after_rereview", "ready_closure", "repair_without_rereview", "required_unsupported_check_degraded_ready", "review_finding_without_repair", "secret_like_payload_field", "targeted_test_reported_as_full", "unknown_event", "unsupported_runtime_event", "validation_pass_then_file_changed"], "token_overhead": "not_collected", "turn_overhead": "not_collected"} |
@@ -43,7 +43,7 @@ Context-control overhead evidence separates structural fixture pass, live pass-r
 
 ## Profile Counts
 
-- `dev`: `pass` - dev top-level count is 157
+- `dev`: `pass` - dev top-level count is 163
 - `full`: `pass` - full top-level count is 28
 - `recommended`: `pass` - recommended top-level count is 21
 

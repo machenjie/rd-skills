@@ -85,6 +85,7 @@ REQUIRED_BROKER_PATH_PATTERNS = (
     "src/runtime_governance/**",
     "src/project_memory/**",
     "src/repository_intelligence/**",
+    "src/business_intelligence/**",
     "src/validation_broker/**",
     "src/trajectory/**",
 )
@@ -98,6 +99,7 @@ AUTHORING_PATH_TOKENS = (
     "src/runtime_governance",
     "src/project_memory",
     "src/repository_intelligence",
+    "src/business_intelligence",
     "src/validation_broker",
     "src/trajectory",
 )

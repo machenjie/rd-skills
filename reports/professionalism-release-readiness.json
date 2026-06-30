@@ -46,7 +46,7 @@
       "blocking": true,
       "evidence_source": "config/skill-content-exceptions.yaml and reports/skill-content-audit.json",
       "item": "content bloat exceptions",
-      "notes": "- classifications: {'KEEP_AS_IS': 162}; - domain_extensions: 7; - foundation_capabilities: 134; - heavy_domain: 0; - heavy_foundation: 0; - heavy_professional: 0; - low_professionalism: 0; - move_to_reference: 0; - professional_skills: 21; - split_candidates: 0",
+      "notes": "- classifications: {'KEEP_AS_IS': 161, 'TIGHTEN_BODY': 2}; - domain_extensions: 7; - foundation_capabilities: 135; - heavy_domain: 0; - heavy_foundation: 0; - heavy_professional: 0; - low_professionalism: 0; - move_to_reference: 0; - professional_skills: 21; - split_candidates: 0",
       "status": "pass"
     },
     {
@@ -72,7 +72,7 @@
     "split_candidates": 0
   },
   "default_regression_status": "pass",
-  "generated_at": "2026-06-30T07:06:57.922704+00:00",
+  "generated_at": "2026-06-30T08:12:40.100885+00:00",
   "key_foundation_capability_coverage_summary": {
     "count": 41,
     "statuses": {
@@ -89,17 +89,72 @@
     "promoted_agent_sample_strict_warnings": 0,
     "promoted_agent_samples_strict_checked": 5,
     "release_blocking_professionalism_warnings": 0,
-    "skill_professionalism_average_score": 57.3,
-    "skill_professionalism_warnings": 0
+    "skill_professionalism_average_score": 57.22,
+    "skill_professionalism_warnings": 3
   },
   "non_blocking_followups": [],
   "out_of_scope_non_key_skill_eval_warnings": {
-    "non_key_capability_advisory_warnings": 0,
+    "non_key_capability_advisory_warnings": 3,
     "other_untracked_skill_eval_warnings": 0,
     "policy": "Professional skill warnings block release. Enhanced foundation warnings require release review. Key foundation warnings are follow-up unless evidence or reference precision is weak. Non-key foundation warnings are advisory-only.",
-    "total_skill_professionalism_warnings": 0,
+    "total_skill_professionalism_warnings": 3,
     "tracked_release_warnings": 0,
-    "warnings": []
+    "warnings": [
+      {
+        "accepted_warning": false,
+        "follow_up": "Track as advisory cleanup; no release action required.",
+        "item": "business-semantic-control-plane",
+        "item_kind": "foundation-capability",
+        "kind": "foundation-capability",
+        "message": "reference 'references/business-golden-case-policy.md' is not linked from SKILL.md body",
+        "name": "business-semantic-control-plane",
+        "path": "src/foundation/capabilities/business-semantic-control-plane/SKILL.md",
+        "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+        "release_blocking": false,
+        "release_relevance": "advisory-only",
+        "scope": "non-key-foundation-capability",
+        "target": "src/foundation/capabilities/business-semantic-control-plane/SKILL.md",
+        "tracked_release_warning": false,
+        "type": "reference_loading_hint",
+        "warning_type": "reference_loading_hint"
+      },
+      {
+        "accepted_warning": false,
+        "follow_up": "Track as advisory cleanup; no release action required.",
+        "item": "business-semantic-control-plane",
+        "item_kind": "foundation-capability",
+        "kind": "foundation-capability",
+        "message": "reference 'references/business-semantic-pack-policy.md' is not linked from SKILL.md body",
+        "name": "business-semantic-control-plane",
+        "path": "src/foundation/capabilities/business-semantic-control-plane/SKILL.md",
+        "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+        "release_blocking": false,
+        "release_relevance": "advisory-only",
+        "scope": "non-key-foundation-capability",
+        "target": "src/foundation/capabilities/business-semantic-control-plane/SKILL.md",
+        "tracked_release_warning": false,
+        "type": "reference_loading_hint",
+        "warning_type": "reference_loading_hint"
+      },
+      {
+        "accepted_warning": false,
+        "follow_up": "Track as advisory cleanup; no release action required.",
+        "item": "business-semantic-control-plane",
+        "item_kind": "foundation-capability",
+        "kind": "foundation-capability",
+        "message": "reference 'references/business-semantic-review-policy.md' is not linked from SKILL.md body",
+        "name": "business-semantic-control-plane",
+        "path": "src/foundation/capabilities/business-semantic-control-plane/SKILL.md",
+        "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+        "release_blocking": false,
+        "release_relevance": "advisory-only",
+        "scope": "non-key-foundation-capability",
+        "target": "src/foundation/capabilities/business-semantic-control-plane/SKILL.md",
+        "tracked_release_warning": false,
+        "type": "reference_loading_hint",
+        "warning_type": "reference_loading_hint"
+      }
+    ]
   },
   "professional_skill_coverage_summary": {
     "count": 21,
@@ -150,12 +205,67 @@
     "enhanced_foundation_review_warnings": 0,
     "key_foundation_follow_up_warnings": 0,
     "new_unaccepted_release_warnings": 0,
-    "non_key_foundation_advisory_warnings": 0,
+    "non_key_foundation_advisory_warnings": 3,
     "policy": "Professional skill warnings block release. Enhanced foundation warnings require release review. Key foundation warnings are follow-up unless evidence or reference precision is weak. Non-key foundation warnings are advisory-only.",
     "release_blocking_warnings": 0,
     "release_review_required_warnings": 0,
-    "total_skill_professionalism_warnings": 0,
+    "total_skill_professionalism_warnings": 3,
     "tracked_release_warnings": 0,
-    "warnings": []
+    "warnings": [
+      {
+        "accepted_warning": false,
+        "follow_up": "Track as advisory cleanup; no release action required.",
+        "item": "business-semantic-control-plane",
+        "item_kind": "foundation-capability",
+        "kind": "foundation-capability",
+        "message": "reference 'references/business-golden-case-policy.md' is not linked from SKILL.md body",
+        "name": "business-semantic-control-plane",
+        "path": "src/foundation/capabilities/business-semantic-control-plane/SKILL.md",
+        "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+        "release_blocking": false,
+        "release_relevance": "advisory-only",
+        "scope": "non-key-foundation-capability",
+        "target": "src/foundation/capabilities/business-semantic-control-plane/SKILL.md",
+        "tracked_release_warning": false,
+        "type": "reference_loading_hint",
+        "warning_type": "reference_loading_hint"
+      },
+      {
+        "accepted_warning": false,
+        "follow_up": "Track as advisory cleanup; no release action required.",
+        "item": "business-semantic-control-plane",
+        "item_kind": "foundation-capability",
+        "kind": "foundation-capability",
+        "message": "reference 'references/business-semantic-pack-policy.md' is not linked from SKILL.md body",
+        "name": "business-semantic-control-plane",
+        "path": "src/foundation/capabilities/business-semantic-control-plane/SKILL.md",
+        "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+        "release_blocking": false,
+        "release_relevance": "advisory-only",
+        "scope": "non-key-foundation-capability",
+        "target": "src/foundation/capabilities/business-semantic-control-plane/SKILL.md",
+        "tracked_release_warning": false,
+        "type": "reference_loading_hint",
+        "warning_type": "reference_loading_hint"
+      },
+      {
+        "accepted_warning": false,
+        "follow_up": "Track as advisory cleanup; no release action required.",
+        "item": "business-semantic-control-plane",
+        "item_kind": "foundation-capability",
+        "kind": "foundation-capability",
+        "message": "reference 'references/business-semantic-review-policy.md' is not linked from SKILL.md body",
+        "name": "business-semantic-control-plane",
+        "path": "src/foundation/capabilities/business-semantic-control-plane/SKILL.md",
+        "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+        "release_blocking": false,
+        "release_relevance": "advisory-only",
+        "scope": "non-key-foundation-capability",
+        "target": "src/foundation/capabilities/business-semantic-control-plane/SKILL.md",
+        "tracked_release_warning": false,
+        "type": "reference_loading_hint",
+        "warning_type": "reference_loading_hint"
+      }
+    ]
   }
 }

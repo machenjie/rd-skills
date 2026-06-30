@@ -1,34 +1,59 @@
 ---
-case_id: ai-rag-permission-no-web3-payment
+case_id: "ai-rag-permission-no-web3-payment"
 actual:
-  complexity: L3
-  risk_level: critical
-  skills: [security-privacy-gate, quality-test-gate]
-  capabilities: [threat-modeling, permission-boundary-modeling, test-strategy]
-  domain_extensions: [ai-product-extension]
-  quality_gates: [implementation gate, security gate, test gate]
+  complexity: "L3"
+  risk_level: "critical"
+  skills:
+    - "security-privacy-gate"
+    - "quality-test-gate"
+  capabilities:
+    - "threat-modeling"
+    - "permission-boundary-modeling"
+    - "test-strategy"
+  domain_extensions:
+    - "ai-product-extension"
+  quality_gates:
+    - "implementation gate"
+    - "security gate"
+    - "test gate"
   required_references:
-    - references/routing-rules.md
-    - references/skill-registry.md
-    - references/capability-index.md
-    - references/domain-extension-index.md
-    - references/capabilities/52-threat-modeling.md
-    - references/capabilities/16-permission-boundary-modeling.md
-    - references/capabilities/58-test-strategy.md
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/capabilities/52-threat-modeling.md"
+    - "references/capabilities/16-permission-boundary-modeling.md"
+    - "references/capabilities/58-test-strategy.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: bug-fix
-    next_stage: testing
-    product_surface: ai-rag-agent
-    language_surface: none
-    selected_skills: [security-privacy-gate, quality-test-gate]
-    selected_capabilities: [threat-modeling, test-strategy]
-    selected_domain_extensions: [ai-product-extension]
+    current_stage: "bug-fix"
+    next_stage: "testing"
+    product_surface: "ai-rag-agent"
+    language_surface: "none"
+    selected_skills:
+      - "security-privacy-gate"
+      - "quality-test-gate"
+    selected_capabilities:
+      - "threat-modeling"
+      - "test-strategy"
+    selected_domain_extensions:
+      - "ai-product-extension"
     skipped_capabilities:
-      - capability: authentication-security
-        reason: retrieval permission filtering is not Web3 auth or wallet verification
-    context_budget_mode: staged-plan
-    context_budget_rationale: L3 RAG permission bug fix selects AI/security without adjacent domains
-    required_evidence: [minimal diff, deleted or rejected complexity when selected, same-pattern scan record, regression test, blast-radius note, plan versus actual changed-file consistency]
-    required_quality_gates: [implementation gate, security gate, test gate]
-    handoff_target: testing
+      -
+        capability: "authentication-security"
+        reason: "retrieval permission filtering is not Web3 auth or wallet verification"
+    context_budget_mode: "staged-plan"
+    context_budget_rationale: "L3 RAG permission bug fix selects AI/security without adjacent domains"
+    required_evidence:
+      - "minimal diff"
+      - "deleted or rejected complexity when selected"
+      - "same-pattern scan record"
+      - "regression test"
+      - "blast-radius note"
+      - "plan versus actual changed-file consistency"
+      - "business semantic same-pattern scan when the defect is rule, status, permission, or workflow related"
+    required_quality_gates:
+      - "implementation gate"
+      - "security gate"
+      - "test gate"
+    handoff_target: "testing"

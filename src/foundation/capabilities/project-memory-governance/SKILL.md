@@ -73,6 +73,7 @@ Evaluate memory use by event boundedness, privacy class, projection determinism,
 # Critical Details
 - Append-only memory events are bounded facts: id, kind, path or artifact family, failure class, validation result, timestamp/order, privacy boundary, projection version, retention policy, and promotion status.
 - Memory projection names retrieval key, included events, excluded events, summary, confidence, freshness limit, determinism version, and source reconciliation result.
+- Business memory event kinds include rule changes/rejections, object ownership changes, ambiguous terms, workflow bugs, missing entry points, hidden SQL rules, stale business context, golden case changes, and superseded owner decisions.
 - Coupling decisions can only widen graph/context scope, require direct source refresh, strengthen validation freshness, require trajectory review, or defer source promotion.
 - Load [references/memory-event-privacy-retention.md](references/memory-event-privacy-retention.md) for event field, privacy, exclusion, and retention rules.
 - Load [references/memory-graph-trajectory-coupling.md](references/memory-graph-trajectory-coupling.md) for graph, execution trajectory, validation freshness, and context-pack coupling.
@@ -100,6 +101,7 @@ Return a `project_memory_governance_record` with:
 - `boundaries_inspected` (current source, registry/config/docs, tests, reports, generated artifacts, graph slice, trajectory ledger, and skipped boundaries with reason).
 - `memory_event` (bounded event facts, privacy class, retention boundary, promotion status, and excluded sensitive material).
 - `memory_projection` (retrieval key, included/excluded events, projection version, summary, confidence, accepted/rejected/stale/not-verified verdict).
+- `business_memory` (accepted, rejected, stale, and not-verified BSP-relevant memory signals with current-source confirmation status).
 - `source_check` (current repository evidence that confirms, refutes, or limits each memory claim).
 - `coupling_decision` (graph/context scope change, validation freshness requirement, trajectory review requirement, promotion path, or no-op).
 - `changed_memory_to_validation_map` (each accepted memory signal mapped to validator, review check, owner response, or residual risk).
@@ -133,6 +135,7 @@ Routes from `change-forge-router`, `quality-test-gate`, `ai-code-review-refactor
 7. Promotion into source artifacts is human-approved or explicitly deferred/rejected.
 8. Coupling decisions name the downstream skill, evidence it must inspect, and the memory limit it must not exceed.
 9. Every accepted memory signal maps to validation, review, owner response, or residual risk.
+10. Business memory remains advisory until confirmed by current source, owner review, or validation evidence and is never stored as raw prompt or personal corpus content.
 10. Handoff states inspected evidence, unknowns, validation limits, rollback note, and next owner.
 
 # Used By

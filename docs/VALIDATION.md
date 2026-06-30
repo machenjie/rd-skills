@@ -19,6 +19,7 @@ python3 scripts/validate-skills.py
 python3 scripts/validate-validation-broker.py
 python3 scripts/validate-hooks.py
 python3 scripts/validate-project-memory.py
+python3 scripts/validate-business-semantic-pack.py
 python3 scripts/validate-skill-efficacy-benchmarks.py
 python3 scripts/eval-context-control-plane.py
 ```
@@ -80,6 +81,8 @@ quality, and behavior-fixture regressions:
 
 ```bash
 python3 scripts/eval-routing.py
+python3 scripts/eval-business-semantic-routing.py
+python3 scripts/eval-business-semantic-review.py
 python3 scripts/eval-context-control-plane.py
 python3 scripts/validate-stage-routing-architecture.py
 python3 scripts/eval-skill-professionalism.py
@@ -110,6 +113,9 @@ python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
 python3 scripts/validate-skill-content-size.py
 python3 scripts/audit-skill-content.py
+python3 scripts/validate-business-semantic-pack.py
+python3 scripts/eval-business-semantic-routing.py
+python3 scripts/eval-business-semantic-review.py
 python3 scripts/validate-examples.py
 python3 scripts/validate-productization-assets.py
 python3 scripts/validate-open-source-readiness.py

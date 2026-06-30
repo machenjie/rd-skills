@@ -50,6 +50,7 @@ Anchor context packaging on minimal sufficient context, source-grounded facts, f
 | Stale context refresh | Requirements, schema, report, generated artifact, branch, or validation output changed after prior context. | Replace stale claims with current evidence before planning or closure. | Changed sources, freshness comparison, rejected old facts, direct-source reread, residual risk. | `project-memory-governance`, `execution-trajectory-analysis` | Skip claims that cannot be refreshed or downgrade them to assumptions. |
 | Graph-built package | RepositoryGraph, TaskContextPack, caller/test graph, or generated-artifact graph is available. | Use graph evidence as a selector without copying the graph. | Selected nodes, omitted nodes, graph freshness, source-of-truth decision, validation candidates. | `repository-graph-analysis`, `validation-broker` | Skip whole-repository graph dumps. |
 | Memory-informed package | Repeat failure, fragile file, stale context, or prior review memory affects scope. | Let memory widen inspection or validation without becoming source fact. | Memory signal, accepted/rejected/stale verdict, current-source confirmation, privacy boundary. | `project-memory-governance`, `security-privacy-gate` | Skip raw prompts, full logs, secrets, and personal archives. |
+| Business semantic package | Business intent, vocabulary, rule authority, workflow states, golden cases, or stale business memory affects scope. | Package BSP evidence without becoming a project-wide business corpus. | Task-scoped BSP sections, source-backed facts, memory/graph selector limits, selected/skipped references, validation map. | `business-semantic-control-plane`, `context-control-plane` | Skip personal archives, private archive maps, and memory-as-fact claims. |
 | Review or compaction handoff | Context-window overflow, session transfer, repair after review, or parallel-agent boundary. | Preserve decisions, constraints, and verification state without hidden assumptions. | Decision ledger, changed files, validation freshness, remaining open questions, next gate. | `ai-code-review-refactor`, `quality-test-gate` | Skip obsolete reasoning that is not tied to current evidence. |
 
 # Selection Rules
@@ -65,6 +66,7 @@ Select this capability when **task context transfer to an AI coding agent** is p
 - Use **with** `repository-graph-analysis` when the package should be generated from a graph/context pack rather than a hand-built file list.
 - Use **with** `project-memory-governance` when memory-derived repeat-failure, fragile-file, or stale-context signals influence risk, while keeping them out of source-fact sections.
 - Use **with** `context-control-plane` when a context package is built, compacted, reused after edits, or included in route closure. This capability owns the package artifact; `context-control-plane` owns budget mode, selected/skipped references, JIT retrieval, tool-output boundary, compaction snapshot, branch route-repair summary, and overhead evidence.
+- Use **with** `business-semantic-control-plane` when packaging business intent, vocabulary, object, rule, workflow, memory, graph, or golden-case evidence into a BSP. The package must state what is `FACT`, `INFERENCE`, `ASSUMPTION`, `OPEN_QUESTION`, or `MEMORY_SIGNAL`.
 - For TaskContextPack v3, treat the pack as an index, selector, and handoff artifact. The `jit_retrieval_plan` controls actual source reads; the pack itself must not become a large active-context payload.
 
 # Risk Escalation Rules
@@ -140,6 +142,7 @@ Return a context package with:
 - `quality_gates` (per gate: objective check, pass criterion, verification method)
 - `freshness_markers` (per major element: commit SHA, date, source snapshot)
 - `memory_experience_inputs` (optional repeat-failure, fragile-file, or stale-context signals, clearly labeled as non-source facts)
+- `business_semantic_pack` (optional task-scoped BSP sections, selected/skipped references, memory/graph selector status, validation map, and residual semantic risk)
 - `graph_memory_execution_coupling` (graph, memory, prior summary, and trajectory claims accepted, rejected, stale, partial, or not verified)
 - `context_control` (budget mode/profile, context budget tokens, selected/omitted file counts, selected symbol count, selected/skipped graph node counts, and signal-density rationale)
 - `jit_retrieval_plan` (bounded discovery commands, targeted reads with line hints and source-truth status, deferred reads, and forbidden reads)
@@ -181,6 +184,7 @@ The context package passes only when:
 16. Graph, memory, prior-summary, and execution-trajectory claims are reconciled before they influence package trust, validation depth, or closure.
 17. Tool output boundaries exclude raw prompts, secrets, environment values, credentials, personal data, full command output, personal archives, and private mapping artifacts.
 18. Residual risk and next professional gate are explicit when evidence is stale, partial, unsupported, or outside the inspected boundary.
+19. Business Semantic Pack content is task-scoped and excludes personal corpora, private archive maps, raw private archives, and memory/graph-as-fact claims.
 
 # Benchmark Coverage
 

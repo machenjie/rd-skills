@@ -108,6 +108,7 @@ Return a `validation_broker_result` with:
 - `validation_ledger` (command, order, outcome, parsed evidence, covered paths, uncovered paths, artifacts, freshness, and evidence limit).
 - `negative_evidence` (failures, skipped checks, stale reports, warnings, missing output, unsupported channels, and repair/owner status).
 - `graph_memory_trajectory_coupling` (graph test edges, memory validation gaps, trajectory order/freshness, accepted/rejected claims, and closure consequence).
+- `business_semantic_validation` when BSP is selected: `validate-business-semantic-pack`, business semantic routing/review evals, rule/workflow golden cases, and residual semantic risk.
 - `stop_closure_input` (passed, failed, not-run, not-verified, stale, partial, or unsupported; residual risk; next validator or owner).
 - `evidence_limits` and `residual_risk` (what validation proves, what it does not prove, rollback note, and next gate).
 - `handoff_package` (route/stage manifest linkage, validators run or skipped, rollback note, owner, reviewer, and residual risk).
@@ -133,6 +134,7 @@ Routes from `change-forge-router`, `quality-test-gate`, `delivery-release-gate`,
 4. Stale, partial, not-run, not-verified, unsupported, or failed validation is not reported as a full pass.
 5. Negative validation evidence is disclosed and reconciled with later passes.
 6. Generated artifacts map to source and build/generator command before closure.
+7. BSP changes run or explicitly defer the business semantic pack, routing, and review validators with evidence limits.
 7. Graph, memory, and trajectory evidence are reconciled before stop closure.
 8. Stop closure consumes broker status and names residual risk, rollback note, and next owner.
 

@@ -1,36 +1,59 @@
 ---
-case_id: kubernetes-helm-no-backend-builder
+case_id: "kubernetes-helm-no-backend-builder"
 actual:
-  complexity: L2
-  risk_level: high
-  skills: [delivery-release-gate, quality-test-gate]
-  capabilities: [kubernetes-gateway, ci-cd, release-rollback, agent-tool-permission-sandbox]
-  domain_extensions: []
-  quality_gates: [delivery gate, test gate]
+  complexity: "L2"
+  risk_level: "high"
+  skills:
+    - "delivery-release-gate"
+    - "quality-test-gate"
+  capabilities:
+    - "kubernetes-gateway"
+    - "ci-cd"
+    - "release-rollback"
+    - "agent-tool-permission-sandbox"
+  domain_extensions:
+  quality_gates:
+    - "delivery gate"
+    - "test gate"
   required_references:
-    - references/routing-rules.md
-    - references/skill-registry.md
-    - references/capability-index.md
-    - references/domain-extension-index.md
-    - references/capabilities/74-kubernetes-gateway.md
-    - references/capabilities/73-ci-cd.md
-    - references/capabilities/75-release-rollback.md
-    - references/capabilities/120-agent-tool-permission-sandbox.md
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/capabilities/74-kubernetes-gateway.md"
+    - "references/capabilities/73-ci-cd.md"
+    - "references/capabilities/75-release-rollback.md"
+    - "references/capabilities/120-agent-tool-permission-sandbox.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: release-delivery
-    next_stage: documentation-handoff
-    product_surface: kubernetes-helm
-    language_surface: none
-    selected_skills: [delivery-release-gate, quality-test-gate]
-    selected_capabilities: [kubernetes-gateway, ci-cd, release-rollback]
-    selected_domain_extensions: []
-    skipped_capabilities: []
+    current_stage: "release-delivery"
+    next_stage: "documentation-handoff"
+    product_surface: "kubernetes-helm"
+    language_surface: "none"
+    selected_skills:
+      - "delivery-release-gate"
+      - "quality-test-gate"
+    selected_capabilities:
+      - "kubernetes-gateway"
+      - "ci-cd"
+      - "release-rollback"
+    selected_domain_extensions:
+    skipped_capabilities:
     skipped_skills:
-      - skill: backend-change-builder
-        reason: Helm chart paths are delivery artifacts, not backend code
-    context_budget_mode: single-stage
-    context_budget_rationale: L2 Helm edit needs delivery and Kubernetes references only
-    required_evidence: [rollout sequence, rollback trigger, config compatibility, health checks, alert ownership, shortcut ceiling and upgrade trigger when shortcuts remain, tool permission and rollback classification for release commands]
-    required_quality_gates: [delivery gate, test gate]
-    handoff_target: documentation-handoff
+      -
+        skill: "backend-change-builder"
+        reason: "Helm chart paths are delivery artifacts, not backend code"
+    context_budget_mode: "single-stage"
+    context_budget_rationale: "L2 Helm edit needs delivery and Kubernetes references only"
+    required_evidence:
+      - "rollout sequence"
+      - "rollback trigger"
+      - "config compatibility"
+      - "health checks"
+      - "alert ownership"
+      - "shortcut ceiling and upgrade trigger when shortcuts remain"
+      - "tool permission and rollback classification for release commands"
+    required_quality_gates:
+      - "delivery gate"
+      - "test gate"
+    handoff_target: "documentation-handoff"

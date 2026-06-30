@@ -108,6 +108,7 @@ Select the AI review/refactor mode before approving or changing generated code. 
 | Complexity-only review | Bloat, overengineering, wrapper-only delegation, unnecessary dependency, one-implementation abstraction, scaffold-for-later, or delete/shrink request. | Produce complexity tags without replacing normal AI review. | Tagged findings, simpler alternative, retained-risk decision, validation required. | `minimal-correct-implementation`, `code-clarity-maintainability`, `cleanup-deletion-governance` | Treating line count as the approval standard. |
 | Test/refactor quality review | Generated tests, fixtures, mocks, snapshots, golden files, or cleanup. | Behavior assertions, fixture ownership, no over-mocking private internals. | What tests prove/do not prove, mock contract, fixture owner. | `quality-test-gate`, `code-clarity-maintainability` | Mock-call-only approval. |
 | Security/performance-sensitive AI code | Generated auth, SQL, migration, secret, integration, retry, concurrency, or hot path. | Adversarial review, measured risk, no silent fallback or speculative optimization. | Security scan/tests, profile/benchmark, rollback/contract proof. | `security-privacy-gate`, `reliability-observability-gate`, `data-middleware-change-builder` | Trusting AI comments as proof. |
+| Business semantic review | Generated diff, refactor, SQL/controller/mapper/DTO, stale memory, or golden case may change business meaning. | Detect changed, hidden, stale, rejected, or untested business semantics. | BSP diff, source-backed facts, rule/workflow map, memory/graph selector limits, golden case evidence. | `business-semantic-control-plane`, `domain-impact-modeler`, `quality-test-gate` | Approving from clean structure alone. |
 
 ## Proactive Professional Triggers
 
@@ -220,6 +221,7 @@ Return a structured review with severity-classified findings first:
 - **API and dependency evidence:** verified API inventory, hallucinated/unverified symbols, dependency audit, CVE/license posture, and stdlib/local alternatives.
 - **Structure review:** reuse ladder, placement rationale, naming evidence, owner boundary, dependency direction, and rejected alternatives.
 - **Behavior preservation:** refactor scope, equivalence evidence, changed-code-to-test map, old/new behavior tests, and compatibility risk.
+- **Business semantic review:** changed/hidden/rejected/stale business rules, workflow transitions, owner decisions, memory/graph selector limits, golden case gaps, and BSP residual risk when selected.
 - **Approval decision:** approved, returned, split, blocked, or refactor-required, with approval scope and re-review requirement.
 - **Validation evidence:** fresh commands, outputs, what evidence proves, what evidence does not prove, residual risk, and next gate.
 
@@ -243,6 +245,7 @@ Close an AI-code review or refactor only when the canonical answers from `agent-
 - New structures have reuse ladder, placement rationale, naming evidence, owner boundary, dependency direction, and local-pattern comparison.
 - Shared/common/utils additions do not contain business rules, fixtures, permission logic, tenant/payment/order assumptions, or module-specific behavior.
 - Generated comments, docs, feature flags, compatibility branches, TODOs, deprecated APIs, and cleanup paths have owner, expiry, and removal evidence.
+- Business semantic changes have source-backed facts, rule/workflow validation, golden cases or owner review, and no memory/graph-as-fact approval.
 - Findings are severity-classified; completion or approval claims require fresh validation evidence, scope, limits, and repair/re-review status.
 
 ## Handoff

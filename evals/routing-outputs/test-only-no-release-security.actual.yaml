@@ -1,35 +1,56 @@
 ---
-case_id: test-only-no-release-security
+case_id: "test-only-no-release-security"
 actual:
-  complexity: L2
-  risk_level: medium
-  skills: [quality-test-gate]
-  capabilities: [test-strategy, plan-execution-consistency, language-testing-strategy, typescript-professional-usage]
-  domain_extensions: []
-  quality_gates: [test gate]
+  complexity: "L2"
+  risk_level: "medium"
+  skills:
+    - "quality-test-gate"
+  capabilities:
+    - "test-strategy"
+    - "plan-execution-consistency"
+    - "language-testing-strategy"
+    - "typescript-professional-usage"
+  domain_extensions:
+  quality_gates:
+    - "test gate"
   required_references:
-    - references/routing-rules.md
-    - references/skill-registry.md
-    - references/capability-index.md
-    - references/domain-extension-index.md
-    - references/capabilities/58-test-strategy.md
-    - references/capabilities/122-plan-execution-consistency.md
-    - references/capabilities/86-language-testing-strategy.md
-    - references/capabilities/91-typescript-professional-usage.md
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/capabilities/58-test-strategy.md"
+    - "references/capabilities/122-plan-execution-consistency.md"
+    - "references/capabilities/86-language-testing-strategy.md"
+    - "references/capabilities/91-typescript-professional-usage.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: testing
-    next_stage: code-review
-    product_surface: none
-    language_surface: typescript
-    selected_skills: [quality-test-gate]
-    selected_capabilities: [test-strategy, plan-execution-consistency, language-testing-strategy, typescript-professional-usage]
-    selected_domain_extensions: []
+    current_stage: "testing"
+    next_stage: "code-review"
+    product_surface: "none"
+    language_surface: "typescript"
+    selected_skills:
+      - "quality-test-gate"
+    selected_capabilities:
+      - "test-strategy"
+      - "plan-execution-consistency"
+      - "language-testing-strategy"
+      - "typescript-professional-usage"
+    selected_domain_extensions:
     skipped_capabilities:
-      - capability: release-rollback
-        reason: no release or deployment action is requested
-    context_budget_mode: single-stage
-    context_budget_rationale: L2 test-only TS route uses test gate and language test capability only
-    required_evidence: [validation commands mapped to PDD/DDD/SDD, risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected, validation freshness after final material edits]
-    required_quality_gates: [test gate]
-    handoff_target: code-review
+      -
+        capability: "release-rollback"
+        reason: "no release or deployment action is requested"
+    context_budget_mode: "single-stage"
+    context_budget_rationale: "L2 test-only TS route uses test gate and language test capability only"
+    required_evidence:
+      - "validation commands mapped to PDD/DDD/SDD"
+      - "risk-based layer selection"
+      - "deterministic data"
+      - "observable-behavior assertions"
+      - "evidence of gaps"
+      - "minimal check rationale when lower-depth validation is selected"
+      - "validation freshness after final material edits"
+      - "business golden cases or explicit residual risk for material rule, reason-code, permission, and workflow claims"
+    required_quality_gates:
+      - "test gate"
+    handoff_target: "code-review"

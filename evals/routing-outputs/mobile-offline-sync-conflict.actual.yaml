@@ -1,87 +1,90 @@
 ---
-case_id: mobile-offline-sync-conflict
+case_id: "mobile-offline-sync-conflict"
 actual:
-  complexity: L4
-  risk_level: high
+  complexity: "L4"
+  risk_level: "high"
   skills:
-    - change-intake-compiler
-    - experience-impact-modeler
-    - domain-impact-modeler
-    - data-api-contract-changer
-    - frontend-change-builder
-    - backend-change-builder
-    - security-privacy-gate
-    - reliability-observability-gate
-    - quality-test-gate
-    - delivery-release-gate
-    - change-documentation-gate
+    - "change-intake-compiler"
+    - "experience-impact-modeler"
+    - "domain-impact-modeler"
+    - "data-api-contract-changer"
+    - "frontend-change-builder"
+    - "backend-change-builder"
+    - "security-privacy-gate"
+    - "reliability-observability-gate"
+    - "quality-test-gate"
+    - "delivery-release-gate"
+    - "change-documentation-gate"
   capabilities:
-    - implementation-structure-design
-    - state-management-design
-    - interaction-state-modeling
-    - concurrency-control
-    - dto-schema-design
-    - e2e-testing
-    - observability
-    - release-rollback
+    - "implementation-structure-design"
+    - "state-management-design"
+    - "interaction-state-modeling"
+    - "concurrency-control"
+    - "dto-schema-design"
+    - "e2e-testing"
+    - "observability"
+    - "release-rollback"
   domain_extensions:
-    - mobile-product-extension
+    - "mobile-product-extension"
   quality_gates:
-    - requirement gate
-    - domain gate
-    - API/data gate
-    - implementation gate
-    - security gate
-    - reliability gate
-    - test gate
-    - delivery gate
-    - documentation gate
+    - "requirement gate"
+    - "domain gate"
+    - "API/data gate"
+    - "implementation gate"
+    - "security gate"
+    - "reliability gate"
+    - "test gate"
+    - "delivery gate"
+    - "documentation gate"
   required_references:
-    - references/capabilities/10-interaction-state-modeling.md
-    - references/capabilities/101-implementation-structure-design.md
-    - references/capabilities/27-dto-schema-design.md
-    - references/capabilities/33-state-management-design.md
-    - references/capabilities/62-e2e-testing.md
-    - references/capabilities/67-concurrency-control.md
-    - references/capabilities/69-observability.md
-    - references/capabilities/75-release-rollback.md
-    - references/capability-index.md
-    - references/domain-extension-index.md
-    - references/routing-rules.md
-    - references/skill-registry.md
+    - "references/capabilities/10-interaction-state-modeling.md"
+    - "references/capabilities/101-implementation-structure-design.md"
+    - "references/capabilities/27-dto-schema-design.md"
+    - "references/capabilities/33-state-management-design.md"
+    - "references/capabilities/62-e2e-testing.md"
+    - "references/capabilities/67-concurrency-control.md"
+    - "references/capabilities/69-observability.md"
+    - "references/capabilities/75-release-rollback.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: bug-fix
-    next_stage: testing
-    product_surface: frontend-product
-    language_surface: none
+    current_stage: "bug-fix"
+    next_stage: "testing"
+    product_surface: "frontend-product"
+    language_surface: "none"
     selected_skills:
-      - frontend-change-builder
-      - quality-test-gate
+      - "frontend-change-builder"
+      - "quality-test-gate"
     selected_capabilities:
-      - state-management-design
+      - "state-management-design"
     selected_domain_extensions:
-      - mobile-product-extension
+      - "mobile-product-extension"
     skipped_capabilities:
-      - capability: release-rollback
-        reason: release sequencing is deferred until conflict behavior is fixed and tested
-    context_budget_mode: staged-plan
-    context_budget_rationale: L4 mobile conflict fix spans stages but the active work is bug-fix
+      -
+        capability: "release-rollback"
+        reason: "release sequencing is deferred until conflict behavior is fixed and tested"
+    context_budget_mode: "staged-plan"
+    context_budget_rationale: "L4 mobile conflict fix spans stages but the active work is bug-fix"
     required_evidence:
-      - minimal diff
-      - same-pattern scan record
-      - deleted or rejected complexity
-      - regression test
-      - blast-radius note
-      - plan versus actual changed-file consistency
+      - "minimal diff"
+      - "same-pattern scan record"
+      - "deleted or rejected complexity"
+      - "regression test"
+      - "blast-radius note"
+      - "plan versus actual changed-file consistency"
+      - "deleted or rejected complexity when selected"
+      - "business semantic same-pattern scan when the defect is rule, status, permission, or workflow related"
     required_quality_gates:
-      - requirement gate
-      - domain gate
-      - API/data gate
-      - implementation gate
-      - security gate
-      - reliability gate
-      - test gate
-      - delivery gate
-      - documentation gate
-    handoff_target: testing
+      - "requirement gate"
+      - "domain gate"
+      - "API/data gate"
+      - "implementation gate"
+      - "security gate"
+      - "reliability gate"
+      - "test gate"
+      - "delivery gate"
+      - "documentation gate"
+    handoff_target: "testing"

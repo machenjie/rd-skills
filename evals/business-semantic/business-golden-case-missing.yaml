@@ -1,0 +1,11 @@
+case_id: business-golden-case-missing
+prompt: Add the new cancellation reason code but the existing test suite is green.
+expected_route:
+  stage: testing
+  business_semantic_pack_required: true
+expected_capabilities: [business-semantic-control-plane, validation-broker, business-rule-extraction]
+expected_quality_gates: [test gate, domain gate]
+expected_bsp_sections: [business_rules, validation_map, context_control]
+expected_review_findings: [business golden case missing for reason code]
+forbidden_behavior: [claim green suite proves new business behavior without golden case]
+scoring: [golden_case_detection, validation_depth, claim_mapping, overclaim_prevention]

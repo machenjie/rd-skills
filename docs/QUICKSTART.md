@@ -20,7 +20,7 @@ It is not a prompt dump. The system combines:
 | --- | --- | --- |
 | `recommended` | Default global/user install. | 21 professional skills |
 | `full` | Project install where domain extensions should be visible. | 21 professional skills plus 7 domain extensions |
-| `dev` | ChangeForge authoring/debugging only. | 21 professional skills plus 134 foundation capabilities plus 7 domain extensions |
+| `dev` | ChangeForge authoring/debugging only. | 21 professional skills plus 135 foundation capabilities plus 7 domain extensions |
 
 `recommended` and `full` keep foundation capabilities inside professional skill `references/` so the selected route reads only the relevant references. They do not expose every foundation capability as a global top-level skill.
 

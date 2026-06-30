@@ -49,14 +49,14 @@ class ExportMarketplaceIndexTests(unittest.TestCase):
         dev_caps = [item for item in dev["items"] if item["type"] == "foundation_capability"]
         self.assertEqual(sum(item["profile_visibility"]["top_level"] for item in recommended_caps), 0)
         self.assertEqual(sum(item["profile_visibility"]["top_level"] for item in full_caps), 0)
-        self.assertEqual(sum(item["profile_visibility"]["top_level"] for item in dev_caps), 134)
+        self.assertEqual(sum(item["profile_visibility"]["top_level"] for item in dev_caps), 135)
 
     def test_index_shape_contains_required_fields(self) -> None:
         module = _load_module()
         payload = module.export_index(ROOT, "recommended")
         self.assertEqual(payload["schema_version"], 1)
         self.assertEqual(payload["profile"], "recommended")
-        self.assertEqual(len(payload["items"]), 162)
+        self.assertEqual(len(payload["items"]), 163)
         for item in payload["items"]:
             self.assertEqual(set(item), REQUIRED_ITEM_FIELDS)
 

@@ -1,68 +1,103 @@
 ---
-case_id: context-control-tool-output-boundary
+case_id: "context-control-tool-output-boundary"
 actual:
-  complexity: L2
-  risk_level: medium
-  skills: [quality-test-gate]
-  capabilities: [context-control-plane, agent-tool-permission-sandbox, validation-broker, repository-graph-analysis, plan-execution-consistency, agent-execution-discipline]
-  domain_extensions: []
-  quality_gates: [security gate, test gate, execution discipline gate]
+  complexity: "L2"
+  risk_level: "medium"
+  skills:
+    - "quality-test-gate"
+  capabilities:
+    - "context-control-plane"
+    - "agent-tool-permission-sandbox"
+    - "validation-broker"
+    - "repository-graph-analysis"
+    - "plan-execution-consistency"
+    - "agent-execution-discipline"
+  domain_extensions:
+  quality_gates:
+    - "security gate"
+    - "test gate"
+    - "execution discipline gate"
   required_references:
-    - references/routing-rules.md
-    - references/skill-registry.md
-    - references/capability-index.md
-    - references/domain-extension-index.md
-    - references/capabilities/128-context-control-plane.md
-    - references/capabilities/120-agent-tool-permission-sandbox.md
-    - references/capabilities/126-validation-broker.md
-    - references/capabilities/124-repository-graph-analysis.md
-    - references/capabilities/122-plan-execution-consistency.md
-    - references/capabilities/102-agent-execution-discipline.md
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/capabilities/128-context-control-plane.md"
+    - "references/capabilities/120-agent-tool-permission-sandbox.md"
+    - "references/capabilities/126-validation-broker.md"
+    - "references/capabilities/124-repository-graph-analysis.md"
+    - "references/capabilities/122-plan-execution-consistency.md"
+    - "references/capabilities/102-agent-execution-discipline.md"
   context_control:
-    budget_mode: single-stage
-    budget_rationale: Testing route needs bounded negative evidence from one large command output.
+    budget_mode: "single-stage"
+    budget_rationale: "Testing route needs bounded negative evidence from one large command output."
     max_selected_capabilities: 6
     max_required_references: 8
     selected_reference_count: 4
     skipped_reference_count: 2
     selected_references:
-      - reference: references/capabilities/128-context-control-plane.md
-        reason: Owns tool-output boundary and retained evidence.
-      - reference: references/capabilities/126-validation-broker.md
-        reason: Parses validation outcome and evidence limits.
-      - reference: references/capabilities/120-agent-tool-permission-sandbox.md
-        reason: Excludes secrets and raw environment output.
-      - reference: references/capabilities/122-plan-execution-consistency.md
-        reason: Prevents partial output from being reported as full validation.
+      -
+        reference: "references/capabilities/128-context-control-plane.md"
+        reason: "Owns tool-output boundary and retained evidence."
+      -
+        reference: "references/capabilities/126-validation-broker.md"
+        reason: "Parses validation outcome and evidence limits."
+      -
+        reference: "references/capabilities/120-agent-tool-permission-sandbox.md"
+        reason: "Excludes secrets and raw environment output."
+      -
+        reference: "references/capabilities/122-plan-execution-consistency.md"
+        reason: "Prevents partial output from being reported as full validation."
     skipped_references:
-      - reference: references/capabilities/65-performance-budgeting.md
-        reason: The issue is output size, not runtime performance budget.
-      - reference: references/capabilities/75-release-rollback.md
-        reason: No release action is in scope.
+      -
+        reference: "references/capabilities/65-performance-budgeting.md"
+        reason: "The issue is output size, not runtime performance budget."
+      -
+        reference: "references/capabilities/75-release-rollback.md"
+        reason: "No release action is in scope."
     jit_retrieval_required: false
-    jit_retrieval_plan: []
+    jit_retrieval_plan:
     tool_output_boundary_required: true
-    tool_output_boundary: keep command, exit status, failing test names, artifact path, and omit full log/environment values
+    tool_output_boundary: "keep command, exit status, failing test names, artifact path, and omit full log/environment values"
     compaction_snapshot_required: false
     branch_route_repair_summary_required: false
     overhead_evidence_required: false
-    overhead_evidence: not_collected
+    overhead_evidence: "not_collected"
     residual_context_risk:
-      - Full raw output is intentionally excluded; rerun or artifact inspection may be needed for detailed debugging.
+      - "Full raw output is intentionally excluded; rerun or artifact inspection may be needed for detailed debugging."
   stage_route_manifest:
     schema_version: 1
-    current_stage: testing
-    next_stage: code-review
-    product_surface: validation-broker
-    language_surface: none
-    selected_skills: [quality-test-gate]
-    selected_capabilities: [context-control-plane, agent-tool-permission-sandbox, validation-broker, repository-graph-analysis, plan-execution-consistency, agent-execution-discipline]
-    selected_domain_extensions: []
+    current_stage: "testing"
+    next_stage: "code-review"
+    product_surface: "validation-broker"
+    language_surface: "none"
+    selected_skills:
+      - "quality-test-gate"
+    selected_capabilities:
+      - "context-control-plane"
+      - "agent-tool-permission-sandbox"
+      - "validation-broker"
+      - "repository-graph-analysis"
+      - "plan-execution-consistency"
+      - "agent-execution-discipline"
+    selected_domain_extensions:
     skipped_capabilities:
-      - capability: release-rollback
-        reason: validation output handling does not touch deployment
-    context_budget_mode: single-stage
-    context_budget_rationale: L2 validation evidence route has one testing-stage output boundary
-    required_evidence: [validation commands mapped to PDD/DDD/SDD, risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected, validation freshness after final material edits]
-    required_quality_gates: [security gate, test gate, execution discipline gate]
-    handoff_target: quality-test-gate
+      -
+        capability: "release-rollback"
+        reason: "validation output handling does not touch deployment"
+    context_budget_mode: "single-stage"
+    context_budget_rationale: "L2 validation evidence route has one testing-stage output boundary"
+    required_evidence:
+      - "validation commands mapped to PDD/DDD/SDD"
+      - "risk-based layer selection"
+      - "deterministic data"
+      - "observable-behavior assertions"
+      - "evidence of gaps"
+      - "minimal check rationale when lower-depth validation is selected"
+      - "validation freshness after final material edits"
+      - "business golden cases or explicit residual risk for material rule, reason-code, permission, and workflow claims"
+    required_quality_gates:
+      - "security gate"
+      - "test gate"
+      - "execution discipline gate"
+    handoff_target: "quality-test-gate"

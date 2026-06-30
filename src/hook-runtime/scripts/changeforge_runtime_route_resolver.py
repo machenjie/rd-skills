@@ -121,6 +121,7 @@ PRODUCT_SURFACE_ORDER = (
     "agent-runtime-governance",
     "repository-intelligence",
     "project-memory",
+    "business-semantics",
     "validation-broker",
     "execution-trajectory",
 )
@@ -200,6 +201,7 @@ PRODUCT_OWNER = {
     "agent-runtime-governance": "change-forge-router",
     "repository-intelligence": "change-impact-analyzer",
     "project-memory": "change-forge-router",
+    "business-semantics": "change-forge-router",
     "validation-broker": "quality-test-gate",
     "execution-trajectory": "ai-code-review-refactor",
     "sdk-library": "data-api-contract-changer",
@@ -372,6 +374,22 @@ PRODUCT_SURFACE_SIGNALS = {
         "previous fix failed",
         "latest commit review follow-up",
     ),
+    "business-semantics": (
+        "business semantic pack",
+        "business semantic control plane",
+        "business intent",
+        "business vocabulary",
+        "business object",
+        "business rule",
+        "rule authority",
+        "workflow state",
+        "status transition",
+        "business golden case",
+        "semantic review",
+        "hidden sql rule",
+        "hidden controller rule",
+        "stale business memory",
+    ),
     "validation-broker": (
         "validation broker",
         "validation command selection",
@@ -484,6 +502,16 @@ SURFACE_CAPABILITIES = {
         "plan-execution-consistency",
         "context-control-plane",
     ),
+    "business-semantics": (
+        "business-semantic-control-plane",
+        "domain-object-identification",
+        "business-rule-extraction",
+        "state-machine-modeling",
+        "context-control-plane",
+        "project-memory-governance",
+        "repository-graph-analysis",
+        "validation-broker",
+    ),
     "validation-broker": (
         "validation-broker",
         "repository-graph-analysis",
@@ -573,11 +601,15 @@ STAGE_CAPABILITIES = {
 }
 
 STAGE_CONDITIONAL_CAPABILITIES = {
+    "requirement-intake": (
+        "business-semantic-control-plane",
+    ),
     "architecture-design": (
         "architecture-enforcement-tooling",
         "consumer-impact-analysis",
         "dependency-wiring-lifecycle",
         "minimal-correct-implementation",
+        "business-semantic-control-plane",
     ),
     "debugging-diagnosis": (
         "data-format-contract-usage",
@@ -597,6 +629,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "agent-workflow-state-machine",
         "repository-graph-analysis",
         "plan-execution-consistency",
+        "business-semantic-control-plane",
     ),
     "coding": (
         "code-element-professionalism",
@@ -610,6 +643,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "agent-tool-permission-sandbox",
         "agent-workflow-state-machine",
         "plan-execution-consistency",
+        "business-semantic-control-plane",
     ),
     "bug-fix": (
         "code-element-professionalism",
@@ -619,12 +653,14 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "project-memory-governance",
         "plan-execution-consistency",
         "agent-workflow-state-machine",
+        "business-semantic-control-plane",
     ),
     "code-review": (
         "code-element-professionalism",
         "data-format-contract-usage",
         "minimal-correct-implementation",
         "agent-workflow-state-machine",
+        "business-semantic-control-plane",
     ),
     "refactoring": (
         "code-element-professionalism",
@@ -633,6 +669,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "data-side-effect-flow-tracing",
         "cleanup-deletion-governance",
         "minimal-correct-implementation",
+        "business-semantic-control-plane",
     ),
     "testing": (
         "unit-testing",
@@ -650,6 +687,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "agent-workflow-state-machine",
         "validation-broker",
         "repository-graph-analysis",
+        "business-semantic-control-plane",
     ),
     "release-delivery": (
         "configuration-runtime-policy",
@@ -665,6 +703,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "validation-broker",
         "execution-trajectory-analysis",
         "project-memory-governance",
+        "business-semantic-control-plane",
     ),
     "skill-authoring": (
         "minimal-correct-implementation",
@@ -675,6 +714,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "validation-broker",
         "execution-trajectory-analysis",
         "context-control-plane",
+        "business-semantic-control-plane",
     ),
 }
 
@@ -719,6 +759,25 @@ CAPABILITY_TRIGGERS: dict[str, tuple[str, ...]] = {
         "output truncation",
         "over routing",
         "under routing",
+    ),
+    "business-semantic-control-plane": (
+        "business semantic pack",
+        "business semantic control plane",
+        "business intent",
+        "business vocabulary",
+        "business object",
+        "business rule",
+        "rule authority",
+        "workflow state",
+        "status transition",
+        "business golden case",
+        "semantic review",
+        "hidden business rule",
+        "hidden sql rule",
+        "hidden controller rule",
+        "stale business memory",
+        "graph used as business fact",
+        "memory used as business fact",
     ),
     "code-element-professionalism": (
         "variable uninitialized",
@@ -925,6 +984,7 @@ CAPABILITY_IDS = {
     "linux-systems-professional-usage": "132",
     "network-protocol-gateway-usage": "133",
     "data-format-contract-usage": "134",
+    "business-semantic-control-plane": "135",
 }
 
 

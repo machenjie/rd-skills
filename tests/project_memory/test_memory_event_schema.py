@@ -42,6 +42,8 @@ class MemoryEventSchemaTests(unittest.TestCase):
         self.assertIn("promotion_status", required)
         self.assertIn("route_decision", data["properties"]["type"]["enum"])
         self.assertIn("repeat_failure", data["properties"]["type"]["enum"])
+        self.assertIn("business_rule_changed", data["properties"]["type"]["enum"])
+        self.assertIn("stale_business_context", data["properties"]["kind"]["enum"])
         self.assertIn("validation_pattern", data["properties"]["kind"]["enum"])
         self.assertNotIn("source_evidence", required)
         source_evidence = data["properties"]["source_evidence"]
@@ -62,6 +64,10 @@ class MemoryEventSchemaTests(unittest.TestCase):
             body["properties"]["source_check_required"],
             {"type": "boolean", "const": True},
         )
+        summary = body["properties"]["summary"]
+        self.assertIn("business_memory", summary["required"])
+        business_memory = summary["properties"]["business_memory"]
+        self.assertEqual(business_memory["required"], ["accepted", "rejected", "stale", "not_verified"])
 
 
 if __name__ == "__main__":

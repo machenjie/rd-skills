@@ -11,6 +11,8 @@ stages:
       - non-goal-boundary-definition
       - acceptance-standard-definition
       - scenario-decomposition
+    conditional_capabilities:
+      - business-semantic-control-plane
     skip_by_default:
       - coding
       - language
@@ -23,6 +25,7 @@ stages:
       - explicit non-goals
       - testable acceptance signal
       - clarification status before action
+      - business semantic intent, vocabulary, and open questions when business terms are present
     required_quality_gates:
       - PDD gate
       - requirement gate
@@ -49,6 +52,7 @@ stages:
       - consumer-impact-analysis
       - dependency-wiring-lifecycle
       - minimal-correct-implementation
+      - business-semantic-control-plane
     skip_by_default:
       - language idiom checks
       - coding
@@ -60,6 +64,7 @@ stages:
       - rejected alternatives
       - simplicity ladder result when extensibility or stack complexity is proposed
       - reversibility classification
+      - business object ownership, rule authority, and workflow boundary when business semantics affect architecture
     required_quality_gates:
       - DDD gate
       - architecture gate
@@ -93,6 +98,7 @@ stages:
       - agent-workflow-state-machine
       - repository-graph-analysis
       - plan-execution-consistency
+      - business-semantic-control-plane
     skip_by_default:
       - full architecture review
       - release
@@ -111,6 +117,7 @@ stages:
       - visibility decisions
       - test placement
       - TDD or validation signal
+      - business-to-code mapping and forbidden placement rationale when rules or workflows are affected
     required_quality_gates:
       - SDD gate
       - implementation gate
@@ -139,6 +146,7 @@ stages:
       - agent-tool-permission-sandbox
       - agent-workflow-state-machine
       - plan-execution-consistency
+      - business-semantic-control-plane
     skip_by_default:
       - architecture deep review
       - release
@@ -153,6 +161,7 @@ stages:
       - minimal scope diff
       - deleted or rejected complexity
       - tool permission and sandbox classification when risky tools or commands are used
+      - business semantic claim-to-code mapping when implementation changes rules, objects, or workflow states
     required_quality_gates:
       - TDD gate
       - implementation gate
@@ -205,6 +214,7 @@ stages:
       - project-memory-governance
       - plan-execution-consistency
       - agent-workflow-state-machine
+      - business-semantic-control-plane
     skip_by_default:
       - architecture redesign
       - release
@@ -215,6 +225,7 @@ stages:
       - regression test
       - blast-radius note
       - plan versus actual changed-file consistency
+      - business semantic same-pattern scan when the defect is rule, status, permission, or workflow related
     required_quality_gates:
       - implementation gate
       - test gate
@@ -239,6 +250,7 @@ stages:
       - data-format-contract-usage
       - minimal-correct-implementation
       - agent-workflow-state-machine
+      - business-semantic-control-plane
     skip_by_default:
       - release
       - deployment
@@ -253,6 +265,7 @@ stages:
       - independent reviewer
       - repair and re-review result
       - final diff covered by review scope
+      - semantic review result for changed, hidden, stale, rejected, or untested business behavior
     required_quality_gates:
       - implementation gate
     allowed_next_stages:
@@ -281,6 +294,7 @@ stages:
       - data-side-effect-flow-tracing
       - cleanup-deletion-governance
       - minimal-correct-implementation
+      - business-semantic-control-plane
     skip_by_default:
       - feature design
       - release
@@ -290,6 +304,7 @@ stages:
       - selection rationale
       - deleted or rejected complexity
       - rollback path
+      - business behavior preservation evidence when refactoring touches terms, rules, or workflows
     required_quality_gates:
       - implementation gate
       - test gate
@@ -324,6 +339,7 @@ stages:
       - agent-workflow-state-machine
       - validation-broker
       - repository-graph-analysis
+      - business-semantic-control-plane
     skip_by_default:
       - architecture redesign
       - coding of new features
@@ -335,6 +351,7 @@ stages:
       - evidence of gaps
       - minimal check rationale when lower-depth validation is selected
       - validation freshness after final material edits
+      - business golden cases or explicit residual risk for material rule, reason-code, permission, and workflow claims
     required_quality_gates:
       - test gate
     allowed_next_stages:
@@ -394,6 +411,7 @@ stages:
       - validation-broker
       - execution-trajectory-analysis
       - project-memory-governance
+      - business-semantic-control-plane
     skip_by_default:
       - coding capabilities
     required_evidence:
@@ -402,6 +420,7 @@ stages:
       - residual risk
       - updated docs list
       - handoff target
+      - business semantic residual risk, owner handoff, and selected/skipped reference rationale when BSP was selected
     required_quality_gates:
       - documentation gate
     allowed_next_stages:
@@ -430,6 +449,7 @@ stages:
       - validation-broker
       - execution-trajectory-analysis
       - context-control-plane
+      - business-semantic-control-plane
     skip_by_default:
       - product coding
       - language runtime
@@ -443,6 +463,7 @@ stages:
       - minimal scope diff
       - deleted or rejected complexity
       - shortcut ceiling and upgrade trigger when shortcuts remain
+      - business semantic schema, fixture, routing, memory, graph, and validation impact when authoring BSP behavior
     required_quality_gates:
       - documentation gate
       - test gate
@@ -476,6 +497,9 @@ process_stage_ownership:
   cross_stage_review:
     owner_skill: ai-code-review-refactor
     evidence: concrete mappings across PDD, DDD, SDD, TDD, actual diff, and final validation
+  business_semantics:
+    owner_skill: change-forge-router
+    evidence: task-scoped Business Semantic Pack trigger decision, source-backed facts, memory/graph selector limits, selected and skipped references, validation map, and residual semantic risk
 
 route_manifest_patterns:
   non_documentation_code_change:
@@ -500,6 +524,22 @@ route_manifest_patterns:
       - logging_decision_has_type_level_fields_redaction
       - logging_or_security_tests_present
       - forbidden_secret_fields_absent
+  business_semantic_change:
+    selected_skills:
+      - change-intake-compiler
+      - domain-impact-modeler
+      - quality-test-gate
+      - ai-code-review-refactor
+    selected_capabilities:
+      - business-semantic-control-plane
+      - domain-object-identification
+      - business-rule-extraction
+      - state-machine-modeling
+      - context-control-plane
+    required_quality_gates:
+      - business_semantic_pack_has_source_backed_facts
+      - memory_and_graph_are_selector_only
+      - business_claims_map_to_validation_or_residual_risk
 
 product_surfaces:
   - surface: frontend-product
@@ -611,6 +651,10 @@ product_surfaces:
     signals: [project memory, repeat failure, fragile file, stale context, previous fix failed, latest commit review follow-up]
     required_skill: change-forge-router
     default_capabilities: [project-memory-governance, agent-execution-discipline, plan-execution-consistency, context-control-plane]
+  - surface: business-semantics
+    signals: [business semantic pack, business semantic control plane, business intent, business vocabulary, business object, business rule, rule authority, workflow state, status transition, business golden case, semantic review, hidden sql rule, hidden controller rule, stale business memory]
+    required_skill: change-forge-router
+    default_capabilities: [business-semantic-control-plane, domain-object-identification, business-rule-extraction, state-machine-modeling, context-control-plane, project-memory-governance, repository-graph-analysis, validation-broker]
   - surface: validation-broker
     signals: [validation broker, validation command selection, stale validation, validation without outcome, affected tests, changed path validation]
     required_skill: quality-test-gate

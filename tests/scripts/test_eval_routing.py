@@ -97,6 +97,7 @@ actual:
       - regression test
       - blast-radius note
       - plan versus actual changed-file consistency
+      - business semantic same-pattern scan when the defect is rule, status, permission, or workflow related
     required_quality_gates:
       - requirement gate
       - impact gate
@@ -207,6 +208,7 @@ class EvalRoutingCandidateTests(unittest.TestCase):
             "      - regression test\n"
             "      - blast-radius note\n"
             "      - plan versus actual changed-file consistency\n"
+            "      - business semantic same-pattern scan when the defect is rule, status, permission, or workflow related\n"
             "    required_quality_gates:\n"
             "      - requirement gate\n"
             "      - impact gate\n"

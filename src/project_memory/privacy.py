@@ -31,6 +31,17 @@ MEMORY_TYPES = {
     "hook_false_positive",
     "hook_false_negative",
     "repeat_failure",
+    "business_rule_changed",
+    "business_rule_rejected",
+    "business_object_ownership_changed",
+    "business_term_ambiguous",
+    "workflow_transition_bug",
+    "missing_entry_point_bug",
+    "hidden_sql_rule_bug",
+    "stale_business_context",
+    "golden_case_added",
+    "golden_case_failed",
+    "owner_decision_superseded",
 }
 MEMORY_KINDS = {
     "fragile_file",
@@ -42,6 +53,17 @@ MEMORY_KINDS = {
     "route_correction",
     "false_positive_hook",
     "false_negative_hook",
+    "business_rule_changed",
+    "business_rule_rejected",
+    "business_object_ownership_changed",
+    "business_term_ambiguous",
+    "workflow_transition_bug",
+    "missing_entry_point_bug",
+    "hidden_sql_rule_bug",
+    "stale_business_context",
+    "golden_case_added",
+    "golden_case_failed",
+    "owner_decision_superseded",
 }
 KIND_BY_TYPE = {
     "route_decision": "route_correction",
@@ -57,6 +79,17 @@ KIND_BY_TYPE = {
     "hook_false_positive": "false_positive_hook",
     "hook_false_negative": "false_negative_hook",
     "repeat_failure": "repeat_failure",
+    "business_rule_changed": "business_rule_changed",
+    "business_rule_rejected": "business_rule_rejected",
+    "business_object_ownership_changed": "business_object_ownership_changed",
+    "business_term_ambiguous": "business_term_ambiguous",
+    "workflow_transition_bug": "workflow_transition_bug",
+    "missing_entry_point_bug": "missing_entry_point_bug",
+    "hidden_sql_rule_bug": "hidden_sql_rule_bug",
+    "stale_business_context": "stale_business_context",
+    "golden_case_added": "golden_case_added",
+    "golden_case_failed": "golden_case_failed",
+    "owner_decision_superseded": "owner_decision_superseded",
 }
 TYPE_BY_KIND = {
     "fragile_file": "fragile_file",
@@ -68,6 +101,17 @@ TYPE_BY_KIND = {
     "route_correction": "route_decision",
     "false_positive_hook": "hook_false_positive",
     "false_negative_hook": "hook_false_negative",
+    "business_rule_changed": "business_rule_changed",
+    "business_rule_rejected": "business_rule_rejected",
+    "business_object_ownership_changed": "business_object_ownership_changed",
+    "business_term_ambiguous": "business_term_ambiguous",
+    "workflow_transition_bug": "workflow_transition_bug",
+    "missing_entry_point_bug": "missing_entry_point_bug",
+    "hidden_sql_rule_bug": "hidden_sql_rule_bug",
+    "stale_business_context": "stale_business_context",
+    "golden_case_added": "golden_case_added",
+    "golden_case_failed": "golden_case_failed",
+    "owner_decision_superseded": "owner_decision_superseded",
 }
 OUTCOMES = {"success", "failed", "partial", "blocked", "unknown"}
 CONFIDENCES = {"low", "medium", "high"}
@@ -405,7 +449,15 @@ def _summary_from_event(kind: str, paths: list[str], outcome: str) -> str:
 def _default_retention_policy(kind: str) -> str:
     if kind in {"false_positive_hook", "false_negative_hook"}:
         return "retain_until_human_review"
-    if kind in {"fragile_file", "repeat_failure"}:
+    if kind in {"fragile_file", "repeat_failure"} or kind.startswith("business_") or kind in {
+        "workflow_transition_bug",
+        "missing_entry_point_bug",
+        "hidden_sql_rule_bug",
+        "stale_business_context",
+        "golden_case_added",
+        "golden_case_failed",
+        "owner_decision_superseded",
+    }:
         return "retain_90_days_or_until_superseded"
     return "retain_30_days_or_until_superseded"
 

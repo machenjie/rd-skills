@@ -59,6 +59,8 @@ Select the object-identification mode before choosing persistence schema, API re
 
 Select this capability when the main question is what domain concepts exist, which category each concept belongs to, and who owns the concept's behavior. Select it before `business-rule-extraction` when rule owners are unknown. Select it with `repository-context-map` or `repository-graph-analysis` when current code, registry, tests, generated artifacts, or docs already use the term and may contain conflicting meanings.
 
+Select `business-semantic-control-plane` with this capability when object names, owner context, DTO/table confusion, stale memory, or graph-selected evidence must be recorded in a task-scoped Business Semantic Pack. The BSP record carries object claims as source-backed facts, inferences, assumptions, open questions, or memory signals.
+
 Prefer `business-rule-extraction` when objects are known but rules are scattered. Prefer `state-machine-modeling` when lifecycle states and transitions are the primary unknown. Prefer `data-model-design` when persistence structure is the main deliverable. Prefer `implementation-structure-design` when the domain concept is accepted and the remaining question is function, class, file, or module placement.
 
 # Risk Escalation Rules
@@ -142,6 +144,7 @@ Return a domain object inventory with, per object:
 - `tests` covering identity, equality, invariant, lifecycle, permission, persistence mapping, and event/resource mapping risks
 - `open_questions`, rejected ambiguous meanings, and downstream handoffs
 - `graph_memory_trajectory_judgment` for accepted, rejected, stale, or not-verified object claims
+- `business_semantic_pack_mapping` when BSP is selected: object id, owning context, evidence class, source paths, memory/graph selector status, selected/skipped references, and residual semantic risk
 - `object_to_validation_map` linking identity, equality, ownership, lifecycle, relationship, permission, persistence, and event/resource claims to validator, owner review, or residual risk
 - `evidence_limits` naming what source reads, graph scans, project memory, owner review, and validation prove and do not prove
 - `next_gate` when rule extraction, state modeling, permission, persistence, API contract, event, transaction, or release evidence remains outside this capability
@@ -160,6 +163,7 @@ Return a domain object inventory with, per object:
 10. DTO, ORM, event, generated, and provider models are mapped to or from domain objects rather than silently becoming them.
 11. Writer entry points are inventoried when mutation authority is part of the change.
 12. Tests or validation obligations are assigned for identity, equality, invariant, lifecycle, permission, persistence, and event/resource mapping risks.
+13. Business Semantic Pack object claims are task-scoped, source-backed when marked `FACT`, and never promoted from repository graph or project memory alone.
 
 # Evidence Contract
 

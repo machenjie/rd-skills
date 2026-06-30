@@ -78,3 +78,4 @@ Use the index to filter by:
 
 The exporter reads source registries and frontmatter. Do not hand-author a second marketplace catalog.
 The validator checks schema shape, profile visibility, runtime paths, and foundation capability exposure rules against built `dist/` artifacts.
+Business semantic capability discovery comes from the same source-derived index and generated catalog as every other capability; do not hand-author a separate business catalog or runtime content package.

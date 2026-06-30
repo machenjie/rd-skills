@@ -21,13 +21,17 @@ expected:
   skills:
     - ai-code-review-refactor
     - architecture-impact-reviewer
+    - domain-impact-modeler
     - backend-change-builder
   capabilities:
     - agent-execution-discipline
+    - business-rule-extraction
+    - business-semantic-control-plane
     - implementation-structure-design
   domain_extensions: []
   quality_gates:
     - architecture gate
+    - domain gate
     - implementation gate
     - AI review gate
     - execution discipline gate

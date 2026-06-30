@@ -1319,3 +1319,15 @@ capabilities:
       - protobuf field number reserved field enum value wire type breaking change old reader new writer YAML safe loader YAML 1.1 YAML 1.2 scalar coercion TOML type strictness duplicate key unknown field boolean timestamp XML canonicalization size depth limit parser differential CPE normalization version matching
     risk_notes: [Data format changes can break consumers or stored data through parser defaults coercion field-number reuse generated drift unsafe loaders duplicate keys and untested old-reader new-writer behavior]
     expected_outputs: [Data Format Contract Record with format surface schema authority parser contract compatibility class field evolution security contract generated artifact policy fixtures validation decision record and residual risk]
+  - id: "135"
+    name: business-semantic-control-plane
+    group: business-intelligence
+    path: src/foundation/capabilities/business-semantic-control-plane
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, domain-impact-modeler, quality-test-gate, ai-code-review-refactor, change-documentation-gate, skill-authoring-expert]
+    triggers:
+      - business semantic pack business semantic control plane business intent business vocabulary business object rule authority workflow state transition business golden case semantic review
+      - hidden business rule controller sql mapper dto memory business signal stale business memory graph selector business fact evidence owner review source-backed business rule
+    risk_notes: [Business semantic changes can silently alter rules workflows owner intent or golden cases when graph or memory hints are treated as facts without current evidence]
+    expected_outputs: [Business Semantic Control Record with task-scoped BSP scope intent vocabulary objects rules workflows memory graph golden cases validation map selected and skipped references evidence limits residual risk and handoff]

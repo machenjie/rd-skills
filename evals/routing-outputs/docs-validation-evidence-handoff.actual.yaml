@@ -1,27 +1,52 @@
 ---
-case_id: docs-validation-evidence-handoff
+case_id: "docs-validation-evidence-handoff"
 actual:
-  complexity: L2
-  risk_level: low
-  skills: [change-documentation-gate, quality-test-gate]
-  capabilities: [documentation-generation, agent-execution-discipline]
-  domain_extensions: []
-  quality_gates: [documentation gate, test gate]
-  required_references: [references/capabilities/80-documentation-generation.md, references/capabilities/102-agent-execution-discipline.md, references/capability-index.md, references/domain-extension-index.md, references/routing-rules.md, references/skill-registry.md]
+  complexity: "L2"
+  risk_level: "low"
+  skills:
+    - "change-documentation-gate"
+    - "quality-test-gate"
+  capabilities:
+    - "documentation-generation"
+    - "agent-execution-discipline"
+  domain_extensions:
+  quality_gates:
+    - "documentation gate"
+    - "test gate"
+  required_references:
+    - "references/capabilities/80-documentation-generation.md"
+    - "references/capabilities/102-agent-execution-discipline.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: documentation-handoff
-    next_stage: closed
-    product_surface: documentation-only
-    language_surface: none
-    selected_skills: [change-documentation-gate, quality-test-gate]
-    selected_capabilities: [documentation-generation, agent-execution-discipline]
-    selected_domain_extensions: []
+    current_stage: "documentation-handoff"
+    next_stage: "closed"
+    product_surface: "documentation-only"
+    language_surface: "none"
+    selected_skills:
+      - "change-documentation-gate"
+      - "quality-test-gate"
+    selected_capabilities:
+      - "documentation-generation"
+      - "agent-execution-discipline"
+    selected_domain_extensions:
     skipped_capabilities:
-      - capability: service-business-logic
-        reason: no implementation remains in documentation handoff
-    context_budget_mode: single-stage
-    context_budget_rationale: L2 handoff only needs one documentation closure stage
-    required_evidence: [validated boundary, validation freshness and plan-execution consistency, residual risk, updated docs list, handoff target]
-    required_quality_gates: [documentation gate, test gate]
-    handoff_target: closed
+      -
+        capability: "service-business-logic"
+        reason: "no implementation remains in documentation handoff"
+    context_budget_mode: "single-stage"
+    context_budget_rationale: "L2 handoff only needs one documentation closure stage"
+    required_evidence:
+      - "validated boundary"
+      - "validation freshness and plan-execution consistency"
+      - "residual risk"
+      - "updated docs list"
+      - "handoff target"
+      - "business semantic residual risk, owner handoff, and selected/skipped reference rationale when BSP was selected"
+    required_quality_gates:
+      - "documentation gate"
+      - "test gate"
+    handoff_target: "closed"

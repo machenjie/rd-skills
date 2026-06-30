@@ -1,0 +1,297 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/business-intelligence/business-semantic-pack.v1.schema.json",
+  "title": "ChangeForge Business Semantic Pack",
+  "description": "Task-scoped business semantic evidence package. Repository graph and project memory are selectors only; FACT claims require current source, owner review, user-provided source material, or validation evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["business_semantic_pack"],
+  "$defs": {
+    "boundedStringList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {"type": "string", "minLength": 1, "maxLength": 300}
+    },
+    "boundedPathList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 220,
+        "not": {"pattern": "^(/|~|\\.\\.)"}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_class", "source_kind", "summary"],
+      "properties": {
+        "evidence_class": {
+          "type": "string",
+          "enum": ["FACT", "INFERENCE", "ASSUMPTION", "OPEN_QUESTION", "MEMORY_SIGNAL"]
+        },
+        "source_kind": {
+          "type": "string",
+          "enum": [
+            "current_source",
+            "user_provided_source",
+            "owner_review",
+            "validation_result",
+            "repository_graph",
+            "memory_projection",
+            "agent_inference"
+          ]
+        },
+        "source_paths": {"$ref": "#/$defs/boundedPathList"},
+        "source_refs": {"$ref": "#/$defs/boundedStringList"},
+        "summary": {"type": "string", "minLength": 1, "maxLength": 500},
+        "freshness": {
+          "type": "string",
+          "enum": ["current", "stale", "unknown", "not_applicable"]
+        },
+        "confidence": {"type": "string", "enum": ["high", "medium", "low", "unknown"]},
+        "verification_status": {
+          "type": "string",
+          "enum": ["verified", "not_verified", "rejected", "stale", "partial"]
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"evidence_class": {"const": "FACT"}}},
+          "then": {
+            "not": {
+              "properties": {
+                "source_kind": {"enum": ["repository_graph", "memory_projection", "agent_inference"]}
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidenceList": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {"$ref": "#/$defs/evidence"}
+    },
+    "claimRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "evidence"],
+      "properties": {
+        "claim_id": {"type": "string", "minLength": 1, "maxLength": 120},
+        "statement": {"type": "string", "minLength": 1, "maxLength": 700},
+        "evidence": {"$ref": "#/$defs/evidenceList"}
+      }
+    },
+    "businessRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule_id", "rule_name", "owner", "enforcement_layer", "rule_statement", "reason_codes", "entry_points", "effective_dating", "tests", "residual_risk", "evidence"],
+      "properties": {
+        "rule_id": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[A-Z0-9][A-Z0-9_.-]*$"},
+        "rule_name": {"type": "string", "minLength": 1, "maxLength": 200},
+        "owner": {"type": "string", "minLength": 1, "maxLength": 200},
+        "enforcement_layer": {
+          "type": "string",
+          "enum": ["domain", "application_service", "policy", "database_constraint", "contract", "workflow", "manual_owner_review", "not_decided"]
+        },
+        "rule_statement": {"type": "string", "minLength": 1, "maxLength": 1000},
+        "reason_codes": {"$ref": "#/$defs/boundedStringList"},
+        "entry_points": {"$ref": "#/$defs/boundedStringList"},
+        "effective_dating": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["effective_from", "effective_to", "timezone_or_calendar"],
+          "properties": {
+            "effective_from": {"type": ["string", "null"], "maxLength": 80},
+            "effective_to": {"type": ["string", "null"], "maxLength": 80},
+            "timezone_or_calendar": {"type": "string", "minLength": 1, "maxLength": 120}
+          }
+        },
+        "tests": {"$ref": "#/$defs/boundedStringList"},
+        "residual_risk": {"$ref": "#/$defs/boundedStringList"},
+        "evidence": {"$ref": "#/$defs/evidenceList"}
+      }
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "trigger", "actor", "guard_rule_ids", "allowed", "evidence"],
+      "properties": {
+        "from": {"type": "string", "minLength": 1, "maxLength": 120},
+        "to": {"type": "string", "minLength": 1, "maxLength": 120},
+        "trigger": {"type": "string", "minLength": 1, "maxLength": 200},
+        "actor": {"type": "string", "minLength": 1, "maxLength": 160},
+        "guard_rule_ids": {"$ref": "#/$defs/boundedStringList"},
+        "allowed": {"type": "boolean"},
+        "reason_code": {"type": "string", "maxLength": 160},
+        "evidence": {"$ref": "#/$defs/evidenceList"}
+      }
+    }
+  },
+  "properties": {
+    "business_semantic_pack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "pack_id",
+        "pack_version",
+        "created_at",
+        "task_business_intent",
+        "business_vocabulary",
+        "business_objects",
+        "business_rules",
+        "workflows",
+        "data_and_signal_semantics",
+        "code_mapping",
+        "memory_projection",
+        "validation_map",
+        "context_control"
+      ],
+      "properties": {
+        "schema_version": {"const": 1},
+        "pack_id": {"type": "string", "minLength": 1, "maxLength": 160},
+        "pack_version": {"type": "string", "minLength": 1, "maxLength": 80},
+        "created_at": {"type": "string", "minLength": 1, "maxLength": 80},
+        "task_business_intent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["business_outcome", "non_goals", "success_signals", "failure_signals", "evidence"],
+          "properties": {
+            "business_outcome": {"type": "string", "minLength": 1, "maxLength": 800},
+            "non_goals": {"$ref": "#/$defs/boundedStringList"},
+            "success_signals": {"$ref": "#/$defs/boundedStringList"},
+            "failure_signals": {"$ref": "#/$defs/boundedStringList"},
+            "evidence": {"$ref": "#/$defs/evidenceList"}
+          }
+        },
+        "business_vocabulary": {
+          "type": "array",
+          "maxItems": 80,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["term", "meaning", "owning_context", "evidence"],
+            "properties": {
+              "term": {"type": "string", "minLength": 1, "maxLength": 160},
+              "meaning": {"type": "string", "minLength": 1, "maxLength": 700},
+              "owning_context": {"type": "string", "minLength": 1, "maxLength": 160},
+              "aliases_or_conflicts": {"$ref": "#/$defs/boundedStringList"},
+              "evidence": {"$ref": "#/$defs/evidenceList"}
+            }
+          }
+        },
+        "business_objects": {
+          "type": "array",
+          "maxItems": 80,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["object_id", "name", "category", "owner", "identity", "lifecycle", "evidence"],
+            "properties": {
+              "object_id": {"type": "string", "minLength": 1, "maxLength": 120},
+              "name": {"type": "string", "minLength": 1, "maxLength": 160},
+              "category": {"type": "string", "enum": ["entity", "value_object", "aggregate_root", "child_entity", "policy", "domain_service", "resource", "read_model", "unknown"]},
+              "owner": {"type": "string", "minLength": 1, "maxLength": 160},
+              "identity": {"type": "string", "minLength": 1, "maxLength": 500},
+              "lifecycle": {"type": "string", "minLength": 1, "maxLength": 500},
+              "evidence": {"$ref": "#/$defs/evidenceList"}
+            }
+          }
+        },
+        "business_rules": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {"$ref": "#/$defs/businessRule"}
+        },
+        "workflows": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["workflow_id", "name", "owner", "states", "transitions", "evidence"],
+            "properties": {
+              "workflow_id": {"type": "string", "minLength": 1, "maxLength": 120},
+              "name": {"type": "string", "minLength": 1, "maxLength": 160},
+              "owner": {"type": "string", "minLength": 1, "maxLength": 160},
+              "states": {"$ref": "#/$defs/boundedStringList"},
+              "transitions": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 100,
+                "items": {"$ref": "#/$defs/transition"}
+              },
+              "evidence": {"$ref": "#/$defs/evidenceList"}
+            }
+          }
+        },
+        "data_and_signal_semantics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["data_sources", "events", "metrics", "evidence"],
+          "properties": {
+            "data_sources": {"$ref": "#/$defs/boundedStringList"},
+            "events": {"$ref": "#/$defs/boundedStringList"},
+            "metrics": {"$ref": "#/$defs/boundedStringList"},
+            "evidence": {"$ref": "#/$defs/evidenceList"}
+          }
+        },
+        "code_mapping": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["object_to_files", "rule_to_enforcement", "workflow_to_state_machine", "forbidden_placements", "evidence"],
+          "properties": {
+            "object_to_files": {"$ref": "#/$defs/boundedStringList"},
+            "rule_to_enforcement": {"$ref": "#/$defs/boundedStringList"},
+            "workflow_to_state_machine": {"$ref": "#/$defs/boundedStringList"},
+            "forbidden_placements": {"$ref": "#/$defs/boundedStringList"},
+            "evidence": {"$ref": "#/$defs/evidenceList"}
+          }
+        },
+        "memory_projection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["accepted", "rejected", "stale", "not_verified"],
+          "properties": {
+            "accepted": {"$ref": "#/$defs/boundedStringList"},
+            "rejected": {"$ref": "#/$defs/boundedStringList"},
+            "stale": {"$ref": "#/$defs/boundedStringList"},
+            "not_verified": {"$ref": "#/$defs/boundedStringList"}
+          }
+        },
+        "validation_map": {
+          "type": "array",
+          "maxItems": 120,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["claim_id", "claim_type", "validation_target", "status", "residual_risk"],
+            "properties": {
+              "claim_id": {"type": "string", "minLength": 1, "maxLength": 120},
+              "claim_type": {"type": "string", "enum": ["intent", "term", "object", "rule", "workflow", "data_signal", "code_mapping", "golden_case"]},
+              "validation_target": {"type": "string", "minLength": 1, "maxLength": 300},
+              "status": {"type": "string", "enum": ["mapped", "not_run", "not_verified", "owner_review_required", "residual_risk"]},
+              "residual_risk": {"$ref": "#/$defs/boundedStringList"}
+            }
+          }
+        },
+        "context_control": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["budget_mode", "selected_references", "skipped_references", "evidence_limits", "residual_context_risk"],
+          "properties": {
+            "budget_mode": {"type": "string", "enum": ["minimal", "single-stage", "staged-plan", "full"]},
+            "selected_references": {"$ref": "#/$defs/boundedStringList"},
+            "skipped_references": {"$ref": "#/$defs/boundedStringList"},
+            "evidence_limits": {"$ref": "#/$defs/boundedStringList"},
+            "residual_context_risk": {"$ref": "#/$defs/boundedStringList"}
+          }
+        }
+      }
+    }
+  }
+}

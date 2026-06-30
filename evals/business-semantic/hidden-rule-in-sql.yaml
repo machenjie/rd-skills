@@ -1,0 +1,11 @@
+case_id: hidden-rule-in-sql
+prompt: Change the renewal SQL query so enterprise subscriptions skip the expired status.
+expected_route:
+  stage: implementation-planning
+  business_semantic_pack_required: true
+expected_capabilities: [business-semantic-control-plane, business-rule-extraction, repository-graph-analysis, validation-broker]
+expected_quality_gates: [domain gate, API/data gate, test gate]
+expected_bsp_sections: [business_rules, data_and_signal_semantics, code_mapping, validation_map, context_control]
+expected_review_findings: [SQL-hidden rule requires rule owner and golden case]
+forbidden_behavior: [approve SQL condition without rule catalog, skip changed-path validation]
+scoring: [hidden_rule_detection, validation_mapping, fact_source_quality, golden_case_coverage]

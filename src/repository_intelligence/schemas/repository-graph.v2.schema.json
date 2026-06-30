@@ -64,7 +64,54 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["from", "to", "type", "edge_type", "evidence", "confidence", "freshness", "extractor"]
+            "required": ["from", "to", "type", "edge_type", "evidence", "confidence", "freshness", "extractor"],
+            "properties": {
+              "from": {"type": "string"},
+              "to": {"type": "string"},
+              "type": {"type": "string"},
+              "edge_type": {
+                "type": "string",
+                "enum": [
+                  "imports",
+                  "calls",
+                  "references",
+                  "tests",
+                  "owns",
+                  "generates",
+                  "generated_from",
+                  "depends_on",
+                  "object_defined_in",
+                  "rule_enforced_by",
+                  "rule_previewed_by",
+                  "rule_defended_by",
+                  "workflow_transition_implemented_by",
+                  "event_produced_by",
+                  "event_consumed_by",
+                  "golden_case_validates",
+                  "memory_warns_about",
+                  "unknown"
+                ]
+              },
+              "evidence": {"type": "object"},
+              "confidence": {"type": "string"},
+              "freshness": {"type": "string"},
+              "extractor": {
+                "type": "string",
+                "enum": [
+                  "python_symbol_extractor",
+                  "markdown_reference_extractor",
+                  "yaml_reference_extractor",
+                  "file_heuristic",
+                  "import_graph",
+                  "test_graph",
+                  "generated_artifact_graph",
+                  "reference_graph",
+                  "business_semantic_graph",
+                  "validation_broker.command_registry",
+                  "unknown"
+                ]
+              }
+            }
           }
         },
         "module_boundaries": {"type": "array"},

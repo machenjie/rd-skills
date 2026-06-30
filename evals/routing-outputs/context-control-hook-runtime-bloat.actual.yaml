@@ -1,77 +1,128 @@
 ---
-case_id: context-control-hook-runtime-bloat
+case_id: "context-control-hook-runtime-bloat"
 actual:
-  complexity: L3
-  risk_level: medium
-  skills: [change-forge-router, quality-test-gate, ai-code-review-refactor, change-documentation-gate]
-  capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency, context-control-plane, validation-broker]
-  domain_extensions: []
-  quality_gates: [impact gate, documentation gate, test gate, AI review gate, execution discipline gate]
+  complexity: "L3"
+  risk_level: "medium"
+  skills:
+    - "change-forge-router"
+    - "quality-test-gate"
+    - "ai-code-review-refactor"
+    - "change-documentation-gate"
+  capabilities:
+    - "repository-context-map"
+    - "skill-authoring-expert"
+    - "engineering-stage-professionalism"
+    - "skill-efficacy-benchmark"
+    - "plan-execution-consistency"
+    - "context-control-plane"
+    - "validation-broker"
+  domain_extensions:
+  quality_gates:
+    - "impact gate"
+    - "documentation gate"
+    - "test gate"
+    - "AI review gate"
+    - "execution discipline gate"
   required_references:
-    - references/routing-rules.md
-    - references/skill-registry.md
-    - references/capability-index.md
-    - references/domain-extension-index.md
-    - references/capabilities/118-repository-context-map.md
-    - references/capabilities/103-skill-authoring-expert.md
-    - references/capabilities/104-engineering-stage-professionalism.md
-    - references/capabilities/121-skill-efficacy-benchmark.md
-    - references/capabilities/122-plan-execution-consistency.md
-    - references/capabilities/128-context-control-plane.md
-    - references/capabilities/126-validation-broker.md
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/capabilities/118-repository-context-map.md"
+    - "references/capabilities/103-skill-authoring-expert.md"
+    - "references/capabilities/104-engineering-stage-professionalism.md"
+    - "references/capabilities/121-skill-efficacy-benchmark.md"
+    - "references/capabilities/122-plan-execution-consistency.md"
+    - "references/capabilities/128-context-control-plane.md"
+    - "references/capabilities/126-validation-broker.md"
   context_control:
-    budget_mode: staged-plan
-    budget_rationale: L3 hook-runtime skill authoring change needs route, validation, review, docs, and reference-overhead evidence.
+    budget_mode: "staged-plan"
+    budget_rationale: "L3 hook-runtime skill authoring change needs route, validation, review, docs, and reference-overhead evidence."
     max_selected_capabilities: 8
     max_required_references: 12
     selected_reference_count: 7
     skipped_reference_count: 2
     selected_references:
-      - reference: references/capabilities/128-context-control-plane.md
-        reason: Owns route budget, selected/skipped references, and overhead evidence.
-      - reference: references/capabilities/121-skill-efficacy-benchmark.md
-        reason: Tracks baseline/treatment and token or turn overhead caveat.
-      - reference: references/capabilities/126-validation-broker.md
-        reason: Maps changed route/runtime files to validators.
-      - reference: references/capabilities/118-repository-context-map.md
-        reason: Confirms source/dist and hook runtime boundaries.
-      - reference: references/capabilities/103-skill-authoring-expert.md
-        reason: Preserves skill boundary and registry impact.
-      - reference: references/capabilities/104-engineering-stage-professionalism.md
-        reason: Keeps the route in skill-authoring stage.
-      - reference: references/capabilities/122-plan-execution-consistency.md
-        reason: Reconciles final diff with the selected route.
+      -
+        reference: "references/capabilities/128-context-control-plane.md"
+        reason: "Owns route budget, selected/skipped references, and overhead evidence."
+      -
+        reference: "references/capabilities/121-skill-efficacy-benchmark.md"
+        reason: "Tracks baseline/treatment and token or turn overhead caveat."
+      -
+        reference: "references/capabilities/126-validation-broker.md"
+        reason: "Maps changed route/runtime files to validators."
+      -
+        reference: "references/capabilities/118-repository-context-map.md"
+        reason: "Confirms source/dist and hook runtime boundaries."
+      -
+        reference: "references/capabilities/103-skill-authoring-expert.md"
+        reason: "Preserves skill boundary and registry impact."
+      -
+        reference: "references/capabilities/104-engineering-stage-professionalism.md"
+        reason: "Keeps the route in skill-authoring stage."
+      -
+        reference: "references/capabilities/122-plan-execution-consistency.md"
+        reason: "Reconciles final diff with the selected route."
     skipped_references:
-      - reference: references/capabilities/123-executor-adapter-protocol.md
-        reason: No adapter event contract is changed.
-      - reference: references/capabilities/75-release-rollback.md
-        reason: No release or deployment artifact is changed.
+      -
+        reference: "references/capabilities/123-executor-adapter-protocol.md"
+        reason: "No adapter event contract is changed."
+      -
+        reference: "references/capabilities/75-release-rollback.md"
+        reason: "No release or deployment artifact is changed."
     jit_retrieval_required: true
     jit_retrieval_plan:
-      - src/hook-runtime/scripts/changeforge_runtime_route_resolver.py
-      - src/registry/routing-rules.yaml
+      - "src/hook-runtime/scripts/changeforge_runtime_route_resolver.py"
+      - "src/registry/routing-rules.yaml"
     tool_output_boundary_required: false
-    tool_output_boundary: bounded validator summaries only
+    tool_output_boundary: "bounded validator summaries only"
     compaction_snapshot_required: false
     branch_route_repair_summary_required: false
     overhead_evidence_required: true
-    overhead_evidence: selected=7 skipped=2 token_estimate=not_collected turn_count=not_collected structural fixture only
+    overhead_evidence: "selected=7 skipped=2 token_estimate=not_collected turn_count=not_collected structural fixture only"
     residual_context_risk:
-      - Live Codex overhead benchmark is not run without explicit maintainer flag.
+      - "Live Codex overhead benchmark is not run without explicit maintainer flag."
   stage_route_manifest:
     schema_version: 1
-    current_stage: skill-authoring
-    next_stage: documentation-handoff
-    product_surface: skill-authoring
-    language_surface: none
-    selected_skills: [change-forge-router, quality-test-gate, ai-code-review-refactor, change-documentation-gate]
-    selected_capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency, context-control-plane, validation-broker]
-    selected_domain_extensions: []
+    current_stage: "skill-authoring"
+    next_stage: "documentation-handoff"
+    product_surface: "skill-authoring"
+    language_surface: "none"
+    selected_skills:
+      - "change-forge-router"
+      - "quality-test-gate"
+      - "ai-code-review-refactor"
+      - "change-documentation-gate"
+    selected_capabilities:
+      - "repository-context-map"
+      - "skill-authoring-expert"
+      - "engineering-stage-professionalism"
+      - "skill-efficacy-benchmark"
+      - "plan-execution-consistency"
+      - "context-control-plane"
+      - "validation-broker"
+    selected_domain_extensions:
     skipped_capabilities:
-      - capability: executor-adapter-protocol
-        reason: hook runtime prompt selection changes do not modify adapter event schema
-    context_budget_mode: staged-plan
-    context_budget_rationale: L3 route-level behavior change needs staged skill-authoring, validation, review, and docs evidence
-    required_evidence: [boundary, trigger precision, output contract, registry/routing/validation impact, skill-efficacy benchmark impact when behavior claims change, minimal scope diff, deleted or rejected complexity, shortcut ceiling and upgrade trigger when shortcuts remain]
-    required_quality_gates: [impact gate, documentation gate, test gate, AI review gate, execution discipline gate]
-    handoff_target: documentation-handoff
+      -
+        capability: "executor-adapter-protocol"
+        reason: "hook runtime prompt selection changes do not modify adapter event schema"
+    context_budget_mode: "staged-plan"
+    context_budget_rationale: "L3 route-level behavior change needs staged skill-authoring, validation, review, and docs evidence"
+    required_evidence:
+      - "boundary"
+      - "trigger precision"
+      - "output contract"
+      - "registry/routing/validation impact"
+      - "skill-efficacy benchmark impact when behavior claims change"
+      - "minimal scope diff"
+      - "deleted or rejected complexity"
+      - "shortcut ceiling and upgrade trigger when shortcuts remain"
+      - "business semantic schema, fixture, routing, memory, graph, and validation impact when authoring BSP behavior"
+    required_quality_gates:
+      - "impact gate"
+      - "documentation gate"
+      - "test gate"
+      - "AI review gate"
+      - "execution discipline gate"
+    handoff_target: "documentation-handoff"

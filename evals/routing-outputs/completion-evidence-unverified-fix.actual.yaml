@@ -1,27 +1,58 @@
 ---
-case_id: completion-evidence-unverified-fix
+case_id: "completion-evidence-unverified-fix"
 actual:
-  complexity: L2
-  risk_level: medium
-  skills: [backend-change-builder, quality-test-gate]
-  capabilities: [implementation-structure-design, agent-execution-discipline, regression-testing]
-  domain_extensions: []
-  quality_gates: [implementation gate, test gate, execution discipline gate]
-  required_references: [references/capabilities/101-implementation-structure-design.md, references/capabilities/102-agent-execution-discipline.md, references/capabilities/64-regression-testing.md, references/capability-index.md, references/domain-extension-index.md, references/routing-rules.md, references/skill-registry.md]
+  complexity: "L2"
+  risk_level: "medium"
+  skills:
+    - "backend-change-builder"
+    - "quality-test-gate"
+  capabilities:
+    - "implementation-structure-design"
+    - "agent-execution-discipline"
+    - "regression-testing"
+  domain_extensions:
+  quality_gates:
+    - "implementation gate"
+    - "test gate"
+    - "execution discipline gate"
+  required_references:
+    - "references/capabilities/101-implementation-structure-design.md"
+    - "references/capabilities/102-agent-execution-discipline.md"
+    - "references/capabilities/64-regression-testing.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: testing
-    next_stage: code-review
-    product_surface: backend-product
-    language_surface: none
-    selected_skills: [backend-change-builder, quality-test-gate]
-    selected_capabilities: [agent-execution-discipline, regression-testing]
-    selected_domain_extensions: []
+    current_stage: "testing"
+    next_stage: "code-review"
+    product_surface: "backend-product"
+    language_surface: "none"
+    selected_skills:
+      - "backend-change-builder"
+      - "quality-test-gate"
+    selected_capabilities:
+      - "agent-execution-discipline"
+      - "regression-testing"
+    selected_domain_extensions:
     skipped_capabilities:
-      - capability: architecture-tradeoff-analysis
-        reason: testing stage validates evidence without architecture redesign
-    context_budget_mode: single-stage
-    context_budget_rationale: L2 completion claim needs test evidence in the active testing stage
-    required_evidence: [validation commands mapped to PDD/DDD/SDD, risk-based layer selection, deterministic data, minimal check rationale when lower-depth validation is selected, observable-behavior assertions, evidence of gaps, validation freshness after final material edits]
-    required_quality_gates: [implementation gate, test gate, execution discipline gate]
-    handoff_target: code-review
+      -
+        capability: "architecture-tradeoff-analysis"
+        reason: "testing stage validates evidence without architecture redesign"
+    context_budget_mode: "single-stage"
+    context_budget_rationale: "L2 completion claim needs test evidence in the active testing stage"
+    required_evidence:
+      - "validation commands mapped to PDD/DDD/SDD"
+      - "risk-based layer selection"
+      - "deterministic data"
+      - "minimal check rationale when lower-depth validation is selected"
+      - "observable-behavior assertions"
+      - "evidence of gaps"
+      - "validation freshness after final material edits"
+      - "business golden cases or explicit residual risk for material rule, reason-code, permission, and workflow claims"
+    required_quality_gates:
+      - "implementation gate"
+      - "test gate"
+      - "execution discipline gate"
+    handoff_target: "code-review"

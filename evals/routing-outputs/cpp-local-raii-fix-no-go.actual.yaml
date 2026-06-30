@@ -1,35 +1,63 @@
 ---
-case_id: cpp-local-raii-fix-no-go
+case_id: "cpp-local-raii-fix-no-go"
 actual:
-  complexity: L2
-  risk_level: high
-  skills: [reliability-observability-gate, quality-test-gate]
-  capabilities: [regression-testing, code-review, language-performance-safety, cpp-professional-usage]
-  domain_extensions: [low-level-systems-extension]
-  quality_gates: [implementation gate, reliability gate, test gate]
+  complexity: "L2"
+  risk_level: "high"
+  skills:
+    - "reliability-observability-gate"
+    - "quality-test-gate"
+  capabilities:
+    - "regression-testing"
+    - "code-review"
+    - "language-performance-safety"
+    - "cpp-professional-usage"
+  domain_extensions:
+    - "low-level-systems-extension"
+  quality_gates:
+    - "implementation gate"
+    - "reliability gate"
+    - "test gate"
   required_references:
-    - references/routing-rules.md
-    - references/skill-registry.md
-    - references/capability-index.md
-    - references/domain-extension-index.md
-    - references/capabilities/64-regression-testing.md
-    - references/capabilities/78-code-review.md
-    - references/capabilities/87-language-performance-safety.md
-    - references/capabilities/94-cpp-professional-usage.md
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/capabilities/64-regression-testing.md"
+    - "references/capabilities/78-code-review.md"
+    - "references/capabilities/87-language-performance-safety.md"
+    - "references/capabilities/94-cpp-professional-usage.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: bug-fix
-    next_stage: testing
-    product_surface: low-level-systems
-    language_surface: cpp
-    selected_skills: [reliability-observability-gate, quality-test-gate]
-    selected_capabilities: [regression-testing, code-review, language-performance-safety, cpp-professional-usage]
-    selected_domain_extensions: [low-level-systems-extension]
+    current_stage: "bug-fix"
+    next_stage: "testing"
+    product_surface: "low-level-systems"
+    language_surface: "cpp"
+    selected_skills:
+      - "reliability-observability-gate"
+      - "quality-test-gate"
+    selected_capabilities:
+      - "regression-testing"
+      - "code-review"
+      - "language-performance-safety"
+      - "cpp-professional-usage"
+    selected_domain_extensions:
+      - "low-level-systems-extension"
     skipped_capabilities:
-      - capability: go-professional-usage
-        reason: no .go file or Go runtime signal
-    context_budget_mode: single-stage
-    context_budget_rationale: L2 native RAII bug fix stays in low-level C++ route
-    required_evidence: [minimal diff, deleted or rejected complexity when selected, same-pattern scan record, regression test, blast-radius note, plan versus actual changed-file consistency]
-    required_quality_gates: [implementation gate, reliability gate, test gate]
-    handoff_target: testing
+      -
+        capability: "go-professional-usage"
+        reason: "no .go file or Go runtime signal"
+    context_budget_mode: "single-stage"
+    context_budget_rationale: "L2 native RAII bug fix stays in low-level C++ route"
+    required_evidence:
+      - "minimal diff"
+      - "deleted or rejected complexity when selected"
+      - "same-pattern scan record"
+      - "regression test"
+      - "blast-radius note"
+      - "plan versus actual changed-file consistency"
+      - "business semantic same-pattern scan when the defect is rule, status, permission, or workflow related"
+    required_quality_gates:
+      - "implementation gate"
+      - "reliability gate"
+      - "test gate"
+    handoff_target: "testing"

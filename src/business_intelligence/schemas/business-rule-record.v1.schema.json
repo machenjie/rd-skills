@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/business-intelligence/business-rule-record.v1.schema.json",
+  "title": "ChangeForge Business Rule Record",
+  "description": "One authoritative business rule record for BSP rule catalogs. Rule IDs are unique within a Business Semantic Pack and must carry owner, enforcement, entry point, reason code, test, and residual-risk evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["business_rule_record"],
+  "$defs": {
+    "boundedStringList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {"type": "string", "minLength": 1, "maxLength": 300}
+    },
+    "boundedPathList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {"type": "string", "minLength": 1, "maxLength": 220, "not": {"pattern": "^(/|~|\\.\\.)"}}
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_class", "source_kind", "summary"],
+      "properties": {
+        "evidence_class": {"type": "string", "enum": ["FACT", "INFERENCE", "ASSUMPTION", "OPEN_QUESTION", "MEMORY_SIGNAL"]},
+        "source_kind": {"type": "string", "enum": ["current_source", "user_provided_source", "owner_review", "validation_result", "repository_graph", "memory_projection", "agent_inference"]},
+        "source_paths": {"$ref": "#/$defs/boundedPathList"},
+        "summary": {"type": "string", "minLength": 1, "maxLength": 500},
+        "freshness": {"type": "string", "enum": ["current", "stale", "unknown", "not_applicable"]}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"evidence_class": {"const": "FACT"}}},
+          "then": {
+            "not": {
+              "properties": {"source_kind": {"enum": ["repository_graph", "memory_projection", "agent_inference"]}}
+            }
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "business_rule_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "rule_id",
+        "rule_name",
+        "rule_statement",
+        "owner",
+        "enforcement_layer",
+        "reason_codes",
+        "entry_points",
+        "effective_dating",
+        "tests",
+        "residual_risk",
+        "evidence"
+      ],
+      "properties": {
+        "schema_version": {"const": 1},
+        "rule_id": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[A-Z0-9][A-Z0-9_.-]*$"},
+        "rule_name": {"type": "string", "minLength": 1, "maxLength": 200},
+        "rule_statement": {"type": "string", "minLength": 1, "maxLength": 1000},
+        "owner": {"type": "string", "minLength": 1, "maxLength": 200},
+        "enforcement_layer": {"type": "string", "enum": ["domain", "application_service", "policy", "database_constraint", "contract", "workflow", "manual_owner_review", "not_decided"]},
+        "reason_codes": {"$ref": "#/$defs/boundedStringList"},
+        "entry_points": {"$ref": "#/$defs/boundedStringList"},
+        "effective_dating": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["effective_from", "effective_to", "timezone_or_calendar"],
+          "properties": {
+            "effective_from": {"type": ["string", "null"], "maxLength": 80},
+            "effective_to": {"type": ["string", "null"], "maxLength": 80},
+            "timezone_or_calendar": {"type": "string", "minLength": 1, "maxLength": 120}
+          }
+        },
+        "tests": {"$ref": "#/$defs/boundedStringList"},
+        "residual_risk": {"$ref": "#/$defs/boundedStringList"},
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {"$ref": "#/$defs/evidence"}
+        }
+      }
+    }
+  }
+}

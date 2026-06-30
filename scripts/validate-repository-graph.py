@@ -39,6 +39,15 @@ EDGE_TYPES = {
     "generates",
     "generated_from",
     "depends_on",
+    "object_defined_in",
+    "rule_enforced_by",
+    "rule_previewed_by",
+    "rule_defended_by",
+    "workflow_transition_implemented_by",
+    "event_produced_by",
+    "event_consumed_by",
+    "golden_case_validates",
+    "memory_warns_about",
     "unknown",
 }
 EXTRACTOR_VALUES = {
@@ -50,6 +59,7 @@ EXTRACTOR_VALUES = {
     "test_graph",
     "generated_artifact_graph",
     "reference_graph",
+    "business_semantic_graph",
     "validation_broker.command_registry",
     "unknown",
 }

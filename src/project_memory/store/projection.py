@@ -17,6 +17,19 @@ from project_memory.store.append_log import parse_iso_datetime
 FAILURE_OUTCOMES = {"failed", "blocked", "partial"}
 FRAGILE_TYPES = {"review_finding", "repair_attempt", "fragile_file"}
 DECISION_TYPES = {"accepted_decision", "rejected_decision", "route_decision"}
+BUSINESS_MEMORY_KINDS = {
+    "business_rule_changed",
+    "business_rule_rejected",
+    "business_object_ownership_changed",
+    "business_term_ambiguous",
+    "workflow_transition_bug",
+    "missing_entry_point_bug",
+    "hidden_sql_rule_bug",
+    "stale_business_context",
+    "golden_case_added",
+    "golden_case_failed",
+    "owner_decision_superseded",
+}
 
 
 def build_memory_summary(
@@ -285,10 +298,21 @@ def _kind(event: dict[str, Any]) -> str:
         "review_finding": "review_finding_pattern",
         "repair_attempt": "review_finding_pattern",
         "context_pack": "generated_source_mapping",
-        "route_decision": "route_correction",
-        "hook_false_positive": "false_positive_hook",
-        "hook_false_negative": "false_negative_hook",
-    }
+            "route_decision": "route_correction",
+            "hook_false_positive": "false_positive_hook",
+            "hook_false_negative": "false_negative_hook",
+            "business_rule_changed": "business_rule_changed",
+            "business_rule_rejected": "business_rule_rejected",
+            "business_object_ownership_changed": "business_object_ownership_changed",
+            "business_term_ambiguous": "business_term_ambiguous",
+            "workflow_transition_bug": "workflow_transition_bug",
+            "missing_entry_point_bug": "missing_entry_point_bug",
+            "hidden_sql_rule_bug": "hidden_sql_rule_bug",
+            "stale_business_context": "stale_business_context",
+            "golden_case_added": "golden_case_added",
+            "golden_case_failed": "golden_case_failed",
+            "owner_decision_superseded": "owner_decision_superseded",
+        }
     return mapping.get(_type(event), "module_convention")
 
 
@@ -366,6 +390,7 @@ def _projection_event(event: dict[str, Any], *, stale: bool, hit: dict[str, str]
         "confidence": str(event.get("confidence") or ""),
         "timestamp": _timestamp(event),
         "source": str(event.get("source") or ""),
+        "promotion_status": str(event.get("promotion_status") or ""),
         "source_check_required": True,
         "stale_relative_to_source": stale,
         "memory_hit": hit,
@@ -406,6 +431,28 @@ def _projection_summary(events: list[dict[str, Any]]) -> dict[str, list[dict[str
             for event in events
             if event.get("kind") == "review_finding_pattern"
         ],
+        "business_memory": {
+            "accepted": [
+                _summary_item(event)
+                for event in events
+                if _business_memory_verdict(event) == "accepted"
+            ],
+            "rejected": [
+                _summary_item(event)
+                for event in events
+                if _business_memory_verdict(event) == "rejected"
+            ],
+            "stale": [
+                _summary_item(event)
+                for event in events
+                if _business_memory_verdict(event) == "stale"
+            ],
+            "not_verified": [
+                _summary_item(event)
+                for event in events
+                if _business_memory_verdict(event) == "not_verified"
+            ],
+        },
     }
 
 
@@ -418,6 +465,19 @@ def _summary_item(event: dict[str, Any]) -> dict[str, Any]:
         "source_status": event.get("source_status", ""),
         "evidence_role": event.get("evidence_role", ""),
     }
+
+
+def _business_memory_verdict(event: dict[str, Any]) -> str:
+    kind = str(event.get("kind") or "")
+    if kind not in BUSINESS_MEMORY_KINDS:
+        return ""
+    if event.get("source_status") == "stale" or kind == "stale_business_context":
+        return "stale"
+    if kind in {"business_rule_rejected", "golden_case_failed", "owner_decision_superseded"}:
+        return "rejected"
+    if event.get("source_status") == "current" and event.get("promotion_status") in {"approved", "candidate"}:
+        return "accepted"
+    return "not_verified"
 
 
 def _changed_times(query: dict[str, Any]) -> dict[str, Any]:

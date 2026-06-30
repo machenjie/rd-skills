@@ -173,6 +173,7 @@ Return a domain impact model with:
 - **Team coordination required**: Named teams or owners that must review or approve before implementation proceeds.
 - **Boundaries inspected**: entities, value objects, aggregates, policies, state machines, events, permissions, repositories, APIs, and context maps inspected.
 - **Professional judgment**: authoritative business rule owner, invariant enforcement decision, hidden coupling ruled out, and domain risks still possible.
+- **Business semantic control**: BSP trigger decision, task-scoped business intent/vocabulary/object/rule/workflow evidence, source-backed FACT status, memory/graph selector limits, selected/skipped references, and residual semantic risk when business semantics are in scope.
 - **Reuse and placement rationale**: existing aggregate, policy, domain service, event, or ACL reused; new concept placement justified.
 - **Behavior preservation statement**: old allowed/forbidden transitions, event semantics, permission rules, and invariants preserved or intentionally changed.
 - **Validation evidence**: domain tests, transition tests, consumer/schema checks, language audit, or not-verified disclosure.
@@ -187,6 +188,7 @@ Close a domain impact model only when all five canonical answers are concrete (a
 - **Validation commands**: the tests proving both allowed and forbidden transitions, and the cross-context language audit, each with its outcome.
 - **Domain judgment and evidence limits**: mode selected, behavior preservation, authoritative owner, what evidence proves, what it does not prove, residual risk, and next gate.
 - **Residual risk**: the cross-domain side effect, event-versioning gap, or compensation path that remains unverified, with the named owner.
+- **BSP evidence**: graph and memory are selectors only; any business semantic `FACT` requires current source, owner review, user-provided source, or validation evidence.
 
 ## Quality Gate
 1. Every aggregate affected has an identified owning bounded context with explicit ownership rules.
@@ -199,6 +201,7 @@ Close a domain impact model only when all five canonical answers are concrete (a
 8. Sagas or process managers are defined for multi-step business processes that span aggregate boundaries.
 9. All teams that own affected bounded contexts have been notified and acknowledged the impact.
 10. Domain model changes do not violate regulatory or compliance invariants without explicit stakeholder approval.
+11. Business Semantic Pack domain claims are mapped to source-backed evidence, validation, owner review, or explicit residual risk.
 
 ## Handoff
 - **architecture-impact-reviewer** — when domain model changes affect architectural boundaries, team topology, or system-of-record ownership.

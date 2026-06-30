@@ -98,7 +98,18 @@
         "generated_source_mapping",
         "route_correction",
         "false_positive_hook",
-        "false_negative_hook"
+        "false_negative_hook",
+        "business_rule_changed",
+        "business_rule_rejected",
+        "business_object_ownership_changed",
+        "business_term_ambiguous",
+        "workflow_transition_bug",
+        "missing_entry_point_bug",
+        "hidden_sql_rule_bug",
+        "stale_business_context",
+        "golden_case_added",
+        "golden_case_failed",
+        "owner_decision_superseded"
       ]
     },
     "bounded_paths": { "$ref": "#/$defs/boundedPathList" },
@@ -128,7 +139,18 @@
         "validated_command",
         "hook_false_positive",
         "hook_false_negative",
-        "repeat_failure"
+        "repeat_failure",
+        "business_rule_changed",
+        "business_rule_rejected",
+        "business_object_ownership_changed",
+        "business_term_ambiguous",
+        "workflow_transition_bug",
+        "missing_entry_point_bug",
+        "hidden_sql_rule_bug",
+        "stale_business_context",
+        "golden_case_added",
+        "golden_case_failed",
+        "owner_decision_superseded"
       ]
     },
     "paths": { "$ref": "#/$defs/boundedPathList" },

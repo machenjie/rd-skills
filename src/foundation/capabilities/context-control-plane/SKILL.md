@@ -48,6 +48,7 @@ Anchor context control on retrieval-augmented generation discipline, context-win
 | Route budget control | Context budget, reference bloat, over-routing, under-routing, token overhead. | Cap selected capabilities and references while preserving required risk coverage. | Budget mode, selected/skipped refs, route rationale, residual risk. | `change-forge-router`, `skill-efficacy-benchmark` |
 | JIT repository retrieval | Repo graph, context pack, changed path, source-truth uncertainty. | Use graph and route signals to read only needed files at the right time. | Selector signal, paths read, paths skipped, freshness note. | `repository-context-map`, `repository-graph-analysis` |
 | Tool-output boundary | Long command output, benchmark report, validation log, hook trace. | Preserve proof without polluting route context or leaking sensitive material. | Command, outcome, relevant excerpt, artifact path, excluded output. | `validation-broker`, `agent-tool-permission-sandbox` |
+| Business semantic budget | BSP evidence, selected/skipped BSP references, memory/graph selector limits, or business semantic residual risk. | Keep BSP high-signal without loading a project-wide business corpus. | BSP scope, selected/skipped references, source-backed FACT requirement, validation map, residual semantic risk. | `business-semantic-control-plane`, `context-packaging` |
 | Compaction snapshot | Context lost after compaction, session transfer, stale prior summary. | Preserve route/stage/validation/review state in bounded form. | Snapshot fields, accepted/stale claims, next gate, residual risk. | `execution-trajectory-analysis`, `plan-execution-consistency` |
 | Branch route repair | Branch switch, rebase, merge, repaired route, changed fixture output. | Rebuild route assumptions after branch context changes. | Previous route, changed files, reroute result, validation delta. | `agent-execution-discipline`, `quality-test-gate` |
 
@@ -58,6 +59,8 @@ Select this capability when a prompt or route mentions context budget, token ove
 Use it with `context-packaging` when a context package is built, compacted, reused after edits, or included in route closure. `context-packaging` owns the task handoff package; `context-control-plane` owns budget mode, selected/skipped references, just-in-time retrieval, tool-output boundary, snapshot requirements, route-repair summary, and overhead evidence.
 
 Use it with `validation-broker` when validation output or benchmark reports would otherwise enter context as full logs. Use it with `execution-trajectory-analysis` when prior commands, compaction, repair, or final material edits determine freshness. Use it with `skill-efficacy-benchmark` when a routing or reference-loading change claims better professionalism or efficiency.
+
+Use it with `business-semantic-control-plane` when BSP route fields, selected/skipped BSP references, or memory/graph selector status must be preserved without loading personal corpora, private archive maps, raw archives, or whole-repository business dumps.
 
 # Risk Escalation Rules
 
@@ -110,6 +113,7 @@ Return a `context_control` record with:
 - `compaction_snapshot_required` and `compaction_snapshot_fields`.
 - `branch_route_repair_summary_required` and `branch_route_repair_summary_fields`.
 - `overhead_evidence_required` and `overhead_evidence`.
+- `business_semantic_context` when selected: BSP scope, selected/skipped BSP references, source-backed FACT requirement, memory/graph selector limits, validation map requirement, and residual semantic risk.
 - `privacy_exclusions`.
 - `validation_commands`.
 - `what_evidence_proves` and `what_evidence_does_not_prove`.
@@ -133,6 +137,7 @@ Close context control only when these answers are concrete: route budget mode; s
 10. Hook runtime support remains advisory and fail-open.
 11. Validation commands run or are explicitly marked not-run with evidence limits.
 12. Final handoff states what context was inspected, what remains unknown, and validation limits.
+13. BSP references stay task-scoped and do not promote memory, graph, personal archives, or private archive maps into business facts.
 
 # Used By
 

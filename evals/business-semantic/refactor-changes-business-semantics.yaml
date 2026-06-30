@@ -1,0 +1,11 @@
+case_id: refactor-changes-business-semantics
+prompt: Refactor eligibility checks into a shared helper and simplify equivalent conditions.
+expected_route:
+  stage: code-review
+  business_semantic_pack_required: true
+expected_capabilities: [business-semantic-control-plane, ai-code-review-refactor, plan-execution-consistency]
+expected_quality_gates: [AI review gate, implementation gate, test gate]
+expected_bsp_sections: [business_rules, code_mapping, validation_map, context_control]
+expected_review_findings: [semantic equivalence not proven, shared helper may hide rule authority]
+forbidden_behavior: [approve as behavior-preserving without rule golden cases]
+scoring: [semantic_diff_detection, review_findings, golden_case_requirement, validation_freshness]

@@ -1,7 +1,7 @@
 {
-  "average_score": 57.3,
+  "average_score": 57.22,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-30T07:06:56.294564+00:00",
+  "generated_at": "2026-06-30T08:12:24.849651+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -29,7 +29,7 @@
       "warnings": []
     },
     {
-      "body_lines": 250,
+      "body_lines": 253,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -129,7 +129,7 @@
       "warnings": []
     },
     {
-      "body_lines": 242,
+      "body_lines": 244,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -304,7 +304,7 @@
       "warnings": []
     },
     {
-      "body_lines": 205,
+      "body_lines": 208,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -429,7 +429,7 @@
       "warnings": []
     },
     {
-      "body_lines": 248,
+      "body_lines": 251,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -879,7 +879,7 @@
       "warnings": []
     },
     {
-      "body_lines": 224,
+      "body_lines": 227,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -902,6 +902,61 @@
       "status": "acceptable",
       "total": 58,
       "warnings": []
+    },
+    {
+      "body_lines": 128,
+      "dimensions": {
+        "anti_bloat_control": 4,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 4,
+        "failure_mode_coverage": 5,
+        "mode_coverage": 4,
+        "output_actionability": 5,
+        "proactive_trigger_quality": 1,
+        "professional_depth": 5,
+        "reference_precision": 0,
+        "stage_fit": 5,
+        "trigger_accuracy": 3,
+        "validation_obligation": 3
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "business-semantic-control-plane",
+      "path": "src/foundation/capabilities/business-semantic-control-plane/SKILL.md",
+      "recommended_fixes": [
+        "Add targeted reference loading hints or link unreferenced skill references."
+      ],
+      "status": "acceptable",
+      "total": 44,
+      "warnings": [
+        {
+          "item": "business-semantic-control-plane",
+          "item_kind": "foundation-capability",
+          "message": "reference 'references/business-golden-case-policy.md' is not linked from SKILL.md body",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "reference_loading_hint"
+        },
+        {
+          "item": "business-semantic-control-plane",
+          "item_kind": "foundation-capability",
+          "message": "reference 'references/business-semantic-pack-policy.md' is not linked from SKILL.md body",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "reference_loading_hint"
+        },
+        {
+          "item": "business-semantic-control-plane",
+          "item_kind": "foundation-capability",
+          "message": "reference 'references/business-semantic-review-policy.md' is not linked from SKILL.md body",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "reference_loading_hint"
+        }
+      ]
     },
     {
       "body_lines": 202,
@@ -1179,7 +1234,7 @@
       "warnings": []
     },
     {
-      "body_lines": 148,
+      "body_lines": 153,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1204,7 +1259,7 @@
       "warnings": []
     },
     {
-      "body_lines": 196,
+      "body_lines": 200,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1604,7 +1659,7 @@
       "warnings": []
     },
     {
-      "body_lines": 182,
+      "body_lines": 186,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -2854,7 +2909,7 @@
       "warnings": []
     },
     {
-      "body_lines": 137,
+      "body_lines": 140,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -3054,7 +3109,7 @@
       "warnings": []
     },
     {
-      "body_lines": 160,
+      "body_lines": 163,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -3454,7 +3509,7 @@
       "warnings": []
     },
     {
-      "body_lines": 165,
+      "body_lines": 168,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -3804,7 +3859,7 @@
       "warnings": []
     },
     {
-      "body_lines": 138,
+      "body_lines": 140,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -3879,6 +3934,6 @@
       "warnings": []
     }
   ],
-  "skills_checked": 155,
-  "warning_count": 0
+  "skills_checked": 156,
+  "warning_count": 3
 }

@@ -85,6 +85,18 @@ class GraphEvidenceSchemaTests(unittest.TestCase):
 
         self.assertTrue(any("edges[0].edge_type must be one of" in error for error in errors), errors)
 
+    def test_business_semantic_edge_type_is_allowed(self) -> None:
+        graph = _valid_graph()
+        edge = graph["repository_graph"]["edges"][0]
+        edge["edge_type"] = "rule_enforced_by"
+        edge["extractor"] = "business_semantic_graph"
+        edge["evidence"]["edge_type"] = "rule_enforced_by"
+        edge["evidence"]["extractor"] = "business_semantic_graph"
+
+        errors = VALIDATOR.validate_repository_graph(graph)
+
+        self.assertFalse(errors, errors)
+
     def test_unknown_edge_type_requires_unknown_reason(self) -> None:
         graph = _valid_graph()
         edge = graph["repository_graph"]["edges"][0]

@@ -81,6 +81,7 @@ Select this capability when the primary risk is **rule authority, consistency ac
 - Prefer `data-model-design` / DB constraints for structural invariants — but **always pair with** domain enforcement for non-trivial rules.
 - Use **with** `acceptance-standard-definition` so each rule has verifiable acceptance evidence.
 - Use **with** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when rule extraction depends on current graph reachability, stale prior decisions, command output, or validation freshness.
+- Use **with** `business-semantic-control-plane` when rule evidence must enter a Business Semantic Pack with source-backed `FACT` records, memory/graph selector limits, selected/skipped references, and rule-to-validation mapping.
 
 # Proactive Professional Triggers
 
@@ -178,6 +179,7 @@ Return `business_rule_catalog` with, per rule:
 - `examples` (positive, negative, edge, override)
 - `deprecation_plan` (when applicable)
 - `graph_memory_execution_validation` (rule source paths/artifacts inspected, project-memory claims accepted or rejected, command/test evidence, validation freshness, and unknowns)
+- `business_semantic_rule_record` when BSP is selected: rule id, owner, enforcement layer, reason codes, entry points, effective dating, evidence class, selected/skipped references, and residual semantic risk
 - `rule_to_validation_map` (rule id -> owner approval, implementation/enforcement location, entry-point checks, test/audit evidence, release blocker, and next gate)
 - `evidence_limits` (uninspected entry points, stale external artifacts, unavailable rule owners, missing historical data, and residual uncertainty owner/date)
 
@@ -217,6 +219,7 @@ The catalog passes only when:
 12. Project memory, prior tickets, generated summaries, spreadsheets, and external rule sources are dated, scope-checked, and rejected as proof when stale.
 13. Every material rule appears in `rule_to_validation_map` with owner approval, implementation location, entry-point evidence, test/audit evidence, and release-blocking status.
 14. Rule deprecation or precedence changes include historical decision compatibility and rollback or audit-retention evidence.
+15. Business Semantic Pack rule claims classify memory and graph as selectors only unless current source, owner review, or validation evidence confirms the rule.
 
 # Used By
 

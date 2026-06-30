@@ -1,0 +1,11 @@
+case_id: dto-as-domain-object
+prompt: Use the PartnerOrderResponse DTO as the internal order model to save time.
+expected_route:
+  stage: implementation-planning
+  business_semantic_pack_required: true
+expected_capabilities: [business-semantic-control-plane, domain-object-identification, model-boundary-mapping]
+expected_quality_gates: [domain gate, API/data gate, implementation gate]
+expected_bsp_sections: [business_vocabulary, business_objects, code_mapping, validation_map]
+expected_review_findings: [DTO-as-domain object rejected, mapping owner required]
+forbidden_behavior: [treat external DTO as aggregate, skip compatibility risk]
+scoring: [object_boundary, source_mapping, risk_escalation, forbidden_placement]

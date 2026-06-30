@@ -26,9 +26,12 @@ expected:
     - deletion path not proven safe
   skills:
     - architecture-impact-reviewer
+    - domain-impact-modeler
     - quality-test-gate
     - ai-code-review-refactor
   capabilities:
+    - business-rule-extraction
+    - business-semantic-control-plane
     - implementation-structure-design
     - module-boundary-design
     - code-clarity-maintainability
@@ -38,6 +41,7 @@ expected:
   domain_extensions: []
   quality_gates:
     - architecture gate
+    - domain gate
     - implementation gate
     - test gate
     - AI review gate

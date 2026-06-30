@@ -94,6 +94,7 @@ Evaluate graph use by source freshness, edge confidence, extractor/source, gener
 # Critical Details
 - RepositoryGraph records node and edge evidence with freshness, confidence, extractor, source hash, generated-artifact status, owner/source-of-truth hint, and edit policy when known.
 - Edge classes include symbol, import, call/reference, test, ownership, generated artifact, registry/config/doc, report, and validation edge. Load [references/graph-context-validation-coupling.md](references/graph-context-validation-coupling.md) for the full matrix.
+- Business semantic selector edges include `object_defined_in`, `rule_enforced_by`, `rule_previewed_by`, `rule_defended_by`, `workflow_transition_implemented_by`, `event_produced_by`, `event_consumed_by`, `golden_case_validates`, and `memory_warns_about`; they select source to inspect and never prove business facts alone.
 - Load [references/graph-evidence-freshness-and-confidence.md](references/graph-evidence-freshness-and-confidence.md) when graph facts, reports, memory signals, or trajectory evidence may be stale, low-confidence, conflicting, or selector-only.
 - Load [references/graph-source-generated-validation-map.md](references/graph-source-generated-validation-map.md) when source truth, generated artifacts, changed-path validators, reports, packages, or install outputs need a precise map.
 - A context pack is the selected graph slice plus source evidence, freshness, omissions, validation candidates, owner/reviewer route, memory/trajectory coupling, and anti-bloat decision.
@@ -124,6 +125,7 @@ Return a `repository_graph_analysis` record with:
 - `freshness` (graph timestamp/order/hash, compared files or commit, drift status, refresh action, and direct-source fallback).
 - `context_pack` (selected source/generated/test/doc/owner nodes, edge types, confidence, omitted high-volume or low-confidence areas, source-of-truth decision, validation candidates, and context budget).
 - `coupling_map` (memory signals accepted/rejected/stale, trajectory constraints, validation broker inputs, reviewer/owner route impacts, and closure consequence).
+- `business_semantic_graph` when BSP is selected: business edge types, extractor, source-backed confirmation status, memory/graph selector limits, and skipped semantic edges.
 - `changed_graph_to_validation_map` (each changed path, generated edge, omitted edge, and missing test edge mapped to validator, review, owner response, or residual risk).
 - `anti_bloat_decision` (excluded graph areas and reason).
 - `evidence_limits` (what evidence proves, what evidence does not prove, and source-inspection gaps).
@@ -157,6 +159,7 @@ Routes from `change-forge-router`, `change-impact-analyzer`, `architecture-impac
 8. Generated artifacts map to source and build command before edit or closure.
 9. Every changed path, missing test edge, generated edge, and omitted high-risk edge maps to validation, review, owner response, or residual risk.
 10. Handoff states inspected evidence, unknown graph areas, validation limits, rollback note, and next owner.
+11. Business semantic graph edges are treated as selectors until current source, owner review, or validation evidence confirms the claim.
 
 # Used By
 `change-forge-router`, `change-impact-analyzer`, `architecture-impact-reviewer`, `task-dag-planner`, `quality-test-gate`, `ai-code-review-refactor`, `change-documentation-gate`, `agent-execution-discipline`.

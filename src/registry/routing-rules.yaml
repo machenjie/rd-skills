@@ -30,17 +30,18 @@ supported_change_types:
   - documentation change
   - code review
   - test generation
+  - business semantic change
 runtime_profiles:
   - name: recommended
     top_level: 21 professional skills
-    foundation_mode: 134 foundation capabilities compiled into professional references
+    foundation_mode: 135 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 21 professional skills and 7 domain extensions
-    foundation_mode: 134 foundation capabilities compiled into professional references
+    foundation_mode: 135 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 21 professional skills, 134 foundation capabilities, and 7 domain extensions
+    top_level: 21 professional skills, 135 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -166,6 +167,17 @@ risk_escalation_triggers:
   - stale compatibility branch
   - shared utility pollution risk
   - business logic in shared utils
+  - business semantic pack
+  - business term ambiguous
+  - business object ownership unclear
+  - rule authority unclear
+  - hidden business rule
+  - hidden sql rule
+  - hidden controller rule
+  - business golden case missing
+  - stale business memory
+  - graph used as business fact
+  - memory used as business fact
   - unreadable main flow
   - oversized function class or file
   - over-fragmented file structure
@@ -319,6 +331,7 @@ risk_escalation_triggers:
   - compaction snapshot
   - branch route repair summary
   - context control plane
+  - business semantic control plane
   - trajectory
   - edit before read
   - stop without residual risk
@@ -414,6 +427,47 @@ risk_trigger_rules:
   - trigger: hallucinated API risk
     required_skills: [ai-code-review-refactor]
     required_capabilities: [agent-execution-discipline]
+  - trigger: business semantic pack
+    required_skills: [change-intake-compiler, domain-impact-modeler, quality-test-gate, ai-code-review-refactor]
+    required_capabilities: [business-semantic-control-plane, context-control-plane, validation-broker]
+    required_quality_gates: [requirement gate, domain gate, test gate, AI review gate]
+  - trigger: business term ambiguous
+    required_skills: [change-intake-compiler, domain-impact-modeler]
+    required_capabilities: [business-semantic-control-plane, domain-object-identification]
+    required_quality_gates: [requirement gate, domain gate]
+  - trigger: business object ownership unclear
+    required_skills: [domain-impact-modeler, architecture-impact-reviewer]
+    required_capabilities: [business-semantic-control-plane, domain-object-identification, module-boundary-design]
+    required_quality_gates: [domain gate, architecture gate]
+  - trigger: rule authority unclear
+    required_skills: [domain-impact-modeler, quality-test-gate]
+    required_capabilities: [business-semantic-control-plane, business-rule-extraction, validation-broker]
+    required_quality_gates: [domain gate, test gate]
+  - trigger: hidden business rule
+    required_skills: [domain-impact-modeler, ai-code-review-refactor, quality-test-gate]
+    required_capabilities: [business-semantic-control-plane, business-rule-extraction, implementation-structure-design]
+    required_quality_gates: [domain gate, implementation gate, AI review gate, test gate]
+  - trigger: hidden sql rule
+    required_skills: [domain-impact-modeler, data-middleware-change-builder, ai-code-review-refactor, quality-test-gate]
+    required_capabilities: [business-semantic-control-plane, business-rule-extraction, sql-professional-usage, validation-broker]
+    required_quality_gates: [domain gate, API/data gate, AI review gate, test gate]
+  - trigger: hidden controller rule
+    required_skills: [domain-impact-modeler, backend-change-builder, ai-code-review-refactor, quality-test-gate]
+    required_capabilities: [business-semantic-control-plane, business-rule-extraction, controller-api-implementation, implementation-structure-design]
+    required_quality_gates: [domain gate, implementation gate, AI review gate, test gate]
+  - trigger: business golden case missing
+    required_skills: [quality-test-gate]
+    required_capabilities: [business-semantic-control-plane, validation-broker, regression-testing]
+    required_quality_gates: [test gate]
+  - trigger: stale business memory
+    required_capabilities: [business-semantic-control-plane, project-memory-governance, repository-graph-analysis]
+    required_quality_gates: [execution discipline gate]
+  - trigger: graph used as business fact
+    required_capabilities: [business-semantic-control-plane, repository-graph-analysis, context-control-plane]
+    required_quality_gates: [domain gate, execution discipline gate]
+  - trigger: memory used as business fact
+    required_capabilities: [business-semantic-control-plane, project-memory-governance, context-control-plane]
+    required_quality_gates: [domain gate, execution discipline gate]
   - trigger: payment
     required_skills: [security-privacy-gate]
     required_domain_extensions: [payment-trading-extension]
@@ -607,6 +661,9 @@ risk_trigger_rules:
   - trigger: context control plane
     required_capabilities: [context-control-plane]
     required_quality_gates: [execution discipline gate]
+  - trigger: business semantic control plane
+    required_capabilities: [business-semantic-control-plane, context-control-plane, plan-execution-consistency]
+    required_quality_gates: [domain gate, test gate, execution discipline gate]
   - trigger: executor adapter
     required_skills: [security-privacy-gate]
     required_capabilities: [executor-adapter-protocol, agent-tool-permission-sandbox]
@@ -784,15 +841,15 @@ risk_trigger_rules:
     required_capabilities: [model-boundary-mapping]
     required_quality_gates: [API/data gate]
   - trigger: DTO used as domain object
-    required_capabilities: [model-boundary-mapping, implementation-structure-design]
+    required_capabilities: [model-boundary-mapping, implementation-structure-design, business-semantic-control-plane, domain-object-identification]
     required_quality_gates: [API/data gate, implementation gate]
   - trigger: persistence model leaked to API
     required_skills: [data-api-contract-changer]
     required_capabilities: [model-boundary-mapping]
     required_quality_gates: [API/data gate]
   - trigger: mapper owns business logic
-    required_capabilities: [model-boundary-mapping, implementation-structure-design]
-    required_quality_gates: [implementation gate]
+    required_capabilities: [model-boundary-mapping, implementation-structure-design, business-semantic-control-plane, business-rule-extraction]
+    required_quality_gates: [domain gate, implementation gate]
   - trigger: side effect hidden in mapper
     required_capabilities: [data-side-effect-flow-tracing, implementation-structure-design]
     required_quality_gates: [implementation gate]
@@ -868,7 +925,8 @@ risk_trigger_rules:
   - trigger: shared utility pollution risk
     required_capabilities: [implementation-structure-design, agent-execution-discipline]
   - trigger: business logic in shared utils
-    required_capabilities: [implementation-structure-design, agent-execution-discipline]
+    required_capabilities: [implementation-structure-design, agent-execution-discipline, business-semantic-control-plane, business-rule-extraction]
+    required_quality_gates: [domain gate, implementation gate]
   - trigger: unreadable main flow
     required_capabilities: [code-clarity-maintainability]
     required_quality_gates: [implementation gate]
@@ -1178,6 +1236,12 @@ failure_routing:
     route_to: experience-impact-modeler
   - condition: wrong business behavior
     route_to: domain-impact-modeler
+  - condition: business semantic pack missing or stale
+    route_to: business-semantic-control-plane
+  - condition: business rule lacks source-backed owner or validation
+    route_to: business-semantic-control-plane
+  - condition: graph or memory used as business fact
+    route_to: business-semantic-control-plane
   - condition: architecture drift
     route_to: architecture-impact-reviewer
   - condition: implementation structure or placement unclear
@@ -1246,10 +1310,14 @@ failure_routing:
     route_to: model-boundary-mapping
   - condition: DTO used as domain object
     route_to: model-boundary-mapping
+  - condition: DTO or table treated as business object
+    route_to: business-semantic-control-plane
   - condition: persistence model leaked to API
     route_to: model-boundary-mapping
   - condition: mapper owns business logic
     route_to: model-boundary-mapping
+  - condition: hidden business rule in SQL controller mapper DTO or tests
+    route_to: business-semantic-control-plane
   - condition: side effect hidden in mapper
     route_to: data-side-effect-flow-tracing
   - condition: event published before commit
@@ -1376,6 +1444,8 @@ failure_routing:
     route_to: ai-code-review-refactor
   - condition: stale docs
     route_to: change-documentation-gate
+  - condition: stale business memory
+    route_to: business-semantic-control-plane
 domain_extension_signals:
   - extension: web3-product-extension
     signals: wallet signature smart contract blockchain token custody private key nonce replay reorg chain
@@ -1393,29 +1463,29 @@ domain_extension_signals:
     signals: OS kernel driver native performance C C++ Rust systems FFI ABI syscall memory safety
 engineering_stage_signals:
   - stage: requirement-intake
-    signals: requirement clarify scope non-goal acceptance criteria
+    signals: requirement clarify scope non-goal acceptance criteria business intent vocabulary open question semantic pack
   - stage: architecture-design
-    signals: design architecture module boundary dependency direction data ownership service boundary extensibility reversibility
+    signals: design architecture module boundary dependency direction data ownership service boundary extensibility reversibility business object ownership rule authority workflow boundary
   - stage: implementation-planning
-    signals: code placement reuse decision object function class file directory design naming public private internal boundary repository context map repo graph context pack caller callee local convention scan plan before repository context source of truth unknown
+    signals: code placement reuse decision object function class file directory design naming public private internal boundary repository context map repo graph context pack caller callee local convention scan plan before repository context source of truth unknown business to code mapping forbidden placement rule enforcement layer
   - stage: coding
-    signals: coding implementation language idiom error handling resource cleanup input validation concurrency minimal implementation
+    signals: coding implementation language idiom error handling resource cleanup input validation concurrency minimal implementation business rule workflow state reason code semantic claim
   - stage: debugging-diagnosis
     signals: debugging diagnosis reproduce evidence logs metrics traces hypothesis elimination root cause
   - stage: bug-fix
     signals: bug fix minimal fix same pattern scan regression test compatibility upstream downstream impact
   - stage: code-review
-    signals: code review generated code correctness maintainability readability security reliability test evidence hallucinated API independent review repair re-review review scope final diff
+    signals: code review generated code correctness maintainability readability security reliability test evidence hallucinated API independent review repair re-review review scope final diff semantic review hidden business rule stale memory business golden case
   - stage: refactoring
     signals: refactoring behavior preserving extraction movement inline merge split dependency direction rollback clarity
   - stage: testing
-    signals: testing unit integration contract e2e regression fixture mock concurrency language specific test validation freshness changed-code-to-test mapping validation broker affected tests stale validation validation without outcome changed path validation
+    signals: testing unit integration contract e2e regression fixture mock concurrency language specific test validation freshness changed-code-to-test mapping validation broker affected tests stale validation validation without outcome changed path validation business golden case rule reason code workflow transition
   - stage: release-delivery
     signals: release rollout rollback migration config feature flag canary blue green observability
   - stage: documentation-handoff
-    signals: documentation handoff change boundary validation evidence residual risk runbook changelog next action workflow state lifecycle state trajectory closure contract validation broker plan execution consistency route manifest repository context
+    signals: documentation handoff change boundary validation evidence residual risk runbook changelog next action workflow state lifecycle state trajectory closure contract validation broker plan execution consistency route manifest repository context business semantic residual risk owner handoff selected skipped references
   - stage: skill-authoring
-    signals: SKILL.md capability reference registry routing rule stage model skill authoring repository context map repo graph context pack context control plane context budget selected references skipped references executor adapter project memory validation broker trajectory skill efficacy benchmark plan execution consistency
+    signals: SKILL.md capability reference registry routing rule stage model skill authoring repository context map repo graph context pack context control plane context budget selected references skipped references executor adapter project memory validation broker trajectory skill efficacy benchmark plan execution consistency business semantic pack business intelligence schemas business semantic control plane
 routing_rules:
   - route_to: change-forge-router
     triggers:
@@ -2057,6 +2127,12 @@ routing_rules:
       - just in time retrieval JIT retrieval graph as selector tool output boundary artifact reference compaction snapshot branch summary route repair summary
       - context lost after compaction stale context over routing under routing context bloat output truncation live benchmark overhead
     priority: 70
+  - route_to: business-semantic-control-plane
+    triggers:
+      - business semantic pack business semantic control plane business intent business vocabulary business object rule authority workflow state transition business golden case semantic review
+      - hidden business rule hidden sql rule hidden controller rule mapper owns business logic DTO used as domain object stale business memory graph used as business fact memory used as business fact
+      - source backed business fact owner review rule catalog validation map selected references skipped references business semantic residual risk
+    priority: 72
   - route_to: task-dag-decomposition
     triggers:
       - decompose work into dependency aware reviewable testable rollback aware AI executable tasks

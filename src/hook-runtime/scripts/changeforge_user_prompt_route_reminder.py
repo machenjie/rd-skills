@@ -45,7 +45,10 @@ ROUTE_REMINDER = (
     "skill and a different review skill; repair and re-review findings; "
     "include plan-execution consistency, validation freshness, residual risk, and next "
     "gate at handoff. For skill/routing/eval changes, include skill-efficacy baseline "
-    "and treatment evidence. A route described only in prose is not closure evidence. "
+    "and treatment evidence. If business terms, rule authority, workflow state, golden "
+    "cases, stale business memory, or graph/memory business hints are in scope, select "
+    "business-semantic-control-plane and keep memory/graph as selectors until verified "
+    "by current source, owner review, or validation evidence. A route described only in prose is not closure evidence. "
     "Skip routing only for a pure question, explanation, or translation with no "
     "engineering action."
 )

@@ -1,27 +1,60 @@
 ---
-case_id: requirement-review-before-plan
+case_id: "requirement-review-before-plan"
 actual:
-  complexity: L2
-  risk_level: low
-  skills: [change-intake-compiler, acceptance-criteria-builder]
-  capabilities: [requirement-clarification, requirement-structuring, non-goal-boundary-definition, acceptance-standard-definition, scenario-decomposition]
-  domain_extensions: []
-  quality_gates: [requirement gate]
-  required_references: [references/capabilities/01-requirement-clarification.md, references/capabilities/02-requirement-structuring.md, references/capabilities/06-non-goal-boundary-definition.md, references/capabilities/05-acceptance-standard-definition.md, references/capabilities/04-scenario-decomposition.md, references/capability-index.md, references/domain-extension-index.md, references/routing-rules.md, references/skill-registry.md]
+  complexity: "L2"
+  risk_level: "low"
+  skills:
+    - "change-intake-compiler"
+    - "acceptance-criteria-builder"
+  capabilities:
+    - "requirement-clarification"
+    - "requirement-structuring"
+    - "non-goal-boundary-definition"
+    - "acceptance-standard-definition"
+    - "scenario-decomposition"
+  domain_extensions:
+  quality_gates:
+    - "requirement gate"
+  required_references:
+    - "references/capabilities/01-requirement-clarification.md"
+    - "references/capabilities/02-requirement-structuring.md"
+    - "references/capabilities/06-non-goal-boundary-definition.md"
+    - "references/capabilities/05-acceptance-standard-definition.md"
+    - "references/capabilities/04-scenario-decomposition.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: requirement-intake
-    next_stage: implementation-planning
-    product_surface: none
-    language_surface: none
-    selected_skills: [change-intake-compiler, acceptance-criteria-builder]
-    selected_capabilities: [requirement-clarification, requirement-structuring, non-goal-boundary-definition, acceptance-standard-definition, scenario-decomposition]
-    selected_domain_extensions: []
+    current_stage: "requirement-intake"
+    next_stage: "implementation-planning"
+    product_surface: "none"
+    language_surface: "none"
+    selected_skills:
+      - "change-intake-compiler"
+      - "acceptance-criteria-builder"
+    selected_capabilities:
+      - "requirement-clarification"
+      - "requirement-structuring"
+      - "non-goal-boundary-definition"
+      - "acceptance-standard-definition"
+      - "scenario-decomposition"
+    selected_domain_extensions:
     skipped_capabilities:
-      - capability: code-review
-        reason: reviewing a vague plan is requirement intake, not code review
-    context_budget_mode: single-stage
-    context_budget_rationale: L2 plan review first needs requirement boundaries and acceptance
-    required_evidence: [PDD acceptance criteria, clarified scope, explicit non-goals, testable acceptance signal, clarification status before action]
-    required_quality_gates: [PDD gate, requirement gate]
-    handoff_target: implementation-planning
+      -
+        capability: "code-review"
+        reason: "reviewing a vague plan is requirement intake, not code review"
+    context_budget_mode: "single-stage"
+    context_budget_rationale: "L2 plan review first needs requirement boundaries and acceptance"
+    required_evidence:
+      - "PDD acceptance criteria"
+      - "clarified scope"
+      - "explicit non-goals"
+      - "testable acceptance signal"
+      - "clarification status before action"
+      - "business semantic intent, vocabulary, and open questions when business terms are present"
+    required_quality_gates:
+      - "PDD gate"
+      - "requirement gate"
+    handoff_target: "implementation-planning"

@@ -1,85 +1,90 @@
 ---
-case_id: api-breaking-field-rename
+case_id: "api-breaking-field-rename"
 actual:
-  complexity: L4
-  risk_level: high
+  complexity: "L4"
+  risk_level: "high"
   skills:
-    - change-intake-compiler
-    - change-impact-analyzer
-    - data-api-contract-changer
-    - frontend-change-builder
-    - backend-change-builder
-    - quality-test-gate
-    - delivery-release-gate
-    - change-documentation-gate
+    - "change-intake-compiler"
+    - "change-impact-analyzer"
+    - "data-api-contract-changer"
+    - "frontend-change-builder"
+    - "backend-change-builder"
+    - "quality-test-gate"
+    - "delivery-release-gate"
+    - "change-documentation-gate"
   capabilities:
-    - implementation-structure-design
-    - api-contract-design
-    - dto-schema-design
-    - version-compatibility
-    - contract-testing
-    - frontend-api-integration
-    - release-rollback
-  domain_extensions: []
+    - "implementation-structure-design"
+    - "api-contract-design"
+    - "dto-schema-design"
+    - "version-compatibility"
+    - "contract-testing"
+    - "frontend-api-integration"
+    - "release-rollback"
+  domain_extensions:
   quality_gates:
-    - requirement gate
-    - impact gate
-    - API/data gate
-    - implementation gate
-    - test gate
-    - delivery gate
-    - documentation gate
+    - "requirement gate"
+    - "impact gate"
+    - "API/data gate"
+    - "implementation gate"
+    - "test gate"
+    - "delivery gate"
+    - "documentation gate"
   required_references:
-    - references/capabilities/101-implementation-structure-design.md
-    - references/capabilities/26-api-contract-design.md
-    - references/capabilities/27-dto-schema-design.md
-    - references/capabilities/29-version-compatibility.md
-    - references/capabilities/35-frontend-api-integration.md
-    - references/capabilities/61-contract-testing.md
-    - references/capabilities/75-release-rollback.md
-    - references/capability-index.md
-    - references/domain-extension-index.md
-    - references/routing-rules.md
-    - references/skill-registry.md
+    - "references/capabilities/101-implementation-structure-design.md"
+    - "references/capabilities/26-api-contract-design.md"
+    - "references/capabilities/27-dto-schema-design.md"
+    - "references/capabilities/29-version-compatibility.md"
+    - "references/capabilities/35-frontend-api-integration.md"
+    - "references/capabilities/61-contract-testing.md"
+    - "references/capabilities/75-release-rollback.md"
+    - "references/capability-index.md"
+    - "references/domain-extension-index.md"
+    - "references/routing-rules.md"
+    - "references/skill-registry.md"
   stage_route_manifest:
     schema_version: 1
-    current_stage: implementation-planning
-    next_stage: coding
-    product_surface: api-contract
-    language_surface: none
+    current_stage: "implementation-planning"
+    next_stage: "coding"
+    product_surface: "api-contract"
+    language_surface: "none"
     selected_skills:
-      - data-api-contract-changer
-      - frontend-change-builder
-      - backend-change-builder
+      - "data-api-contract-changer"
+      - "frontend-change-builder"
+      - "backend-change-builder"
     selected_capabilities:
-      - implementation-structure-design
-      - api-contract-design
-      - dto-schema-design
-      - version-compatibility
-    selected_domain_extensions: []
+      - "implementation-structure-design"
+      - "api-contract-design"
+      - "dto-schema-design"
+      - "version-compatibility"
+    selected_domain_extensions:
     skipped_capabilities:
-      - capability: release-rollback
-        reason: delivery sequencing is planned later in release-delivery
-    context_budget_mode: staged-plan
-    context_budget_rationale: L4 API compatibility work needs a staged plan while executing implementation-planning first
+      -
+        capability: "release-rollback"
+        reason: "delivery sequencing is planned later in release-delivery"
+    context_budget_mode: "staged-plan"
+    context_budget_rationale: "L4 API compatibility work needs a staged plan while executing implementation-planning first"
     required_evidence:
-      - SDD public API and module placement
-      - target boundaries inspected before plan
-      - repository context map with owning surface and caller/callee evidence
-      - reuse candidates
-      - simplicity ladder result
-      - deleted or rejected complexity
-      - placement rationale
-      - visibility decisions
-      - test placement
-      - TDD or validation signal
+      - "SDD public API and module placement"
+      - "target boundaries inspected before plan"
+      - "repository context map with owning surface and caller/callee evidence"
+      - "reuse candidates"
+      - "simplicity ladder result"
+      - "deleted or rejected complexity"
+      - "placement rationale"
+      - "visibility decisions"
+      - "test placement"
+      - "TDD or validation signal"
+      - "SDD design decision points for material choices"
+      - "user choice status for material design choices"
+      - "safe assumption rationale when proceeding without user choice"
+      - "business-to-code mapping and forbidden placement rationale when rules or workflows are affected"
     required_quality_gates:
-      - SDD gate
-      - requirement gate
-      - impact gate
-      - API/data gate
-      - implementation gate
-      - test gate
-      - delivery gate
-      - documentation gate
-    handoff_target: coding
+      - "SDD gate"
+      - "requirement gate"
+      - "impact gate"
+      - "API/data gate"
+      - "implementation gate"
+      - "test gate"
+      - "delivery gate"
+      - "documentation gate"
+    handoff_target: "coding"
