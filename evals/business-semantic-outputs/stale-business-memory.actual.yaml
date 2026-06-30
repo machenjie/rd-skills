@@ -1,132 +1,103 @@
-{
-  "actual_metadata": {
-    "generated_by": "scripts/generate-business-semantic-actuals.py",
-    "generation_mode": "deterministic",
-    "source_fixture": "evals/business-semantic/stale-business-memory.yaml",
-    "route_source": "current deterministic route resolver / fixture route adapter",
-    "review_source": "deterministic fixture review skeleton"
-  },
-  "actual_route": {
-    "stage": "implementation-planning",
-    "detected_triggers": [
-      "business memory affects decision",
-      "memory used as business fact"
-    ],
-    "selected_skills": [
-      "change-forge-router",
-      "change-impact-analyzer",
-      "domain-impact-modeler",
-      "quality-test-gate"
-    ],
-    "selected_capabilities": [
-      "repository-context-map",
-      "implementation-structure-design",
-      "module-boundary-design",
-      "code-clarity-maintainability",
-      "language-idiom-enforcement",
-      "business-semantic-control-plane",
-      "idempotency-retry-design",
-      "transaction-consistency",
-      "domain-object-identification",
-      "business-rule-extraction",
-      "state-machine-modeling",
-      "context-control-plane",
-      "project-memory-governance",
-      "repository-graph-analysis",
-      "validation-broker",
-      "python-professional-usage"
-    ],
-    "required_quality_gates": [
-      "implementation gate",
-      "domain gate",
-      "execution discipline gate",
-      "test gate"
-    ],
-    "business_semantic_pack_required": true,
-    "business_semantic_scope": "stale-memory-reconciliation",
-    "selected_bsp_sections": [
-      "memory_projection",
-      "business_rules",
-      "code_mapping",
-      "validation_map"
-    ],
-    "selected_references": [
-      {
-        "reference": "references/capabilities/135-business-semantic-control-plane.md",
-        "reason": "business-semantic-control-plane selected by deterministic resolver/trigger adapter for stale-business-memory",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/118-repository-context-map.md",
-        "reason": "repository-context-map selected by deterministic resolver/trigger adapter for stale-business-memory",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/101-implementation-structure-design.md",
-        "reason": "implementation-structure-design selected by deterministic resolver/trigger adapter for stale-business-memory",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/19-module-boundary-design.md",
-        "reason": "module-boundary-design selected by deterministic resolver/trigger adapter for stale-business-memory",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      }
-    ],
-    "skipped_references": [
-      {
-        "reference": "payment-trading-extension",
-        "reason": "no payment, ledger, settlement, or trading signal in the fixture",
-        "evidence_limit": "not evidence for omitted surface correctness",
-        "residual_risk": [
-          "route separately if the omitted surface appears in current source"
-        ]
-      },
-      {
-        "reference": "live-business-correctness",
-        "reason": "deterministic fixture checks structure, not live domain truth",
-        "evidence_limit": "not evidence for omitted surface correctness",
-        "residual_risk": [
-          "route separately if the omitted surface appears in current source"
-        ]
-      }
-    ]
-  },
-  "actual_review": {
-    "business_semantic_pack_required": true,
-    "findings": [
-      {
-        "finding_id": "BSP-STALE-MEMORY",
-        "severity": "high",
-        "category": "stale_memory_source_truth",
-        "impacted_claim": "prior discount owner from memory",
-        "evidence": [
-          "source: deterministic-fixture-review",
-          "memory signal conflicts with current source owner",
-          "billing/owners.yaml declares revenue-platform"
-        ],
-        "required_fix": "memory is stale selector, not source truth; current source must win or residual risk must be recorded.",
-        "validation_required": "source/diff evidence, owner review, or changed-path validation required"
-      }
-    ],
-    "forbidden_behavior_avoided": [
-      "treat memory as current owner",
-      "skip source reread"
-    ],
-    "residual_risk": [
-      "stale-business-memory actual is deterministic fixture evidence only",
-      "does not prove live LLM behavior or live business correctness"
-    ]
-  }
-}
+actual_metadata:
+  generated_by: "scripts/generate-business-semantic-actuals.py"
+  generation_mode: "deterministic"
+  source_fixture: "evals/business-semantic/stale-business-memory.yaml"
+  route_source: "current deterministic route resolver / fixture route adapter"
+  review_source: "deterministic fixture review skeleton"
+actual_route:
+  stage: "implementation-planning"
+  detected_triggers:
+    - "business memory affects decision"
+    - "memory used as business fact"
+  selected_skills:
+    - "change-forge-router"
+    - "change-impact-analyzer"
+    - "domain-impact-modeler"
+    - "quality-test-gate"
+  selected_capabilities:
+    - "repository-context-map"
+    - "implementation-structure-design"
+    - "module-boundary-design"
+    - "code-clarity-maintainability"
+    - "language-idiom-enforcement"
+    - "business-semantic-control-plane"
+    - "idempotency-retry-design"
+    - "transaction-consistency"
+    - "domain-object-identification"
+    - "business-rule-extraction"
+    - "state-machine-modeling"
+    - "context-control-plane"
+    - "project-memory-governance"
+    - "repository-graph-analysis"
+    - "validation-broker"
+    - "python-professional-usage"
+  required_quality_gates:
+    - "implementation gate"
+    - "domain gate"
+    - "execution discipline gate"
+    - "test gate"
+  business_semantic_pack_required: true
+  business_semantic_scope: "stale-memory-reconciliation"
+  selected_bsp_sections:
+    - "memory_projection"
+    - "business_rules"
+    - "code_mapping"
+    - "validation_map"
+  selected_references:
+    -
+      reference: "references/capabilities/135-business-semantic-control-plane.md"
+      reason: "business-semantic-control-plane selected by deterministic resolver/trigger adapter for stale-business-memory"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/118-repository-context-map.md"
+      reason: "repository-context-map selected by deterministic resolver/trigger adapter for stale-business-memory"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/101-implementation-structure-design.md"
+      reason: "implementation-structure-design selected by deterministic resolver/trigger adapter for stale-business-memory"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/19-module-boundary-design.md"
+      reason: "module-boundary-design selected by deterministic resolver/trigger adapter for stale-business-memory"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+  skipped_references:
+    -
+      reference: "payment-trading-extension"
+      reason: "no payment, ledger, settlement, or trading signal in the fixture"
+      evidence_limit: "not evidence for omitted surface correctness"
+      residual_risk:
+        - "route separately if the omitted surface appears in current source"
+    -
+      reference: "live-business-correctness"
+      reason: "deterministic fixture checks structure, not live domain truth"
+      evidence_limit: "not evidence for omitted surface correctness"
+      residual_risk:
+        - "route separately if the omitted surface appears in current source"
+actual_review:
+  business_semantic_pack_required: true
+  findings:
+    -
+      finding_id: "BSP-STALE-MEMORY"
+      severity: "high"
+      category: "stale_memory_source_truth"
+      impacted_claim: "prior discount owner from memory"
+      evidence:
+        - "source: deterministic-fixture-review"
+        - "memory signal conflicts with current source owner"
+        - "billing/owners.yaml declares revenue-platform"
+      required_fix: "memory is stale selector, not source truth; current source must win or residual risk must be recorded."
+      validation_required: "source/diff evidence, owner review, or changed-path validation required"
+  forbidden_behavior_avoided:
+    - "treat memory as current owner"
+    - "skip source reread"
+  residual_risk:
+    - "stale-business-memory actual is deterministic fixture evidence only"
+    - "does not prove live LLM behavior or live business correctness"

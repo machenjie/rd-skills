@@ -1,139 +1,110 @@
-{
-  "actual_metadata": {
-    "generated_by": "scripts/generate-business-semantic-actuals.py",
-    "generation_mode": "deterministic",
-    "source_fixture": "evals/business-semantic/controller-only-business-rule.yaml",
-    "route_source": "current deterministic route resolver / fixture route adapter",
-    "review_source": "deterministic fixture review skeleton"
-  },
-  "actual_route": {
-    "stage": "architecture-design",
-    "detected_triggers": [
-      "business rule hidden in SQL/controller/UI/test",
-      "business rule authority unknown"
-    ],
-    "selected_skills": [
-      "backend-change-builder",
-      "ai-code-review-refactor",
-      "change-forge-router",
-      "domain-impact-modeler",
-      "quality-test-gate",
-      "architecture-impact-reviewer"
-    ],
-    "selected_capabilities": [
-      "repository-context-map",
-      "implementation-structure-design",
-      "module-boundary-design",
-      "code-clarity-maintainability",
-      "language-idiom-enforcement",
-      "business-semantic-control-plane",
-      "service-business-logic",
-      "authentication-authorization",
-      "idempotency-retry-design",
-      "logging-error-handling",
-      "domain-object-identification",
-      "business-rule-extraction",
-      "state-machine-modeling",
-      "context-control-plane",
-      "project-memory-governance",
-      "repository-graph-analysis",
-      "validation-broker",
-      "python-professional-usage",
-      "sql-professional-usage"
-    ],
-    "required_quality_gates": [
-      "implementation gate",
-      "API/data gate",
-      "domain gate",
-      "AI review gate",
-      "test gate",
-      "architecture gate"
-    ],
-    "business_semantic_pack_required": true,
-    "business_semantic_scope": "controller-only-rule-authority",
-    "selected_bsp_sections": [
-      "business_objects",
-      "business_rules",
-      "code_mapping",
-      "validation_map"
-    ],
-    "selected_references": [
-      {
-        "reference": "references/capabilities/135-business-semantic-control-plane.md",
-        "reason": "business-semantic-control-plane selected by deterministic resolver/trigger adapter for controller-only-business-rule",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/118-repository-context-map.md",
-        "reason": "repository-context-map selected by deterministic resolver/trigger adapter for controller-only-business-rule",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/101-implementation-structure-design.md",
-        "reason": "implementation-structure-design selected by deterministic resolver/trigger adapter for controller-only-business-rule",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/19-module-boundary-design.md",
-        "reason": "module-boundary-design selected by deterministic resolver/trigger adapter for controller-only-business-rule",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      }
-    ],
-    "skipped_references": [
-      {
-        "reference": "payment-trading-extension",
-        "reason": "no payment, ledger, settlement, or trading signal in the fixture",
-        "evidence_limit": "not evidence for omitted surface correctness",
-        "residual_risk": [
-          "route separately if the omitted surface appears in current source"
-        ]
-      },
-      {
-        "reference": "live-business-correctness",
-        "reason": "deterministic fixture checks structure, not live domain truth",
-        "evidence_limit": "not evidence for omitted surface correctness",
-        "residual_risk": [
-          "route separately if the omitted surface appears in current source"
-        ]
-      }
-    ]
-  },
-  "actual_review": {
-    "business_semantic_pack_required": true,
-    "findings": [
-      {
-        "finding_id": "BSP-CONTROLLER-ONLY-RULE",
-        "severity": "high",
-        "category": "controller_only_rule",
-        "impacted_claim": "order cancellation after shipped",
-        "evidence": [
-          "source: deterministic-fixture-review",
-          "if order.status == \"shipped\": return error(\"cannot_cancel\")",
-          "orders/jobs/import_cancellations.py bypass path"
-        ],
-        "required_fix": "controller-only rule can be bypassed by jobs/admin/import path; route to business-rule-extraction and domain enforcement.",
-        "validation_required": "source/diff evidence, owner review, or changed-path validation required"
-      }
-    ],
-    "forbidden_behavior_avoided": [
-      "leave rule only in controller",
-      "no bypass path scan"
-    ],
-    "residual_risk": [
-      "controller-only-business-rule actual is deterministic fixture evidence only",
-      "does not prove live LLM behavior or live business correctness"
-    ]
-  }
-}
+actual_metadata:
+  generated_by: "scripts/generate-business-semantic-actuals.py"
+  generation_mode: "deterministic"
+  source_fixture: "evals/business-semantic/controller-only-business-rule.yaml"
+  route_source: "current deterministic route resolver / fixture route adapter"
+  review_source: "deterministic fixture review skeleton"
+actual_route:
+  stage: "architecture-design"
+  detected_triggers:
+    - "business rule hidden in SQL/controller/UI/test"
+    - "business rule authority unknown"
+  selected_skills:
+    - "backend-change-builder"
+    - "ai-code-review-refactor"
+    - "change-forge-router"
+    - "domain-impact-modeler"
+    - "quality-test-gate"
+    - "architecture-impact-reviewer"
+  selected_capabilities:
+    - "repository-context-map"
+    - "implementation-structure-design"
+    - "module-boundary-design"
+    - "code-clarity-maintainability"
+    - "language-idiom-enforcement"
+    - "business-semantic-control-plane"
+    - "service-business-logic"
+    - "authentication-authorization"
+    - "idempotency-retry-design"
+    - "logging-error-handling"
+    - "domain-object-identification"
+    - "business-rule-extraction"
+    - "state-machine-modeling"
+    - "context-control-plane"
+    - "project-memory-governance"
+    - "repository-graph-analysis"
+    - "validation-broker"
+    - "python-professional-usage"
+    - "sql-professional-usage"
+  required_quality_gates:
+    - "implementation gate"
+    - "API/data gate"
+    - "domain gate"
+    - "AI review gate"
+    - "test gate"
+    - "architecture gate"
+  business_semantic_pack_required: true
+  business_semantic_scope: "controller-only-rule-authority"
+  selected_bsp_sections:
+    - "business_objects"
+    - "business_rules"
+    - "code_mapping"
+    - "validation_map"
+  selected_references:
+    -
+      reference: "references/capabilities/135-business-semantic-control-plane.md"
+      reason: "business-semantic-control-plane selected by deterministic resolver/trigger adapter for controller-only-business-rule"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/118-repository-context-map.md"
+      reason: "repository-context-map selected by deterministic resolver/trigger adapter for controller-only-business-rule"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/101-implementation-structure-design.md"
+      reason: "implementation-structure-design selected by deterministic resolver/trigger adapter for controller-only-business-rule"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/19-module-boundary-design.md"
+      reason: "module-boundary-design selected by deterministic resolver/trigger adapter for controller-only-business-rule"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+  skipped_references:
+    -
+      reference: "payment-trading-extension"
+      reason: "no payment, ledger, settlement, or trading signal in the fixture"
+      evidence_limit: "not evidence for omitted surface correctness"
+      residual_risk:
+        - "route separately if the omitted surface appears in current source"
+    -
+      reference: "live-business-correctness"
+      reason: "deterministic fixture checks structure, not live domain truth"
+      evidence_limit: "not evidence for omitted surface correctness"
+      residual_risk:
+        - "route separately if the omitted surface appears in current source"
+actual_review:
+  business_semantic_pack_required: true
+  findings:
+    -
+      finding_id: "BSP-CONTROLLER-ONLY-RULE"
+      severity: "high"
+      category: "controller_only_rule"
+      impacted_claim: "order cancellation after shipped"
+      evidence:
+        - "source: deterministic-fixture-review"
+        - "if order.status == \"shipped\": return error(\"cannot_cancel\")"
+        - "orders/jobs/import_cancellations.py bypass path"
+      required_fix: "controller-only rule can be bypassed by jobs/admin/import path; route to business-rule-extraction and domain enforcement."
+      validation_required: "source/diff evidence, owner review, or changed-path validation required"
+  forbidden_behavior_avoided:
+    - "leave rule only in controller"
+    - "no bypass path scan"
+  residual_risk:
+    - "controller-only-business-rule actual is deterministic fixture evidence only"
+    - "does not prove live LLM behavior or live business correctness"

@@ -237,6 +237,7 @@ When BSP is selected, every changed business rule, workflow transition, permissi
 - explicit residual risk with owner and release consequence
 
 Green generic tests do not prove a changed business semantic claim unless the test names the rule/workflow/reason code or is mapped in the BSP `validation_map`.
+A missing business golden case for a changed rule, workflow, permission, or reason code is a test-gate risk. Each changed rule/workflow/permission reason code must map to a test, owner review, or explicit residual risk before closure.
 
 ## Evidence Contract
 Close a test strategy only when the canonical answers from `agent-execution-discipline` are concrete:

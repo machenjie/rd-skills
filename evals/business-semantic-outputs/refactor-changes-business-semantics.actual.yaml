@@ -1,133 +1,104 @@
-{
-  "actual_metadata": {
-    "generated_by": "scripts/generate-business-semantic-actuals.py",
-    "generation_mode": "deterministic",
-    "source_fixture": "evals/business-semantic/refactor-changes-business-semantics.yaml",
-    "route_source": "current deterministic route resolver / fixture route adapter",
-    "review_source": "deterministic fixture review skeleton"
-  },
-  "actual_route": {
-    "stage": "code-review",
-    "detected_triggers": [
-      "technical refactor may change business semantics",
-      "business semantic review required"
-    ],
-    "selected_skills": [
-      "security-privacy-gate",
-      "quality-test-gate",
-      "change-forge-router",
-      "ai-code-review-refactor",
-      "domain-impact-modeler"
-    ],
-    "selected_capabilities": [
-      "code-review",
-      "plan-execution-consistency",
-      "implementation-structure-design",
-      "code-clarity-maintainability",
-      "language-idiom-enforcement",
-      "business-semantic-control-plane",
-      "idempotency-retry-design",
-      "transaction-consistency",
-      "domain-object-identification",
-      "business-rule-extraction",
-      "state-machine-modeling",
-      "context-control-plane",
-      "project-memory-governance",
-      "repository-graph-analysis",
-      "validation-broker",
-      "python-professional-usage",
-      "ai-code-review-refactor"
-    ],
-    "required_quality_gates": [
-      "implementation gate",
-      "security gate",
-      "test gate",
-      "AI review gate"
-    ],
-    "business_semantic_pack_required": true,
-    "business_semantic_scope": "semantic-refactor-review",
-    "selected_bsp_sections": [
-      "business_rules",
-      "code_mapping",
-      "validation_map",
-      "context_control"
-    ],
-    "selected_references": [
-      {
-        "reference": "references/capabilities/135-business-semantic-control-plane.md",
-        "reason": "business-semantic-control-plane selected by deterministic resolver/trigger adapter for refactor-changes-business-semantics",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/78-code-review.md",
-        "reason": "code-review selected by deterministic resolver/trigger adapter for refactor-changes-business-semantics",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/122-plan-execution-consistency.md",
-        "reason": "plan-execution-consistency selected by deterministic resolver/trigger adapter for refactor-changes-business-semantics",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/101-implementation-structure-design.md",
-        "reason": "implementation-structure-design selected by deterministic resolver/trigger adapter for refactor-changes-business-semantics",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      }
-    ],
-    "skipped_references": [
-      {
-        "reference": "payment-trading-extension",
-        "reason": "no payment, ledger, settlement, or trading signal in the fixture",
-        "evidence_limit": "not evidence for omitted surface correctness",
-        "residual_risk": [
-          "route separately if the omitted surface appears in current source"
-        ]
-      },
-      {
-        "reference": "live-business-correctness",
-        "reason": "deterministic fixture checks structure, not live domain truth",
-        "evidence_limit": "not evidence for omitted surface correctness",
-        "residual_risk": [
-          "route separately if the omitted surface appears in current source"
-        ]
-      }
-    ]
-  },
-  "actual_review": {
-    "business_semantic_pack_required": true,
-    "findings": [
-      {
-        "finding_id": "BSP-SEMANTIC-REFACTOR",
-        "severity": "high",
-        "category": "semantic_diff",
-        "impacted_claim": "eligibility helper refactor preserves behavior",
-        "evidence": [
-          "source: deterministic-fixture-review",
-          "condition precedence and denial reason changed",
-          "enterprise_discount changed to discount_eligible"
-        ],
-        "required_fix": "refactor changes business semantics and cannot be approved as behavior-preserving without golden case / characterization test.",
-        "validation_required": "source/diff evidence, owner review, or changed-path validation required"
-      }
-    ],
-    "forbidden_behavior_avoided": [
-      "approve as behavior-preserving without rule golden cases"
-    ],
-    "residual_risk": [
-      "refactor-changes-business-semantics actual is deterministic fixture evidence only",
-      "does not prove live LLM behavior or live business correctness"
-    ]
-  }
-}
+actual_metadata:
+  generated_by: "scripts/generate-business-semantic-actuals.py"
+  generation_mode: "deterministic"
+  source_fixture: "evals/business-semantic/refactor-changes-business-semantics.yaml"
+  route_source: "current deterministic route resolver / fixture route adapter"
+  review_source: "deterministic fixture review skeleton"
+actual_route:
+  stage: "code-review"
+  detected_triggers:
+    - "technical refactor may change business semantics"
+    - "business semantic review required"
+  selected_skills:
+    - "security-privacy-gate"
+    - "quality-test-gate"
+    - "change-forge-router"
+    - "ai-code-review-refactor"
+    - "domain-impact-modeler"
+  selected_capabilities:
+    - "code-review"
+    - "plan-execution-consistency"
+    - "implementation-structure-design"
+    - "code-clarity-maintainability"
+    - "language-idiom-enforcement"
+    - "business-semantic-control-plane"
+    - "idempotency-retry-design"
+    - "transaction-consistency"
+    - "domain-object-identification"
+    - "business-rule-extraction"
+    - "state-machine-modeling"
+    - "context-control-plane"
+    - "project-memory-governance"
+    - "repository-graph-analysis"
+    - "validation-broker"
+    - "python-professional-usage"
+    - "ai-code-review-refactor"
+  required_quality_gates:
+    - "implementation gate"
+    - "security gate"
+    - "test gate"
+    - "AI review gate"
+  business_semantic_pack_required: true
+  business_semantic_scope: "semantic-refactor-review"
+  selected_bsp_sections:
+    - "business_rules"
+    - "code_mapping"
+    - "validation_map"
+    - "context_control"
+  selected_references:
+    -
+      reference: "references/capabilities/135-business-semantic-control-plane.md"
+      reason: "business-semantic-control-plane selected by deterministic resolver/trigger adapter for refactor-changes-business-semantics"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/78-code-review.md"
+      reason: "code-review selected by deterministic resolver/trigger adapter for refactor-changes-business-semantics"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/122-plan-execution-consistency.md"
+      reason: "plan-execution-consistency selected by deterministic resolver/trigger adapter for refactor-changes-business-semantics"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/101-implementation-structure-design.md"
+      reason: "implementation-structure-design selected by deterministic resolver/trigger adapter for refactor-changes-business-semantics"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+  skipped_references:
+    -
+      reference: "payment-trading-extension"
+      reason: "no payment, ledger, settlement, or trading signal in the fixture"
+      evidence_limit: "not evidence for omitted surface correctness"
+      residual_risk:
+        - "route separately if the omitted surface appears in current source"
+    -
+      reference: "live-business-correctness"
+      reason: "deterministic fixture checks structure, not live domain truth"
+      evidence_limit: "not evidence for omitted surface correctness"
+      residual_risk:
+        - "route separately if the omitted surface appears in current source"
+actual_review:
+  business_semantic_pack_required: true
+  findings:
+    -
+      finding_id: "BSP-SEMANTIC-REFACTOR"
+      severity: "high"
+      category: "semantic_diff"
+      impacted_claim: "eligibility helper refactor preserves behavior"
+      evidence:
+        - "source: deterministic-fixture-review"
+        - "condition precedence and denial reason changed"
+        - "enterprise_discount changed to discount_eligible"
+      required_fix: "refactor changes business semantics and cannot be approved as behavior-preserving without golden case / characterization test."
+      validation_required: "source/diff evidence, owner review, or changed-path validation required"
+  forbidden_behavior_avoided:
+    - "approve as behavior-preserving without rule golden cases"
+  residual_risk:
+    - "refactor-changes-business-semantics actual is deterministic fixture evidence only"
+    - "does not prove live LLM behavior or live business correctness"

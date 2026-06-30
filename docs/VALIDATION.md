@@ -81,6 +81,7 @@ quality, and behavior-fixture regressions:
 
 ```bash
 python3 scripts/eval-routing.py
+python3 scripts/generate-business-semantic-actuals.py --check
 python3 scripts/eval-business-semantic-routing.py
 python3 scripts/eval-business-semantic-review.py
 python3 scripts/eval-context-control-plane.py
@@ -99,17 +100,22 @@ Business semantic validation is a two-part closure. `validate-business-semantic-
 loads the BSP, business rule record, business memory event, and business golden
 case schemas; validates committed valid/invalid JSON samples; and then applies
 semantic invariants such as unique `rule_id`, non-manual enforcement paths,
-allowed plus forbidden workflow transitions, non-memory validation evidence,
-and structured selected/skipped reference rationale. `eval-business-semantic-routing.py`
-and `eval-business-semantic-review.py` compare expected fixtures with
-deterministic actual outputs in `evals/business-semantic-outputs/`; they are no
-longer fixture self-consistency checks.
+non-empty rule `reason_codes` and `entry_points`, allowed plus forbidden
+workflow transitions, non-memory validation evidence, and structured
+selected/skipped reference rationale. `generate-business-semantic-actuals.py`
+generates the committed deterministic actual outputs in
+`evals/business-semantic-outputs/`; `--check` fails when those outputs drift from
+the current deterministic route resolver/fixture adapter. `eval-business-semantic-routing.py`
+compares selected skills, selected capabilities, quality gates, BSP sections,
+BSP scope, detected canonical triggers, and reference decisions. `eval-business-semantic-review.py`
+checks expected findings and each `expected_evidence` item against source/diff
+grounded finding text.
 
 Business semantic fixtures remain structural/local evidence. They prove route,
 schema, review, and validator behavior over bounded source/diff snippets; they
-do not prove live business correctness. Project memory and repository graph
-signals are selectors until current source, owner review, user source, or
-validation evidence confirms a claim.
+do not prove live LLM behavior or live business correctness. Project memory and
+repository graph signals are selectors until current source, owner review, user
+source, or validation evidence confirms a claim.
 
 Run the extended routing fixture comparison only when updating or verifying
 captured actual router outputs:
@@ -130,6 +136,7 @@ python3 scripts/validate-skill-body-links.py
 python3 scripts/validate-skill-content-size.py
 python3 scripts/audit-skill-content.py
 python3 scripts/validate-business-semantic-pack.py
+python3 scripts/generate-business-semantic-actuals.py --check
 python3 scripts/eval-business-semantic-routing.py
 python3 scripts/eval-business-semantic-review.py
 python3 scripts/validate-examples.py

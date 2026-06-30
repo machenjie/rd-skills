@@ -165,6 +165,7 @@ Use this mode when BSP evidence is part of the handoff. The package is task-scop
 - Package only the BSP sections selected for the current task: intent, vocabulary, objects, rules, workflows, data/signal semantics, memory projection, graph selectors, code mapping, validation map, and context control.
 - Every BSP `FACT` must cite current source, owner review, user-provided source, or validation evidence. Project memory, repository graph, prior summaries, and agent inference stay selectors or non-fact evidence classes until confirmed.
 - `selected_references` and `skipped_references` must be structured reference decisions: reference, reason, evidence limit, optional budget mode, and residual risk.
+- The package consumes the selected BSP sections and writes only the handoff slice, selected/skipped references, evidence limits, validation map status, and residual semantic risk. Missing selected sections are blocking when they are needed for the next gate; otherwise they must be explicit residual risk.
 - If the BSP grows past the route budget, hand it to `context-control-plane` as a selected slice with skipped-reference rationale rather than loading the whole package.
 - Record what the BSP slice proves, what it does not prove, and which owner or validator must close residual business risk.
 

@@ -136,6 +136,8 @@ When BSP is selected, each workflow must be writable to `BSP.workflows` with:
 - `validation_map` entries for allowed transitions, forbidden transitions, guard rules, side effects, and migration/compatibility claims
 - residual risk for uninspected writers, stored-record compatibility, or missing owner review
 
+State modeling consumes BSP task intent, business objects, business rules, code mapping, memory projection, graph selectors, validation map, and context control when present. Missing states, forbidden transitions, guard rule ids, actor authority, or writer coverage blocks workflow closure unless recorded as residual risk with owner/test handoff; graph and memory remain selector evidence, not BSP `FACT`.
+
 # Evidence Contract
 
 - **Repository evidence:** name the domain files, models, services, jobs, SQL, event schemas, tests, docs, registry entries, and support/admin tools inspected; if no concrete implementation exists, state that the output is a design contract rather than verified source behavior.

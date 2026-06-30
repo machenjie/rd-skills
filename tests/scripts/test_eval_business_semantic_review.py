@@ -131,7 +131,7 @@ actual_review:
 """
 
 
-def _finding(category: str = "hidden_sql_rule") -> str:
+def _finding(category: str = "hidden_sql_rule", evidence: str = "fixture") -> str:
     return f"""    - finding_id: BSP-HIDDEN-SQL-RULE
       severity: high
       category: {category}

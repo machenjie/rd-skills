@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import contextlib
-import importlib.util
-import io
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -16,12 +14,6 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 SCRIPT_PATH = ROOT / "scripts" / "generate-business-semantic-actuals.py"
-_SPEC = importlib.util.spec_from_file_location("generate_business_semantic_actuals_under_test", SCRIPT_PATH)
-if _SPEC is None or _SPEC.loader is None:
-    raise RuntimeError(f"cannot load {SCRIPT_PATH}")
-GENERATOR = importlib.util.module_from_spec(_SPEC)
-sys.modules[_SPEC.name] = GENERATOR
-_SPEC.loader.exec_module(GENERATOR)
 
 
 class GenerateBusinessSemanticActualsTests(unittest.TestCase):
@@ -38,11 +30,11 @@ class GenerateBusinessSemanticActualsTests(unittest.TestCase):
             shutil.copytree(ROOT / "evals" / "business-semantic", eval_dir)
             shutil.copytree(ROOT / "evals" / "business-semantic-outputs", output_dir)
 
-            actual_path = next(sorted(output_dir.glob("*.actual.yaml")))
+            actual_path = sorted(output_dir.glob("*.actual.yaml"))[0]
             actual_path.write_text(
                 actual_path.read_text(encoding="utf-8").replace(
-                    "generation_mode: deterministic",
-                    "generation_mode: stale",
+                    'generation_mode: "deterministic"',
+                    'generation_mode: "stale"',
                     1,
                 ),
                 encoding="utf-8",
@@ -57,10 +49,14 @@ class GenerateBusinessSemanticActualsTests(unittest.TestCase):
 
 
 def _run_generator(argv: list[str]) -> tuple[int, str]:
-    buffer = io.StringIO()
-    with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
-        rc = GENERATOR.main(argv)
-    return rc, buffer.getvalue()
+    completed = subprocess.run(
+        [sys.executable, str(SCRIPT_PATH), *argv],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return completed.returncode, completed.stdout + completed.stderr
 
 
 if __name__ == "__main__":

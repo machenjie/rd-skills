@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import re
 import sys
+import json
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -109,10 +110,13 @@ def _parse_scalar(raw: str) -> Any:
         return value.lower() == "true"
     if value.lower() in {"null", "~"}:
         return None
-    if (value.startswith('"') and value.endswith('"')) or (
-        value.startswith("'") and value.endswith("'")
-    ):
-        return value[1:-1]
+    if value.startswith('"') and value.endswith('"'):
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            return value[1:-1]
+    if value.startswith("'") and value.endswith("'"):
+        return value[1:-1].replace("''", "'")
     if value.startswith("[") and value.endswith("]"):
         inner = value[1:-1].strip()
         if not inner:

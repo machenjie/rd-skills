@@ -191,10 +191,12 @@ When BSP is selected, each material rule must be writable to `BSP.business_rules
 - `rule_id`, statement, `owner`, and `authoritative_enforcement_layer`
 - `authoritative_enforcement_paths` for non-manual and decided enforcement
 - `preview_paths`, `defense_paths`, and audit paths when those layers exist
-- `reason_codes`, inputs, outputs, precedence, exceptions, and entry points
+- non-empty `reason_codes`, inputs, outputs, precedence, exceptions, and non-empty entry points
 - effective dating, historical decision strategy, and audit requirements when applicable
 - tests, golden cases, owner review, or explicit residual risk
 - evidence class, source paths or refs, and `validation_map` entries for claim-to-proof mapping
+
+Rule extraction consumes BSP task intent, vocabulary, objects, workflows, `validation_map`, and `context_control` when present. Missing owner, enforcement layer, `reason_codes`, or entry points blocks rule closure unless the BSP records an explicit `OPEN_QUESTION` plus residual risk and owner handoff; graph and memory may select candidate rules but cannot create a BSP `FACT`.
 
 # Evidence Contract
 

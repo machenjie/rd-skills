@@ -1,146 +1,117 @@
-{
-  "actual_metadata": {
-    "generated_by": "scripts/generate-business-semantic-actuals.py",
-    "generation_mode": "deterministic",
-    "source_fixture": "evals/business-semantic/workflow-transition-added.yaml",
-    "route_source": "current deterministic route resolver / fixture route adapter",
-    "review_source": "deterministic fixture review skeleton"
-  },
-  "actual_route": {
-    "stage": "architecture-design",
-    "detected_triggers": [
-      "business workflow state unclear",
-      "business invariant changed"
-    ],
-    "selected_skills": [
-      "delivery-release-gate",
-      "quality-test-gate",
-      "frontend-change-builder",
-      "data-api-contract-changer",
-      "change-forge-router",
-      "domain-impact-modeler",
-      "ai-code-review-refactor"
-    ],
-    "selected_capabilities": [
-      "ci-cd",
-      "release-rollback",
-      "containerization",
-      "kubernetes-gateway",
-      "observability",
-      "backup-recovery",
-      "page-component-decomposition",
-      "state-management-design",
-      "form-validation-design",
-      "frontend-api-integration",
-      "api-contract-design",
-      "dto-schema-design",
-      "error-code-design",
-      "version-compatibility",
-      "package-dependency-management",
-      "build-tool-professional-usage",
-      "business-semantic-control-plane",
-      "domain-object-identification",
-      "business-rule-extraction",
-      "state-machine-modeling",
-      "context-control-plane",
-      "project-memory-governance",
-      "repository-graph-analysis",
-      "validation-broker",
-      "agent-tool-permission-sandbox",
-      "implementation-structure-design"
-    ],
-    "required_quality_gates": [
-      "delivery gate",
-      "API/data gate",
-      "test gate",
-      "domain gate",
-      "AI review gate"
-    ],
-    "business_semantic_pack_required": true,
-    "business_semantic_scope": "workflow-transition-change",
-    "selected_bsp_sections": [
-      "workflows",
-      "business_rules",
-      "validation_map",
-      "code_mapping"
-    ],
-    "selected_references": [
-      {
-        "reference": "references/capabilities/135-business-semantic-control-plane.md",
-        "reason": "business-semantic-control-plane selected by deterministic resolver/trigger adapter for workflow-transition-added",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/73-ci-cd.md",
-        "reason": "ci-cd selected by deterministic resolver/trigger adapter for workflow-transition-added",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/75-release-rollback.md",
-        "reason": "release-rollback selected by deterministic resolver/trigger adapter for workflow-transition-added",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/72-containerization.md",
-        "reason": "containerization selected by deterministic resolver/trigger adapter for workflow-transition-added",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      }
-    ],
-    "skipped_references": [
-      {
-        "reference": "payment-trading-extension",
-        "reason": "no payment, ledger, settlement, or trading signal in the fixture",
-        "evidence_limit": "not evidence for omitted surface correctness",
-        "residual_risk": [
-          "route separately if the omitted surface appears in current source"
-        ]
-      },
-      {
-        "reference": "live-business-correctness",
-        "reason": "deterministic fixture checks structure, not live domain truth",
-        "evidence_limit": "not evidence for omitted surface correctness",
-        "residual_risk": [
-          "route separately if the omitted surface appears in current source"
-        ]
-      }
-    ]
-  },
-  "actual_review": {
-    "business_semantic_pack_required": true,
-    "findings": [
-      {
-        "finding_id": "BSP-WORKFLOW-FORBIDDEN-GAP",
-        "severity": "high",
-        "category": "workflow_transition_gap",
-        "impacted_claim": "approved claim can return to draft",
-        "evidence": [
-          "source: deterministic-fixture-review",
-          "enum/status change lacks forbidden transition tests",
-          "APPROVED to DRAFT transition added"
-        ],
-        "required_fix": "workflow transition table and invalid transition tests required.",
-        "validation_required": "source/diff evidence, owner review, or changed-path validation required"
-      }
-    ],
-    "forbidden_behavior_avoided": [
-      "add enum value only",
-      "skip invalid transition coverage"
-    ],
-    "residual_risk": [
-      "workflow-transition-added actual is deterministic fixture evidence only",
-      "does not prove live LLM behavior or live business correctness"
-    ]
-  }
-}
+actual_metadata:
+  generated_by: "scripts/generate-business-semantic-actuals.py"
+  generation_mode: "deterministic"
+  source_fixture: "evals/business-semantic/workflow-transition-added.yaml"
+  route_source: "current deterministic route resolver / fixture route adapter"
+  review_source: "deterministic fixture review skeleton"
+actual_route:
+  stage: "architecture-design"
+  detected_triggers:
+    - "business workflow state unclear"
+    - "business invariant changed"
+  selected_skills:
+    - "delivery-release-gate"
+    - "quality-test-gate"
+    - "frontend-change-builder"
+    - "data-api-contract-changer"
+    - "change-forge-router"
+    - "domain-impact-modeler"
+    - "ai-code-review-refactor"
+  selected_capabilities:
+    - "ci-cd"
+    - "release-rollback"
+    - "containerization"
+    - "kubernetes-gateway"
+    - "observability"
+    - "backup-recovery"
+    - "page-component-decomposition"
+    - "state-management-design"
+    - "form-validation-design"
+    - "frontend-api-integration"
+    - "api-contract-design"
+    - "dto-schema-design"
+    - "error-code-design"
+    - "version-compatibility"
+    - "package-dependency-management"
+    - "build-tool-professional-usage"
+    - "business-semantic-control-plane"
+    - "domain-object-identification"
+    - "business-rule-extraction"
+    - "state-machine-modeling"
+    - "context-control-plane"
+    - "project-memory-governance"
+    - "repository-graph-analysis"
+    - "validation-broker"
+    - "agent-tool-permission-sandbox"
+    - "implementation-structure-design"
+  required_quality_gates:
+    - "delivery gate"
+    - "API/data gate"
+    - "test gate"
+    - "domain gate"
+    - "AI review gate"
+  business_semantic_pack_required: true
+  business_semantic_scope: "workflow-transition-change"
+  selected_bsp_sections:
+    - "workflows"
+    - "business_rules"
+    - "validation_map"
+    - "code_mapping"
+  selected_references:
+    -
+      reference: "references/capabilities/135-business-semantic-control-plane.md"
+      reason: "business-semantic-control-plane selected by deterministic resolver/trigger adapter for workflow-transition-added"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/73-ci-cd.md"
+      reason: "ci-cd selected by deterministic resolver/trigger adapter for workflow-transition-added"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/75-release-rollback.md"
+      reason: "release-rollback selected by deterministic resolver/trigger adapter for workflow-transition-added"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/72-containerization.md"
+      reason: "containerization selected by deterministic resolver/trigger adapter for workflow-transition-added"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+  skipped_references:
+    -
+      reference: "payment-trading-extension"
+      reason: "no payment, ledger, settlement, or trading signal in the fixture"
+      evidence_limit: "not evidence for omitted surface correctness"
+      residual_risk:
+        - "route separately if the omitted surface appears in current source"
+    -
+      reference: "live-business-correctness"
+      reason: "deterministic fixture checks structure, not live domain truth"
+      evidence_limit: "not evidence for omitted surface correctness"
+      residual_risk:
+        - "route separately if the omitted surface appears in current source"
+actual_review:
+  business_semantic_pack_required: true
+  findings:
+    -
+      finding_id: "BSP-WORKFLOW-FORBIDDEN-GAP"
+      severity: "high"
+      category: "workflow_transition_gap"
+      impacted_claim: "approved claim can return to draft"
+      evidence:
+        - "source: deterministic-fixture-review"
+        - "enum/status change lacks forbidden transition tests"
+        - "APPROVED to DRAFT transition added"
+      required_fix: "workflow transition table and invalid transition tests required."
+      validation_required: "source/diff evidence, owner review, or changed-path validation required"
+  forbidden_behavior_avoided:
+    - "add enum value only"
+    - "skip invalid transition coverage"
+  residual_risk:
+    - "workflow-transition-added actual is deterministic fixture evidence only"
+    - "does not prove live LLM behavior or live business correctness"

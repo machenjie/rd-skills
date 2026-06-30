@@ -1,58 +1,43 @@
-{
-  "actual_metadata": {
-    "generated_by": "scripts/generate-business-semantic-actuals.py",
-    "generation_mode": "deterministic",
-    "source_fixture": "evals/business-semantic/over-routing-simple-local-change.yaml",
-    "route_source": "current deterministic route resolver / fixture route adapter",
-    "review_source": "deterministic fixture review skeleton"
-  },
-  "actual_route": {
-    "stage": "coding",
-    "detected_triggers": [],
-    "selected_skills": [
-      "backend-change-builder"
-    ],
-    "selected_capabilities": [
-      "minimal-correct-implementation"
-    ],
-    "required_quality_gates": [
-      "implementation gate"
-    ],
-    "business_semantic_pack_required": false,
-    "business_semantic_scope": "none",
-    "selected_bsp_sections": [],
-    "selected_references": [],
-    "skipped_references": [
-      {
-        "reference": "references/capabilities/135-business-semantic-control-plane.md",
-        "reason": "over-routing-simple-local-change has no business semantic trigger and does not require BSP",
-        "evidence_limit": "skip applies only to this deterministic local fixture",
-        "residual_risk": []
-      }
-    ]
-  },
-  "actual_review": {
-    "business_semantic_pack_required": false,
-    "findings": [
-      {
-        "finding_id": "BSP-SKIPPED-LOCAL-TYPO",
-        "severity": "low",
-        "category": "bsp_skipped",
-        "impacted_claim": "typo-only internal log message",
-        "evidence": [
-          "source: deterministic-fixture-review",
-          "BSP should be skipped with rationale"
-        ],
-        "required_fix": "BSP should be skipped with rationale",
-        "validation_required": "deterministic fixture review coverage required"
-      }
-    ],
-    "forbidden_behavior_avoided": [
-      "select business-semantic-control-plane",
-      "require full BSP"
-    ],
-    "residual_risk": [
-      "none for business semantic coverage"
-    ]
-  }
-}
+actual_metadata:
+  generated_by: "scripts/generate-business-semantic-actuals.py"
+  generation_mode: "deterministic"
+  source_fixture: "evals/business-semantic/over-routing-simple-local-change.yaml"
+  route_source: "current deterministic route resolver / fixture route adapter"
+  review_source: "deterministic fixture review skeleton"
+actual_route:
+  stage: "coding"
+  detected_triggers: []
+  selected_skills:
+    - "backend-change-builder"
+  selected_capabilities:
+    - "minimal-correct-implementation"
+  required_quality_gates:
+    - "implementation gate"
+  business_semantic_pack_required: false
+  business_semantic_scope: "none"
+  selected_bsp_sections: []
+  selected_references: []
+  skipped_references:
+    -
+      reference: "references/capabilities/135-business-semantic-control-plane.md"
+      reason: "over-routing-simple-local-change has no business semantic trigger and does not require BSP"
+      evidence_limit: "skip applies only to this deterministic local fixture"
+      residual_risk: []
+actual_review:
+  business_semantic_pack_required: false
+  findings:
+    -
+      finding_id: "BSP-SKIPPED-LOCAL-TYPO"
+      severity: "low"
+      category: "bsp_skipped"
+      impacted_claim: "typo-only internal log message"
+      evidence:
+        - "source: deterministic-fixture-review"
+        - "BSP should be skipped with rationale"
+      required_fix: "BSP should be skipped with rationale"
+      validation_required: "deterministic fixture review coverage required"
+  forbidden_behavior_avoided:
+    - "select business-semantic-control-plane"
+    - "require full BSP"
+  residual_risk:
+    - "none for business semantic coverage"

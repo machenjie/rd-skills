@@ -170,6 +170,10 @@ used as business fact, and memory used as business fact. Legacy trigger aliases
 remain accepted for compatibility. BSP reference selection must use structured
 reason/evidence-limit rationale, and graph or memory cannot be promoted to
 `FACT` without current source, owner review, user source, or validation evidence.
+BSP authoring changes must also keep deterministic actual outputs fresh through
+`generate-business-semantic-actuals.py --check`; routing evidence includes
+skills, capabilities, gates, BSP scope, BSP sections, triggers, and references,
+while review evidence includes source/diff `expected_evidence`.
 
 ## 3. Language Surface Selector
 

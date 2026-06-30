@@ -1,143 +1,114 @@
-{
-  "actual_metadata": {
-    "generated_by": "scripts/generate-business-semantic-actuals.py",
-    "generation_mode": "deterministic",
-    "source_fixture": "evals/business-semantic/hidden-rule-in-sql.yaml",
-    "route_source": "current deterministic route resolver / fixture route adapter",
-    "review_source": "deterministic fixture review skeleton"
-  },
-  "actual_route": {
-    "stage": "implementation-planning",
-    "detected_triggers": [
-      "business rule hidden in SQL/controller/UI/test",
-      "business rule authority unknown"
-    ],
-    "selected_skills": [
-      "backend-change-builder",
-      "ai-code-review-refactor",
-      "data-api-contract-changer",
-      "change-forge-router",
-      "domain-impact-modeler",
-      "quality-test-gate",
-      "data-middleware-change-builder"
-    ],
-    "selected_capabilities": [
-      "repository-context-map",
-      "implementation-structure-design",
-      "module-boundary-design",
-      "code-clarity-maintainability",
-      "language-idiom-enforcement",
-      "business-semantic-control-plane",
-      "service-business-logic",
-      "authentication-authorization",
-      "idempotency-retry-design",
-      "logging-error-handling",
-      "data-model-design",
-      "relational-database",
-      "indexing-query-optimization",
-      "transaction-consistency",
-      "domain-object-identification",
-      "business-rule-extraction",
-      "state-machine-modeling",
-      "context-control-plane",
-      "project-memory-governance",
-      "repository-graph-analysis",
-      "validation-broker",
-      "sql-professional-usage"
-    ],
-    "required_quality_gates": [
-      "implementation gate",
-      "API/data gate",
-      "domain gate",
-      "AI review gate",
-      "test gate"
-    ],
-    "business_semantic_pack_required": true,
-    "business_semantic_scope": "hidden-sql-rule",
-    "selected_bsp_sections": [
-      "business_rules",
-      "data_and_signal_semantics",
-      "code_mapping",
-      "validation_map",
-      "context_control"
-    ],
-    "selected_references": [
-      {
-        "reference": "references/capabilities/135-business-semantic-control-plane.md",
-        "reason": "business-semantic-control-plane selected by deterministic resolver/trigger adapter for hidden-rule-in-sql",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/118-repository-context-map.md",
-        "reason": "repository-context-map selected by deterministic resolver/trigger adapter for hidden-rule-in-sql",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/101-implementation-structure-design.md",
-        "reason": "implementation-structure-design selected by deterministic resolver/trigger adapter for hidden-rule-in-sql",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      },
-      {
-        "reference": "references/capabilities/19-module-boundary-design.md",
-        "reason": "module-boundary-design selected by deterministic resolver/trigger adapter for hidden-rule-in-sql",
-        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
-        "residual_risk": [
-          "does not prove live LLM behavior or live business correctness"
-        ]
-      }
-    ],
-    "skipped_references": [
-      {
-        "reference": "payment-trading-extension",
-        "reason": "no payment, ledger, settlement, or trading signal in the fixture",
-        "evidence_limit": "not evidence for omitted surface correctness",
-        "residual_risk": [
-          "route separately if the omitted surface appears in current source"
-        ]
-      },
-      {
-        "reference": "live-business-correctness",
-        "reason": "deterministic fixture checks structure, not live domain truth",
-        "evidence_limit": "not evidence for omitted surface correctness",
-        "residual_risk": [
-          "route separately if the omitted surface appears in current source"
-        ]
-      }
-    ]
-  },
-  "actual_review": {
-    "business_semantic_pack_required": true,
-    "findings": [
-      {
-        "finding_id": "BSP-HIDDEN-SQL-RULE",
-        "severity": "high",
-        "category": "hidden_sql_rule",
-        "impacted_claim": "subscription renewal eligibility status filter",
-        "evidence": [
-          "source: deterministic-fixture-review",
-          "SELECT * FROM subscriptions WHERE status != 'expired'",
-          "WHERE status NOT IN ('expired', 'enterprise_expired')"
-        ],
-        "required_fix": "SQL condition is a hidden business rule and needs rule_id, owner, authoritative enforcement layer, golden case, changed-path validation.",
-        "validation_required": "source/diff evidence, owner review, or changed-path validation required"
-      }
-    ],
-    "forbidden_behavior_avoided": [
-      "approve SQL condition without rule catalog",
-      "skip changed-path validation"
-    ],
-    "residual_risk": [
-      "hidden-rule-in-sql actual is deterministic fixture evidence only",
-      "does not prove live LLM behavior or live business correctness"
-    ]
-  }
-}
+actual_metadata:
+  generated_by: "scripts/generate-business-semantic-actuals.py"
+  generation_mode: "deterministic"
+  source_fixture: "evals/business-semantic/hidden-rule-in-sql.yaml"
+  route_source: "current deterministic route resolver / fixture route adapter"
+  review_source: "deterministic fixture review skeleton"
+actual_route:
+  stage: "implementation-planning"
+  detected_triggers:
+    - "business rule hidden in SQL/controller/UI/test"
+    - "business rule authority unknown"
+  selected_skills:
+    - "backend-change-builder"
+    - "ai-code-review-refactor"
+    - "data-api-contract-changer"
+    - "change-forge-router"
+    - "domain-impact-modeler"
+    - "quality-test-gate"
+    - "data-middleware-change-builder"
+  selected_capabilities:
+    - "repository-context-map"
+    - "implementation-structure-design"
+    - "module-boundary-design"
+    - "code-clarity-maintainability"
+    - "language-idiom-enforcement"
+    - "business-semantic-control-plane"
+    - "service-business-logic"
+    - "authentication-authorization"
+    - "idempotency-retry-design"
+    - "logging-error-handling"
+    - "data-model-design"
+    - "relational-database"
+    - "indexing-query-optimization"
+    - "transaction-consistency"
+    - "domain-object-identification"
+    - "business-rule-extraction"
+    - "state-machine-modeling"
+    - "context-control-plane"
+    - "project-memory-governance"
+    - "repository-graph-analysis"
+    - "validation-broker"
+    - "sql-professional-usage"
+  required_quality_gates:
+    - "implementation gate"
+    - "API/data gate"
+    - "domain gate"
+    - "AI review gate"
+    - "test gate"
+  business_semantic_pack_required: true
+  business_semantic_scope: "hidden-sql-rule"
+  selected_bsp_sections:
+    - "business_rules"
+    - "data_and_signal_semantics"
+    - "code_mapping"
+    - "validation_map"
+    - "context_control"
+  selected_references:
+    -
+      reference: "references/capabilities/135-business-semantic-control-plane.md"
+      reason: "business-semantic-control-plane selected by deterministic resolver/trigger adapter for hidden-rule-in-sql"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/118-repository-context-map.md"
+      reason: "repository-context-map selected by deterministic resolver/trigger adapter for hidden-rule-in-sql"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/101-implementation-structure-design.md"
+      reason: "implementation-structure-design selected by deterministic resolver/trigger adapter for hidden-rule-in-sql"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+    -
+      reference: "references/capabilities/19-module-boundary-design.md"
+      reason: "module-boundary-design selected by deterministic resolver/trigger adapter for hidden-rule-in-sql"
+      evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
+      residual_risk:
+        - "does not prove live LLM behavior or live business correctness"
+  skipped_references:
+    -
+      reference: "payment-trading-extension"
+      reason: "no payment, ledger, settlement, or trading signal in the fixture"
+      evidence_limit: "not evidence for omitted surface correctness"
+      residual_risk:
+        - "route separately if the omitted surface appears in current source"
+    -
+      reference: "live-business-correctness"
+      reason: "deterministic fixture checks structure, not live domain truth"
+      evidence_limit: "not evidence for omitted surface correctness"
+      residual_risk:
+        - "route separately if the omitted surface appears in current source"
+actual_review:
+  business_semantic_pack_required: true
+  findings:
+    -
+      finding_id: "BSP-HIDDEN-SQL-RULE"
+      severity: "high"
+      category: "hidden_sql_rule"
+      impacted_claim: "subscription renewal eligibility status filter"
+      evidence:
+        - "source: deterministic-fixture-review"
+        - "SELECT * FROM subscriptions WHERE status != 'expired'"
+        - "WHERE status NOT IN ('expired', 'enterprise_expired')"
+      required_fix: "SQL condition is a hidden business rule and needs rule_id, owner, authoritative enforcement layer, golden case, changed-path validation."
+      validation_required: "source/diff evidence, owner review, or changed-path validation required"
+  forbidden_behavior_avoided:
+    - "approve SQL condition without rule catalog"
+    - "skip changed-path validation"
+  residual_risk:
+    - "hidden-rule-in-sql actual is deterministic fixture evidence only"
+    - "does not prove live LLM behavior or live business correctness"

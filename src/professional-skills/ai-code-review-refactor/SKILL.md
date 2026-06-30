@@ -238,6 +238,7 @@ When BSP is selected or a business semantic trigger appears in the diff, review 
 - project memory or repository graph used as source truth instead of selector evidence
 - missing business golden cases for changed rules, workflow transitions, reason codes, and negative paths
 - BSP-vs-actual-diff inconsistency, including a BSP claim not supported by the changed files or a changed semantic not represented in BSP
+- expected review evidence and source/diff grounding; finding text alone is insufficient to close business semantic review
 
 Return findings rather than approval when any check lacks source-backed evidence, owner review, validation evidence, or explicit residual risk.
 

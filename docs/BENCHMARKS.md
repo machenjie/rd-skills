@@ -14,7 +14,7 @@ ChangeForge benchmarks are release evidence, not marketing claims. They are loca
 | Profile build reproducibility | Build manifests for `recommended`, `full`, and `dev`. | `python3 scripts/build.py --profile recommended && python3 scripts/build.py --profile full && python3 scripts/build.py --profile dev` |
 | Installation validation | Installer/doctor validation. | `python3 scripts/validate-installation.py` |
 | Skill efficacy structural fixtures | evals/skill-efficacy | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
-| Business semantic structural fixtures | Business Semantic Pack schemas and deterministic BSP routing/review fixtures under `evals/business-semantic`. | `python3 scripts/validate-business-semantic-pack.py`, `python3 scripts/eval-business-semantic-routing.py`, and `python3 scripts/eval-business-semantic-review.py` |
+| Business semantic structural fixtures | Business Semantic Pack schemas and deterministic BSP routing/review fixtures under `evals/business-semantic`. | `python3 scripts/validate-business-semantic-pack.py`, `python3 scripts/generate-business-semantic-actuals.py --check`, `python3 scripts/eval-business-semantic-routing.py`, and `python3 scripts/eval-business-semantic-review.py` |
 | Context Control Plane overhead | Deterministic fixtures for context budget, selected/skipped references, JIT packs, tool-output boundaries, compaction snapshots, route repair summaries, and overhead policy. | `python3 scripts/eval-context-control-plane.py` |
 | Executor adapter structural fixtures | Deterministic adapter fixtures and sanitized telemetry sample under `evals/executor-adapter` and `reports/`. | `python3 scripts/eval-executor-adapters.py` |
 | Activation precision benchmark | Deterministic activation fixtures for stage, skill, capability, reference, language, risk, and overroute precision against the built hook runtime. | `python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks` |
@@ -61,12 +61,17 @@ Business semantic fixtures are structural/local evidence for source-backed
 semantic packs, route selection, overroute avoidance, review findings, memory
 verdict buckets, and golden-case expectations. The routing and review evals now
 compare expected fixture fields with deterministic actual outputs under
-`evals/business-semantic-outputs/`; the schema validator checks both JSON Schema
-valid/invalid samples and semantic invariants. They do not prove live business
-correctness, and memory or repository graph signals remain selectors until
-current source, owner review, user source, or validation evidence confirms the
-claim. BSP selected/skipped references require structured rationale, not string
-lists.
+`evals/business-semantic-outputs/`; those actuals are generated and checked by
+`generate-business-semantic-actuals.py --check`. Routing fixtures compare
+selected skills, selected capabilities, quality gates, BSP sections, BSP scope,
+canonical triggers, and structured reference decisions. Review fixtures check
+`expected_evidence`, not only finding text. The schema validator checks both
+JSON Schema valid/invalid samples and semantic invariants, including non-empty
+rule `reason_codes` and `entry_points`. They do not prove live LLM behavior or
+live business correctness, and memory or repository graph signals remain
+selectors until current source, owner review, user source, or validation
+evidence confirms the claim. BSP selected/skipped references require structured
+rationale, not string lists.
 
 Executor adapter benchmarks are also structural/local evidence. They validate
 canonical event recognition, adapter degradation, privacy redaction, validation
