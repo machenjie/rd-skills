@@ -1,0 +1,38 @@
+---
+id: linux-dns-systemd-resolved
+description: |
+  Linux resolver chain issue requires Linux systems routing.
+prompt: |
+  Diagnose a Linux DNS failure involving `/etc/hosts`, `/etc/resolv.conf`,
+  systemd-resolved, search domains, and ndots. Record the resolver trace and
+  rollback plan.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: debugging-diagnosis
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - linux service lifecycle failure
+  skills:
+    - reliability-observability-gate
+    - delivery-release-gate
+    - security-privacy-gate
+  capabilities:
+    - linux-systems-professional-usage
+    - observability
+    - agent-tool-permission-sandbox
+  domain_extensions: []
+  quality_gates:
+    - reliability gate
+    - delivery gate
+    - security gate
+    - implementation gate
+forbidden:
+  skills:
+    - data-api-contract-changer
+    - frontend-change-builder
+  capabilities:
+    - data-format-contract-usage
+    - message-queue-design
+notes: |
+  Resolver behavior is Linux runtime evidence, not data-format or generic backend routing.

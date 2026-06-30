@@ -1271,8 +1271,8 @@ capabilities:
     status: implemented
     used_by: [development-process-orchestrator, quality-test-gate, ai-code-review-refactor, delivery-release-gate, change-documentation-gate]
     triggers:
-      - git merge rebase cherry-pick conflict worktree index branch upstream reflog reset revert force-with-lease tag submodule sparse checkout generated file conflict dirty worktree
-      - generated output source authority ours theirs merge base conflict marker unrelated staged changes user changes overwrite rollback ref protected branch history rewrite
+      - git merge rebase cherry-pick conflict worktree index branch upstream reflog reset revert stash force-with-lease tag signed tag release tag submodule sparse checkout generated file conflict dirty worktree
+      - generated output source authority ours theirs merge base conflict marker unrelated staged changes unstaged diff staged diff user changes overwrite rollback ref protected branch history rewrite backup branch branch naming commit message commit splitting bisect failure isolation
     risk_notes: [Git operations can overwrite user work resolve generated conflicts incorrectly rewrite shared history or claim validation without current worktree and rollback evidence]
     expected_outputs: [Git Professional Usage Record with operation state inspected ownership boundary decision record generated artifact policy safety controls validation commands rollback note residual risk and handoff summary]
   - id: "131"
@@ -1282,8 +1282,8 @@ capabilities:
     status: implemented
     used_by: [delivery-release-gate, architecture-impact-reviewer, quality-test-gate, ai-code-review-refactor, change-documentation-gate]
     triggers:
-      - Makefile make Bazel Buck Pants Gradle Maven npm script pnpm yarn Turborepo Nx build graph generated artifact codegen strict deps remote cache remote execution hermetic build
-      - undeclared dependency generated source generator output source of truth reproducible artifact checksum digest build cache action key toolchain pin local CI mismatch
+      - Makefile make Ant Bazel Buck Pants Gradle Maven npm script pnpm yarn Turborepo Nx build graph generated artifact codegen strict deps remote cache remote execution hermetic build
+      - undeclared dependency generated source generated source declaration generator output source of truth reproducible artifact checksum digest build cache action key toolchain pin local CI mismatch make parallel phony target order-only dependency bazel sandbox classpath sourcepath output directory
     risk_notes: [Build graph changes can pass locally while CI release or remote cache uses stale generated artifacts undeclared dependencies hidden environment inputs or non-reproducible outputs]
     expected_outputs: [Build Tool Usage Record with build surface graph boundary generated artifact policy cache contract artifact contract decision record validation commands tool permission boundary and residual risk]
   - id: "132"
@@ -1293,8 +1293,8 @@ capabilities:
     status: implemented
     used_by: [reliability-observability-gate, delivery-release-gate, security-privacy-gate, backend-change-builder, ai-code-review-refactor]
     triggers:
-      - Linux systemd journald cgroup namespace procfs sysfs signal handling daemon pid file PID 1 ulimit file descriptor socket permission capability seccomp service restart
-      - distro kernel init container runtime cgroup v2 unit file EnvironmentFile TimeoutStopSec User Group WorkingDirectory OOM fd exhaustion resolver mount tmpfs
+      - Linux systemd systemd-resolved journald cgroup namespace procfs sysfs signal handling daemon pid file PID 1 ulimit file descriptor socket permission sudo root capability seccomp service restart
+      - distro kernel init container runtime cgroup v2 unit file EnvironmentFile TimeoutStopSec User Group WorkingDirectory OOM fd exhaustion resolver /etc/hosts /etc/resolv.conf search domain ndots mount tmpfs logrotate privileged port SELinux AppArmor
     risk_notes: [Linux runtime changes can fail through service lifecycle cgroup limits signals permissions namespaces logs or host/container differences that application tests do not cover]
     expected_outputs: [Linux Systems Usage Record with runtime surface environment evidence service contract process contract filesystem permission contract resource contract observability contract decision record validation commands and residual risk]
   - id: "133"
@@ -1305,7 +1305,7 @@ capabilities:
     used_by: [integration-change-builder, reliability-observability-gate, security-privacy-gate, delivery-release-gate, backend-change-builder]
     triggers:
       - Nginx Envoy HAProxy Cloudflare Fastly CloudFront ALB NLB ingress API gateway service mesh WAF CDN reverse proxy load balancer TLS DNS SNI ALPN
-      - HTTP proxy header X-Forwarded-For Forwarded Host CORS WebSocket SSE gRPC timeout chain 502 503 504 retry amplification upstream status edge origin trace context
+      - HTTP proxy header X-Forwarded-For Forwarded Host CORS WebSocket SSE gRPC timeout chain 502 503 504 retry amplification upstream status edge origin trace context path rewrite cache key TTL invalidation purge stale behavior per-user data health check origin shielding
     risk_notes: [Gateway and protocol changes can mask upstream failures amplify retries trust spoofed headers break TLS or streaming behavior and produce 5xx symptoms without hop-chain evidence]
     expected_outputs: [Network Protocol Gateway Record with network surface hop chain protocol contract timeout retry contract header identity contract security contract observability contract decision record validation commands and residual risk]
   - id: "134"
@@ -1315,7 +1315,7 @@ capabilities:
     status: implemented
     used_by: [data-api-contract-changer, data-middleware-change-builder, integration-change-builder, quality-test-gate, backend-change-builder, ai-code-review-refactor, consumer-impact-analysis, configuration-runtime-policy]
     triggers:
-      - JSON YAML XML CSV Protobuf Avro Parquet schema registry parser serializer wire format field evolution compatibility generated model golden fixture
-      - protobuf field number reserved field enum value wire type breaking change old reader new writer YAML safe loader scalar coercion duplicate key boolean timestamp
+      - JSON Schema YAML XML TOML CSV CPE Protobuf Avro Parquet schema registry parser compatibility parser serializer deserializer serialization wire format storage format field evolution compatibility generated model golden fixture
+      - protobuf field number reserved field enum value wire type breaking change old reader new writer YAML safe loader YAML 1.1 YAML 1.2 scalar coercion TOML type strictness duplicate key unknown field boolean timestamp XML canonicalization size depth limit parser differential CPE normalization version matching
     risk_notes: [Data format changes can break consumers or stored data through parser defaults coercion field-number reuse generated drift unsafe loaders duplicate keys and untested old-reader new-writer behavior]
     expected_outputs: [Data Format Contract Record with format surface schema authority parser contract compatibility class field evolution security contract generated artifact policy fixtures validation decision record and residual risk]

@@ -145,6 +145,7 @@ Use this governance path for classical ML, classifiers, recommenders, ranking, f
 
 ## Output Contract
 Return AI-specific change assessment with:
+- **Required named output records**: `AI Source Verification Record`, `Prompt / Model Version Contract`, `Eval Dataset Freshness Record`, `Retrieval Permission Evidence`, `Tool-Call Safety Matrix`, `Token / Latency / Cost Budget`, and `AI Regression Gate`.
 - **LLM integration risk assessment**: trust boundary analysis, prompt injection analysis, tool use scope.
 - **Retrieval permission audit**: ACL/RBAC filter coverage on every vector database query.
 - **Evaluation requirements**: required evaluation dataset size, coverage dimensions (normal, adversarial, edge, fairness), quality metrics with thresholds.

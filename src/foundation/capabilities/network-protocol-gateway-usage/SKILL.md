@@ -54,6 +54,9 @@ Escalate to `security-privacy-gate` for auth header forwarding, client IP trust,
 - **WebSocket and streaming need buffering controls.** Proxy buffering, idle timeout, and upgrade headers can break long-lived connections.
 - **DNS has deployment latency.** TTL, negative caching, split-horizon, and resolver behavior affect rollback.
 - **CDN cache and gateway auth interact.** Public/shared edge caches must not store per-user responses.
+- **Path rewrites need before/after examples.** A gateway rewrite must state the external path, upstream path, query handling, trailing slash behavior, and auth boundary before and after the change.
+- **CDN cache keys are security boundaries.** Cache key fields, TTL, `Vary`, cookies, authorization headers, purge/invalidation path, stale-if-error behavior, and per-user data safety must be explicit.
+- **WAF and origin shielding change failure modes.** WAF bypass rules, origin shielding, health checks, failover, and origin auth can expose private origins or mask unhealthy backends.
 
 # Failure Modes
 
@@ -67,6 +70,25 @@ Escalate to `security-privacy-gate` for auth header forwarding, client IP trust,
 - **CORS wildcard with credentials:** browser blocks or exposes data depending on misconfigured headers.
 - **CDN origin cache leak:** authenticated response cached at edge because `Cache-Control` or `Vary` was wrong.
 
+# Anti-Rationalization Table
+
+| Rationalization | Hidden Risk | Required Correction |
+|---|---|---|
+| "Increase the timeout." | Slow upstreams keep consuming capacity and callers still fail. | Map the full timeout chain and capacity/SLO impact. |
+| "Retry on all 5xx." | Non-idempotent retries amplify partial outages. | Bound retries by method, idempotency, budget, and backoff. |
+| "Trust X-Forwarded-For." | Attackers spoof client identity outside trusted proxies. | Accept forwarded headers only from known proxy boundaries. |
+| "CORS wildcard is easier." | Credentials or private data can cross origins incorrectly. | Define exact allowed origins, credentials, and cache behavior. |
+| "CDN cache cannot affect auth responses." | Per-user responses can be shared globally. | Prove cache key, `Vary`, `Cache-Control`, and purge behavior. |
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 routing, risk, and output-contract rules.
+
+Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when hop-chain, timeout/retry, CDN cache, WAF, DNS/TLS, path rewrite, or gateway rollout behavior needs deeper protocol benchmark support.
+Load [references/evidence-patterns.md](references/evidence-patterns.md) only when the handoff needs concrete curl/openssl/dig/config/log evidence, CDN cache safety proof, or rollback evidence patterns.
+Do not load references for ordinary REST DTO/API changes with no gateway, CDN, proxy, TLS, DNS, cache, or protocol behavior change.
+References are just-in-time support, not default-loaded encyclopedia content.
+
 # Output Contract
 
 Return a Network Protocol Gateway Record with:
@@ -77,9 +99,13 @@ Return a Network Protocol Gateway Record with:
 - `timeout_retry_contract` (connect/read/write/idle timeouts, caller deadline, retry attempts, backoff, idempotency)
 - `header_identity_contract` (`Host`, scheme, client IP, request id, trace context, auth/cookie forwarding)
 - `security_contract` (CORS, cookies, WAF, TLS policy, cacheability, trusted proxies)
+- `path_rewrite_contract` (external path, upstream path, query/trailing-slash behavior, before/after examples)
+- `cache_cdn_safety_record` (cache key, TTL, invalidation/purge, stale behavior, `Vary`, cookies/auth headers, per-user data safety)
+- `waf_origin_health_record` (WAF bypass rules, health check behavior, origin shielding, origin auth, failover)
 - `observability_contract` (gateway/upstream status, latency breakdown, retry count, trace id, log fields, alerts)
 - `decision_record` (change made, alternatives rejected, capacity and SLO rationale)
 - `validation_commands` (curl/openssl/dig/kubectl/nginx/envoy config test, synthetic request, log query, or not-run disclosure)
+- `rollback_plan` (DNS/CDN/cache purge, certificate/gateway config restore, origin shielding or WAF revert)
 - `residual_risk` (untested client, region, resolver, edge provider, or production traffic pattern)
 
 # Quality Gate
@@ -88,11 +114,13 @@ Return a Network Protocol Gateway Record with:
 2. Timeout and retry chain is bounded, ordered, and idempotency-aware.
 3. TLS, DNS, HTTP version, headers, and body/stream limits are explicit.
 4. Client identity and trace headers are accepted only across trusted proxies.
-5. Security-sensitive gateway behavior is reviewed.
-6. Logs and metrics can identify the failing hop and correlate to app traces.
-7. Rollout and rollback are defined for DNS, certificate, CDN, ingress, or gateway config.
-8. Validation covers at least the changed protocol path or discloses why not.
-9. Residual risk names untested clients, regions, providers, or live-load behavior.
+5. Path rewrite before/after examples, CDN cache key, TTL, purge/invalidation, stale behavior, and per-user data safety are reviewed when edge caching or rewrites are in scope.
+6. WAF bypass risk, health check behavior, origin shielding, and origin auth are reviewed when gateway/edge routing changes.
+7. Security-sensitive gateway behavior is reviewed.
+8. Logs and metrics can identify the failing hop and correlate to app traces.
+9. Rollout and rollback are defined for DNS, certificate, CDN, ingress, or gateway config.
+10. Validation covers at least the changed protocol path or discloses why not.
+11. Residual risk names untested clients, regions, providers, or live-load behavior.
 
 # Used By
 

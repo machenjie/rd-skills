@@ -54,6 +54,10 @@ Escalate to `security-privacy-gate` for root services, Linux capabilities, writa
 - **Filesystem semantics differ.** Overlayfs, bind mounts, tmpfs, read-only rootfs, SELinux/AppArmor labels, and NFS locks affect runtime behavior.
 - **DNS and resolver behavior are runtime inputs.** `/etc/resolv.conf`, systemd-resolved, search domains, and ndots can change latency and failure mode.
 - **Logs are diagnostic surface.** Journald unit logs, stdout/stderr, and file rotation must map to alert and incident workflows.
+- **Resolver chain needs file and service evidence.** `/etc/hosts`, `/etc/resolv.conf`, systemd-resolved status, search domains, and `ndots` decide whether a DNS issue is local override, resolver config, split DNS, or upstream failure.
+- **Privilege changes need a boundary record.** `sudo`, root services, Linux capabilities, privileged ports, setuid/setgid, and socket ownership must state why lower privilege is insufficient and how rollback restores least privilege.
+- **Log rotation is part of runtime safety.** File logs need logrotate ownership, retention, compression, permissions, and disk-full behavior; journald-only services need journal retention expectations.
+- **Security modules can change filesystem and process behavior.** SELinux/AppArmor labels, profiles, denials, and audit logs must be checked when permissions look correct but access fails.
 
 # Failure Modes
 
@@ -67,6 +71,25 @@ Escalate to `security-privacy-gate` for root services, Linux capabilities, writa
 - **Resolver latency:** DNS search path or ndots causes slow external lookups and request timeout.
 - **Package script non-idempotence:** postinstall restarts or rewrites config unexpectedly during upgrade.
 
+# Anti-Rationalization Table
+
+| Rationalization | Hidden Risk | Required Correction |
+|---|---|---|
+| "It is just an environment issue." | Root cause remains unverified and repeats in production. | Capture target environment commands and isolate the failing layer. |
+| "Run it as root to fix permissions." | Least privilege is bypassed and files become root-owned. | Fix ownership/capabilities or document a bounded privileged boundary. |
+| "systemctl active means healthy." | Restart loops or readiness failures are hidden. | Inspect status, logs, restart counters, and health/readiness signals. |
+| "Container limits are the same as host limits." | cgroup, namespace, DNS, PID 1, or mount behavior differs. | Verify inside the actual runtime boundary. |
+| "Clear /tmp or logs to free space." | State or audit evidence is deleted and the growth cause remains. | Identify owner, retention, and rollback before cleanup. |
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 routing, risk, and output-contract rules.
+
+Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when systemd, DNS resolver, cgroup, privilege, filesystem, logging, package, or container-host behavior needs deeper operating-system benchmark support.
+Load [references/evidence-patterns.md](references/evidence-patterns.md) only when the handoff needs command evidence patterns for resolver traces, privileged command risk, rollback, logs, process state, or host/container boundary proof.
+Do not load references for ordinary application code that has no Linux-specific runtime dependency or for metadata-only documentation edits.
+References are just-in-time support, not default-loaded encyclopedia content.
+
 # Output Contract
 
 Return a Linux Systems Usage Record with:
@@ -76,10 +99,13 @@ Return a Linux Systems Usage Record with:
 - `service_contract` (unit settings, user/group, working directory, env files, restart/timeout, hardening, resource limits)
 - `process_contract` (signals, child cleanup, PID files, sockets, readiness, graceful shutdown)
 - `filesystem_permission_contract` (paths, ownership, umask, temp, mounts, secrets, rotation)
+- `dns_resolution_trace` (`/etc/hosts`, `/etc/resolv.conf`, systemd-resolved, search domain, ndots, resolver command output)
+- `privileged_command_risk_record` (sudo/root/capability/privileged-port need, least-privilege alternative, rollback)
 - `resource_contract` (CPU, memory, fd, process, disk, inode, network limits and observed signals)
 - `observability_contract` (journald/stdout/syslog, metrics, alerts, runbook commands)
 - `decision_record` (chosen change, alternatives rejected, placement rationale)
 - `validation_commands` (systemctl, journalctl, ps, ss, lsof, cat /proc, container inspect, tests, or not-run disclosure)
+- `rollback_plan` (service config restore, package rollback, permission revert, resolver/config restore)
 - `residual_risk` (unverified distro, container runtime, host policy, kernel, or production load)
 
 # Quality Gate
@@ -88,11 +114,12 @@ Return a Linux Systems Usage Record with:
 2. Service manager behavior is explicit: restart, timeout, user, group, working directory, environment, limits, and hardening.
 3. Signal, shutdown, reload, and child cleanup behavior is defined and validated or disclosed.
 4. File paths, ownership, permissions, temp files, sockets, and secret handling are safe.
-5. cgroup, namespace, capability, and seccomp assumptions are stated.
-6. Resource limits and saturation signals are mapped to observability.
-7. Logs reach the intended sink with redaction and retention expectations.
-8. Rollout and rollback are safe for package/service changes.
-9. Residual risk names unverified host, kernel, runtime, or production-load behavior.
+5. DNS resolver behavior covers `/etc/hosts`, `/etc/resolv.conf`, systemd-resolved, search domains, and ndots when name resolution is in scope.
+6. sudo/root boundary, privileged ports, Linux capabilities, SELinux/AppArmor, and seccomp assumptions are stated where relevant.
+7. Resource limits and saturation signals are mapped to observability.
+8. Logs reach the intended sink with redaction, logrotate or journald retention expectations, and disk-full behavior.
+9. Rollout and rollback are safe for package/service changes.
+10. Residual risk names unverified host, kernel, runtime, or production-load behavior.
 
 # Used By
 

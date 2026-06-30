@@ -1,0 +1,37 @@
+---
+id: make-parallel-phony-target
+description: |
+  Make parallel race and phony target behavior require build-tool routing.
+prompt: |
+  Fix a `make -j` race where a generated file target is missing `.PHONY`
+  discipline and uses an order-only dependency as if it were an input.
+  Preserve declared inputs and outputs.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - build graph undeclared dependency
+  skills:
+    - architecture-impact-reviewer
+    - delivery-release-gate
+    - quality-test-gate
+  capabilities:
+    - build-tool-professional-usage
+    - package-dependency-management
+    - validation-broker
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - delivery gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - security-privacy-gate
+  capabilities:
+    - git-professional-usage
+    - network-protocol-gateway-usage
+notes: |
+  Make graph correctness is a build-tool capability, not generic shell or product routing.

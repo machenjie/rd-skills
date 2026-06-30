@@ -1,19 +1,19 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-30T03:15:21.422576+00:00
+- Generated: 2026-06-30T04:01:22.758928+00:00
 - Skills/capabilities checked: 155
-- Warning count: 10
-- Average score: 57.12/60
+- Warning count: 0
+- Average score: 57.30/60
 
 ## Scores
 
 | Item | Kind | Score | Status | Missing Sections | Warnings |
 | --- | --- | ---: | --- | ---: | ---: |
-| `src/foundation/capabilities/network-protocol-gateway-usage/SKILL.md` | foundation-capability | 37/60 | acceptable | 0 | 2 |
-| `src/foundation/capabilities/build-tool-professional-usage/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 2 |
-| `src/foundation/capabilities/linux-systems-professional-usage/SKILL.md` | foundation-capability | 41/60 | acceptable | 0 | 2 |
-| `src/foundation/capabilities/data-format-contract-usage/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 2 |
-| `src/foundation/capabilities/git-professional-usage/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 2 |
+| `src/foundation/capabilities/network-protocol-gateway-usage/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/build-tool-professional-usage/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/data-format-contract-usage/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/linux-systems-professional-usage/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/git-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/code-element-professionalism/SKILL.md` | foundation-capability | 51/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/contract-testing/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/controller-api-implementation/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
@@ -167,37 +167,4 @@
 
 ## Warnings
 
-### `src/foundation/capabilities/build-tool-professional-usage/SKILL.md`
-- message: reference 'references/benchmarks-and-patterns.md' is not linked from SKILL.md body | type: reference_loading_hint | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-- message: reference 'references/evidence-patterns.md' is not linked from SKILL.md body | type: reference_loading_hint | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-
-Recommended fixes:
-- Add targeted reference loading hints or link unreferenced skill references.
-
-### `src/foundation/capabilities/data-format-contract-usage/SKILL.md`
-- message: reference 'references/benchmarks-and-patterns.md' is not linked from SKILL.md body | type: reference_loading_hint | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-- message: reference 'references/evidence-patterns.md' is not linked from SKILL.md body | type: reference_loading_hint | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-
-Recommended fixes:
-- Add targeted reference loading hints or link unreferenced skill references.
-
-### `src/foundation/capabilities/git-professional-usage/SKILL.md`
-- message: reference 'references/benchmarks-and-patterns.md' is not linked from SKILL.md body | type: reference_loading_hint | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-- message: reference 'references/evidence-patterns.md' is not linked from SKILL.md body | type: reference_loading_hint | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-
-Recommended fixes:
-- Add targeted reference loading hints or link unreferenced skill references.
-
-### `src/foundation/capabilities/linux-systems-professional-usage/SKILL.md`
-- message: reference 'references/benchmarks-and-patterns.md' is not linked from SKILL.md body | type: reference_loading_hint | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-- message: reference 'references/evidence-patterns.md' is not linked from SKILL.md body | type: reference_loading_hint | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-
-Recommended fixes:
-- Add targeted reference loading hints or link unreferenced skill references.
-
-### `src/foundation/capabilities/network-protocol-gateway-usage/SKILL.md`
-- message: reference 'references/benchmarks-and-patterns.md' is not linked from SKILL.md body | type: reference_loading_hint | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-- message: reference 'references/evidence-patterns.md' is not linked from SKILL.md body | type: reference_loading_hint | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-
-Recommended fixes:
-- Add targeted reference loading hints or link unreferenced skill references.
+No warnings.

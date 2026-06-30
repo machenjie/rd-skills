@@ -1,8 +1,8 @@
 # Professional Routing Coverage
 
-- Generated: 2026-06-30T03:22:22.469209+00:00
+- Generated: 2026-06-30T04:01:23.247438+00:00
 - Status: pass
-- Routing cases checked: 155
+- Routing cases checked: 164
 - Benchmark cases checked: 30
 - Hidden risks checked: 91
 - Strongly covered: 87
@@ -31,7 +31,7 @@
 | `evals/professional-benchmarks/api/contract-change-without-consumer-verification` | covered | provider-only test misses consumer compatibility | api-breaking-field-rename |
 | `evals/professional-benchmarks/api/contract-change-without-consumer-verification` | covered | breaking API field change lacks schema diff or migration evidence | api-breaking-field-rename |
 | `evals/professional-benchmarks/backend/idor-local-fix-without-same-pattern-scan` | covered | IDOR from missing object ownership check | backend-auth-idor, backend-idor-tenant-leak-hidden-risk |
-| `evals/professional-benchmarks/backend/idor-local-fix-without-same-pattern-scan` | covered | tenant data leak from identifier-only query | backend-idor-tenant-leak-hidden-risk |
+| `evals/professional-benchmarks/backend/idor-local-fix-without-same-pattern-scan` | covered | tenant data leak from identifier-only query | backend-idor-tenant-leak-hidden-risk, cdn-cache-user-data-leak |
 | `evals/professional-benchmarks/backend/idor-local-fix-without-same-pattern-scan` | covered | local fix without same-pattern scan | backend-idor-tenant-leak-hidden-risk, bugfix-missing-same-pattern-scan, go-backend-goroutine-leak-bugfix |
 | `evals/professional-benchmarks/backend/partial-success-without-transaction` | covered | inconsistent account and billing state | backend-partial-success-transaction-hidden-risk |
 | `evals/professional-benchmarks/backend/partial-success-without-transaction` | covered | event emitted without durable state or compensation | backend-partial-success-transaction-hidden-risk |

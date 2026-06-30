@@ -124,6 +124,7 @@ Extend ChangeForge product and code change analysis with Web3 engineering discip
 
 ## Output Contract
 Return Web3 change assessment with:
+- **Required named output records**: `Web3 Source Verification Record`, `Chain / Network Safety Matrix`, `Signature Replay Safety Record`, `Finality and Reorg Handling Plan`, `Oracle Freshness Evidence`, `Indexer Consistency Record`, `Transaction Simulation Evidence`, and `Custody Boundary Record`.
 - **Smart contract security review**: SWC vulnerability mapping, reentrancy analysis, access control audit, integer arithmetic safety.
 - **Signature integrity**: EIP-712 domain completeness, chain ID binding, nonce/replay protection, human-readable intent display.
 - **Network and source verification**: official spec/provider source checked, expected chain ID, RPC endpoint, contract addresses, bridge/L2 finality, indexer lag, and oracle heartbeat/deviation limits.

@@ -395,6 +395,50 @@ class RuntimeRouteResolverTests(unittest.TestCase):
         self.assertEqual(context["primary_product_surface"], "backend-product")
         self.assertIn("api-contract-design", context["selected_capabilities"])
 
+    def test_ordinary_api_dto_does_not_default_data_format_contract(self) -> None:
+        context = _context_for(
+            {
+                "hook_event_name": "UserPromptSubmit",
+                "prompt": (
+                    "Add an optional displayName string to a REST response DTO "
+                    "and OpenAPI schema while preserving existing encoding behavior."
+                ),
+            }
+        )
+        self.assertIn("api-contract", context["product_surfaces"])
+        self.assertIn("api-contract-design", context["selected_capabilities"])
+        self.assertIn("dto-schema-design", context["selected_capabilities"])
+        self.assertNotIn("data-format-contract-usage", context["selected_capabilities"])
+
+    def test_toml_parser_risk_selects_data_format_contract(self) -> None:
+        context = _context_for(
+            {
+                "hook_event_name": "UserPromptSubmit",
+                "prompt": "Fix TOML config parser type strictness and parser compatibility for generated config.",
+            }
+        )
+        self.assertIn("api-contract", context["product_surfaces"])
+        self.assertIn("data-format-contract-usage", context["selected_capabilities"])
+
+    def test_protobuf_field_number_reuse_selects_data_format_contract(self) -> None:
+        context = _context_for(
+            {
+                "hook_event_name": "UserPromptSubmit",
+                "prompt": "Fix Protobuf field number reuse in a generated model and preserve unknown field compatibility.",
+            }
+        )
+        self.assertIn("api-contract", context["product_surfaces"])
+        self.assertIn("data-format-contract-usage", context["selected_capabilities"])
+
+    def test_json_literal_unit_test_does_not_select_data_format_contract(self) -> None:
+        self.assertNotIn(
+            "data-format-contract-usage",
+            detect_conditional_capabilities(
+                [],
+                text="Update a unit test assertion with an ordinary JSON literal only.",
+            ),
+        )
+
     def test_skipped_capabilities_are_only_foundation_capabilities(self) -> None:
         context = _context_for(_edit_event("src/components/ProfileCard.tsx"))
         skipped = [

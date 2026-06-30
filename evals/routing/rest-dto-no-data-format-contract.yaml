@@ -1,12 +1,14 @@
 ---
-id: rest-dto-no-network-gateway
+id: rest-dto-no-data-format-contract
 description: |
-  Simple REST DTO field change should not activate network gateway usage.
+  Ordinary optional REST DTO field addition must not activate data-format contract usage.
 prompt: |
   Add an optional `displayName` string to a REST response DTO and OpenAPI
-  schema. No CDN, proxy, ingress, TLS, timeout, header, or gateway config changes.
+  schema. This is only an additive API DTO compatibility change; existing
+  transport behavior stays unchanged.
 expected:
   complexity: L2
+  risk_level: medium
   expected_stage: implementation-planning
   expected_context_budget_mode: single-stage
   risk_triggers: []
@@ -23,11 +25,11 @@ expected:
     - test gate
 forbidden:
   skills:
+    - data-middleware-change-builder
     - reliability-observability-gate
-    - integration-change-builder
   capabilities:
-    - network-protocol-gateway-usage
-    - linux-systems-professional-usage
     - data-format-contract-usage
+    - network-protocol-gateway-usage
 notes: |
-  DTO/schema compatibility is not gateway/protocol routing.
+  Anti-overrouting: ordinary DTO/schema additions use API and DTO contract
+  capabilities, not parser/wire-format capability loading.

@@ -1,0 +1,37 @@
+---
+id: git-stash-dirty-worktree
+description: |
+  Dirty worktree with unrelated user changes and stash proposal requires Git and tool-sandbox routing.
+prompt: |
+  The worktree has unrelated user edits. Before a risky local reset, the agent
+  proposes `git stash -u`, a backup branch, staged/unstaged diff review, and a
+  commit split. Keep user changes safe.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
+  risk_triggers: []
+  skills:
+    - development-process-orchestrator
+    - quality-test-gate
+  capabilities:
+    - git-professional-usage
+    - repository-context-map
+    - validation-broker
+    - plan-execution-consistency
+    - agent-tool-permission-sandbox
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+  capabilities:
+    - network-protocol-gateway-usage
+    - data-format-contract-usage
+notes: |
+  Dirty worktree and stash/reset risk require Git evidence and tool permission
+  classification because user changes could be overwritten.

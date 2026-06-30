@@ -13,7 +13,7 @@ Ensure build tools produce reproducible, declared, cache-correct artifacts throu
 
 # When To Use
 
-Use when a change touches Makefiles, Bazel, Buck, Pants, Gradle, Maven, npm/pnpm/yarn scripts, Turborepo, Nx, code generation, build cache, remote execution, hermeticity, artifact packaging, build environment variables, compiler/linker flags, generated source, CI build graph, monorepo task dependencies, or reproducible release artifacts.
+Use when a change touches Makefiles, Ant, Bazel, Buck, Pants, Gradle, Maven, npm/pnpm/yarn scripts, Turborepo, Nx, code generation, build cache, remote execution, hermeticity, artifact packaging, build environment variables, compiler/linker flags, generated source declaration, CI build graph, monorepo task dependencies, or reproducible release artifacts.
 
 # Do Not Use When
 
@@ -34,7 +34,7 @@ Do not use for a simple source-only code change where the existing build graph i
 
 # Industry Benchmarks
 
-Anchor decisions against Bazel hermeticity and strict dependency rules, Gradle configuration cache and build cache guidance, Maven reproducible-build practices, GNU Make dependency-file discipline, npm/pnpm/yarn frozen install behavior, SLSA provenance expectations, reproducible-builds.org principles, and monorepo affected-task graph practices used by Nx, Turborepo, Pants, and Buck.
+Anchor decisions against Bazel hermeticity, sandboxing, and strict dependency rules; Gradle configuration cache and build cache guidance; Maven and Ant classpath/sourcepath behavior; GNU Make dependency-file, phony target, order-only prerequisite, and parallel execution discipline; npm/pnpm/yarn frozen install behavior; SLSA provenance expectations; reproducible-builds.org principles; and monorepo affected-task graph practices used by Nx, Turborepo, Pants, and Buck.
 
 # Selection Rules
 
@@ -52,6 +52,10 @@ Escalate to `delivery-release-gate` when build output is shipped, published, con
 - **Cache correctness.** Remote cache hit is not proof; compare action inputs, toolchain version, and output determinism when behavior changes.
 - **Task graph invalidation.** Monorepo affected builds must include generated sources, schema changes, lockfiles, env configs, and package boundaries.
 - **Artifact provenance.** Release builds should name build target, source ref, dependency lock, toolchain, environment, checksum, and signing/provenance status.
+- **Make parallel safety is explicit.** Parallel `make -j` requires correct prerequisites, no hidden shared temp files, phony targets marked `.PHONY`, and order-only dependencies used only for ordering, not missing inputs.
+- **Bazel sandboxing exposes undeclared inputs.** Do not disable sandboxing or strict deps to pass CI; declare generated sources, tools, data files, and runtime dependencies in the owning target.
+- **JVM classpath and sourcepath are contracts.** Ant, Maven, and Gradle fixes must name whether compile/test/runtime classpath or sourcepath changed and why transitive scope is not hiding a missing direct dependency.
+- **Build rules write to outputs, not source.** A build action that writes into the source tree, HOME, or a global cache must be declared, isolated, or rejected unless the repository policy makes it authoritative.
 
 # Failure Modes
 
@@ -64,13 +68,36 @@ Escalate to `delivery-release-gate` when build output is shipped, published, con
 - **CI/local mismatch:** local `npm run build` differs from CI target; one passes while release target fails.
 - **Task graph under-selection:** affected tests skip a package that consumes generated output.
 
+# Anti-Rationalization Table
+
+| Rationalization | Hidden Risk | Required Correction |
+|---|---|---|
+| "Local build passed." | CI, remote execution, or release target uses different inputs. | Run the authoritative target or explain the mismatch. |
+| "Just add the missing package to the classpath." | Transitive dependency or sourcepath leak remains hidden. | Declare the owning dependency in the correct target/scope. |
+| "Generated code can be edited directly." | Source schema and generated output drift. | Regenerate from source or document checked-in output authority. |
+| "Disable strict deps to unblock CI." | Undeclared dependency becomes permanent. | Fix the build graph and keep strict validation enabled. |
+| "Remote cache hit proves correctness." | Cache key omitted a behavior-affecting input. | Verify declared inputs/toolchain and rerun without suspect cache when needed. |
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 routing, risk, and output-contract rules.
+
+Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when build graph semantics, generated-source policy, Make/Ant/Bazel/Maven/Gradle behavior, cache correctness, or artifact reproducibility needs deeper benchmark support.
+Load [references/evidence-patterns.md](references/evidence-patterns.md) only when the handoff needs concrete build evidence, generated-drift proof, cache/provenance records, or CI/local comparison patterns.
+Do not load references for source-only changes that do not alter build graph, generated outputs, cache keys, toolchains, or release artifacts.
+References are just-in-time support, not default-loaded encyclopedia content.
+
 # Output Contract
 
 Return a Build Tool Usage Record with:
 
-- `build_surface` (tool, target, task, generator, package, artifact)
+- `build_surface` (tool, target, task, generator, package, artifact; includes Ant, Make, Bazel, Gradle, Maven, and task runners where relevant)
 - `graph_boundary` (declared inputs, outputs, dependencies, toolchain, environment)
+- `make_contract` (parallel safety, `.PHONY` targets, order-only dependencies, shared temp/output risks)
+- `jvm_classpath_contract` (classpath/sourcepath behavior for Ant/Maven/Gradle, direct vs transitive scope)
+- `bazel_sandbox_contract` (sandboxing status, strict deps, generated source declaration, data/tool inputs)
 - `generated_artifact_policy` (source, generator, output, committed/ignored, drift check)
+- `write_boundary` (source tree vs output directory, HOME/global cache writes, sandbox/network policy)
 - `cache_contract` (local/remote cache, action key inputs, invalidation sources, nondeterminism risks)
 - `artifact_contract` (artifact path, checksum/digest, provenance/signing, reproducibility status)
 - `decision_record` (change made, alternatives rejected, placement rationale)
@@ -82,12 +109,13 @@ Return a Build Tool Usage Record with:
 
 1. Build inputs, outputs, dependencies, toolchain, and environment assumptions are declared.
 2. Generated artifacts have source/generator/output policy and drift validation.
-3. Cache keys include every behavior-affecting input or cache is disabled for nondeterministic steps.
-4. CI and local validation target the same build behavior or differences are explained.
-5. Monorepo affected-task graph includes generated and transitive consumers.
-6. Release artifacts have command, path, digest, and provenance/signing status where relevant.
-7. Tool permission boundary states generated-output, cache, artifact, HOME, and network behavior.
-8. Residual risk names untested platform, remote execution, downstream package, or cache state.
+3. Make, Ant, Bazel, Maven, Gradle, and generated-source behavior names parallel safety, classpath/sourcepath, sandboxing, and write-boundary assumptions where relevant.
+4. Cache keys include every behavior-affecting input or cache is disabled for nondeterministic steps.
+5. CI and local validation target the same build behavior or differences are explained.
+6. Monorepo affected-task graph includes generated and transitive consumers.
+7. Release artifacts have command, path, digest, and provenance/signing status where relevant.
+8. Tool permission boundary states generated-output, cache, artifact, HOME, and network behavior.
+9. Residual risk names untested platform, remote execution, downstream package, or cache state.
 
 # Used By
 

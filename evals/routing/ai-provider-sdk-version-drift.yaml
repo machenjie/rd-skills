@@ -1,0 +1,42 @@
+---
+id: ai-provider-sdk-version-drift
+description: |
+  AI provider SDK/model version drift requires AI source verification output.
+prompt: |
+  Provider SDK and model version drift changed tool-call JSON behavior. Require
+  an AI Source Verification Record, Prompt / Model Version Contract, side-by-side
+  eval freshness, token/latency/cost budget, and AI Regression Gate.
+expected:
+  complexity: L4
+  risk_level: high
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - AI prompt
+  skills:
+    - security-privacy-gate
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - threat-modeling
+    - test-strategy
+    - observability
+  domain_extensions:
+    - ai-product-extension
+  quality_gates:
+    - security gate
+    - reliability gate
+    - test gate
+    - implementation gate
+forbidden:
+  skills:
+    - data-middleware-change-builder
+    - delivery-release-gate
+  capabilities:
+    - message-queue-design
+    - network-protocol-gateway-usage
+  domain_extensions:
+    - web3-product-extension
+notes: |
+  The AI domain extension output contract must require source verification,
+  model/prompt version, eval freshness, budget, and regression evidence.

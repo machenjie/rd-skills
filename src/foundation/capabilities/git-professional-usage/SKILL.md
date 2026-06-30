@@ -13,7 +13,7 @@ Keep Git usage evidence-driven, reversible, and respectful of existing work. Tre
 
 # When To Use
 
-Use when a task touches merge, rebase, cherry-pick, revert, reset, conflict resolution, branch creation, worktree setup, submodules, sparse checkout, generated files, lockfiles, vendored outputs, local dirty state, force push, release tag, bisect, patch application, commit splitting, or any workflow where user changes could be overwritten.
+Use when a task touches merge, rebase, cherry-pick, revert, reset, stash, conflict resolution, branch creation or naming, worktree setup, submodules, sparse checkout, generated files, lockfiles, vendored outputs, local dirty state, staged vs. unstaged diff review, force push, signed tags, release tag mutation, bisect failure isolation, patch application, commit message format, commit splitting, or any workflow where user changes could be overwritten.
 
 # Do Not Use When
 
@@ -53,6 +53,11 @@ Escalate to `delivery-release-gate` for release tags, protected branches, deploy
 - **Reflog is recovery evidence.** Before risky operations, know the prior ref or create a lightweight backup branch if the local policy allows it.
 - **Commit boundaries are review boundaries.** Split unrelated changes and keep generated artifacts with their source change when the repository expects them together.
 - **Remote mutation changes other people's state.** Push, force-with-lease, tag mutation, and branch deletion need branch ownership and rollback communication.
+- **Stash is not a backup plan by itself.** Stash only after status and diff review; name what is included, whether untracked files are included, and how the stash will be reapplied or dropped.
+- **Branch names and commit messages are release evidence.** Branch names should follow repository convention and issue/release scope. Commit messages should state behavior and risk, not vague activity.
+- **Staged and unstaged diffs are separate review surfaces.** Review both before committing, rebasing, splitting commits, or resolving conflicts so unrelated user changes do not leak into the operation.
+- **Release tag mutation is a release event.** Signed tags, tag deletion, retagging, and release-branch rewrites require ownership, verification, and rollback/communication evidence.
+- **Bisect isolates a failure, not a fix.** A bisect result needs the tested command, known good/bad refs, skipped refs, and same-pattern follow-up before diagnosis closes.
 
 # Failure Modes
 
@@ -65,6 +70,25 @@ Escalate to `delivery-release-gate` for release tags, protected branches, deploy
 - **Patch applies cleanly but behavior regresses:** cherry-pick compiles but misses nearby API, schema, or generated-output changes from the original branch.
 - **Secret persistence:** a secret removed from the working tree remains in commits, tags, or patches.
 
+# Anti-Rationalization Table
+
+| Rationalization | Hidden Risk | Required Correction |
+|---|---|---|
+| "It is just a small reset." | Unrelated user work or staged changes are lost. | Inspect status and diffs, target explicit paths/refs, and record rollback. |
+| "The conflict looks obvious." | Behavior, generated authority, or a security fix is silently dropped. | Inspect both sides, source authority, and validation before resolving. |
+| "Generated files can be fixed by hand." | Source and generated artifacts drift. | Regenerate or document why checked-in output is authoritative. |
+| "Force push is fine because it is my branch." | Collaborator refs or review state are rewritten. | Verify branch ownership, use force-with-lease, and record recovery. |
+| "Tests are not needed after rebase." | Replay changes compile but behavior regresses. | Run changed-path validation or state the unverified residual risk. |
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 routing, risk, and output-contract rules.
+
+Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when conflict resolution, generated/source authority, history rewrite, release tag, bisect, stash, or commit hygiene needs deeper benchmark support.
+Load [references/evidence-patterns.md](references/evidence-patterns.md) only when the handoff must prove worktree/ref evidence, rollback notes, conflict-resolution evidence, or release-tag safety.
+Do not load references for ordinary repository reads, final status summaries, or low-risk typo/docs edits with no Git state decision.
+References are just-in-time support, not default-loaded encyclopedia content.
+
 # Output Contract
 
 Return a Git Professional Usage Record with:
@@ -74,6 +98,11 @@ Return a Git Professional Usage Record with:
 - `ownership_boundary` (user changes, generated files, source files, submodules, protected branches, remote refs)
 - `decision_record` (chosen action, alternatives rejected, why it preserves behavior and ownership)
 - `generated_artifact_policy` (source authority, generator command, drift check, committed/ignored output)
+- `diff_review` (staged diff, unstaged diff, untracked risk, and unrelated-change exclusions)
+- `stash_policy` (included paths, untracked handling, apply/drop plan, and why stash is safer than alternatives)
+- `branch_commit_contract` (branch naming convention, commit message format, commit split boundaries)
+- `release_tag_contract` (signed tag status, tag mutation owner, protected release ref impact)
+- `bisect_record` (good/bad refs, command, skipped refs, isolated failure, follow-up validation)
 - `safety_controls` (backup ref, force-with-lease, dry run, explicit pathspec, no-destructive-action note)
 - `validation_commands` (diff, tests, generator, lint, or not-run disclosure mapped to changed paths)
 - `rollback_note` (reflog ref, revert command, backup branch, or why rollback is not available)
@@ -86,9 +115,11 @@ Return a Git Professional Usage Record with:
 3. Conflict resolution cites both sides and source-of-truth policy.
 4. Generated artifacts are regenerated or intentionally left alone with policy evidence.
 5. Destructive or remote-mutating commands have rollback notes and explicit targets.
-6. Commit boundaries are reviewable and exclude unrelated changes.
-7. Validation evidence maps to the resolved files and replayed changes.
-8. Residual risk names untested conflict paths, generated drift, remote coordination, or release impact.
+6. Stash, backup branch, branch naming, commit message, and commit splitting decisions match repository convention and preserve unrelated work.
+7. Staged and unstaged diffs are reviewed before commits, rebases, splits, resets, and conflict resolution.
+8. Signed tags, release tag mutation, force-with-lease, and bisect results include ownership, verification, and rollback notes.
+9. Validation evidence maps to the resolved files and replayed changes.
+10. Residual risk names untested conflict paths, generated drift, remote coordination, or release impact.
 
 # Used By
 

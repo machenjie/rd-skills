@@ -9,11 +9,11 @@ changeforge_version: 0.1.0
 
 # Mission
 
-Protect data format contracts across parsers, serializers, generated code, schema evolution, compatibility, and wire/storage behavior. Treat JSON/YAML/XML/CSV/Protobuf/Avro/Parquet changes as contracts only when their parser rules, compatibility class, examples, generated artifacts, and validation evidence are explicit.
+Protect data format contracts across parsers, serializers, generated code, schema evolution, compatibility, and wire/storage behavior. Treat JSON/YAML/XML/TOML/CSV/Protobuf/Avro/Parquet changes as contracts only when their parser rules, compatibility class, examples, generated artifacts, and validation evidence are explicit.
 
 # When To Use
 
-Use when a change touches serialization/deserialization, JSON Schema, OpenAPI schema, YAML config, XML, CSV/TSV, Protobuf, Avro, Thrift, Parquet, Arrow, schema registry, parser options, enum/field evolution, default/null/unknown field behavior, number/time encoding, generated models, content type, backward/forward compatibility, golden fixtures, or format migration.
+Use when a change touches serialization/deserialization, JSON Schema, OpenAPI schema, YAML config, TOML config, XML, CSV/TSV, Protobuf, Avro, Thrift, Parquet, Arrow, CPE identifiers, schema registry, parser options, enum/field evolution, default/null/unknown field behavior, number/time encoding, generated models, content type, backward/forward compatibility, golden fixtures, or format migration.
 
 # Do Not Use When
 
@@ -25,16 +25,19 @@ Do not use for a simple JSON literal inside a unit test, ordinary DTO field addi
 - Classify compatibility: backward, forward, full, transitive, additive, breaking, or storage-only.
 - Protobuf field numbers must never be reused; removed fields and enum values must be reserved.
 - YAML scalar coercion must be controlled. Ambiguous booleans, numbers, dates, anchors, tags, and duplicate keys require parser policy and negative tests.
+- YAML 1.1 vs. 1.2 scalar differences must be explicit for boolean-like values such as `yes`, `no`, `on`, and `off`.
+- TOML type strictness must be preserved: strings, integers, floats, booleans, arrays, dates, and tables cannot be silently coerced across versions.
 - JSON numbers, nulls, absent fields, unknown fields, ordering, duplicate keys, and timestamp formats require explicit behavior at boundaries.
 - CSV requires delimiter, quote, escape, newline, encoding, header, null/empty, formula-injection, and column-order policy.
-- XML requires namespace, entity expansion, external entity, schema validation, and canonicalization policy.
+- XML requires namespace, entity expansion, external entity, schema validation, canonicalization, and size/depth limit policy.
+- CPE identifiers require normalization, version matching, wildcard, edition/language/update handling, and vendor/product ambiguity checks.
 - Schema registry or generated-code changes require source/generator/output policy and drift validation.
 - Storage formats such as Avro/Parquet require reader/writer schema compatibility, partition evolution, nullable/default behavior, and backfill/read-old-data tests.
-- Examples and golden fixtures must validate with the same parser settings as production.
+- Examples, golden fixtures, and parser differential tests must validate with the same parser settings as production.
 
 # Industry Benchmarks
 
-Anchor decisions against JSON Schema 2020-12, OpenAPI 3.1, YAML 1.2, XML security guidance against XXE/entity expansion, RFC 8259 JSON, RFC 4180 CSV baseline plus formula-injection controls, Protobuf field evolution rules, Confluent Schema Registry compatibility modes, Avro schema resolution, Parquet schema evolution guidance, ISO 8601/RFC 3339 timestamps, and language-specific parser security guidance.
+Anchor decisions against JSON Schema 2020-12, OpenAPI 3.1, YAML 1.1/1.2 behavior, TOML 1.0 type rules, XML security and canonicalization guidance against XXE/entity expansion, RFC 8259 JSON, RFC 4180 CSV baseline plus formula-injection controls, Protobuf field evolution rules, Confluent Schema Registry compatibility modes, Avro schema resolution, Parquet schema evolution guidance, CPE 2.3 naming/matching guidance, ISO 8601/RFC 3339 timestamps, and language-specific parser security guidance.
 
 # Selection Rules
 
@@ -50,9 +53,13 @@ Escalate to `security-privacy-gate` for XML external entities, YAML unsafe loade
 - **Absent, null, empty, zero, and false differ.** Define each state before mapping data into domain or config behavior.
 - **Protobuf compatibility is numeric.** Field names are not the wire contract; field numbers and wire types are.
 - **YAML is risky config surface.** `yes`, `on`, `no`, `off`, timestamps, anchors, and tags can be coerced unexpectedly depending on parser version.
+- **TOML is strict config surface.** A value moving from `"8080"` to `8080`, array element type changes, or date parsing differences can break consumers that relied on exact types.
 - **JSON duplicate keys are ambiguous.** Many parsers keep last value; security-sensitive configs should reject duplicates.
+- **XML canonicalization and limits matter.** Equivalent-looking XML can sign, compare, or normalize differently; entity expansion and deep nesting need explicit limits.
+- **CPE matching is normalization-sensitive.** Vendor, product, version, update, edition, language, and wildcard handling can change vulnerability matching results.
 - **Generated models drift.** Schema source, generated clients, and runtime validators must stay aligned.
 - **Golden fixtures prove only configured behavior.** Fixtures must use production parser options and include negative cases.
+- **Parser differential tests catch hidden compatibility.** Compare old/new parser settings or library versions when config, schema, or wire-format behavior changes.
 - **Data lake formats need old-reader/new-writer checks.** Avro/Parquet changes must be tested against old files and old consumers where compatibility matters.
 
 # Failure Modes
@@ -67,18 +74,38 @@ Escalate to `security-privacy-gate` for XML external entities, YAML unsafe loade
 - **Avro default mismatch:** reader schema expects a default that writer never supplied; old data fails after deployment.
 - **Generated client stale:** schema changed but generated models were not regenerated.
 
+# Anti-Rationalization Table
+
+| Rationalization | Hidden Risk | Required Correction |
+|---|---|---|
+| "It is just a config format." | Parser/coercion behavior changes runtime policy. | Name parser settings and add positive/negative fixtures. |
+| "JSON/YAML parser behavior is obvious." | Duplicate keys, unknown fields, or scalar coercion differ by library/version. | Record parser version/options and test edge cases. |
+| "Renaming a Protobuf field is safe." | Field numbers and wire types, not names, are compatibility. | Reserve removed numbers/names and verify old/new consumers. |
+| "Duplicate keys do not happen." | Attackers or bad generators can choose parser-dependent values. | Reject duplicates where security or config behavior matters. |
+| "Golden fixture passed, so all consumers are safe." | Fixture covers one parser and one happy path only. | Add differential, negative, and consumer compatibility evidence. |
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 routing, risk, and output-contract rules.
+
+Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when parser/serializer behavior, Protobuf/YAML/TOML/XML/CPE compatibility, schema registry, generated model, or storage format risks need deeper benchmark support.
+Load [references/evidence-patterns.md](references/evidence-patterns.md) only when the handoff needs concrete fixture, parser-differential, generated-drift, schema-registry, or old-reader/new-writer evidence patterns.
+Do not load references for ordinary DTO changes, local JSON literals in tests, or application-level API design with no parser, serialization, wire-format, generated-model, schema-registry, or storage-format risk.
+References are just-in-time support, not default-loaded encyclopedia content.
+
 # Output Contract
 
 Return a Data Format Contract Record with:
 
-- `format_surface` (JSON, YAML, XML, CSV, Protobuf, Avro, Parquet, schema registry, generated model, parser config)
+- `format_surface` (JSON, YAML, TOML, XML, CSV, CPE, Protobuf, Avro, Parquet, schema registry, generated model, parser config)
 - `schema_authority` (source file, registry, generated artifact, runtime validator, owner)
 - `parser_contract` (library, version, safe mode, coercion, duplicate key, unknown field, null/default behavior)
+- `format_specific_contract` (YAML 1.1/1.2 boolean handling, TOML type strictness, XML canonicalization, CPE normalization/version matching)
 - `compatibility_class` (backward/forward/full/transitive/additive/breaking/storage-only)
 - `field_evolution` (added, removed, reserved, renamed, type changed, default/null/enum behavior)
 - `security_contract` (unsafe loader, XXE, formula injection, deserialization, size/depth limits)
 - `generated_artifact_policy` (generator, output, committed/ignored, drift check)
-- `fixtures_and_validation` (positive/negative examples, golden files, schema validation, consumer contract tests)
+- `fixtures_and_validation` (positive/negative examples, golden files, parser differential tests, schema validation, consumer contract tests)
 - `decision_record` (change made, alternatives rejected, migration/rollout rationale)
 - `residual_risk` (unverified consumer, parser version, old data, schema registry mode, generated artifact)
 
@@ -88,12 +115,13 @@ Return a Data Format Contract Record with:
 2. Compatibility class is explicit and matches consumer/storage risk.
 3. Removed Protobuf fields and enum values are reserved; no field number reuse.
 4. YAML/JSON/XML/CSV parser security and coercion behavior is controlled.
-5. Null, absent, empty, zero, false, default, and unknown field behavior is defined.
-6. Generated artifacts and runtime validators are aligned with drift checks.
-7. Positive and negative fixtures validate with production parser settings.
-8. Old-reader/new-writer or old-data/new-reader behavior is tested where compatibility matters.
-9. Security-sensitive parser risks route to security review.
-10. Residual risk names unverified consumers, parser versions, stored data, or generated outputs.
+5. TOML type strictness, YAML 1.1/1.2 boolean differences, XML canonicalization, size/depth limits, and CPE normalization/version matching are defined when in scope.
+6. Null, absent, empty, zero, false, default, and unknown field behavior is defined.
+7. Generated artifacts and runtime validators are aligned with drift checks.
+8. Positive, negative, golden, and parser differential fixtures validate with production parser settings.
+9. Old-reader/new-writer or old-data/new-reader behavior is tested where compatibility matters.
+10. Security-sensitive parser risks route to security review.
+11. Residual risk names unverified consumers, parser versions, stored data, or generated outputs.
 
 # Used By
 

@@ -16,7 +16,7 @@
 | Split candidates (score ≥ 60) | 0 |
 | Low-professionalism candidates (< 70) | 0 |
 | Move-to-reference candidates | 0 |
-| Shared duplicated lines (≥ 3 files) | 19 |
+| Shared duplicated lines (≥ 3 files) | 21 |
 
 Suggested-action distribution:
 
@@ -229,8 +229,8 @@ No frontmatter description risks detected.
 | `state-machine-modeling` | 165 | 2971 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `interaction-state-modeling` | 163 | 2823 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `logging-error-handling` | 163 | 3173 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `message-queue-design` | 162 | 3133 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `user-flow-modeling` | 162 | 3650 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `message-queue-design` | 161 | 3051 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `permission-boundary-modeling` | 161 | 3441 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `documentation-generation` | 160 | 2669 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `repository-graph-analysis` | 160 | 2231 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -257,19 +257,19 @@ No frontmatter description risks detected.
 | `project-memory-governance` | 137 | 2174 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `release-rollback` | 129 | 2760 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `repository-context-map` | 129 | 2143 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `data-format-contract-usage` | 100 | 1042 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `linux-systems-professional-usage` | 99 | 1066 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `network-protocol-gateway-usage` | 99 | 1080 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `git-professional-usage` | 95 | 1116 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `build-tool-professional-usage` | 94 | 1023 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `data-format-contract-usage` | 128 | 1476 | 100 | 96 | 100 | 0 | KEEP_AS_IS | - | low |
+| `network-protocol-gateway-usage` | 127 | 1464 | 100 | 96 | 100 | 0 | KEEP_AS_IS | - | low |
+| `git-professional-usage` | 126 | 1597 | 100 | 96 | 100 | 0 | KEEP_AS_IS | - | low |
+| `linux-systems-professional-usage` | 126 | 1468 | 100 | 96 | 100 | 0 | KEEP_AS_IS | - | low |
+| `build-tool-professional-usage` | 122 | 1452 | 100 | 96 | 100 | 0 | KEEP_AS_IS | - | low |
 
 ### 3.3 Domain Extensions (7)
 
 | Skill | Lines | Words | Prof | Ctx | Route | Split | Classification | Phase | Risk |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ai-product-extension` | 191 | 3149 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `ai-product-extension` | 192 | 3183 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `bigdata-product-extension` | 190 | 2922 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `web3-product-extension` | 162 | 2604 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `web3-product-extension` | 163 | 2640 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `mobile-product-extension` | 150 | 2224 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `payment-trading-extension` | 150 | 2237 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `low-level-systems-extension` | 147 | 2313 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -291,17 +291,19 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 
 | Files | Excerpt |
 | --- | --- |
-| 18 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
 | 18 | do not load every reference by default. treat references as targeted support selected by t |
-| 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
-| 17 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 17 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
-| 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
+| 18 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
 | 17 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 17 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 17 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
+| 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 11 | these triggers are hidden-risk escalators, not ordinary checklist items. |
 | 7 | **block/pass decision** with required conditions for approval. |
 | 6 | non-trivial direct use still requires `repository-context-map` before planning when affect |
+| 5 | the `skill.md` body carries l1/l2 routing, risk, and output-contract rules. |
+| 5 | references are just-in-time support, not default-loaded encyclopedia content. |
 | 5 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 4 | **route to:** `validation-broker`, `quality-test-gate`. |
 | 4 | **route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-gover |
