@@ -30,6 +30,7 @@ expected_route:
   stage: implementation-planning
   business_semantic_pack_required: true
   business_semantic_scope: stale-memory-reconciliation
+expected_skills: [domain-impact-modeler, quality-test-gate]
 expected_capabilities: [business-semantic-control-plane, project-memory-governance, repository-graph-analysis]
 expected_quality_gates: [domain gate, execution discipline gate, test gate]
 expected_bsp_sections: [memory_projection, business_rules, code_mapping, validation_map]

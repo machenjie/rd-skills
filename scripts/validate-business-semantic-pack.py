@@ -64,6 +64,8 @@ SAMPLE_SCHEMA_BY_FILE = {
     "invalid-fact-from-graph.json": BSP_SCHEMA,
     "invalid-rule-missing-owner.json": BSP_SCHEMA,
     "invalid-rule-missing-enforcement-path.json": BSP_SCHEMA,
+    "invalid-rule-empty-reason-codes.json": BSP_SCHEMA,
+    "invalid-rule-empty-entry-points.json": BSP_SCHEMA,
     "invalid-workflow-no-forbidden-transition.json": BSP_SCHEMA,
     "invalid-selected-reference-no-reason.json": BSP_SCHEMA,
     "valid-business-rule-record.json": "business-rule-record.v1.schema.json",
@@ -333,6 +335,10 @@ def _validate_bsp_semantics(instance: dict[str, Any], context: str, errors: list
         for field in ("owner", "enforcement_layer"):
             if not rule.get(field):
                 errors.append(f"{context}: rule {rule_id} missing {field}")
+        if not rule.get("reason_codes"):
+            errors.append(f"{context}: rule {rule_id} missing reason_codes")
+        if not rule.get("entry_points"):
+            errors.append(f"{context}: rule {rule_id} missing entry_points")
         if not rule.get("tests") and not rule.get("residual_risk"):
             errors.append(f"{context}: rule {rule_id} must have tests or residual_risk")
         if rule.get("enforcement_layer") not in {"manual_owner_review", "not_decided"} and not rule.get("authoritative_enforcement_paths"):
@@ -409,6 +415,7 @@ def _validate_eval_fixtures(schemas: dict[str, dict[str, Any]], errors: list[str
             "case_id",
             "prompt",
             "expected_route",
+            "expected_skills",
             "expected_capabilities",
             "expected_quality_gates",
             "expected_bsp_sections",
@@ -425,6 +432,10 @@ def _validate_eval_fixtures(schemas: dict[str, dict[str, Any]], errors: list[str
         route = fixture.get("expected_route", {})
         if not isinstance(route, dict) or "business_semantic_pack_required" not in route:
             errors.append(f"{context}: expected_route must declare business_semantic_pack_required")
+        if not isinstance(route, dict) or "business_semantic_scope" not in route:
+            errors.append(f"{context}: expected_route must declare business_semantic_scope")
+        elif route.get("business_semantic_pack_required") is False and route.get("business_semantic_scope") != "none":
+            errors.append(f"{context}: non-BSP case must set business_semantic_scope to none")
         sections = set(str(item) for item in fixture.get("expected_bsp_sections", []) or [])
         invalid_sections = sections - BSP_SECTIONS
         if invalid_sections:

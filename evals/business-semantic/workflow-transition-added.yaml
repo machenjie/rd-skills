@@ -30,6 +30,7 @@ expected_route:
   stage: architecture-design
   business_semantic_pack_required: true
   business_semantic_scope: workflow-transition-change
+expected_skills: [domain-impact-modeler, quality-test-gate]
 expected_capabilities: [business-semantic-control-plane, state-machine-modeling, business-rule-extraction]
 expected_quality_gates: [domain gate, test gate]
 expected_bsp_sections: [workflows, business_rules, validation_map, code_mapping]

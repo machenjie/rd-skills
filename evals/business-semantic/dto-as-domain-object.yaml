@@ -31,6 +31,7 @@ expected_route:
   stage: implementation-planning
   business_semantic_pack_required: true
   business_semantic_scope: dto-domain-boundary
+expected_skills: [domain-impact-modeler, data-api-contract-changer]
 expected_capabilities: [business-semantic-control-plane, domain-object-identification, model-boundary-mapping]
 expected_quality_gates: [domain gate, API/data gate, implementation gate]
 expected_bsp_sections: [business_vocabulary, business_objects, code_mapping, validation_map]

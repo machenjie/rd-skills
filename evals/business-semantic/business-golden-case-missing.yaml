@@ -6,6 +6,8 @@ routing_triggers:
 expected_route:
   stage: testing
   business_semantic_pack_required: true
+  business_semantic_scope: golden-case-gap
+expected_skills: [domain-impact-modeler, quality-test-gate]
 expected_capabilities: [business-semantic-control-plane, validation-broker, business-rule-extraction]
 expected_quality_gates: [test gate, domain gate]
 expected_bsp_sections: [business_rules, validation_map, context_control]

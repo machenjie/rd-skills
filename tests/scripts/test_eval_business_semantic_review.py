@@ -46,6 +46,31 @@ class BusinessSemanticReviewEvalTests(unittest.TestCase):
         self.assertNotEqual(rc, 0)
         self.assertIn("forbidden behavior not avoided", output)
 
+    def test_expected_evidence_missing_from_actual_fails(self) -> None:
+        case = _case("missing-evidence", expected_evidence=["expected SQL predicate"])
+        actual = _actual("missing-evidence", findings=[_finding(evidence="different evidence")])
+
+        rc, output = self._run_eval(case, actual)
+
+        self.assertNotEqual(rc, 0)
+        self.assertIn("missing expected evidence", output)
+
+    def test_expected_evidence_present_in_actual_passes(self) -> None:
+        case = _case("present-evidence", expected_evidence=["expected SQL predicate"])
+        actual = _actual("present-evidence", findings=[_finding(evidence="expected SQL predicate")])
+
+        rc, output = self._run_eval(case, actual)
+
+        self.assertEqual(rc, 0, output)
+
+    def test_checked_in_business_semantic_review_fixtures_pass(self) -> None:
+        buffer = io.StringIO()
+
+        with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+            rc = REVIEW.main()
+
+        self.assertEqual(rc, 0, buffer.getvalue())
+
     def _run_eval(self, case_yaml: str, actual_yaml: str | None) -> tuple[int, str]:
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp_s:
             tmp = Path(tmp_s)
@@ -71,13 +96,16 @@ class BusinessSemanticReviewEvalTests(unittest.TestCase):
         return rc, buffer.getvalue()
 
 
-def _case(case_id: str) -> str:
+def _case(case_id: str, *, expected_evidence: list[str] | None = None) -> str:
+    evidence = ""
+    if expected_evidence:
+        evidence = "\n    expected_evidence: " + str(expected_evidence)
     return f"""case_id: {case_id}
 expected_review_findings:
   - finding_id: BSP-HIDDEN-SQL-RULE
     category: hidden_sql_rule
     impacted_claim: renewal status filter
-    required_fix: catalog rule and add changed-path validation
+    required_fix: catalog rule and add changed-path validation{evidence}
 forbidden_behavior:
   - approve SQL condition without rule catalog
 """
@@ -86,7 +114,13 @@ forbidden_behavior:
 def _actual(case_id: str, *, findings: list[str], forbidden_behavior_avoided: list[str] | None = None) -> str:
     avoided = forbidden_behavior_avoided if forbidden_behavior_avoided is not None else ["approve SQL condition without rule catalog"]
     finding_text = "\n".join(findings)
-    return f"""actual_route:
+    return f"""actual_metadata:
+  generated_by: scripts/generate-business-semantic-actuals.py
+  generation_mode: deterministic
+  source_fixture: evals/business-semantic/{case_id}.yaml
+  route_source: current deterministic route resolver / fixture route adapter
+  review_source: deterministic fixture review skeleton
+actual_route:
   stage: code-review
   business_semantic_pack_required: true
 actual_review:
@@ -102,7 +136,7 @@ def _finding(category: str = "hidden_sql_rule") -> str:
       severity: high
       category: {category}
       impacted_claim: renewal status filter
-      evidence: [fixture]
+      evidence: [{evidence}]
       required_fix: catalog rule and add changed-path validation
       validation_required: changed-path validation
 """

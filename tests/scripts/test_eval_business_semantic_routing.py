@@ -39,6 +39,33 @@ class BusinessSemanticRoutingEvalTests(unittest.TestCase):
         self.assertNotEqual(rc, 0)
         self.assertIn("missing expected capabilities", output)
 
+    def test_expected_skill_missing_from_actual_fails(self) -> None:
+        case = _case("skill-missing", expected_skills=["domain-impact-modeler"])
+        actual = _actual("skill-missing", selected_skills=[])
+
+        rc, output = self._run_eval(case, actual)
+
+        self.assertNotEqual(rc, 0)
+        self.assertIn("missing expected skills", output)
+
+    def test_business_semantic_scope_mismatch_fails(self) -> None:
+        case = _case("scope-mismatch", business_semantic_scope="expected-scope")
+        actual = _actual("scope-mismatch", business_semantic_scope="actual-scope")
+
+        rc, output = self._run_eval(case, actual)
+
+        self.assertNotEqual(rc, 0)
+        self.assertIn("business_semantic_scope expected", output)
+
+    def test_expected_trigger_missing_from_actual_fails(self) -> None:
+        case = _case("trigger-missing", routing_triggers=["business invariant changed"])
+        actual = _actual("trigger-missing", detected_triggers=[])
+
+        rc, output = self._run_eval(case, actual)
+
+        self.assertNotEqual(rc, 0)
+        self.assertIn("missing expected detected triggers", output)
+
     def test_overroute_case_selecting_bsp_fails(self) -> None:
         case = _case("over-routing-simple-local-change", expected_bsp=False, expected_capabilities=["minimal-correct-implementation"])
         actual = _actual(
@@ -64,6 +91,14 @@ class BusinessSemanticRoutingEvalTests(unittest.TestCase):
 
         self.assertNotEqual(rc, 0)
         self.assertIn("underroute did not require BSP", output)
+
+    def test_checked_in_business_semantic_routing_fixtures_pass(self) -> None:
+        buffer = io.StringIO()
+
+        with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+            rc = ROUTING.main()
+
+        self.assertEqual(rc, 0, buffer.getvalue())
 
     def _run_eval(self, case_yaml: str, actual_yaml: str | None) -> tuple[int, str]:
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp_s:
@@ -95,17 +130,25 @@ def _case(
     *,
     stage: str = "coding",
     expected_bsp: bool = False,
+    business_semantic_scope: str = "none",
+    routing_triggers: list[str] | None = None,
+    expected_skills: list[str] | None = None,
     expected_capabilities: list[str] | None = None,
     expected_quality_gates: list[str] | None = None,
     expected_bsp_sections: list[str] | None = None,
 ) -> str:
+    triggers = routing_triggers or []
+    skills = expected_skills or []
     capabilities = expected_capabilities or ["minimal-correct-implementation"]
     gates = expected_quality_gates or ["implementation gate"]
     sections = expected_bsp_sections or []
     return f"""case_id: {case_id}
+routing_triggers: {triggers}
 expected_route:
   stage: {stage}
   business_semantic_pack_required: {str(expected_bsp).lower()}
+  business_semantic_scope: {business_semantic_scope}
+expected_skills: {skills}
 expected_capabilities: {capabilities}
 expected_quality_gates: {gates}
 expected_bsp_sections: {sections}
@@ -117,18 +160,30 @@ def _actual(
     *,
     stage: str = "coding",
     business_semantic_pack_required: bool = False,
+    business_semantic_scope: str = "none",
+    detected_triggers: list[str] | None = None,
+    selected_skills: list[str] | None = None,
     selected_capabilities: list[str] | None = None,
     required_quality_gates: list[str] | None = None,
 ) -> str:
+    triggers = detected_triggers or []
+    skills = selected_skills or []
     capabilities = selected_capabilities or ["minimal-correct-implementation"]
     gates = required_quality_gates or ["implementation gate"]
-    return f"""actual_route:
+    return f"""actual_metadata:
+  generated_by: scripts/generate-business-semantic-actuals.py
+  generation_mode: deterministic
+  source_fixture: evals/business-semantic/{case_id}.yaml
+  route_source: current deterministic route resolver / fixture route adapter
+  review_source: deterministic fixture review skeleton
+actual_route:
   stage: {stage}
-  selected_skills: []
+  detected_triggers: {triggers}
+  selected_skills: {skills}
   selected_capabilities: {capabilities}
   required_quality_gates: {gates}
   business_semantic_pack_required: {str(business_semantic_pack_required).lower()}
-  business_semantic_scope: test
+  business_semantic_scope: {business_semantic_scope}
   selected_bsp_sections: []
   selected_references: []
   skipped_references: []

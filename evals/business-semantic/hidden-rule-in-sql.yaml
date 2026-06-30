@@ -21,6 +21,7 @@ expected_route:
   stage: implementation-planning
   business_semantic_pack_required: true
   business_semantic_scope: hidden-sql-rule
+expected_skills: [domain-impact-modeler, data-middleware-change-builder, quality-test-gate]
 expected_capabilities: [business-semantic-control-plane, business-rule-extraction, repository-graph-analysis, validation-broker]
 expected_quality_gates: [domain gate, API/data gate, test gate]
 expected_bsp_sections: [business_rules, data_and_signal_semantics, code_mapping, validation_map, context_control]

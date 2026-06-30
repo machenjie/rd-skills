@@ -1,32 +1,145 @@
-actual_route:
-  stage: implementation-planning
-  detected_triggers: [DTO used as business object, business object ownership unclear]
-  selected_skills: [domain-impact-modeler, data-api-contract-changer, ai-code-review-refactor]
-  selected_capabilities: [business-semantic-control-plane, domain-object-identification, model-boundary-mapping]
-  required_quality_gates: [domain gate, API/data gate, implementation gate]
-  business_semantic_pack_required: true
-  business_semantic_scope: dto-domain-boundary
-  selected_bsp_sections: [business_vocabulary, business_objects, code_mapping, validation_map]
-  selected_references:
-    - reference: 12-domain-object-identification
-      reason: DTO/resource model must not silently become domain object
-      evidence_limit: mapping owner and source paths required
-  skipped_references:
-    - reference: state-machine-modeling
-      reason: lifecycle transition is not the primary fixture risk
-      evidence_limit: route if DTO status fields become workflow authority
-      residual_risk: [DTO may still hide status semantics]
-actual_review:
-  findings:
-    - finding_id: BSP-DTO-AS-DOMAIN
-      severity: high
-      category: dto_as_domain_object
-      impacted_claim: PartnerOrderResponse internal order model
-      evidence: [external DTO passed into domain service without mapper]
-      required_fix: DTO-as-domain object rejected, mapping owner required; DTO/table/resource model is being used as domain object; requires model-boundary-mapping and domain-object-identification.
-      validation_required: mapping tests for identity, lifecycle, and null/default semantics
-  forbidden_behavior_avoided:
-    - treat external DTO as aggregate
-    - skip compatibility risk
-  residual_risk:
-    - fixture does not enumerate all external DTO consumers
+{
+  "actual_metadata": {
+    "generated_by": "scripts/generate-business-semantic-actuals.py",
+    "generation_mode": "deterministic",
+    "source_fixture": "evals/business-semantic/dto-as-domain-object.yaml",
+    "route_source": "current deterministic route resolver / fixture route adapter",
+    "review_source": "deterministic fixture review skeleton"
+  },
+  "actual_route": {
+    "stage": "implementation-planning",
+    "detected_triggers": [
+      "DTO used as business object",
+      "business object ownership unclear"
+    ],
+    "selected_skills": [
+      "backend-change-builder",
+      "ai-code-review-refactor",
+      "data-api-contract-changer",
+      "change-forge-router",
+      "domain-impact-modeler",
+      "architecture-impact-reviewer"
+    ],
+    "selected_capabilities": [
+      "repository-context-map",
+      "implementation-structure-design",
+      "module-boundary-design",
+      "code-clarity-maintainability",
+      "language-idiom-enforcement",
+      "model-boundary-mapping",
+      "business-semantic-control-plane",
+      "service-business-logic",
+      "authentication-authorization",
+      "idempotency-retry-design",
+      "logging-error-handling",
+      "api-contract-design",
+      "dto-schema-design",
+      "error-code-design",
+      "version-compatibility",
+      "threat-modeling",
+      "observability",
+      "test-strategy",
+      "domain-object-identification",
+      "business-rule-extraction",
+      "state-machine-modeling",
+      "context-control-plane",
+      "project-memory-governance",
+      "repository-graph-analysis",
+      "validation-broker",
+      "python-professional-usage"
+    ],
+    "required_quality_gates": [
+      "implementation gate",
+      "API/data gate",
+      "domain gate",
+      "AI review gate",
+      "architecture gate"
+    ],
+    "business_semantic_pack_required": true,
+    "business_semantic_scope": "dto-domain-boundary",
+    "selected_bsp_sections": [
+      "business_vocabulary",
+      "business_objects",
+      "code_mapping",
+      "validation_map"
+    ],
+    "selected_references": [
+      {
+        "reference": "references/capabilities/135-business-semantic-control-plane.md",
+        "reason": "business-semantic-control-plane selected by deterministic resolver/trigger adapter for dto-as-domain-object",
+        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
+        "residual_risk": [
+          "does not prove live LLM behavior or live business correctness"
+        ]
+      },
+      {
+        "reference": "references/capabilities/118-repository-context-map.md",
+        "reason": "repository-context-map selected by deterministic resolver/trigger adapter for dto-as-domain-object",
+        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
+        "residual_risk": [
+          "does not prove live LLM behavior or live business correctness"
+        ]
+      },
+      {
+        "reference": "references/capabilities/101-implementation-structure-design.md",
+        "reason": "implementation-structure-design selected by deterministic resolver/trigger adapter for dto-as-domain-object",
+        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
+        "residual_risk": [
+          "does not prove live LLM behavior or live business correctness"
+        ]
+      },
+      {
+        "reference": "references/capabilities/19-module-boundary-design.md",
+        "reason": "module-boundary-design selected by deterministic resolver/trigger adapter for dto-as-domain-object",
+        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
+        "residual_risk": [
+          "does not prove live LLM behavior or live business correctness"
+        ]
+      }
+    ],
+    "skipped_references": [
+      {
+        "reference": "payment-trading-extension",
+        "reason": "no payment, ledger, settlement, or trading signal in the fixture",
+        "evidence_limit": "not evidence for omitted surface correctness",
+        "residual_risk": [
+          "route separately if the omitted surface appears in current source"
+        ]
+      },
+      {
+        "reference": "live-business-correctness",
+        "reason": "deterministic fixture checks structure, not live domain truth",
+        "evidence_limit": "not evidence for omitted surface correctness",
+        "residual_risk": [
+          "route separately if the omitted surface appears in current source"
+        ]
+      }
+    ]
+  },
+  "actual_review": {
+    "business_semantic_pack_required": true,
+    "findings": [
+      {
+        "finding_id": "BSP-DTO-AS-DOMAIN",
+        "severity": "high",
+        "category": "dto_as_domain_object",
+        "impacted_claim": "PartnerOrderResponse internal order model",
+        "evidence": [
+          "source: deterministic-fixture-review",
+          "external DTO passed into domain service without mapper",
+          "PartnerOrderResponse replaces Order"
+        ],
+        "required_fix": "DTO/table/resource model is being used as domain object; requires model-boundary-mapping and domain-object-identification.",
+        "validation_required": "source/diff evidence, owner review, or changed-path validation required"
+      }
+    ],
+    "forbidden_behavior_avoided": [
+      "treat external DTO as aggregate",
+      "skip compatibility risk"
+    ],
+    "residual_risk": [
+      "dto-as-domain-object actual is deterministic fixture evidence only",
+      "does not prove live LLM behavior or live business correctness"
+    ]
+  }
+}

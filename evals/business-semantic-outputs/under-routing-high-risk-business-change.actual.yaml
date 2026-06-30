@@ -1,35 +1,165 @@
-actual_route:
-  stage: architecture-design
-  detected_triggers: [business invariant changed, business rule authority unknown, business workflow state unclear, business semantic review required]
-  selected_skills: [change-intake-compiler, domain-impact-modeler, quality-test-gate, ai-code-review-refactor]
-  selected_capabilities: [business-semantic-control-plane, domain-object-identification, business-rule-extraction, state-machine-modeling, validation-broker, context-control-plane]
-  required_quality_gates: [requirement gate, domain gate, architecture gate, API/data gate, test gate, AI review gate]
-  business_semantic_pack_required: true
-  business_semantic_scope: high-risk-entitlement-workflow-reason-code
-  selected_bsp_sections: [task_business_intent, business_vocabulary, business_objects, business_rules, workflows, data_and_signal_semantics, code_mapping, memory_projection, validation_map, context_control]
-  selected_references:
-    - reference: 135-business-semantic-control-plane
-      reason: entitlement eligibility, renewal transitions, and denial reasons require full BSP sections
-      evidence_limit: source-backed claims plus validation map; deterministic fixture only
-    - reference: 14-state-machine-modeling
-      reason: renewal status transition risk must be modeled
-      evidence_limit: allowed/forbidden transition evidence required
-  skipped_references:
-    - reference: payment-trading-extension
-      reason: entitlement fixture does not directly change billing ledger or settlement
-      evidence_limit: billing side effects remain outside this fixture
-      residual_risk: [enterprise renewal may still affect billing in a real system]
-actual_review:
-  findings:
-    - finding_id: BSP-UNDERROUTE-HIGH-RISK
-      severity: critical
-      category: underroute_business_semantics
-      impacted_claim: enterprise entitlement eligibility, renewal status, denial reasons
-      evidence: [multi-object rule/workflow/reason-code prompt]
-      required_fix: BSP required, rule/workflow/object/golden coverage required
-      validation_required: domain, test, and AI semantic review gates
-  forbidden_behavior_avoided:
-    - route directly to coding
-    - skip semantic review
-  residual_risk:
-    - deterministic fixture cannot prove live entitlement correctness
+{
+  "actual_metadata": {
+    "generated_by": "scripts/generate-business-semantic-actuals.py",
+    "generation_mode": "deterministic",
+    "source_fixture": "evals/business-semantic/under-routing-high-risk-business-change.yaml",
+    "route_source": "current deterministic route resolver / fixture route adapter",
+    "review_source": "deterministic fixture review skeleton"
+  },
+  "actual_route": {
+    "stage": "architecture-design",
+    "detected_triggers": [
+      "business invariant changed",
+      "business rule authority unknown",
+      "business workflow state unclear",
+      "business semantic review required"
+    ],
+    "selected_skills": [
+      "delivery-release-gate",
+      "quality-test-gate",
+      "frontend-change-builder",
+      "change-forge-router",
+      "domain-impact-modeler",
+      "ai-code-review-refactor",
+      "change-intake-compiler",
+      "architecture-impact-reviewer",
+      "data-api-contract-changer"
+    ],
+    "selected_capabilities": [
+      "ci-cd",
+      "release-rollback",
+      "containerization",
+      "kubernetes-gateway",
+      "observability",
+      "backup-recovery",
+      "page-component-decomposition",
+      "state-management-design",
+      "form-validation-design",
+      "frontend-api-integration",
+      "package-dependency-management",
+      "build-tool-professional-usage",
+      "business-semantic-control-plane",
+      "domain-object-identification",
+      "business-rule-extraction",
+      "state-machine-modeling",
+      "context-control-plane",
+      "project-memory-governance",
+      "repository-graph-analysis",
+      "validation-broker",
+      "agent-tool-permission-sandbox",
+      "implementation-structure-design"
+    ],
+    "required_quality_gates": [
+      "delivery gate",
+      "test gate",
+      "domain gate",
+      "AI review gate",
+      "requirement gate",
+      "architecture gate",
+      "API/data gate"
+    ],
+    "business_semantic_pack_required": true,
+    "business_semantic_scope": "high-risk-entitlement-workflow-reason-code",
+    "selected_bsp_sections": [
+      "task_business_intent",
+      "business_vocabulary",
+      "business_objects",
+      "business_rules",
+      "workflows",
+      "data_and_signal_semantics",
+      "code_mapping",
+      "memory_projection",
+      "validation_map",
+      "context_control"
+    ],
+    "selected_references": [
+      {
+        "reference": "references/capabilities/135-business-semantic-control-plane.md",
+        "reason": "business-semantic-control-plane selected by deterministic resolver/trigger adapter for under-routing-high-risk-business-change",
+        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
+        "residual_risk": [
+          "does not prove live LLM behavior or live business correctness"
+        ]
+      },
+      {
+        "reference": "references/capabilities/73-ci-cd.md",
+        "reason": "ci-cd selected by deterministic resolver/trigger adapter for under-routing-high-risk-business-change",
+        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
+        "residual_risk": [
+          "does not prove live LLM behavior or live business correctness"
+        ]
+      },
+      {
+        "reference": "references/capabilities/75-release-rollback.md",
+        "reason": "release-rollback selected by deterministic resolver/trigger adapter for under-routing-high-risk-business-change",
+        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
+        "residual_risk": [
+          "does not prove live LLM behavior or live business correctness"
+        ]
+      },
+      {
+        "reference": "references/capabilities/72-containerization.md",
+        "reason": "containerization selected by deterministic resolver/trigger adapter for under-routing-high-risk-business-change",
+        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
+        "residual_risk": [
+          "does not prove live LLM behavior or live business correctness"
+        ]
+      }
+    ],
+    "skipped_references": [
+      {
+        "reference": "payment-trading-extension",
+        "reason": "no payment, ledger, settlement, or trading signal in the fixture",
+        "evidence_limit": "not evidence for omitted surface correctness",
+        "residual_risk": [
+          "route separately if the omitted surface appears in current source"
+        ]
+      },
+      {
+        "reference": "live-business-correctness",
+        "reason": "deterministic fixture checks structure, not live domain truth",
+        "evidence_limit": "not evidence for omitted surface correctness",
+        "residual_risk": [
+          "route separately if the omitted surface appears in current source"
+        ]
+      }
+    ]
+  },
+  "actual_review": {
+    "business_semantic_pack_required": true,
+    "findings": [
+      {
+        "finding_id": "BSP-UNDERROUTE-HIGH-RISK",
+        "severity": "critical",
+        "category": "underroute_business_semantics",
+        "impacted_claim": "enterprise entitlement eligibility, renewal status, denial reasons",
+        "evidence": [
+          "source: deterministic-fixture-review",
+          "BSP required"
+        ],
+        "required_fix": "BSP required",
+        "validation_required": "deterministic fixture review coverage required"
+      },
+      {
+        "finding_id": "BSP-UNDERROUTE-HIGH-RISK",
+        "severity": "critical",
+        "category": "underroute_business_semantics",
+        "impacted_claim": "enterprise entitlement eligibility, renewal status, denial reasons",
+        "evidence": [
+          "source: deterministic-fixture-review",
+          "rule/workflow/object/golden coverage required"
+        ],
+        "required_fix": "rule/workflow/object/golden coverage required",
+        "validation_required": "deterministic fixture review coverage required"
+      }
+    ],
+    "forbidden_behavior_avoided": [
+      "route directly to coding",
+      "skip semantic review"
+    ],
+    "residual_risk": [
+      "under-routing-high-risk-business-change actual is deterministic fixture evidence only",
+      "does not prove live LLM behavior or live business correctness"
+    ]
+  }
+}

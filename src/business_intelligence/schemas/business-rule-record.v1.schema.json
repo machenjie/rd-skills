@@ -12,6 +12,12 @@
       "maxItems": 50,
       "items": {"type": "string", "minLength": 1, "maxLength": 300}
     },
+    "nonEmptyStringList": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": {"type": "string", "minLength": 1, "maxLength": 300}
+    },
     "boundedPathList": {
       "type": "array",
       "maxItems": 50,
@@ -65,8 +71,8 @@
         "rule_statement": {"type": "string", "minLength": 1, "maxLength": 1000},
         "owner": {"type": "string", "minLength": 1, "maxLength": 200},
         "enforcement_layer": {"type": "string", "enum": ["domain", "application_service", "policy", "database_constraint", "contract", "workflow", "manual_owner_review", "not_decided"]},
-        "reason_codes": {"$ref": "#/$defs/boundedStringList"},
-        "entry_points": {"$ref": "#/$defs/boundedStringList"},
+        "reason_codes": {"$ref": "#/$defs/nonEmptyStringList"},
+        "entry_points": {"$ref": "#/$defs/nonEmptyStringList"},
         "effective_dating": {
           "type": "object",
           "additionalProperties": false,

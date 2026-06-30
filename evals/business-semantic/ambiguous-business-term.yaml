@@ -6,6 +6,8 @@ routing_triggers:
 expected_route:
   stage: requirement-intake
   business_semantic_pack_required: true
+  business_semantic_scope: vocabulary-and-object-ownership
+expected_skills: [change-intake-compiler, domain-impact-modeler, change-documentation-gate]
 expected_capabilities: [business-semantic-control-plane, domain-object-identification, context-control-plane]
 expected_quality_gates: [requirement gate, domain gate, documentation gate]
 expected_bsp_sections: [task_business_intent, business_vocabulary, business_objects, code_mapping, validation_map, context_control]

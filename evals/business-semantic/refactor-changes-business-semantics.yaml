@@ -29,6 +29,7 @@ expected_route:
   stage: code-review
   business_semantic_pack_required: true
   business_semantic_scope: semantic-refactor-review
+expected_skills: [ai-code-review-refactor, quality-test-gate]
 expected_capabilities: [business-semantic-control-plane, ai-code-review-refactor, plan-execution-consistency]
 expected_quality_gates: [AI review gate, implementation gate, test gate]
 expected_bsp_sections: [business_rules, code_mapping, validation_map, context_control]

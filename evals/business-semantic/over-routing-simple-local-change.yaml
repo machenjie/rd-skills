@@ -4,6 +4,8 @@ routing_triggers: []
 expected_route:
   stage: coding
   business_semantic_pack_required: false
+  business_semantic_scope: none
+expected_skills: [backend-change-builder]
 expected_capabilities: [minimal-correct-implementation]
 expected_quality_gates: [implementation gate]
 expected_bsp_sections: []

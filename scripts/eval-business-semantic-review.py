@@ -10,8 +10,17 @@ from validation_utils import fail_many, load_yaml_file
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EVAL_DIR = ROOT / "evals" / "business-semantic"
-OUTPUT_DIR = ROOT / "evals" / "business-semantic-outputs"
+DEFAULT_EVAL_DIR = ROOT / "evals" / "business-semantic"
+DEFAULT_OUTPUT_DIR = ROOT / "evals" / "business-semantic-outputs"
+EVAL_DIR = DEFAULT_EVAL_DIR
+OUTPUT_DIR = DEFAULT_OUTPUT_DIR
+
+EXPECTED_METADATA = {
+    "generated_by": "scripts/generate-business-semantic-actuals.py",
+    "generation_mode": "deterministic",
+    "route_source": "current deterministic route resolver / fixture route adapter",
+    "review_source": "deterministic fixture review skeleton",
+}
 
 REQUIRED_CATEGORIES = {
     "hidden-rule-in-sql": {"hidden_sql_rule"},
@@ -25,9 +34,13 @@ REQUIRED_CATEGORIES = {
 def main() -> int:
     errors: list[str] = []
     cases = [(path, load_yaml_file(path)) for path in sorted(EVAL_DIR.glob("*.yaml"))]
+    if _using_default_dirs() and len(cases) != 10:
+        errors.append(f"expected 10 fixtures, found {len(cases)}")
     metrics = {
         "expected_findings": 0,
         "finding_hits": 0,
+        "expected_evidence_items": 0,
+        "expected_evidence_hits": 0,
         "forbidden_expected": 0,
         "forbidden_hits": 0,
         "memory_source_separation_coverage": 0,
@@ -42,6 +55,9 @@ def main() -> int:
         "eval-business-semantic-review: OK "
         f"cases={len(cases)} "
         f"finding_recall={_ratio(metrics['finding_hits'], metrics['expected_findings']):.2f} "
+        f"expected_evidence_items={metrics['expected_evidence_items']} "
+        f"expected_evidence_hits={metrics['expected_evidence_hits']} "
+        f"expected_evidence_recall={_ratio(metrics['expected_evidence_hits'], metrics['expected_evidence_items']):.2f} "
         f"forbidden_behavior_avoidance={_ratio(metrics['forbidden_hits'], metrics['forbidden_expected']):.2f} "
         f"memory_source_separation_coverage={metrics['memory_source_separation_coverage']} "
         f"golden_case_gap_coverage={metrics['golden_case_gap_coverage']} "
@@ -62,6 +78,7 @@ def _validate_case(
         errors.append(f"{case_id}: missing actual output {actual_path.relative_to(ROOT)}")
         return
     actual_doc = load_yaml_file(actual_path)
+    _validate_actual_metadata(case_id, actual_doc, errors)
     actual_review = actual_doc.get("actual_review") if isinstance(actual_doc, dict) else None
     if not isinstance(actual_review, dict):
         errors.append(f"{case_id}: actual output must contain actual_review")
@@ -74,13 +91,21 @@ def _validate_case(
     if not isinstance(expected_findings, list) or not expected_findings:
         errors.append(f"{case_id}: expected_review_findings must be non-empty")
         return
-    actual_texts = [_finding_text(item) for item in findings if isinstance(item, dict)]
+    actual_findings = [item for item in findings if isinstance(item, dict)]
+    actual_texts = [_finding_text(item) for item in actual_findings]
     for expected in expected_findings:
         metrics["expected_findings"] += 1
         if _finding_is_covered(expected, actual_texts):
             metrics["finding_hits"] += 1
         else:
             errors.append(f"{case_id}: missing expected review finding {expected!r}")
+        evidence_items = _as_list(expected.get("expected_evidence")) if isinstance(expected, dict) else []
+        metrics["expected_evidence_items"] += len(evidence_items)
+        if evidence_items:
+            evidence_covered, missing_evidence = _expected_evidence_covered(expected, actual_findings)
+            metrics["expected_evidence_hits"] += len(evidence_items) - len(missing_evidence)
+            if not evidence_covered:
+                errors.append(f"{case_id}: missing expected evidence {missing_evidence}")
     forbidden = _as_list(case.get("forbidden_behavior"))
     avoided = _as_list(actual_review.get("forbidden_behavior_avoided"))
     avoided_text = " | ".join(_normalize(item) for item in avoided)
@@ -104,6 +129,26 @@ def _finding_is_covered(expected: Any, actual_texts: list[str]) -> bool:
         return all(any(probe in text for text in actual_texts) for probe in probes)
     expected_text = _normalize(str(expected))
     return any(expected_text in text or text in expected_text for text in actual_texts)
+
+
+def _expected_evidence_covered(
+    expected: dict[str, Any],
+    actual_findings: list[dict[str, Any]],
+) -> tuple[bool, list[str]]:
+    expected_items = _as_list(expected.get("expected_evidence"))
+    matching_texts = [
+        _finding_text(finding)
+        for finding in actual_findings
+        if _finding_is_covered(expected, [_finding_text(finding)])
+    ]
+    if not matching_texts:
+        matching_texts = [_finding_text(finding) for finding in actual_findings]
+    missing = [
+        item
+        for item in expected_items
+        if not any(_normalize(item) in text for text in matching_texts)
+    ]
+    return not missing, missing
 
 
 def _validate_case_specific_categories(
@@ -169,6 +214,22 @@ def _normalize(value: str) -> str:
 
 def _ratio(hit: int, expected: int) -> float:
     return 1.0 if expected == 0 else hit / expected
+
+
+def _validate_actual_metadata(case_id: str, actual_doc: Any, errors: list[str]) -> None:
+    metadata = actual_doc.get("actual_metadata") if isinstance(actual_doc, dict) else None
+    if not isinstance(metadata, dict):
+        errors.append(f"{case_id}: actual output missing actual_metadata")
+        return
+    for key, expected in EXPECTED_METADATA.items():
+        if metadata.get(key) != expected:
+            errors.append(f"{case_id}: actual_metadata.{key} expected {expected!r}, actual {metadata.get(key)!r}")
+    if not metadata.get("source_fixture"):
+        errors.append(f"{case_id}: actual_metadata.source_fixture must be non-empty")
+
+
+def _using_default_dirs() -> bool:
+    return EVAL_DIR == DEFAULT_EVAL_DIR and OUTPUT_DIR == DEFAULT_OUTPUT_DIR
 
 
 if __name__ == "__main__":

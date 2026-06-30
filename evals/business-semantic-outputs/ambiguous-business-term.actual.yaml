@@ -1,32 +1,148 @@
-actual_route:
-  stage: requirement-intake
-  detected_triggers: [business vocabulary ambiguous, business object ownership unclear]
-  selected_skills: [change-intake-compiler, domain-impact-modeler, change-documentation-gate]
-  selected_capabilities: [business-semantic-control-plane, domain-object-identification, context-control-plane]
-  required_quality_gates: [requirement gate, domain gate, documentation gate]
-  business_semantic_pack_required: true
-  business_semantic_scope: vocabulary-and-object-ownership
-  selected_bsp_sections: [task_business_intent, business_vocabulary, business_objects, code_mapping, validation_map, context_control]
-  selected_references:
-    - reference: 135-business-semantic-control-plane
-      reason: ambiguous Account/Customer vocabulary requires BSP vocabulary and object evidence
-      evidence_limit: source-backed term ownership only; owner review still required
-  skipped_references:
-    - reference: payment-trading-extension
-      reason: no payment movement or ledger behavior is requested
-      evidence_limit: not evidence for billing correctness
-      residual_risk: [billing owner still needs review]
-actual_review:
-  findings:
-    - finding_id: BSP-AMBIGUOUS-TERM
-      severity: high
-      category: ambiguous_business_vocabulary
-      impacted_claim: Account rename to Customer
-      evidence: [prompt spans billing identity support contexts]
-      required_fix: same term has multiple owning contexts, owner review required
-      validation_required: vocabulary owner review and code mapping
-  forbidden_behavior_avoided:
-    - treat term rename as text-only refactor
-    - memory as FACT
-  residual_risk:
-    - owner review is deterministic fixture evidence only
+{
+  "actual_metadata": {
+    "generated_by": "scripts/generate-business-semantic-actuals.py",
+    "generation_mode": "deterministic",
+    "source_fixture": "evals/business-semantic/ambiguous-business-term.yaml",
+    "route_source": "current deterministic route resolver / fixture route adapter",
+    "review_source": "deterministic fixture review skeleton"
+  },
+  "actual_route": {
+    "stage": "requirement-intake",
+    "detected_triggers": [
+      "business vocabulary ambiguous",
+      "business object ownership unclear"
+    ],
+    "selected_skills": [
+      "change-impact-analyzer",
+      "change-forge-router",
+      "change-intake-compiler",
+      "domain-impact-modeler",
+      "architecture-impact-reviewer",
+      "change-documentation-gate"
+    ],
+    "selected_capabilities": [
+      "requirement-clarification",
+      "requirement-structuring",
+      "non-goal-boundary-definition",
+      "acceptance-standard-definition",
+      "scenario-decomposition",
+      "business-semantic-control-plane",
+      "idempotency-retry-design",
+      "transaction-consistency",
+      "domain-object-identification",
+      "business-rule-extraction",
+      "state-machine-modeling",
+      "context-control-plane",
+      "project-memory-governance",
+      "repository-graph-analysis",
+      "validation-broker",
+      "module-boundary-design",
+      "implementation-structure-design"
+    ],
+    "required_quality_gates": [
+      "requirement gate",
+      "domain gate",
+      "architecture gate",
+      "documentation gate"
+    ],
+    "business_semantic_pack_required": true,
+    "business_semantic_scope": "vocabulary-and-object-ownership",
+    "selected_bsp_sections": [
+      "task_business_intent",
+      "business_vocabulary",
+      "business_objects",
+      "code_mapping",
+      "validation_map",
+      "context_control"
+    ],
+    "selected_references": [
+      {
+        "reference": "references/capabilities/135-business-semantic-control-plane.md",
+        "reason": "business-semantic-control-plane selected by deterministic resolver/trigger adapter for ambiguous-business-term",
+        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
+        "residual_risk": [
+          "does not prove live LLM behavior or live business correctness"
+        ]
+      },
+      {
+        "reference": "references/capabilities/01-requirement-clarification.md",
+        "reason": "requirement-clarification selected by deterministic resolver/trigger adapter for ambiguous-business-term",
+        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
+        "residual_risk": [
+          "does not prove live LLM behavior or live business correctness"
+        ]
+      },
+      {
+        "reference": "references/capabilities/02-requirement-structuring.md",
+        "reason": "requirement-structuring selected by deterministic resolver/trigger adapter for ambiguous-business-term",
+        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
+        "residual_risk": [
+          "does not prove live LLM behavior or live business correctness"
+        ]
+      },
+      {
+        "reference": "references/capabilities/06-non-goal-boundary-definition.md",
+        "reason": "non-goal-boundary-definition selected by deterministic resolver/trigger adapter for ambiguous-business-term",
+        "evidence_limit": "deterministic fixture source/diff snippets and routing triggers only",
+        "residual_risk": [
+          "does not prove live LLM behavior or live business correctness"
+        ]
+      }
+    ],
+    "skipped_references": [
+      {
+        "reference": "payment-trading-extension",
+        "reason": "no payment, ledger, settlement, or trading signal in the fixture",
+        "evidence_limit": "not evidence for omitted surface correctness",
+        "residual_risk": [
+          "route separately if the omitted surface appears in current source"
+        ]
+      },
+      {
+        "reference": "live-business-correctness",
+        "reason": "deterministic fixture checks structure, not live domain truth",
+        "evidence_limit": "not evidence for omitted surface correctness",
+        "residual_risk": [
+          "route separately if the omitted surface appears in current source"
+        ]
+      }
+    ]
+  },
+  "actual_review": {
+    "business_semantic_pack_required": true,
+    "findings": [
+      {
+        "finding_id": "BSP-AMBIGUOUS-TERM",
+        "severity": "high",
+        "category": "ambiguous_business_vocabulary",
+        "impacted_claim": "Account rename to Customer",
+        "evidence": [
+          "source: deterministic-fixture-review",
+          "same term has multiple owning contexts"
+        ],
+        "required_fix": "same term has multiple owning contexts",
+        "validation_required": "deterministic fixture review coverage required"
+      },
+      {
+        "finding_id": "BSP-AMBIGUOUS-TERM",
+        "severity": "high",
+        "category": "ambiguous_business_vocabulary",
+        "impacted_claim": "Account rename to Customer",
+        "evidence": [
+          "source: deterministic-fixture-review",
+          "owner review required"
+        ],
+        "required_fix": "owner review required",
+        "validation_required": "deterministic fixture review coverage required"
+      }
+    ],
+    "forbidden_behavior_avoided": [
+      "treat term rename as text-only refactor",
+      "memory as FACT"
+    ],
+    "residual_risk": [
+      "ambiguous-business-term actual is deterministic fixture evidence only",
+      "does not prove live LLM behavior or live business correctness"
+    ]
+  }
+}

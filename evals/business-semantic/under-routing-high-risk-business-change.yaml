@@ -8,6 +8,8 @@ routing_triggers:
 expected_route:
   stage: architecture-design
   business_semantic_pack_required: true
+  business_semantic_scope: high-risk-entitlement-workflow-reason-code
+expected_skills: [change-intake-compiler, domain-impact-modeler, quality-test-gate, ai-code-review-refactor]
 expected_capabilities: [business-semantic-control-plane, domain-object-identification, business-rule-extraction, state-machine-modeling, validation-broker]
 expected_quality_gates: [requirement gate, domain gate, architecture gate, API/data gate, test gate, AI review gate]
 expected_bsp_sections: [task_business_intent, business_vocabulary, business_objects, business_rules, workflows, data_and_signal_semantics, code_mapping, memory_projection, validation_map, context_control]

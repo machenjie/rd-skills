@@ -29,6 +29,7 @@ expected_route:
   stage: architecture-design
   business_semantic_pack_required: true
   business_semantic_scope: controller-only-rule-authority
+expected_skills: [domain-impact-modeler, backend-change-builder, quality-test-gate]
 expected_capabilities: [business-semantic-control-plane, business-rule-extraction, implementation-structure-design]
 expected_quality_gates: [domain gate, architecture gate, test gate]
 expected_bsp_sections: [business_objects, business_rules, code_mapping, validation_map]

@@ -47,6 +47,12 @@ class BusinessSemanticPackSchemaTests(unittest.TestCase):
     def test_rule_without_enforcement_path_fails(self) -> None:
         self.assert_errors("invalid-rule-missing-enforcement-path.json", "authoritative_enforcement_paths")
 
+    def test_rule_empty_reason_codes_fails(self) -> None:
+        self.assert_errors("invalid-rule-empty-reason-codes.json", "reason_codes")
+
+    def test_rule_empty_entry_points_fails(self) -> None:
+        self.assert_errors("invalid-rule-empty-entry-points.json", "entry_points")
+
     def test_workflow_without_forbidden_transition_fails(self) -> None:
         self.assert_errors("invalid-workflow-no-forbidden-transition.json", "forbidden")
 
