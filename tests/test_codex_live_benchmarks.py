@@ -950,6 +950,38 @@ def _with_process_field_sources(trace: dict[str, object], source: str = "final.m
     return trace
 
 
+def _runner_sdd_payload(**overrides: object) -> dict[str, object]:
+    source = "final.md:process-trace-json"
+    payload: dict[str, object] = {
+        "modules": ["URL validation module"],
+        "public_api": ["URL validation public entrypoint"],
+        "error_contract": ["deny unsafe URLs with stable error"],
+        "failure_modes": ["metadata URL denial"],
+        "logging_decision": {"needed": False, "rationale": "public tests cover denial"},
+        "design_decision_points": [],
+        "no_design_choice_rationale": (
+            "Prompt source and repository convention require the existing URL validation boundary; "
+            "no material user preference remains."
+        ),
+        "assumption_policy": (
+            "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
+        ),
+        "_evidence_source": source,
+    }
+    payload.update(overrides)
+    payload["_field_sources"] = {
+        str(field): source
+        for field, value in payload.items()
+        if not str(field).startswith("_")
+        and (
+            _trace_value_present(value)
+            or (field == "design_decision_points" and isinstance(value, list))
+        )
+    }
+    payload.setdefault("_inferred_fields", [])
+    return payload
+
+
 class CodexLiveBenchmarkTests(unittest.TestCase):
     def test_default_variants_for_clean_paired_ablation_and_smoke(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_defaults", "scripts/run-codex-live-benchmarks.py")
@@ -3237,6 +3269,136 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             "_evidence_source": "final.md:process-trace-json",
         }
         self.assertEqual(runner._phase_status_from_sources("sdd", payload), "degraded")
+
+    def test_sdd_phase_status_degrades_malformed_resolved_blocking_choice(self) -> None:
+        runner = _load_script(
+            "run_codex_live_benchmarks_malformed_resolved_blocking_choice",
+            "scripts/run-codex-live-benchmarks.py",
+        )
+        payload = _runner_sdd_payload(
+            design_decision_points=[
+                {
+                    "id": "api-boundary",
+                    "decision": "Choose public API shape",
+                    "trigger": "The wrong answer changes public API",
+                    "blocking": True,
+                    "user_choice_status": "resolved",
+                    "resolution_evidence": "User selected this.",
+                }
+            ],
+            no_design_choice_rationale="",
+        )
+        self.assertEqual(runner._phase_status_from_sources("sdd", payload), "degraded")
+        self.assertNotEqual(runner._phase_status_from_sources("sdd", payload), "present")
+
+    def test_sdd_phase_status_degrades_required_choice_with_one_option(self) -> None:
+        runner = _load_script(
+            "run_codex_live_benchmarks_required_choice_one_option",
+            "scripts/run-codex-live-benchmarks.py",
+        )
+        payload = _runner_sdd_payload(
+            design_decision_points=[
+                {
+                    "id": "api-boundary",
+                    "decision": "Choose public API shape",
+                    "trigger": "The wrong answer changes public API",
+                    "why_user_choice_is_needed": "User or owner must choose the public contract.",
+                    "options": [{"label": "A", "summary": "Reuse existing API"}],
+                    "recommended_option": "A",
+                    "blocking": True,
+                    "user_choice_status": "required",
+                    "residual_risk": "Unresolved public API shape.",
+                }
+            ],
+            no_design_choice_rationale="",
+        )
+        self.assertEqual(runner._phase_status_from_sources("sdd", payload), "degraded")
+
+    def test_sdd_phase_status_accepts_valid_resolved_blocking_choice(self) -> None:
+        runner = _load_script(
+            "run_codex_live_benchmarks_valid_resolved_blocking_choice",
+            "scripts/run-codex-live-benchmarks.py",
+        )
+        payload = _runner_sdd_payload(
+            design_decision_points=[
+                {
+                    "id": "api-boundary",
+                    "decision": "Choose public API shape",
+                    "trigger": "The wrong answer changes the public contract.",
+                    "why_user_choice_is_needed": "The public API shape depends on user or owner preference.",
+                    "options": [
+                        {
+                            "label": "A",
+                            "summary": "Reuse existing API",
+                            "pros": ["minimal compatibility risk"],
+                            "cons": ["less explicit new capability"],
+                        },
+                        {
+                            "label": "B",
+                            "summary": "Add new API",
+                            "pros": ["clearer dedicated contract"],
+                            "cons": ["new public contract to maintain"],
+                        },
+                    ],
+                    "recommended_option": "A",
+                    "blocking": True,
+                    "user_choice_status": "resolved",
+                    "resolution_evidence": "User explicitly selected option A in the prompt.",
+                    "residual_risk": "No unresolved design-choice risk.",
+                }
+            ],
+            no_design_choice_rationale="",
+        )
+        self.assertEqual(runner._phase_status_from_sources("sdd", payload), "present")
+
+    def test_sdd_phase_status_degrades_not_required_material_choice_without_evidence(self) -> None:
+        runner = _load_script(
+            "run_codex_live_benchmarks_not_required_material_without_evidence",
+            "scripts/run-codex-live-benchmarks.py",
+        )
+        payload = _runner_sdd_payload(
+            design_decision_points=[
+                {
+                    "id": "api-boundary",
+                    "decision": "Choose whether a new public API is needed",
+                    "trigger": "The wrong answer changes public API",
+                    "blocking": False,
+                    "user_choice_status": "not_required",
+                    "resolution_evidence": "not required",
+                }
+            ],
+            no_design_choice_rationale="",
+        )
+        self.assertEqual(runner._phase_status_from_sources("sdd", payload), "degraded")
+        self.assertNotEqual(runner._phase_status_from_sources("sdd", payload), "present")
+
+    def test_sdd_phase_status_accepts_low_risk_safe_assumption_with_negative_boundary(self) -> None:
+        runner = _load_script(
+            "run_codex_live_benchmarks_low_risk_safe_assumption",
+            "scripts/run-codex-live-benchmarks.py",
+        )
+        payload = _runner_sdd_payload(
+            design_decision_points=[
+                {
+                    "id": "helper-placement",
+                    "decision": "Place helper in existing module-local file",
+                    "trigger": "Helper name and placement are not specified.",
+                    "blocking": False,
+                    "user_choice_status": "assumed_with_rationale",
+                    "safe_default_if_user_unavailable": "Use same-file module-local helper.",
+                    "resolution_evidence": (
+                        "Repository convention supports same-file local helpers; this is local, "
+                        "reversible, conventional, and acceptance-neutral."
+                    ),
+                    "residual_risk": (
+                        "Low; can be reverted in the same file. Does not change public API, data, "
+                        "security, migration, rollback, or user-visible behavior."
+                    ),
+                }
+            ],
+            no_design_choice_rationale="",
+        )
+        self.assertEqual(runner._phase_status_from_sources("sdd", payload), "present")
 
     def test_process_summary_counts_sdd_choice_gate_fallback_fields(self) -> None:
         summary_module = _load_script(

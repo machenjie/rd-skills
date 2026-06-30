@@ -77,10 +77,24 @@ PROCESS_REQUIRED_FIELDS = {
     ),
 }
 PROCESS_SDD_CHOICE_GATE_FIELDS = ("design_decision_points", "assumption_policy")
+PROCESS_SDD_CHOICE_STATUSES = {"required", "resolved", "not_required", "assumed_with_rationale"}
 PROCESS_SDD_NO_CHOICE_RATIONALE_FIELDS = (
     "no_design_choice_rationale",
     "no_material_design_choice_rationale",
     "design_choice_rationale",
+)
+PROCESS_SDD_SPECIFIC_RATIONALE_MARKERS = (
+    "source",
+    "constraint",
+    "repository convention",
+    "repo convention",
+    "existing convention",
+    "existing pattern",
+    "reuse evidence",
+    "prompt",
+    "fixture",
+    "explicit user",
+    "user specified",
 )
 PROCESS_SDD_GENERIC_RATIONALES = {
     "no choice needed",
@@ -93,6 +107,66 @@ PROCESS_SDD_GENERIC_RATIONALES = {
 }
 PROCESS_SDD_ASSUMPTION_POLICY = (
     "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
+)
+PROCESS_SDD_MATERIAL_CHOICE_KEYWORDS = (
+    "new module",
+    "new directory",
+    "new public api",
+    "public api",
+    "public export",
+    "shared utility",
+    "common/shared",
+    "abstraction",
+    "interface",
+    "protocol",
+    "inheritance",
+    "composition",
+    "strategy",
+    "factory",
+    "plugin",
+    "adapter",
+    "wrapper",
+    "cache",
+    "queue",
+    "async",
+    "worker",
+    "migration",
+    "rollback",
+    "config switch",
+    "feature flag",
+    "external dependency",
+    "service boundary",
+    "data ownership",
+    "permission",
+    "auth",
+    "security",
+    "tenant",
+    "payment",
+    "irreversible",
+)
+PROCESS_SDD_HIGH_RISK_SAFE_ASSUMPTION_KEYWORDS = (
+    "public api",
+    "public export",
+    "contract",
+    "architecture",
+    "data",
+    "data model",
+    "schema",
+    "security",
+    "permission",
+    "auth",
+    "tenant",
+    "migration",
+    "rollback",
+    "irreversible",
+    "payment",
+    "privacy",
+)
+PROCESS_SDD_SAFE_ASSUMPTION_MARKER_GROUPS = (
+    ("local", "same file", "single file", "module-local", "within existing"),
+    ("reversible", "can be reverted", "easy to revert", "revertible"),
+    ("conventional", "repository convention", "existing convention", "existing pattern"),
+    ("acceptance-neutral", "acceptance neutral", "does not change acceptance", "no acceptance change"),
 )
 COMPACTION_REQUIRED_FIELDS = (
     "route_id",
@@ -2014,7 +2088,7 @@ def _phase_status_from_sources(phase: str, payload: Any) -> str:
             fallback_or_inferred_required += 1
         elif source and _required_field_shape_valid(phase, field, value):
             real_required += 1
-        elif source:
+        elif source or _field_has_trace_value(phase, field, value):
             invalid_real_required += 1
     if real_required == len(required_fields):
         if phase == "sdd" and _sdd_choice_gate_uses_fallback(payload):
@@ -2050,6 +2124,10 @@ def _required_field_shape_valid(phase: str, field: str, value: Any) -> bool:
 
 
 def _sdd_choice_gate_uses_fallback(payload: dict[str, Any]) -> bool:
+    return _sdd_choice_gate_invalid_for_present(payload)
+
+
+def _sdd_choice_gate_invalid_for_present(payload: dict[str, Any]) -> bool:
     field_sources = payload.get("_field_sources")
     sources = field_sources if isinstance(field_sources, dict) else {}
     raw_inferred_fields = payload.get("_inferred_fields")
@@ -2059,7 +2137,9 @@ def _sdd_choice_gate_uses_fallback(payload: dict[str, Any]) -> bool:
             return True
         if field == "design_decision_points" and not isinstance(payload.get(field), list):
             return True
-        if field == "assumption_policy" and not str(payload.get(field, "")).strip():
+        if field == "assumption_policy" and "block_when_wrong_answer_changes" not in str(
+            payload.get(field, "")
+        ).strip():
             return True
         if field in inferred_fields or _source_is_fallback(str(sources.get(field) or "")):
             return True
@@ -2068,31 +2148,112 @@ def _sdd_choice_gate_uses_fallback(payload: dict[str, Any]) -> bool:
         rationale_field = _sdd_no_choice_rationale_field(payload)
         if rationale_field is None:
             return True
-        rationale = str(payload.get(rationale_field, "")).strip().casefold().strip(".")
-        if not rationale or rationale in PROCESS_SDD_GENERIC_RATIONALES or len(rationale.split()) < 4:
+        rationale = str(payload.get(rationale_field, "")).strip()
+        if _is_generic_sdd_rationale(rationale):
             return True
         if rationale_field in inferred_fields or _source_is_fallback(str(sources.get(rationale_field) or "")):
             return True
     if isinstance(choices, list):
         for choice in choices:
-            if not isinstance(choice, dict):
+            if _sdd_decision_point_invalid_for_present(choice):
                 return True
-            status = str(choice.get("user_choice_status", "")).strip()
-            if choice.get("blocking") is True and status == "required":
+    return False
+
+
+def _sdd_decision_point_invalid_for_present(choice: Any) -> bool:
+    if not isinstance(choice, dict):
+        return True
+    for field in ("id", "decision", "trigger", "user_choice_status"):
+        if not str(choice.get(field, "")).strip():
+            return True
+    status = str(choice.get("user_choice_status", "")).strip()
+    if status not in PROCESS_SDD_CHOICE_STATUSES:
+        return True
+    blocking = choice.get("blocking")
+    if not isinstance(blocking, bool):
+        return True
+    risk_text = _decision_point_risk_text(choice)
+    material_terms = _keyword_hits(risk_text, PROCESS_SDD_MATERIAL_CHOICE_KEYWORDS)
+    high_risk_terms = _keyword_hits(risk_text, PROCESS_SDD_HIGH_RISK_SAFE_ASSUMPTION_KEYWORDS)
+    why_user_choice_is_needed = str(choice.get("why_user_choice_is_needed", "")).strip()
+    requires_user_options = (
+        blocking is True
+        or status == "required"
+        or bool(material_terms)
+        or bool(high_risk_terms)
+        or bool(why_user_choice_is_needed)
+    )
+    if requires_user_options:
+        required_or_blocking = blocking is True or status == "required"
+        if _sdd_decision_point_options_invalid_for_present(
+            choice,
+            require_two_options=required_or_blocking,
+            require_pros_or_cons=required_or_blocking,
+        ):
+            return True
+        if not str(choice.get("recommended_option", "")).strip():
+            return True
+        if not why_user_choice_is_needed:
+            return True
+        if not str(choice.get("residual_risk", "")).strip():
+            return True
+    if blocking is True and status == "required":
+        return True
+    if status == "resolved":
+        evidence = str(choice.get("resolution_evidence", "")).strip()
+        if not evidence or evidence.casefold() in {"not resolved", "none", "n/a", "na"}:
+            return True
+        if (blocking is True or material_terms or high_risk_terms) and not (
+            str(choice.get("recommended_option", "")).strip() or str(choice.get("resolved_option", "")).strip()
+        ):
+            return True
+    if status == "not_required":
+        rationale = _decision_point_rationale(choice)
+        if _is_generic_sdd_rationale(rationale):
+            return True
+        if (material_terms or high_risk_terms) and not _sdd_rationale_has_specific_evidence(rationale):
+            return True
+    if status == "assumed_with_rationale":
+        if not str(choice.get("safe_default_if_user_unavailable", "")).strip():
+            return True
+        if not str(choice.get("residual_risk", "")).strip():
+            return True
+        if not _has_trace_value(
+            [
+                choice.get("resolution_evidence"),
+                choice.get("why_user_choice_is_needed"),
+                choice.get("trigger"),
+            ]
+        ):
+            return True
+        if not _safe_assumption_rationale_ok(_decision_point_text(choice)):
+            return True
+        if high_risk_terms:
+            return True
+    return False
+
+
+def _sdd_decision_point_options_invalid_for_present(
+    choice: dict[str, Any],
+    *,
+    require_two_options: bool,
+    require_pros_or_cons: bool,
+) -> bool:
+    options = choice.get("options")
+    if not isinstance(options, list) or not options:
+        return True
+    if require_two_options and len(options) < 2:
+        return True
+    for option in options:
+        if not isinstance(option, dict):
+            return True
+        for field in ("label", "summary"):
+            if not str(option.get(field, "")).strip():
                 return True
-            if status == "assumed_with_rationale":
-                if not str(choice.get("safe_default_if_user_unavailable", "")).strip():
-                    return True
-                if not str(choice.get("residual_risk", "")).strip():
-                    return True
-                if not _has_trace_value(
-                    [
-                        choice.get("resolution_evidence"),
-                        choice.get("why_user_choice_is_needed"),
-                        choice.get("trigger"),
-                    ]
-                ):
-                    return True
+        if not any(_has_trace_value(option.get(field)) for field in ("pros", "cons", "recommended_when")):
+            return True
+        if require_pros_or_cons and not any(_has_trace_value(option.get(field)) for field in ("pros", "cons")):
+            return True
     return False
 
 
@@ -2101,6 +2262,50 @@ def _sdd_no_choice_rationale_field(payload: dict[str, Any]) -> str | None:
         if str(payload.get(field, "")).strip():
             return field
     return None
+
+
+def _decision_point_rationale(point: dict[str, Any]) -> str:
+    for field in ("resolution_evidence", "why_user_choice_is_needed", "residual_risk", "trigger"):
+        value = str(point.get(field, "")).strip()
+        if value:
+            return value
+    return ""
+
+
+def _decision_point_text(point: dict[str, Any]) -> str:
+    return json.dumps(point, sort_keys=True).casefold()
+
+
+def _decision_point_risk_text(point: dict[str, Any]) -> str:
+    return json.dumps(
+        {
+            "decision": point.get("decision"),
+            "trigger": point.get("trigger"),
+            "options": point.get("options"),
+            "safe_default_if_user_unavailable": point.get("safe_default_if_user_unavailable"),
+        },
+        sort_keys=True,
+    ).casefold()
+
+
+def _keyword_hits(text: str, keywords: tuple[str, ...]) -> list[str]:
+    lowered = text.casefold()
+    return [keyword for keyword in keywords if keyword in lowered]
+
+
+def _is_generic_sdd_rationale(rationale: str) -> bool:
+    lowered = rationale.strip().casefold().strip(".")
+    return not lowered or lowered in PROCESS_SDD_GENERIC_RATIONALES or len(lowered.split()) < 4
+
+
+def _sdd_rationale_has_specific_evidence(rationale: str) -> bool:
+    lowered = rationale.casefold()
+    return any(marker in lowered for marker in PROCESS_SDD_SPECIFIC_RATIONALE_MARKERS)
+
+
+def _safe_assumption_rationale_ok(text: str) -> bool:
+    lowered = text.casefold()
+    return all(any(marker in lowered for marker in group) for group in PROCESS_SDD_SAFE_ASSUMPTION_MARKER_GROUPS)
 
 
 def _non_empty_trace_list(value: Any) -> bool:

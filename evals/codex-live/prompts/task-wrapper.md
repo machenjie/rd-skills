@@ -67,14 +67,19 @@ final answer that includes:
   `tdd.logging_or_security_tests`. Event names must be specific operational
   events, not generic log descriptions. When `log_types` includes both `audit`
   and `diagnostic`, state separate sink and retention rationale explicitly;
-- SDD must include `design_decision_points` and `assumption_policy`. If the task
-  involves a material design choice, fill `design_decision_points` with options,
-  recommendation, blocking status, `user_choice_status`, resolution evidence,
-  and residual risk. If interactive user choice is unavailable, state why the
-  prompt/fixture already decides, why the choice is a safe assumption, or why
-  the implementation should be blocked or degraded. Do not write generic
-  "no choice needed"; no-choice rationale must cite concrete code facts,
-  repository convention, prompt constraints, or reuse evidence;
+- SDD must include `design_decision_points` and `assumption_policy`. Required,
+  blocking, material, or high-risk choices need user-visible `options`,
+  `recommended_option`, `user_choice_status`, `why_user_choice_is_needed`, and
+  `residual_risk`; required/blocking choices need at least two options, each
+  with `label`, `summary`, and `pros` or `cons`. `recommended_option` is the
+  recommendation, not user selection; unresolved required/blocking choices cannot
+  close as SDD present. Resolved material choices require `resolution_evidence`;
+  material `not_required` choices require prompt, fixture, explicit-user,
+  repository, or reuse evidence. If interactive user choice is unavailable,
+  state why the prompt/fixture already decides, why the choice is a safe
+  low-risk assumption, or why implementation should be blocked or degraded. Do
+  not write generic "no choice needed"; no-choice rationale must cite concrete
+  code facts, repository convention, prompt constraints, or reuse evidence;
 - validation commands run and their result;
 - reuse or placement evidence when relevant;
 - residual risk.

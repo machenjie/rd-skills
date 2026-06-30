@@ -829,6 +829,61 @@ def test_sdd_blocking_required_choice_cannot_be_present() -> None:
     assert any(".residual_risk must be non-empty" in error for error in errors)
 
 
+def test_sdd_required_choice_with_complete_options_only_fails_unresolved_present() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["sdd"]["design_decision_points"] = [
+        {
+            "id": "api-boundary",
+            "decision": "Choose whether to add a new public API",
+            "trigger": "The wrong answer changes the public contract.",
+            "why_user_choice_is_needed": "User or owner preference decides the public contract.",
+            "options": [
+                {
+                    "label": "A",
+                    "summary": "Reuse existing API",
+                    "pros": ["minimal compatibility risk"],
+                    "cons": ["less explicit new capability"],
+                },
+                {
+                    "label": "B",
+                    "summary": "Add new API",
+                    "pros": ["clearer dedicated contract"],
+                    "cons": ["new public contract to maintain"],
+                },
+            ],
+            "recommended_option": "A",
+            "blocking": True,
+            "user_choice_status": "required",
+            "residual_risk": "Unresolved public API shape.",
+        }
+    ]
+    errors = _run_trace_errors(trace)
+    assert not any(".options must be" in error for error in errors)
+    assert not any(".recommended_option must be" in error for error in errors)
+    assert not any(".residual_risk must be" in error for error in errors)
+    assert any("requires user choice, so SDD cannot be present" in error for error in errors)
+
+
+def test_sdd_not_required_material_choice_without_evidence_fails() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["sdd"]["design_decision_points"] = [
+        {
+            "id": "api-boundary",
+            "decision": "Choose whether a new public API is needed",
+            "trigger": "The wrong answer changes public API",
+            "blocking": False,
+            "user_choice_status": "not_required",
+            "resolution_evidence": "not required",
+        }
+    ]
+    errors = _run_trace_errors(trace)
+    assert any(
+        "user_choice_status=not_required for material choice requires prompt/fixture/user/repository/reuse evidence"
+        in error
+        for error in errors
+    )
+
+
 def test_sdd_high_risk_safe_assumption_fails() -> None:
     trace = _valid_trace()
     trace["process_facts"]["sdd"]["design_decision_points"] = [
@@ -1000,6 +1055,12 @@ class ProcessMethodologyTests(unittest.TestCase):
 
     def test_sdd_blocking_required_choice_cannot_be_present(self) -> None:
         test_sdd_blocking_required_choice_cannot_be_present()
+
+    def test_sdd_required_choice_with_complete_options_only_fails_unresolved_present(self) -> None:
+        test_sdd_required_choice_with_complete_options_only_fails_unresolved_present()
+
+    def test_sdd_not_required_material_choice_without_evidence_fails(self) -> None:
+        test_sdd_not_required_material_choice_without_evidence_fails()
 
     def test_sdd_high_risk_safe_assumption_fails(self) -> None:
         test_sdd_high_risk_safe_assumption_fails()

@@ -94,6 +94,9 @@ SDD Design Choice Gate schema anchor: include `"design_decision_points"` with `i
 SDD design choice rules:
 - `design_decision_points` is always present and is a list. It may be empty only with a concrete `no_design_choice_rationale` tied to user constraints, source evidence, repository convention, or reuse evidence.
 - `user_choice_status` is exactly one of `required`, `resolved`, `not_required`, or `assumed_with_rationale`.
+- Required, blocking, material, or high-risk choices must provide user-visible `options`; required or blocking choices need at least two. Each option needs `label` and `summary`, and required/blocking options need `pros` or `cons`.
+- `recommended_option` is the agent's recommendation, not the user's selection; resolved material choices still need `resolution_evidence`.
+- `not_required` material choices need prompt, fixture, explicit-user, repository-convention, or reuse evidence.
 - `blocking=true` with `user_choice_status=required` cannot close as implementable SDD evidence.
 - `assumed_with_rationale` is only for low-risk, local, reversible, conventional, acceptance-neutral choices.
 - If a wrong answer could alter contract, architecture, data, security, acceptance, migration, rollback, public API, or user-visible behavior, the choice must be `required` or `resolved`, not a safe assumption.

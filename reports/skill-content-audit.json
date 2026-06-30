@@ -645,7 +645,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 7,
-      "bullet_count": 131,
+      "bullet_count": 134,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 98,
@@ -656,10 +656,10 @@
       "has_shared_optimality": false,
       "heading_count": 22,
       "kind": "professional-skill",
-      "largest_section_lines": 39,
+      "largest_section_lines": 42,
       "largest_section_title": "SDD - System / Software / Structure Design Discipline",
       "largest_table_rows": 5,
-      "line_count": 245,
+      "line_count": 248,
       "name": "development-process-orchestrator",
       "optimality_section_length": 0,
       "output_contract_length": 18,
@@ -676,7 +676,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 1,
       "used_by_count": 0,
-      "word_count": 2938
+      "word_count": 2998
     },
     {
       "anti_example_section_length": 10,

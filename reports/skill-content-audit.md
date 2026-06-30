@@ -83,8 +83,8 @@ Suggested-action distribution:
 | --- | --- | --- | --- | --- |
 | `ai-code-review-refactor` | professional-skill | 250 | 0 | - |
 | `frontend-change-builder` | professional-skill | 249 | 0 | - |
+| `development-process-orchestrator` | professional-skill | 248 | 0 | - |
 | `quality-test-gate` | professional-skill | 248 | 0 | - |
-| `development-process-orchestrator` | professional-skill | 245 | 0 | - |
 | `task-dag-planner` | professional-skill | 244 | 0 | - |
 | `security-privacy-gate` | professional-skill | 243 | 0 | - |
 | `change-forge-router` | professional-skill | 242 | 0 | - |
@@ -104,8 +104,8 @@ No frontmatter description risks detected.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `ai-code-review-refactor` | 250 | 4524 | 100 | 88 | 100 | 0 | KEEP_AS_IS | - | low |
 | `frontend-change-builder` | 249 | 4642 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `development-process-orchestrator` | 248 | 2998 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `quality-test-gate` | 248 | 4974 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
-| `development-process-orchestrator` | 245 | 2938 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `task-dag-planner` | 244 | 4091 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `security-privacy-gate` | 243 | 4242 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-forge-router` | 242 | 4839 | 100 | 96 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -291,14 +291,14 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 
 | Files | Excerpt |
 | --- | --- |
-| 18 | do not load every reference by default. treat references as targeted support selected by t |
 | 18 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
+| 18 | do not load every reference by default. treat references as targeted support selected by t |
 | 17 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
-| 17 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 17 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 17 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 11 | these triggers are hidden-risk escalators, not ordinary checklist items. |
 | 7 | **block/pass decision** with required conditions for approval. |
 | 6 | non-trivial direct use still requires `repository-context-map` before planning when affect |
