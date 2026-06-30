@@ -29,7 +29,10 @@ final answer that includes:
       "public_api": ["public function, endpoint, command, or UI behavior"],
       "error_contract": ["expected error or failure behavior"],
       "failure_modes": ["failure mode covered"],
-      "logging_decision": {"needed": false, "rationale": "why logs are or are not required"}
+      "logging_decision": {"needed": false, "rationale": "why logs are or are not required"},
+      "design_decision_points": [],
+      "no_design_choice_rationale": "specific code fact, repository convention, prompt constraint, or reuse evidence showing no material choice exists",
+      "assumption_policy": "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
     },
     "tdd": {
       "acceptance_to_tests": {"observable acceptance criterion": ["exact command or test"]},
@@ -64,6 +67,14 @@ final answer that includes:
   `tdd.logging_or_security_tests`. Event names must be specific operational
   events, not generic log descriptions. When `log_types` includes both `audit`
   and `diagnostic`, state separate sink and retention rationale explicitly;
+- SDD must include `design_decision_points` and `assumption_policy`. If the task
+  involves a material design choice, fill `design_decision_points` with options,
+  recommendation, blocking status, `user_choice_status`, resolution evidence,
+  and residual risk. If interactive user choice is unavailable, state why the
+  prompt/fixture already decides, why the choice is a safe assumption, or why
+  the implementation should be blocked or degraded. Do not write generic
+  "no choice needed"; no-choice rationale must cite concrete code facts,
+  repository convention, prompt constraints, or reuse evidence;
 - validation commands run and their result;
 - reuse or placement evidence when relevant;
 - residual risk.

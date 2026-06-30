@@ -13,8 +13,12 @@ object, service, or module. Use a compact execution flow:
   owner code, and where side effects are allowed.
 - SDD (System / Software / Structure Design Discipline): before editing, name
   modules/files, public API, data flow, error contract, failure modes, logging
-  decision, security/performance/concurrency constraints, compatibility, and
-  rollback or recovery implications.
+  decision, material design choices, security/performance/concurrency
+  constraints, compatibility, and rollback or recovery implications. If a wrong
+  design choice would change architecture, public API, data, security,
+  migration, rollback, acceptance, or user-visible behavior, stop and ask with
+  options; proceed only under safe assumptions that are local, reversible,
+  conventional, and acceptance-neutral.
 - TDD (Test-Driven Development Discipline): map PDD acceptance criteria, DDD
   invariants, SDD public API, failure modes, and any logging/security decisions
   to tests or validation commands. Do not claim traceability with booleans when

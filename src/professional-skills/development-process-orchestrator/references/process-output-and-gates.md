@@ -12,7 +12,7 @@ Return a compact process orchestration result with:
 - **Phase status**: `present`, `inferred`, `degraded`, `missing`, or `not_applicable` for PDD, DDD, SDD, and TDD.
 - **PDD facts**: problem, impact, observable acceptance, constraints, non-goals, risk surfaces, validation signal, and behaviors preserved.
 - **DDD facts**: domain terms, entities/value objects/services/adapters when relevant, ownership decision, invariants, side-effect boundaries, and existing code owner.
-- **SDD facts**: modules/files, public API, data flow, error contract, failure modes, logging decision, metrics/traces/alerts, compatibility, rollback, recovery, and placement rationale.
+- **SDD facts**: modules/files, public API, data flow, error contract, failure modes, logging decision, design decision points, no-choice rationale when empty, assumption policy, metrics/traces/alerts, compatibility, rollback, recovery, and placement rationale.
 - **TDD mappings**: acceptance-to-tests, invariant-to-tests-or-code, public-API-to-tests, failure-mode tests, logging/security tests, validation commands, and red/green/refactor trace when available.
 - **Traceability matrix**: PDD fact -> DDD owner/invariant -> SDD file/API/logging decision -> TDD command or residual risk.
 - **Generic-fact rejection**: process facts that were rejected as template, metadata-only, non-case-specific, private-helper-only, or boolean-without-mapping.
@@ -32,15 +32,17 @@ Return a compact process orchestration result with:
 5. DDD invariants map to tests or code constraints.
 6. SDD public API maps to tests or importable/public behavior evidence.
 7. SDD failure modes map to failure tests or accepted residual risk.
-8. Logging decisions map to log/security tests or explicit no-log rationale.
-9. Generic process facts, booleans, and placeholder mappings are rejected.
-10. Registered, dry-run, promoted, and actual live-run coverage are separated.
-11. Validation evidence is fresh against the final trace and report artifacts.
-12. Residual risk names owner and next gate.
+8. SDD design decision points are resolved, blocked before implementation, not required with concrete rationale, or safe-assumed only when local, reversible, conventional, and acceptance-neutral.
+9. Logging decisions map to log/security tests or explicit no-log rationale.
+10. Generic process facts, booleans, and placeholder mappings are rejected.
+11. Registered, dry-run, promoted, and actual live-run coverage are separated.
+12. Validation evidence is fresh against the final trace and report artifacts.
+13. Residual risk names owner and next gate.
 
 ## Handoff
 
 - **quality-test-gate**: PDD acceptance, DDD invariants, SDD public API, failure modes, or validation commands do not map to tests.
+- **development-process-orchestrator**: SDD design choices are missing, generic, unresolved while blocking, or unsafe assumptions.
 - **logging-design-gate**: SDD logging is present but type, fields, redaction, correlation, cardinality, or tests are incomplete.
 - **ai-code-review-refactor**: generated or agent-assisted traces may contain generic facts, hallucinated API names, or synthetic evidence.
 - **change-documentation-gate**: benchmark summaries, release notes, or reports overstate actual run coverage.

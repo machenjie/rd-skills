@@ -940,7 +940,11 @@ def _with_process_field_sources(trace: dict[str, object], source: str = "final.m
         payload["_field_sources"] = {
             str(field): source
             for field, value in payload.items()
-            if not str(field).startswith("_") and _trace_value_present(value)
+            if not str(field).startswith("_")
+            and (
+                _trace_value_present(value)
+                or (phase == "sdd" and field == "design_decision_points" and isinstance(value, list))
+            )
         }
         payload.setdefault("_inferred_fields", [])
     return trace
@@ -2975,6 +2979,14 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
                             "cardinality_controls": ["policy category instead of raw URL"],
                             "rationale": "Security denial diagnostics must not leak query secrets.",
                         },
+                        "design_decision_points": [],
+                        "no_design_choice_rationale": (
+                            "Prompt source and repository convention require the existing URL validation boundary; "
+                            "no material user preference remains."
+                        ),
+                        "assumption_policy": (
+                            "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
+                        ),
                         "metrics_traces_alerts": ["grading-result.json"],
                         "performance_or_concurrency_constraints": ["security"],
                         "compatibility_and_migration": ["preserve harness"],
@@ -3179,6 +3191,9 @@ SDD:
       - trace_id
     cardinality_controls:
       - policy category instead of raw URL
+  design_decision_points:
+  no_design_choice_rationale: Prompt source and repository convention require the existing URL validation boundary; no material user preference remains.
+  assumption_policy: block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior
 TDD:
   acceptance_to_tests: deny metadata URL -> benchmark command
   invariant_to_tests_or_code: unsafe URL is never fetched -> benchmark command
@@ -3240,6 +3255,14 @@ Residual Risk:
                                     "needed": False,
                                     "rationale": "public behavior tests cover denial",
                                 },
+                                "design_decision_points": [],
+                                "no_design_choice_rationale": (
+                                    "Prompt source and repository convention require the existing URL validation boundary; "
+                                    "no material user preference remains."
+                                ),
+                                "assumption_policy": (
+                                    "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
+                                ),
                             },
                             "tdd": {
                                 "acceptance_to_tests": {"deny metadata URL": ["benchmark command"]},

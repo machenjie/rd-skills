@@ -94,9 +94,10 @@ SDD defines how the change will be implemented. It answers:
 3. Data flow.
 4. Error contract and failure modes.
 5. Logging decision.
-6. Metrics, traces, and alerts.
-7. Concurrency, performance, and security constraints.
-8. Compatibility, migration, rollback, and recovery.
+6. Design decision points that require user choice, are already resolved, are not required, or are safe assumptions.
+7. Metrics, traces, and alerts.
+8. Concurrency, performance, and security constraints.
+9. Compatibility, migration, rollback, and recovery.
 
 Output schema:
 
@@ -121,12 +122,44 @@ Output schema:
     "tests_or_validation": [],
     "rationale": ""
   },
+  "design_decision_points": [
+    {
+      "id": "sdd-choice-1",
+      "decision": "What design decision must be made?",
+      "trigger": "Why this decision exists",
+      "why_user_choice_is_needed": "Why the agent must not silently choose",
+      "options": [
+        {
+          "label": "A",
+          "summary": "Option summary",
+          "pros": ["specific benefit"],
+          "cons": ["specific cost or risk"],
+          "recommended_when": "When this option is appropriate"
+        }
+      ],
+      "recommended_option": "A",
+      "safe_default_if_user_unavailable": "A or none",
+      "blocking": true,
+      "user_choice_status": "required | resolved | not_required | assumed_with_rationale",
+      "resolution_evidence": "user-selected option, explicit prior instruction, repository convention, or not resolved",
+      "residual_risk": "what remains risky if any"
+    }
+  ],
+  "no_design_choice_rationale": "why no material choice exists",
+  "assumption_policy": "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior",
   "metrics_traces_alerts": [],
   "performance_or_concurrency_constraints": [],
   "compatibility_and_migration": [],
   "rollback_or_recovery": []
 }
 ```
+
+SDD Design Choice Gate rules:
+- Ask the user when the answer can change architecture, public API, data model, security, permissions, migration, rollback, acceptance, long-term maintenance shape, or user-visible behavior.
+- Typical blocking choices include new public APIs or exports, new modules/directories/services/shared packages, reuse versus new boundary, function versus class/object hierarchy, inheritance versus composition, cache/queue/worker/plugin/registry choices, config switches, migrations, permission/security/privacy changes, irreversible operations, and vague "optimize/enhance/refactor/professionalize" requests where cost/benefit depends on user preference.
+- Do not ask for mechanical fixes, typo/format changes, local reversible choices, repository-conventional placement, code-fact-determined minimum fixes, or benchmark cases where the prompt/fixture already decides the option.
+- Empty `design_decision_points` requires a concrete `no_design_choice_rationale`; generic "no choice needed" is not evidence.
+- `assumed_with_rationale` requires a safe default plus local, reversible, conventional, and acceptance-neutral rationale, and must not be used for security, data, API, migration, rollback, auth, payment, irreversible, or permission choices.
 
 SDD logging decision rules:
 - Retry, fallback, and degradation paths must distinguish retryable, intermediate, and final failure.
@@ -143,10 +176,13 @@ SDD pass criteria:
 - File placement matches DDD ownership.
 - Failure modes have error categories.
 - Logging decision is explicit or includes a no-log rationale.
+- Design decision points are resolved, blocked for user choice, not required with concrete rationale, or safe assumptions under the assumption policy.
 - Security, performance, and concurrency constraints are not ignored.
 
 SDD anti-patterns:
 - Adding a new module without reuse and placement rationale.
+- Treating user-owned architecture, public API, data, security, migration, rollback, acceptance, or user-visible choices as agent defaults.
+- Writing "no choice needed" without specific source, constraint, repository convention, or reuse evidence.
 - Exposing private helpers for tests.
 - Hiding adapter side effects inside mappers or DTOs.
 - Saying "structured logging" without type, level, fields, redaction, and tests.

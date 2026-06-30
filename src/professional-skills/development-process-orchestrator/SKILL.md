@@ -25,7 +25,8 @@ Keep code changes traceable from problem definition to domain ownership, system 
 ## Non-Negotiable Rules
 - **PDD before implementation**: identify the problem, affected users or systems, acceptance criteria, constraints, non-goals, risk surfaces, and validation signal before coding.
 - **DDD before placement**: identify domain terms, entity or value-object ownership, invariants, side-effect boundaries, and existing code owner before moving behavior.
-- **SDD before edits**: name modules, files, public API, data flow, error contract, logging decision, metrics/traces/alerts, performance, security, compatibility, migration, and rollback implications.
+- **SDD before edits**: name modules, files, public API, data flow, error contract, logging decision, design decision points, metrics/traces/alerts, performance, security, compatibility, migration, and rollback implications.
+- **Design Choice Gate before implementation**: when a wrong answer could change architecture, public API, data, security, migration, rollback, acceptance, or user-visible behavior, stop and present user-facing options instead of silently choosing. Low-risk, local, reversible choices may proceed only as a documented safe assumption.
 - **TDD closes the loop**: map PDD acceptance to tests, DDD invariants to tests or code constraints, SDD public API to tests, failure modes to tests, and logging/security decisions to tests or validation commands.
 - **Evidence cannot be synthesized as complete**: case metadata may infer expected phases, but `present` requires parsed final trace, hook telemetry, explicit trace artifact, or grading evidence with specific content.
 - **Generic process facts are insufficient**: template-only PDD/DDD/SDD/TDD language must fail unless it maps to case-specific tests, code constraints, or an explicit no-log rationale.
@@ -88,6 +89,15 @@ SDD defines how the change will be implemented and operated.
 
 Schema anchor: `"logging_decision"` plus modules, files, public API, data flow, error contract, failure modes, observability, constraints, migration, and rollback.
 
+SDD Design Choice Gate schema anchor: include `"design_decision_points"` with `id`, `decision`, `trigger`, `options`, `recommended_option`, `blocking`, `user_choice_status`, `resolution_evidence`, and `residual_risk`; include `no_design_choice_rationale` when the list is empty; set `"assumption_policy"` to `block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior`. Load `references/process-phase-contracts.md` for the full JSON schema.
+
+SDD design choice rules:
+- `design_decision_points` is always present and is a list. It may be empty only with a concrete `no_design_choice_rationale` tied to user constraints, source evidence, repository convention, or reuse evidence.
+- `user_choice_status` is exactly one of `required`, `resolved`, `not_required`, or `assumed_with_rationale`.
+- `blocking=true` with `user_choice_status=required` cannot close as implementable SDD evidence.
+- `assumed_with_rationale` is only for low-risk, local, reversible, conventional, acceptance-neutral choices.
+- If a wrong answer could alter contract, architecture, data, security, acceptance, migration, rollback, public API, or user-visible behavior, the choice must be `required` or `resolved`, not a safe assumption.
+
 SDD logging decision rules:
 - Retry, fallback, and degradation paths distinguish retryable, intermediate, and final failure.
 - Security boundaries log denial category and policy, never raw secret-bearing input.
@@ -102,10 +112,13 @@ SDD pass criteria:
 - File placement matches DDD ownership.
 - Failure modes have error categories.
 - Logging is explicit or has a no-log rationale.
+- Material design choices are resolved, blocked for user selection, or justified as safe assumptions.
 - Security, performance, and concurrency constraints are addressed.
 
 SDD anti-patterns:
 - Adding a new module without reuse and placement rationale.
+- Silently choosing between material design options that require user or owner preference.
+- Using generic "no choice needed" rationale instead of source, constraint, repository-convention, or reuse evidence.
 - Exposing private helpers for tests.
 - Hiding adapter side effects inside mappers or DTOs.
 - Saying "structured logging" without type, level, fields, redaction, and tests.
@@ -198,7 +211,7 @@ Booleans are not proof. The mappings inside `process_facts.tdd` are the proof.
 - **Phase dependency chain:** show which PDD fact feeds which DDD owner/invariant, which SDD file/API/logging decision, and which TDD validator.
 - **PDD fields required:** include problem, impact, acceptance criteria, constraints, non-goals, risk surfaces, and validation signal.
 - **DDD fields required:** include domain terms, ownership decision, invariants, and side-effect boundaries.
-- **SDD fields required:** include modules, files, public API, data flow, error contract, failure modes, and logging decision.
+- **SDD fields required:** include modules, files, public API, data flow, error contract, failure modes, logging decision, design decision points, no-choice rationale when empty, and assumption policy.
 - **TDD fields required:** include acceptance, invariant, public API, failure-mode, logging/security, and validation command mappings.
 - **Validation commands:** name command, exit code or not-run status, freshness, what evidence proves, and what it does not prove.
 - **Coverage run status:** separate registered cases, dry-run cases, promoted cases, and actual live-run coverage.
@@ -226,6 +239,7 @@ Close process orchestration only when the trace answers these evidence questions
 - SDD public API maps to tests.
 - SDD error contract and failure modes map to failure tests.
 - SDD logging decision maps to log/security tests or a no-log rationale.
+- SDD design decision points are resolved, blocked, not required with concrete rationale, or assumed only under the safe-assumption policy.
 
 ## Handoff
 Report the compact process trace, validation commands and results, residual risk, inferred versus present evidence, any missing mappings, and whether Level 1 coverage is registered only or actually run.

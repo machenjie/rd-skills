@@ -31,6 +31,7 @@ Use during requirement intake before design, task planning, code changes, migrat
 - **Stakeholder statements are not verified facts.** Treat them as claims until checked against current source, current docs, production-like data, telemetry, generated contracts, or the relevant authority.
 - **Repository graph, project memory, and prior execution are evidence leads, not truth.** Accept or reject them against current files, routes, schemas, tests, reports, and known owners.
 - **Do not encode answers to blocking questions in implementation choices.** Defaults for authorization, data retention, billing, irreversible actions, or compliance require owner approval.
+- **Clarification can reopen during SDD.** If system design exposes material ambiguity about architecture, public API, data, security, migration, rollback, acceptance, or user-visible behavior, route back to clarification or the SDD Design Choice Gate. Design choice authority belongs to the user or owner, not the agent.
 - **The clarification record must state what may proceed now, what must wait, and why.** "Proceed with caution" is not enough.
 - **Every owner response needs decision shape, owner, due date or trigger, and downstream gate.** A question without an owner is still unresolved.
 

@@ -58,6 +58,95 @@ GENERIC_DDD_MARKERS = (
     "side effects remain outside pure domain",
 )
 GENERIC_PUBLIC_API_MARKERS = ("candidate public api", "starter repository public api")
+SDD_ASSUMPTION_POLICY_MARKER = "block_when_wrong_answer_changes"
+SDD_CHOICE_STATUSES = {"required", "resolved", "not_required", "assumed_with_rationale"}
+SDD_NO_CHOICE_RATIONALE_FIELDS = (
+    "no_design_choice_rationale",
+    "no_material_design_choice_rationale",
+    "design_choice_rationale",
+)
+SDD_SPECIFIC_RATIONALE_MARKERS = (
+    "source",
+    "constraint",
+    "repository convention",
+    "repo convention",
+    "existing convention",
+    "existing pattern",
+    "reuse evidence",
+    "prompt",
+    "fixture",
+    "explicit user",
+    "user specified",
+)
+SDD_GENERIC_RATIONALES = {
+    "no choice needed",
+    "no decision needed",
+    "not needed",
+    "not required",
+    "none",
+    "n/a",
+    "na",
+}
+SDD_MATERIAL_CHOICE_KEYWORDS = (
+    "new module",
+    "new directory",
+    "new public api",
+    "public api",
+    "public export",
+    "shared utility",
+    "common/shared",
+    "abstraction",
+    "interface",
+    "protocol",
+    "inheritance",
+    "composition",
+    "strategy",
+    "factory",
+    "plugin",
+    "adapter",
+    "wrapper",
+    "cache",
+    "queue",
+    "async",
+    "worker",
+    "migration",
+    "rollback",
+    "config switch",
+    "feature flag",
+    "external dependency",
+    "service boundary",
+    "data ownership",
+    "permission",
+    "auth",
+    "security",
+    "tenant",
+    "payment",
+    "irreversible",
+)
+SDD_HIGH_RISK_SAFE_ASSUMPTION_KEYWORDS = (
+    "public api",
+    "public export",
+    "contract",
+    "architecture",
+    "data",
+    "data model",
+    "schema",
+    "security",
+    "permission",
+    "auth",
+    "tenant",
+    "migration",
+    "rollback",
+    "irreversible",
+    "payment",
+    "privacy",
+)
+SDD_SAFE_ASSUMPTION_MARKER_GROUPS = (
+    ("local", "same file", "single file", "module-local", "within existing"),
+    ("reversible", "can be reverted", "easy to revert", "revertible"),
+    ("conventional", "repository convention", "existing convention", "existing pattern"),
+    ("acceptance-neutral", "acceptance neutral", "does not change acceptance", "no acceptance change"),
+)
 LOGGING_VALIDATOR_PATH = Path(__file__).with_name("validate-logging-design.py")
 _LOGGING_VALIDATOR: Any = None
 
@@ -105,7 +194,7 @@ def _trace_errors(path: Path, run_dir: Path, trace: dict[str, Any], *, require_p
     tdd = facts.get("tdd")
     errors.extend(_pdd_errors(label, pdd))
     errors.extend(_ddd_errors(label, ddd))
-    errors.extend(_sdd_errors(label, sdd))
+    errors.extend(_sdd_errors(label, sdd, pdd=pdd, ddd=ddd, phase_status=phase_status))
     errors.extend(_tdd_errors(label, tdd, trace))
     if isinstance(pdd, dict) and isinstance(ddd, dict) and isinstance(sdd, dict) and isinstance(tdd, dict):
         errors.extend(_mapping_errors(label, trace, pdd, ddd, sdd, tdd))
@@ -268,7 +357,7 @@ def _ddd_errors(label: str, ddd: Any) -> list[str]:
     return errors
 
 
-def _sdd_errors(label: str, sdd: Any) -> list[str]:
+def _sdd_errors(label: str, sdd: Any, *, pdd: Any = None, ddd: Any = None, phase_status: Any = None) -> list[str]:
     if not isinstance(sdd, dict):
         return [f"{label}: SDD facts are missing"]
     errors = _non_empty_list_errors(
@@ -280,7 +369,165 @@ def _sdd_errors(label: str, sdd: Any) -> list[str]:
     logging_decision = sdd.get("logging_decision")
     if not isinstance(logging_decision, dict):
         errors.append(f"{label}: SDD.logging_decision must be an object")
+    errors.extend(_sdd_design_choice_errors(label, sdd, pdd=pdd, ddd=ddd, phase_status=phase_status))
     return errors
+
+
+def _sdd_design_choice_errors(
+    label: str,
+    sdd: dict[str, Any],
+    *,
+    pdd: Any,
+    ddd: Any,
+    phase_status: Any,
+) -> list[str]:
+    errors: list[str] = []
+    choices = sdd.get("design_decision_points")
+    if not isinstance(choices, list):
+        errors.append(f"{label}: SDD.design_decision_points must be a list")
+        choices = []
+    policy = str(sdd.get("assumption_policy", "")).strip()
+    if not policy:
+        errors.append(f"{label}: SDD.assumption_policy must be a non-empty string")
+    elif SDD_ASSUMPTION_POLICY_MARKER not in policy:
+        errors.append(f"{label}: SDD.assumption_policy must include {SDD_ASSUMPTION_POLICY_MARKER!r}")
+
+    sdd_is_present = isinstance(phase_status, dict) and phase_status.get("sdd") == "present"
+    if sdd_is_present:
+        errors.extend(_sdd_choice_source_errors(label, sdd, choices))
+
+    if not choices:
+        rationale = _sdd_no_choice_rationale(sdd)
+        if not rationale:
+            errors.append(f"{label}: SDD.design_decision_points empty requires no_design_choice_rationale")
+        elif _is_generic_sdd_rationale(rationale):
+            errors.append(f"{label}: SDD.no_design_choice_rationale is generic and must cite concrete evidence")
+        material_terms = _sdd_material_choice_terms(pdd, ddd, sdd)
+        if material_terms and not _sdd_rationale_has_specific_evidence(rationale):
+            errors.append(
+                f"{label}: SDD has material design trigger(s) {', '.join(material_terms[:5])} but no-choice rationale lacks source/constraint/repository convention/reuse evidence"
+            )
+        return errors
+
+    for index, point in enumerate(choices, start=1):
+        if not isinstance(point, dict):
+            errors.append(f"{label}: SDD.design_decision_points[{index}] must be an object")
+            continue
+        errors.extend(_sdd_decision_point_errors(label, point, index=index, sdd_is_present=sdd_is_present))
+    return errors
+
+
+def _sdd_choice_source_errors(label: str, sdd: dict[str, Any], choices: list[Any]) -> list[str]:
+    errors: list[str] = []
+    sources = sdd.get("_field_sources") if isinstance(sdd.get("_field_sources"), dict) else {}
+    for field in ("design_decision_points", "assumption_policy"):
+        source = str(sources.get(field) or "")
+        if _source_is_fallback(source):
+            errors.append(f"{label}: SDD is present but {field} comes from fallback source {source!r}")
+        elif not source:
+            errors.append(f"{label}: SDD is present but {field} has no field source")
+    if not choices:
+        rationale_field = _sdd_no_choice_rationale_field(sdd)
+        source = str(sources.get(rationale_field) or "") if rationale_field else ""
+        if rationale_field and _source_is_fallback(source):
+            errors.append(f"{label}: SDD is present but {rationale_field} comes from fallback source {source!r}")
+        elif rationale_field and not source:
+            errors.append(f"{label}: SDD is present but {rationale_field} has no field source")
+    return errors
+
+
+def _sdd_decision_point_errors(label: str, point: dict[str, Any], *, index: int, sdd_is_present: bool) -> list[str]:
+    errors: list[str] = []
+    prefix = f"SDD.design_decision_points[{index}]"
+    for field in ("id", "decision", "trigger"):
+        if not str(point.get(field, "")).strip():
+            errors.append(f"{label}: {prefix}.{field} must be non-empty")
+    status = str(point.get("user_choice_status", "")).strip()
+    if status not in SDD_CHOICE_STATUSES:
+        errors.append(f"{label}: {prefix}.user_choice_status must be one of {sorted(SDD_CHOICE_STATUSES)}")
+    blocking = point.get("blocking")
+    if not isinstance(blocking, bool):
+        errors.append(f"{label}: {prefix}.blocking must be true or false")
+    if blocking is True and status == "required" and sdd_is_present:
+        errors.append(f"{label}: {prefix} is blocking and requires user choice, so SDD cannot be present")
+    if status == "resolved":
+        evidence = str(point.get("resolution_evidence", "")).strip()
+        if not evidence or evidence.casefold() in {"not resolved", "none", "n/a", "na"}:
+            errors.append(f"{label}: {prefix}.user_choice_status=resolved requires resolution_evidence")
+    if status == "not_required":
+        rationale = _decision_point_rationale(point)
+        if _is_generic_sdd_rationale(rationale):
+            errors.append(f"{label}: {prefix}.user_choice_status=not_required requires concrete rationale")
+    if status == "assumed_with_rationale":
+        if not str(point.get("safe_default_if_user_unavailable", "")).strip():
+            errors.append(f"{label}: {prefix}.assumed_with_rationale requires safe_default_if_user_unavailable")
+        if not str(point.get("residual_risk", "")).strip():
+            errors.append(f"{label}: {prefix}.assumed_with_rationale requires residual_risk")
+        text = _decision_point_text(point)
+        if not _safe_assumption_rationale_ok(text):
+            errors.append(
+                f"{label}: {prefix}.assumed_with_rationale must state local, reversible, conventional, and acceptance-neutral rationale"
+            )
+        risk_terms = _keyword_hits(text, SDD_HIGH_RISK_SAFE_ASSUMPTION_KEYWORDS)
+        if risk_terms:
+            errors.append(
+                f"{label}: {prefix}.assumed_with_rationale cannot cover high-risk material choice(s): {', '.join(risk_terms[:5])}"
+            )
+    return errors
+
+
+def _sdd_no_choice_rationale(sdd: dict[str, Any]) -> str:
+    field = _sdd_no_choice_rationale_field(sdd)
+    return str(sdd.get(field, "")).strip() if field else ""
+
+
+def _sdd_no_choice_rationale_field(sdd: dict[str, Any]) -> str | None:
+    for field in SDD_NO_CHOICE_RATIONALE_FIELDS:
+        if str(sdd.get(field, "")).strip():
+            return field
+    return None
+
+
+def _decision_point_rationale(point: dict[str, Any]) -> str:
+    for field in ("resolution_evidence", "why_user_choice_is_needed", "residual_risk", "trigger"):
+        value = str(point.get(field, "")).strip()
+        if value:
+            return value
+    return ""
+
+
+def _decision_point_text(point: dict[str, Any]) -> str:
+    return json.dumps(point, sort_keys=True).casefold()
+
+
+def _sdd_material_choice_terms(pdd: Any, ddd: Any, sdd: dict[str, Any]) -> list[str]:
+    sdd_scope = {
+        key: value
+        for key, value in sdd.items()
+        if not str(key).startswith("_")
+        and key not in {"design_decision_points", "assumption_policy", *SDD_NO_CHOICE_RATIONALE_FIELDS}
+    }
+    return _keyword_hits(json.dumps({"pdd": pdd, "ddd": ddd, "sdd": sdd_scope}, sort_keys=True).casefold(), SDD_MATERIAL_CHOICE_KEYWORDS)
+
+
+def _keyword_hits(text: str, keywords: tuple[str, ...]) -> list[str]:
+    lowered = text.casefold()
+    return [keyword for keyword in keywords if keyword in lowered]
+
+
+def _is_generic_sdd_rationale(rationale: str) -> bool:
+    lowered = rationale.strip().casefold().strip(".")
+    return not lowered or lowered in SDD_GENERIC_RATIONALES or len(lowered.split()) < 4
+
+
+def _sdd_rationale_has_specific_evidence(rationale: str) -> bool:
+    lowered = rationale.casefold()
+    return any(marker in lowered for marker in SDD_SPECIFIC_RATIONALE_MARKERS)
+
+
+def _safe_assumption_rationale_ok(text: str) -> bool:
+    lowered = text.casefold()
+    return all(any(marker in lowered for marker in group) for group in SDD_SAFE_ASSUMPTION_MARKER_GROUPS)
 
 
 def _tdd_errors(label: str, tdd: Any, trace: dict[str, Any]) -> list[str]:

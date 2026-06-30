@@ -3,7 +3,7 @@
 - Select mode: compact trace, process-evidence repair, logging-sensitive trace, or coverage/reporting audit.
 - State PDD problem, impact, acceptance, constraints, non-goals, risk surfaces, and validation signal.
 - State DDD terms, ownership, invariants, side-effect boundaries, and existing code owner.
-- State SDD modules/files, public API, data flow, error contract, failure modes, logging decision, observability, compatibility, and rollback/recovery.
+- State SDD modules/files, public API, data flow, error contract, failure modes, logging decision, design decision points, no-choice rationale when empty, assumption policy, observability, compatibility, and rollback/recovery.
 - Map TDD acceptance, invariants, public API, failure modes, logging/security, and validation commands.
 - Mark each phase `present`, `inferred`, `degraded`, `missing`, or `not_applicable` with an evidence source.
 - Keep inferred case metadata separate from present trace evidence.

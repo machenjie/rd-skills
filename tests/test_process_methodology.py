@@ -16,6 +16,14 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 PROCESS_SKILL = ROOT / "src" / "professional-skills" / "development-process-orchestrator" / "SKILL.md"
+PROCESS_PHASE_CONTRACTS = (
+    ROOT
+    / "src"
+    / "professional-skills"
+    / "development-process-orchestrator"
+    / "references"
+    / "process-phase-contracts.md"
+)
 LOGGING_SKILL = ROOT / "src" / "professional-skills" / "logging-design-gate" / "SKILL.md"
 COMMAND = "python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"
 CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
@@ -56,7 +64,8 @@ def _with_field_sources(trace: dict[str, Any], source: str = "final.md:compact-p
         payload["_field_sources"] = {
             field: source
             for field, value in payload.items()
-            if not str(field).startswith("_") and _has_trace_value(value)
+            if not str(field).startswith("_")
+            and (_has_trace_value(value) or (phase == "sdd" and field == "design_decision_points" and isinstance(value, list)))
         }
         payload.setdefault("_inferred_fields", [])
     return trace
@@ -64,6 +73,7 @@ def _with_field_sources(trace: dict[str, Any], source: str = "final.md:compact-p
 
 def test_process_skill_has_professional_pdd_ddd_sdd_tdd_methodology() -> None:
     text = _text(PROCESS_SKILL)
+    contract_text = _text(PROCESS_PHASE_CONTRACTS)
     for term in (
         "PDD - Problem / Product / Purpose Definition Discipline",
         '"problem": "one sentence"',
@@ -75,6 +85,11 @@ def test_process_skill_has_professional_pdd_ddd_sdd_tdd_methodology() -> None:
         "DDD pass criteria",
         "SDD - System / Software / Structure Design Discipline",
         '"logging_decision"',
+        '"design_decision_points"',
+        "`user_choice_status`",
+        '"assumption_policy"',
+        "block_when_wrong_answer_changes",
+        "safe assumption",
         "SDD logging decision rules",
         "SDD pass criteria",
         "TDD - Test-Driven Development Discipline",
@@ -83,6 +98,14 @@ def test_process_skill_has_professional_pdd_ddd_sdd_tdd_methodology() -> None:
         "TDD anti-patterns",
     ):
         assert term in text
+    for term in (
+        "design_decision_points",
+        "user_choice_status",
+        "assumption_policy",
+        "block_when_wrong_answer_changes",
+        "safe assumption",
+    ):
+        assert term in contract_text
 
 
 def test_stage_ownership_and_prompts_include_professional_process_method() -> None:
@@ -102,6 +125,9 @@ def test_stage_ownership_and_prompts_include_professional_process_method() -> No
         '"acceptance_criteria"',
         '"ownership_decision"',
         '"logging_decision"',
+        '"design_decision_points"',
+        "`user_choice_status`",
+        '"assumption_policy"',
         '"validation_commands"',
         "placeholders such as",
         "strict traceability is required",
@@ -114,6 +140,8 @@ def test_stage_ownership_and_prompts_include_professional_process_method() -> No
         "Problem / Product / Purpose Definition Discipline",
         "Domain-Driven Design Discipline",
         "System / Software / Structure Design Discipline",
+        "material design choices",
+        "safe assumption",
         "Test-Driven Development Discipline",
     ):
         assert phrase in system
@@ -219,6 +247,14 @@ def _valid_trace(*, logging_needed: bool = True) -> dict[str, Any]:
                 "error_contract": error_contract,
                 "failure_modes": failure_modes,
                 "logging_decision": logging_decision,
+                "design_decision_points": [],
+                "no_design_choice_rationale": (
+                    "Prompt source and repository convention require the existing URL validation boundary; "
+                    "no material user preference remains."
+                ),
+                "assumption_policy": (
+                    "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
+                ),
                 "metrics_traces_alerts": ["grading-result.json"],
                 "performance_or_concurrency_constraints": ["security"],
                 "compatibility_and_migration": ["preserve harness"],
@@ -299,7 +335,10 @@ def test_final_json_process_trace_populates_process_facts_and_present_status() -
       "public_api": ["URL validation public entrypoint"],
       "error_contract": ["deny unsafe URLs with stable error"],
       "failure_modes": ["metadata URL denial"],
-      "logging_decision": {"needed": false, "rationale": "public tests cover denial"}
+      "logging_decision": {"needed": false, "rationale": "public tests cover denial"},
+      "design_decision_points": [],
+      "no_design_choice_rationale": "Prompt source and repository convention require the existing URL validation boundary; no material user preference remains.",
+      "assumption_policy": "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
     },
     "tdd": {
       "acceptance_to_tests": {"deny metadata URL": ["python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"]},
@@ -327,6 +366,12 @@ def test_final_json_process_trace_populates_process_facts_and_present_status() -
         for field in runner._required_process_fields(phase):
             assert trace["process_facts"][phase]["_field_sources"][field] == "final.md:process-trace-json"
             assert field not in trace["process_facts"][phase].get("_inferred_fields", [])
+    assert trace["process_facts"]["sdd"]["design_decision_points"] == []
+    assert (
+        trace["process_facts"]["sdd"]["assumption_policy"]
+        == "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
+    )
+    assert trace["process_facts"]["sdd"]["_field_sources"]["design_decision_points"] == "final.md:process-trace-json"
     assert _run_trace_errors(trace) == []
 
 
@@ -355,6 +400,14 @@ SDD:
   error_contract: deny unsafe URLs with stable error
   failure_modes: metadata URL denial
   logging_decision: public tests cover denial
+  design_decision_points:
+    - id: url-boundary
+      decision: Keep existing URL validation boundary
+      trigger: Prompt source and repository convention select the existing boundary, so no material user choice remains
+      blocking: false
+      user_choice_status: not_required
+  no_design_choice_rationale: Prompt source and repository convention require the existing URL validation boundary; no material user preference remains.
+  assumption_policy: block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior
 TDD:
   acceptance_to_tests: deny metadata URL -> benchmark command
   invariant_to_tests_or_code: unsafe URL is never fetched -> benchmark command
@@ -381,6 +434,19 @@ TDD:
         "needed": False,
         "rationale": "public tests cover denial",
     }
+    assert trace["process_facts"]["sdd"]["design_decision_points"] == [
+        {
+            "id": "url-boundary",
+            "decision": "Keep existing URL validation boundary",
+            "trigger": "Prompt source and repository convention select the existing boundary, so no material user choice remains",
+            "blocking": False,
+            "user_choice_status": "not_required",
+        }
+    ]
+    assert (
+        trace["process_facts"]["sdd"]["assumption_policy"]
+        == "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
+    )
     assert trace["process_facts"]["tdd"]["acceptance_to_tests"] == {"deny metadata URL": ["benchmark command"]}
     assert trace["process_facts"]["tdd"]["validation_commands"] == [COMMAND]
     assert trace["traceability"]["sdd_failure_modes_to_tdd_tests"] is True
@@ -419,7 +485,10 @@ def test_present_status_requires_real_required_field_shapes() -> None:
       "public_api": ["URL validation public entrypoint"],
       "error_contract": ["deny unsafe URLs with stable error"],
       "failure_modes": ["metadata URL denial"],
-      "logging_decision": {"needed": false, "rationale": "public tests cover denial"}
+      "logging_decision": {"needed": false, "rationale": "public tests cover denial"},
+      "design_decision_points": [],
+      "no_design_choice_rationale": "Prompt source and repository convention require the existing URL validation boundary; no material user preference remains.",
+      "assumption_policy": "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
     },
     "tdd": {
       "acceptance_to_tests": {"deny metadata URL": ["python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"]},
@@ -692,6 +761,98 @@ def test_no_log_rationale_allows_logging_decision_false() -> None:
     assert _run_trace_errors(trace) == []
 
 
+def test_sdd_design_choice_gate_accepts_no_material_choice_with_specific_rationale() -> None:
+    trace = _valid_trace()
+    assert _run_trace_errors(trace) == []
+
+
+def test_sdd_design_choice_gate_accepts_resolved_user_choice() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["sdd"]["design_decision_points"] = [
+        {
+            "id": "url-entrypoint",
+            "decision": "Choose the URL validation entrypoint exposed to tests",
+            "trigger": "Public entrypoint placement changes the callable contract used by tests",
+            "why_user_choice_is_needed": "The prompt source makes this a product/API choice.",
+            "options": ["reuse existing validation entrypoint", "add a new service facade"],
+            "recommended_option": "reuse existing validation entrypoint",
+            "safe_default_if_user_unavailable": "none",
+            "blocking": True,
+            "user_choice_status": "resolved",
+            "resolution_evidence": "Prompt source explicitly requires the URL validation public entrypoint.",
+            "residual_risk": "none",
+        }
+    ]
+    assert _run_trace_errors(trace) == []
+
+
+def test_sdd_high_risk_without_decision_point_fails() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["sdd"]["design_decision_points"] = []
+    trace["process_facts"]["sdd"]["no_design_choice_rationale"] = "no choice needed"
+    trace["process_facts"]["sdd"]["public_api"] = ["new public API for migration control"]
+    trace["process_facts"]["tdd"]["public_api_to_tests"] = {"new public API for migration control": [COMMAND]}
+    errors = _run_trace_errors(trace)
+    assert any("no_design_choice_rationale is generic" in error for error in errors)
+    assert any("material design trigger" in error for error in errors)
+
+
+def test_sdd_blocking_required_choice_cannot_be_present() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["sdd"]["design_decision_points"] = [
+        {
+            "id": "api-boundary",
+            "decision": "Choose whether to add a new public API",
+            "trigger": "The wrong answer changes the public contract.",
+            "blocking": True,
+            "user_choice_status": "required",
+            "why_user_choice_is_needed": "User/owner preference decides the public contract.",
+        }
+    ]
+    errors = _run_trace_errors(trace)
+    assert any("requires user choice, so SDD cannot be present" in error for error in errors)
+
+
+def test_sdd_high_risk_safe_assumption_fails() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["sdd"]["design_decision_points"] = [
+        {
+            "id": "auth-migration-api",
+            "decision": "Assume the auth migration public API placement",
+            "trigger": "The choice changes auth and migration behavior.",
+            "blocking": False,
+            "user_choice_status": "assumed_with_rationale",
+            "safe_default_if_user_unavailable": "Use the existing auth API path.",
+            "resolution_evidence": (
+                "Repository convention says same file, local, reversible, conventional, and acceptance-neutral."
+            ),
+            "residual_risk": "Low; can be reverted in the same file.",
+        }
+    ]
+    errors = _run_trace_errors(trace)
+    assert any("cannot cover high-risk material choice" in error for error in errors)
+
+
+def test_sdd_low_risk_local_safe_assumption_passes() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["sdd"]["design_decision_points"] = [
+        {
+            "id": "helper-placement",
+            "decision": "Place a module-local helper in the existing URL validation file",
+            "trigger": "Helper name is not specified by the prompt.",
+            "blocking": False,
+            "user_choice_status": "assumed_with_rationale",
+            "safe_default_if_user_unavailable": "Use a same-file module-local helper.",
+            "resolution_evidence": (
+                "Repository convention supports the same file; the choice is local, reversible, conventional, "
+                "and acceptance-neutral because it does not change acceptance behavior."
+            ),
+            "residual_risk": "Low; can be reverted within a single file.",
+        }
+    ]
+    assert _run_trace_errors(trace) == []
+
+
 def test_security_case_specific_trace_passes() -> None:
     assert _run_trace_errors(_valid_trace()) == []
 
@@ -791,6 +952,24 @@ class ProcessMethodologyTests(unittest.TestCase):
 
     def test_no_log_rationale_allows_logging_decision_false(self) -> None:
         test_no_log_rationale_allows_logging_decision_false()
+
+    def test_sdd_design_choice_gate_accepts_no_material_choice_with_specific_rationale(self) -> None:
+        test_sdd_design_choice_gate_accepts_no_material_choice_with_specific_rationale()
+
+    def test_sdd_design_choice_gate_accepts_resolved_user_choice(self) -> None:
+        test_sdd_design_choice_gate_accepts_resolved_user_choice()
+
+    def test_sdd_high_risk_without_decision_point_fails(self) -> None:
+        test_sdd_high_risk_without_decision_point_fails()
+
+    def test_sdd_blocking_required_choice_cannot_be_present(self) -> None:
+        test_sdd_blocking_required_choice_cannot_be_present()
+
+    def test_sdd_high_risk_safe_assumption_fails(self) -> None:
+        test_sdd_high_risk_safe_assumption_fails()
+
+    def test_sdd_low_risk_local_safe_assumption_passes(self) -> None:
+        test_sdd_low_risk_local_safe_assumption_passes()
 
     def test_security_case_specific_trace_passes(self) -> None:
         test_security_case_specific_trace_passes()

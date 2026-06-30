@@ -99,6 +99,9 @@ stages:
       - deep performance profiling
     required_evidence:
       - SDD public API and module placement
+      - SDD design decision points for material choices
+      - user choice status for material design choices
+      - safe assumption rationale when proceeding without user choice
       - target boundaries inspected before plan
       - repository context map with owning surface and caller/callee evidence
       - reuse candidates
@@ -460,7 +463,10 @@ process_stage_ownership:
     evidence: domain terms, ownership, invariants, side-effect boundaries, code ownership
   sdd:
     owner_skill: architecture-impact-reviewer
-    evidence: modules, files, public API, data flow, error contract, compatibility, rollback, structure tradeoffs
+    evidence: modules, files, public API, data flow, error contract, compatibility, rollback, structure tradeoffs, design decision points, user choice status, safe assumption rationale
+  sdd_design_choice_gate:
+    owner_skill: development-process-orchestrator
+    evidence: material design choices, options, required/resolved/not_required/assumed_with_rationale status, no-choice rationale, assumption policy
   sdd_logging_decision:
     owner_skill: logging-design-gate
     evidence: log type, placement, level, fields, redaction, correlation, cardinality, tests or no-log rationale
@@ -484,6 +490,7 @@ route_manifest_patterns:
       - ddd_invariants_to_tdd_tests
       - sdd_public_api_to_tdd_tests
       - sdd_failure_modes_to_tdd_tests
+      - sdd_design_choice_gate
   logging_change:
     selected_skills:
       - logging-design-gate

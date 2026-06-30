@@ -38,7 +38,7 @@ quality gates, and the allowed handoff target stage.
 - Launch: `repository-context-map`, `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` (naming only); add `minimal-correct-implementation` when new structure, dependency, file, class, config, or abstraction is proposed.
 - Conditional launch: `code-element-professionalism` when variable, expression, statement, default, cleanup, fallthrough, boolean-trap, side-effect-getter, or event-order hazards shape the plan; `repository-graph-analysis` when repo graph, context pack, generated artifact graph, affected-test graph, or source-of-truth uncertainty is part of the plan.
 - Do not launch by default: full architecture review, release gate, deep performance profiling.
-- Required evidence: target boundaries inspected before plan, repository context map with owning surface and caller/callee evidence, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal, SDD public API and module placement.
+- Required evidence: SDD public API and module placement, SDD design decision points for material choices, user choice status for material design choices, safe assumption rationale when proceeding without user choice, target boundaries inspected before plan, repository context map with owning surface and caller/callee evidence, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal.
 - Required quality gates: implementation gate, SDD gate.
 - Handoff: coding.
 

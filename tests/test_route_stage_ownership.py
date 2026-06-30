@@ -77,6 +77,7 @@ class RouteStageOwnershipTests(unittest.TestCase):
         self.assertEqual(ownership["pdd"]["owner_skill"], "change-intake-compiler")
         self.assertEqual(ownership["ddd"]["owner_skill"], "domain-impact-modeler")
         self.assertEqual(ownership["sdd"]["owner_skill"], "architecture-impact-reviewer")
+        self.assertEqual(ownership["sdd_design_choice_gate"]["owner_skill"], "development-process-orchestrator")
         self.assertEqual(ownership["sdd_logging_decision"]["owner_skill"], "logging-design-gate")
         self.assertEqual(ownership["tdd"]["owner_skill"], "quality-test-gate")
         self.assertEqual(ownership["cross_stage_review"]["owner_skill"], "ai-code-review-refactor")
@@ -96,6 +97,7 @@ class RouteStageOwnershipTests(unittest.TestCase):
             "ddd_invariants_to_tdd_tests",
             "sdd_public_api_to_tdd_tests",
             "sdd_failure_modes_to_tdd_tests",
+            "sdd_design_choice_gate",
         ):
             self.assertIn(gate, code_change["required_quality_gates"])
 

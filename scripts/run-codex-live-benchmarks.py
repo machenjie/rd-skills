@@ -68,6 +68,15 @@ PROCESS_REQUIRED_FIELDS = {
         "validation_commands",
     ),
 }
+PROCESS_SDD_CHOICE_GATE_FIELDS = ("design_decision_points", "assumption_policy")
+PROCESS_SDD_NO_CHOICE_RATIONALE_FIELDS = (
+    "no_design_choice_rationale",
+    "no_material_design_choice_rationale",
+    "design_choice_rationale",
+)
+PROCESS_SDD_ASSUMPTION_POLICY = (
+    "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
+)
 COMPACTION_REQUIRED_FIELDS = (
     "route_id",
     "selected_skills",
@@ -119,6 +128,7 @@ PROCESS_LIST_FIELDS = {
         "data_flow",
         "error_contract",
         "failure_modes",
+        "design_decision_points",
         "metrics_traces_alerts",
         "performance_or_concurrency_constraints",
         "compatibility_and_migration",
@@ -1487,6 +1497,8 @@ def _has_required_process_field_fallback(facts: dict[str, Any]) -> bool:
         phase_payload = facts.get(phase)
         if not isinstance(phase_payload, dict):
             return True
+        if phase == "sdd" and _sdd_choice_gate_uses_fallback(phase_payload):
+            return True
         field_sources = phase_payload.get("_field_sources")
         sources = field_sources if isinstance(field_sources, dict) else {}
         inferred = phase_payload.get("_inferred_fields")
@@ -1657,10 +1669,28 @@ def _section_to_phase_facts(phase: str, lines: list[str]) -> dict[str, Any]:
 def _parse_indented_section(lines: list[str]) -> dict[str, Any]:
     parsed: dict[str, Any] = {}
     current_key: str | None = None
+    current_key_indent: int | None = None
     nested_key: str | None = None
+    current_list_item: dict[str, Any] | None = None
+    current_list_item_indent: int | None = None
     for raw_line in lines:
         stripped = raw_line.strip()
         if not stripped:
+            continue
+        if (
+            current_key
+            and current_list_item is not None
+            and current_list_item_indent is not None
+            and isinstance(parsed.get(current_key), list)
+            and raw_line.startswith((" ", "\t"))
+            and _leading_indent(raw_line) > current_list_item_indent
+            and not stripped.startswith("- ")
+            and ":" in stripped
+        ):
+            item_key, item_value = stripped.split(":", 1)
+            item_key = _normalize_trace_key(item_key)
+            item_value = item_value.strip()
+            current_list_item[item_key] = _coerce_trace_scalar(item_value) if item_value else {}
             continue
         if current_key and isinstance(parsed.get(current_key), dict) and nested_key and stripped.startswith("- "):
             target = parsed[current_key].setdefault(nested_key, [])
@@ -1669,19 +1699,43 @@ def _parse_indented_section(lines: list[str]) -> dict[str, Any]:
             continue
         if stripped.startswith("- ") and current_key:
             target = parsed.setdefault(current_key, [])
+            if isinstance(target, dict) and not target:
+                target = []
+                parsed[current_key] = target
             if isinstance(target, list):
-                target.append(_coerce_trace_scalar(stripped[2:].strip()))
+                item = stripped[2:].strip()
+                if ":" in item:
+                    item_key, item_value = item.split(":", 1)
+                    item_dict = {
+                        _normalize_trace_key(item_key): _coerce_trace_scalar(item_value.strip()) if item_value.strip() else {}
+                    }
+                    target.append(item_dict)
+                    current_list_item = item_dict
+                    current_list_item_indent = _leading_indent(raw_line)
+                else:
+                    target.append(_coerce_trace_scalar(item))
+                    current_list_item = None
+                    current_list_item_indent = None
             continue
         if ":" in stripped:
             key, value = stripped.split(":", 1)
             key = _normalize_trace_key(key)
             value = value.strip()
-            if current_key and isinstance(parsed.get(current_key), dict) and raw_line.startswith((" ", "\t")):
+            if (
+                current_key
+                and current_key_indent is not None
+                and isinstance(parsed.get(current_key), dict)
+                and raw_line.startswith((" ", "\t"))
+                and _leading_indent(raw_line) > current_key_indent
+            ):
                 nested_key = key
                 parsed[current_key][nested_key] = _coerce_trace_scalar(value) if value else []
                 continue
             current_key = key
+            current_key_indent = _leading_indent(raw_line)
             nested_key = None
+            current_list_item = None
+            current_list_item_indent = None
             if value:
                 parsed[key] = _coerce_trace_scalar(value)
             else:
@@ -1689,6 +1743,10 @@ def _parse_indented_section(lines: list[str]) -> dict[str, Any]:
             continue
         parsed.setdefault("_summary", []).append(_coerce_trace_scalar(stripped))
     return parsed
+
+
+def _leading_indent(line: str) -> int:
+    return len(line) - len(line.lstrip(" \t"))
 
 
 def _normalize_trace_key(key: str) -> str:
@@ -1855,11 +1913,11 @@ def _merge_phase_facts(
     final_payload = final_phase if isinstance(final_phase, dict) else _summary_phase_facts(phase, str(final_phase))
     fallback_payload = fallback_phase if isinstance(fallback_phase, dict) else {}
     merged = json.loads(json.dumps(fallback_payload))
-    field_sources = _field_sources_for_payload(fallback_payload, default_source=PROCESS_FALLBACK_FIELD_SOURCE)
+    field_sources = _field_sources_for_payload(fallback_payload, default_source=PROCESS_FALLBACK_FIELD_SOURCE, phase=phase)
     existing_inferred = fallback_payload.get("_inferred_fields")
     inferred_fields = set(str(field) for field in existing_inferred) if isinstance(existing_inferred, list) else set()
     for key, value in fallback_payload.items():
-        if key.startswith("_") or not _has_trace_value(value):
+        if key.startswith("_") or not _field_has_trace_value(phase, key, value):
             continue
         if key in inferred_fields or _source_is_fallback(str(field_sources.get(key) or PROCESS_FALLBACK_FIELD_SOURCE)):
             inferred_fields.add(key)
@@ -1868,7 +1926,7 @@ def _merge_phase_facts(
             if key not in {"_evidence_source", "_field_sources", "_inferred_fields"} and _has_trace_value(value):
                 merged[key] = value
             continue
-        if _has_trace_value(value):
+        if _field_has_trace_value(phase, key, value):
             merged[key] = value
             field_sources[key] = evidence_source
             inferred_fields.discard(key)
@@ -1888,7 +1946,7 @@ def _mark_process_facts_source(facts: dict[str, Any], source: str) -> dict[str, 
         phase_payload = marked.get(phase)
         if isinstance(phase_payload, dict):
             phase_payload["_evidence_source"] = source
-            phase_payload["_field_sources"] = _field_sources_for_payload(phase_payload, default_source=source)
+            phase_payload["_field_sources"] = _field_sources_for_payload(phase_payload, default_source=source, phase=phase)
             if _source_is_fallback(source):
                 phase_payload["_inferred_fields"] = sorted(phase_payload["_field_sources"])
     if _source_is_fallback(source):
@@ -1896,14 +1954,20 @@ def _mark_process_facts_source(facts: dict[str, Any], source: str) -> dict[str, 
     return marked
 
 
-def _field_sources_for_payload(payload: dict[str, Any], *, default_source: str) -> dict[str, str]:
+def _field_sources_for_payload(payload: dict[str, Any], *, default_source: str, phase: str | None = None) -> dict[str, str]:
     existing = payload.get("_field_sources")
     existing_sources = existing if isinstance(existing, dict) else {}
     return {
         str(key): str(existing_sources.get(key) or default_source)
         for key, value in payload.items()
-        if not str(key).startswith("_") and _has_trace_value(value)
+        if not str(key).startswith("_") and _field_has_trace_value(phase, str(key), value)
     }
+
+
+def _field_has_trace_value(phase: str | None, field: str, value: Any) -> bool:
+    if phase == "sdd" and field == "design_decision_points" and isinstance(value, list):
+        return True
+    return _has_trace_value(value)
 
 
 def _required_process_fields(phase: str) -> tuple[str, ...]:
@@ -1936,6 +2000,8 @@ def _phase_status_from_sources(phase: str, payload: Any) -> str:
         elif source:
             invalid_real_required += 1
     if real_required == len(required_fields):
+        if phase == "sdd" and _sdd_choice_gate_uses_fallback(payload):
+            return "degraded"
         return "present"
     if real_required or invalid_real_required or has_real_field:
         return "degraded"
@@ -1960,6 +2026,31 @@ def _required_field_shape_valid(phase: str, field: str, value: Any) -> bool:
     if phase == "tdd" and field in {"failure_mode_tests", "validation_commands"}:
         return _non_empty_trace_list(value)
     return _has_trace_value(value)
+
+
+def _sdd_choice_gate_uses_fallback(payload: dict[str, Any]) -> bool:
+    field_sources = payload.get("_field_sources")
+    sources = field_sources if isinstance(field_sources, dict) else {}
+    raw_inferred_fields = payload.get("_inferred_fields")
+    inferred_fields = {str(field) for field in raw_inferred_fields} if isinstance(raw_inferred_fields, list) else set()
+    for field in PROCESS_SDD_CHOICE_GATE_FIELDS:
+        if field in inferred_fields or _source_is_fallback(str(sources.get(field) or "")):
+            return True
+    choices = payload.get("design_decision_points")
+    if isinstance(choices, list) and not choices:
+        rationale_field = _sdd_no_choice_rationale_field(payload)
+        if rationale_field is None:
+            return True
+        if rationale_field in inferred_fields or _source_is_fallback(str(sources.get(rationale_field) or "")):
+            return True
+    return False
+
+
+def _sdd_no_choice_rationale_field(payload: dict[str, Any]) -> str | None:
+    for field in PROCESS_SDD_NO_CHOICE_RATIONALE_FIELDS:
+        if str(payload.get(field, "")).strip():
+            return field
+    return None
 
 
 def _non_empty_trace_list(value: Any) -> bool:
@@ -2000,6 +2091,7 @@ def _required_quality_gates_for_process_trace(facts: dict[str, Any]) -> list[str
         "ddd_invariants_to_tdd_tests",
         "sdd_public_api_to_tdd_tests",
         "sdd_failure_modes_to_tdd_tests",
+        "sdd_design_choice_gate",
     ]
     logging_decision = facts.get("sdd", {}).get("logging_decision") if isinstance(facts.get("sdd"), dict) else None
     if isinstance(logging_decision, dict) and logging_decision.get("needed") is True:
@@ -2019,6 +2111,7 @@ def _process_stage_ownership() -> dict[str, str]:
         "ddd": "domain-impact-modeler",
         "sdd": "architecture-impact-reviewer",
         "sdd_logging_decision": "logging-design-gate",
+        "sdd_design_choice_gate": "development-process-orchestrator",
         "tdd": "quality-test-gate",
         "cross_stage_review": "ai-code-review-refactor",
         "repair": "ai-code-review-refactor",
@@ -2113,6 +2206,9 @@ def _process_facts(case: CodexLiveCase, validation_commands: list[str]) -> dict[
                 "needed": False,
                 "rationale": "No product logging requirement is inferred for this generic case fallback; benchmark artifacts provide validation evidence.",
             },
+            "design_decision_points": [],
+            "no_design_choice_rationale": "Prompt/fixture constraints and repository inspection determine the benchmark implementation path; fallback metadata does not resolve an unresolved material SDD choice.",
+            "assumption_policy": PROCESS_SDD_ASSUMPTION_POLICY,
             "metrics_traces_alerts": ["events.metrics.json", "events.redacted.jsonl", "grading-result.json"],
             "performance_or_concurrency_constraints": coverage_dimensions,
             "compatibility_and_migration": ["preserve harness entrypoints"],
@@ -2538,6 +2634,9 @@ def _mapped_process_facts(
             "error_contract": error_contract,
             "failure_modes": failure_modes,
             "logging_decision": logging_decision,
+            "design_decision_points": [],
+            "no_design_choice_rationale": "Prompt/fixture constraints and repository inspection determine the benchmark implementation path; fallback metadata does not resolve an unresolved material SDD choice.",
+            "assumption_policy": PROCESS_SDD_ASSUMPTION_POLICY,
             "metrics_traces_alerts": ["grading-result.json", "events.metrics.json"],
             "performance_or_concurrency_constraints": risk_surfaces,
             "compatibility_and_migration": ["preserve benchmark harness contract"],

@@ -16,6 +16,12 @@ an action hook needs a compact reminder.
   acceptance criteria/constraints/non-goals; DDD invariants and side-effect
   boundaries; SDD public API/module/failure/logging/security/performance
   constraints; TDD validation mapped to those facts.
+- Before implementation, SDD must classify material design choices. If a wrong
+  answer would change architecture, public API, data, security, migration,
+  rollback, acceptance, or user-visible behavior, stop and ask the user with
+  options. If proceeding under a safe assumption, record why it is reversible,
+  local, conventional, and acceptance-neutral. Do not silently resolve blocking
+  design choices.
 - Preserve setup and test harness scripts unless the task explicitly requires a
   change. Keep setup runnable from the candidate root, compatible with
   environment-provided roots, and free of external network or HOME/CODEX_HOME
