@@ -10,24 +10,14 @@ actual_route:
     - "business workflow state unclear"
     - "business invariant changed"
   selected_skills:
-    - "delivery-release-gate"
     - "quality-test-gate"
-    - "frontend-change-builder"
     - "data-api-contract-changer"
     - "change-forge-router"
     - "domain-impact-modeler"
     - "ai-code-review-refactor"
+    - "architecture-impact-reviewer"
   selected_capabilities:
-    - "ci-cd"
-    - "release-rollback"
-    - "containerization"
-    - "kubernetes-gateway"
     - "observability"
-    - "backup-recovery"
-    - "page-component-decomposition"
-    - "state-management-design"
-    - "form-validation-design"
-    - "frontend-api-integration"
     - "api-contract-design"
     - "dto-schema-design"
     - "error-code-design"
@@ -39,24 +29,24 @@ actual_route:
     - "business-rule-extraction"
     - "state-machine-modeling"
     - "context-control-plane"
-    - "project-memory-governance"
     - "repository-graph-analysis"
     - "validation-broker"
     - "agent-tool-permission-sandbox"
     - "implementation-structure-design"
   required_quality_gates:
-    - "delivery gate"
     - "API/data gate"
     - "test gate"
     - "domain gate"
     - "AI review gate"
+    - "architecture gate"
   business_semantic_pack_required: true
   business_semantic_scope: "workflow-transition-change"
   selected_bsp_sections:
-    - "workflows"
     - "business_rules"
-    - "validation_map"
+    - "workflows"
     - "code_mapping"
+    - "validation_map"
+    - "context_control"
   selected_references:
     -
       reference: "references/capabilities/135-business-semantic-control-plane.md"
@@ -65,20 +55,20 @@ actual_route:
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/73-ci-cd.md"
-      reason: "ci-cd selected by deterministic resolver/trigger adapter for workflow-transition-added"
+      reference: "references/capabilities/13-business-rule-extraction.md"
+      reason: "business-rule-extraction selected by deterministic resolver/trigger adapter for workflow-transition-added"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/75-release-rollback.md"
-      reason: "release-rollback selected by deterministic resolver/trigger adapter for workflow-transition-added"
+      reference: "references/capabilities/14-state-machine-modeling.md"
+      reason: "state-machine-modeling selected by deterministic resolver/trigger adapter for workflow-transition-added"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/72-containerization.md"
-      reason: "containerization selected by deterministic resolver/trigger adapter for workflow-transition-added"
+      reference: "references/capabilities/124-repository-graph-analysis.md"
+      reason: "repository-graph-analysis selected by deterministic resolver/trigger adapter for workflow-transition-added"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
@@ -107,6 +97,9 @@ actual_review:
         - "source: deterministic-fixture-review"
         - "enum/status change lacks forbidden transition tests"
         - "APPROVED to DRAFT transition added"
+        - "claims/domain/status.py: REFUNDED = \"refunded\""
+        - "claims/domain/status.py: CANCELLED = \"cancelled\""
+        - "claims/domain/transitions.py: (ClaimStatus.APPROVED, ClaimStatus.DRAFT): reviewer_requested_changes,"
       required_fix: "workflow transition table and invalid transition tests required."
       validation_required: "source/diff evidence, owner review, or changed-path validation required"
   forbidden_behavior_avoided:

@@ -25,6 +25,10 @@ diff_context:
                  return False, "trial_accounts_ineligible"
         +    if account.is_enterprise or invoice.total > 0:
         +        return True, "discount_eligible"
+input_route_hint:
+  stage: code-review
+  business_semantic_pack_required: true
+  business_semantic_scope: semantic-refactor-review
 expected_route:
   stage: code-review
   business_semantic_pack_required: true

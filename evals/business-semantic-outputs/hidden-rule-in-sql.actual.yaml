@@ -34,9 +34,7 @@ actual_route:
     - "transaction-consistency"
     - "domain-object-identification"
     - "business-rule-extraction"
-    - "state-machine-modeling"
     - "context-control-plane"
-    - "project-memory-governance"
     - "repository-graph-analysis"
     - "validation-broker"
     - "sql-professional-usage"
@@ -49,6 +47,7 @@ actual_route:
   business_semantic_pack_required: true
   business_semantic_scope: "hidden-sql-rule"
   selected_bsp_sections:
+    - "business_objects"
     - "business_rules"
     - "data_and_signal_semantics"
     - "code_mapping"
@@ -62,20 +61,20 @@ actual_route:
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/118-repository-context-map.md"
-      reason: "repository-context-map selected by deterministic resolver/trigger adapter for hidden-rule-in-sql"
+      reference: "references/capabilities/13-business-rule-extraction.md"
+      reason: "business-rule-extraction selected by deterministic resolver/trigger adapter for hidden-rule-in-sql"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/101-implementation-structure-design.md"
-      reason: "implementation-structure-design selected by deterministic resolver/trigger adapter for hidden-rule-in-sql"
+      reference: "references/capabilities/12-domain-object-identification.md"
+      reason: "domain-object-identification selected by deterministic resolver/trigger adapter for hidden-rule-in-sql"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/19-module-boundary-design.md"
-      reason: "module-boundary-design selected by deterministic resolver/trigger adapter for hidden-rule-in-sql"
+      reference: "references/capabilities/124-repository-graph-analysis.md"
+      reason: "repository-graph-analysis selected by deterministic resolver/trigger adapter for hidden-rule-in-sql"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
@@ -102,8 +101,9 @@ actual_review:
       impacted_claim: "subscription renewal eligibility status filter"
       evidence:
         - "source: deterministic-fixture-review"
-        - "SELECT * FROM subscriptions WHERE status != 'expired'"
-        - "WHERE status NOT IN ('expired', 'enterprise_expired')"
+        - "billing/sql/subscription_renewals.sql: SELECT * FROM subscriptions WHERE status != 'expired' AND renewal_enabled = TRUE;"
+        - "billing/sql/subscription_renewals.sql: WHERE status != 'expired'"
+        - "billing/sql/subscription_renewals.sql: WHERE status NOT IN ('expired', 'enterprise_expired')"
       required_fix: "SQL condition is a hidden business rule and needs rule_id, owner, authoritative enforcement layer, golden case, changed-path validation."
       validation_required: "source/diff evidence, owner review, or changed-path validation required"
   forbidden_behavior_avoided:

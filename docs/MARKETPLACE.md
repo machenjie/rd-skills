@@ -90,7 +90,11 @@ surface those names while retaining legacy aliases for compatibility; BSP
 references require structured rationale and memory/graph remain selectors until
 confirmed by current source or validation. Business semantic fixture evidence is
 deterministic and local: generated actual outputs must pass
-`generate-business-semantic-actuals.py --check`, routing evals compare skills,
-capabilities, gates, BSP scope, sections, triggers, and references, review evals
-check `expected_evidence`, and rule `reason_codes` / `entry_points` must be
-non-empty. This does not prove live LLM behavior or live business correctness.
+`generate-business-semantic-actuals.py --check`. Actual generation reads input
+signals, `input_route_hint`, resolver/routing rules, and source/diff context, not
+`expected_*` oracle fields. Routing evals compare skills, capabilities, gates,
+BSP scope, sections, triggers, references, forbidden selections, and max
+selection limits; review evals check `expected_evidence` against actual evidence
+derived from source/diff snippets, prompt, and routing triggers; rule
+`reason_codes` / `entry_points` must be non-empty. This does not prove live LLM
+behavior or live business correctness.

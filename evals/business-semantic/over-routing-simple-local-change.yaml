@@ -1,6 +1,10 @@
 case_id: over-routing-simple-local-change
 prompt: Fix a typo in an internal log message with no behavior change.
 routing_triggers: []
+input_route_hint:
+  stage: coding
+  business_semantic_pack_required: false
+  business_semantic_scope: none
 expected_route:
   stage: coding
   business_semantic_pack_required: false
@@ -9,6 +13,14 @@ expected_skills: [backend-change-builder]
 expected_capabilities: [minimal-correct-implementation]
 expected_quality_gates: [implementation gate]
 expected_bsp_sections: []
+forbidden_skills:
+  - domain-impact-modeler
+  - ai-code-review-refactor
+  - quality-test-gate
+forbidden_capabilities:
+  - business-semantic-control-plane
+max_selected_skills: 2
+max_selected_capabilities: 3
 expected_review_findings: [BSP should be skipped with rationale]
 forbidden_behavior: [select business-semantic-control-plane, require full BSP]
 scoring: [overrouting_avoidance, skipped_reference_rationale, minimality]

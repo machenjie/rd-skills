@@ -37,9 +37,7 @@ actual_route:
     - "test-strategy"
     - "domain-object-identification"
     - "business-rule-extraction"
-    - "state-machine-modeling"
     - "context-control-plane"
-    - "project-memory-governance"
     - "repository-graph-analysis"
     - "validation-broker"
     - "python-professional-usage"
@@ -49,6 +47,7 @@ actual_route:
     - "domain gate"
     - "AI review gate"
     - "architecture gate"
+    - "test gate"
   business_semantic_pack_required: true
   business_semantic_scope: "dto-domain-boundary"
   selected_bsp_sections:
@@ -56,6 +55,7 @@ actual_route:
     - "business_objects"
     - "code_mapping"
     - "validation_map"
+    - "context_control"
   selected_references:
     -
       reference: "references/capabilities/135-business-semantic-control-plane.md"
@@ -64,20 +64,20 @@ actual_route:
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/118-repository-context-map.md"
-      reason: "repository-context-map selected by deterministic resolver/trigger adapter for dto-as-domain-object"
+      reference: "references/capabilities/12-domain-object-identification.md"
+      reason: "domain-object-identification selected by deterministic resolver/trigger adapter for dto-as-domain-object"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/101-implementation-structure-design.md"
-      reason: "implementation-structure-design selected by deterministic resolver/trigger adapter for dto-as-domain-object"
+      reference: "references/capabilities/124-repository-graph-analysis.md"
+      reason: "repository-graph-analysis selected by deterministic resolver/trigger adapter for dto-as-domain-object"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/19-module-boundary-design.md"
-      reason: "module-boundary-design selected by deterministic resolver/trigger adapter for dto-as-domain-object"
+      reference: "references/capabilities/126-validation-broker.md"
+      reason: "validation-broker selected by deterministic resolver/trigger adapter for dto-as-domain-object"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
@@ -106,6 +106,8 @@ actual_review:
         - "source: deterministic-fixture-review"
         - "external DTO passed into domain service without mapper"
         - "PartnerOrderResponse replaces Order"
+        - "orders/services/returns.py: def return_window(order: Order) -> int:"
+        - "orders/services/returns.py: def return_window(order: PartnerOrderResponse) -> int:"
       required_fix: "DTO/table/resource model is being used as domain object; requires model-boundary-mapping and domain-object-identification."
       validation_required: "source/diff evidence, owner review, or changed-path validation required"
   forbidden_behavior_avoided:

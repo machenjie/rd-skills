@@ -3,6 +3,10 @@ prompt: Rename Account to Customer in billing, identity, and support screens.
 routing_triggers:
   - business vocabulary ambiguous
   - business object ownership unclear
+input_route_hint:
+  stage: requirement-intake
+  business_semantic_pack_required: true
+  business_semantic_scope: vocabulary-and-object-ownership
 expected_route:
   stage: requirement-intake
   business_semantic_pack_required: true

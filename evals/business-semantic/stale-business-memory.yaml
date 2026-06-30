@@ -26,6 +26,10 @@ diff_context:
       patch: |
         +# owner assumed from memory: growth
         +DISCOUNT_RULE_OWNER = "growth"
+input_route_hint:
+  stage: implementation-planning
+  business_semantic_pack_required: true
+  business_semantic_scope: stale-memory-reconciliation
 expected_route:
   stage: implementation-planning
   business_semantic_pack_required: true

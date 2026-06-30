@@ -34,8 +34,9 @@ actual_review:
       evidence:
         - "source: deterministic-fixture-review"
         - "BSP should be skipped with rationale"
+        - "prompt: Fix a typo in an internal log message with no behavior change."
       required_fix: "BSP should be skipped with rationale"
-      validation_required: "deterministic fixture review coverage required"
+      validation_required: "minimal implementation verification only"
   forbidden_behavior_avoided:
     - "select business-semantic-control-plane"
     - "require full BSP"

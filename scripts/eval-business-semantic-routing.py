@@ -176,6 +176,32 @@ def _validate_forbidden_route_behavior(
     selected_skills = set(_as_list(actual.get("selected_skills")))
     selected_capabilities = set(_as_list(actual.get("selected_capabilities")))
     actual_bsp = bool(actual.get("business_semantic_pack_required"))
+    forbidden_skills = set(_as_list(case.get("forbidden_skills")))
+    forbidden_capabilities = set(_as_list(case.get("forbidden_capabilities")))
+    forbidden_skill_hits = sorted(forbidden_skills & selected_skills)
+    forbidden_capability_hits = sorted(forbidden_capabilities & selected_capabilities)
+    failed_overroute = False
+    if forbidden_skill_hits:
+        errors.append(f"{case_id}: forbidden skills selected {forbidden_skill_hits}")
+        failed_overroute = True
+    if forbidden_capability_hits:
+        errors.append(f"{case_id}: forbidden capabilities selected {forbidden_capability_hits}")
+        failed_overroute = True
+    allow_broad_route = case.get("allow_broad_route") is True
+    if not allow_broad_route:
+        max_skills = case.get("max_selected_skills")
+        if isinstance(max_skills, int) and len(selected_skills) > max_skills:
+            errors.append(f"{case_id}: selected skills count {len(selected_skills)} exceeds max_selected_skills {max_skills}")
+            failed_overroute = True
+        max_capabilities = case.get("max_selected_capabilities")
+        if isinstance(max_capabilities, int) and len(selected_capabilities) > max_capabilities:
+            errors.append(
+                f"{case_id}: selected capabilities count {len(selected_capabilities)} exceeds "
+                f"max_selected_capabilities {max_capabilities}"
+            )
+            failed_overroute = True
+    if failed_overroute:
+        metrics["overroute_failures"] += 1
     if case_id == "over-routing-simple-local-change":
         failed = False
         forbidden_skills = {"domain-impact-modeler", "ai-code-review-refactor", "quality-test-gate"}

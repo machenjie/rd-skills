@@ -62,16 +62,21 @@ semantic packs, route selection, overroute avoidance, review findings, memory
 verdict buckets, and golden-case expectations. The routing and review evals now
 compare expected fixture fields with deterministic actual outputs under
 `evals/business-semantic-outputs/`; those actuals are generated and checked by
-`generate-business-semantic-actuals.py --check`. Routing fixtures compare
-selected skills, selected capabilities, quality gates, BSP sections, BSP scope,
-canonical triggers, and structured reference decisions. Review fixtures check
-`expected_evidence`, not only finding text. The schema validator checks both
-JSON Schema valid/invalid samples and semantic invariants, including non-empty
-rule `reason_codes` and `entry_points`. They do not prove live LLM behavior or
-live business correctness, and memory or repository graph signals remain
-selectors until current source, owner review, user source, or validation
-evidence confirms the claim. BSP selected/skipped references require structured
-rationale, not string lists.
+`generate-business-semantic-actuals.py --check`. The generator reads fixture
+input signals, `input_route_hint`, resolver/routing rules, and source/diff
+context only. `expected_*` fields are oracle assertions for evals, not generator
+inputs. Routing fixtures compare selected skills, selected capabilities, quality
+gates, BSP sections, BSP scope, canonical triggers, and structured reference
+decisions, including forbidden skills/capabilities and max selection limits to
+catch over-route failures. Review fixtures check `expected_evidence`, not only
+finding text, while actual review evidence is derived from source/diff snippets,
+prompt, and routing triggers. The schema validator checks both JSON Schema
+valid/invalid samples and semantic invariants, including non-empty rule
+`reason_codes` and `entry_points`. They do not prove live LLM behavior or live
+business correctness, and memory or repository graph signals remain selectors
+until current source, owner review, user source, or validation evidence confirms
+the claim. BSP selected/skipped references require structured rationale, not
+string lists.
 
 Executor adapter benchmarks are also structural/local evidence. They validate
 canonical event recognition, adapter degradation, privacy redaction, validation

@@ -336,9 +336,9 @@ def _validate_bsp_semantics(instance: dict[str, Any], context: str, errors: list
             if not rule.get(field):
                 errors.append(f"{context}: rule {rule_id} missing {field}")
         if not rule.get("reason_codes"):
-            errors.append(f"{context}: rule {rule_id} missing reason_codes")
+            errors.append(f"{context}: rule {rule_id} missing non-empty reason_codes")
         if not rule.get("entry_points"):
-            errors.append(f"{context}: rule {rule_id} missing entry_points")
+            errors.append(f"{context}: rule {rule_id} missing non-empty entry_points")
         if not rule.get("tests") and not rule.get("residual_risk"):
             errors.append(f"{context}: rule {rule_id} must have tests or residual_risk")
         if rule.get("enforcement_layer") not in {"manual_owner_review", "not_decided"} and not rule.get("authoritative_enforcement_paths"):
@@ -414,6 +414,7 @@ def _validate_eval_fixtures(schemas: dict[str, dict[str, Any]], errors: list[str
         for field in (
             "case_id",
             "prompt",
+            "input_route_hint",
             "expected_route",
             "expected_skills",
             "expected_capabilities",
@@ -436,6 +437,13 @@ def _validate_eval_fixtures(schemas: dict[str, dict[str, Any]], errors: list[str
             errors.append(f"{context}: expected_route must declare business_semantic_scope")
         elif route.get("business_semantic_pack_required") is False and route.get("business_semantic_scope") != "none":
             errors.append(f"{context}: non-BSP case must set business_semantic_scope to none")
+        input_route_hint = fixture.get("input_route_hint", {})
+        if not isinstance(input_route_hint, dict):
+            errors.append(f"{context}: input_route_hint must be a mapping")
+        else:
+            for field in ("stage", "business_semantic_pack_required", "business_semantic_scope"):
+                if field not in input_route_hint:
+                    errors.append(f"{context}: input_route_hint must declare {field}")
         sections = set(str(item) for item in fixture.get("expected_bsp_sections", []) or [])
         invalid_sections = sections - BSP_SECTIONS
         if invalid_sections:
@@ -444,6 +452,14 @@ def _validate_eval_fixtures(schemas: dict[str, dict[str, Any]], errors: list[str
             errors.append(f"{context}: BSP-required case must select business-semantic-control-plane")
         if not fixture.get("forbidden_behavior"):
             errors.append(f"{context}: forbidden_behavior must be non-empty")
+        for field in ("forbidden_skills", "forbidden_capabilities"):
+            if field in fixture and not isinstance(fixture.get(field), list):
+                errors.append(f"{context}: {field} must be a list when present")
+        for field in ("max_selected_skills", "max_selected_capabilities"):
+            if field in fixture and not isinstance(fixture.get(field), int):
+                errors.append(f"{context}: {field} must be an integer when present")
+        if "allow_broad_route" in fixture and not isinstance(fixture.get("allow_broad_route"), bool):
+            errors.append(f"{context}: allow_broad_route must be a boolean when present")
         sample_bsp_path = fixture.get("sample_bsp_path")
         if sample_bsp_path:
             _validate_fixture_sample_bsp(str(sample_bsp_path), schemas, context, errors)

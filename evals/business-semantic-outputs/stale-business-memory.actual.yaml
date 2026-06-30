@@ -25,7 +25,6 @@ actual_route:
     - "transaction-consistency"
     - "domain-object-identification"
     - "business-rule-extraction"
-    - "state-machine-modeling"
     - "context-control-plane"
     - "project-memory-governance"
     - "repository-graph-analysis"
@@ -39,10 +38,11 @@ actual_route:
   business_semantic_pack_required: true
   business_semantic_scope: "stale-memory-reconciliation"
   selected_bsp_sections:
-    - "memory_projection"
     - "business_rules"
     - "code_mapping"
+    - "memory_projection"
     - "validation_map"
+    - "context_control"
   selected_references:
     -
       reference: "references/capabilities/135-business-semantic-control-plane.md"
@@ -51,20 +51,20 @@ actual_route:
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/118-repository-context-map.md"
-      reason: "repository-context-map selected by deterministic resolver/trigger adapter for stale-business-memory"
+      reference: "references/capabilities/13-business-rule-extraction.md"
+      reason: "business-rule-extraction selected by deterministic resolver/trigger adapter for stale-business-memory"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/101-implementation-structure-design.md"
-      reason: "implementation-structure-design selected by deterministic resolver/trigger adapter for stale-business-memory"
+      reference: "references/capabilities/124-repository-graph-analysis.md"
+      reason: "repository-graph-analysis selected by deterministic resolver/trigger adapter for stale-business-memory"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/19-module-boundary-design.md"
-      reason: "module-boundary-design selected by deterministic resolver/trigger adapter for stale-business-memory"
+      reference: "references/capabilities/126-validation-broker.md"
+      reason: "validation-broker selected by deterministic resolver/trigger adapter for stale-business-memory"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
@@ -93,6 +93,11 @@ actual_review:
         - "source: deterministic-fixture-review"
         - "memory signal conflicts with current source owner"
         - "billing/owners.yaml declares revenue-platform"
+        - "billing/owners.yaml: owner: revenue-platform"
+        - "memory/business-rule-owner.event.json: \"remembered_owner\": \"growth\","
+        - "memory/business-rule-owner.event.json: \"source_check_required\": true"
+        - "billing/domain/discounts.py: # owner assumed from memory: growth"
+        - "billing/domain/discounts.py: DISCOUNT_RULE_OWNER = \"growth\""
       required_fix: "memory is stale selector, not source truth; current source must win or residual risk must be recorded."
       validation_required: "source/diff evidence, owner review, or changed-path validation required"
   forbidden_behavior_avoided:

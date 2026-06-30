@@ -105,11 +105,18 @@ workflow transitions, non-memory validation evidence, and structured
 selected/skipped reference rationale. `generate-business-semantic-actuals.py`
 generates the committed deterministic actual outputs in
 `evals/business-semantic-outputs/`; `--check` fails when those outputs drift from
-the current deterministic route resolver/fixture adapter. `eval-business-semantic-routing.py`
-compares selected skills, selected capabilities, quality gates, BSP sections,
-BSP scope, detected canonical triggers, and reference decisions. `eval-business-semantic-review.py`
-checks expected findings and each `expected_evidence` item against source/diff
-grounded finding text.
+the current deterministic route resolver/fixture adapter. Actual generation may
+read fixture input signals, `input_route_hint`, resolver output, routing rules,
+`source_context`, and `diff_context`; it must not read `expected_route`,
+`expected_skills`, `expected_capabilities`, `expected_quality_gates`,
+`expected_bsp_sections`, or `expected_review_findings`. Those expected fields are
+eval oracle only. `eval-business-semantic-routing.py` compares selected skills,
+selected capabilities, quality gates, BSP sections, BSP scope, detected canonical
+triggers, and reference decisions, and it checks both under-route and over-route
+guardrails through forbidden skills/capabilities and max selection limits.
+`eval-business-semantic-review.py` checks expected findings and each
+`expected_evidence` item against actual finding text whose evidence must come
+from `source_context`, `diff_context`, `prompt`, or `routing_triggers`.
 
 Business semantic fixtures remain structural/local evidence. They prove route,
 schema, review, and validator behavior over bounded source/diff snippets; they

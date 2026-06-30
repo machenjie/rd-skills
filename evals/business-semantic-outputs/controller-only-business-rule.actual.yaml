@@ -29,9 +29,7 @@ actual_route:
     - "logging-error-handling"
     - "domain-object-identification"
     - "business-rule-extraction"
-    - "state-machine-modeling"
     - "context-control-plane"
-    - "project-memory-governance"
     - "repository-graph-analysis"
     - "validation-broker"
     - "python-professional-usage"
@@ -50,6 +48,7 @@ actual_route:
     - "business_rules"
     - "code_mapping"
     - "validation_map"
+    - "context_control"
   selected_references:
     -
       reference: "references/capabilities/135-business-semantic-control-plane.md"
@@ -58,20 +57,20 @@ actual_route:
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/118-repository-context-map.md"
-      reason: "repository-context-map selected by deterministic resolver/trigger adapter for controller-only-business-rule"
+      reference: "references/capabilities/13-business-rule-extraction.md"
+      reason: "business-rule-extraction selected by deterministic resolver/trigger adapter for controller-only-business-rule"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/101-implementation-structure-design.md"
-      reason: "implementation-structure-design selected by deterministic resolver/trigger adapter for controller-only-business-rule"
+      reference: "references/capabilities/12-domain-object-identification.md"
+      reason: "domain-object-identification selected by deterministic resolver/trigger adapter for controller-only-business-rule"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/19-module-boundary-design.md"
-      reason: "module-boundary-design selected by deterministic resolver/trigger adapter for controller-only-business-rule"
+      reference: "references/capabilities/124-repository-graph-analysis.md"
+      reason: "repository-graph-analysis selected by deterministic resolver/trigger adapter for controller-only-business-rule"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
@@ -98,8 +97,9 @@ actual_review:
       impacted_claim: "order cancellation after shipped"
       evidence:
         - "source: deterministic-fixture-review"
-        - "if order.status == \"shipped\": return error(\"cannot_cancel\")"
-        - "orders/jobs/import_cancellations.py bypass path"
+        - "orders/controllers/cancel_order.py: if order.status == \"shipped\": return error(\"cannot_cancel\")"
+        - "orders/jobs/import_cancellations.py bypass path calls order.cancel()"
+        - "orders/controllers/cancel_order.py: if order.customer_tier == \"premium\" and order.age_days <= 45:"
       required_fix: "controller-only rule can be bypassed by jobs/admin/import path; route to business-rule-extraction and domain enforcement."
       validation_required: "source/diff evidence, owner review, or changed-path validation required"
   forbidden_behavior_avoided:

@@ -27,9 +27,7 @@ actual_route:
     - "transaction-consistency"
     - "domain-object-identification"
     - "business-rule-extraction"
-    - "state-machine-modeling"
     - "context-control-plane"
-    - "project-memory-governance"
     - "repository-graph-analysis"
     - "validation-broker"
     - "module-boundary-design"
@@ -38,6 +36,7 @@ actual_route:
     - "requirement gate"
     - "domain gate"
     - "architecture gate"
+    - "test gate"
     - "documentation gate"
   business_semantic_pack_required: true
   business_semantic_scope: "vocabulary-and-object-ownership"
@@ -56,20 +55,20 @@ actual_route:
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/01-requirement-clarification.md"
-      reason: "requirement-clarification selected by deterministic resolver/trigger adapter for ambiguous-business-term"
+      reference: "references/capabilities/12-domain-object-identification.md"
+      reason: "domain-object-identification selected by deterministic resolver/trigger adapter for ambiguous-business-term"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/02-requirement-structuring.md"
-      reason: "requirement-structuring selected by deterministic resolver/trigger adapter for ambiguous-business-term"
+      reference: "references/capabilities/124-repository-graph-analysis.md"
+      reason: "repository-graph-analysis selected by deterministic resolver/trigger adapter for ambiguous-business-term"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
     -
-      reference: "references/capabilities/06-non-goal-boundary-definition.md"
-      reason: "non-goal-boundary-definition selected by deterministic resolver/trigger adapter for ambiguous-business-term"
+      reference: "references/capabilities/126-validation-broker.md"
+      reason: "validation-broker selected by deterministic resolver/trigger adapter for ambiguous-business-term"
       evidence_limit: "deterministic fixture source/diff snippets and routing triggers only"
       residual_risk:
         - "does not prove live LLM behavior or live business correctness"
@@ -97,18 +96,10 @@ actual_review:
       evidence:
         - "source: deterministic-fixture-review"
         - "same term has multiple owning contexts"
-      required_fix: "same term has multiple owning contexts"
-      validation_required: "deterministic fixture review coverage required"
-    -
-      finding_id: "BSP-AMBIGUOUS-TERM"
-      severity: "high"
-      category: "ambiguous_business_vocabulary"
-      impacted_claim: "Account rename to Customer"
-      evidence:
-        - "source: deterministic-fixture-review"
         - "owner review required"
-      required_fix: "owner review required"
-      validation_required: "deterministic fixture review coverage required"
+        - "prompt/triggers: Rename Account to Customer in billing, identity, and support screens. | business vocabulary ambiguous, business object ownership unclear"
+      required_fix: "same term has multiple owning contexts, owner review required"
+      validation_required: "source/diff evidence, owner review, or changed-path validation required"
   forbidden_behavior_avoided:
     - "treat term rename as text-only refactor"
     - "memory as FACT"

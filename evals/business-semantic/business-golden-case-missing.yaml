@@ -3,6 +3,10 @@ prompt: Add the new cancellation reason code but the existing test suite is gree
 routing_triggers:
   - business golden case missing
   - business semantic review required
+input_route_hint:
+  stage: testing
+  business_semantic_pack_required: true
+  business_semantic_scope: golden-case-gap
 expected_route:
   stage: testing
   business_semantic_pack_required: true

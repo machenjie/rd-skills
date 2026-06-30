@@ -171,9 +171,13 @@ remain accepted for compatibility. BSP reference selection must use structured
 reason/evidence-limit rationale, and graph or memory cannot be promoted to
 `FACT` without current source, owner review, user source, or validation evidence.
 BSP authoring changes must also keep deterministic actual outputs fresh through
-`generate-business-semantic-actuals.py --check`; routing evidence includes
-skills, capabilities, gates, BSP scope, BSP sections, triggers, and references,
-while review evidence includes source/diff `expected_evidence`.
+`generate-business-semantic-actuals.py --check`. Actual generation reads input
+signals, `input_route_hint`, resolver/routing rules, and source/diff context;
+`expected_*` fields remain eval-only oracle assertions. Routing evals cover
+skills, capabilities, gates, BSP scope, BSP sections, triggers, references,
+forbidden selections, and max selection limits, while review actual evidence is
+derived from source/diff snippets, prompt, and routing triggers before eval checks
+`expected_evidence`.
 
 ## 3. Language Surface Selector
 

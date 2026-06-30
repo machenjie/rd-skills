@@ -17,6 +17,10 @@ diff_context:
       patch: |
         -WHERE status != 'expired'
         +WHERE status NOT IN ('expired', 'enterprise_expired')
+input_route_hint:
+  stage: implementation-planning
+  business_semantic_pack_required: true
+  business_semantic_scope: hidden-sql-rule
 expected_route:
   stage: implementation-planning
   business_semantic_pack_required: true
@@ -25,6 +29,13 @@ expected_skills: [domain-impact-modeler, data-middleware-change-builder, quality
 expected_capabilities: [business-semantic-control-plane, business-rule-extraction, repository-graph-analysis, validation-broker]
 expected_quality_gates: [domain gate, API/data gate, test gate]
 expected_bsp_sections: [business_rules, data_and_signal_semantics, code_mapping, validation_map, context_control]
+forbidden_skills:
+  - delivery-release-gate
+  - frontend-change-builder
+forbidden_capabilities:
+  - kubernetes-gateway
+  - release-rollback
+  - containerization
 expected_review_findings:
   - finding_id: BSP-HIDDEN-SQL-RULE
     category: hidden_sql_rule

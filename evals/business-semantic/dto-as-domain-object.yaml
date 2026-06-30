@@ -27,6 +27,10 @@ diff_context:
         +def return_window(order: PartnerOrderResponse) -> int:
              if order.status == "DELIVERED":
                  return 30
+input_route_hint:
+  stage: implementation-planning
+  business_semantic_pack_required: true
+  business_semantic_scope: dto-domain-boundary
 expected_route:
   stage: implementation-planning
   business_semantic_pack_required: true

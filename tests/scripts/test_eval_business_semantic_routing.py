@@ -92,6 +92,45 @@ class BusinessSemanticRoutingEvalTests(unittest.TestCase):
         self.assertNotEqual(rc, 0)
         self.assertIn("underroute did not require BSP", output)
 
+    def test_forbidden_skill_selected_fails(self) -> None:
+        case = _case("forbidden-skill", forbidden_skills=["domain-impact-modeler"])
+        actual = _actual("forbidden-skill", selected_skills=["domain-impact-modeler"])
+
+        rc, output = self._run_eval(case, actual)
+
+        self.assertNotEqual(rc, 0)
+        self.assertIn("forbidden skills selected", output)
+
+    def test_forbidden_capability_selected_fails(self) -> None:
+        case = _case("forbidden-capability", forbidden_capabilities=["business-semantic-control-plane"])
+        actual = _actual("forbidden-capability", selected_capabilities=["business-semantic-control-plane"])
+
+        rc, output = self._run_eval(case, actual)
+
+        self.assertNotEqual(rc, 0)
+        self.assertIn("forbidden capabilities selected", output)
+
+    def test_max_selected_skills_exceeded_fails(self) -> None:
+        case = _case("max-skills", max_selected_skills=1)
+        actual = _actual("max-skills", selected_skills=["backend-change-builder", "domain-impact-modeler"])
+
+        rc, output = self._run_eval(case, actual)
+
+        self.assertNotEqual(rc, 0)
+        self.assertIn("exceeds max_selected_skills", output)
+
+    def test_max_selected_capabilities_exceeded_fails(self) -> None:
+        case = _case("max-capabilities", max_selected_capabilities=1)
+        actual = _actual(
+            "max-capabilities",
+            selected_capabilities=["minimal-correct-implementation", "business-semantic-control-plane"],
+        )
+
+        rc, output = self._run_eval(case, actual)
+
+        self.assertNotEqual(rc, 0)
+        self.assertIn("exceeds max_selected_capabilities", output)
+
     def test_checked_in_business_semantic_routing_fixtures_pass(self) -> None:
         buffer = io.StringIO()
 
@@ -136,12 +175,31 @@ def _case(
     expected_capabilities: list[str] | None = None,
     expected_quality_gates: list[str] | None = None,
     expected_bsp_sections: list[str] | None = None,
+    forbidden_skills: list[str] | None = None,
+    forbidden_capabilities: list[str] | None = None,
+    max_selected_skills: int | None = None,
+    max_selected_capabilities: int | None = None,
+    allow_broad_route: bool | None = None,
 ) -> str:
     triggers = routing_triggers or []
     skills = expected_skills or []
     capabilities = expected_capabilities or ["minimal-correct-implementation"]
     gates = expected_quality_gates or ["implementation gate"]
     sections = expected_bsp_sections or []
+    extras = []
+    if forbidden_skills is not None:
+        extras.append(f"forbidden_skills: {forbidden_skills}")
+    if forbidden_capabilities is not None:
+        extras.append(f"forbidden_capabilities: {forbidden_capabilities}")
+    if max_selected_skills is not None:
+        extras.append(f"max_selected_skills: {max_selected_skills}")
+    if max_selected_capabilities is not None:
+        extras.append(f"max_selected_capabilities: {max_selected_capabilities}")
+    if allow_broad_route is not None:
+        extras.append(f"allow_broad_route: {str(allow_broad_route).lower()}")
+    extras_text = "\n".join(extras)
+    if extras_text:
+        extras_text += "\n"
     return f"""case_id: {case_id}
 routing_triggers: {triggers}
 expected_route:
@@ -152,6 +210,7 @@ expected_skills: {skills}
 expected_capabilities: {capabilities}
 expected_quality_gates: {gates}
 expected_bsp_sections: {sections}
+{extras_text}
 """
 
 
