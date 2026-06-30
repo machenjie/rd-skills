@@ -3,7 +3,7 @@ actual_metadata:
   generation_mode: "deterministic"
   source_fixture: "evals/business-semantic/stale-business-memory.yaml"
   route_source: "current deterministic route resolver / fixture route adapter"
-  review_source: "deterministic fixture review skeleton"
+  review_source: "deterministic source/diff/prompt/trigger review skeleton"
 actual_route:
   stage: "implementation-planning"
   detected_triggers:

@@ -7,8 +7,9 @@ import argparse
 import importlib.util
 import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from validation_utils import fail_many, load_yaml_file
 
@@ -26,9 +27,10 @@ EVAL_ROUTING_PATH = ROOT / "scripts" / "eval-routing.py"
 
 GENERATOR = "scripts/generate-business-semantic-actuals.py"
 ROUTE_SOURCE = "current deterministic route resolver / fixture route adapter"
-REVIEW_SOURCE = "deterministic fixture review skeleton"
+REVIEW_SOURCE = "deterministic source/diff/prompt/trigger review skeleton"
 
 _FORBIDDEN_GENERATOR_INPUT_KEYS = {
+    "expected_route",
     "expected_skills",
     "expected_capabilities",
     "expected_quality_gates",
@@ -102,6 +104,18 @@ DELIVERY_CAPABILITIES = {
     "ci-cd",
     "backup-recovery",
 }
+
+
+@dataclass(frozen=True)
+class ReviewDetector:
+    name: str
+    category: str
+    trigger_terms: tuple[str, ...]
+    path_terms: tuple[str, ...]
+    source_terms: tuple[str, ...]
+    patch_terms: tuple[str, ...]
+    builder: Callable[[str, dict[str, Any]], dict[str, Any]]
+
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
@@ -916,6 +930,100 @@ def _ambiguous_term_finding(case_id: str, case: dict[str, Any]) -> dict[str, Any
     )
 
 
+REVIEW_DETECTORS = (
+    ReviewDetector(
+        name="hidden-rule-in-sql",
+        category="hidden_sql_rule",
+        trigger_terms=("business rule hidden in sql/controller/ui/test", "business rule authority unknown", "hidden sql rule"),
+        path_terms=(".sql", "/sql/"),
+        source_terms=("select ", " where ", "status", "eligibility"),
+        patch_terms=("where", "status", "eligibility"),
+        builder=_hidden_sql_rule_finding,
+    ),
+    ReviewDetector(
+        name="controller-only-business-rule",
+        category="controller_only_rule",
+        trigger_terms=("business rule hidden in sql/controller/ui/test", "business rule authority unknown", "hidden controller rule"),
+        path_terms=("controller",),
+        source_terms=("if ", "return ", "status", "permission", "order.cancel()"),
+        patch_terms=("if ", "status", "permission", "customer_tier", "age_days"),
+        builder=_controller_only_rule_finding,
+    ),
+    ReviewDetector(
+        name="dto-as-domain-object",
+        category="dto_as_domain_object",
+        trigger_terms=("dto used as business object", "dto used as domain object", "business object ownership unclear"),
+        path_terms=("models.py", "/api/", "/domain/"),
+        source_terms=("partnerorderresponse", "class order", "refund_allowed"),
+        patch_terms=("partnerorderresponse", "order:", "return_window"),
+        builder=_dto_as_domain_object_finding,
+    ),
+    ReviewDetector(
+        name="workflow-transition-added",
+        category="workflow_transition_gap",
+        trigger_terms=("business workflow state unclear", "business invariant changed", "workflow transition"),
+        path_terms=("status", "transition"),
+        source_terms=("claimstatus", "approved", "submitted"),
+        patch_terms=("claimstatus.approved", "claimstatus.draft", "refunded", "cancelled"),
+        builder=_workflow_transition_finding,
+    ),
+    ReviewDetector(
+        name="refactor-changes-business-semantics",
+        category="semantic_diff",
+        trigger_terms=("technical refactor may change business semantics", "business semantic review required", "refactor"),
+        path_terms=("eligibility",),
+        source_terms=("enterprise_discount", "trial_accounts_ineligible", "minimum_invoice_total"),
+        patch_terms=("enterprise_discount", "discount_eligible", "trial_accounts_ineligible"),
+        builder=_semantic_refactor_finding,
+    ),
+    ReviewDetector(
+        name="stale-business-memory",
+        category="stale_memory_source_truth",
+        trigger_terms=("business memory affects decision", "memory used as business fact", "stale business memory"),
+        path_terms=("memory", "owners"),
+        source_terms=("owner: revenue-platform", "remembered_owner", "source_check_required"),
+        patch_terms=("owner assumed from memory", "discount_rule_owner"),
+        builder=_stale_memory_finding,
+    ),
+    ReviewDetector(
+        name="business-golden-case-missing",
+        category="golden_case_gap",
+        trigger_terms=("business golden case missing", "reason code", "golden case missing"),
+        path_terms=(),
+        source_terms=(),
+        patch_terms=(),
+        builder=_golden_case_gap_finding,
+    ),
+    ReviewDetector(
+        name="under-routing-high-risk-business-change",
+        category="underroute_business_semantics",
+        trigger_terms=("entitlement", "eligibility", "denial", "reason code", "business semantic review required"),
+        path_terms=(),
+        source_terms=(),
+        patch_terms=(),
+        builder=_underroute_business_semantics_finding,
+    ),
+    ReviewDetector(
+        name="over-routing-simple-local-change",
+        category="bsp_skipped",
+        trigger_terms=("no behavior change", "typo"),
+        path_terms=(),
+        source_terms=(),
+        patch_terms=(),
+        builder=_bsp_skipped_finding,
+    ),
+    ReviewDetector(
+        name="ambiguous-business-term",
+        category="ambiguous_business_vocabulary",
+        trigger_terms=("business vocabulary ambiguous", "business term ambiguous"),
+        path_terms=(),
+        source_terms=(),
+        patch_terms=(),
+        builder=_ambiguous_term_finding,
+    ),
+)
+
+
 def _fixture_review_finding(case_id: str, case: dict[str, Any]) -> dict[str, Any]:
     return _finding(
         finding_id=f"BSP-{case_id.upper()}-NO-FINDING",
@@ -1006,29 +1114,40 @@ def _forbidden_behavior_avoided(case_id: str, triggers: list[str], text: str, bs
     return _unique(avoided)
 
 
+def _detector_matches(detector: ReviewDetector, case: dict[str, Any]) -> bool:
+    signal_text = _search_text(_string_list(case.get("routing_triggers")), str(case.get("prompt") or ""))
+    path_text = "\n".join(_fixture_paths(case)).casefold()
+    source_text = "\n".join(
+        "\n".join(str(item.get(key) or "") for key in ("path", "language", "content"))
+        for item in _source_items(case)
+    ).casefold()
+    patch_text = "\n".join(
+        "\n".join(str(item.get(key) or "") for key in ("path", "patch"))
+        for item in _changed_items(case)
+    ).casefold()
+    return (
+        _terms_match(detector.trigger_terms, signal_text)
+        and _terms_match(detector.path_terms, path_text)
+        and _terms_match(detector.source_terms, source_text)
+        and _terms_match(detector.patch_terms, patch_text)
+    )
+
+
+def _terms_match(terms: tuple[str, ...], text: str) -> bool:
+    return not terms or any(term.casefold() in text for term in terms)
+
+
+def _case_id_fallback_matches(detector: ReviewDetector, case_id: str) -> bool:
+    # Compatibility tie-breaker only: business semantic evidence must come from
+    # prompt, routing triggers, source context, or diff context.
+    return detector.name == case_id
+
+
 def _review_findings(case_id: str, case: dict[str, Any]) -> list[dict[str, Any]]:
-    search = _fixture_text(case).casefold()
     findings: list[dict[str, Any]] = []
-    if case_id == "hidden-rule-in-sql" or (_has_sql_signal(_fixture_paths(case), _fixture_text(case)) and "where" in search):
-        findings.append(_hidden_sql_rule_finding(case_id, case))
-    if case_id == "controller-only-business-rule" or ("controller" in search and "if " in search):
-        findings.append(_controller_only_rule_finding(case_id, case))
-    if case_id == "dto-as-domain-object" or "partnerorderresponse" in search or "dto used as business object" in search:
-        findings.append(_dto_as_domain_object_finding(case_id, case))
-    if case_id == "workflow-transition-added" or ("transition" in search and "claimstatus" in search):
-        findings.append(_workflow_transition_finding(case_id, case))
-    if case_id == "refactor-changes-business-semantics" or ("refactor" in search and "reason" in search):
-        findings.append(_semantic_refactor_finding(case_id, case))
-    if case_id == "stale-business-memory" or "memory used as business fact" in search:
-        findings.append(_stale_memory_finding(case_id, case))
-    if case_id == "business-golden-case-missing" or "golden case missing" in search:
-        findings.append(_golden_case_gap_finding(case_id, case))
-    if case_id == "under-routing-high-risk-business-change" or _has_high_risk_business_signal(search):
-        findings.append(_underroute_business_semantics_finding(case_id, case))
-    if case_id == "over-routing-simple-local-change" or ("no behavior change" in search and "typo" in search):
-        findings.append(_bsp_skipped_finding(case_id, case))
-    if case_id == "ambiguous-business-term" or "business vocabulary ambiguous" in search:
-        findings.append(_ambiguous_term_finding(case_id, case))
+    for detector in REVIEW_DETECTORS:
+        if _detector_matches(detector, case) or _case_id_fallback_matches(detector, case_id):
+            findings.append(detector.builder(case_id, case))
     if not findings:
         findings.append(_fixture_review_finding(case_id, case))
     return findings

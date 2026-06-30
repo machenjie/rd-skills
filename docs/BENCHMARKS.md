@@ -14,7 +14,7 @@ ChangeForge benchmarks are release evidence, not marketing claims. They are loca
 | Profile build reproducibility | Build manifests for `recommended`, `full`, and `dev`. | `python3 scripts/build.py --profile recommended && python3 scripts/build.py --profile full && python3 scripts/build.py --profile dev` |
 | Installation validation | Installer/doctor validation. | `python3 scripts/validate-installation.py` |
 | Skill efficacy structural fixtures | evals/skill-efficacy | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
-| Business semantic structural fixtures | Business Semantic Pack schemas and deterministic BSP routing/review fixtures under `evals/business-semantic`. | `python3 scripts/validate-business-semantic-pack.py`, `python3 scripts/generate-business-semantic-actuals.py --check`, `python3 scripts/eval-business-semantic-routing.py`, and `python3 scripts/eval-business-semantic-review.py` |
+| Business semantic structural fixtures | Business Semantic Pack schemas, deterministic BSP routing/review fixtures under `evals/business-semantic`, and static generator oracle-boundary checks. | `python3 scripts/validate-business-semantic-generator.py`, `python3 scripts/validate-business-semantic-pack.py`, `python3 scripts/generate-business-semantic-actuals.py --check`, `python3 scripts/eval-business-semantic-routing.py`, and `python3 scripts/eval-business-semantic-review.py` |
 | Context Control Plane overhead | Deterministic fixtures for context budget, selected/skipped references, JIT packs, tool-output boundaries, compaction snapshots, route repair summaries, and overhead policy. | `python3 scripts/eval-context-control-plane.py` |
 | Executor adapter structural fixtures | Deterministic adapter fixtures and sanitized telemetry sample under `evals/executor-adapter` and `reports/`. | `python3 scripts/eval-executor-adapters.py` |
 | Activation precision benchmark | Deterministic activation fixtures for stage, skill, capability, reference, language, risk, and overroute precision against the built hook runtime. | `python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks` |
@@ -64,18 +64,26 @@ compare expected fixture fields with deterministic actual outputs under
 `evals/business-semantic-outputs/`; those actuals are generated and checked by
 `generate-business-semantic-actuals.py --check`. The generator reads fixture
 input signals, `input_route_hint`, resolver/routing rules, and source/diff
-context only. `expected_*` fields are oracle assertions for evals, not generator
-inputs. Routing fixtures compare selected skills, selected capabilities, quality
-gates, BSP sections, BSP scope, canonical triggers, and structured reference
-decisions, including forbidden skills/capabilities and max selection limits to
-catch over-route failures. Review fixtures check `expected_evidence`, not only
-finding text, while actual review evidence is derived from source/diff snippets,
-prompt, and routing triggers. The schema validator checks both JSON Schema
-valid/invalid samples and semantic invariants, including non-empty rule
-`reason_codes` and `entry_points`. They do not prove live LLM behavior or live
-business correctness, and memory or repository graph signals remain selectors
-until current source, owner review, user source, or validation evidence confirms
-the claim. BSP selected/skipped references require structured rationale, not
+context only; `validate-business-semantic-generator.py` statically rejects direct
+generator access to `expected_*` oracle fields. `input_route_hint` is the only
+route override input and is limited to `stage`,
+`business_semantic_pack_required`, and `business_semantic_scope`; fixture authors
+must add `route_hint_diff_rationale` when it intentionally differs from
+`expected_route`. `expected_*` fields are oracle assertions for evals, not
+generator inputs. Routing fixtures compare selected skills, selected
+capabilities, quality gates, BSP sections, BSP scope, canonical triggers, and
+structured reference decisions, including forbidden skills/capabilities and max
+selection limits to catch over-route failures. Review fixtures check
+`expected_evidence`, not only finding text, while actual review evidence is
+derived from source/diff snippets, prompt, and routing triggers. Actual metadata
+uses `review_source: deterministic source/diff/prompt/trigger review skeleton`
+to avoid implying a live agent review or generic semantic review engine. The
+schema validator checks both JSON Schema valid/invalid samples and semantic
+invariants, including non-empty rule `reason_codes` and `entry_points`. They do
+not prove live agent behavior, live LLM behavior, production routing quality, or
+live business correctness, and memory or repository graph signals remain
+selectors until current source, owner review, user source, or validation evidence
+confirms the claim. BSP selected/skipped references require structured rationale, not
 string lists.
 
 Executor adapter benchmarks are also structural/local evidence. They validate

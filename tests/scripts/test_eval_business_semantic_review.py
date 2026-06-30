@@ -119,7 +119,7 @@ def _actual(case_id: str, *, findings: list[str], forbidden_behavior_avoided: li
   generation_mode: deterministic
   source_fixture: evals/business-semantic/{case_id}.yaml
   route_source: current deterministic route resolver / fixture route adapter
-  review_source: deterministic fixture review skeleton
+  review_source: deterministic source/diff/prompt/trigger review skeleton
 actual_route:
   stage: code-review
   business_semantic_pack_required: true

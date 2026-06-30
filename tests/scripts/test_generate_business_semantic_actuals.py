@@ -19,6 +19,7 @@ if str(SCRIPTS) not in sys.path:
 
 SCRIPT_PATH = ROOT / "scripts" / "generate-business-semantic-actuals.py"
 REVIEW_PATH = ROOT / "scripts" / "eval-business-semantic-review.py"
+VALIDATOR_PATH = ROOT / "scripts" / "validate-business-semantic-generator.py"
 _GENERATOR_SPEC = importlib.util.spec_from_file_location("generate_business_semantic_actuals_under_test", SCRIPT_PATH)
 if _GENERATOR_SPEC is None or _GENERATOR_SPEC.loader is None:
     raise RuntimeError(f"cannot load {SCRIPT_PATH}")
@@ -31,6 +32,12 @@ if _REVIEW_SPEC is None or _REVIEW_SPEC.loader is None:
 REVIEW = importlib.util.module_from_spec(_REVIEW_SPEC)
 sys.modules[_REVIEW_SPEC.name] = REVIEW
 _REVIEW_SPEC.loader.exec_module(REVIEW)
+_VALIDATOR_SPEC = importlib.util.spec_from_file_location("validate_business_semantic_generator_under_test", VALIDATOR_PATH)
+if _VALIDATOR_SPEC is None or _VALIDATOR_SPEC.loader is None:
+    raise RuntimeError(f"cannot load {VALIDATOR_PATH}")
+VALIDATOR = importlib.util.module_from_spec(_VALIDATOR_SPEC)
+sys.modules[_VALIDATOR_SPEC.name] = VALIDATOR
+_VALIDATOR_SPEC.loader.exec_module(VALIDATOR)
 
 
 class GenerateBusinessSemanticActualsTests(unittest.TestCase):
@@ -88,6 +95,39 @@ class GenerateBusinessSemanticActualsTests(unittest.TestCase):
         actual_text = json.dumps(actual["actual_review"], sort_keys=True)
 
         self.assertNotIn("not in source", actual_text)
+
+    def test_generator_uses_input_route_hint_not_expected_route(self) -> None:
+        case = _oracle_pollution_case()
+        case["input_route_hint"] = {
+            "stage": "implementation-planning",
+            "business_semantic_pack_required": True,
+            "business_semantic_scope": "input-scope",
+        }
+        case["expected_route"] = {
+            "stage": "coding",
+            "business_semantic_pack_required": False,
+            "business_semantic_scope": "expected-scope",
+        }
+
+        actual = GENERATOR.build_actual(Path("route-hint-boundary.yaml"), case)
+        actual_route = actual["actual_route"]
+
+        self.assertEqual(actual_route["stage"], "implementation-planning")
+        self.assertIs(actual_route["business_semantic_pack_required"], True)
+        self.assertEqual(actual_route["business_semantic_scope"], "input-scope")
+        self.assertNotEqual(actual_route["stage"], "coding")
+        self.assertNotEqual(actual_route["business_semantic_scope"], "expected-scope")
+
+    def test_static_validator_accepts_current_generator_source(self) -> None:
+        errors = VALIDATOR.validate_path(SCRIPT_PATH)
+
+        self.assertEqual(errors, [])
+
+    def test_static_validator_rejects_expected_route_access(self) -> None:
+        errors = VALIDATOR.validate_source('case.get("expected_route")\n', Path("candidate.py"))
+
+        self.assertTrue(errors)
+        self.assertIn("expected_route", errors[0])
 
     def test_review_eval_fails_when_expected_evidence_is_not_in_generated_actual(self) -> None:
         case_yaml = _missing_evidence_case_yaml()

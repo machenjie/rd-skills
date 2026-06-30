@@ -42,6 +42,7 @@ BSP_SECTIONS = {
     "validation_map",
     "context_control",
 }
+ROUTE_BOUNDARY_FIELDS = {"stage", "business_semantic_pack_required", "business_semantic_scope"}
 EVIDENCE_CLASSES = {"FACT", "INFERENCE", "ASSUMPTION", "OPEN_QUESTION", "MEMORY_SIGNAL"}
 FACT_SELECTOR_SOURCES = {"repository_graph", "memory_projection", "agent_inference"}
 BUSINESS_MEMORY_EVENT_TYPES = {
@@ -433,17 +434,33 @@ def _validate_eval_fixtures(schemas: dict[str, dict[str, Any]], errors: list[str
         route = fixture.get("expected_route", {})
         if not isinstance(route, dict) or "business_semantic_pack_required" not in route:
             errors.append(f"{context}: expected_route must declare business_semantic_pack_required")
+        if not isinstance(route, dict) or "stage" not in route:
+            errors.append(f"{context}: expected_route must declare stage")
         if not isinstance(route, dict) or "business_semantic_scope" not in route:
             errors.append(f"{context}: expected_route must declare business_semantic_scope")
         elif route.get("business_semantic_pack_required") is False and route.get("business_semantic_scope") != "none":
             errors.append(f"{context}: non-BSP case must set business_semantic_scope to none")
+        if isinstance(route, dict):
+            _validate_route_keys(context, "expected_route", route, errors)
         input_route_hint = fixture.get("input_route_hint", {})
         if not isinstance(input_route_hint, dict):
             errors.append(f"{context}: input_route_hint must be a mapping")
         else:
-            for field in ("stage", "business_semantic_pack_required", "business_semantic_scope"):
+            _validate_route_keys(context, "input_route_hint", input_route_hint, errors)
+            for field in ROUTE_BOUNDARY_FIELDS:
                 if field not in input_route_hint:
                     errors.append(f"{context}: input_route_hint must declare {field}")
+            if input_route_hint.get("business_semantic_pack_required") is False and input_route_hint.get("business_semantic_scope") != "none":
+                errors.append(f"{context}: non-BSP input_route_hint must set business_semantic_scope to none")
+        if isinstance(route, dict) and isinstance(input_route_hint, dict):
+            hint_projection = {field: input_route_hint.get(field) for field in ROUTE_BOUNDARY_FIELDS}
+            route_projection = {field: route.get(field) for field in ROUTE_BOUNDARY_FIELDS}
+            if hint_projection != route_projection:
+                rationale = fixture.get("route_hint_diff_rationale")
+                if not isinstance(rationale, str) or not rationale.strip():
+                    errors.append(f"{context}: route_hint_diff_rationale required when input_route_hint differs from expected_route")
+        if "route_hint_diff_rationale" in fixture and not isinstance(fixture.get("route_hint_diff_rationale"), str):
+            errors.append(f"{context}: route_hint_diff_rationale must be a string when present")
         sections = set(str(item) for item in fixture.get("expected_bsp_sections", []) or [])
         invalid_sections = sections - BSP_SECTIONS
         if invalid_sections:
@@ -463,6 +480,12 @@ def _validate_eval_fixtures(schemas: dict[str, dict[str, Any]], errors: list[str
         sample_bsp_path = fixture.get("sample_bsp_path")
         if sample_bsp_path:
             _validate_fixture_sample_bsp(str(sample_bsp_path), schemas, context, errors)
+
+
+def _validate_route_keys(context: str, field: str, route: dict[str, Any], errors: list[str]) -> None:
+    extra = set(route) - ROUTE_BOUNDARY_FIELDS
+    if extra:
+        errors.append(f"{context}: {field} may only contain {sorted(ROUTE_BOUNDARY_FIELDS)}, found extra {sorted(extra)}")
 
 
 def _validate_fixture_sample_bsp(

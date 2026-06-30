@@ -19,7 +19,7 @@ EXPECTED_METADATA = {
     "generated_by": "scripts/generate-business-semantic-actuals.py",
     "generation_mode": "deterministic",
     "route_source": "current deterministic route resolver / fixture route adapter",
-    "review_source": "deterministic fixture review skeleton",
+    "review_source": "deterministic source/diff/prompt/trigger review skeleton",
 }
 
 REQUIRED_CATEGORIES = {

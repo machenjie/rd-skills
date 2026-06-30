@@ -234,7 +234,7 @@ def _actual(
   generation_mode: deterministic
   source_fixture: evals/business-semantic/{case_id}.yaml
   route_source: current deterministic route resolver / fixture route adapter
-  review_source: deterministic fixture review skeleton
+  review_source: deterministic source/diff/prompt/trigger review skeleton
 actual_route:
   stage: {stage}
   detected_triggers: {triggers}

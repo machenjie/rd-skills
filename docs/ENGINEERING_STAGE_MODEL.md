@@ -170,14 +170,16 @@ used as business fact, and memory used as business fact. Legacy trigger aliases
 remain accepted for compatibility. BSP reference selection must use structured
 reason/evidence-limit rationale, and graph or memory cannot be promoted to
 `FACT` without current source, owner review, user source, or validation evidence.
-BSP authoring changes must also keep deterministic actual outputs fresh through
+BSP authoring changes must keep generator oracle boundaries and deterministic
+actual outputs fresh through `validate-business-semantic-generator.py` and
 `generate-business-semantic-actuals.py --check`. Actual generation reads input
-signals, `input_route_hint`, resolver/routing rules, and source/diff context;
-`expected_*` fields remain eval-only oracle assertions. Routing evals cover
-skills, capabilities, gates, BSP scope, BSP sections, triggers, references,
-forbidden selections, and max selection limits, while review actual evidence is
-derived from source/diff snippets, prompt, and routing triggers before eval checks
-`expected_evidence`.
+signals, bounded `input_route_hint`, resolver/routing rules, and source/diff
+context; `expected_*` fields remain eval-only oracle assertions. Routing evals
+cover skills, capabilities, gates, BSP scope, BSP sections, triggers,
+references, forbidden selections, and max selection limits, while review actual
+evidence is derived from source/diff snippets, prompt, and routing triggers
+before eval checks `expected_evidence`. These local fixtures prove deterministic
+structure, not live agent behavior or live business correctness.
 
 ## 3. Language Surface Selector
 
