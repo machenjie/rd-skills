@@ -79,3 +79,13 @@ Use the index to filter by:
 The exporter reads source registries and frontmatter. Do not hand-author a second marketplace catalog.
 The validator checks schema shape, profile visibility, runtime paths, and foundation capability exposure rules against built `dist/` artifacts.
 Business semantic capability discovery comes from the same source-derived index and generated catalog as every other capability; do not hand-author a separate business catalog or runtime content package.
+The canonical business semantic triggers are business context missing, business
+vocabulary ambiguous, business object ownership unclear, business rule authority
+unknown, business workflow state unclear, business invariant changed, business
+rule hidden in SQL/controller/UI/test, DTO used as business object, business
+memory affects decision, business golden case missing, technical refactor may
+change business semantics, business semantic review required, graph used as
+business fact, and memory used as business fact. Marketplace discovery should
+surface those names while retaining legacy aliases for compatibility; BSP
+references require structured rationale and memory/graph remain selectors until
+confirmed by current source or validation.

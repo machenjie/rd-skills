@@ -1,0 +1,32 @@
+actual_route:
+  stage: architecture-design
+  detected_triggers: [business workflow state unclear, business invariant changed]
+  selected_skills: [domain-impact-modeler, quality-test-gate]
+  selected_capabilities: [business-semantic-control-plane, state-machine-modeling, business-rule-extraction]
+  required_quality_gates: [domain gate, test gate]
+  business_semantic_pack_required: true
+  business_semantic_scope: workflow-transition-change
+  selected_bsp_sections: [workflows, business_rules, validation_map, code_mapping]
+  selected_references:
+    - reference: 14-state-machine-modeling
+      reason: status transition must include allowed and forbidden transition coverage
+      evidence_limit: transition table and invalid transition tests only
+  skipped_references:
+    - reference: data-migration-design
+      reason: fixture adds enum/status behavior but no persisted-record migration evidence
+      evidence_limit: migration risk remains out of scope
+      residual_risk: [stored record compatibility not proven]
+actual_review:
+  findings:
+    - finding_id: BSP-WORKFLOW-FORBIDDEN-GAP
+      severity: high
+      category: workflow_transition_gap
+      impacted_claim: approved claim can return to draft
+      evidence: [enum/status change lacks forbidden transition tests]
+      required_fix: transition table delta required, forbidden transition tests required; workflow transition table and invalid transition tests required.
+      validation_required: allowed and forbidden transition coverage
+  forbidden_behavior_avoided:
+    - add enum value only
+    - skip invalid transition coverage
+  residual_risk:
+    - persisted historical status migration not exercised

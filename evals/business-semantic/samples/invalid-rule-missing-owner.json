@@ -1,0 +1,32 @@
+{
+  "business_semantic_pack": {
+    "schema_version": 1,
+    "pack_id": "bsp_invalid_rule_owner",
+    "pack_version": "1",
+    "created_at": "2026-06-30T00:00:00Z",
+    "task_business_intent": {"business_outcome": "Reject cancellation after shipment.", "non_goals": [], "success_signals": ["denial is enforced"], "failure_signals": ["ownerless rule"], "evidence": [{"evidence_class": "FACT", "source_kind": "current_source", "source_paths": ["src/domain/order.py"], "summary": "Current source.", "freshness": "current", "confidence": "high", "verification_status": "verified"}]},
+    "business_vocabulary": [],
+    "business_objects": [],
+    "business_rules": [
+      {
+        "rule_id": "ORDER.CANCEL.AFTER_SHIP_DENIED",
+        "rule_name": "Deny shipped cancellation",
+        "enforcement_layer": "domain",
+        "authoritative_enforcement_paths": ["src/domain/order.py"],
+        "rule_statement": "A shipped order cannot be cancelled.",
+        "reason_codes": ["ORDER_ALREADY_SHIPPED"],
+        "entry_points": ["Order.cancel"],
+        "effective_dating": {"effective_from": null, "effective_to": null, "timezone_or_calendar": "UTC"},
+        "tests": ["tests/domain/test_order.py::test_shipped_order_cannot_cancel"],
+        "residual_risk": [],
+        "evidence": [{"evidence_class": "FACT", "source_kind": "current_source", "source_paths": ["src/domain/order.py"], "summary": "Current source.", "freshness": "current", "confidence": "high", "verification_status": "verified"}]
+      }
+    ],
+    "workflows": [],
+    "data_and_signal_semantics": {"data_sources": [], "events": [], "metrics": [], "evidence": [{"evidence_class": "INFERENCE", "source_kind": "agent_inference", "summary": "No data signal.", "freshness": "unknown", "confidence": "low", "verification_status": "not_verified"}]},
+    "code_mapping": {"object_to_files": [], "rule_to_enforcement": [], "workflow_to_state_machine": [], "forbidden_placements": [], "evidence": [{"evidence_class": "INFERENCE", "source_kind": "agent_inference", "summary": "No mapping.", "freshness": "unknown", "confidence": "low", "verification_status": "not_verified"}]},
+    "memory_projection": {"accepted": [], "rejected": [], "stale": [], "not_verified": []},
+    "validation_map": [],
+    "context_control": {"budget_mode": "minimal", "selected_references": [], "skipped_references": [], "evidence_limits": ["invalid owner"], "residual_context_risk": []}
+  }
+}

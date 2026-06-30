@@ -1,0 +1,32 @@
+actual_route:
+  stage: implementation-planning
+  detected_triggers: [DTO used as business object, business object ownership unclear]
+  selected_skills: [domain-impact-modeler, data-api-contract-changer, ai-code-review-refactor]
+  selected_capabilities: [business-semantic-control-plane, domain-object-identification, model-boundary-mapping]
+  required_quality_gates: [domain gate, API/data gate, implementation gate]
+  business_semantic_pack_required: true
+  business_semantic_scope: dto-domain-boundary
+  selected_bsp_sections: [business_vocabulary, business_objects, code_mapping, validation_map]
+  selected_references:
+    - reference: 12-domain-object-identification
+      reason: DTO/resource model must not silently become domain object
+      evidence_limit: mapping owner and source paths required
+  skipped_references:
+    - reference: state-machine-modeling
+      reason: lifecycle transition is not the primary fixture risk
+      evidence_limit: route if DTO status fields become workflow authority
+      residual_risk: [DTO may still hide status semantics]
+actual_review:
+  findings:
+    - finding_id: BSP-DTO-AS-DOMAIN
+      severity: high
+      category: dto_as_domain_object
+      impacted_claim: PartnerOrderResponse internal order model
+      evidence: [external DTO passed into domain service without mapper]
+      required_fix: DTO-as-domain object rejected, mapping owner required; DTO/table/resource model is being used as domain object; requires model-boundary-mapping and domain-object-identification.
+      validation_required: mapping tests for identity, lifecycle, and null/default semantics
+  forbidden_behavior_avoided:
+    - treat external DTO as aggregate
+    - skip compatibility risk
+  residual_risk:
+    - fixture does not enumerate all external DTO consumers

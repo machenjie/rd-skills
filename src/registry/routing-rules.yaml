@@ -167,10 +167,20 @@ risk_escalation_triggers:
   - stale compatibility branch
   - shared utility pollution risk
   - business logic in shared utils
+  - business context missing
   - business semantic pack
+  - business vocabulary ambiguous
   - business term ambiguous
   - business object ownership unclear
+  - business rule authority unknown
   - rule authority unclear
+  - business workflow state unclear
+  - business invariant changed
+  - business rule hidden in SQL/controller/UI/test
+  - DTO used as business object
+  - business memory affects decision
+  - technical refactor may change business semantics
+  - business semantic review required
   - hidden business rule
   - hidden sql rule
   - hidden controller rule
@@ -431,6 +441,14 @@ risk_trigger_rules:
     required_skills: [change-intake-compiler, domain-impact-modeler, quality-test-gate, ai-code-review-refactor]
     required_capabilities: [business-semantic-control-plane, context-control-plane, validation-broker]
     required_quality_gates: [requirement gate, domain gate, test gate, AI review gate]
+  - trigger: business context missing
+    required_skills: [change-intake-compiler, domain-impact-modeler]
+    required_capabilities: [business-semantic-control-plane, context-control-plane]
+    required_quality_gates: [requirement gate, domain gate]
+  - trigger: business vocabulary ambiguous
+    required_skills: [change-intake-compiler, domain-impact-modeler]
+    required_capabilities: [business-semantic-control-plane, domain-object-identification]
+    required_quality_gates: [requirement gate, domain gate]
   - trigger: business term ambiguous
     required_skills: [change-intake-compiler, domain-impact-modeler]
     required_capabilities: [business-semantic-control-plane, domain-object-identification]
@@ -439,10 +457,30 @@ risk_trigger_rules:
     required_skills: [domain-impact-modeler, architecture-impact-reviewer]
     required_capabilities: [business-semantic-control-plane, domain-object-identification, module-boundary-design]
     required_quality_gates: [domain gate, architecture gate]
+  - trigger: DTO used as business object
+    required_skills: [domain-impact-modeler, data-api-contract-changer, ai-code-review-refactor]
+    required_capabilities: [business-semantic-control-plane, domain-object-identification, model-boundary-mapping]
+    required_quality_gates: [domain gate, API/data gate, implementation gate, AI review gate]
+  - trigger: business rule authority unknown
+    required_skills: [domain-impact-modeler, quality-test-gate]
+    required_capabilities: [business-semantic-control-plane, business-rule-extraction, validation-broker]
+    required_quality_gates: [domain gate, test gate]
   - trigger: rule authority unclear
     required_skills: [domain-impact-modeler, quality-test-gate]
     required_capabilities: [business-semantic-control-plane, business-rule-extraction, validation-broker]
     required_quality_gates: [domain gate, test gate]
+  - trigger: business workflow state unclear
+    required_skills: [domain-impact-modeler, quality-test-gate]
+    required_capabilities: [business-semantic-control-plane, state-machine-modeling, business-rule-extraction]
+    required_quality_gates: [domain gate, test gate]
+  - trigger: business invariant changed
+    required_skills: [domain-impact-modeler, quality-test-gate, ai-code-review-refactor]
+    required_capabilities: [business-semantic-control-plane, business-rule-extraction, state-machine-modeling, validation-broker]
+    required_quality_gates: [domain gate, test gate, AI review gate]
+  - trigger: business rule hidden in SQL/controller/UI/test
+    required_skills: [domain-impact-modeler, ai-code-review-refactor, quality-test-gate]
+    required_capabilities: [business-semantic-control-plane, business-rule-extraction, implementation-structure-design, validation-broker]
+    required_quality_gates: [domain gate, implementation gate, AI review gate, test gate]
   - trigger: hidden business rule
     required_skills: [domain-impact-modeler, ai-code-review-refactor, quality-test-gate]
     required_capabilities: [business-semantic-control-plane, business-rule-extraction, implementation-structure-design]
@@ -459,9 +497,20 @@ risk_trigger_rules:
     required_skills: [quality-test-gate]
     required_capabilities: [business-semantic-control-plane, validation-broker, regression-testing]
     required_quality_gates: [test gate]
+  - trigger: business memory affects decision
+    required_capabilities: [business-semantic-control-plane, project-memory-governance, repository-graph-analysis]
+    required_quality_gates: [domain gate, execution discipline gate]
   - trigger: stale business memory
     required_capabilities: [business-semantic-control-plane, project-memory-governance, repository-graph-analysis]
     required_quality_gates: [execution discipline gate]
+  - trigger: technical refactor may change business semantics
+    required_skills: [ai-code-review-refactor, quality-test-gate]
+    required_capabilities: [business-semantic-control-plane, plan-execution-consistency]
+    required_quality_gates: [AI review gate, implementation gate, test gate]
+  - trigger: business semantic review required
+    required_skills: [ai-code-review-refactor, quality-test-gate]
+    required_capabilities: [business-semantic-control-plane, validation-broker]
+    required_quality_gates: [AI review gate, test gate]
   - trigger: graph used as business fact
     required_capabilities: [business-semantic-control-plane, repository-graph-analysis, context-control-plane]
     required_quality_gates: [domain gate, execution discipline gate]

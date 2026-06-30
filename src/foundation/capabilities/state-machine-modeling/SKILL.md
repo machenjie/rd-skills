@@ -125,6 +125,17 @@ Return a state machine model with:
 - `handoff_boundaries` (what belongs to object identification, business rules, events, idempotency, permissions, migration, release, or testing)
 - `evidence_limits` (uninspected code paths, data, migrations, events, runtime behavior, tests not run, or graph freshness limits)
 
+## BSP.workflows Write Contract
+
+When BSP is selected, each workflow must be writable to `BSP.workflows` with:
+
+- workflow id, object or aggregate owner, and source of truth
+- `states`, allowed transitions, and forbidden transitions
+- guard rule ids, actor or mutation authority, side effects, emitted events, and audit fields
+- source paths, evidence class, graph/memory selector status, and freshness limits
+- `validation_map` entries for allowed transitions, forbidden transitions, guard rules, side effects, and migration/compatibility claims
+- residual risk for uninspected writers, stored-record compatibility, or missing owner review
+
 # Evidence Contract
 
 - **Repository evidence:** name the domain files, models, services, jobs, SQL, event schemas, tests, docs, registry entries, and support/admin tools inspected; if no concrete implementation exists, state that the output is a design contract rather than verified source behavior.
@@ -156,6 +167,7 @@ The state machine model is complete only when:
 8. Transition table is versioned alongside the domain code.
 9. Test plan covers: all states, all valid transitions, all invalid transitions, timeout paths, recovery paths.
 10. Data migration plan exists if new states are added to objects with existing production records.
+11. A new or changed status/enum without forbidden transition coverage blocks closure; allowed-path tests alone do not prove workflow safety.
 11. Selected mode, source evidence, lifecycle owner, source of truth, and transition authority are explicit.
 12. Repository graph, project memory, and prior execution trajectory evidence are confirmed against current source or marked stale/not verified.
 13. Every changed state, transition, guard, side effect, event, audit field, migration, and permission branch maps to validation evidence or named residual risk.

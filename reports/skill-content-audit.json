@@ -285,7 +285,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 22,
-      "bullet_count": 138,
+      "bullet_count": 148,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 73,
@@ -293,18 +293,18 @@
       "description_findings": [],
       "description_length": 240,
       "findings": [
-        "body 253 lines exceeds review threshold 250"
+        "body 270 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
-      "heading_count": 23,
+      "heading_count": 24,
       "kind": "professional-skill",
       "largest_section_lines": 49,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 253,
+      "line_count": 270,
       "name": "ai-code-review-refactor",
       "optimality_section_length": 5,
-      "output_contract_length": 14,
+      "output_contract_length": 12,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
@@ -318,7 +318,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 4617
+      "word_count": 4826
     },
     {
       "anti_example_section_length": 10,
@@ -445,7 +445,7 @@
       "largest_section_lines": 55,
       "largest_section_title": "Technical Selection Criteria",
       "largest_table_rows": 14,
-      "line_count": 244,
+      "line_count": 246,
       "name": "change-forge-router",
       "optimality_section_length": 0,
       "output_contract_length": 25,
@@ -462,7 +462,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 5053
+      "word_count": 5159
     },
     {
       "anti_example_section_length": 10,
@@ -683,7 +683,7 @@
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 18,
-      "bullet_count": 111,
+      "bullet_count": 121,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 82,
@@ -692,15 +692,15 @@
       "description_length": 189,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 22,
+      "heading_count": 23,
       "kind": "professional-skill",
-      "largest_section_lines": 26,
-      "largest_section_title": "Proactive Professional Triggers",
+      "largest_section_lines": 27,
+      "largest_section_title": "Output Contract",
       "largest_table_rows": 7,
-      "line_count": 208,
+      "line_count": 222,
       "name": "domain-impact-modeler",
       "optimality_section_length": 0,
-      "output_contract_length": 21,
+      "output_contract_length": 27,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/domain-impact-modeler/SKILL.md",
@@ -714,7 +714,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3406
+      "word_count": 3662
     },
     {
       "anti_example_section_length": 10,
@@ -863,7 +863,7 @@
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 22,
-      "bullet_count": 150,
+      "bullet_count": 155,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 0,
       "context_efficiency_score": 69,
@@ -871,15 +871,15 @@
       "description_findings": [],
       "description_length": 202,
       "findings": [
-        "body 251 lines exceeds review threshold 250"
+        "body 263 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
-      "heading_count": 24,
+      "heading_count": 25,
       "kind": "professional-skill",
       "largest_section_lines": 28,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 251,
+      "line_count": 263,
       "name": "quality-test-gate",
       "optimality_section_length": 0,
       "output_contract_length": 12,
@@ -896,7 +896,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 5079
+      "word_count": 5194
     },
     {
       "anti_example_section_length": 10,
@@ -1513,7 +1513,7 @@
     {
       "anti_example_section_length": 13,
       "benchmark_section_length": 24,
-      "bullet_count": 115,
+      "bullet_count": 124,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 90,
@@ -1522,15 +1522,15 @@
       "description_length": 137,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 23,
+      "heading_count": 24,
       "kind": "foundation-capability",
-      "largest_section_lines": 34,
-      "largest_section_title": "Critical Details",
+      "largest_section_lines": 39,
+      "largest_section_title": "Output Contract",
       "largest_table_rows": 9,
-      "line_count": 227,
+      "line_count": 241,
       "name": "business-rule-extraction",
       "optimality_section_length": 0,
-      "output_contract_length": 27,
+      "output_contract_length": 39,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/business-rule-extraction/SKILL.md",
@@ -1544,7 +1544,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 2,
-      "word_count": 3802
+      "word_count": 3937
     },
     {
       "anti_example_section_length": 0,
@@ -1580,7 +1580,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 6,
-      "word_count": 1385
+      "word_count": 1519
     },
     {
       "anti_example_section_length": 0,
@@ -1981,7 +1981,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 63,
+      "bullet_count": 68,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -1990,15 +1990,15 @@
       "description_length": 215,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 20,
+      "heading_count": 21,
       "kind": "foundation-capability",
-      "largest_section_lines": 20,
+      "largest_section_lines": 31,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 7,
-      "line_count": 153,
+      "line_count": 165,
       "name": "context-control-plane",
       "optimality_section_length": 0,
-      "output_contract_length": 20,
+      "output_contract_length": 31,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/context-control-plane/SKILL.md",
@@ -2012,29 +2012,29 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 6,
-      "word_count": 2153
+      "word_count": 2275
     },
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 110,
+      "bullet_count": 116,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
-      "context_efficiency_score": 100,
+      "context_efficiency_score": 90,
       "critical_details_length": 18,
       "description_findings": [],
       "description_length": 156,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 21,
+      "heading_count": 22,
       "kind": "foundation-capability",
-      "largest_section_lines": 36,
+      "largest_section_lines": 46,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 7,
-      "line_count": 200,
+      "line_count": 211,
       "name": "context-packaging",
       "optimality_section_length": 0,
-      "output_contract_length": 36,
+      "output_contract_length": 46,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/context-packaging/SKILL.md",
@@ -2048,7 +2048,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 2,
-      "word_count": 3643
+      "word_count": 3820
     },
     {
       "anti_example_section_length": 14,
@@ -2593,7 +2593,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 66,
+      "bullet_count": 73,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -2602,15 +2602,15 @@
       "description_length": 138,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 19,
+      "heading_count": 20,
       "kind": "foundation-capability",
-      "largest_section_lines": 33,
-      "largest_section_title": "Proactive Professional Triggers",
+      "largest_section_lines": 34,
+      "largest_section_title": "Output Contract",
       "largest_table_rows": 5,
-      "line_count": 186,
+      "line_count": 198,
       "name": "domain-object-identification",
       "optimality_section_length": 0,
-      "output_contract_length": 23,
+      "output_contract_length": 34,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/domain-object-identification/SKILL.md",
@@ -2624,7 +2624,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 3,
-      "word_count": 2485
+      "word_count": 2582
     },
     {
       "anti_example_section_length": 13,
@@ -4393,7 +4393,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 3,
-      "bullet_count": 77,
+      "bullet_count": 82,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -4402,15 +4402,15 @@
       "description_length": 239,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 22,
+      "heading_count": 23,
       "kind": "foundation-capability",
-      "largest_section_lines": 14,
+      "largest_section_lines": 25,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 6,
-      "line_count": 140,
+      "line_count": 152,
       "name": "project-memory-governance",
       "optimality_section_length": 0,
-      "output_contract_length": 14,
+      "output_contract_length": 25,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/project-memory-governance/SKILL.md",
@@ -4424,7 +4424,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 6,
-      "word_count": 2245
+      "word_count": 2357
     },
     {
       "anti_example_section_length": 11,
@@ -4681,7 +4681,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 3,
-      "bullet_count": 80,
+      "bullet_count": 90,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 98,
@@ -4690,15 +4690,15 @@
       "description_length": 244,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 22,
+      "heading_count": 23,
       "kind": "foundation-capability",
-      "largest_section_lines": 27,
-      "largest_section_title": "Proactive Professional Triggers",
+      "largest_section_lines": 31,
+      "largest_section_title": "Output Contract",
       "largest_table_rows": 6,
-      "line_count": 163,
+      "line_count": 180,
       "name": "repository-graph-analysis",
       "optimality_section_length": 0,
-      "output_contract_length": 15,
+      "output_contract_length": 31,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/repository-graph-analysis/SKILL.md",
@@ -4712,7 +4712,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 8,
-      "word_count": 2298
+      "word_count": 2386
     },
     {
       "anti_example_section_length": 0,
@@ -5257,7 +5257,7 @@
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 4,
-      "bullet_count": 68,
+      "bullet_count": 75,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -5266,15 +5266,15 @@
       "description_length": 168,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 22,
+      "heading_count": 23,
       "kind": "foundation-capability",
-      "largest_section_lines": 27,
+      "largest_section_lines": 38,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 7,
-      "line_count": 168,
+      "line_count": 180,
       "name": "state-machine-modeling",
       "optimality_section_length": 0,
-      "output_contract_length": 27,
+      "output_contract_length": 38,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/state-machine-modeling/SKILL.md",
@@ -5288,7 +5288,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 3,
-      "word_count": 3023
+      "word_count": 3130
     },
     {
       "anti_example_section_length": 11,

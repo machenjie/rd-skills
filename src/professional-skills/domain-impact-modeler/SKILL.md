@@ -178,7 +178,20 @@ Return a domain impact model with:
 - **Behavior preservation statement**: old allowed/forbidden transitions, event semantics, permission rules, and invariants preserved or intentionally changed.
 - **Validation evidence**: domain tests, transition tests, consumer/schema checks, language audit, or not-verified disclosure.
 - **Evidence limits**: what the domain evidence proves and does not prove about downstream consumers, historical data, replay, or compliance.
+- `business_semantic_pack_delta` when BSP is selected:
+  - `sections_written`: business_vocabulary, business_objects, business_rules, workflows, data_and_signal_semantics, code_mapping, validation_map, or context_control sections changed by the DDD work.
+  - `source_backed_facts`: each business claim marked `FACT` with current source, owner review, user-provided source, or validation evidence.
+  - `assumptions`: business claims that are not source-confirmed and must not be treated as FACT.
+  - `open_questions`: owner, vocabulary, rule authority, workflow, or validation gaps that block implementation planning.
+  - `residual_business_risk`: semantic risks left after selected source reads and validation.
 - **Residual risk and next gate**: unverified side effect, event migration, data cleanup, or owner approval with handoff.
+
+## Business Semantic Pack Coupling
+DDD owns the BSP domain slices when a business semantic trigger is present. It writes or updates `business_vocabulary`, `business_objects`, `business_rules`, `workflows`, and `data_and_signal_semantics`, then maps each claim into `validation_map` or residual risk.
+
+- When a business semantic trigger is present but no BSP exists, do not proceed directly to implementation planning. Create the BSP slice, or record a structured skip rationale in `context_control.selected_references` / `skipped_references` using reference, reason, evidence limit, and residual risk.
+- Domain model output must carry `evidence_class` for each material claim. Mark current-source, owner-review, user-source, or validation-backed claims as `FACT`; mark graph-selected or memory-selected claims as `INFERENCE`, `ASSUMPTION`, `OPEN_QUESTION`, or `MEMORY_SIGNAL`.
+- Project memory and repository graph are selectors only. They may choose files, owners, rules, or transitions to inspect, but they cannot prove a BSP `FACT` without current source, owner review, user-provided source, or validation result.
 
 ## Evidence Contract
 Close a domain impact model only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
@@ -202,6 +215,7 @@ Close a domain impact model only when all five canonical answers are concrete (a
 9. All teams that own affected bounded contexts have been notified and acknowledged the impact.
 10. Domain model changes do not violate regulatory or compliance invariants without explicit stakeholder approval.
 11. Business Semantic Pack domain claims are mapped to source-backed evidence, validation, owner review, or explicit residual risk.
+12. When a business semantic trigger is present, DDD output maps affected vocabulary, object, rule, workflow, signal, and validation claims into BSP or records structured BSP skipped rationale before implementation planning.
 
 ## Handoff
 - **architecture-impact-reviewer** — when domain model changes affect architectural boundaries, team topology, or system-of-record ownership.

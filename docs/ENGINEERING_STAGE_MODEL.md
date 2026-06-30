@@ -160,6 +160,17 @@ common risks, and gates likely needed. Launch only the matching set for the surf
 | validation-broker | `quality-test-gate` | `validation-broker`, `repository-graph-analysis`, `plan-execution-consistency`, `context-control-plane` | stale validation, wrong validator depth | test |
 | execution-trajectory | `ai-code-review-refactor` | `execution-trajectory-analysis`, `agent-workflow-state-machine`, `validation-broker`, `context-control-plane` | edit-before-read, repair without re-review | AI review, test |
 
+Business semantics use the canonical trigger family: business context missing,
+business vocabulary ambiguous, business object ownership unclear, business rule
+authority unknown, business workflow state unclear, business invariant changed,
+business rule hidden in SQL/controller/UI/test, DTO used as business object,
+business memory affects decision, business golden case missing, technical
+refactor may change business semantics, business semantic review required, graph
+used as business fact, and memory used as business fact. Legacy trigger aliases
+remain accepted for compatibility. BSP reference selection must use structured
+reason/evidence-limit rationale, and graph or memory cannot be promoted to
+`FACT` without current source, owner review, user source, or validation evidence.
+
 ## 3. Language Surface Selector
 
 Each language lists its capability, the stages where it launches, and its main professional

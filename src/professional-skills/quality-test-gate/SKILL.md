@@ -227,6 +227,17 @@ Return a test strategy with actionable evidence:
 - **Validation evidence:** commands, exit codes, artifacts, what evidence proves, what evidence does not prove, validation freshness, and evidence limits.
 - **Residual risk and next gate:** accepted gaps, flaky classifications, manual evidence, owner, and next gate or no-next-gate rationale.
 
+## Business Golden Case Gate
+
+When BSP is selected, every changed business rule, workflow transition, permission or denial reason code, and negative path must map to at least one of:
+
+- business golden case or tabular rule case with stable rule/workflow id
+- executable test covering the changed path and one denied/forbidden path
+- owner review with current source or validation reference
+- explicit residual risk with owner and release consequence
+
+Green generic tests do not prove a changed business semantic claim unless the test names the rule/workflow/reason code or is mapped in the BSP `validation_map`.
+
 ## Evidence Contract
 Close a test strategy only when the canonical answers from `agent-execution-discipline` are concrete:
 - **Basis:** selected mode, risk-to-test map, and why that depth fits the risk.
@@ -246,6 +257,7 @@ Close a test strategy only when the canonical answers from `agent-execution-disc
 - Validation evidence is fresh against final source, configs, fixtures, generated inputs, migrations, and lockfiles.
 - Partial validation is reported honestly; lint/typecheck/single-test passes are not presented as full-suite or full-coverage success.
 - Business semantic rules, workflows, reason codes, and owner decisions map to golden cases, owner review, or explicit residual risk; graph and memory do not prove business behavior alone.
+- New or changed BSP validation_map entries with status `mapped` include non-memory evidence; memory-only or graph-only mappings block closure.
 
 ## Handoff
 - Hand service/API test obligations to `backend-change-builder`; data/query/migration obligations to `data-middleware-change-builder`; UI/a11y obligations to `frontend-change-builder`; integration/idempotency/failure simulation to `integration-change-builder`.

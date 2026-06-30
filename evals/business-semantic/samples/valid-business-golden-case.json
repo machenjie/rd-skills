@@ -1,0 +1,18 @@
+{
+  "business_golden_case": {
+    "schema_version": 1,
+    "case_id": "order-cancel-shipped-denied",
+    "business_claim_ids": ["ORDER.CANCEL.AFTER_SHIP_DENIED"],
+    "business_object_ids": ["OBJ.ORDER"],
+    "business_rule_ids": ["ORDER.CANCEL.AFTER_SHIP_DENIED"],
+    "workflow_transition_ids": ["ORDER_LIFECYCLE:SHIPPED->CANCELLED"],
+    "given": ["an order is SHIPPED"],
+    "when": "the customer attempts cancellation",
+    "then": ["the order remains SHIPPED", "the denial reason is ORDER_ALREADY_SHIPPED"],
+    "expected_outcome": "Cancellation is denied with a stable reason code.",
+    "negative_cases": ["PENDING order cancellation remains allowed"],
+    "validation_target": "tests/domain/test_order.py::test_shipped_order_cannot_cancel",
+    "owner_review": "Order aggregate owner",
+    "residual_risk": []
+  }
+}

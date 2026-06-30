@@ -1,0 +1,13 @@
+{
+  "business_golden_case": {
+    "schema_version": 1,
+    "case_id": "OrderCancelShippedDenied",
+    "business_claim_ids": [],
+    "given": [],
+    "when": "",
+    "then": [],
+    "expected_outcome": "",
+    "validation_target": "",
+    "residual_risk": []
+  }
+}

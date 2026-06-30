@@ -126,6 +126,10 @@ class MemoryProjectionTests(unittest.TestCase):
         self.assertEqual([item["event_id"] for item in business_memory["accepted"]], [accepted["event_id"]])
         self.assertEqual([item["event_id"] for item in business_memory["rejected"]], [rejected["event_id"]])
         self.assertEqual([item["event_id"] for item in business_memory["stale"]], [stale["event_id"]])
+        accepted_item = business_memory["accepted"][0]
+        self.assertTrue(accepted_item["source_check_required"])
+        self.assertEqual(accepted_item["source_status"], "current")
+        self.assertNotEqual(accepted_item["evidence_role"], "business_fact")
 
 
 if __name__ == "__main__":

@@ -119,6 +119,17 @@ Return a `context_control` record with:
 - `what_evidence_proves` and `what_evidence_does_not_prove`.
 - `residual_context_risk`.
 
+## Structured BSP Reference Budget Policy
+
+Business semantic context uses `referenceDecision` records for both selected and skipped references. Each decision includes `reference`, `reason`, `evidence_limit`, optional `budget_mode`, and optional `residual_risk`.
+
+- `minimal`: affected object/rule/direct source/direct test only.
+- `single-stage`: one object, rule, or workflow slice for the current stage.
+- `staged-plan`: cross-module or cross-context BSP that needs staged reads and validators.
+- `full`: regulated, financial, Web3, AI-agent, migration, or production-critical BSP only.
+
+Do not upgrade from minimal or single-stage to full because graph or memory is available. Upgrade only when the route risk and current source evidence require it, and record skipped references with residual risk.
+
 # Evidence Contract
 
 Close context control only when these answers are concrete: route budget mode; selected and skipped references; JIT retrieval plan; tool-output boundary; compaction snapshot requirement; branch route-repair summary requirement; overhead evidence status; privacy exclusions; validation commands; what evidence proves; what evidence does not prove; rollback or reroute note; residual risk; and next gate.
@@ -138,6 +149,7 @@ Close context control only when these answers are concrete: route budget mode; s
 11. Validation commands run or are explicitly marked not-run with evidence limits.
 12. Final handoff states what context was inspected, what remains unknown, and validation limits.
 13. BSP references stay task-scoped and do not promote memory, graph, personal archives, or private archive maps into business facts.
+14. BSP selected/skipped references are structured reference decisions with reason and evidence limit; string-only entries are rejected.
 
 # Used By
 

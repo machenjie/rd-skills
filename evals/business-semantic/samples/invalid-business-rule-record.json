@@ -1,0 +1,15 @@
+{
+  "business_rule_record": {
+    "schema_version": 1,
+    "rule_id": "ORDER.CANCEL.AFTER_SHIP_DENIED",
+    "rule_name": "Deny shipped cancellation",
+    "rule_statement": "A shipped order cannot be cancelled.",
+    "enforcement_layer": "domain",
+    "reason_codes": ["ORDER_ALREADY_SHIPPED"],
+    "entry_points": ["Order.cancel"],
+    "effective_dating": {"effective_from": null, "effective_to": null, "timezone_or_calendar": "UTC"},
+    "tests": ["tests/domain/test_order.py::test_shipped_order_cannot_cancel"],
+    "residual_risk": [],
+    "evidence": [{"evidence_class": "FACT", "source_kind": "current_source", "source_paths": ["src/domain/order.py"], "summary": "Current source.", "freshness": "current"}]
+  }
+}

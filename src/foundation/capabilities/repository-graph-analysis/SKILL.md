@@ -132,6 +132,22 @@ Return a `repository_graph_analysis` record with:
 - `residual_risk` (stale, missing, ambiguous, conflicting, low-confidence, or unknown-consumer graph evidence and next gate).
 - `handoff` (closure decision, owner/reviewer route, rollback note, validation limits, and next gate).
 
+## Business Semantic Graph Edge Contract
+
+When BSP is selected, graph output may expose these selector edges:
+
+- `object_defined_in`
+- `rule_enforced_by`
+- `rule_previewed_by`
+- `rule_defended_by`
+- `workflow_transition_implemented_by`
+- `event_produced_by`
+- `event_consumed_by`
+- `golden_case_validates`
+- `memory_warns_about`
+
+These edges select source files, owners, tests, and validation candidates to inspect. They do not prove BSP `FACT` claims until current source, owner review, user-provided source, or validation evidence confirms the selected claim.
+
 # Evidence Contract
 Close graph analysis only when these answers are concrete:
 - **Basis:** graph signal, requested change, target boundary, and why graph evidence changes planning, validation, review, or handoff.
@@ -160,6 +176,7 @@ Routes from `change-forge-router`, `change-impact-analyzer`, `architecture-impac
 9. Every changed path, missing test edge, generated edge, and omitted high-risk edge maps to validation, review, owner response, or residual risk.
 10. Handoff states inspected evidence, unknown graph areas, validation limits, rollback note, and next owner.
 11. Business semantic graph edges are treated as selectors until current source, owner review, or validation evidence confirms the claim.
+12. A graph edge cannot prove a BSP `FACT` without a current-source read or validation artifact tied to that edge.
 
 # Used By
 `change-forge-router`, `change-impact-analyzer`, `architecture-impact-reviewer`, `task-dag-planner`, `quality-test-gate`, `ai-code-review-refactor`, `change-documentation-gate`, `agent-execution-discipline`.

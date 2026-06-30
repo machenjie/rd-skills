@@ -109,6 +109,17 @@ Return a `project_memory_governance_record` with:
 - `evidence_limits` (what evidence proves, what evidence does not prove, not-run or stale checks, unsupported owner or adapter evidence, and residual risk).
 - `handoff` (owner skill, reviewer or maintainer, required next action, blocked condition, and accepted memory limit).
 
+## Business Memory Projection Contract
+
+Business memory events may enter `BSP.memory_projection` only as selector verdicts:
+
+- `accepted`: useful selector after scope/date/source reconciliation, still requiring current-source or validation confirmation before FACT.
+- `rejected`: excluded from the BSP claim path with reason.
+- `stale`: previously useful but contradicted or superseded by current source, owner review, or validation.
+- `not_verified`: potentially relevant but not confirmed within the task budget.
+
+Accepted memory is still not source truth. It must carry source-check status, evidence limit, and validation or owner-review handoff before any BSP claim can become `FACT`.
+
 # Evidence Contract
 Close memory governance only when these answers are concrete:
 - **Basis:** memory signal, current request, affected path or artifact, and why the signal changes risk.
@@ -136,7 +147,8 @@ Routes from `change-forge-router`, `quality-test-gate`, `ai-code-review-refactor
 8. Coupling decisions name the downstream skill, evidence it must inspect, and the memory limit it must not exceed.
 9. Every accepted memory signal maps to validation, review, owner response, or residual risk.
 10. Business memory remains advisory until confirmed by current source, owner review, or validation evidence and is never stored as raw prompt or personal corpus content.
-10. Handoff states inspected evidence, unknowns, validation limits, rollback note, and next owner.
+11. Accepted business memory still requires source_check before becoming a BSP `FACT`; missing source_check blocks closure or leaves residual risk.
+12. Handoff states inspected evidence, unknowns, validation limits, rollback note, and next owner.
 
 # Used By
 `change-forge-router`, `quality-test-gate`, `ai-code-review-refactor`, `change-documentation-gate`, `agent-execution-discipline`, `skill-authoring-expert`.

@@ -1,0 +1,35 @@
+actual_route:
+  stage: architecture-design
+  detected_triggers: [business invariant changed, business rule authority unknown, business workflow state unclear, business semantic review required]
+  selected_skills: [change-intake-compiler, domain-impact-modeler, quality-test-gate, ai-code-review-refactor]
+  selected_capabilities: [business-semantic-control-plane, domain-object-identification, business-rule-extraction, state-machine-modeling, validation-broker, context-control-plane]
+  required_quality_gates: [requirement gate, domain gate, architecture gate, API/data gate, test gate, AI review gate]
+  business_semantic_pack_required: true
+  business_semantic_scope: high-risk-entitlement-workflow-reason-code
+  selected_bsp_sections: [task_business_intent, business_vocabulary, business_objects, business_rules, workflows, data_and_signal_semantics, code_mapping, memory_projection, validation_map, context_control]
+  selected_references:
+    - reference: 135-business-semantic-control-plane
+      reason: entitlement eligibility, renewal transitions, and denial reasons require full BSP sections
+      evidence_limit: source-backed claims plus validation map; deterministic fixture only
+    - reference: 14-state-machine-modeling
+      reason: renewal status transition risk must be modeled
+      evidence_limit: allowed/forbidden transition evidence required
+  skipped_references:
+    - reference: payment-trading-extension
+      reason: entitlement fixture does not directly change billing ledger or settlement
+      evidence_limit: billing side effects remain outside this fixture
+      residual_risk: [enterprise renewal may still affect billing in a real system]
+actual_review:
+  findings:
+    - finding_id: BSP-UNDERROUTE-HIGH-RISK
+      severity: critical
+      category: underroute_business_semantics
+      impacted_claim: enterprise entitlement eligibility, renewal status, denial reasons
+      evidence: [multi-object rule/workflow/reason-code prompt]
+      required_fix: BSP required, rule/workflow/object/golden coverage required
+      validation_required: domain, test, and AI semantic review gates
+  forbidden_behavior_avoided:
+    - route directly to coding
+    - skip semantic review
+  residual_risk:
+    - deterministic fixture cannot prove live entitlement correctness

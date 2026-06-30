@@ -59,9 +59,14 @@ overhead.
 
 Business semantic fixtures are structural/local evidence for source-backed
 semantic packs, route selection, overroute avoidance, review findings, memory
-verdict buckets, and golden-case expectations. They do not prove live business
+verdict buckets, and golden-case expectations. The routing and review evals now
+compare expected fixture fields with deterministic actual outputs under
+`evals/business-semantic-outputs/`; the schema validator checks both JSON Schema
+valid/invalid samples and semantic invariants. They do not prove live business
 correctness, and memory or repository graph signals remain selectors until
-current source and validation evidence confirm the claim.
+current source, owner review, user source, or validation evidence confirms the
+claim. BSP selected/skipped references require structured rationale, not string
+lists.
 
 Executor adapter benchmarks are also structural/local evidence. They validate
 canonical event recognition, adapter degradation, privacy redaction, validation

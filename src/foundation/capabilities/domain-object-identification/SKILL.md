@@ -149,6 +149,17 @@ Return a domain object inventory with, per object:
 - `evidence_limits` naming what source reads, graph scans, project memory, owner review, and validation prove and do not prove
 - `next_gate` when rule extraction, state modeling, permission, persistence, API contract, event, transaction, or release evidence remains outside this capability
 
+## BSP.business_objects Write Contract
+
+When BSP is selected, each object inventory item must be writable to `BSP.business_objects` with:
+
+- `object_id`, `name`, `category`, and `owning_context`
+- `identity`, `lifecycle`, and `mutation_authority`
+- source paths and evidence class for every material object claim
+- DTO/table/resource/read-model mapping status and rejected direct-use alternatives
+- `validation_map` entries for identity, lifecycle, owner, mutation authority, and mapping claims
+- residual risk when owner, identity, lifecycle, or mutation authority is not verified
+
 # Quality Gate
 
 1. Every identified object has an explicit category (entity, value object, aggregate root, domain service, or policy) with a justification.
@@ -164,6 +175,7 @@ Return a domain object inventory with, per object:
 11. Writer entry points are inventoried when mutation authority is part of the change.
 12. Tests or validation obligations are assigned for identity, equality, invariant, lifecycle, permission, persistence, and event/resource mapping risks.
 13. Business Semantic Pack object claims are task-scoped, source-backed when marked `FACT`, and never promoted from repository graph or project memory alone.
+14. DTO, table, resource, generated, and read models do not silently become business objects; direct reuse requires explicit owner, mapping, compatibility, and validation evidence.
 
 # Evidence Contract
 

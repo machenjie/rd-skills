@@ -1,5 +1,6 @@
 case_id: over-routing-simple-local-change
 prompt: Fix a typo in an internal log message with no behavior change.
+routing_triggers: []
 expected_route:
   stage: coding
   business_semantic_pack_required: false

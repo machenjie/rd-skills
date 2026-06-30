@@ -225,6 +225,22 @@ Return a structured review with severity-classified findings first:
 - **Approval decision:** approved, returned, split, blocked, or refactor-required, with approval scope and re-review requirement.
 - **Validation evidence:** fresh commands, outputs, what evidence proves, what evidence does not prove, residual risk, and next gate.
 
+## Business Semantic Review
+
+When BSP is selected or a business semantic trigger appears in the diff, review must check:
+
+- silent business rule changes hidden behind refactors, helper moves, SQL filters, fixture updates, or mapper/default changes
+- wrong authoritative enforcement layer, including controller-only, UI-only, SQL-only, test-only, and support-tool-only rules
+- DTO, table, resource, generated model, or read model used as the domain object without mapping owner and compatibility evidence
+- hidden SQL/controller/UI/test-only rule that lacks rule id, owner, entry points, enforcement path, and validation map
+- missing entry-point coverage across UI, public API, internal API, jobs, imports, admin, replay, migration, and support paths
+- workflow state drift, new statuses, changed allowed transitions, or missing forbidden transition tests
+- project memory or repository graph used as source truth instead of selector evidence
+- missing business golden cases for changed rules, workflow transitions, reason codes, and negative paths
+- BSP-vs-actual-diff inconsistency, including a BSP claim not supported by the changed files or a changed semantic not represented in BSP
+
+Return findings rather than approval when any check lacks source-backed evidence, owner review, validation evidence, or explicit residual risk.
+
 For the full enumerated output fields, quality gate list, and handoff routing table, load `references/review-output-and-gates.md`.
 
 ## Evidence Contract
@@ -246,6 +262,7 @@ Close an AI-code review or refactor only when the canonical answers from `agent-
 - Shared/common/utils additions do not contain business rules, fixtures, permission logic, tenant/payment/order assumptions, or module-specific behavior.
 - Generated comments, docs, feature flags, compatibility branches, TODOs, deprecated APIs, and cleanup paths have owner, expiry, and removal evidence.
 - Business semantic changes have source-backed facts, rule/workflow validation, golden cases or owner review, and no memory/graph-as-fact approval.
+- BSP and actual diff agree on changed business rules, objects, workflows, entry points, evidence classes, and validation obligations; inconsistencies are findings.
 - Findings are severity-classified; completion or approval claims require fresh validation evidence, scope, limits, and repair/re-review status.
 
 ## Handoff

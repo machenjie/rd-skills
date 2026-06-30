@@ -1,11 +1,45 @@
 case_id: stale-business-memory
 prompt: Use the previous discount owner from memory and implement the same rule.
+routing_triggers:
+  - business memory affects decision
+  - memory used as business fact
+source_context:
+  files:
+    - path: billing/owners.yaml
+      language: yaml
+      content: |
+        discount_rules:
+          owner: revenue-platform
+          source_status: current
+    - path: memory/business-rule-owner.event.json
+      language: json
+      content: |
+        {
+          "subject": "discount_rules",
+          "remembered_owner": "growth",
+          "verdict": "accepted",
+          "source_check_required": true
+        }
+diff_context:
+  changed_files:
+    - path: billing/domain/discounts.py
+      patch: |
+        +# owner assumed from memory: growth
+        +DISCOUNT_RULE_OWNER = "growth"
 expected_route:
   stage: implementation-planning
   business_semantic_pack_required: true
+  business_semantic_scope: stale-memory-reconciliation
 expected_capabilities: [business-semantic-control-plane, project-memory-governance, repository-graph-analysis]
 expected_quality_gates: [domain gate, execution discipline gate, test gate]
 expected_bsp_sections: [memory_projection, business_rules, code_mapping, validation_map]
-expected_review_findings: [memory not FACT, current-source confirmation required]
+expected_review_findings:
+  - finding_id: BSP-STALE-MEMORY
+    category: stale_memory_source_truth
+    impacted_claim: prior discount owner from memory
+    expected_evidence:
+      - memory signal conflicts with current source owner
+      - billing/owners.yaml declares revenue-platform
+    required_fix: memory is stale selector, not source truth; current source must win or residual risk must be recorded.
 forbidden_behavior: [treat memory as current owner, skip source reread]
 scoring: [memory_verdict, source_confirmation, residual_risk, context_control]

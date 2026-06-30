@@ -1,11 +1,44 @@
 case_id: refactor-changes-business-semantics
 prompt: Refactor eligibility checks into a shared helper and simplify equivalent conditions.
+routing_triggers:
+  - technical refactor may change business semantics
+  - business semantic review required
+source_context:
+  files:
+    - path: billing/domain/eligibility.py
+      language: python
+      content: |
+        def can_apply_discount(account, invoice):
+            if account.is_enterprise and invoice.total > 0:
+                return True, "enterprise_discount"
+            if account.is_trial:
+                return False, "trial_accounts_ineligible"
+            return invoice.total >= 100, "minimum_invoice_total"
+diff_context:
+  changed_files:
+    - path: billing/domain/eligibility.py
+      patch: |
+        -    if account.is_enterprise and invoice.total > 0:
+        -        return True, "enterprise_discount"
+        -    if account.is_trial:
+        +    if account.is_trial:
+                 return False, "trial_accounts_ineligible"
+        +    if account.is_enterprise or invoice.total > 0:
+        +        return True, "discount_eligible"
 expected_route:
   stage: code-review
   business_semantic_pack_required: true
+  business_semantic_scope: semantic-refactor-review
 expected_capabilities: [business-semantic-control-plane, ai-code-review-refactor, plan-execution-consistency]
 expected_quality_gates: [AI review gate, implementation gate, test gate]
 expected_bsp_sections: [business_rules, code_mapping, validation_map, context_control]
-expected_review_findings: [semantic equivalence not proven, shared helper may hide rule authority]
+expected_review_findings:
+  - finding_id: BSP-SEMANTIC-REFACTOR
+    category: semantic_diff
+    impacted_claim: eligibility helper refactor preserves behavior
+    expected_evidence:
+      - condition precedence and denial reason changed
+      - enterprise_discount changed to discount_eligible
+    required_fix: refactor changes business semantics and cannot be approved as behavior-preserving without golden case / characterization test.
 forbidden_behavior: [approve as behavior-preserving without rule golden cases]
 scoring: [semantic_diff_detection, review_findings, golden_case_requirement, validation_freshness]

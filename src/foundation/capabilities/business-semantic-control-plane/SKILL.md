@@ -13,7 +13,7 @@ Coordinate Business Semantic Pack (BSP) evidence so AI-assisted engineering can 
 
 # When To Use
 
-Use this capability when a task changes or reviews business meaning: ambiguous business terms, domain objects, rule authority, workflow transitions, state/status changes, hidden rules in controllers/SQL/mappers/DTOs, stale memory, missing business golden cases, or broad requests to make AI understand business context.
+Use this capability when a task changes or reviews business meaning: business context missing, business vocabulary ambiguous, business object ownership unclear, business rule authority unknown, business workflow state unclear, business invariant changed, business rule hidden in SQL/controller/UI/test, DTO used as business object, business memory affects decision, business golden case missing, technical refactor may change business semantics, business semantic review required, graph used as business fact, memory used as business fact, or broad requests to make AI understand business context. Legacy aliases such as ambiguous business term, rule authority unclear, hidden SQL rule, hidden controller rule, and stale business memory remain compatible.
 
 Use it for ChangeForge skill-authoring work that adds business semantic routing, stage evidence, eval fixtures, schemas, graph/memory semantics, validation scripts, or hook-runtime advisory reminders.
 
@@ -34,7 +34,7 @@ Use during requirement intake, DDD, implementation planning, coding, testing, co
 - Every rule record names `rule_id`, owner, enforcement layer, reason codes, entry points, effective dating, tests or residual risk, and evidence.
 - Every workflow record names allowed and forbidden transitions, guard rules, actors, and validation mapping.
 - Business golden cases map business claims to executable tests, review evidence, owner review, or residual risk.
-- Selected and skipped references must have rationale under `context-control-plane`.
+- Selected and skipped references must use structured `referenceDecision` rationale under `context-control-plane`: reference, reason, evidence limit, optional budget mode, and residual risk.
 - Do not add personal asset ingestion, private archive maps, or runtime assumptions about private corpora.
 
 # Industry Benchmarks
@@ -56,7 +56,7 @@ Anchor on domain-driven design ubiquitous language, business rule cataloging, de
 
 # Selection Rules
 
-Select this capability when business terms, domain semantics, rule authority, workflow state, memory/graph business hints, or golden cases change the route. Select it with `domain-impact-modeler` for DDD evidence, with `quality-test-gate` for business golden cases, with `ai-code-review-refactor` for semantic review, and with `context-control-plane` when BSP references or evidence are selected/skipped.
+Select this capability when the canonical trigger family appears: business context missing, business vocabulary ambiguous, business object ownership unclear, business rule authority unknown, business workflow state unclear, business invariant changed, business rule hidden in SQL/controller/UI/test, DTO used as business object, business memory affects decision, business golden case missing, technical refactor may change business semantics, business semantic review required, graph used as business fact, or memory used as business fact. Select it with `domain-impact-modeler` for DDD evidence, with `quality-test-gate` for business golden cases, with `ai-code-review-refactor` for semantic review, and with `context-control-plane` when BSP references or evidence are selected/skipped.
 
 Do not select it for every backend or frontend change. A simple local formatting, typo, dependency, or internal implementation edit should skip BSP unless it changes business meaning or hides a business rule.
 
@@ -97,8 +97,8 @@ Return a `business_semantic_control_record` with:
 - `graph`
 - `golden_cases`
 - `validation`
-- `selected_references`
-- `skipped_references`
+- `selected_references` as structured reference decisions
+- `skipped_references` as structured reference decisions
 - `evidence_limits`
 - `residual_risk`
 - `handoff`
@@ -114,7 +114,7 @@ When a BSP artifact is produced, use `business_semantic_pack` schema version 1 a
 5. Every workflow has allowed and forbidden transitions with guard/actor evidence.
 6. Every business claim maps to validation, owner review, review finding, or residual risk.
 7. Golden cases cover material business rules, workflows, permissions, reason codes, and negative paths.
-8. Selected and skipped BSP references have context-control rationale.
+8. Selected and skipped BSP references have structured context-control rationale with reason and evidence limit.
 9. Review detects new, moved, hidden, rejected, stale, or untested business semantics.
 10. Handoff states validation evidence, rollback note, residual risk, and next owner.
 

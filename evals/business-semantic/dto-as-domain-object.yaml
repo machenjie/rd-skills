@@ -1,11 +1,46 @@
 case_id: dto-as-domain-object
 prompt: Use the PartnerOrderResponse DTO as the internal order model to save time.
+routing_triggers:
+  - DTO used as business object
+  - business object ownership unclear
+source_context:
+  files:
+    - path: partners/api/models.py
+      language: python
+      content: |
+        class PartnerOrderResponse(BaseModel):
+            id: str
+            status: str
+            refund_allowed: bool | None = None
+    - path: orders/domain/order.py
+      language: python
+      content: |
+        class Order:
+            def __init__(self, order_id, status):
+                self.order_id = order_id
+                self.status = status
+diff_context:
+  changed_files:
+    - path: orders/services/returns.py
+      patch: |
+        -def return_window(order: Order) -> int:
+        +def return_window(order: PartnerOrderResponse) -> int:
+             if order.status == "DELIVERED":
+                 return 30
 expected_route:
   stage: implementation-planning
   business_semantic_pack_required: true
+  business_semantic_scope: dto-domain-boundary
 expected_capabilities: [business-semantic-control-plane, domain-object-identification, model-boundary-mapping]
 expected_quality_gates: [domain gate, API/data gate, implementation gate]
 expected_bsp_sections: [business_vocabulary, business_objects, code_mapping, validation_map]
-expected_review_findings: [DTO-as-domain object rejected, mapping owner required]
+expected_review_findings:
+  - finding_id: BSP-DTO-AS-DOMAIN
+    category: dto_as_domain_object
+    impacted_claim: PartnerOrderResponse internal order model
+    expected_evidence:
+      - external DTO passed into domain service without mapper
+      - PartnerOrderResponse replaces Order
+    required_fix: DTO/table/resource model is being used as domain object; requires model-boundary-mapping and domain-object-identification.
 forbidden_behavior: [treat external DTO as aggregate, skip compatibility risk]
 scoring: [object_boundary, source_mapping, risk_escalation, forbidden_placement]

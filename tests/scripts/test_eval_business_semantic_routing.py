@@ -1,0 +1,145 @@
+from __future__ import annotations
+
+import contextlib
+import importlib.util
+import io
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPTS = ROOT / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+SCRIPT_PATH = ROOT / "scripts" / "eval-business-semantic-routing.py"
+_SPEC = importlib.util.spec_from_file_location("eval_business_semantic_routing_under_test", SCRIPT_PATH)
+if _SPEC is None or _SPEC.loader is None:
+    raise RuntimeError(f"cannot load {SCRIPT_PATH}")
+ROUTING = importlib.util.module_from_spec(_SPEC)
+sys.modules[_SPEC.name] = ROUTING
+_SPEC.loader.exec_module(ROUTING)
+
+
+class BusinessSemanticRoutingEvalTests(unittest.TestCase):
+    def test_missing_actual_file_fails(self) -> None:
+        rc, output = self._run_eval(_case("missing-actual"), None)
+
+        self.assertNotEqual(rc, 0)
+        self.assertIn("missing actual output", output)
+
+    def test_expected_capability_missing_from_actual_fails(self) -> None:
+        case = _case("capability-missing", expected_capabilities=["business-semantic-control-plane"])
+        actual = _actual("capability-missing", selected_capabilities=["minimal-correct-implementation"])
+
+        rc, output = self._run_eval(case, actual)
+
+        self.assertNotEqual(rc, 0)
+        self.assertIn("missing expected capabilities", output)
+
+    def test_overroute_case_selecting_bsp_fails(self) -> None:
+        case = _case("over-routing-simple-local-change", expected_bsp=False, expected_capabilities=["minimal-correct-implementation"])
+        actual = _actual(
+            "over-routing-simple-local-change",
+            business_semantic_pack_required=True,
+            selected_capabilities=["business-semantic-control-plane"],
+        )
+
+        rc, output = self._run_eval(case, actual)
+
+        self.assertNotEqual(rc, 0)
+        self.assertIn("overroute selected business-semantic-control-plane", output)
+
+    def test_underroute_case_not_selecting_bsp_fails(self) -> None:
+        case = _case(
+            "under-routing-high-risk-business-change",
+            expected_bsp=True,
+            expected_quality_gates=["domain gate", "test gate", "AI review gate"],
+        )
+        actual = _actual("under-routing-high-risk-business-change", business_semantic_pack_required=False)
+
+        rc, output = self._run_eval(case, actual)
+
+        self.assertNotEqual(rc, 0)
+        self.assertIn("underroute did not require BSP", output)
+
+    def _run_eval(self, case_yaml: str, actual_yaml: str | None) -> tuple[int, str]:
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp_s:
+            tmp = Path(tmp_s)
+            eval_dir = tmp / "evals" / "business-semantic"
+            output_dir = tmp / "evals" / "business-semantic-outputs"
+            eval_dir.mkdir(parents=True)
+            output_dir.mkdir(parents=True)
+            case_id = _case_id(case_yaml)
+            (eval_dir / f"{case_id}.yaml").write_text(case_yaml, encoding="utf-8")
+            if actual_yaml is not None:
+                (output_dir / f"{case_id}.actual.yaml").write_text(actual_yaml, encoding="utf-8")
+            old_eval_dir = ROUTING.EVAL_DIR
+            old_output_dir = ROUTING.OUTPUT_DIR
+            ROUTING.EVAL_DIR = eval_dir
+            ROUTING.OUTPUT_DIR = output_dir
+            buffer = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+                    rc = ROUTING.main()
+            finally:
+                ROUTING.EVAL_DIR = old_eval_dir
+                ROUTING.OUTPUT_DIR = old_output_dir
+        return rc, buffer.getvalue()
+
+
+def _case(
+    case_id: str,
+    *,
+    stage: str = "coding",
+    expected_bsp: bool = False,
+    expected_capabilities: list[str] | None = None,
+    expected_quality_gates: list[str] | None = None,
+    expected_bsp_sections: list[str] | None = None,
+) -> str:
+    capabilities = expected_capabilities or ["minimal-correct-implementation"]
+    gates = expected_quality_gates or ["implementation gate"]
+    sections = expected_bsp_sections or []
+    return f"""case_id: {case_id}
+expected_route:
+  stage: {stage}
+  business_semantic_pack_required: {str(expected_bsp).lower()}
+expected_capabilities: {capabilities}
+expected_quality_gates: {gates}
+expected_bsp_sections: {sections}
+"""
+
+
+def _actual(
+    case_id: str,
+    *,
+    stage: str = "coding",
+    business_semantic_pack_required: bool = False,
+    selected_capabilities: list[str] | None = None,
+    required_quality_gates: list[str] | None = None,
+) -> str:
+    capabilities = selected_capabilities or ["minimal-correct-implementation"]
+    gates = required_quality_gates or ["implementation gate"]
+    return f"""actual_route:
+  stage: {stage}
+  selected_skills: []
+  selected_capabilities: {capabilities}
+  required_quality_gates: {gates}
+  business_semantic_pack_required: {str(business_semantic_pack_required).lower()}
+  business_semantic_scope: test
+  selected_bsp_sections: []
+  selected_references: []
+  skipped_references: []
+actual_review:
+  findings: []
+"""
+
+
+def _case_id(case_yaml: str) -> str:
+    return next(line.split(":", 1)[1].strip() for line in case_yaml.splitlines() if line.startswith("case_id:"))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1327,7 +1327,9 @@ capabilities:
     route_level_capability: true
     used_by: [change-forge-router, domain-impact-modeler, quality-test-gate, ai-code-review-refactor, change-documentation-gate, skill-authoring-expert]
     triggers:
-      - business semantic pack business semantic control plane business intent business vocabulary business object rule authority workflow state transition business golden case semantic review
+      - business semantic pack business semantic control plane business context missing business intent business vocabulary business vocabulary ambiguous business object business object ownership unclear
+      - business rule authority unknown business workflow state unclear business invariant changed business rule hidden in SQL/controller/UI/test DTO used as business object
+      - business memory affects decision business golden case missing technical refactor may change business semantics business semantic review required graph used as business fact memory used as business fact
       - hidden business rule controller sql mapper dto memory business signal stale business memory graph selector business fact evidence owner review source-backed business rule
     risk_notes: [Business semantic changes can silently alter rules workflows owner intent or golden cases when graph or memory hints are treated as facts without current evidence]
     expected_outputs: [Business Semantic Control Record with task-scoped BSP scope intent vocabulary objects rules workflows memory graph golden cases validation map selected and skipped references evidence limits residual risk and handoff]

@@ -1,6 +1,6 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-30T08:12:24.849651+00:00
+- Generated: 2026-06-30T09:05:38.655873+00:00
 - Skills/capabilities checked: 156
 - Warning count: 3
 - Average score: 57.22/60
@@ -42,7 +42,6 @@
 | `src/foundation/capabilities/user-role-identification/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
 | `src/professional-skills/data-middleware-change-builder/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/delivery-release-gate/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/domain-impact-modeler/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/task-dag-planner/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/backup-recovery/SKILL.md` | foundation-capability | 57/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/code-review/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
@@ -71,6 +70,7 @@
 | `src/professional-skills/architecture-impact-reviewer/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/change-impact-analyzer/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/change-intake-compiler/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/domain-impact-modeler/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/integration-change-builder/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/reliability-observability-gate/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/security-privacy-gate/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |

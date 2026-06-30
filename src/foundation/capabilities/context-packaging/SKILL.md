@@ -158,6 +158,16 @@ Return a context package with:
 - `owner` (task owner; contract owners; boundary owners)
 - `package_version` and `created_at`
 
+## Business Semantic Package Mode
+
+Use this mode when BSP evidence is part of the handoff. The package is task-scoped, not project-wide, and must not become a business corpus dump.
+
+- Package only the BSP sections selected for the current task: intent, vocabulary, objects, rules, workflows, data/signal semantics, memory projection, graph selectors, code mapping, validation map, and context control.
+- Every BSP `FACT` must cite current source, owner review, user-provided source, or validation evidence. Project memory, repository graph, prior summaries, and agent inference stay selectors or non-fact evidence classes until confirmed.
+- `selected_references` and `skipped_references` must be structured reference decisions: reference, reason, evidence limit, optional budget mode, and residual risk.
+- If the BSP grows past the route budget, hand it to `context-control-plane` as a selected slice with skipped-reference rationale rather than loading the whole package.
+- Record what the BSP slice proves, what it does not prove, and which owner or validator must close residual business risk.
+
 # Evidence Contract
 
 Close a context package only when these answers are concrete: **boundaries inspected**; direct source, graph, memory, and trajectory claims accepted or rejected; **validation evidence** including command, validator, test, report, artifact, and exit code or not-run status; **what evidence proves** and **what evidence does not prove**; reuse / placement rationale for included and excluded files; behavior preservation and do-not-regress boundaries; residual risk; handoff owner; and next gate.
@@ -185,6 +195,7 @@ The context package passes only when:
 17. Tool output boundaries exclude raw prompts, secrets, environment values, credentials, personal data, full command output, personal archives, and private mapping artifacts.
 18. Residual risk and next professional gate are explicit when evidence is stale, partial, unsupported, or outside the inspected boundary.
 19. Business Semantic Pack content is task-scoped and excludes personal corpora, private archive maps, raw private archives, and memory/graph-as-fact claims.
+20. BSP selected and skipped references use structured rationale with evidence limits; string-only reference lists fail the package gate.
 
 # Benchmark Coverage
 

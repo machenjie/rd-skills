@@ -652,7 +652,7 @@ product_surfaces:
     required_skill: change-forge-router
     default_capabilities: [project-memory-governance, agent-execution-discipline, plan-execution-consistency, context-control-plane]
   - surface: business-semantics
-    signals: [business semantic pack, business semantic control plane, business intent, business vocabulary, business object, business rule, rule authority, workflow state, status transition, business golden case, semantic review, hidden sql rule, hidden controller rule, stale business memory]
+    signals: [business semantic pack, business semantic control plane, business context missing, business intent, business vocabulary, business vocabulary ambiguous, business object, business object ownership unclear, DTO used as business object, business rule, business rule authority unknown, rule authority, business workflow state unclear, workflow state, status transition, business invariant changed, business rule hidden in SQL/controller/UI/test, business golden case missing, business memory affects decision, semantic review, business semantic review required, technical refactor may change business semantics, hidden sql rule, hidden controller rule, stale business memory, graph used as business fact, memory used as business fact]
     required_skill: change-forge-router
     default_capabilities: [business-semantic-control-plane, domain-object-identification, business-rule-extraction, state-machine-modeling, context-control-plane, project-memory-governance, repository-graph-analysis, validation-broker]
   - surface: validation-broker

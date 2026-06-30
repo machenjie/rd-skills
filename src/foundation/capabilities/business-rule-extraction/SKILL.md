@@ -155,6 +155,7 @@ Rules have scope, authority, exceptions, precedence, and enforcement timing. Mis
 - Rule deprecated in code but still referenced by historical decisions → audit log has dangling rule ids.
 - Decision returns boolean only; customer support cannot explain the denial; regulator complaint escalates.
 - Pricing rule depends on a feature flag → effective rule depends on rollout state, not documented anywhere.
+- Rule hidden in SQL, controller, mapper, or test fixture is changed but not cataloged with rule id, owner, enforcement layer, and changed-path validation.
 
 # Output Contract
 
@@ -182,6 +183,18 @@ Return `business_rule_catalog` with, per rule:
 - `business_semantic_rule_record` when BSP is selected: rule id, owner, enforcement layer, reason codes, entry points, effective dating, evidence class, selected/skipped references, and residual semantic risk
 - `rule_to_validation_map` (rule id -> owner approval, implementation/enforcement location, entry-point checks, test/audit evidence, release blocker, and next gate)
 - `evidence_limits` (uninspected entry points, stale external artifacts, unavailable rule owners, missing historical data, and residual uncertainty owner/date)
+
+## BSP.business_rules Write Contract
+
+When BSP is selected, each material rule must be writable to `BSP.business_rules` with:
+
+- `rule_id`, statement, `owner`, and `authoritative_enforcement_layer`
+- `authoritative_enforcement_paths` for non-manual and decided enforcement
+- `preview_paths`, `defense_paths`, and audit paths when those layers exist
+- `reason_codes`, inputs, outputs, precedence, exceptions, and entry points
+- effective dating, historical decision strategy, and audit requirements when applicable
+- tests, golden cases, owner review, or explicit residual risk
+- evidence class, source paths or refs, and `validation_map` entries for claim-to-proof mapping
 
 # Evidence Contract
 
@@ -220,6 +233,7 @@ The catalog passes only when:
 13. Every material rule appears in `rule_to_validation_map` with owner approval, implementation location, entry-point evidence, test/audit evidence, and release-blocking status.
 14. Rule deprecation or precedence changes include historical decision compatibility and rollback or audit-retention evidence.
 15. Business Semantic Pack rule claims classify memory and graph as selectors only unless current source, owner review, or validation evidence confirms the rule.
+16. A non-manual, decided BSP rule has at least one authoritative enforcement path; missing paths block closure unless the rule is downgraded to owner review or residual risk.
 
 # Used By
 

@@ -1,0 +1,37 @@
+actual_route:
+  stage: implementation-planning
+  detected_triggers: [business rule hidden in SQL/controller/UI/test, business rule authority unknown]
+  selected_skills: [domain-impact-modeler, data-middleware-change-builder, ai-code-review-refactor, quality-test-gate]
+  selected_capabilities: [business-semantic-control-plane, business-rule-extraction, repository-graph-analysis, validation-broker, sql-professional-usage]
+  required_quality_gates: [domain gate, API/data gate, test gate, AI review gate]
+  business_semantic_pack_required: true
+  business_semantic_scope: hidden-sql-rule
+  selected_bsp_sections: [business_rules, data_and_signal_semantics, code_mapping, validation_map, context_control]
+  selected_references:
+    - reference: 13-business-rule-extraction
+      reason: SQL WHERE condition changes eligibility semantics
+      evidence_limit: current SQL source and changed-path validation only
+    - reference: 135-business-semantic-control-plane
+      reason: hidden SQL rule must enter BSP with owner and validation map
+      evidence_limit: graph selectors cannot prove FACT
+  skipped_references:
+    - reference: state-machine-modeling
+      reason: no lifecycle transition is changed in this SQL-only fixture
+      evidence_limit: if status semantics become workflow transitions, route separately
+      residual_risk: [status vocabulary still needs owner confirmation]
+actual_review:
+  findings:
+    - finding_id: BSP-HIDDEN-SQL-RULE
+      severity: high
+      category: hidden_sql_rule
+      impacted_claim: subscription renewal eligibility status filter
+      evidence:
+        - "SELECT * FROM subscriptions WHERE status != 'expired'"
+        - "WHERE status NOT IN ('expired', 'enterprise_expired')"
+      required_fix: SQL-hidden rule requires rule owner and golden case; SQL condition is a hidden business rule and needs rule_id, owner, authoritative enforcement layer, golden case, changed-path validation.
+      validation_required: rule catalog entry plus changed-path SQL validation
+  forbidden_behavior_avoided:
+    - approve SQL condition without rule catalog
+    - skip changed-path validation
+  residual_risk:
+    - deterministic fixture does not prove live database behavior

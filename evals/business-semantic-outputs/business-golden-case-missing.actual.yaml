@@ -1,0 +1,31 @@
+actual_route:
+  stage: testing
+  detected_triggers: [business golden case missing, business semantic review required]
+  selected_skills: [quality-test-gate, domain-impact-modeler]
+  selected_capabilities: [business-semantic-control-plane, validation-broker, business-rule-extraction]
+  required_quality_gates: [test gate, domain gate]
+  business_semantic_pack_required: true
+  business_semantic_scope: golden-case-gap
+  selected_bsp_sections: [business_rules, validation_map, context_control]
+  selected_references:
+    - reference: quality-test-gate
+      reason: new reason code requires business golden case mapping
+      evidence_limit: green technical suite is not business semantic proof
+  skipped_references:
+    - reference: state-machine-modeling
+      reason: reason code changes without status transition in this fixture
+      evidence_limit: route if reason code implies transition behavior
+      residual_risk: []
+actual_review:
+  findings:
+    - finding_id: BSP-GOLDEN-CASE-GAP
+      severity: high
+      category: golden_case_gap
+      impacted_claim: new cancellation reason code
+      evidence: [existing test suite green but no business golden case maps the reason]
+      required_fix: business golden case missing for reason code
+      validation_required: golden case or owner review for new reason code
+  forbidden_behavior_avoided:
+    - claim green suite proves new business behavior without golden case
+  residual_risk:
+    - missing golden case blocks business behavior closure

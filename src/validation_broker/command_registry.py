@@ -275,6 +275,7 @@ REGISTRY: dict[str, dict[str, object]] = {
             "src/business_intelligence/**",
             "src/foundation/capabilities/business-semantic-control-plane/**",
             "evals/business-semantic/**",
+            "evals/business-semantic-outputs/**",
             "scripts/validate-business-semantic-pack.py",
             "scripts/eval-business-semantic-routing.py",
             "scripts/eval-business-semantic-review.py",

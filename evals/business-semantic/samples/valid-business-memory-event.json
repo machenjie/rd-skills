@@ -1,0 +1,19 @@
+{
+  "business_memory_event": {
+    "schema_version": 1,
+    "event_id": "mem_business_rule_changed_001",
+    "event_type": "business_rule_changed",
+    "verdict": "not_verified",
+    "summary": "Cancellation rule changed in a prior task and needs source confirmation.",
+    "bounded_paths": ["src/domain/order.py"],
+    "related_rule_ids": ["ORDER.CANCEL.AFTER_SHIP_DENIED"],
+    "related_object_ids": ["OBJ.ORDER"],
+    "related_workflow_ids": ["ORDER_LIFECYCLE"],
+    "source_check_required": true,
+    "source_confirmation": {
+      "status": "not_verified",
+      "current_source_paths": [],
+      "residual_risk": ["current source not yet checked"]
+    }
+  }
+}

@@ -97,6 +97,20 @@ class GraphEvidenceSchemaTests(unittest.TestCase):
 
         self.assertFalse(errors, errors)
 
+    def test_business_semantic_graph_edge_is_selector_not_fact(self) -> None:
+        graph = _valid_graph()
+        edge = graph["repository_graph"]["edges"][0]
+        edge["edge_type"] = "rule_enforced_by"
+        edge["extractor"] = "business_semantic_graph"
+        edge["evidence"]["edge_type"] = "rule_enforced_by"
+        edge["evidence"]["extractor"] = "business_semantic_graph"
+
+        errors = VALIDATOR.validate_repository_graph(graph)
+
+        self.assertFalse(errors, errors)
+        self.assertEqual(edge["extractor"], "business_semantic_graph")
+        self.assertNotEqual(edge["evidence"].get("evidence_class"), "FACT")
+
     def test_unknown_edge_type_requires_unknown_reason(self) -> None:
         graph = _valid_graph()
         edge = graph["repository_graph"]["edges"][0]

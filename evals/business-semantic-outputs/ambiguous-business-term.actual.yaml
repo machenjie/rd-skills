@@ -1,0 +1,32 @@
+actual_route:
+  stage: requirement-intake
+  detected_triggers: [business vocabulary ambiguous, business object ownership unclear]
+  selected_skills: [change-intake-compiler, domain-impact-modeler, change-documentation-gate]
+  selected_capabilities: [business-semantic-control-plane, domain-object-identification, context-control-plane]
+  required_quality_gates: [requirement gate, domain gate, documentation gate]
+  business_semantic_pack_required: true
+  business_semantic_scope: vocabulary-and-object-ownership
+  selected_bsp_sections: [task_business_intent, business_vocabulary, business_objects, code_mapping, validation_map, context_control]
+  selected_references:
+    - reference: 135-business-semantic-control-plane
+      reason: ambiguous Account/Customer vocabulary requires BSP vocabulary and object evidence
+      evidence_limit: source-backed term ownership only; owner review still required
+  skipped_references:
+    - reference: payment-trading-extension
+      reason: no payment movement or ledger behavior is requested
+      evidence_limit: not evidence for billing correctness
+      residual_risk: [billing owner still needs review]
+actual_review:
+  findings:
+    - finding_id: BSP-AMBIGUOUS-TERM
+      severity: high
+      category: ambiguous_business_vocabulary
+      impacted_claim: Account rename to Customer
+      evidence: [prompt spans billing identity support contexts]
+      required_fix: same term has multiple owning contexts, owner review required
+      validation_required: vocabulary owner review and code mapping
+  forbidden_behavior_avoided:
+    - treat term rename as text-only refactor
+    - memory as FACT
+  residual_risk:
+    - owner review is deterministic fixture evidence only

@@ -61,9 +61,61 @@
           "if": {"properties": {"evidence_class": {"const": "FACT"}}},
           "then": {
             "not": {
+              "required": ["source_kind"],
               "properties": {
                 "source_kind": {"enum": ["repository_graph", "memory_projection", "agent_inference"]}
               }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["evidence_class", "source_kind"],
+            "properties": {
+              "evidence_class": {"const": "FACT"},
+              "source_kind": {"const": "current_source"}
+            }
+          },
+          "then": {
+            "required": ["source_paths", "freshness", "verification_status"],
+            "properties": {
+              "source_paths": {"allOf": [{"$ref": "#/$defs/boundedPathList"}, {"minItems": 1}]},
+              "freshness": {"const": "current"},
+              "verification_status": {"const": "verified"}
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["evidence_class", "source_kind"],
+            "properties": {
+              "evidence_class": {"const": "FACT"},
+              "source_kind": {"const": "owner_review"}
+            }
+          },
+          "then": {
+            "required": ["source_refs", "freshness", "verification_status"],
+            "properties": {
+              "source_refs": {"allOf": [{"$ref": "#/$defs/boundedStringList"}, {"minItems": 1}]},
+              "freshness": {"const": "current"},
+              "verification_status": {"const": "verified"}
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["evidence_class", "source_kind"],
+            "properties": {
+              "evidence_class": {"const": "FACT"},
+              "source_kind": {"const": "validation_result"}
+            }
+          },
+          "then": {
+            "required": ["source_refs", "freshness", "verification_status"],
+            "properties": {
+              "source_refs": {"allOf": [{"$ref": "#/$defs/boundedStringList"}, {"minItems": 1}]},
+              "freshness": {"const": "current"},
+              "verification_status": {"const": "verified"}
             }
           }
         }
@@ -74,6 +126,35 @@
       "minItems": 1,
       "maxItems": 20,
       "items": {"$ref": "#/$defs/evidence"}
+    },
+    "referenceDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reference", "reason", "evidence_limit"],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 220
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "budget_mode": {
+          "type": "string",
+          "enum": ["minimal", "single-stage", "staged-plan", "full"]
+        },
+        "evidence_limit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "residual_risk": {
+          "$ref": "#/$defs/boundedStringList"
+        }
+      }
     },
     "claimRef": {
       "type": "object",
@@ -97,6 +178,10 @@
           "type": "string",
           "enum": ["domain", "application_service", "policy", "database_constraint", "contract", "workflow", "manual_owner_review", "not_decided"]
         },
+        "authoritative_enforcement_paths": {"$ref": "#/$defs/boundedPathList"},
+        "preview_paths": {"$ref": "#/$defs/boundedPathList"},
+        "defense_paths": {"$ref": "#/$defs/boundedPathList"},
+        "audit_paths": {"$ref": "#/$defs/boundedPathList"},
         "rule_statement": {"type": "string", "minLength": 1, "maxLength": 1000},
         "reason_codes": {"$ref": "#/$defs/boundedStringList"},
         "entry_points": {"$ref": "#/$defs/boundedStringList"},
@@ -113,7 +198,27 @@
         "tests": {"$ref": "#/$defs/boundedStringList"},
         "residual_risk": {"$ref": "#/$defs/boundedStringList"},
         "evidence": {"$ref": "#/$defs/evidenceList"}
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["enforcement_layer"],
+            "properties": {
+              "enforcement_layer": {
+                "not": {"enum": ["manual_owner_review", "not_decided"]}
+              }
+            }
+          },
+          "then": {
+            "required": ["authoritative_enforcement_paths"],
+            "properties": {
+              "authoritative_enforcement_paths": {
+                "allOf": [{"$ref": "#/$defs/boundedPathList"}, {"minItems": 1}]
+              }
+            }
+          }
+        }
+      ]
     },
     "transition": {
       "type": "object",
@@ -223,7 +328,23 @@
                 "type": "array",
                 "minItems": 1,
                 "maxItems": 100,
-                "items": {"$ref": "#/$defs/transition"}
+                "items": {"$ref": "#/$defs/transition"},
+                "allOf": [
+                  {
+                    "contains": {
+                      "type": "object",
+                      "required": ["allowed"],
+                      "properties": {"allowed": {"const": true}}
+                    }
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "required": ["allowed"],
+                      "properties": {"allowed": {"const": false}}
+                    }
+                  }
+                ]
               },
               "evidence": {"$ref": "#/$defs/evidenceList"}
             }
@@ -275,8 +396,36 @@
               "claim_type": {"type": "string", "enum": ["intent", "term", "object", "rule", "workflow", "data_signal", "code_mapping", "golden_case"]},
               "validation_target": {"type": "string", "minLength": 1, "maxLength": 300},
               "status": {"type": "string", "enum": ["mapped", "not_run", "not_verified", "owner_review_required", "residual_risk"]},
-              "residual_risk": {"$ref": "#/$defs/boundedStringList"}
-            }
+              "residual_risk": {"$ref": "#/$defs/boundedStringList"},
+              "evidence": {"$ref": "#/$defs/evidenceList"}
+            },
+            "allOf": [
+              {
+                "if": {
+                  "required": ["status"],
+                  "properties": {"status": {"const": "mapped"}}
+                },
+                "then": {
+                  "required": ["evidence"],
+                  "properties": {
+                    "evidence": {
+                      "allOf": [
+                        {"$ref": "#/$defs/evidenceList"},
+                        {
+                          "contains": {
+                            "type": "object",
+                            "not": {
+                              "required": ["evidence_class"],
+                              "properties": {"evidence_class": {"const": "MEMORY_SIGNAL"}}
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         "context_control": {
@@ -285,8 +434,16 @@
           "required": ["budget_mode", "selected_references", "skipped_references", "evidence_limits", "residual_context_risk"],
           "properties": {
             "budget_mode": {"type": "string", "enum": ["minimal", "single-stage", "staged-plan", "full"]},
-            "selected_references": {"$ref": "#/$defs/boundedStringList"},
-            "skipped_references": {"$ref": "#/$defs/boundedStringList"},
+            "selected_references": {
+              "type": "array",
+              "maxItems": 30,
+              "items": {"$ref": "#/$defs/referenceDecision"}
+            },
+            "skipped_references": {
+              "type": "array",
+              "maxItems": 30,
+              "items": {"$ref": "#/$defs/referenceDecision"}
+            },
             "evidence_limits": {"$ref": "#/$defs/boundedStringList"},
             "residual_context_risk": {"$ref": "#/$defs/boundedStringList"}
           }

@@ -95,6 +95,22 @@ python3 scripts/eval-professional-agent-samples.py --promoted-only --strict
 python3 scripts/eval-pressure-behavior.py
 ```
 
+Business semantic validation is a two-part closure. `validate-business-semantic-pack.py`
+loads the BSP, business rule record, business memory event, and business golden
+case schemas; validates committed valid/invalid JSON samples; and then applies
+semantic invariants such as unique `rule_id`, non-manual enforcement paths,
+allowed plus forbidden workflow transitions, non-memory validation evidence,
+and structured selected/skipped reference rationale. `eval-business-semantic-routing.py`
+and `eval-business-semantic-review.py` compare expected fixtures with
+deterministic actual outputs in `evals/business-semantic-outputs/`; they are no
+longer fixture self-consistency checks.
+
+Business semantic fixtures remain structural/local evidence. They prove route,
+schema, review, and validator behavior over bounded source/diff snippets; they
+do not prove live business correctness. Project memory and repository graph
+signals are selectors until current source, owner review, user source, or
+validation evidence confirms a claim.
+
 Run the extended routing fixture comparison only when updating or verifying
 captured actual router outputs:
 

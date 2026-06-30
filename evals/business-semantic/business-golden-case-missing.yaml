@@ -1,5 +1,8 @@
 case_id: business-golden-case-missing
 prompt: Add the new cancellation reason code but the existing test suite is green.
+routing_triggers:
+  - business golden case missing
+  - business semantic review required
 expected_route:
   stage: testing
   business_semantic_pack_required: true

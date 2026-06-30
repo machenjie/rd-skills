@@ -1,0 +1,31 @@
+actual_route:
+  stage: code-review
+  detected_triggers: [technical refactor may change business semantics, business semantic review required]
+  selected_skills: [ai-code-review-refactor, quality-test-gate]
+  selected_capabilities: [business-semantic-control-plane, ai-code-review-refactor, plan-execution-consistency]
+  required_quality_gates: [AI review gate, implementation gate, test gate]
+  business_semantic_pack_required: true
+  business_semantic_scope: semantic-refactor-review
+  selected_bsp_sections: [business_rules, code_mapping, validation_map, context_control]
+  selected_references:
+    - reference: ai-code-review-refactor
+      reason: behavior-preserving claim needs semantic diff review
+      evidence_limit: final diff and characterization/golden tests only
+  skipped_references:
+    - reference: repository-graph-analysis
+      reason: deterministic fixture includes direct diff context
+      evidence_limit: live caller graph not proven
+      residual_risk: [unknown dynamic callers]
+actual_review:
+  findings:
+    - finding_id: BSP-SEMANTIC-REFACTOR
+      severity: high
+      category: semantic_diff
+      impacted_claim: eligibility helper refactor preserves behavior
+      evidence: [condition precedence and denial reason changed]
+      required_fix: semantic equivalence not proven, shared helper may hide rule authority; refactor changes business semantics and cannot be approved as behavior-preserving without golden case / characterization test.
+      validation_required: characterization test and business golden case before approval
+  forbidden_behavior_avoided:
+    - approve as behavior-preserving without rule golden cases
+  residual_risk:
+    - fixture does not run live mutation/characterization tests

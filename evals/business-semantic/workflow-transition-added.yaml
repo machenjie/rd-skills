@@ -1,11 +1,45 @@
 case_id: workflow-transition-added
 prompt: Allow approved claims to go back to draft when the reviewer requests changes.
+routing_triggers:
+  - business workflow state unclear
+  - business invariant changed
+source_context:
+  files:
+    - path: claims/domain/status.py
+      language: python
+      content: |
+        class ClaimStatus(Enum):
+            DRAFT = "draft"
+            SUBMITTED = "submitted"
+            APPROVED = "approved"
+    - path: claims/tests/test_transitions.py
+      language: python
+      content: |
+        def test_approved_claim_can_be_paid():
+            assert can_transition(APPROVED, PAID)
+diff_context:
+  changed_files:
+    - path: claims/domain/status.py
+      patch: |
+        +    REFUNDED = "refunded"
+        +    CANCELLED = "cancelled"
+    - path: claims/domain/transitions.py
+      patch: |
+        +    (ClaimStatus.APPROVED, ClaimStatus.DRAFT): reviewer_requested_changes,
 expected_route:
   stage: architecture-design
   business_semantic_pack_required: true
+  business_semantic_scope: workflow-transition-change
 expected_capabilities: [business-semantic-control-plane, state-machine-modeling, business-rule-extraction]
 expected_quality_gates: [domain gate, test gate]
 expected_bsp_sections: [workflows, business_rules, validation_map, code_mapping]
-expected_review_findings: [transition table delta required, forbidden transition tests required]
+expected_review_findings:
+  - finding_id: BSP-WORKFLOW-FORBIDDEN-GAP
+    category: workflow_transition_gap
+    impacted_claim: approved claim can return to draft
+    expected_evidence:
+      - enum/status change lacks forbidden transition tests
+      - APPROVED to DRAFT transition added
+    required_fix: workflow transition table and invalid transition tests required.
 forbidden_behavior: [add enum value only, skip invalid transition coverage]
 scoring: [transition_recall, guard_mapping, negative_path_tests, residual_risk]

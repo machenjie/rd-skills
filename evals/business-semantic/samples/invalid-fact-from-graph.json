@@ -1,0 +1,33 @@
+{
+  "business_semantic_pack": {
+    "schema_version": 1,
+    "pack_id": "bsp_invalid_graph_fact",
+    "pack_version": "1",
+    "created_at": "2026-06-30T00:00:00Z",
+    "task_business_intent": {
+      "business_outcome": "Reject cancellation after shipment.",
+      "non_goals": [],
+      "success_signals": ["denial is enforced"],
+      "failure_signals": ["graph becomes source truth"],
+      "evidence": [
+        {
+          "evidence_class": "FACT",
+          "source_kind": "repository_graph",
+          "summary": "Invalid: graph cannot prove a FACT.",
+          "freshness": "current",
+          "confidence": "high",
+          "verification_status": "verified"
+        }
+      ]
+    },
+    "business_vocabulary": [],
+    "business_objects": [],
+    "business_rules": [],
+    "workflows": [],
+    "data_and_signal_semantics": {"data_sources": [], "events": [], "metrics": [], "evidence": [{"evidence_class": "INFERENCE", "source_kind": "agent_inference", "summary": "No data signal.", "freshness": "unknown", "confidence": "low", "verification_status": "not_verified"}]},
+    "code_mapping": {"object_to_files": [], "rule_to_enforcement": [], "workflow_to_state_machine": [], "forbidden_placements": [], "evidence": [{"evidence_class": "INFERENCE", "source_kind": "agent_inference", "summary": "No mapping.", "freshness": "unknown", "confidence": "low", "verification_status": "not_verified"}]},
+    "memory_projection": {"accepted": [], "rejected": [], "stale": [], "not_verified": []},
+    "validation_map": [],
+    "context_control": {"budget_mode": "minimal", "selected_references": [], "skipped_references": [], "evidence_limits": ["invalid fact source"], "residual_context_risk": []}
+  }
+}

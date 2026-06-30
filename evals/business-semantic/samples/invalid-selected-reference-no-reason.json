@@ -1,0 +1,24 @@
+{
+  "business_semantic_pack": {
+    "schema_version": 1,
+    "pack_id": "bsp_invalid_reference",
+    "pack_version": "1",
+    "created_at": "2026-06-30T00:00:00Z",
+    "task_business_intent": {"business_outcome": "Reject cancellation after shipment.", "non_goals": [], "success_signals": ["denial is enforced"], "failure_signals": ["reference has no rationale"], "evidence": [{"evidence_class": "FACT", "source_kind": "current_source", "source_paths": ["src/domain/order.py"], "summary": "Current source.", "freshness": "current", "confidence": "high", "verification_status": "verified"}]},
+    "business_vocabulary": [],
+    "business_objects": [],
+    "business_rules": [],
+    "workflows": [],
+    "data_and_signal_semantics": {"data_sources": [], "events": [], "metrics": [], "evidence": [{"evidence_class": "INFERENCE", "source_kind": "agent_inference", "summary": "No data signal.", "freshness": "unknown", "confidence": "low", "verification_status": "not_verified"}]},
+    "code_mapping": {"object_to_files": [], "rule_to_enforcement": [], "workflow_to_state_machine": [], "forbidden_placements": [], "evidence": [{"evidence_class": "INFERENCE", "source_kind": "agent_inference", "summary": "No mapping.", "freshness": "unknown", "confidence": "low", "verification_status": "not_verified"}]},
+    "memory_projection": {"accepted": [], "rejected": [], "stale": [], "not_verified": []},
+    "validation_map": [],
+    "context_control": {
+      "budget_mode": "minimal",
+      "selected_references": [{"reference": "135-business-semantic-control-plane", "evidence_limit": "missing reason"}],
+      "skipped_references": [],
+      "evidence_limits": ["invalid reference"],
+      "residual_context_risk": []
+    }
+  }
+}

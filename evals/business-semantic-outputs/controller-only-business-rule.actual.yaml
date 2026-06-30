@@ -1,0 +1,32 @@
+actual_route:
+  stage: architecture-design
+  detected_triggers: [business rule hidden in SQL/controller/UI/test, business rule authority unknown]
+  selected_skills: [domain-impact-modeler, backend-change-builder, ai-code-review-refactor, quality-test-gate]
+  selected_capabilities: [business-semantic-control-plane, business-rule-extraction, implementation-structure-design, controller-api-implementation]
+  required_quality_gates: [domain gate, architecture gate, test gate, implementation gate, AI review gate]
+  business_semantic_pack_required: true
+  business_semantic_scope: controller-only-rule-authority
+  selected_bsp_sections: [business_objects, business_rules, code_mapping, validation_map]
+  selected_references:
+    - reference: 13-business-rule-extraction
+      reason: controller branch owns a cancellation decision that may be bypassed
+      evidence_limit: requires entry-point scan before FACT closure
+  skipped_references:
+    - reference: data-migration-design
+      reason: no schema migration or stored data transition is changed
+      evidence_limit: not evidence for historical records
+      residual_risk: []
+actual_review:
+  findings:
+    - finding_id: BSP-CONTROLLER-ONLY-RULE
+      severity: high
+      category: controller_only_rule
+      impacted_claim: order cancellation after shipped
+      evidence: ["if order.status == \"shipped\": return error(\"cannot_cancel\")"]
+      required_fix: controller-only rule bypass risk, enforcement layer must be domain or policy; controller-only rule can be bypassed by jobs/admin/import path; route to business-rule-extraction and domain enforcement.
+      validation_required: bypass path scan and domain/policy rule tests
+  forbidden_behavior_avoided:
+    - leave rule only in controller
+    - no bypass path scan
+  residual_risk:
+    - admin/import paths are fixture examples, not live graph proof

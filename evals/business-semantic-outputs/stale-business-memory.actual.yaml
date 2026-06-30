@@ -1,0 +1,33 @@
+actual_route:
+  stage: implementation-planning
+  detected_triggers: [business memory affects decision, memory used as business fact]
+  selected_skills: [domain-impact-modeler, quality-test-gate]
+  selected_capabilities: [business-semantic-control-plane, project-memory-governance, repository-graph-analysis]
+  required_quality_gates: [domain gate, execution discipline gate, test gate]
+  business_semantic_pack_required: true
+  business_semantic_scope: stale-memory-reconciliation
+  selected_bsp_sections: [memory_projection, business_rules, code_mapping, validation_map]
+  selected_references:
+    - reference: 125-project-memory-governance
+      reason: prior discount owner memory conflicts with current source
+      evidence_limit: memory is selector only until source read confirms
+  skipped_references:
+    - reference: business-rule-extraction
+      reason: route first reconciles stale owner before full rule catalog
+      evidence_limit: full rule extraction remains next-stage work
+      residual_risk: [rule catalog incomplete]
+actual_review:
+  findings:
+    - finding_id: BSP-STALE-MEMORY
+      severity: high
+      category: stale_memory_source_truth
+      impacted_claim: prior discount owner from memory
+      evidence: [memory signal conflicts with current source owner]
+      required_fix: memory not FACT, current-source confirmation required; memory is stale selector, not source truth; current source must win or residual risk must be recorded.
+      validation_required: source reread and memory verdict update
+  forbidden_behavior_avoided:
+    - treat memory as current owner
+    - skip source reread
+  residual_risk:
+    - memory not source truth until source_check confirms
+    - stale verdict remains if current owner is not read

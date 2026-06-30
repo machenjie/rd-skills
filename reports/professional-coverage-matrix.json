@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-30T08:12:41.206495+00:00",
+  "generated_at": "2026-06-30T09:05:38.775150+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -969,7 +969,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (8)",
-      "score": 56,
+      "score": 57,
       "status": "sample-grade",
       "warnings": []
     },

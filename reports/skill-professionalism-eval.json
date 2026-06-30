@@ -1,7 +1,7 @@
 {
   "average_score": 57.22,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-30T08:12:24.849651+00:00",
+  "generated_at": "2026-06-30T09:05:38.655873+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -29,7 +29,7 @@
       "warnings": []
     },
     {
-      "body_lines": 253,
+      "body_lines": 270,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -129,7 +129,7 @@
       "warnings": []
     },
     {
-      "body_lines": 244,
+      "body_lines": 246,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -304,7 +304,7 @@
       "warnings": []
     },
     {
-      "body_lines": 208,
+      "body_lines": 222,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -317,7 +317,7 @@
         "reference_precision": 3,
         "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "professional-skill",
       "likely_missing_sections": [],
@@ -325,7 +325,7 @@
       "path": "src/professional-skills/domain-impact-modeler/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 56,
+      "total": 57,
       "warnings": []
     },
     {
@@ -429,7 +429,7 @@
       "warnings": []
     },
     {
-      "body_lines": 251,
+      "body_lines": 263,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -879,7 +879,7 @@
       "warnings": []
     },
     {
-      "body_lines": 227,
+      "body_lines": 241,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1234,7 +1234,7 @@
       "warnings": []
     },
     {
-      "body_lines": 153,
+      "body_lines": 165,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1259,7 +1259,7 @@
       "warnings": []
     },
     {
-      "body_lines": 200,
+      "body_lines": 211,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1659,7 +1659,7 @@
       "warnings": []
     },
     {
-      "body_lines": 186,
+      "body_lines": 198,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -2909,7 +2909,7 @@
       "warnings": []
     },
     {
-      "body_lines": 140,
+      "body_lines": 152,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -3109,7 +3109,7 @@
       "warnings": []
     },
     {
-      "body_lines": 163,
+      "body_lines": 180,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -3509,7 +3509,7 @@
       "warnings": []
     },
     {
-      "body_lines": 168,
+      "body_lines": 180,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,

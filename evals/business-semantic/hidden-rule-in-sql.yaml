@@ -1,11 +1,36 @@
 case_id: hidden-rule-in-sql
 prompt: Change the renewal SQL query so enterprise subscriptions skip the expired status.
+routing_triggers:
+  - business rule hidden in SQL/controller/UI/test
+  - business rule authority unknown
+source_context:
+  files:
+    - path: billing/sql/subscription_renewals.sql
+      language: sql
+      content: |
+        SELECT * FROM subscriptions
+        WHERE status != 'expired'
+          AND renewal_enabled = TRUE;
+diff_context:
+  changed_files:
+    - path: billing/sql/subscription_renewals.sql
+      patch: |
+        -WHERE status != 'expired'
+        +WHERE status NOT IN ('expired', 'enterprise_expired')
 expected_route:
   stage: implementation-planning
   business_semantic_pack_required: true
+  business_semantic_scope: hidden-sql-rule
 expected_capabilities: [business-semantic-control-plane, business-rule-extraction, repository-graph-analysis, validation-broker]
 expected_quality_gates: [domain gate, API/data gate, test gate]
 expected_bsp_sections: [business_rules, data_and_signal_semantics, code_mapping, validation_map, context_control]
-expected_review_findings: [SQL-hidden rule requires rule owner and golden case]
+expected_review_findings:
+  - finding_id: BSP-HIDDEN-SQL-RULE
+    category: hidden_sql_rule
+    impacted_claim: subscription renewal eligibility status filter
+    expected_evidence:
+      - "SELECT * FROM subscriptions WHERE status != 'expired'"
+      - "WHERE status NOT IN ('expired', 'enterprise_expired')"
+    required_fix: SQL condition is a hidden business rule and needs rule_id, owner, authoritative enforcement layer, golden case, changed-path validation.
 forbidden_behavior: [approve SQL condition without rule catalog, skip changed-path validation]
 scoring: [hidden_rule_detection, validation_mapping, fact_source_quality, golden_case_coverage]
