@@ -1,0 +1,107 @@
+---
+name: linux-systems-professional-usage
+description: Use when Linux systemd, process, file descriptor, permissions, cgroup, namespace, signal, package, kernel, container host, filesystem, or operational runtime behavior needs evidence-backed handling.
+license: MIT
+changeforge_kind: foundation-capability
+changeforge_capability_id: "132"
+changeforge_version: 0.1.0
+---
+
+# Mission
+
+Make Linux runtime changes safe under real process, permission, filesystem, cgroup, namespace, signal, service-manager, and host constraints. Treat Linux behavior as observable system state, not a guess from application code or container assumptions.
+
+# When To Use
+
+Use when a change touches systemd units, service lifecycle, process supervision, signals, daemons, file descriptors, sockets, permissions, users/groups, capabilities, seccomp, cgroups, namespaces, `/proc`, `/sys`, ulimits, kernel parameters, package/service install scripts, container host behavior, cron/timers, log/journald integration, DNS resolver behavior, filesystem mounts, temp directories, or Linux-only production incidents.
+
+# Do Not Use When
+
+Do not use for ordinary application code that merely runs on Linux without relying on OS-specific behavior. Do not duplicate low-level memory, ABI, or driver analysis owned by `low-level-systems-extension`; use this capability for operational Linux runtime and service behavior.
+
+# Non-Negotiable Rules
+
+- Verify target environment: distro, kernel, init system, container/runtime, architecture, filesystem, user, cgroup version, namespace boundaries, and package manager when relevant.
+- systemd units require explicit `User`, `Group`, `WorkingDirectory`, `EnvironmentFile`, restart policy, timeout policy, resource limits, hardening options, and logging behavior.
+- Signal handling must be defined for shutdown, reload, child process cleanup, and timeout escalation.
+- File paths, permissions, ownership, umask, temp files, sockets, and PID files must be explicit and safe under concurrent start/restart.
+- Container behavior is not host behavior: PID 1, cgroups, DNS, mounts, capabilities, seccomp, and filesystem persistence must be verified in the actual runtime.
+- Never diagnose as "environment issue" without command evidence from the target or a representative environment.
+- Resource limits require observed or budgeted CPU, memory, fd, process, disk, inode, and network bounds.
+- Logs must go to the configured sink with redaction: journald, stdout/stderr, syslog, or file rotation policy.
+- Package/service scripts must be idempotent, restart-safe, and rollback-aware.
+- Security hardening must preserve required behavior while minimizing privileges: no root service by default, no broad capabilities, no world-writable state.
+
+# Industry Benchmarks
+
+Anchor decisions against systemd service and sandboxing documentation, Linux man-pages for signals, procfs, capabilities, namespaces, cgroups, file permissions, and limits, CIS Linux Benchmarks, container runtime security guidance, FHS path conventions, journald/syslog logging practice, and SRE guidance for graceful shutdown and resource saturation.
+
+# Selection Rules
+
+Select when Linux runtime semantics, not generic code structure, decide correctness or operability. Pair with `reliability-observability-gate` for service SLOs and saturation, `security-privacy-gate` for capabilities and privilege boundaries, `delivery-release-gate` for package/service rollout, `shell-cli-professional-usage` for scripts, and `containerization` when container image/runtime behavior is primary.
+
+# Risk Escalation Rules
+
+Escalate to `security-privacy-gate` for root services, Linux capabilities, writable directories, setuid/setgid, secret files, seccomp, or public sockets. Escalate to `reliability-observability-gate` for restart loops, resource exhaustion, signal shutdown, or host-level saturation. Escalate to `delivery-release-gate` for package manager, systemd rollout, or kernel/sysctl changes. Escalate to `low-level-systems-extension` for kernel, driver, ABI, native memory, or syscall implementation work.
+
+# Critical Details
+
+- **PID 1 matters.** A process running as PID 1 in a container needs signal forwarding and child reaping, or shutdown hangs and zombies accumulate.
+- **cgroup version changes evidence.** CPU/memory accounting, OOM behavior, and pressure signals differ across cgroup v1/v2 and container runtimes.
+- **systemd restart policy can hide crashes.** Restart loops need backoff, `StartLimit*`, health readiness, and clear failure logs.
+- **File descriptor and process limits fail late.** Set and observe `LimitNOFILE`, thread/process counts, socket backlog, and ephemeral port usage.
+- **Environment files are contracts.** Missing or malformed env files should fail clearly; secrets should not appear in unit files or logs.
+- **Filesystem semantics differ.** Overlayfs, bind mounts, tmpfs, read-only rootfs, SELinux/AppArmor labels, and NFS locks affect runtime behavior.
+- **DNS and resolver behavior are runtime inputs.** `/etc/resolv.conf`, systemd-resolved, search domains, and ndots can change latency and failure mode.
+- **Logs are diagnostic surface.** Journald unit logs, stdout/stderr, and file rotation must map to alert and incident workflows.
+
+# Failure Modes
+
+- **systemd restart loop:** service crashes repeatedly but appears "active" between restarts; alert misses user impact.
+- **Wrong user or path:** unit starts as root or from the wrong working directory, creating root-owned files the app later cannot write.
+- **Container PID 1 shutdown gap:** SIGTERM is not handled; deployment waits until SIGKILL and loses in-flight work.
+- **cgroup memory OOM:** process is killed by cgroup limit while host memory looks healthy.
+- **fd exhaustion:** high connection count hits `ulimit -n`; app reports random network failures.
+- **Writable secret leakage:** env file or socket directory is world-readable.
+- **tmpfs persistence assumption:** restart loses state written under `/tmp` or ephemeral container filesystem.
+- **Resolver latency:** DNS search path or ndots causes slow external lookups and request timeout.
+- **Package script non-idempotence:** postinstall restarts or rewrites config unexpectedly during upgrade.
+
+# Output Contract
+
+Return a Linux Systems Usage Record with:
+
+- `runtime_surface` (systemd, container host, process, filesystem, cgroup, namespace, package, network resolver, log sink)
+- `environment_evidence` (distro, kernel, init, runtime, cgroup, user, filesystem, package manager)
+- `service_contract` (unit settings, user/group, working directory, env files, restart/timeout, hardening, resource limits)
+- `process_contract` (signals, child cleanup, PID files, sockets, readiness, graceful shutdown)
+- `filesystem_permission_contract` (paths, ownership, umask, temp, mounts, secrets, rotation)
+- `resource_contract` (CPU, memory, fd, process, disk, inode, network limits and observed signals)
+- `observability_contract` (journald/stdout/syslog, metrics, alerts, runbook commands)
+- `decision_record` (chosen change, alternatives rejected, placement rationale)
+- `validation_commands` (systemctl, journalctl, ps, ss, lsof, cat /proc, container inspect, tests, or not-run disclosure)
+- `residual_risk` (unverified distro, container runtime, host policy, kernel, or production load)
+
+# Quality Gate
+
+1. Target Linux environment and container/host boundary are identified.
+2. Service manager behavior is explicit: restart, timeout, user, group, working directory, environment, limits, and hardening.
+3. Signal, shutdown, reload, and child cleanup behavior is defined and validated or disclosed.
+4. File paths, ownership, permissions, temp files, sockets, and secret handling are safe.
+5. cgroup, namespace, capability, and seccomp assumptions are stated.
+6. Resource limits and saturation signals are mapped to observability.
+7. Logs reach the intended sink with redaction and retention expectations.
+8. Rollout and rollback are safe for package/service changes.
+9. Residual risk names unverified host, kernel, runtime, or production-load behavior.
+
+# Used By
+
+reliability-observability-gate, delivery-release-gate, security-privacy-gate, backend-change-builder, ai-code-review-refactor
+
+# Handoff
+
+Hand off to `low-level-systems-extension` for kernel/driver/native ABI work, `containerization` for image/runtime packaging, `shell-cli-professional-usage` for scripts, `secret-configuration-security` for secret files, and `delivery-release-gate` for production service rollout.
+
+# Completion Criteria
+
+Linux-system work is complete when the target runtime is identified, service/process/filesystem/resource behavior is explicit, commands or tests prove the critical path, privileges are minimized, logs and alerts are wired, and unverified host/runtime differences are owned.

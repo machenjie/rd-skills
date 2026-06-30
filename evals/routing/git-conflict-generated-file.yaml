@@ -1,0 +1,42 @@
+---
+id: git-conflict-generated-file
+description: |
+  Git conflict where a source contract and generated file both changed.
+prompt: |
+  Resolve the merge conflict in an OpenAPI spec and the generated TypeScript
+  client. The generated file and source spec both changed on different branches;
+  keep user edits and do not pick ours/theirs blindly.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - generated file conflict
+  skills:
+    - development-process-orchestrator
+    - architecture-impact-reviewer
+    - quality-test-gate
+    - ai-code-review-refactor
+  capabilities:
+    - git-professional-usage
+    - build-tool-professional-usage
+    - repository-context-map
+    - validation-broker
+    - plan-execution-consistency
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+  capabilities:
+    - network-protocol-gateway-usage
+    - linux-systems-professional-usage
+  domain_extensions:
+    - ai-product-extension
+    - web3-product-extension
+notes: |
+  Generated/source conflicts require Git and build/codegen evidence, not broad
+  product routing.

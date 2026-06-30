@@ -35,6 +35,8 @@ Extend ChangeForge product and code change analysis with Web3 engineering discip
 - **Smart contracts that handle significant value require a third-party security audit**: self-review of contracts is insufficient for adversarial conditions — contracts handling > $100K in value must be audited by a reputable firm (Trail of Bits, Consensys Diligence, Spearbit, Code4rena) before deployment.
 - **Integer arithmetic in Solidity must be checked for overflow/underflow**: Solidity < 0.8.0 does not check integer overflow by default — use Solidity ≥ 0.8.0 (built-in overflow revert) or OpenZeppelin `SafeMath` for < 0.8.0; never use unchecked arithmetic blocks on untrusted values.
 - **Oracle price feed manipulation must be considered for any DeFi operation**: a spot price from a single DEX can be manipulated in a single block by a flash loan — use Chainlink price feeds for price-sensitive operations; use TWAPs (time-weighted average prices) with a minimum observation window of 30 minutes for on-chain oracles.
+- **Chain/network binding is a product invariant**: every signing, transaction submission, indexer, bridge, and RPC call must validate expected chain ID, contract address, nonce/deadline, finality depth, and network name. Testnets, forks, L2s, and sidechains are not interchangeable.
+- **Official-source verification is required for protocol assumptions**: EIP behavior, wallet SDK APIs, bridge finality, oracle heartbeat/deviation, and chain RPC semantics must be checked against official specs or provider docs before release decisions.
 
 ## Industry Benchmarks
 - **Solidity Security Best Practices (Consensys — smart-contract-best-practices.com)**: Reentrancy, tx.origin misuse, delegatecall risk, unchecked return values, integer overflow, front-running, DoS by block gas limit, improper access control. The baseline checklist for Solidity review.
@@ -99,6 +101,8 @@ Extend ChangeForge product and code change analysis with Web3 engineering discip
 - **Proxy upgrade governance must be timelocked**: an immediately executable upgrade with no timelock allows a compromised admin key to silently upgrade a contract to a malicious implementation — use OpenZeppelin TimelockController with a minimum 48-hour delay for production contracts.
 - **`latestRoundData` oracle staleness check**: Chainlink returns `(roundId, answer, startedAt, updatedAt, answeredInRound)` — always validate `updatedAt > block.timestamp - MAX_STALENESS` and `answeredInRound >= roundId` before using the price; stale prices produce incorrect valuations.
 - **Tenderly / Hardhat fork simulation**: test all contract interactions against a mainnet fork before deploying to mainnet — forked simulations catch gas estimation errors, slippage issues, and integration failures that testnets cannot replicate.
+- **Indexer state is derived, not final.** Event indexers, subgraphs, and off-chain caches lag, reorg, and miss events. Product decisions that grant access, credit deposits, or release assets must reconcile against canonical chain state and finality rules.
+- **Upgrade safety includes storage layout.** Proxy upgrades require storage-layout diff, initializer/reinitializer review, timelock, pause/rollback plan, and fork simulation against current deployed state.
 
 ### Anti-Examples
 
@@ -122,12 +126,14 @@ Extend ChangeForge product and code change analysis with Web3 engineering discip
 Return Web3 change assessment with:
 - **Smart contract security review**: SWC vulnerability mapping, reentrancy analysis, access control audit, integer arithmetic safety.
 - **Signature integrity**: EIP-712 domain completeness, chain ID binding, nonce/replay protection, human-readable intent display.
+- **Network and source verification**: official spec/provider source checked, expected chain ID, RPC endpoint, contract addresses, bridge/L2 finality, indexer lag, and oracle heartbeat/deviation limits.
 - **Custody architecture**: key management model, HSM/MPC usage, signing authorization chain.
 - **Transaction lifecycle model**: pending, confirmed (with block depth), finalized, failed, reverted, reorg states.
 - **Oracle security**: price feed source, staleness check, manipulation resistance.
 - **L2 finality implications**: fraud proof window, bridge challenge period, cross-chain state consistency.
 - **Audit obligations**: contract value threshold, required audit firm, formal verification requirements.
 - **Observability plan**: on-chain event indexing, balance monitoring, anomaly alerting.
+- **Irreversibility controls**: explicit user confirmation for asset movement, nonce/deadline expiry, slippage/MEV limits, reorg handling, pause/freeze owner, and recovery limits.
 - **Block/pass decision** with required conditions for approval.
 
 ## Evidence Contract
@@ -149,6 +155,8 @@ Close a Web3 change only when all five canonical answers are concrete (answer sc
 8. Contracts handling > $100K equivalent require third-party audit before deployment.
 9. Transaction lifecycle model covers reorg, pending, confirmed (depth), reverted, and failed states.
 10. MEV exposure is assessed; slippage limits are configured; high-value operations use private RPC (Flashbots Protect).
+11. Chain ID, contract address, nonce/deadline, and verifying contract are validated in signature and transaction flows, with replay tests across at least one wrong chain or stale nonce scenario.
+12. Indexer, bridge, L2, and oracle assumptions include finality, lag, heartbeat/deviation, reorg, and reconciliation evidence before product state is trusted.
 
 ## Handoff
 - **security-privacy-gate** — for private key custody, signature security, OWASP-equivalent Web3 vulnerabilities, and regulatory compliance.

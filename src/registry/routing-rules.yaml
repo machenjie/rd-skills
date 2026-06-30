@@ -33,14 +33,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 21 professional skills
-    foundation_mode: 129 foundation capabilities compiled into professional references
+    foundation_mode: 134 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 21 professional skills and 7 domain extensions
-    foundation_mode: 129 foundation capabilities compiled into professional references
+    foundation_mode: 134 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 21 professional skills, 129 foundation capabilities, and 7 domain extensions
+    top_level: 21 professional skills, 134 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -208,6 +208,15 @@ risk_escalation_triggers:
   - stdlib replacement available
   - native feature replacement available
   - existing code replacement available
+  - git destructive history operation
+  - generated file conflict
+  - build graph undeclared dependency
+  - generated artifact source of truth
+  - linux service lifecycle failure
+  - network gateway timeout chain
+  - data format parser compatibility
+  - protobuf field reuse
+  - yaml scalar coercion
   - one implementation abstraction
   - speculative abstraction
   - scaffold for later
@@ -506,6 +515,42 @@ risk_trigger_rules:
     required_skills: [security-privacy-gate, delivery-release-gate]
     required_capabilities: [agent-tool-permission-sandbox, plan-execution-consistency]
     required_quality_gates: [security gate, delivery gate]
+  - trigger: git destructive history operation
+    required_skills: [delivery-release-gate, quality-test-gate]
+    required_capabilities: [git-professional-usage, agent-tool-permission-sandbox, plan-execution-consistency]
+    required_quality_gates: [delivery gate, test gate, security gate]
+  - trigger: generated file conflict
+    required_skills: [architecture-impact-reviewer, quality-test-gate]
+    required_capabilities: [git-professional-usage, build-tool-professional-usage, repository-context-map, validation-broker]
+    required_quality_gates: [architecture gate, test gate]
+  - trigger: build graph undeclared dependency
+    required_skills: [architecture-impact-reviewer, delivery-release-gate, quality-test-gate]
+    required_capabilities: [build-tool-professional-usage, package-dependency-management, validation-broker]
+    required_quality_gates: [architecture gate, delivery gate, test gate]
+  - trigger: generated artifact source of truth
+    required_skills: [architecture-impact-reviewer, quality-test-gate]
+    required_capabilities: [build-tool-professional-usage, data-format-contract-usage, validation-broker]
+    required_quality_gates: [architecture gate, test gate]
+  - trigger: linux service lifecycle failure
+    required_skills: [reliability-observability-gate, delivery-release-gate]
+    required_capabilities: [linux-systems-professional-usage, observability, agent-tool-permission-sandbox]
+    required_quality_gates: [reliability gate, delivery gate, security gate]
+  - trigger: network gateway timeout chain
+    required_skills: [reliability-observability-gate, integration-change-builder]
+    required_capabilities: [network-protocol-gateway-usage, degradation-circuit-breaking, observability]
+    required_quality_gates: [reliability gate, implementation gate]
+  - trigger: data format parser compatibility
+    required_skills: [data-api-contract-changer, quality-test-gate]
+    required_capabilities: [data-format-contract-usage, contract-testing, version-compatibility]
+    required_quality_gates: [API/data gate, test gate]
+  - trigger: protobuf field reuse
+    required_skills: [data-api-contract-changer, quality-test-gate]
+    required_capabilities: [data-format-contract-usage, contract-testing, version-compatibility]
+    required_quality_gates: [API/data gate, test gate]
+  - trigger: yaml scalar coercion
+    required_skills: [data-api-contract-changer, security-privacy-gate, quality-test-gate]
+    required_capabilities: [data-format-contract-usage, configuration-runtime-policy, input-validation]
+    required_quality_gates: [API/data gate, security gate, test gate]
   - trigger: untrusted MCP tool or connector
     required_skills: [security-privacy-gate]
     required_capabilities: [agent-tool-permission-sandbox]
@@ -1844,6 +1889,12 @@ routing_rules:
       - define queue topology ordering acknowledgement replay poison message and observability behavior
       - Kafka Kafka topic partition consumer group offset commit enable.auto.commit schema registry topic compaction retention DLQ poison message replay consumer lag transactional producer Kafka Connect
     priority: 60
+  - route_to: data-format-contract-usage
+    triggers:
+      - JSON YAML XML CSV Protobuf Avro Parquet schema registry parser serializer wire format field evolution compatibility generated model golden fixture
+      - protobuf field number reserved field enum value wire type breaking change old reader new writer schema compatibility
+      - YAML safe loader scalar coercion duplicate key boolean on yes no timestamp anchor tag configuration parser compatibility
+    priority: 62
   - route_to: search-analytics-design
     triggers:
       - design search analytics full text relevance filtering faceting OLAP freshness reindex fallback
@@ -1939,6 +1990,12 @@ routing_rules:
       - design fallback timeout bulkhead circuit breaker graceful degradation external dependency failure
       - prevent dependency outage from collapsing core flows where fallback is possible
     priority: 60
+  - route_to: network-protocol-gateway-usage
+    triggers:
+      - Nginx Envoy HAProxy Cloudflare Fastly CloudFront ALB NLB ingress API gateway service mesh WAF CDN reverse proxy load balancer
+      - HTTP TLS DNS SNI ALPN proxy header X-Forwarded-For Forwarded Host CORS WebSocket SSE gRPC timeout chain 502 503 504 retry amplification
+      - gateway timeout connect timeout read timeout idle timeout upstream status edge origin trace context request id
+    priority: 62
   - route_to: observability
     triggers:
       - design logs metrics traces alerts dashboards correlation ids privacy safe production diagnostics
@@ -1969,6 +2026,12 @@ routing_rules:
       - design monorepo affected test selection incremental build Bazel Pants Nx Turborepo build cache correctness generated file policy
       - capture compliance evidence approval evidence artifact digest SBOM vulnerability scan deploy audit event
     priority: 60
+  - route_to: build-tool-professional-usage
+    triggers:
+      - Makefile make Bazel Buck Pants Gradle Maven npm script pnpm yarn Turborepo Nx build graph generated artifact codegen strict deps remote cache remote execution hermetic build
+      - undeclared dependency generated source generator output source of truth reproducible artifact checksum digest build cache action key toolchain pin
+      - monorepo affected targets codegen drift build pipeline local CI mismatch release artifact provenance
+    priority: 62
   - route_to: kubernetes-gateway
     triggers:
       - design Kubernetes workload service ingress gateway probes resources rollout rollback and safety checks
@@ -2052,6 +2115,12 @@ routing_rules:
       - repository map missing before plan caller callee graph unclear local convention scan missing source dist boundary wrong placement risk
       - use repo graph context pack when fresh and refresh graph when stale
     priority: 60
+  - route_to: git-professional-usage
+    triggers:
+      - git merge rebase cherry-pick conflict worktree index staging branch upstream reflog reset revert force-with-lease tag submodule sparse checkout
+      - generated file conflict ours theirs merge base conflict marker dirty worktree untracked file protected branch history rewrite
+      - commit hygiene unrelated staged changes user changes overwrite rollback ref
+    priority: 62
   - route_to: agent-workflow-state-machine
     triggers:
       - agent workflow state machine current stage next stage legal transition owner reviewer repair re-review validation freshness closure evidence

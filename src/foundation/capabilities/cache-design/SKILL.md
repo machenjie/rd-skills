@@ -46,6 +46,7 @@ Use during planning, coding, bug-fix, debugging, code-review, refactoring, testi
 - **Stampede controls need executable local proof**: tests should use deterministic fake/in-memory cache and a clearly named FakeBackend or source-of-truth seam to drive concurrent same-key workers, prove only one refresh happens with an assertion such as `backend.calls == 1`, prove Redis-down fallback/backpressure behavior, and avoid live Redis, network clients, URL literals, or new package dependencies unless the task explicitly requires them.
 - **Serialization format and value schema are versioned** in the key prefix; rolling deploys with mixed versions must not mix shapes (otherwise readers crash on unexpected fields).
 - **No secrets, tokens, or PII in cache logs/keys**; key may contain hashed identifiers.
+- **Redis deployments require topology and command-safety evidence**: standalone, Sentinel, Cluster, ElastiCache, or Memorystore mode; DB number or hash-slot behavior; key prefix; ACL user; timeout; connection pool; pipeline/transaction/Lua usage; eviction policy; persistence mode (RDB/AOF/off); replication/failover behavior; and explicit handling for hot keys, distributed locks, and cache-aside races.
 
 # Industry Benchmarks
 
@@ -104,6 +105,7 @@ Cache correctness is defined by **what staleness is acceptable, for how long, un
 - **Eviction and memory.** Pick eviction policy to match access skew, alert before `maxmemory`, and measure item size, fragmentation, key cardinality, and p99 latency under pressure.
 - **Multi-region and erasure.** Declare replication lag, avoid strong decisions on eventually replicated cache, and invalidate cached PII on erasure.
 - **Observability.** Emit hit, miss, stale, bypass, eviction, refresh failure, hot-key, source-load, memory, and `Cache-Status`-style decision signals where applicable.
+- **Redis lock safety.** A Redis lock is acceptable only with unique token ownership, bounded TTL, refresh or fencing when work can exceed TTL, best-effort unlock that checks the token, and idempotent side effects. A single Redis lock without fencing is not enough for money, inventory, or irreversible work.
 
 # Failure Modes
 
@@ -143,6 +145,7 @@ Return a cache strategy with, per cached value class:
 - `security_privacy_contract` (secrets/PII redaction, HTTP cacheability, `Vary`, deception/poisoning defenses, erasure path)
 - `failure_and_rollout_contract` (cache-down behavior, warm-up, canary, kill switch, rollback independent of cache health)
 - `observability_contract` (hit/miss/stale/eviction/refresh-failure/source-load/hot-key/memory metrics, alerts, `Cache-Status`)
+- `redis_contract` (topology, keyspace, ACL, pool, timeout, pipeline/transaction/Lua usage, persistence, eviction, failover, hot-key plan, distributed-lock safety)
 - `validation_contract` (tests for stale, miss flood, stampede, cache-down, mixed schema, permission revoke, invalidation race)
 - `graph_memory_execution_coupling` (current graph/memory facts used, current files/config/tests/telemetry that confirm or reject them)
 - `validation_freshness` (validator/test commands, timestamps or run identifiers, exit code, artifact/report or screenshot path when applicable, and stale evidence called out)
@@ -183,6 +186,7 @@ The strategy passes only when:
 10. **Rollout** includes warm-up, canary, kill switch, and rollback that does not depend on cache health.
 11. **Graph, memory, validation, and tool-boundary evidence** is fresh and records read-only vs state-mutating actions.
 12. **Claims are bounded** and do not overstate production traffic skew, regional propagation, memory pressure, or rare races.
+13. **Redis-specific behavior** names topology, ACL, failover, persistence/eviction, hot-key controls, connection-pool limits, and lock safety with duplicate-worker or lock-expiry validation when locks protect side effects.
 
 # Benchmark Coverage
 

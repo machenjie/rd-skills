@@ -33,6 +33,7 @@ Use during planning, coding, bug-fix, debugging, code-review, refactoring, testi
 - **Ordering guarantees must be stated explicitly with the partition/key scope.** In Kafka: ordering is guaranteed within a partition, not globally. SQS standard: no ordering. SQS FIFO: ordering per message group ID. Define: which messages require ordering (e.g., events for the same `orderId` must be ordered), what the partition key is, and the tradeoff (smaller key space → hot partitions; larger key space → lower ordering guarantees).
 - **Consumer lag must be monitored and alert on threshold breach.** Consumer lag (messages produced − messages consumed) growing unbounded indicates a consumer that is slower than the producer, stuck in a retry loop, or dead. Alert when: lag exceeds a business-latency SLO threshold (e.g., > 10,000 messages OR > 5-minute processing delay for payment events); DLQ depth > 0; consumer group has no active members. Expose lag via metrics: Kafka `consumer_lag_sum`, SQS `ApproximateNumberOfMessagesNotVisible`, RabbitMQ `messages_ready + messages_unacknowledged`.
 - **Backpressure must slow producers or shed non-critical work before lag becomes an outage.** Consumers that cannot keep up will eventually exhaust memory, crash, or block critical paths. Options: producer rate limiting (token bucket); priority queues (shed low-priority messages first); separate queues by criticality (payment events on dedicated high-priority topic); consumer horizontal scaling (add consumer instances up to partition count). Never let lag grow indefinitely without a shedding or scaling mechanism.
+- **Kafka configuration must be explicit**: topic, partitions, replication factor, retention, compaction, schema registry subject strategy, producer idempotence/acks, consumer group, `enable.auto.commit=false`, `max.poll.interval.ms`, `max.poll.records`, rebalance strategy, transactional producer or outbox boundary, and replay/seek ownership.
 
 # Industry Benchmarks
 
@@ -61,6 +62,7 @@ Escalate when: messages carry financial transactions (payments, ledger updates, 
 - **Deduplication window is finite.** SQS FIFO deduplication window: 5 minutes. NATS JetStream `MsgId` deduplication: configurable (default 2 minutes). Messages replayed outside this window will be re-processed. Consumer idempotency must not rely solely on broker-level deduplication for events that may be replayed hours or days later (replay from DLQ, disaster recovery).
 - **Partition key selection determines ordering AND load distribution.** `orderId` as partition key: ordering guaranteed per order; hot partition risk if one order generates high volume. `customerId` as partition key: ordering per customer; more balanced load. `random` / no key: maximum throughput, no ordering. For stateful workflows that require strict ordering, the partition key must be the entity ID whose state is being mutated.
 - **Consumer group rebalance causes pause — design for it.** When a consumer joins or leaves a Kafka consumer group, partitions are reassigned (rebalance). During rebalance, no consumer is processing. Sessions that hold locks or DB connections during rebalance may time out. Use `CooperativeStickyAssignor` (incremental rebalance) to minimize pause. Commit offsets before processing to minimize reprocessing on rebalance.
+- **Kafka early offset commit is data loss.** Commit offsets only after durable side effects and idempotency record are committed. Batch consumers must either commit per processed record, keep a processed-offset watermark, or stop the partition on first failure. Never commit the batch high-water mark after partial success.
 
 ### Consumer Implementation Checklist
 
@@ -115,6 +117,7 @@ Return a queue design with:
 - `topics_queues` (name, broker, ordering guarantee, partition key, retention, consumer groups)
 - `message_schema` (fields: idempotency_key, correlation_id, event_type, payload, schema_version; no secrets in payload)
 - `delivery_guarantee` (at-least-once; idempotency compensation strategy)
+- `kafka_contract` (topic, partitions, replication, retention/compaction, schema subject, producer acks/idempotence/transactions, consumer group, manual commit, poll and rebalance settings)
 - `consumer_steps` (per-consumer: idempotency check → deserialization → business logic → durable write → ack)
 - `acknowledgement_point` (after or before durable write — must be AFTER)
 - `retry_policy` (initial delay, backoff formula, max attempts, jitter, max delay, retryable vs non-retryable classification)
@@ -149,6 +152,7 @@ The design is complete only when:
 11. Project memory, repository graph, dashboards, runbooks, and prior validations are reconciled with current source/config or marked stale/not verified.
 12. Every changed queue behavior maps to duplicate, poison, crash, replay, lag, contract, integration, or manual validation evidence.
 13. Validation evidence names the command, test or validator, output, report or artifact, screenshot when dashboard/alert/runbook UI evidence is material, exit code or manual result, and freshness after the final material edit.
+14. Kafka consumers use manual offset commits after durable processing; tests or review evidence cover early-commit, partial-batch failure, rebalance, and replay behavior.
 
 # Used By
 

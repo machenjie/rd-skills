@@ -1,0 +1,108 @@
+---
+name: data-format-contract-usage
+description: Use when JSON, YAML, XML, CSV, Protobuf, Avro, Parquet, OpenAPI schema, serialization, parser behavior, compatibility, coercion, field evolution, or wire-format contracts need professional evidence.
+license: MIT
+changeforge_kind: foundation-capability
+changeforge_capability_id: "134"
+changeforge_version: 0.1.0
+---
+
+# Mission
+
+Protect data format contracts across parsers, serializers, generated code, schema evolution, compatibility, and wire/storage behavior. Treat JSON/YAML/XML/CSV/Protobuf/Avro/Parquet changes as contracts only when their parser rules, compatibility class, examples, generated artifacts, and validation evidence are explicit.
+
+# When To Use
+
+Use when a change touches serialization/deserialization, JSON Schema, OpenAPI schema, YAML config, XML, CSV/TSV, Protobuf, Avro, Thrift, Parquet, Arrow, schema registry, parser options, enum/field evolution, default/null/unknown field behavior, number/time encoding, generated models, content type, backward/forward compatibility, golden fixtures, or format migration.
+
+# Do Not Use When
+
+Do not use for a simple JSON literal inside a unit test, ordinary DTO field addition with no parser/compatibility risk, or application-level API design that does not depend on format semantics. Use `api-contract-design` or `dto-schema-design` when operation or field validation is primary and format compatibility is not the risk.
+
+# Non-Negotiable Rules
+
+- Name the format, schema authority, parser/serializer library, version, and options that define behavior.
+- Classify compatibility: backward, forward, full, transitive, additive, breaking, or storage-only.
+- Protobuf field numbers must never be reused; removed fields and enum values must be reserved.
+- YAML scalar coercion must be controlled. Ambiguous booleans, numbers, dates, anchors, tags, and duplicate keys require parser policy and negative tests.
+- JSON numbers, nulls, absent fields, unknown fields, ordering, duplicate keys, and timestamp formats require explicit behavior at boundaries.
+- CSV requires delimiter, quote, escape, newline, encoding, header, null/empty, formula-injection, and column-order policy.
+- XML requires namespace, entity expansion, external entity, schema validation, and canonicalization policy.
+- Schema registry or generated-code changes require source/generator/output policy and drift validation.
+- Storage formats such as Avro/Parquet require reader/writer schema compatibility, partition evolution, nullable/default behavior, and backfill/read-old-data tests.
+- Examples and golden fixtures must validate with the same parser settings as production.
+
+# Industry Benchmarks
+
+Anchor decisions against JSON Schema 2020-12, OpenAPI 3.1, YAML 1.2, XML security guidance against XXE/entity expansion, RFC 8259 JSON, RFC 4180 CSV baseline plus formula-injection controls, Protobuf field evolution rules, Confluent Schema Registry compatibility modes, Avro schema resolution, Parquet schema evolution guidance, ISO 8601/RFC 3339 timestamps, and language-specific parser security guidance.
+
+# Selection Rules
+
+Select when parser behavior, serialization, schema evolution, generated artifacts, or format compatibility is the central risk. Pair with `api-contract-design` for client-visible API operations, `dto-schema-design` for field validation, `contract-testing` for consumer/provider fixtures, `data-migration-design` for stored data format migration, and `build-tool-professional-usage` for generated-code drift.
+
+# Risk Escalation Rules
+
+Escalate to `security-privacy-gate` for XML external entities, YAML unsafe loaders, CSV formula injection, deserialization gadgets, or untrusted parser inputs. Escalate to `data-api-contract-changer` when public or cross-service contracts evolve. Escalate to `data-middleware-change-builder` for storage formats, schema registry, streams, or warehouse files. Escalate to `delivery-release-gate` for incompatible format migrations or backfills.
+
+# Critical Details
+
+- **Parser settings are the contract.** Safe loader vs unsafe loader, duplicate-key handling, unknown-field behavior, and coercion options can change behavior without schema text changing.
+- **Absent, null, empty, zero, and false differ.** Define each state before mapping data into domain or config behavior.
+- **Protobuf compatibility is numeric.** Field names are not the wire contract; field numbers and wire types are.
+- **YAML is risky config surface.** `yes`, `on`, `no`, `off`, timestamps, anchors, and tags can be coerced unexpectedly depending on parser version.
+- **JSON duplicate keys are ambiguous.** Many parsers keep last value; security-sensitive configs should reject duplicates.
+- **Generated models drift.** Schema source, generated clients, and runtime validators must stay aligned.
+- **Golden fixtures prove only configured behavior.** Fixtures must use production parser options and include negative cases.
+- **Data lake formats need old-reader/new-writer checks.** Avro/Parquet changes must be tested against old files and old consumers where compatibility matters.
+
+# Failure Modes
+
+- **Protobuf field reuse:** a removed field number is reused for a new meaning; old consumers interpret new data incorrectly.
+- **YAML boolean coercion:** `on` or `yes` becomes boolean true, enabling a feature or permission unexpectedly.
+- **Unknown field drop:** parser silently drops new fields, causing partial updates or lost config.
+- **Duplicate JSON key:** attacker supplies two `role` keys; parser keeps the privileged value.
+- **CSV formula injection:** exported cell begins with `=`, causing spreadsheet execution when opened.
+- **XML entity expansion:** unsafe parser resolves external entity or expands payload into resource exhaustion.
+- **Timestamp ambiguity:** local time without offset is interpreted differently by producers and consumers.
+- **Avro default mismatch:** reader schema expects a default that writer never supplied; old data fails after deployment.
+- **Generated client stale:** schema changed but generated models were not regenerated.
+
+# Output Contract
+
+Return a Data Format Contract Record with:
+
+- `format_surface` (JSON, YAML, XML, CSV, Protobuf, Avro, Parquet, schema registry, generated model, parser config)
+- `schema_authority` (source file, registry, generated artifact, runtime validator, owner)
+- `parser_contract` (library, version, safe mode, coercion, duplicate key, unknown field, null/default behavior)
+- `compatibility_class` (backward/forward/full/transitive/additive/breaking/storage-only)
+- `field_evolution` (added, removed, reserved, renamed, type changed, default/null/enum behavior)
+- `security_contract` (unsafe loader, XXE, formula injection, deserialization, size/depth limits)
+- `generated_artifact_policy` (generator, output, committed/ignored, drift check)
+- `fixtures_and_validation` (positive/negative examples, golden files, schema validation, consumer contract tests)
+- `decision_record` (change made, alternatives rejected, migration/rollout rationale)
+- `residual_risk` (unverified consumer, parser version, old data, schema registry mode, generated artifact)
+
+# Quality Gate
+
+1. Format, schema authority, parser library/version/options, and content type are named.
+2. Compatibility class is explicit and matches consumer/storage risk.
+3. Removed Protobuf fields and enum values are reserved; no field number reuse.
+4. YAML/JSON/XML/CSV parser security and coercion behavior is controlled.
+5. Null, absent, empty, zero, false, default, and unknown field behavior is defined.
+6. Generated artifacts and runtime validators are aligned with drift checks.
+7. Positive and negative fixtures validate with production parser settings.
+8. Old-reader/new-writer or old-data/new-reader behavior is tested where compatibility matters.
+9. Security-sensitive parser risks route to security review.
+10. Residual risk names unverified consumers, parser versions, stored data, or generated outputs.
+
+# Used By
+
+data-api-contract-changer, data-middleware-change-builder, integration-change-builder, quality-test-gate, backend-change-builder, ai-code-review-refactor, consumer-impact-analysis, configuration-runtime-policy
+
+# Handoff
+
+Hand off to `api-contract-design` for operation behavior, `dto-schema-design` for field validation, `contract-testing` for consumer/provider tests, `data-migration-design` for stored data migration, `security-privacy-gate` for unsafe parser or injection risk, and `build-tool-professional-usage` for generated artifacts.
+
+# Completion Criteria
+
+Data-format work is complete when parser behavior, schema authority, compatibility class, field evolution, generated artifacts, fixtures, security posture, and residual consumer/storage risk are all explicit and validated with the same parser settings used in production.

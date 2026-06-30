@@ -1,0 +1,40 @@
+---
+id: bazel-build-generated-artifact
+description: |
+  Bazel strict-deps and generated artifact source-of-truth routing.
+prompt: |
+  CI fails under Bazel remote execution because a generated gRPC target uses a
+  protobuf runtime dependency that is only available transitively. Fix the
+  BUILD files and generated artifact policy without disabling strict deps.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - build graph undeclared dependency
+    - generated artifact source of truth
+  skills:
+    - architecture-impact-reviewer
+    - delivery-release-gate
+    - quality-test-gate
+  capabilities:
+    - build-tool-professional-usage
+    - data-format-contract-usage
+    - package-dependency-management
+    - validation-broker
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - delivery gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - security-privacy-gate
+  capabilities:
+    - git-professional-usage
+    - network-protocol-gateway-usage
+notes: |
+  The build graph and generated source policy are primary; security is not
+  selected absent supply-chain or secret risk.

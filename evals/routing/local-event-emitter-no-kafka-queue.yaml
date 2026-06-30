@@ -1,0 +1,27 @@
+---
+id: local-event-emitter-no-kafka-queue
+description: |
+  In-process event emitter should not activate Kafka-specific queue design.
+prompt: |
+  Rename an in-process EventEmitter event constant used only within one
+  frontend component. No Kafka topic, consumer, offset, DLQ, broker, retry, or
+  durable queue behavior changes.
+expected:
+  complexity: L1
+  risk_triggers: []
+  skills:
+    - frontend-change-builder
+  capabilities:
+    - code-clarity-maintainability
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+forbidden:
+  skills:
+    - data-middleware-change-builder
+    - integration-change-builder
+  capabilities:
+    - message-queue-design
+    - idempotency-retry-design
+notes: |
+  Anti-overrouting: local UI event names are not broker queue semantics.

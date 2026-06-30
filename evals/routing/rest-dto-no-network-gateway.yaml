@@ -1,0 +1,32 @@
+---
+id: rest-dto-no-network-gateway
+description: |
+  Simple REST DTO field change should not activate network gateway usage.
+prompt: |
+  Add an optional `displayName` string to a REST response DTO and OpenAPI
+  schema. No CDN, proxy, ingress, TLS, timeout, header, or gateway config changes.
+expected:
+  complexity: L2
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  skills:
+    - data-api-contract-changer
+    - quality-test-gate
+  capabilities:
+    - api-contract-design
+    - dto-schema-design
+    - contract-testing
+  domain_extensions: []
+  quality_gates:
+    - API/data gate
+    - test gate
+forbidden:
+  skills:
+    - reliability-observability-gate
+    - integration-change-builder
+  capabilities:
+    - network-protocol-gateway-usage
+    - linux-systems-professional-usage
+notes: |
+  DTO/schema compatibility is not gateway/protocol routing.

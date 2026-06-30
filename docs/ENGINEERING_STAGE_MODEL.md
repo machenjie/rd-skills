@@ -131,24 +131,27 @@ common risks, and gates likely needed. Launch only the matching set for the surf
 | --- | --- | --- | --- | --- |
 | frontend-product | `frontend-change-builder` | `page-component-decomposition`, `state-management-design`, `form-validation-design`, `frontend-api-integration` | broken flow, a11y, state leaks | impact, test |
 | backend-product | `backend-change-builder` | `service-business-logic`, `authentication-authorization`, `idempotency-retry-design`, `logging-error-handling` | auth, transactions, concurrency | security, test |
-| api-contract | `data-api-contract-changer` | `api-contract-design`, `dto-schema-design`, `error-code-design`, `version-compatibility` | breaking change, compatibility | API/data, test |
+| api-contract | `data-api-contract-changer` | `api-contract-design`, `dto-schema-design`, `error-code-design`, `version-compatibility`, `data-format-contract-usage` | breaking change, compatibility | API/data, test |
 | data-model | `data-api-contract-changer` | `data-model-design`, `relational-database`, `indexing-query-optimization` | integrity, ownership | API/data, test |
 | database-migration | `data-api-contract-changer` | `data-migration-design`, `transaction-consistency`, `release-rollback` | irreversible data, downtime | API/data, delivery, test |
 | cache | `data-middleware-change-builder` | `cache-design`, `concurrency-control` | stampede, stale reads | reliability, test |
 | message-queue | `data-middleware-change-builder` | `message-queue-design`, `idempotency-retry-design` | ordering, duplicate delivery | reliability, test |
+| network-gateway | `reliability-observability-gate` | `network-protocol-gateway-usage`, `degradation-circuit-breaking`, `observability` | timeout chain, spoofed headers, retry amplification | reliability, security |
 | search-analytics | `data-middleware-change-builder` | `search-analytics-design`, `indexing-query-optimization` | freshness, relevance | reliability, test |
 | external-integration | `integration-change-builder` | `degradation-circuit-breaking`, `idempotency-retry-design` | timeout, retry storms | security, reliability |
 | webhook | `integration-change-builder` | `authentication-security`, `idempotency-retry-design` | signature, replay | security, reliability |
 | infrastructure-deployment | `delivery-release-gate` | `containerization`, `release-rollback`, `ci-cd` | rollout, rollback | delivery, reliability |
 | kubernetes-helm | `delivery-release-gate` | `kubernetes-gateway`, `ci-cd`, `secret-configuration-security` | exposure, RBAC | delivery, security |
-| ci-cd | `delivery-release-gate` | `ci-cd`, `package-dependency-management` | unverified release, supply chain | delivery, security |
+| ci-cd | `delivery-release-gate` | `ci-cd`, `package-dependency-management`, `build-tool-professional-usage` | unverified release, supply chain | delivery, security |
 | ai-rag-agent | `ai-product-extension` | `threat-modeling`, `observability`, `test-strategy` | prompt injection, hallucination | security, AI review |
 | web3 | `web3-product-extension` | `authentication-security`, `threat-modeling` | key custody, replay | security, test |
 | payment-trading | `payment-trading-extension` | `idempotency-retry-design`, `transaction-consistency` | double-charge, ledger drift | security, test, delivery |
 | low-level-systems | `low-level-systems-extension` | `concurrency-control`, `language-performance-safety` | memory safety, ABI | reliability, test |
+| linux-systems | `reliability-observability-gate` | `linux-systems-professional-usage`, `observability` | service lifecycle, cgroup limits, permissions | reliability, security |
 | sdk-library | `data-api-contract-changer` | `sdk-library-contract-design`, `version-compatibility`, `package-dependency-management` | API break, provenance | API/data, test |
 | cli-daemon | `backend-change-builder` | `cli-daemon-interface-design`, `logging-error-handling` | exit-code/IO contract | test |
 | documentation-only | `change-documentation-gate` | `documentation-generation` | stale or wrong docs | documentation |
+| git-workflow | `development-process-orchestrator` | `git-professional-usage`, `repository-context-map`, `validation-broker`, `plan-execution-consistency` | overwritten worktree, generated conflict, history rewrite | implementation, test |
 | skill-authoring | `change-forge-router` | `repository-context-map`, `skill-authoring-expert`, `engineering-stage-professionalism`, `skill-efficacy-benchmark`, `plan-execution-consistency`, `context-control-plane`, `minimal-correct-implementation` | over/under routing, context bloat | documentation, test |
 | agent-runtime-governance | `change-forge-router` | `executor-adapter-protocol`, `agent-tool-permission-sandbox`, `agent-workflow-state-machine`, `context-control-plane` | unsupported runtime event, overclaimed closure | security, execution discipline |
 | repository-intelligence | `change-impact-analyzer` | `repository-graph-analysis`, `repository-context-map`, `context-packaging`, `context-control-plane` | stale graph, source-of-truth drift | impact, test |

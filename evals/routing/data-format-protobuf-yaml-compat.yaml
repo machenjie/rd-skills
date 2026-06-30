@@ -1,0 +1,43 @@
+---
+id: data-format-protobuf-yaml-compat
+description: |
+  Protobuf field removal and YAML scalar coercion require data-format contract routing.
+prompt: |
+  Remove a Protobuf event field and update a YAML config where the value `on`
+  is parsed by the production loader. Preserve old consumers and prevent
+  scalar coercion surprises.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - protobuf field reuse
+    - yaml scalar coercion
+    - data format parser compatibility
+  skills:
+    - data-api-contract-changer
+    - delivery-release-gate
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - data-format-contract-usage
+    - contract-testing
+    - version-compatibility
+    - configuration-runtime-policy
+    - input-validation
+  domain_extensions: []
+  quality_gates:
+    - API/data gate
+    - delivery gate
+    - security gate
+    - test gate
+forbidden:
+  skills:
+    - reliability-observability-gate
+  capabilities:
+    - network-protocol-gateway-usage
+    - linux-systems-professional-usage
+notes: |
+  Format/parser compatibility is primary; ordinary API operation design is
+  secondary.

@@ -41,6 +41,7 @@ Use during planning when a login, MFA, account recovery, identity-provider, cook
 - **Auditable events**: login success, login failure (with category), MFA success/failure, password change, password reset request, password reset completion, MFA enrollment/removal, recovery code use, session creation, session revocation, suspicious activity. **Never log secrets or reusable tokens**; hash for correlation (`sha256(token)[:16]`).
 - **Notify users** of: new device login (geo/UA), password change, MFA change, email change, new active session, recovery initiated. Provide a "revoke" action.
 - **Token signing keys** rotated regularly (≤ 90 days) with key set (JWKS) published for verifiers; old key kept until max token lifetime expires.
+- **OIDC/OAuth callback hardening is mandatory**: exact redirect URI matching, `state` and `nonce` validation, PKCE for public clients, issuer/audience validation, and no wildcard redirect or path-prefix matching. Public-client secrets are not secrets and must not be treated as proof.
 
 # Mode Matrix
 
@@ -97,6 +98,7 @@ Authentication security is **lifecycle control**. Issuing a token safely is not 
 - **OAuth client_secret** is not a secret in a public client (SPA, mobile). Use PKCE only; never embed client_secret in distributable code.
 - **Open redirect** in OAuth `redirect_uri` is a token-theft vector; require exact-match (no wildcard, no path-prefix match).
 - **State / nonce** parameters are not optional in OAuth/OIDC; without `state` you have CSRF in the auth flow; without `nonce` you have id-token replay.
+- **Federation protocol matrix.** For every OAuth/OIDC/SAML provider, record client type, redirect URI matching mode, PKCE requirement, `state`, `nonce`, issuer, audience, clock skew, cert/JWKS rotation, IdP-initiated flow status, account-linking policy, and logout behavior. Wildcards, prefix matching, missing nonce, unpinned issuer, or email-only linking are release blockers until risk is explicitly accepted by security.
 - **Token introspection cache.** If introspecting on every request, cache briefly (seconds) with respect for revocation latency.
 - **Service account credentials** are bearer tokens with no human in the loop; rotate quarterly, audit usage, alert on unusual scope.
 - **Crypto agility.** JWS `kid` + JWKS endpoint; multiple active keys during rotation; signed-by-old verified by both during rollover.
@@ -142,6 +144,7 @@ Return an authentication security review with:
 - `mode_selected` (new/changed login flow, token lifecycle, MFA/recovery, federation/client integration, or compromise repair)
 - `boundaries_inspected` (login, logout, refresh, revocation, recovery, MFA, cookies, IdP callbacks, service credentials, logs, configs, and tests inspected or skipped with reason)
 - `identity_sources` (internal credentials, OIDC/OAuth providers, SAML IdPs, passkey relying-party id)
+- `federation_protocol_matrix` (per provider: client type, exact redirect list, PKCE, state, nonce, issuer, audience, cert/JWKS rotation, account linking, logout)
 - `credential_storage` (hash algorithm + parameters; service-account key storage)
 - `password_policy` (min length, breach screening source, prohibited substring rules, history)
 - `session_or_token_model` (session id vs JWT vs hybrid; lifetimes; absolute caps; sender-constrained?)
@@ -194,6 +197,7 @@ The review passes only when:
 10. JWT verifier pins algorithm, validates audience/issuer/expiry, has clock-skew limit; signing keys rotate.
 11. Audit events redact secrets; user notifications cover the canonical sensitive events.
 12. Negative-path tests exist (replay, fixation, enumeration, refresh reuse, recovery hijack).
+13. OAuth/OIDC/SAML callback tests cover wildcard or prefix redirect rejection, missing `state`, missing `nonce`, wrong issuer/audience, expired code, replayed id token, and stale email-linking denial.
 
 # Used By
 

@@ -1,7 +1,7 @@
 {
-  "average_score": 57.68,
+  "average_score": 57.12,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-29T07:17:57.353478+00:00",
+  "generated_at": "2026-06-30T03:15:21.422576+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -804,7 +804,7 @@
       "warnings": []
     },
     {
-      "body_lines": 201,
+      "body_lines": 205,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -854,6 +854,52 @@
       "warnings": []
     },
     {
+      "body_lines": 94,
+      "dimensions": {
+        "anti_bloat_control": 4,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 2,
+        "failure_mode_coverage": 5,
+        "mode_coverage": 4,
+        "output_actionability": 4,
+        "proactive_trigger_quality": 1,
+        "professional_depth": 5,
+        "reference_precision": 0,
+        "stage_fit": 3,
+        "trigger_accuracy": 2,
+        "validation_obligation": 4
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "build-tool-professional-usage",
+      "path": "src/foundation/capabilities/build-tool-professional-usage/SKILL.md",
+      "recommended_fixes": [
+        "Add targeted reference loading hints or link unreferenced skill references."
+      ],
+      "status": "acceptable",
+      "total": 39,
+      "warnings": [
+        {
+          "item": "build-tool-professional-usage",
+          "item_kind": "foundation-capability",
+          "message": "reference 'references/benchmarks-and-patterns.md' is not linked from SKILL.md body",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "reference_loading_hint"
+        },
+        {
+          "item": "build-tool-professional-usage",
+          "item_kind": "foundation-capability",
+          "message": "reference 'references/evidence-patterns.md' is not linked from SKILL.md body",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "reference_loading_hint"
+        }
+      ]
+    },
+    {
       "body_lines": 224,
       "dimensions": {
         "anti_bloat_control": 5,
@@ -879,7 +925,7 @@
       "warnings": []
     },
     {
-      "body_lines": 198,
+      "body_lines": 202,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1277,6 +1323,52 @@
       "status": "sample-grade",
       "total": 56,
       "warnings": []
+    },
+    {
+      "body_lines": 100,
+      "dimensions": {
+        "anti_bloat_control": 4,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 2,
+        "failure_mode_coverage": 5,
+        "mode_coverage": 4,
+        "output_actionability": 5,
+        "proactive_trigger_quality": 1,
+        "professional_depth": 5,
+        "reference_precision": 0,
+        "stage_fit": 5,
+        "trigger_accuracy": 2,
+        "validation_obligation": 4
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "data-format-contract-usage",
+      "path": "src/foundation/capabilities/data-format-contract-usage/SKILL.md",
+      "recommended_fixes": [
+        "Add targeted reference loading hints or link unreferenced skill references."
+      ],
+      "status": "acceptable",
+      "total": 42,
+      "warnings": [
+        {
+          "item": "data-format-contract-usage",
+          "item_kind": "foundation-capability",
+          "message": "reference 'references/benchmarks-and-patterns.md' is not linked from SKILL.md body",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "reference_loading_hint"
+        },
+        {
+          "item": "data-format-contract-usage",
+          "item_kind": "foundation-capability",
+          "message": "reference 'references/evidence-patterns.md' is not linked from SKILL.md body",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "reference_loading_hint"
+        }
+      ]
     },
     {
       "body_lines": 187,
@@ -1929,6 +2021,52 @@
       "warnings": []
     },
     {
+      "body_lines": 95,
+      "dimensions": {
+        "anti_bloat_control": 4,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 4,
+        "failure_mode_coverage": 5,
+        "mode_coverage": 4,
+        "output_actionability": 4,
+        "proactive_trigger_quality": 1,
+        "professional_depth": 5,
+        "reference_precision": 0,
+        "stage_fit": 4,
+        "trigger_accuracy": 2,
+        "validation_obligation": 5
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "git-professional-usage",
+      "path": "src/foundation/capabilities/git-professional-usage/SKILL.md",
+      "recommended_fixes": [
+        "Add targeted reference loading hints or link unreferenced skill references."
+      ],
+      "status": "acceptable",
+      "total": 43,
+      "warnings": [
+        {
+          "item": "git-professional-usage",
+          "item_kind": "foundation-capability",
+          "message": "reference 'references/benchmarks-and-patterns.md' is not linked from SKILL.md body",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "reference_loading_hint"
+        },
+        {
+          "item": "git-professional-usage",
+          "item_kind": "foundation-capability",
+          "message": "reference 'references/evidence-patterns.md' is not linked from SKILL.md body",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "reference_loading_hint"
+        }
+      ]
+    },
+    {
       "body_lines": 191,
       "dimensions": {
         "anti_bloat_control": 5,
@@ -2329,6 +2467,52 @@
       "warnings": []
     },
     {
+      "body_lines": 99,
+      "dimensions": {
+        "anti_bloat_control": 4,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 3,
+        "failure_mode_coverage": 5,
+        "mode_coverage": 4,
+        "output_actionability": 5,
+        "proactive_trigger_quality": 1,
+        "professional_depth": 5,
+        "reference_precision": 0,
+        "stage_fit": 3,
+        "trigger_accuracy": 3,
+        "validation_obligation": 3
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "linux-systems-professional-usage",
+      "path": "src/foundation/capabilities/linux-systems-professional-usage/SKILL.md",
+      "recommended_fixes": [
+        "Add targeted reference loading hints or link unreferenced skill references."
+      ],
+      "status": "acceptable",
+      "total": 41,
+      "warnings": [
+        {
+          "item": "linux-systems-professional-usage",
+          "item_kind": "foundation-capability",
+          "message": "reference 'references/benchmarks-and-patterns.md' is not linked from SKILL.md body",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "reference_loading_hint"
+        },
+        {
+          "item": "linux-systems-professional-usage",
+          "item_kind": "foundation-capability",
+          "message": "reference 'references/evidence-patterns.md' is not linked from SKILL.md body",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "reference_loading_hint"
+        }
+      ]
+    },
+    {
       "body_lines": 163,
       "dimensions": {
         "anti_bloat_control": 5,
@@ -2354,7 +2538,7 @@
       "warnings": []
     },
     {
-      "body_lines": 157,
+      "body_lines": 161,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -2477,6 +2661,52 @@
       "status": "acceptable",
       "total": 58,
       "warnings": []
+    },
+    {
+      "body_lines": 99,
+      "dimensions": {
+        "anti_bloat_control": 4,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 2,
+        "failure_mode_coverage": 5,
+        "mode_coverage": 4,
+        "output_actionability": 5,
+        "proactive_trigger_quality": 1,
+        "professional_depth": 5,
+        "reference_precision": 0,
+        "stage_fit": 2,
+        "trigger_accuracy": 2,
+        "validation_obligation": 2
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "network-protocol-gateway-usage",
+      "path": "src/foundation/capabilities/network-protocol-gateway-usage/SKILL.md",
+      "recommended_fixes": [
+        "Add targeted reference loading hints or link unreferenced skill references."
+      ],
+      "status": "acceptable",
+      "total": 37,
+      "warnings": [
+        {
+          "item": "network-protocol-gateway-usage",
+          "item_kind": "foundation-capability",
+          "message": "reference 'references/benchmarks-and-patterns.md' is not linked from SKILL.md body",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "reference_loading_hint"
+        },
+        {
+          "item": "network-protocol-gateway-usage",
+          "item_kind": "foundation-capability",
+          "message": "reference 'references/evidence-patterns.md' is not linked from SKILL.md body",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "reference_loading_hint"
+        }
+      ]
     },
     {
       "body_lines": 172,
@@ -3754,6 +3984,6 @@
       "warnings": []
     }
   ],
-  "skills_checked": 150,
-  "warning_count": 0
+  "skills_checked": 155,
+  "warning_count": 10
 }

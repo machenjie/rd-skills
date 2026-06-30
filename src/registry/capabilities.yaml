@@ -1264,3 +1264,58 @@ capabilities:
       - empty loop empty branch switch fallthrough broad try scope missing resource cleanup ignored return event before commit cache before commit external io before commit
     risk_notes: [Small local variables expressions and statements can silently change permissions defaults cleanup transactions events or generated-code behavior while broader structure review appears satisfied]
     expected_outputs: [Code Element Professionalism Review with variable expression statement bridge risk fix direction validation evidence and residual risk]
+  - id: "130"
+    name: git-professional-usage
+    group: engineering-workflow
+    path: src/foundation/capabilities/git-professional-usage
+    status: implemented
+    used_by: [development-process-orchestrator, quality-test-gate, ai-code-review-refactor, delivery-release-gate, change-documentation-gate]
+    triggers:
+      - git merge rebase cherry-pick conflict worktree index branch upstream reflog reset revert force-with-lease tag submodule sparse checkout generated file conflict dirty worktree
+      - generated output source authority ours theirs merge base conflict marker unrelated staged changes user changes overwrite rollback ref protected branch history rewrite
+    risk_notes: [Git operations can overwrite user work resolve generated conflicts incorrectly rewrite shared history or claim validation without current worktree and rollback evidence]
+    expected_outputs: [Git Professional Usage Record with operation state inspected ownership boundary decision record generated artifact policy safety controls validation commands rollback note residual risk and handoff summary]
+  - id: "131"
+    name: build-tool-professional-usage
+    group: delivery-platform
+    path: src/foundation/capabilities/build-tool-professional-usage
+    status: implemented
+    used_by: [delivery-release-gate, architecture-impact-reviewer, quality-test-gate, ai-code-review-refactor, change-documentation-gate]
+    triggers:
+      - Makefile make Bazel Buck Pants Gradle Maven npm script pnpm yarn Turborepo Nx build graph generated artifact codegen strict deps remote cache remote execution hermetic build
+      - undeclared dependency generated source generator output source of truth reproducible artifact checksum digest build cache action key toolchain pin local CI mismatch
+    risk_notes: [Build graph changes can pass locally while CI release or remote cache uses stale generated artifacts undeclared dependencies hidden environment inputs or non-reproducible outputs]
+    expected_outputs: [Build Tool Usage Record with build surface graph boundary generated artifact policy cache contract artifact contract decision record validation commands tool permission boundary and residual risk]
+  - id: "132"
+    name: linux-systems-professional-usage
+    group: reliability-operations
+    path: src/foundation/capabilities/linux-systems-professional-usage
+    status: implemented
+    used_by: [reliability-observability-gate, delivery-release-gate, security-privacy-gate, backend-change-builder, ai-code-review-refactor]
+    triggers:
+      - Linux systemd journald cgroup namespace procfs sysfs signal handling daemon pid file PID 1 ulimit file descriptor socket permission capability seccomp service restart
+      - distro kernel init container runtime cgroup v2 unit file EnvironmentFile TimeoutStopSec User Group WorkingDirectory OOM fd exhaustion resolver mount tmpfs
+    risk_notes: [Linux runtime changes can fail through service lifecycle cgroup limits signals permissions namespaces logs or host/container differences that application tests do not cover]
+    expected_outputs: [Linux Systems Usage Record with runtime surface environment evidence service contract process contract filesystem permission contract resource contract observability contract decision record validation commands and residual risk]
+  - id: "133"
+    name: network-protocol-gateway-usage
+    group: reliability-operations
+    path: src/foundation/capabilities/network-protocol-gateway-usage
+    status: implemented
+    used_by: [integration-change-builder, reliability-observability-gate, security-privacy-gate, delivery-release-gate, backend-change-builder]
+    triggers:
+      - Nginx Envoy HAProxy Cloudflare Fastly CloudFront ALB NLB ingress API gateway service mesh WAF CDN reverse proxy load balancer TLS DNS SNI ALPN
+      - HTTP proxy header X-Forwarded-For Forwarded Host CORS WebSocket SSE gRPC timeout chain 502 503 504 retry amplification upstream status edge origin trace context
+    risk_notes: [Gateway and protocol changes can mask upstream failures amplify retries trust spoofed headers break TLS or streaming behavior and produce 5xx symptoms without hop-chain evidence]
+    expected_outputs: [Network Protocol Gateway Record with network surface hop chain protocol contract timeout retry contract header identity contract security contract observability contract decision record validation commands and residual risk]
+  - id: "134"
+    name: data-format-contract-usage
+    group: data-api-contracts
+    path: src/foundation/capabilities/data-format-contract-usage
+    status: implemented
+    used_by: [data-api-contract-changer, data-middleware-change-builder, integration-change-builder, quality-test-gate, backend-change-builder, ai-code-review-refactor, consumer-impact-analysis, configuration-runtime-policy]
+    triggers:
+      - JSON YAML XML CSV Protobuf Avro Parquet schema registry parser serializer wire format field evolution compatibility generated model golden fixture
+      - protobuf field number reserved field enum value wire type breaking change old reader new writer YAML safe loader scalar coercion duplicate key boolean timestamp
+    risk_notes: [Data format changes can break consumers or stored data through parser defaults coercion field-number reuse generated drift unsafe loaders duplicate keys and untested old-reader new-writer behavior]
+    expected_outputs: [Data Format Contract Record with format surface schema authority parser contract compatibility class field evolution security contract generated artifact policy fixtures validation decision record and residual risk]

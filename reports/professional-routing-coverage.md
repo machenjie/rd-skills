@@ -1,8 +1,8 @@
 # Professional Routing Coverage
 
-- Generated: 2026-06-29T07:20:04.358622+00:00
+- Generated: 2026-06-30T03:22:22.469209+00:00
 - Status: pass
-- Routing cases checked: 140
+- Routing cases checked: 155
 - Benchmark cases checked: 30
 - Hidden risks checked: 91
 - Strongly covered: 87
@@ -11,7 +11,7 @@
 - Expected-route-only supplemental: 7
 - Uncovered: 0
 - Manual review: 0
-- L1 anti-over-routing cases: 11
+- L1 anti-over-routing cases: 15
 - Runtime fixture suites checked: 5
 - Runtime fixture cases checked: 15
 - Findings: 0
@@ -38,13 +38,13 @@
 | `evals/professional-benchmarks/backend/partial-success-without-transaction` | covered | silent partial success with no recovery contract | backend-partial-success-transaction-hidden-risk |
 | `evals/professional-benchmarks/backend/queue-consumer-missing-idempotency` | covered | duplicate fulfillment from retry or redelivery | queue-consumer-idempotency-hidden-risk |
 | `evals/professional-benchmarks/backend/queue-consumer-missing-idempotency` | covered | poison message retry loop | kafka-consumer-lag-dlq, queue-consumer-idempotency-hidden-risk |
-| `evals/professional-benchmarks/backend/queue-consumer-missing-idempotency` | covered | lost replay path and invisible failure | iot-device-telemetry-buffer, l3-webhook-signature-verification, queue-consumer-idempotency-hidden-risk, webhook-signature-replay-hidden-risk |
+| `evals/professional-benchmarks/backend/queue-consumer-missing-idempotency` | covered | lost replay path and invisible failure | auth-oidc-nonce-redirect, iot-device-telemetry-buffer, kafka-offset-side-effect, l3-webhook-signature-verification, queue-consumer-idempotency-hidden-risk, webhook-signature-replay-hidden-risk |
 | `evals/professional-benchmarks/data/cache-key-cross-tenant-collision` | covered | cross-tenant cache collision | redis-cache-ttl-invalidation-hidden-risk |
 | `evals/professional-benchmarks/data/cache-key-cross-tenant-collision` | covered | stale authorization or entitlement state | redis-cache-ttl-invalidation-hidden-risk |
-| `evals/professional-benchmarks/data/cache-key-cross-tenant-collision` | covered | unbounded cache cardinality or hot key | redis-cache-stampede, redis-cache-ttl-invalidation-hidden-risk |
+| `evals/professional-benchmarks/data/cache-key-cross-tenant-collision` | covered | unbounded cache cardinality or hot key | redis-cache-stampede, redis-cache-ttl-invalidation-hidden-risk, redis-hot-key-lock-duplicate |
 | `evals/professional-benchmarks/data/redis-cache-without-ttl-or-invalidation` | covered | stale entitlement state | redis-cache-ttl-invalidation-hidden-risk |
 | `evals/professional-benchmarks/data/redis-cache-without-ttl-or-invalidation` | covered | cross-tenant cache collision | redis-cache-ttl-invalidation-hidden-risk |
-| `evals/professional-benchmarks/data/redis-cache-without-ttl-or-invalidation` | covered | unbounded Redis memory growth or hot key | redis-cache-stampede, redis-cache-ttl-invalidation-hidden-risk |
+| `evals/professional-benchmarks/data/redis-cache-without-ttl-or-invalidation` | covered | unbounded Redis memory growth or hot key | redis-cache-stampede, redis-cache-ttl-invalidation-hidden-risk, redis-hot-key-lock-duplicate |
 | `evals/professional-benchmarks/data/relational-query-without-index-or-explain` | covered | relational query without index or explain | large-table-migration |
 | `evals/professional-benchmarks/data/relational-query-without-index-or-explain` | covered | missing index or query plan evidence on large table | large-table-migration |
 | `evals/professional-benchmarks/data/relational-query-without-index-or-explain` | covered | production cardinality not represented by dev data | large-table-migration |

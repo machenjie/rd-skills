@@ -498,9 +498,9 @@ product_surfaces:
     required_skill: backend-change-builder
     default_capabilities: [service-business-logic, authentication-authorization, idempotency-retry-design, logging-error-handling]
   - surface: api-contract
-    signals: [api, endpoint, dto, schema, response, request]
+    signals: [api, endpoint, dto, schema, response, request, json schema, protobuf, yaml config, parser compatibility, wire format]
     required_skill: data-api-contract-changer
-    default_capabilities: [api-contract-design, dto-schema-design, error-code-design, version-compatibility]
+    default_capabilities: [api-contract-design, dto-schema-design, error-code-design, version-compatibility, data-format-contract-usage]
   - surface: data-model
     signals: [data model, table, column, entity, persistence, database]
     required_skill: data-api-contract-changer
@@ -517,6 +517,10 @@ product_surfaces:
     signals: [queue, kafka, consumer, producer, dlq, offset, dead letter]
     required_skill: data-middleware-change-builder
     default_capabilities: [message-queue-design, idempotency-retry-design]
+  - surface: network-gateway
+    signals: [nginx, envoy, haproxy, cloudflare, cdn, reverse proxy, load balancer, gateway, ingress, tls, websocket, grpc, "502", "503", "504", timeout chain]
+    required_skill: reliability-observability-gate
+    default_capabilities: [network-protocol-gateway-usage, degradation-circuit-breaking, observability]
   - surface: search-analytics
     signals: [search, analytics, search index, dashboard, data freshness, warehouse freshness]
     required_skill: data-middleware-change-builder
@@ -538,9 +542,9 @@ product_surfaces:
     required_skill: delivery-release-gate
     default_capabilities: [kubernetes-gateway, ci-cd, secret-configuration-security]
   - surface: ci-cd
-    signals: [ci, cd, workflow, pipeline, lockfile]
+    signals: [ci, cd, workflow, pipeline, lockfile, makefile, bazel, gradle, maven, build graph, generated build artifact, remote cache]
     required_skill: delivery-release-gate
-    default_capabilities: [ci-cd, package-dependency-management]
+    default_capabilities: [ci-cd, package-dependency-management, build-tool-professional-usage]
   - surface: ai-rag-agent
     signals: [ai, llm, rag, agent, embedding, vector, prompt, model]
     required_skill: ai-product-extension
@@ -557,6 +561,10 @@ product_surfaces:
     signals: [kernel, driver, ffi, abi, syscall, memory safety]
     required_skill: low-level-systems-extension
     default_capabilities: [concurrency-control, language-performance-safety]
+  - surface: linux-systems
+    signals: [linux, systemd, journald, cgroup, namespace, procfs, signal handling, ulimit, service restart, daemon, pid 1]
+    required_skill: reliability-observability-gate
+    default_capabilities: [linux-systems-professional-usage, observability]
   - surface: sdk-library
     signals: [sdk, library, client, package, public api]
     required_skill: data-api-contract-changer
@@ -569,6 +577,10 @@ product_surfaces:
     signals: [documentation, docs, readme, changelog, runbook]
     required_skill: change-documentation-gate
     default_capabilities: [documentation-generation]
+  - surface: git-workflow
+    signals: [merge conflict, rebase conflict, cherry-pick, conflict, dirty worktree, generated file conflict, lease-protected push, reflog, submodule]
+    required_skill: development-process-orchestrator
+    default_capabilities: [git-professional-usage, repository-context-map, validation-broker, plan-execution-consistency]
   - surface: skill-authoring
     signals: [skill, capability, skill registry, routing rule, stage model, hook runtime, context control plane, context budget, reference bloat, selected references, skipped references]
     required_skill: change-forge-router

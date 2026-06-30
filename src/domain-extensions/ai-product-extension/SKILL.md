@@ -37,6 +37,8 @@ Extend ChangeForge product and code change analysis with AI-specific engineering
 - **Model output must be treated as untrusted input to downstream systems**: parsed LLM output used in SQL queries, shell commands, API calls, or UI rendering is a security boundary — apply the same input validation as user-submitted data.
 - **Context window data minimization**: do not include data in the context window that the requesting user does not have permission to see — over-stuffing context leaks sensitive information from adjacent records.
 - **Model lifecycle must be versioned and rollbackable**: production ML models need a registry version, approved training dataset/feature set, drift signal, rollout strategy, and rollback model version before serving traffic.
+- **Model and provider claims require current source verification**: model names, tool-call APIs, context limits, pricing, deprecations, rate limits, and safety behavior must be checked against official provider docs or pinned SDK versions before release planning.
+- **Prompt and policy changes need registry discipline**: prompt version, system instruction owner, allowed tool list, eval fixture, rollout cohort, and rollback prompt/model must be recorded. Ad hoc prompt edits in code are not production governance.
 - **Training-serving skew and label leakage are release blockers**: offline training features must match online serving features, and labels or post-outcome fields must never leak into feature inputs.
 
 ## Industry Benchmarks
@@ -119,6 +121,7 @@ Use this governance path for classical ML, classifiers, recommenders, ranking, f
 - **Streaming response requires different error handling**: a streaming completion that starts successfully and then fails mid-stream leaves the user with partial output — implement explicit stream error handlers and display completion status.
 - **Model provider SLA is not the same as feature SLA**: OpenAI/Anthropic availability is 99.9% — if your feature SLA is 99.9% and the model is in the critical path, you have no availability margin — implement fallback to a secondary model or cached response.
 - **Shadow deployment is not canary**: shadow traffic validates predictions and latency without affecting users; canary affects a limited live cohort and needs rollback criteria. Use both when model behavior risk is high.
+- **Provider migration is a contract migration.** A model or SDK swap can change tool-call JSON, refusal behavior, tokenization, embedding dimensionality, truncation, latency, and moderation output. Treat it as compatibility work with side-by-side eval and rollback.
 
 ### Anti-Examples
 
@@ -147,7 +150,9 @@ Return AI-specific change assessment with:
 - **Evaluation requirements**: required evaluation dataset size, coverage dimensions (normal, adversarial, edge, fairness), quality metrics with thresholds.
 - **MLOps model governance**: `model_version`, `feature_store`, training-serving skew check, label leakage controls, `drift_metric`, offline/online metric alignment, bias/fairness eval, shadow/canary plan, and `rollback_model`.
 - **Tool use constraints**: approved tool allowlist, argument validation schema, confirmation gate requirements.
+- **Model/source verification**: provider docs or SDK version checked, model version, context limit, rate limit, pricing/cost assumption, deprecation status, and migration compatibility notes.
 - **Agent tool permission/sandbox constraints**: permission state, sandbox boundary, dry-run/revert path, destructive action confirmation, connector/MCP scope, and redaction rule.
+- **Prompt registry and rollout**: prompt/system instruction version, owner, eval fixture, deployment cohort, rollback prompt/model, and freshness of eval dataset.
 - **Skill efficacy evidence**: baseline/treatment behavior cases, eval fixture, token/turn overhead signal, quality threshold, and regression trigger for skill or routing changes.
 - **Safety controls**: uncertainty display, human escalation thresholds, fallback behavior on model failure.
 - **Observability plan**: hallucination rate metric, retrieval quality metric, token cost metric, model latency (TTFT, TPOT), model availability metric.
@@ -177,6 +182,7 @@ Close an AI change only when all five canonical answers are concrete (answer sch
 12. Embedding model version is locked; re-indexing procedure is documented for model updates.
 13. ML model rollout has registry version, feature store point-in-time correctness, skew check, drift metric, fairness/bias evaluation, and rollback model version.
 14. Shadow or canary deployment validates online behavior before full rollout when model decisions affect users, money, safety, or access.
+15. Provider/model/prompt changes cite current official source or pinned SDK evidence, include side-by-side eval freshness, and define degraded behavior when provider APIs, limits, or safety behavior change.
 
 ## Handoff
 - **security-privacy-gate** — for OWASP LLM Top 10 findings, prompt injection, tool misuse, and data exfiltration paths.

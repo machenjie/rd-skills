@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-29T07:17:57.475408+00:00",
+  "generated_at": "2026-06-30T03:15:21.546467+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -68,7 +68,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (5)",
+      "routing_coverage": "yes (6)",
       "score": 59,
       "status": "sample-grade",
       "warnings": []
@@ -140,7 +140,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "no",
+      "routing_coverage": "yes (1)",
       "score": 58,
       "status": "sample-grade",
       "warnings": []
@@ -176,7 +176,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (9)",
+      "routing_coverage": "yes (12)",
       "score": 56,
       "status": "sample-grade",
       "warnings": []
@@ -212,7 +212,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (2)",
+      "routing_coverage": "yes (4)",
       "score": 58,
       "status": "sample-grade",
       "warnings": []
@@ -320,7 +320,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (10)",
+      "routing_coverage": "yes (11)",
       "score": 56,
       "status": "sample-grade",
       "warnings": []
@@ -446,7 +446,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (4)",
+      "routing_coverage": "yes (5)",
       "score": 58,
       "status": "sample-grade",
       "warnings": []
@@ -500,7 +500,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (28)",
+      "routing_coverage": "yes (33)",
       "score": 59,
       "status": "sample-grade",
       "warnings": []
@@ -662,7 +662,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (7)",
+      "routing_coverage": "yes (8)",
       "score": 59,
       "status": "sample-grade",
       "warnings": []
@@ -698,7 +698,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (9)",
+      "routing_coverage": "yes (10)",
       "score": 59,
       "status": "sample-grade",
       "warnings": []
@@ -734,7 +734,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (19)",
+      "routing_coverage": "yes (21)",
       "score": 59,
       "status": "sample-grade",
       "warnings": []
@@ -770,7 +770,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (31)",
+      "routing_coverage": "yes (32)",
       "score": 58,
       "status": "sample-grade",
       "warnings": []
@@ -788,7 +788,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (15)",
+      "routing_coverage": "yes (17)",
       "score": 57,
       "status": "sample-grade",
       "warnings": []
@@ -806,7 +806,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (61)",
+      "routing_coverage": "yes (64)",
       "score": 59,
       "status": "sample-grade",
       "warnings": []
@@ -824,7 +824,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (41)",
+      "routing_coverage": "yes (42)",
       "score": 58,
       "status": "sample-grade",
       "warnings": []
@@ -842,7 +842,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "n/a (router owns routing fixture corpus; eval-routing cases=140)",
+      "routing_coverage": "n/a (router owns routing fixture corpus; eval-routing cases=155)",
       "score": 60,
       "status": "sample-grade",
       "warnings": []
@@ -896,7 +896,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (15)",
+      "routing_coverage": "yes (17)",
       "score": 58,
       "status": "sample-grade",
       "warnings": []
@@ -914,7 +914,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (16)",
+      "routing_coverage": "yes (18)",
       "score": 56,
       "status": "sample-grade",
       "warnings": []
@@ -932,7 +932,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (28)",
+      "routing_coverage": "yes (31)",
       "score": 56,
       "status": "sample-grade",
       "warnings": []
@@ -950,7 +950,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "no",
+      "routing_coverage": "yes (1)",
       "score": 60,
       "status": "sample-grade",
       "warnings": []
@@ -1004,7 +1004,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (16)",
+      "routing_coverage": "yes (17)",
       "score": 58,
       "status": "sample-grade",
       "warnings": []
@@ -1022,7 +1022,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (12)",
+      "routing_coverage": "yes (15)",
       "score": 57,
       "status": "sample-grade",
       "warnings": []
@@ -1058,7 +1058,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (124)",
+      "routing_coverage": "yes (135)",
       "score": 59,
       "status": "sample-grade",
       "warnings": []
@@ -1076,7 +1076,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (33)",
+      "routing_coverage": "yes (38)",
       "score": 57,
       "status": "sample-grade",
       "warnings": []
@@ -1094,7 +1094,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (28)",
+      "routing_coverage": "yes (33)",
       "score": 57,
       "status": "sample-grade",
       "warnings": []

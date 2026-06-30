@@ -4092,13 +4092,13 @@ Residual Risk:
                         "profile_counts": {
                             "recommended": {"detail": "recommended top-level count is 21"},
                             "full": {"detail": "full top-level count is 28"},
-                            "dev": {"detail": "dev top-level count is 157"},
+                            "dev": {"detail": "dev top-level count is 162"},
                         },
                     }
                 ),
                 encoding="utf-8",
             )
-            _write_profile_manifests(root, {"recommended": 21, "full": 28, "dev": 157})
+            _write_profile_manifests(root, {"recommended": 21, "full": 28, "dev": 162})
             dashboard_path.write_text(
                 "\n".join(
                     [

@@ -1,0 +1,26 @@
+---
+id: l1-readme-typo-no-git-capability
+description: |
+  README typo should not activate Git professional usage beyond ordinary workflow.
+prompt: |
+  Fix a typo in README.md: change "recieve" to "receive". No branch, merge,
+  conflict, generated file, staging, or history operation is requested.
+expected:
+  complexity: L1
+  risk_triggers: []
+  skills:
+    - change-documentation-gate
+  capabilities: []
+  domain_extensions: []
+  quality_gates:
+    - documentation gate
+forbidden:
+  skills:
+    - delivery-release-gate
+    - ai-code-review-refactor
+  capabilities:
+    - git-professional-usage
+    - build-tool-professional-usage
+    - agent-tool-permission-sandbox
+notes: |
+  Anti-overrouting: a typo in docs is not a Git workflow risk.
