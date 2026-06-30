@@ -59,7 +59,15 @@ PROCESS_FALLBACK_SOURCE_ALIASES = {PROCESS_FALLBACK_FIELD_SOURCE, "inferred"}
 PROCESS_REQUIRED_FIELDS = {
     "pdd": ("problem", "acceptance_criteria", "constraints", "validation_signal"),
     "ddd": ("domain_terms", "invariants", "ownership_decision", "side_effect_boundaries"),
-    "sdd": ("modules", "public_api", "error_contract", "failure_modes", "logging_decision"),
+    "sdd": (
+        "modules",
+        "public_api",
+        "error_contract",
+        "failure_modes",
+        "logging_decision",
+        "design_decision_points",
+        "assumption_policy",
+    ),
     "tdd": (
         "acceptance_to_tests",
         "invariant_to_tests_or_code",
@@ -74,6 +82,15 @@ PROCESS_SDD_NO_CHOICE_RATIONALE_FIELDS = (
     "no_material_design_choice_rationale",
     "design_choice_rationale",
 )
+PROCESS_SDD_GENERIC_RATIONALES = {
+    "no choice needed",
+    "no decision needed",
+    "not needed",
+    "not required",
+    "none",
+    "n/a",
+    "na",
+}
 PROCESS_SDD_ASSUMPTION_POLICY = (
     "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
 )
@@ -1990,7 +2007,7 @@ def _phase_status_from_sources(phase: str, payload: Any) -> str:
     fallback_or_inferred_required = 0
     for field in required_fields:
         value = payload.get(field)
-        if not _has_trace_value(value):
+        if not _field_has_trace_value(phase, field, value):
             continue
         source = str(sources.get(field) or "")
         if field in inferred_fields or _source_is_fallback(source):
@@ -2021,6 +2038,10 @@ def _required_field_shape_valid(phase: str, field: str, value: Any) -> bool:
         return _non_empty_trace_list(value)
     if phase == "sdd" and field == "logging_decision":
         return isinstance(value, dict) and _has_trace_value(value)
+    if phase == "sdd" and field == "design_decision_points":
+        return isinstance(value, list)
+    if phase == "sdd" and field == "assumption_policy":
+        return isinstance(value, str) and "block_when_wrong_answer_changes" in value
     if phase == "tdd" and field in {"acceptance_to_tests", "invariant_to_tests_or_code", "public_api_to_tests"}:
         return isinstance(value, dict) and _has_trace_value(value)
     if phase == "tdd" and field in {"failure_mode_tests", "validation_commands"}:
@@ -2034,6 +2055,12 @@ def _sdd_choice_gate_uses_fallback(payload: dict[str, Any]) -> bool:
     raw_inferred_fields = payload.get("_inferred_fields")
     inferred_fields = {str(field) for field in raw_inferred_fields} if isinstance(raw_inferred_fields, list) else set()
     for field in PROCESS_SDD_CHOICE_GATE_FIELDS:
+        if field not in payload:
+            return True
+        if field == "design_decision_points" and not isinstance(payload.get(field), list):
+            return True
+        if field == "assumption_policy" and not str(payload.get(field, "")).strip():
+            return True
         if field in inferred_fields or _source_is_fallback(str(sources.get(field) or "")):
             return True
     choices = payload.get("design_decision_points")
@@ -2041,8 +2068,31 @@ def _sdd_choice_gate_uses_fallback(payload: dict[str, Any]) -> bool:
         rationale_field = _sdd_no_choice_rationale_field(payload)
         if rationale_field is None:
             return True
+        rationale = str(payload.get(rationale_field, "")).strip().casefold().strip(".")
+        if not rationale or rationale in PROCESS_SDD_GENERIC_RATIONALES or len(rationale.split()) < 4:
+            return True
         if rationale_field in inferred_fields or _source_is_fallback(str(sources.get(rationale_field) or "")):
             return True
+    if isinstance(choices, list):
+        for choice in choices:
+            if not isinstance(choice, dict):
+                return True
+            status = str(choice.get("user_choice_status", "")).strip()
+            if choice.get("blocking") is True and status == "required":
+                return True
+            if status == "assumed_with_rationale":
+                if not str(choice.get("safe_default_if_user_unavailable", "")).strip():
+                    return True
+                if not str(choice.get("residual_risk", "")).strip():
+                    return True
+                if not _has_trace_value(
+                    [
+                        choice.get("resolution_evidence"),
+                        choice.get("why_user_choice_is_needed"),
+                        choice.get("trigger"),
+                    ]
+                ):
+                    return True
     return False
 
 

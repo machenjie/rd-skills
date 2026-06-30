@@ -3146,6 +3146,139 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         ):
             self.assertIn(skill, trace["selected_skills"])
 
+    def test_process_trace_payload_degrades_sdd_when_choice_gate_fields_are_missing(self) -> None:
+        runner = _load_script(
+            "run_codex_live_benchmarks_missing_sdd_choice_fields",
+            "scripts/run-codex-live-benchmarks.py",
+        )
+        case = self._trace_case()
+        for missing_field in ("design_decision_points", "assumption_policy"):
+            with self.subTest(missing_field=missing_field):
+                # Keep the trace otherwise complete so the only SDD degradation reason is the missing choice gate.
+                process_trace = {
+                    "pdd": {
+                        "problem": "Block SSRF metadata URLs",
+                        "acceptance_criteria": ["deny metadata URL"],
+                        "constraints": ["preserve harness"],
+                        "validation_signal": [
+                            "python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"
+                        ],
+                    },
+                    "ddd": {
+                        "domain_terms": ["URL candidate", "network boundary"],
+                        "invariants": ["unsafe URL is never fetched"],
+                        "ownership_decision": ["URL safety policy owns deny decision"],
+                        "side_effect_boundaries": ["no fetch before allowlist"],
+                    },
+                    "sdd": {
+                        "modules": ["URL validation module"],
+                        "public_api": ["URL validation public entrypoint"],
+                        "error_contract": ["deny unsafe URLs with stable error"],
+                        "failure_modes": ["metadata URL denial"],
+                        "logging_decision": {"needed": False, "rationale": "public tests cover denial"},
+                        "design_decision_points": [],
+                        "no_design_choice_rationale": (
+                            "Prompt source and repository convention require the existing URL validation boundary; "
+                            "no material user preference remains."
+                        ),
+                        "assumption_policy": (
+                            "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
+                        ),
+                    },
+                    "tdd": {
+                        "acceptance_to_tests": {"deny metadata URL": ["benchmark command"]},
+                        "invariant_to_tests_or_code": {"unsafe URL is never fetched": ["benchmark command"]},
+                        "public_api_to_tests": {"URL validation public entrypoint": ["benchmark command"]},
+                        "failure_mode_tests": ["metadata URL denial covered"],
+                        "validation_commands": ["benchmark command"],
+                    },
+                }
+                del process_trace["sdd"][missing_field]
+                with tempfile.TemporaryDirectory() as tmp:
+                    out_dir = Path(tmp) / "run"
+                    run_dir = out_dir / "cases" / "security__ssrf-url-allowlist" / "skills_only_clean" / "run-01"
+                    run_dir.mkdir(parents=True)
+                    run_dir.joinpath("final.md").write_text(
+                        "Result\n\n```json\n"
+                        + json.dumps({"process_trace": process_trace})
+                        + "\n```\n",
+                        encoding="utf-8",
+                    )
+                    trace = runner._process_trace_payload(
+                        out_dir,
+                        run_dir,
+                        case=case,
+                        variant="skills_only_clean",
+                        run_index=1,
+                        result={"status": "collected", "grading_status": "passed"},
+                    )
+                self.assertEqual(trace["phase_status"]["sdd"], "degraded")
+                self.assertNotEqual(trace["phase_status"]["sdd"], "present")
+                self.assertIn(missing_field, trace["process_facts"]["sdd"].get("_inferred_fields", []))
+
+    def test_sdd_phase_status_requires_choice_gate_fields_from_real_sources(self) -> None:
+        runner = _load_script(
+            "run_codex_live_benchmarks_sdd_choice_required_fields",
+            "scripts/run-codex-live-benchmarks.py",
+        )
+        payload = {
+            "modules": ["URL validation module"],
+            "public_api": ["URL validation public entrypoint"],
+            "error_contract": ["deny unsafe URLs with stable error"],
+            "failure_modes": ["metadata URL denial"],
+            "logging_decision": {"needed": False, "rationale": "public tests cover denial"},
+            "_field_sources": {
+                "modules": "final.md:process-trace-json",
+                "public_api": "final.md:process-trace-json",
+                "error_contract": "final.md:process-trace-json",
+                "failure_modes": "final.md:process-trace-json",
+                "logging_decision": "final.md:process-trace-json",
+            },
+            "_evidence_source": "final.md:process-trace-json",
+        }
+        self.assertEqual(runner._phase_status_from_sources("sdd", payload), "degraded")
+
+    def test_process_summary_counts_sdd_choice_gate_fallback_fields(self) -> None:
+        summary_module = _load_script(
+            "generate_codex_live_summary_sdd_choice_fallback",
+            "scripts/generate-codex-live-summary.py",
+        )
+        source = "final.md:process-trace-json"
+        # Report fallback metrics must include SDD choice-gate fields, not only the older SDD fields.
+        trace = {
+            "phase_status": {"pdd": "present", "ddd": "present", "sdd": "degraded", "tdd": "present"},
+            "traceability": {},
+            "process_facts": {
+                "sdd": {
+                    "modules": ["URL validation module"],
+                    "public_api": ["URL validation public entrypoint"],
+                    "error_contract": ["deny unsafe URLs with stable error"],
+                    "failure_modes": ["metadata URL denial"],
+                    "logging_decision": {"needed": False, "rationale": "public tests cover denial"},
+                    "design_decision_points": [],
+                    "assumption_policy": (
+                        "block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior"
+                    ),
+                    "_field_sources": {
+                        "modules": source,
+                        "public_api": source,
+                        "error_contract": source,
+                        "failure_modes": source,
+                        "logging_decision": source,
+                        "design_decision_points": "case_metadata_fallback",
+                        "assumption_policy": source,
+                    },
+                    "_inferred_fields": ["design_decision_points"],
+                }
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            result_dir = Path(tmp) / "cases" / "security__ssrf-url-allowlist" / "skills_only_clean" / "run-01"
+            result_dir.mkdir(parents=True)
+            result_dir.joinpath("process-trace.json").write_text(json.dumps(trace), encoding="utf-8")
+            summary = summary_module._process_compliance_summary([{"_result_dir": result_dir}])
+        self.assertGreater(summary["sdd_required_field_fallback_rate"], 0.0)
+
     def test_process_trace_payload_parses_multiline_compact_trace(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_multiline_trace", "scripts/run-codex-live-benchmarks.py")
         case = self._trace_case()

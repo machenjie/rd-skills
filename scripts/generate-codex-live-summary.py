@@ -100,7 +100,15 @@ CAPABILITY_PRIVACY_PATTERNS = (
 PROCESS_REQUIRED_FIELDS = {
     "pdd": ("problem", "acceptance_criteria", "constraints", "validation_signal"),
     "ddd": ("domain_terms", "invariants", "ownership_decision", "side_effect_boundaries"),
-    "sdd": ("modules", "public_api", "error_contract", "failure_modes", "logging_decision"),
+    "sdd": (
+        "modules",
+        "public_api",
+        "error_contract",
+        "failure_modes",
+        "logging_decision",
+        "design_decision_points",
+        "assumption_policy",
+    ),
     "tdd": (
         "acceptance_to_tests",
         "invariant_to_tests_or_code",

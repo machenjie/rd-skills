@@ -293,12 +293,12 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | --- | --- |
 | 18 | do not load every reference by default. treat references as targeted support selected by t |
 | 18 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 17 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 17 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
-| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
-| 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 17 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 17 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
+| 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
+| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 17 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 11 | these triggers are hidden-risk escalators, not ordinary checklist items. |
 | 7 | **block/pass decision** with required conditions for approval. |
 | 6 | non-trivial direct use still requires `repository-context-map` before planning when affect |

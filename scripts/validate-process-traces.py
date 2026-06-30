@@ -448,31 +448,96 @@ def _sdd_decision_point_errors(label: str, point: dict[str, Any], *, index: int,
     blocking = point.get("blocking")
     if not isinstance(blocking, bool):
         errors.append(f"{label}: {prefix}.blocking must be true or false")
+    text = _decision_point_text(point)
+    risk_text = _decision_point_risk_text(point)
+    material_terms = _keyword_hits(risk_text, SDD_MATERIAL_CHOICE_KEYWORDS)
+    high_risk_terms = _keyword_hits(risk_text, SDD_HIGH_RISK_SAFE_ASSUMPTION_KEYWORDS)
+    why_user_choice_is_needed = str(point.get("why_user_choice_is_needed", "")).strip()
+    requires_user_options = (
+        blocking is True
+        or status == "required"
+        or bool(material_terms)
+        or bool(high_risk_terms)
+        or bool(why_user_choice_is_needed)
+    )
+    if requires_user_options:
+        required_or_blocking = blocking is True or status == "required"
+        errors.extend(
+            _sdd_decision_point_option_errors(
+                label,
+                point,
+                prefix=prefix,
+                require_two_options=required_or_blocking,
+                require_pros_or_cons=required_or_blocking,
+            )
+        )
+        if not str(point.get("recommended_option", "")).strip():
+            errors.append(f"{label}: {prefix}.recommended_option must be non-empty")
+        if not why_user_choice_is_needed:
+            errors.append(f"{label}: {prefix}.why_user_choice_is_needed must be non-empty")
+        if not str(point.get("residual_risk", "")).strip():
+            errors.append(f"{label}: {prefix}.residual_risk must be non-empty")
     if blocking is True and status == "required" and sdd_is_present:
         errors.append(f"{label}: {prefix} is blocking and requires user choice, so SDD cannot be present")
     if status == "resolved":
         evidence = str(point.get("resolution_evidence", "")).strip()
         if not evidence or evidence.casefold() in {"not resolved", "none", "n/a", "na"}:
             errors.append(f"{label}: {prefix}.user_choice_status=resolved requires resolution_evidence")
+        if (blocking is True or material_terms or high_risk_terms) and not (
+            str(point.get("recommended_option", "")).strip() or str(point.get("resolved_option", "")).strip()
+        ):
+            errors.append(f"{label}: {prefix}.user_choice_status=resolved requires recommended_option or resolved_option")
     if status == "not_required":
         rationale = _decision_point_rationale(point)
         if _is_generic_sdd_rationale(rationale):
             errors.append(f"{label}: {prefix}.user_choice_status=not_required requires concrete rationale")
+        if (material_terms or high_risk_terms) and not _sdd_rationale_has_specific_evidence(rationale):
+            errors.append(
+                f"{label}: {prefix}.user_choice_status=not_required for material choice requires prompt/fixture/user/repository/reuse evidence"
+            )
     if status == "assumed_with_rationale":
         if not str(point.get("safe_default_if_user_unavailable", "")).strip():
             errors.append(f"{label}: {prefix}.assumed_with_rationale requires safe_default_if_user_unavailable")
         if not str(point.get("residual_risk", "")).strip():
             errors.append(f"{label}: {prefix}.assumed_with_rationale requires residual_risk")
-        text = _decision_point_text(point)
         if not _safe_assumption_rationale_ok(text):
             errors.append(
                 f"{label}: {prefix}.assumed_with_rationale must state local, reversible, conventional, and acceptance-neutral rationale"
             )
-        risk_terms = _keyword_hits(text, SDD_HIGH_RISK_SAFE_ASSUMPTION_KEYWORDS)
+        risk_terms = _keyword_hits(risk_text, SDD_HIGH_RISK_SAFE_ASSUMPTION_KEYWORDS)
         if risk_terms:
             errors.append(
                 f"{label}: {prefix}.assumed_with_rationale cannot cover high-risk material choice(s): {', '.join(risk_terms[:5])}"
             )
+    return errors
+
+
+def _sdd_decision_point_option_errors(
+    label: str,
+    point: dict[str, Any],
+    *,
+    prefix: str,
+    require_two_options: bool,
+    require_pros_or_cons: bool,
+) -> list[str]:
+    options = point.get("options")
+    if not isinstance(options, list) or not options:
+        return [f"{label}: {prefix}.options must be a non-empty list"]
+    errors: list[str] = []
+    if require_two_options and len(options) < 2:
+        errors.append(f"{label}: {prefix}.options must include at least 2 options")
+    for option_index, option in enumerate(options, start=1):
+        option_prefix = f"{prefix}.options[{option_index}]"
+        if not isinstance(option, dict):
+            errors.append(f"{label}: {option_prefix} must be an object with label and summary")
+            continue
+        for field in ("label", "summary"):
+            if not str(option.get(field, "")).strip():
+                errors.append(f"{label}: {option_prefix}.{field} must be non-empty")
+        if not any(_has_evidence(option.get(field)) for field in ("pros", "cons", "recommended_when")):
+            errors.append(f"{label}: {option_prefix} must include pros, cons, or recommended_when")
+        if require_pros_or_cons and not any(_has_evidence(option.get(field)) for field in ("pros", "cons")):
+            errors.append(f"{label}: {option_prefix} must include pros or cons")
     return errors
 
 
@@ -498,6 +563,18 @@ def _decision_point_rationale(point: dict[str, Any]) -> str:
 
 def _decision_point_text(point: dict[str, Any]) -> str:
     return json.dumps(point, sort_keys=True).casefold()
+
+
+def _decision_point_risk_text(point: dict[str, Any]) -> str:
+    return json.dumps(
+        {
+            "decision": point.get("decision"),
+            "trigger": point.get("trigger"),
+            "options": point.get("options"),
+            "safe_default_if_user_unavailable": point.get("safe_default_if_user_unavailable"),
+        },
+        sort_keys=True,
+    ).casefold()
 
 
 def _sdd_material_choice_terms(pdd: Any, ddd: Any, sdd: dict[str, Any]) -> list[str]:

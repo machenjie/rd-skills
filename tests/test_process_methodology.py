@@ -774,7 +774,20 @@ def test_sdd_design_choice_gate_accepts_resolved_user_choice() -> None:
             "decision": "Choose the URL validation entrypoint exposed to tests",
             "trigger": "Public entrypoint placement changes the callable contract used by tests",
             "why_user_choice_is_needed": "The prompt source makes this a product/API choice.",
-            "options": ["reuse existing validation entrypoint", "add a new service facade"],
+            "options": [
+                {
+                    "label": "reuse existing validation entrypoint",
+                    "summary": "Keep the existing public callable boundary.",
+                    "pros": ["preserves the benchmark contract"],
+                    "cons": ["does not introduce a new facade"],
+                },
+                {
+                    "label": "add a new service facade",
+                    "summary": "Create a new public service-level entrypoint.",
+                    "pros": ["separates orchestration from validation"],
+                    "cons": ["changes the public API surface"],
+                },
+            ],
             "recommended_option": "reuse existing validation entrypoint",
             "safe_default_if_user_unavailable": "none",
             "blocking": True,
@@ -811,6 +824,9 @@ def test_sdd_blocking_required_choice_cannot_be_present() -> None:
     ]
     errors = _run_trace_errors(trace)
     assert any("requires user choice, so SDD cannot be present" in error for error in errors)
+    assert any(".options must be a non-empty list" in error for error in errors)
+    assert any(".recommended_option must be non-empty" in error for error in errors)
+    assert any(".residual_risk must be non-empty" in error for error in errors)
 
 
 def test_sdd_high_risk_safe_assumption_fails() -> None:
@@ -831,6 +847,26 @@ def test_sdd_high_risk_safe_assumption_fails() -> None:
     ]
     errors = _run_trace_errors(trace)
     assert any("cannot cover high-risk material choice" in error for error in errors)
+
+
+def test_sdd_safe_assumption_ignores_negative_boundary_risk_text() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["sdd"]["design_decision_points"] = [
+        {
+            "id": "helper-placement",
+            "decision": "Place a helper beside the existing validator code",
+            "trigger": "The helper keeps the current behavior and owner.",
+            "blocking": False,
+            "user_choice_status": "assumed_with_rationale",
+            "safe_default_if_user_unavailable": "Use a same-file local helper.",
+            "resolution_evidence": (
+                "Repository convention supports the same file; the choice is local, reversible, conventional, "
+                "and acceptance-neutral because it keeps current behavior."
+            ),
+            "residual_risk": "Does not change public API, data, security, migration, or rollback behavior.",
+        }
+    ]
+    assert _run_trace_errors(trace) == []
 
 
 def test_sdd_low_risk_local_safe_assumption_passes() -> None:
@@ -967,6 +1003,9 @@ class ProcessMethodologyTests(unittest.TestCase):
 
     def test_sdd_high_risk_safe_assumption_fails(self) -> None:
         test_sdd_high_risk_safe_assumption_fails()
+
+    def test_sdd_safe_assumption_ignores_negative_boundary_risk_text(self) -> None:
+        test_sdd_safe_assumption_ignores_negative_boundary_risk_text()
 
     def test_sdd_low_risk_local_safe_assumption_passes(self) -> None:
         test_sdd_low_risk_local_safe_assumption_passes()
