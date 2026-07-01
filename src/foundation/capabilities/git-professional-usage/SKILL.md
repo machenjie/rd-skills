@@ -19,6 +19,10 @@ Use when a task touches merge, rebase, cherry-pick, revert, reset, stash, confli
 
 Do not use for ordinary repository reading, a simple README typo, or normal final-status reporting where no Git operation, conflict, history, generated artifact, or worktree-state decision is being made. Do not use to install source content or to treat Git history as a substitute for current source inspection.
 
+# Stage Fit
+
+Use during planning, debugging, implementation, code-review, testing, release, and incident-repair stages when Git state, branch history, index contents, generated artifacts, remote refs, or recovery evidence can affect correctness, reviewability, ownership, or rollback. Re-enter after merge, rebase, cherry-pick, conflict resolution, stash, reset, revert, commit split, generated-file, submodule, sparse-checkout, branch, tag, push, or recovery decisions. Skip for read-only repository inspection where no worktree, index, ref, history, generated artifact, or ownership decision is being made.
+
 # Non-Negotiable Rules
 
 - Inspect `git status --short`, current branch, and relevant diff before any state-mutating Git command.
@@ -43,6 +47,49 @@ Select this capability when Git state or history is part of the risk, not merely
 # Risk Escalation Rules
 
 Escalate to `delivery-release-gate` for release tags, protected branches, deployment branches, or branch rewrites that can affect production. Escalate to `security-privacy-gate` if commits, diffs, reflog, or patch files may expose secrets. Escalate to `architecture-impact-reviewer` when conflicts reveal ownership drift across generated/source boundaries or module dependency direction. Escalate to `quality-test-gate` when conflict resolution or cherry-pick behavior lacks validation evidence.
+
+# Proactive Professional Triggers
+
+- **Signal:** A Git operation is proposed while status, branch, upstream, staged diff, unstaged diff, or untracked files are unknown.
+  **Hidden risk:** unrelated user work is staged, overwritten, lost, or treated as agent-owned for the wrong operation.
+  **Required professional action:** inspect current worktree/index/ref state and state ownership boundaries before mutation.
+  **Route to:** `repository-context-map`, `agent-tool-permission-sandbox`.
+  **Evidence required:** branch/upstream, `git status --short`, staged diff, unstaged diff, untracked summary, and excluded unrelated paths.
+- **Signal:** A merge, rebase, cherry-pick, or conflict is resolved by accepting `ours`, `theirs`, a generated file, or a memory-based answer.
+  **Hidden risk:** source authority, behavior, security fix, or compatibility change is silently dropped.
+  **Required professional action:** inspect both sides and the source-of-truth artifact, then map validation to the resolved paths.
+  **Route to:** `repository-graph-analysis`, `validation-broker`, `quality-test-gate`.
+  **Evidence required:** conflicted paths, ours/theirs/base or source authority, chosen behavior, same-pattern scan, and validator output or not-run owner.
+- **Signal:** `reset`, `checkout --`, `clean`, branch deletion, tag mutation, force push, force-with-lease, reflog recovery, or stash is suggested as a cleanup shortcut.
+  **Hidden risk:** local or remote state changes become irreversible or affect collaborators.
+  **Required professional action:** classify command permission, target ref/path, branch ownership, rollback ref, and safer alternative.
+  **Route to:** `agent-tool-permission-sandbox`, `delivery-release-gate`.
+  **Evidence required:** command class, exact target, backup/ref/reflog path, lease or ownership proof, and rollback/communication note.
+- **Signal:** Commit hygiene, staged changes, generated output, lockfiles, vendored files, submodules, sparse checkout, or release tags are included without source/generated policy and review boundaries.
+  **Hidden risk:** review diff mixes unrelated work or publishes derived artifacts inconsistent with source.
+  **Required professional action:** split review boundaries and keep generated artifacts with their authority decision.
+  **Route to:** `build-tool-professional-usage`, `plan-execution-consistency`.
+  **Evidence required:** source/generator/output policy, staged vs unstaged review, commit split rationale, and release/tag impact.
+- **Signal:** Commits, diffs, patches, reflog entries, generated files, or review artifacts include tokens, keys, credentials, private URLs, or secret-like values.
+  **Hidden risk:** removing the working-tree value does not remove a secret leak from history, artifacts, logs, or remote refs.
+  **Required professional action:** route secret review, preserve evidence safely, and plan rotation/history handling before publishing or cleanup.
+  **Route to:** `security-privacy-gate`, `secret-configuration-security`.
+  **Evidence required:** redacted finding path, affected refs/artifacts, secret-scan or manual review result, rotation owner, and residual exposure.
+- **Signal:** Repository graph, project memory, old CI logs, previous diffs, branch summaries, or historical command output are reused after ref, index, generated artifact, or conflict changes.
+  **Hidden risk:** stale graph or execution trajectory certifies the wrong worktree state.
+  **Required professional action:** verify memory, graph, and trajectory as selectors, rerun selected status/diff/ref reads, and mark stale evidence rejected.
+  **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`.
+  **Evidence required:** accepted/rejected memory, graph freshness, changed refs/paths, rerun command, exit code, and report/artifact path.
+
+# Mode Matrix
+
+| Mode | Trigger | Required evidence |
+| --- | --- | --- |
+| Worktree/index protection | Dirty state, staging, commit split, stash, or cleanup | Branch/upstream, status, staged/unstaged/untracked summary, ownership boundary, excluded paths |
+| Conflict or replay | Merge, rebase, cherry-pick, conflict marker, generated conflict | Ours/theirs/base or source authority, same-pattern scan, changed-path validation |
+| Destructive or recovery | Reset, clean, checkout, reflog, backup branch, branch deletion | Command class, exact target, backup/ref, rollback note, safer alternative |
+| Remote or release ref | Push, force-with-lease, protected branch, signed tag, release tag | Branch/tag ownership, lease/protection policy, communication, release impact |
+| Generated/submodule boundary | Generated file, lockfile, vendored output, submodule, sparse checkout | Source/generated authority, generator or drift check, pinned revision, consumer impact |
 
 # Critical Details
 
@@ -84,6 +131,7 @@ Escalate to `delivery-release-gate` for release tags, protected branches, deploy
 
 The `SKILL.md` body carries L1/L2 routing, risk, and output-contract rules.
 
+Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete Git Professional Usage Record, conflict/rebase/cherry-pick handoff, destructive-command review, commit hygiene review, release-tag review, or recovery checklist.
 Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when conflict resolution, generated/source authority, history rewrite, release tag, bisect, stash, or commit hygiene needs deeper benchmark support.
 Load [references/evidence-patterns.md](references/evidence-patterns.md) only when the handoff must prove worktree/ref evidence, rollback notes, conflict-resolution evidence, or release-tag safety.
 Do not load references for ordinary repository reads, final status summaries, or low-risk typo/docs edits with no Git state decision.
@@ -105,8 +153,16 @@ Return a Git Professional Usage Record with:
 - `bisect_record` (good/bad refs, command, skipped refs, isolated failure, follow-up validation)
 - `safety_controls` (backup ref, force-with-lease, dry run, explicit pathspec, no-destructive-action note)
 - `validation_commands` (diff, tests, generator, lint, or not-run disclosure mapped to changed paths)
+- `validation_freshness` (commands or validators rerun after the final material worktree, index, conflict, generated artifact, or ref edit; stale output rejected or named)
+- `what_evidence_proves` and `what_evidence_does_not_prove` (covered paths, refs, generated policy, branch ownership, validation scope, and limits)
+- `tool_permission_boundary` (read-only vs local state-mutating vs remote state-mutating Git command, sandbox, target, and rollback)
+- `memory_graph_execution_record` (repository graph, project memory, old diff, branch summary, previous command output, or trajectory evidence accepted, rejected, stale, partial, or not used)
 - `rollback_note` (reflog ref, revert command, backup branch, or why rollback is not available)
 - `handoff_summary` (changed refs/files, residual risk, next owner)
+
+# Evidence Contract
+
+Close a Git Professional Usage Record only when these answers are concrete: **boundaries inspected** across branch, upstream, status, staged diff, unstaged diff, untracked files, relevant refs, generated artifacts, submodules, protected branches, remote refs, and release tags when in scope; direct status/diff/ref/config/validator evidence accepted or rejected; repository graph, project memory, old CI logs, branch summaries, previous diffs, and execution trajectory used only as selectors unless rerun against current worktree/ref state; validation evidence names command/test/validator/report/artifact, output summary, exit code or not-run status, and freshness after the final material edit; what evidence proves and does not prove for paths, refs, generated drift, branch ownership, remote coordination, and release impact; reuse and placement rationale for new branches, commits, generated artifacts, backups, stashes, tags, or recovery paths; behavior preservation, rollback or communication path, residual risk owner, and next gate.
 
 # Quality Gate
 
@@ -119,7 +175,9 @@ Return a Git Professional Usage Record with:
 7. Staged and unstaged diffs are reviewed before commits, rebases, splits, resets, and conflict resolution.
 8. Signed tags, release tag mutation, force-with-lease, and bisect results include ownership, verification, and rollback notes.
 9. Validation evidence maps to the resolved files and replayed changes.
-10. Residual risk names untested conflict paths, generated drift, remote coordination, or release impact.
+10. Tool permission boundary is explicit for read-only, local state-mutating, and remote state-mutating Git commands.
+11. Graph, memory, previous diffs, old logs, branch summaries, and prior command output are freshness-checked and cannot substitute for current worktree/ref evidence.
+12. Residual risk names untested conflict paths, generated drift, user-owned dirty state, remote coordination, protected branch policy, or release impact.
 
 # Used By
 

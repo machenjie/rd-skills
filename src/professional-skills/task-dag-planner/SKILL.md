@@ -24,6 +24,14 @@ Decompose a complex product or code change into a directed acyclic graph (DAG) o
 - A single obvious edit with no dependency, test, release, or coordination risk — create the task directly without a DAG.
 - The change is a documentation-only update with no implementation dependencies.
 
+## Stage Fit
+Use this skill when planning must connect execution stages without loading every downstream gate at once:
+- **Planning and implementation:** split coding work into owner-scoped nodes with repository context, reuse candidates, placement decisions, validation commands, and stop conditions before edits begin.
+- **Coding support:** keep implementation tasks small enough that a fresh agent can inspect, code, validate, and hand off one node without guessing about adjacent nodes.
+- **Debugging and bug-fix:** add diagnosis, reproduction, repair, regression, same-pattern scan, and route-repair nodes instead of retrying an unverified path.
+- **Code-review and refactoring:** separate behavior-preserving movement, API/contract changes, cleanup, generated-file updates, and review gates so reviewers can approve one risk domain at a time.
+- **Testing, release, and handoff:** attach verification, rollback, release-watch, documentation, plan-execution consistency, and residual-risk nodes where they block downstream work.
+
 ## Non-Negotiable Rules
 - **Direct use still runs the runtime prompt flow.** When `task-dag-planner` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - **Tasks must be small enough to review in a single pass**: a task that requires reviewing 5 modules simultaneously is not a task, it is a phase — break it down further.
@@ -174,14 +182,15 @@ Plan depth scales with complexity, not the reverse:
 - **Circular dependency discovered during execution**: Tasks A and B each depend on the other's output — neither can start; the plan is deadlocked.
 - **Parallel tasks create a write conflict**: two teams modify the same database migration file simultaneously — the merge conflict is resolved incorrectly; both migrations run, one corrupting the other's schema.
 - **Critical path not identified**: the team parallelizes low-risk frontend tasks while the high-risk migration task (the bottleneck) is assigned to a single engineer with no backup — delivery is delayed by the unidentified critical path.
+- **Plan drift goes unnoticed**: implementation touches files or behavior not represented by any node — validation evidence no longer proves the accepted plan and handoff hides unreviewed work.
 
 ## Reference Loading Policy
 Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
 
 - L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
-- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
-- L3 changes: read all selected capability references and `references/checklist.md` when present.
-- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+- L2 changes: read `references/capabilities/index.md`, only capability files explicitly selected by `change-forge-router`, and [references/checklist.md](references/checklist.md) when a task graph or plan handoff is required.
+- L3 changes: read all selected capability references plus [references/task-contract-patterns.md](references/task-contract-patterns.md) when task nodes must be agent-executable or split by owner/risk.
+- L4/L5 changes: read all selected capability references, [references/planning-evidence-patterns.md](references/planning-evidence-patterns.md), and domain extension references when selected.
 - Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
 
 Examples:
@@ -238,6 +247,7 @@ Close a task DAG only when all five canonical answers are concrete (answer schem
 14. No L3-or-higher task spans more than one independent subsystem; oversized tasks are split further.
 15. Repository context is present before planning begins, including owning surface, caller/callee path, local conventions, tests/config/docs, generated artifacts, and rejected placement locations.
 16. Handoff includes plan-execution consistency: accepted plan vs. changed files, validation commands, skipped work, stale evidence, unplanned behavior, and residual risk.
+17. Every deferred validation, unknown owner, skipped reference, and non-parallel edge has a named reason, owner, and unblock condition.
 
 ## Handoff
 - **backend-change-builder** — receives backend task nodes with dependencies, completion criteria, and rollback notes.

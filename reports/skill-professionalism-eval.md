@@ -1,29 +1,14 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-30T12:50:06.770440+00:00
+- Generated: 2026-07-01T00:27:45.940642+00:00
 - Skills/capabilities checked: 156
-- Warning count: 3
-- Average score: 57.22/60
+- Warning count: 0
+- Average score: 58.02/60
 
 ## Scores
 
 | Item | Kind | Score | Status | Missing Sections | Warnings |
 | --- | --- | ---: | --- | ---: | ---: |
-| `src/foundation/capabilities/network-protocol-gateway-usage/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/business-semantic-control-plane/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 3 |
-| `src/foundation/capabilities/build-tool-professional-usage/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/data-format-contract-usage/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/linux-systems-professional-usage/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/git-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/code-element-professionalism/SKILL.md` | foundation-capability | 51/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/contract-testing/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
-| `src/foundation/capabilities/controller-api-implementation/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/cpp-professional-usage/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
-| `src/foundation/capabilities/design-pattern-selection/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/domain-event-modeling/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/event-driven-architecture/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/executor-adapter-protocol/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/failure-diagnosis/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/go-professional-usage/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/i18n-timezone-money-safety/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/idempotency-retry-design/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
@@ -40,9 +25,6 @@
 | `src/foundation/capabilities/testability-seam-design/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/use-case-modeling/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/user-role-identification/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/professional-skills/data-middleware-change-builder/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/delivery-release-gate/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/task-dag-planner/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/backup-recovery/SKILL.md` | foundation-capability | 57/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/code-review/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/dto-schema-design/SKILL.md` | foundation-capability | 57/60 | acceptable | 0 | 0 |
@@ -130,24 +112,39 @@
 | `src/foundation/capabilities/async-job-design/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/authentication-authorization/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/authentication-security/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/build-tool-professional-usage/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/business-semantic-control-plane/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cache-design/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/ci-cd/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cleanup-deletion-governance/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/cli-daemon-interface-design/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/code-clarity-maintainability/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
+| `src/foundation/capabilities/code-element-professionalism/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/consumer-impact-analysis/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/context-control-plane/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/context-packaging/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/contract-testing/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
+| `src/foundation/capabilities/controller-api-implementation/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/cpp-professional-usage/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
+| `src/foundation/capabilities/data-format-contract-usage/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/data-migration-design/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/data-model-design/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/design-pattern-selection/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/design-system-rules/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/domain-event-modeling/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/event-driven-architecture/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/execution-trajectory-analysis/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/executor-adapter-protocol/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/extensibility-design/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/failure-diagnosis/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/frontend-testing/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/git-professional-usage/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/implementation-structure-design/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/indexing-query-optimization/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/input-validation/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/linux-systems-professional-usage/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/logging-error-handling/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
+| `src/foundation/capabilities/network-protocol-gateway-usage/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/observability/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/package-dependency-management/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/permission-boundary-modeling/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
@@ -163,15 +160,12 @@
 | `src/professional-skills/experience-impact-modeler/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/quality-test-gate/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/change-forge-router/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/data-middleware-change-builder/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/delivery-release-gate/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/development-process-orchestrator/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/logging-design-gate/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/task-dag-planner/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |
 
 ## Warnings
 
-### `src/foundation/capabilities/business-semantic-control-plane/SKILL.md`
-- message: reference 'references/business-golden-case-policy.md' is not linked from SKILL.md body | type: reference_loading_hint | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-- message: reference 'references/business-semantic-pack-policy.md' is not linked from SKILL.md body | type: reference_loading_hint | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-- message: reference 'references/business-semantic-review-policy.md' is not linked from SKILL.md body | type: reference_loading_hint | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-
-Recommended fixes:
-- Add targeted reference loading hints or link unreferenced skill references.
+No warnings.

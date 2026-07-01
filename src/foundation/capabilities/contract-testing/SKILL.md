@@ -21,7 +21,7 @@ Do not use this capability for testing provider business logic (internal service
 
 # Stage Fit
 
-Use during API/data design review, provider implementation, consumer integration, release readiness, and compatibility incident repair when a consumer-visible contract must remain executable and version-aware. Re-enter after schema, OpenAPI/AsyncAPI/proto, SDK, generated client, pact broker, schema registry, vendor fixture, or deployment-version evidence changes. Skip when the change is provider-internal behavior with no supported consumer-visible contract surface.
+At each stage, use during planning, coding, debugging, bug-fix repair, code-review, refactoring, testing, release readiness, and handoff when a consumer-visible contract must remain executable and version-aware. Re-enter after schema, OpenAPI/AsyncAPI/proto, SDK, generated client, pact broker, schema registry, vendor fixture, deployment-version evidence, project memory, repository graph, or execution trajectory changes. Skip when the change is provider-internal behavior with no supported consumer-visible contract surface.
 
 # Non-Negotiable Rules
 
@@ -50,7 +50,7 @@ Anchor against consumer-driven contract testing, OpenAPI/AsyncAPI/protobuf schem
 
 # Selection Rules
 
-Select this capability when **consumer-visible compatibility** is the primary concern. Adjacent routing:
+Use this selection when **consumer-visible compatibility** is the primary concern. Adjacent routing:
 
 - Prefer `api-contract-design` when designing the contract shape itself (before implementation).
 - Prefer `dto-schema-design` when the question is the serialized transfer object structure.
@@ -100,22 +100,22 @@ Contract testing succeeds only when both **provider** and **consumer** perspecti
 
 # Failure Modes
 
-- CI only runs provider unit tests; no consumer expectations are verified; breaking change ships.
-- Consumer pact broker not configured; contracts verified locally only; independent releases diverge.
-- Golden snapshot for response body does not include error cases; 4xx contract regressions are invisible.
-- Mobile client cannot be force-upgraded; breaking API change causes crash on old app version.
-- Kafka topic schema evolves; in-flight messages fail deserialization on consumer restart.
-- Enum value removed; consumer code that pattern-matched it returns null silently.
-- `additionalProperties: false` on response pact; provider adds new optional field; consumer CI breaks on a non-breaking change.
-- Vendor API mock built from stale documentation; production integration behaves differently than tests.
-- Schema registry mode not set; default (BACKWARD) assumed for FULL requirement; forward-incompatible change breaks old consumers.
-- Contract version matrix not tracked; provider verified against old consumer version; new consumer expectation never run.
-- Sunset header not added; deprecated endpoint removed; partner integration fails without warning.
-- Pagination `meta.total` removed; consumer pagination UI breaks; not covered by contract test.
+- **Provider-only CI:** CI only runs provider unit tests; no consumer expectations are verified; breaking change ships.
+- **Broker gap:** Consumer pact broker not configured; contracts verified locally only; independent releases diverge.
+- **Error-shape gap:** Golden snapshot for response body does not include error cases; 4xx contract regressions are invisible.
+- **Long-lived client break:** Mobile client cannot be force-upgraded; breaking API change causes crash on old app version.
+- **Event replay break:** Kafka topic schema evolves; in-flight messages fail deserialization on consumer restart.
+- **Enum drift:** Enum value removed; consumer code that pattern-matched it returns null silently.
+- **Unknown-field rigidity:** `additionalProperties: false` on response pact; provider adds new optional field; consumer CI breaks on a non-breaking change.
+- **Vendor fixture drift:** Vendor API mock built from stale documentation; production integration behaves differently than tests.
+- **Registry mode mismatch:** Schema registry mode not set; default (BACKWARD) assumed for FULL requirement; forward-incompatible change breaks old consumers.
+- **Version matrix gap:** Contract version matrix not tracked; provider verified against old consumer version; new consumer expectation never run.
+- **Deprecation signal gap:** Sunset header not added; deprecated endpoint removed; partner integration fails without warning.
+- **Pagination contract gap:** Pagination `meta.total` removed; consumer pagination UI breaks; not covered by contract test.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 selection, routing, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting a concrete contract test plan. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when selecting tooling, classifying breaking changes, comparing REST/gRPC/event/webhook/GraphQL contract styles, or designing Pact Broker/schema-registry workflows. Do not load references for provider-internal tests with no consumer-visible contract surface.
+The `SKILL.md` body carries L1/L2 selection, routing, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting a concrete contract test plan, closure map, or provider/consumer evidence review. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when selecting tooling, classifying breaking changes, comparing REST/gRPC/event/webhook/GraphQL contract styles, or designing Pact Broker/schema-registry workflows. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on repository graph, project memory, execution trajectory, validation freshness, fixture freshness, broker/registry status, or tool permission boundaries. Use [examples/example-output.md](examples/example-output.md) only when the expected answer shape is unclear or a compact source-authored example is needed. Do not load references for provider-internal tests with no consumer-visible contract surface.
 
 # Output Contract
 

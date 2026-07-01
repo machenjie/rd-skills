@@ -14,6 +14,14 @@ Design and review changes to persistence, caching, queueing, search, streaming, 
 ## Stage Ownership
 Own data and middleware implementation placement for databases, caches, queues, search, object storage, workers, retries, DLQs, lag, fallback, and consistency boundaries. Use `logging-design-gate` for queue, consumer, retry, DLQ, cache-stampede, lag, fallback, and source-of-truth diagnostics.
 
+## Stage Fit
+Use this skill across the full execution path for data and middleware work:
+- **Discovery and planning:** map source of truth, derived stores, access patterns, consistency model, delivery semantics, freshness target, and irreversible data risk before coding.
+- **Implementation and coding:** place queries, indexes, migrations, cache keys, queue consumers, offset commits, retries, and search/object-storage updates at the boundary that owns the invariant.
+- **Debugging and bug-fix:** verify stale reads, duplicate delivery, lag, hot keys, full scans, lock waits, drift, poison messages, and rollback failures with data evidence before accepting a diagnosis.
+- **Code-review and refactoring:** reject speculative indexes, hidden side effects, load-all paths, custom middleware layers, unowned clients/pools, and refactors that weaken source-of-truth or ordering guarantees.
+- **Testing, release, and handoff:** require query-plan, cache, DLQ/replay, migration rollback, reconciliation, observability, and release-watch evidence with residual risk and owner.
+
 ## When To Use
 - Database schema changes, query rewrites, index additions, or constraint modifications in SQL or NoSQL stores.
 - Cache layer additions, key design changes, TTL modifications, or invalidation logic changes.
@@ -167,9 +175,9 @@ No query change → No index change required
 Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
 
 - L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
-- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
-- L3 changes: read all selected capability references and `references/checklist.md` when present.
-- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+- L2 changes: read `references/capabilities/index.md`, only capability files explicitly selected by `change-forge-router`, and [references/checklist.md](references/checklist.md) when the data/middleware boundary is in scope.
+- L3 changes: read all selected capability references plus [references/evidence-patterns.md](references/evidence-patterns.md) when validation proof, evidence limits, or release-watch signals are needed.
+- L4/L5 changes: read all selected capability references, [references/recovery-patterns.md](references/recovery-patterns.md), and domain extension references when selected.
 - Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
 
 Examples:
@@ -198,7 +206,7 @@ Return a data and middleware change plan with:
 - **Behavior preservation**: read/write semantics, freshness, ordering, rollback, and old application compatibility preserved or intentionally changed.
 - **Test obligations**: Query plan tests, cache invalidation tests, DLQ tests, migration tests.
 - **Observability**: Metrics (query latency, cache hit rate, queue depth, DLQ depth) and alert thresholds.
-- **Validation evidence**: EXPLAIN/plan, cache, queue, migration/backfill, replay, and observability checks run, with residual risk and next gate.
+- **Validation evidence**: command, validator, output/report artifact path, exit code, EXPLAIN/plan, cache, queue, migration/backfill, replay, screenshot when UI or dashboard verification is relevant, and observability checks run, with residual risk and next gate.
 - **Evidence limits**: what each plan/test/metric proves and what it does not prove about production cardinality, replay scale, tenant isolation, stale reads, or downstream consumers.
 
 ## Evidence Contract
@@ -206,7 +214,7 @@ Close a data or middleware change only when all five canonical answers are concr
 - **Basis**: the selected mode, source-of-truth declaration, consistency model, delivery semantic, freshness target, or access pattern the change rests on.
 - **Files and boundaries inspected**: schemas, queries, indexes, cache keys, invalidation paths, queue topics/consumer groups, search indexes, migrations/backfills, and downstream consumers read, and the invalidation or offset-commit boundary confirmed.
 - **Placement rationale**: why each index, cache key, queue, or migration step is shaped as it is, with the rejected alternative and its query-plan or throughput evidence.
-- **Validation commands**: the query-plan, cache-invalidation, DLQ/replay, TTL, migration-rollback, backfill, and freshness checks run, each with its outcome and what it proves/does not prove.
+- **Validation commands**: the query-plan, cache-invalidation, DLQ/replay, TTL, migration-rollback, backfill, and freshness checks run, including validator, command, output artifact/report, exit code, outcome, and what each item proves/does not prove.
 - **What evidence proves / what it does not prove**: map every EXPLAIN plan, cache test, replay test, migration test, metric, or reconciliation report to the exact data correctness claim it proves and the scale, tenant, ordering, lag, or rollback claim it does not prove.
 - **Data judgment and handoff**: mode selected, source-of-truth/consistency judgment, behavior preservation, evidence limits, and next gate.
 - **Residual risk**: the stampede, hot-key, lag, ordering, stale read, data drift, cost, or partial-migration path that remains untested or assumed, and the named owner of the follow-up.
@@ -222,6 +230,7 @@ Close a data or middleware change only when all five canonical answers are concr
 8. Every migration has a tested rollback migration.
 9. Large table migrations use online migration strategies — no exclusive locks on high-traffic tables.
 10. Failure mode analysis covers: stale cache, queue duplicate, replication lag, and migration rollback failure.
+11. Validation reports or artifacts name the command/validator, exit code, data freshness, and evidence limit for every accepted proof.
 
 ## Handoff
 - **data-api-contract-changer** — when schema changes affect API contract compatibility or consumer migration.
@@ -237,4 +246,4 @@ Close a data or middleware change only when all five canonical answers are concr
 - **testability-seam-design** — when middleware tests need deterministic DB/cache/queue/search seams or risk private-helper coupling.
 
 ## Completion Criteria
-Data and middleware changes are ready when source of truth is declared, consistency model is explicit, indexes are justified by access patterns with EXPLAIN evidence, cache invalidation is deterministic, queue semantics and DLQ routing are defined, every migration has a tested rollback, large table changes use online strategies, and failure modes for stale cache, queue duplication, replication lag, and migration rollback are explicitly analyzed.
+Data and middleware changes are ready when source of truth is declared, consistency model is explicit, indexes are justified by access patterns with EXPLAIN evidence, cache invalidation is deterministic, queue semantics and DLQ routing are defined, every migration has a tested rollback, large table changes use online strategies, validation artifacts are bounded and reproducible, and failure modes for stale cache, queue duplication, replication lag, and migration rollback are explicitly analyzed.

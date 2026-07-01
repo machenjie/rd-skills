@@ -94,6 +94,21 @@ Evaluate adapter evidence by executor support, event family, field visibility, p
   **Required professional action:** normalize to `Unknown`, degrade gate result, and preserve residual risk.
   **Route to:** `agent-workflow-state-machine`, `execution-trajectory-analysis`.
   **Evidence required:** event family guess, unsupported fields, safe fallback.
+- **Signal:** adapter evidence cites repository graph, project memory, prior execution trace, or old validation output after hook templates, event fields, permissions, path visibility, or final diff changed.
+  **Hidden risk:** stale runtime evidence closes a gate that the current adapter can no longer observe.
+  **Required professional action:** compare current adapter capabilities with graph, memory, and execution evidence before closure.
+  **Route to:** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`, and this capability.
+  **Evidence required:** capability diff, graph or memory source/date, execution log path, validator exit code, stale-evidence decision, and rollback note.
+- **Signal:** closure depends on manual fallback evidence because the adapter lacks stop, permission, validation, changed-path, or compaction visibility.
+  **Hidden risk:** manual notes are treated as equivalent to supported runtime signals and residual risk disappears.
+  **Required professional action:** build a degraded closure contract that separates adapter-supported checks from manual fallback checks.
+  **Route to:** `plan-execution-consistency`, `agent-execution-discipline`, `validation-broker`, and this capability.
+  **Evidence required:** unsupported checks, fallback evidence source, owner, freshness, fail policy, and residual risk.
+- **Signal:** adapter fixtures, generated hook artifacts, or runtime templates are updated without comparing normalized events consumed by gates.
+  **Hidden risk:** fixture drift lets validation pass while production adapter events miss permission, path, validation, or lifecycle fields.
+  **Required professional action:** compare fixture output, generated artifact, runtime template, and downstream gate field requirements.
+  **Route to:** `quality-test-gate`, `validation-broker`, `agent-tool-permission-sandbox`, and this capability.
+  **Evidence required:** fixture diff, generated artifact path, gate field matrix, validator exit code, and unsupported-field residual risk.
 
 # Risk Escalation Rules
 - Escalate to `security-privacy-gate` when adapter payloads may expose secrets, raw prompts, credentials, personal data, environment variables, full command output, connector data, or external side effects.
@@ -122,7 +137,11 @@ Evaluate adapter evidence by executor support, event family, field visibility, p
 - **Compaction state loss:** Pre-compact or post-compact support is missing, so final handoff treats retained summaries as full trajectory evidence.
 
 # Reference Loading Policy
-The `SKILL.md` body carries selection, gates, output, and closure rules. Load [references/adapter-event-contract.md](references/adapter-event-contract.md) when drafting a concrete adapter record, comparing executor support, normalizing event fields, deciding fail policy, reconciling validation/permission visibility, or building a closure contract.
+The `SKILL.md` body carries selection, gates, output, and closure rules. Load deep references only when the inline contract cannot close the adapter decision:
+
+- [references/adapter-event-contract.md](references/adapter-event-contract.md): draft a concrete adapter record, compare executor support, normalize event fields, decide fail policy, reconcile validation/permission visibility, or build a closure contract.
+- [references/visibility-freshness.md](references/visibility-freshness.md): decide whether repository graph, project memory, execution trace, prior validation, or generated hook artifacts still prove current adapter visibility.
+- [references/degraded-closure-contract.md](references/degraded-closure-contract.md): separate adapter-supported checks, unsupported checks, manual fallback evidence, fail-open warnings, fail-closed recovery, rollback notes, and residual risk.
 
 # Output Contract
 Return an `executor_adapter_protocol_record` with:

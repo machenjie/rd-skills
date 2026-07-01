@@ -19,6 +19,10 @@ Use when a change touches serialization/deserialization, JSON Schema, OpenAPI sc
 
 Do not use for a simple JSON literal inside a unit test, ordinary DTO field addition with no parser/compatibility risk, or application-level API design that does not depend on format semantics. Use `api-contract-design` or `dto-schema-design` when operation or field validation is primary and format compatibility is not the risk.
 
+# Stage Fit
+
+Use during planning, implementation, code-review, testing, release, migration, and incident-repair stages when parser behavior, schema evolution, generated models, fixtures, stored data, or wire/storage compatibility can change runtime meaning. Re-enter after schema, parser library/options, generator config, golden fixture, OpenAPI/JSON Schema/Protobuf/Avro/Parquet/YAML/XML/CSV/TOML/CPE, content type, compatibility mode, or stored-format migration edits. Skip for ordinary DTO work where the format parser, serializer, compatibility class, generated artifacts, fixtures, and old-data behavior are unchanged.
+
 # Non-Negotiable Rules
 
 - Name the format, schema authority, parser/serializer library, version, and options that define behavior.
@@ -46,6 +50,14 @@ Select when parser behavior, serialization, schema evolution, generated artifact
 # Risk Escalation Rules
 
 Escalate to `security-privacy-gate` for XML external entities, YAML unsafe loaders, CSV formula injection, deserialization gadgets, or untrusted parser inputs. Escalate to `data-api-contract-changer` when public or cross-service contracts evolve. Escalate to `data-middleware-change-builder` for storage formats, schema registry, streams, or warehouse files. Escalate to `delivery-release-gate` for incompatible format migrations or backfills.
+
+# Proactive Professional Triggers
+
+- **Signal:** A config, schema, fixture, or parser change is described as "just JSON/YAML/XML/CSV/TOML" without parser library, version, options, duplicate-key, coercion, null/default, or unknown-field policy. **Hidden risk:** parser defaults become runtime policy and can change permissions, routing, money, or rollout behavior. **Required professional action:** define the parser contract and add positive and negative fixtures for the risky states. **Route to:** `configuration-runtime-policy`, `input-validation`, `quality-test-gate`. **Evidence required:** parser version/options, risky scalar/key/null cases, fixture output, and what the fixture does not prove.
+- **Signal:** Protobuf, Avro, Parquet, OpenAPI, JSON Schema, schema registry, or generated model changes are claimed compatible without old-reader/new-writer, old-data/new-reader, or generated-client evidence. **Hidden risk:** local validation passes while consumers or stored data break. **Required professional action:** classify compatibility and verify old/new consumer or stored-data behavior. **Route to:** `contract-testing`, `version-compatibility`, `data-migration-design`. **Evidence required:** compatibility class, consumer/storage inventory, schema diff, generated output policy, and old/new validation result.
+- **Signal:** YAML unsafe loader, XML entity handling, CSV export, duplicate JSON keys, deserialization, huge nesting, formula-like cell, or untrusted format input reaches runtime. **Hidden risk:** XXE, injection, formula execution, resource exhaustion, or parser-dependent privilege confusion. **Required professional action:** route security review and prove malicious or malformed input is rejected or neutralized. **Route to:** `security-privacy-gate`, `web-security`. **Evidence required:** hostile-input fixture, size/depth limit, safe loader or encoding rule, command output, and residual untested parser/version.
+- **Signal:** Generated validators, clients, schemas, fixtures, or checked-in generated artifacts change without a source/generator/output/drift decision. **Hidden risk:** generated files become a stale source of truth and later agents edit the wrong artifact. **Required professional action:** establish generated artifact authority and run or disclose drift validation. **Route to:** `build-tool-professional-usage`, `validation-broker`. **Evidence required:** source spec, generator version/config, generated output path, committed/ignored decision, drift command output or not-run owner.
+- **Signal:** Repository graph, project memory, old examples, previous parser output, or historical schema notes are reused after parser, schema, generator, fixture, or stored-format edits. **Hidden risk:** stale memory or graph evidence certifies the wrong compatibility boundary. **Required professional action:** treat graph and memory as selectors, rerun selected parser/schema/fixture checks, and mark stale evidence rejected. **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `repository-graph-analysis`. **Evidence required:** accepted/rejected memory, graph freshness, changed paths, rerun validator command, exit code, and report/artifact path.
 
 # Critical Details
 
@@ -88,6 +100,7 @@ Escalate to `security-privacy-gate` for XML external entities, YAML unsafe loade
 
 The `SKILL.md` body carries L1/L2 routing, risk, and output-contract rules.
 
+Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete data-format contract record, fixture plan, compatibility handoff, generated-artifact review, or format migration checklist.
 Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when parser/serializer behavior, Protobuf/YAML/TOML/XML/CPE compatibility, schema registry, generated model, or storage format risks need deeper benchmark support.
 Load [references/evidence-patterns.md](references/evidence-patterns.md) only when the handoff needs concrete fixture, parser-differential, generated-drift, schema-registry, or old-reader/new-writer evidence patterns.
 Do not load references for ordinary DTO changes, local JSON literals in tests, or application-level API design with no parser, serialization, wire-format, generated-model, schema-registry, or storage-format risk.
@@ -107,7 +120,15 @@ Return a Data Format Contract Record with:
 - `generated_artifact_policy` (generator, output, committed/ignored, drift check)
 - `fixtures_and_validation` (positive/negative examples, golden files, parser differential tests, schema validation, consumer contract tests)
 - `decision_record` (change made, alternatives rejected, migration/rollout rationale)
+- `validation_freshness` (commands or validators rerun after the final material schema/parser/fixture/generated edit; stale output rejected or named)
+- `what_evidence_proves` and `what_evidence_does_not_prove` (covered parser, version, consumer, stored data, generated artifact, and limits)
+- `memory_graph_execution_record` (repository graph, project memory, previous parser output, old fixture, or trajectory evidence accepted, rejected, stale, partial, or not used)
+- `rollback_or_migration_plan` (schema compatibility window, parser option revert, generator rollback, data backfill/replay, or release sequencing when relevant)
 - `residual_risk` (unverified consumer, parser version, old data, schema registry mode, generated artifact)
+
+# Evidence Contract
+
+Close a data-format contract record only when these answers are concrete: **boundaries inspected** across format surface, schema authority, parser/serializer library and options, generated artifacts, fixtures, old/new consumers, stored data, security-sensitive parser inputs, release or migration path, and validation owner; direct schema/config/parser/fixture/output evidence accepted or rejected; repository graph, project memory, old examples, previous parser output, generated artifacts, and execution trajectory used only as selectors unless rerun against current source; validation evidence names command/test/validator/report/artifact, output summary, exit code or not-run status, and freshness after the final material edit; what evidence proves and does not prove for parser version, consumer coverage, stored data, hostile input, generated drift, and old/new compatibility; reuse and placement rationale for schemas, fixtures, generators, validators, and parser settings; behavior preservation, rollback or migration path, residual risk owner, and next gate.
 
 # Quality Gate
 
@@ -121,7 +142,9 @@ Return a Data Format Contract Record with:
 8. Positive, negative, golden, and parser differential fixtures validate with production parser settings.
 9. Old-reader/new-writer or old-data/new-reader behavior is tested where compatibility matters.
 10. Security-sensitive parser risks route to security review.
-11. Residual risk names unverified consumers, parser versions, stored data, or generated outputs.
+11. Validation covers at least the changed format/schema/parser/generated/stored-data path with command output, exit code, report/artifact, or a not-run disclosure.
+12. Graph, memory, previous parser output, old fixtures, and generated artifacts are freshness-checked and cannot substitute for current schema/parser validation.
+13. Residual risk names unverified consumers, parser versions, stored data, schema registry modes, generated outputs, or hostile-input classes.
 
 # Used By
 

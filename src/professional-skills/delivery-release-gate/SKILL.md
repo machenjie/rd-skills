@@ -30,9 +30,12 @@ Make every release execution safe, observable, and reversible — by defining en
 - The change is a documentation-only edit with no deployment artifact.
 
 ## Stage Fit
-Owns release-delivery; also serves infrastructure-deployment, kubernetes-helm, and ci-cd surfaces. Per-stage focus:
-- **release-delivery**: rollout sequence, rollback trigger, config and migration compatibility, health checks, alert ownership.
-- **documentation-handoff**: release notes, runbook, and post-release verification.
+Owns release-delivery; also serves infrastructure-deployment, kubernetes-helm, and ci-cd surfaces across the execution path:
+- **Planning and implementation:** map deployable artifacts, environment config, migration order, flag state, release owners, rollback boundary, and existing platform controls before coding or changing release machinery.
+- **Coding support:** keep release-affecting config defaults, feature-flag branches, deploy scripts, Helm/IaC values, and pipeline changes compatible with old and new runtime versions.
+- **Debugging and bug-fix:** diagnose failed pipeline, deploy, migration, config, canary, rollback, or post-release signal with fresh evidence before retrying the same path.
+- **Code-review and refactoring:** reject speculative wrappers, unowned flags, hidden config switches, mutable deploy artifacts, and refactors that weaken rollback, audit, or release observability.
+- **Testing, release, and handoff:** require staging, rollback, canary, config, audit, post-release watch, and release-note evidence with residual risk and next gate.
 
 ## Non-Negotiable Rules
 - **Direct use still runs the runtime prompt flow.** When `delivery-release-gate` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
@@ -194,9 +197,9 @@ All checks pass → Rolling update with monitored rollout window
 Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
 
 - L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
-- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
-- L3 changes: read all selected capability references and `references/checklist.md` when present.
-- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+- L2 changes: read `references/capabilities/index.md`, only capability files explicitly selected by `change-forge-router`, and [references/checklist.md](references/checklist.md) when a deployable artifact, config, flag, migration, or rollback boundary is in scope.
+- L3 changes: read all selected capability references plus [references/delivery-output-and-gates.md](references/delivery-output-and-gates.md) when the release plan needs the full field list, quality gate, or handoff table.
+- L4/L5 changes: read all selected capability references, [references/release-evidence-patterns.md](references/release-evidence-patterns.md), and domain extension references when selected.
 - Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
 
 Examples:
@@ -211,8 +214,10 @@ Return a structured release plan with actionable evidence:
 - **Execution plan:** deployment strategy, pre-deploy checklist, cloud governance, Helm plan, migration sequence, feature flag plan, rollback steps, communication plan, and post-release watch.
 - **Evidence package:** pipeline/staging/rollback/Helm/IaC/config/canary/post-release checks, artifact digest, SBOM/scan, deploy audit event, command status, failed-attempt ledger, and evidence limits.
 - **Tool permission/sandbox evidence:** deploy/migration/IaC/Helm/Kubernetes/cloud/secret action class, permission state, sandbox boundary, dry-run/rendered diff, rollback/revert path, and redaction rule.
+- **Approval decision:** approved, blocked, deferred, rollback-only, or no-go, with the required owner, stop condition, and next validation command.
 - **Reuse / placement rationale:** why migration, config, flag, Helm/IaC, pipeline, watch, and rollback responsibilities sit in the selected release boundary.
 - **Behavior preservation:** old/new version compatibility, config defaults, feature flag off-state, public contract, rollback behavior, residual risk, and next gate.
+- **Evidence limits and residual risk:** what each release artifact proves, what remains unverified, who owns it, and whether release can proceed.
 
 For the full output field list, quality gate, and handoff table, load `references/delivery-output-and-gates.md`.
 

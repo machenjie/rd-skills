@@ -21,7 +21,7 @@ Do not convert a synchronous dependency to asynchronous without a clear reason: 
 
 # Stage Fit
 
-Use during architecture planning when a change introduces cross-bounded-context events, asynchronous fan-out, choreography, projection rebuild, CDC, webhook-to-event flow, or product-visible eventual consistency. Use during implementation review when producers, consumers, outbox/relay, partition keys, schema evolution, replay, DLQ ownership, lag/backpressure, or event observability change. Use during testing when duplicate delivery, out-of-order arrival, poison message routing, replay safety, lag alerting, and stale projection behavior need evidence. Hand off to `domain-event-modeling` for payload semantics, `message-queue-design` for broker mechanics, `transaction-consistency` for outbox/saga invariants, and `reliability-observability-gate` for production SLO readiness.
+Use during architecture planning when a change introduces cross-bounded-context events, asynchronous fan-out, choreography, projection rebuild, CDC, webhook-to-event flow, or product-visible eventual consistency. Use during coding, debugging, bug-fix, code-review, refactoring, testing, and release review when producers, consumers, outbox/relay, partition keys, schema evolution, replay, DLQ ownership, lag/backpressure, stale projection behavior, or event observability need evidence. Hand off to `domain-event-modeling` for payload semantics, `message-queue-design` for broker mechanics, `transaction-consistency` for outbox/saga invariants, and `reliability-observability-gate` for production SLO readiness.
 
 # Non-Negotiable Rules
 
@@ -96,18 +96,24 @@ Event-driven systems trade synchronous coupling for temporal complexity. Precisi
 
 # Failure Modes
 
-- Consumer duplicate delivery creates two payment charges; customer charged twice; refund required; SLA breach.
-- DLQ accumulates 50,000 messages over 48 hours; no alert; orders in permanent "processing" state; mass customer escalation.
-- Partition key assigned to random UUID; `OrderCancelled` arrives before `OrderCreated`; state machine error; order stuck.
-- Replay rebuilds read model; payment capture consumer re-fires; 10,000 duplicate charges; production incident P0.
-- Consumer lag reaches 500,000 messages; auto-scaling not configured; service processes events 3 hours old; financial totals stale; compliance SLA violated.
-- Saga no compensation path: inventory reserved, payment fails, no `ReleaseInventory` compensation event defined; inventory permanently locked.
-- Schema field renamed: `price` → `unitPrice`; consumers read null; order total = $0.00; passed validation; financial loss.
-- `acks=0` on critical payment event topic; broker restart during peak; 200 events lost; payment status unknown.
+- **Duplicate side effect:** consumer duplicate delivery creates two payment charges; customer charged twice; refund required; SLA breach.
+- **Silent DLQ growth:** DLQ accumulates 50,000 messages over 48 hours; no alert; orders in permanent "processing" state; mass customer escalation.
+- **Ordering corruption:** partition key assigned to random UUID; `OrderCancelled` arrives before `OrderCreated`; state machine error; order stuck.
+- **Unsafe replay:** replay rebuilds read model; payment capture consumer re-fires; 10,000 duplicate charges; production incident P0.
+- **Invisible lag:** consumer lag reaches 500,000 messages; auto-scaling not configured; service processes events 3 hours old; financial totals stale; compliance SLA violated.
+- **Missing compensation:** saga has no compensation path: inventory reserved, payment fails, no `ReleaseInventory` compensation event defined; inventory permanently locked.
+- **Schema drift:** schema field renamed from `price` to `unitPrice`; consumers read null; order total is zero; passed validation; financial loss.
+- **Producer durability loss:** `acks=0` on critical payment event topic; broker restart during peak; 200 events lost; payment status unknown.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 selection, boundary, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete event-flow plan, adding a producer or consumer, changing delivery/order/retry/DLQ/replay behavior, or accepting eventual consistency. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when delivery guarantee comparison, saga pattern choice, lag/backpressure thresholds, replay-safety classification, outbox/inbox design, or operational anti-pattern detail is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected plan shape is unclear. Do not load references for pure routing or metadata-only edits with no event topology, schema, or recovery behavior change.
+The `SKILL.md` body carries L1/L2 selection, boundary, and evidence rules. Load deep references only when the inline rules cannot safely close the event architecture decision:
+
+- [references/checklist.md](references/checklist.md): draft or review a concrete event-flow plan, add a producer or consumer, change delivery/order/retry/DLQ/replay behavior, or accept eventual consistency.
+- [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md): compare delivery guarantees, choose a saga pattern, set lag/backpressure thresholds, classify replay safety, design outbox/inbox flow, or review operational anti-patterns.
+- [references/topology-evidence-freshness.md](references/topology-evidence-freshness.md): decide whether repository graph, project memory, generated contracts, prior validation, or execution traces still prove current producers, consumers, schemas, topics, replay behavior, and runbooks.
+
+Use [examples/example-output.md](examples/example-output.md) only when the expected plan shape is unclear. Do not load references for pure routing or metadata-only edits with no event topology, schema, or recovery behavior change.
 
 # Output Contract
 

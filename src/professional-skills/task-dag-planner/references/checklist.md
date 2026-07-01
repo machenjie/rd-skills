@@ -9,3 +9,4 @@
 - Add feature flag, rollout, and rollback tasks where needed.
 - Verify no cyclic dependency exists.
 - Keep each task reviewable on its own.
+- Record topological-sort or acyclicity proof, critical path, collision scan, validation artifact, freshness, plan-execution consistency, and residual risk owner.

@@ -31,6 +31,10 @@ Use when code is written, reviewed, generated, refactored, or tested and any loc
 - The main question is cross-boundary side-effect flow, transaction consistency, idempotency, caching, eventing, or external I/O ordering. Use `data-side-effect-flow-tracing`, `transaction-consistency`, or the owning integration/data capability.
 - The main question is behavior-preserving movement or structural cleanup after the element problem is understood. Use `refactoring`.
 
+# Stage Fit
+
+Use during planning, implementation, debugging, code-review, refactoring, testing, and handoff when a variable, expression, or statement can change correctness, security, data integrity, resource cleanup, transaction ordering, or user-visible behavior. Re-enter after edits that change initialization, defaulting, truthiness, precedence, branch/fallthrough behavior, cleanup scope, loop mutation, transaction/event/cache order, or generated local code. Skip when the main question is broad placement, module ownership, design pattern choice, language runtime semantics, or file/directory structure without a specific element-level hazard.
+
 # Non-Negotiable Rules
 
 - Every variable used in behavior, permission, money, data mutation, resource, or transaction logic must have explicit initialization, scope, lifetime, mutability, and sentinel/default semantics.
@@ -62,6 +66,49 @@ Select this capability when the defect or decision fits in one local code elemen
 - `quality-test-gate` when tests must prove nullish/default, truthiness, fallthrough, cleanup, resource, or transaction ordering behavior.
 
 Prefer adjacent capabilities when the problem exceeds a code element: `implementation-structure-design` owns signatures, placement, objects, files, directories, and boolean-trap API design; `code-clarity-maintainability` owns broad readability and navigation cost; `language-idiom-enforcement` owns language-specific idiom and runtime semantics; `data-side-effect-flow-tracing` owns cross-boundary side-effect maps.
+
+# Mode Matrix
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+| --- | --- | --- | --- | --- | --- |
+| Variable professionalism | Uninitialized, shadowed, reused, mutable, captured, global, or sentinel/default variable. | Preserve meaning across initialization, scope, lifetime, mutability, ownership, and missing/empty/false states. | Variable reads/writes, default semantics, affected branch, review artifact or focused test. | `language-idiom-enforcement`, `quality-test-gate` | Skip when naming is purely stylistic and no behavior depends on the variable. |
+| Expression professionalism | Truthiness, nullish/default, precedence, hidden assignment, cast, comparison, magic value, or side-effect expression. | Make behavior decisions and absent side effects visible to reviewers and tests. | Expression before/after, named decision or split, edge-case fixture, static analysis or typecheck. | `code-clarity-maintainability`, `language-idiom-enforcement` | Skip broad readability cleanup until the specific expression hazard is named. |
+| Statement/control-flow professionalism | Empty branch, fallthrough, loop mutation, broad try/catch, ignored return, cleanup gap, or event before commit. | Preserve control flow, cleanup, error boundary, source-of-truth order, and side-effect visibility. | Statement scope, success/failure/early-return paths, ordering proof, validation command or not-run disclosure. | `failure-contract-design`, `transaction-consistency`, `data-side-effect-flow-tracing` | Skip cross-boundary side-effect ownership once handed to the owning capability. |
+| Bridge review | Boolean trap, side-effect getter, weak method/file constant, function return ambiguity, or directory-level repeated element pattern. | Name the local element risk and hand placement or ownership to the existing owner capability. | Bridge signal, target owner, rejected local-only fix, handoff and next gate. | `implementation-structure-design`, `refactoring`, `code-clarity-maintainability` | Skip solving module/object/file placement inside this capability. |
+| AI-generated element review | Generated code uses plausible defaults, shadowing, hidden side effects, nested expressions, or broad exception statements. | Reject shallow plausibility and require current-source, graph, memory, and validation freshness. | Changed paths, selected element references, accepted/rejected graph or memory, command output, residual risk. | `ai-code-review-refactor`, `project-memory-governance`, `validation-broker` | Skip approval from final diff alone when trajectory or prior evidence is stale. |
+
+# Proactive Professional Triggers
+
+- **Signal:** A variable in permission, money, tenant, transaction, resource, or state logic is uninitialized, shadowed, reused for another concept, or defaulted with `null`, `None`, zero, false, or empty.
+  **Hidden risk:** missing, denied, expired, empty, partial, and error states are silently collapsed into the wrong branch.
+  **Required professional action:** inspect all reads/writes and verify sentinel/default semantics before approving or fixing locally.
+  **Route to:** `language-idiom-enforcement`, `quality-test-gate`.
+  **Evidence required:** variable lifecycle, affected branch, edge-case fixture or review proof, validation command, and residual untested state.
+- **Signal:** An expression uses truthiness, `||`, `or`, `??`, mixed precedence, hidden assignment, cast/coercion, nested ternary, comprehension, getter, time/random/env read, or magic value to decide behavior.
+  **Hidden risk:** valid falsey values, type coercion, mutation, or side effects change security, data, or compatibility behavior while the expression looks compact.
+  **Required professional action:** split or name the decision, isolate side effects, and prove the edge case that would fail if the expression is wrong.
+  **Route to:** `code-clarity-maintainability`, `language-idiom-enforcement`, `regression-testing`.
+  **Evidence required:** before/after expression, named decision or split rationale, edge-case assertion, typecheck/linter/test output, and what remains unproven.
+- **Signal:** A statement contains empty branch behavior, switch fallthrough, loop counter/cursor mutation, broad try/catch/finally/defer scope, ignored return, missing cleanup, or swallowed error.
+  **Hidden risk:** wrong cleanup, termination, error propagation, resource ownership, or resource loss fails only on failure, early return, cancellation, or concurrent paths.
+  **Required professional action:** narrow the statement scope and verify success, failure, and early-exit paths before closure.
+  **Route to:** `failure-contract-design`, `language-idiom-enforcement`, `quality-test-gate`.
+  **Evidence required:** statement boundary, cleanup/error path map, static-analysis or test command, exit code, and residual runtime limit.
+- **Signal:** Event publication, cache write, notification, external I/O, metrics, or message enqueue appears before source-of-truth commit or inside a local mapper/getter/policy statement.
+  **Hidden risk:** partial failure, duplicate side effects, stale cache, or event-before-commit inconsistency can survive local tests.
+  **Required professional action:** inspect and verify side-effect order, then hand cross-boundary ownership to the data/transaction capability.
+  **Route to:** `data-side-effect-flow-tracing`, `transaction-consistency`, `idempotency-retry-design`.
+  **Evidence required:** ordering map, commit boundary, affected side effect, test or not-run owner, and rollback/compensation risk.
+- **Signal:** A function, method, class, file, or directory issue is described as a local element problem when the real signal is a boolean trap, side-effect getter, weak return state, file-scope mutable default, or repeated directory pattern.
+  **Hidden risk:** a local expression fix hides the wrong owner, public API, object boundary, or same-pattern defect.
+  **Required professional action:** inspect the bridge signal, classify the owner, and hand placement, refactor, or module ownership to the existing owner capability.
+  **Route to:** `implementation-structure-design`, `refactoring`, `repository-graph-analysis`.
+  **Evidence required:** bridge signal, searched scope, selected owner capability, rejected local-only fix, and next-gate handoff.
+- **Signal:** Repository graph, project memory, previous review, generated patch, old static-analysis output, or stale validation is reused after variable, expression, statement, cleanup, or side-effect-order edits.
+  **Hidden risk:** stale memory or execution trajectory approves an element whose current source and tests were never inspected.
+  **Required professional action:** verify memory and graph as selectors, rerun selected source reads or validators, and mark stale evidence rejected.
+  **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`.
+  **Evidence required:** accepted/rejected memory, graph freshness, changed paths, rerun command, exit code, and report/artifact path.
 
 # Risk Escalation Rules
 
@@ -141,6 +188,9 @@ Return a Code Element Professionalism Review with:
 - **Risk classification**: severity, affected behavior, security/data/resource/transaction impact, and whether the issue blocks completion.
 - **Fix direction**: narrow scope, initialize earlier, rename/re-scope, split expression, name decision, add constant, isolate statement, narrow try scope, add cleanup, reorder side effect, or route to another capability.
 - **Validation evidence**: tests, static analysis, typecheck, linter, review proof, or not-run disclosure showing the element behavior is covered.
+- **Validation freshness**: command, review, or validator rerun after the final material variable, expression, statement, fixture, generated-code, or side-effect-order edit; stale output rejected or named.
+- **What evidence proves and what evidence does not prove**: covered element behavior, language/runtime boundary, failure path, side-effect order, and untested limits.
+- **Memory graph execution record**: repository graph, project memory, previous review, generated patch, old static-analysis output, or execution trajectory accepted, rejected, stale, partial, or not used.
 
 # Evidence Contract
 

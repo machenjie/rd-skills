@@ -19,6 +19,10 @@ Use when a change touches systemd units, service lifecycle, process supervision,
 
 Do not use for ordinary application code that merely runs on Linux without relying on OS-specific behavior. Do not duplicate low-level memory, ABI, or driver analysis owned by `low-level-systems-extension`; use this capability for operational Linux runtime and service behavior.
 
+# Stage Fit
+
+Use during planning, debugging, implementation, code-review, testing, release, and incident-repair stages when Linux runtime, service-manager, process, filesystem, cgroup, container-host, permission, resolver, or package behavior can change correctness, availability, security, rollback, or operability. Re-enter after systemd unit, package script, container runtime, cgroup/ulimit, environment file, signal/shutdown, resolver, mount/path/permission, logging, hardening, or privileged-command edits. Skip for ordinary application changes where no Linux-specific runtime dependency, service behavior, host policy, or operational command boundary changes.
+
 # Non-Negotiable Rules
 
 - Verify target environment: distro, kernel, init system, container/runtime, architecture, filesystem, user, cgroup version, namespace boundaries, and package manager when relevant.
@@ -43,6 +47,14 @@ Select when Linux runtime semantics, not generic code structure, decide correctn
 # Risk Escalation Rules
 
 Escalate to `security-privacy-gate` for root services, Linux capabilities, writable directories, setuid/setgid, secret files, seccomp, or public sockets. Escalate to `reliability-observability-gate` for restart loops, resource exhaustion, signal shutdown, or host-level saturation. Escalate to `delivery-release-gate` for package manager, systemd rollout, or kernel/sysctl changes. Escalate to `low-level-systems-extension` for kernel, driver, ABI, native memory, or syscall implementation work.
+
+# Proactive Professional Triggers
+
+- **Signal:** A Linux incident is called an "environment issue" or is diagnosed from only application logs. **Hidden risk:** the host/container/service boundary, resolver, cgroup, or permission layer is stale or unverified. **Required professional action:** capture target or representative environment evidence before repair. **Route to:** `reliability-observability-gate`, `observability`. **Evidence required:** distro/kernel/init/runtime, unit or process state, relevant log slice, command output, and residual untested host or runtime.
+- **Signal:** A service, unit, package script, or container runtime change touches `User`, `Group`, `WorkingDirectory`, `EnvironmentFile`, `Restart`, `TimeoutStopSec`, `Limit*`, capabilities, seccomp, read/write paths, or log sinks without a contract. **Hidden risk:** privilege, secret exposure, restart-loop, shutdown, or filesystem behavior changes outside application tests. **Required professional action:** record the service/process/filesystem contract and rollback path. **Route to:** `delivery-release-gate`, `security-privacy-gate`. **Evidence required:** config artifact, before/after runtime boundary, validation command, rollback step, and owner.
+- **Signal:** OOM, fd exhaustion, restart loops, resolver failures, tmpfs/mount issues, or permission errors are fixed by raising limits, chmod/chown, root, cleanup, or restart only. **Hidden risk:** symptom masking leaves saturation, leakage, or incorrect ownership in production. **Required professional action:** identify the emitting Linux layer and prove the new limit or permission is bounded and observable. **Route to:** `reliability-observability-gate`, `security-privacy-gate`. **Evidence required:** observed signal, limit/path owner, command output, alert/log path, and what remains unproven under load.
+- **Signal:** A state-mutating Linux command is proposed: `systemctl restart`, package install/remove, `sysctl`, `chmod`, `chown`, mount, kill, cleanup, or privileged shell. **Hidden risk:** validation mutates host state, deletes evidence, breaks another service, or escalates privilege without rollback. **Required professional action:** classify tool permission, sandbox, dry-run, approval, and rollback before execution. **Route to:** `agent-tool-permission-sandbox`, `security-privacy-gate`. **Evidence required:** command class, write paths, privilege level, expected state change, rollback or cleanup path, and not-run status when blocked.
+- **Signal:** Repository graph, project memory, old incident notes, previous command output, or historical runbooks are reused after unit/runtime/container/env/cgroup/path edits. **Hidden risk:** stale memory or execution evidence certifies the wrong runtime boundary. **Required professional action:** treat memory, graph, and trajectory as selectors, rerun selected source reads or probes, and mark stale evidence rejected. **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected memory, changed paths, graph freshness, rerun command, exit code, and report or artifact path.
 
 # Critical Details
 
@@ -85,6 +97,7 @@ Escalate to `security-privacy-gate` for root services, Linux capabilities, writa
 
 The `SKILL.md` body carries L1/L2 routing, risk, and output-contract rules.
 
+Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete Linux Systems Usage Record, incident handoff, package/service rollout, privileged-command review, or runtime checklist.
 Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when systemd, DNS resolver, cgroup, privilege, filesystem, logging, package, or container-host behavior needs deeper operating-system benchmark support.
 Load [references/evidence-patterns.md](references/evidence-patterns.md) only when the handoff needs command evidence patterns for resolver traces, privileged command risk, rollback, logs, process state, or host/container boundary proof.
 Do not load references for ordinary application code that has no Linux-specific runtime dependency or for metadata-only documentation edits.
@@ -105,8 +118,16 @@ Return a Linux Systems Usage Record with:
 - `observability_contract` (journald/stdout/syslog, metrics, alerts, runbook commands)
 - `decision_record` (chosen change, alternatives rejected, placement rationale)
 - `validation_commands` (systemctl, journalctl, ps, ss, lsof, cat /proc, container inspect, tests, or not-run disclosure)
+- `validation_freshness` (commands or validators rerun after the final material unit/package/runtime/path/permission/config edit; stale output rejected or named)
+- `what_evidence_proves` and `what_evidence_does_not_prove` (covered host, runtime, service, container, resource, resolver, log, permission, and limits)
+- `tool_permission_boundary` (read-only vs state-mutating command, sandbox, privilege, host mutation, network behavior, and rollback)
+- `memory_graph_execution_record` (repository graph, project memory, old incident note, runbook, previous command output, or trajectory evidence accepted, rejected, stale, partial, or not used)
 - `rollback_plan` (service config restore, package rollback, permission revert, resolver/config restore)
 - `residual_risk` (unverified distro, container runtime, host policy, kernel, or production load)
+
+# Evidence Contract
+
+Close a Linux Systems Usage Record only when these answers are concrete: **boundaries inspected** across distro, kernel, init system, runtime, cgroup, user/group, filesystem, service manager, process tree, resolver, logs, privilege, package or rollout path, and rollback owner; direct source/config/command/log/probe evidence accepted or rejected; repository graph, project memory, old incident notes, runbooks, and execution trajectory used only as selectors unless rerun against current source or target runtime; validation evidence names command/test/validator/report/artifact, output summary, exit code or not-run status, and freshness after the final material edit; what evidence proves and does not prove for host, container runtime, kernel policy, cgroup pressure, DNS behavior, permissions, and production load; reuse and placement rationale for units, scripts, paths, limits, mounts, and hardening changes; behavior preservation, rollback or cleanup path, residual risk owner, and next gate.
 
 # Quality Gate
 
@@ -119,7 +140,10 @@ Return a Linux Systems Usage Record with:
 7. Resource limits and saturation signals are mapped to observability.
 8. Logs reach the intended sink with redaction, logrotate or journald retention expectations, and disk-full behavior.
 9. Rollout and rollback are safe for package/service changes.
-10. Residual risk names unverified host, kernel, runtime, or production-load behavior.
+10. Validation covers at least the changed unit, package, runtime, path, permission, resolver, or resource boundary with command output, exit code, report/artifact, or a not-run disclosure.
+11. Tool permission boundary is explicit for state-mutating commands, privileged execution, host writes, cleanup, package actions, service restarts, and rollback.
+12. Graph, memory, previous logs, old incident notes, and prior command output are freshness-checked and cannot substitute for current source/runtime evidence.
+13. Residual risk names unverified host, kernel, runtime, security module, service manager, resolver, or production-load behavior.
 
 # Used By
 

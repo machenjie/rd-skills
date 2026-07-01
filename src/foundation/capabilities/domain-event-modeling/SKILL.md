@@ -72,6 +72,17 @@ Escalate when duplicate events can cause payment, ledger, entitlement, notificat
 - **Signal:** schema changes or consumer additions rely on memory, diagrams, or graph assumptions without current source confirmation. **Hidden risk:** hidden consumers break or stale topology drives the wrong migration. **Required professional action:** inspect current producers, consumers, schemas, generated artifacts, tests, and registry/config. **Route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected memory, inspected paths, unknown consumers.
 - **Signal:** consumer retry, DLQ, replay, or idempotency is described but no owner or validation exists. **Hidden risk:** permanent stuck events, repeated side effects, or unrecoverable poison messages. **Required professional action:** define durable dedupe, DLQ owner, replay runbook, and tests. **Route to:** `idempotency-retry-design`, `quality-test-gate`, `reliability-observability-gate`. **Evidence required:** duplicate/replay/DLQ validation and residual risk.
 - **Signal:** payload includes tenant, object, permission, PII, financial, audit, health, or credential data. **Hidden risk:** durable fan-out leaks data or violates authorization boundaries. **Required professional action:** classify data, minimize payload, restrict consumers, and record residual privacy risk. **Route to:** `security-privacy-gate`, `permission-boundary-modeling`. **Evidence required:** allowed consumer list, redaction/tokenization decision, retention rule.
+- **Signal:** event approval cites a prior validation log, old topology graph, migration note, or project memory after the producer, schema, consumer registration, outbox relay, DLQ policy, or final diff changed. **Hidden risk:** stale evidence closes the catalog while hidden consumers, generated contracts, replay behavior, or rollback paths remain unverified. **Required professional action:** rerun source graph and validation after the final edit, classify stale evidence, and record the handoff owner for unknown consumers or replay scale. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`, and this capability. **Evidence required:** graph scan command/report, memory source/date, execution log path, validator exit code, stale-evidence decision, and rollback note.
+- **Signal:** generated event schema, AsyncAPI document, Avro/JSON schema, or client contract is regenerated from a different source than the producer uses.
+  **Hidden risk:** hidden contract drift breaks consumers while source tests still pass.
+  **Required professional action:** compare generated artifact, registry entry, producer payload, and consumer fixture before approving the event.
+  **Route to:** `contract-testing`, `version-compatibility`, `consumer-impact-analysis`, and this capability.
+  **Evidence required:** schema diff, registry compatibility report, generated contract path, consumer fixture output, and rollback plan.
+- **Signal:** replay or DLQ recovery is approved from a happy-path unit test without poison-message, duplicate, out-of-order, or irreversible side-effect fixtures.
+  **Hidden risk:** stale validation misses stuck events, repeated side effects, or unsafe replay in production.
+  **Required professional action:** require replay/DLQ fixtures or block release with an explicit owner and manual gate.
+  **Route to:** `quality-test-gate`, `idempotency-retry-design`, `reliability-observability-gate`, and this capability.
+  **Evidence required:** duplicate fixture, reordered-event fixture, DLQ replay command or runbook, exit code, and residual risk owner.
 
 # Critical Details
 
@@ -99,20 +110,20 @@ Domain events are not log messages, notifications, or commands. Precision failur
 
 # Failure Modes
 
-- Duplicate `PaymentCaptured` event processed twice because the consumer has no durable idempotency record.
-- `OrderCancelled` arrives before `OrderPlaced` due to partition-key mismatch and projection state becomes invalid.
-- Producer emits `InvoiceIssued.v1` before transaction commit; rollback leaves downstream accounting with a non-existent invoice.
-- Producer commits state but broker publish fails; saga waits forever for an event that was never emitted.
-- Field `amount` is renamed to `totalAmount` without versioning; consumers calculate zero or reject the message.
-- PII in event payload reaches analytics, logs, or low-trust consumers outside the permission boundary.
-- DLQ accumulates unprocessed events for days because no owner, alert, or replay tool exists.
-- Event-sourced aggregate replay takes unacceptable time because snapshot and replay constraints were not designed.
-- Saga compensation event is missing; payment capture succeeds while inventory reservation fails permanently.
-- Previous project memory names an old consumer, but the current repository contains a new hidden consumer not included in compatibility review.
+- **Duplicate side effect:** `PaymentCaptured` event processed twice because the consumer has no durable idempotency record.
+- **Ordering corruption:** `OrderCancelled` arrives before `OrderPlaced` due to partition-key mismatch and projection state becomes invalid.
+- **Ghost fact:** producer emits `InvoiceIssued.v1` before transaction commit; rollback leaves downstream accounting with a non-existent invoice.
+- **Lost fact:** producer commits state but broker publish fails; saga waits forever for an event that was never emitted.
+- **Schema compatibility break:** field `amount` is renamed to `totalAmount` without versioning; consumers calculate zero or reject the message.
+- **Privacy fan-out:** PII in event payload reaches analytics, logs, or low-trust consumers outside the permission boundary.
+- **Unowned DLQ:** DLQ accumulates unprocessed events for days because no owner, alert, or replay tool exists.
+- **Replay scale failure:** event-sourced aggregate replay takes unacceptable time because snapshot and replay constraints were not designed.
+- **Missing compensation:** saga compensation event is missing; payment capture succeeds while inventory reservation fails permanently.
+- **Stale graph closure:** previous project memory names an old consumer, but the current repository contains a new hidden consumer not included in compatibility review.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 selection, boundaries, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete event catalog, producer change, consumer addition, schema evolution, outbox path, idempotency rule, ordering policy, retry/DLQ policy, replay plan, or audit/privacy classification. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when event type classification, outbox SQL, CloudEvents/AsyncAPI shape, schema compatibility, idempotency strategy, retry/DLQ matrix, ordering/partition design, saga/audit/privacy detail, graph-memory-execution coupling, or event-to-validation mapping is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing, metadata-only edits, or event-free changes.
+The `SKILL.md` body carries L1/L2 selection, boundaries, and evidence rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete event catalog, producer change, consumer addition, schema evolution, outbox path, idempotency rule, ordering policy, retry/DLQ policy, replay plan, or audit/privacy classification. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when event type classification, outbox SQL, CloudEvents/AsyncAPI shape, schema compatibility, idempotency strategy, retry/DLQ matrix, ordering/partition design, saga/audit/privacy detail, graph-memory-execution coupling, or event-to-validation mapping is needed. Load [references/event-evidence-freshness.md](references/event-evidence-freshness.md) when repository graph, project memory, prior execution logs, generated contracts, or validation freshness decides whether an event catalog can close. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for pure routing, metadata-only edits, or event-free changes.
 
 # Output Contract
 

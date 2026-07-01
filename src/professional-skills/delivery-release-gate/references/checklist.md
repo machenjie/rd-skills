@@ -9,3 +9,4 @@
 - Choose canary, blue-green, rolling, or direct rollout.
 - Define rollback triggers, steps, and owner.
 - Prepare release notes and post-release monitoring window.
+- Record approval decision, stop condition, validation command, output/report artifact, exit code, evidence freshness, and residual risk owner.

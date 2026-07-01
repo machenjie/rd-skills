@@ -125,9 +125,10 @@ Use this capability proactively, even when the request does not ask for controll
 
 - **L1:** Use only this `SKILL.md` for routing or rejecting business logic in a controller when the route and contract are obvious.
 - **L2:** Load `references/checklist.md` when drafting or reviewing a real controller implementation plan, transport boundary review, or controller unit-test plan.
-- **L3:** Load `examples/example-output.md` when the expected output contract shape is unclear or a concise user-facing plan is needed.
-- **L4:** Pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when the controller decision depends on route wiring, middleware/auth chain, generated code, prior API decisions, tests, command output, or validation freshness.
+- **L3:** Load `references/boundary-patterns.md` when the route/service/DTO/error/authorization split is unclear, generated controllers are involved, or the controller may be doing non-transport work.
+- **L4:** Load `references/evidence-patterns.md` when closure depends on route graph, middleware/auth chain, project memory, generated artifacts, execution trajectory, validation freshness, or tool permission boundaries.
 - **L5:** Pair only selected specialist gates: `api-contract-design`, `input-validation`, `error-code-design`, `authentication-authorization`, `idempotency-retry-design`, `security-privacy-gate`, `performance-budgeting`, or `integration-testing`; do not load unrelated references for a simple thin-controller rejection.
+- Load `examples/example-output.md` only when the expected output contract shape is unclear or a concise user-facing plan is needed.
 
 # Risk Escalation Rules
 
@@ -147,18 +148,18 @@ Controllers are the first trust boundary. Every security, performance, and contr
 
 # Failure Modes
 
-- Business rule duplicated in controller and service; diverges silently when one is updated.
-- ORM entity returned directly; internal field names and relations exposed; contract breaks on schema refactor.
-- Stack trace returned in 500 response; internal service topology discoverable by clients.
-- Authorization check in controller only; route called via internal service-to-service path; BOLA bypassed.
-- Raw `req.body` passed to DB query without validation; SQL/NoSQL injection possible.
-- Status 200 returned for all errors with error field in body; monitoring, alerting, retries, and contract tests blind to errors.
-- Validation called once in controller but service called again with unvalidated path params; second injection surface.
-- `Content-Type: application/json` not set on response; client parses error as HTML 500 page from reverse proxy.
-- Controller test spins up full service + DB; slow test suite; business logic tested at wrong layer.
-- Missing `Location` header on 201 response; clients cannot retrieve created resource without additional design.
-- Idempotency key not validated; duplicate payment processed; no deduplication window.
-- Mass assignment: `user.set(req.body)` overwrites `role`, `isAdmin`, `creditBalance`.
+- **Business logic duplication:** controller and service implement the same rule and diverge silently when one is updated.
+- **Internal model leakage:** ORM entity or domain object is returned directly, exposing internal fields and breaking the API contract on schema refactor.
+- **Raw internal error exposure:** stack trace, SQL/provider message, service topology, or privileged field reaches a 5xx response body.
+- **Controller-only authorization:** object-level check lives only in the controller and is bypassed by another route, job, or internal service path.
+- **Unvalidated transport input:** raw body/query/path/header values reach DB queries, service commands, or provider calls and open SQL/NoSQL injection or coercion bugs.
+- **HTTP-semantic collapse:** all failures return 200 with an error body, making monitoring, retry, contract tests, and clients blind to real errors.
+- **Split validation surface:** controller validates one field set but service or repository receives unvalidated path params, headers, or derived identifiers.
+- **Response metadata drift:** `Content-Type`, `Location`, `Retry-After`, pagination, rate-limit, or correlation headers are missing or inconsistent with the contract.
+- **Wrong test seam:** controller tests spin up service, repository, and database, so transport mapping is slow to verify and business logic is tested in the wrong layer.
+- **Creation response gap:** 201 response omits `Location` or returns a non-contract body, forcing clients to infer follow-up behavior.
+- **Idempotency header gap:** `Idempotency-Key` is missing, malformed, or not forwarded, allowing duplicate side effects after retry or timeout.
+- **Mass assignment:** raw request binding overwrites privileged fields such as `role`, `isAdmin`, `tenantId`, or `creditBalance`.
 
 # Output Contract
 

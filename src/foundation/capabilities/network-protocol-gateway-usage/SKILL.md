@@ -19,6 +19,10 @@ Use when a change touches Nginx, Envoy, HAProxy, Apache, Cloudflare, Fastly, Clo
 
 Do not use for ordinary REST DTO field changes, internal function calls, or application-level API semantics where no network/gateway/protocol behavior changes. Use `api-contract-design` for operation-level API behavior and `integration-change-builder` for external provider business contracts.
 
+# Stage Fit
+
+Use during planning, debugging, code-review, testing, release, and incident-repair stages when protocol, gateway, edge, ingress, or hop-chain behavior can change user-visible availability, security, latency, streaming, or rollback behavior. Re-enter after DNS, certificate, CDN, WAF, load balancer, ingress, proxy, service mesh, timeout, retry, header, body-limit, path-rewrite, cache, health-check, or observability edits. Skip for application-only refactoring or DTO work where no network surface, public protocol contract, gateway config, or release route is affected.
+
 # Non-Negotiable Rules
 
 - Map every hop: client, DNS, CDN, WAF, load balancer, ingress, proxy, service mesh, app, upstream dependency, and response path.
@@ -43,6 +47,14 @@ Select when protocol or gateway behavior is the central risk: timeout chains, pr
 # Risk Escalation Rules
 
 Escalate to `security-privacy-gate` for auth header forwarding, client IP trust, CORS, cookies, TLS downgrade, WAF bypass, or public exposure. Escalate to `reliability-observability-gate` for timeout changes, retry chains, 5xx incidents, connection pool saturation, or CDN/origin failover. Escalate to `delivery-release-gate` for DNS, certificate, ingress, or load balancer rollout. Escalate to `api-contract-design` when protocol changes alter client-visible API semantics.
+
+# Proactive Professional Triggers
+
+- **Signal:** A 502, 503, 504, 524, reset, TLS, CORS, WebSocket, gRPC, or intermittent edge error is diagnosed from only the app logs. **Hidden risk:** the emitting gateway, upstream hop, timeout budget, or connection failure is stale or unverified. **Required professional action:** inspect the full hop chain and map gateway status to upstream status before repair. **Route to:** `reliability-observability-gate`, `observability`. **Evidence required:** hop map, request id, gateway log, upstream log, duration breakdown, command output, and residual untested region or client.
+- **Signal:** A timeout, retry, keepalive, connection pool, or rate-limit value is raised to stop incidents. **Hidden risk:** retry amplification, capacity exhaustion, or caller deadline mismatch is hidden behind a larger number. **Required professional action:** compare caller/gateway/app/upstream budgets and verify idempotency before changing config. **Route to:** `degradation-circuit-breaking`, `integration-change-builder`. **Evidence required:** timeout table, retry budget, idempotency decision, load/backpressure evidence, validation command, and rollback owner.
+- **Signal:** Gateway config changes `X-Forwarded-*`, `Forwarded`, `Host`, scheme, auth, cookies, CORS, TLS policy, WAF rule, cache key, or CDN behavior. **Hidden risk:** spoofed identity, tenant leak, credential exposure, cache poisoning, or public-origin bypass. **Required professional action:** classify the trust boundary and require security review before approval. **Route to:** `security-privacy-gate`, `web-security`. **Evidence required:** trusted proxy list, header policy, CORS/cookie/cache rule, redaction scan report, negative test or not-run status.
+- **Signal:** DNS, certificate, CDN, ingress, load balancer, WAF, origin shielding, or gateway route rollout is planned without rollback. **Hidden risk:** propagation delay, regional edge drift, certificate mismatch, or origin exposure blocks safe revert. **Required professional action:** document rollout order, TTL/propagation, config revert, purge, and certificate restore path. **Route to:** `delivery-release-gate`, `ci-cd`. **Evidence required:** rollout plan, rollback command or procedure, config artifact, owner, validation exit code, and live-provider residual risk.
+- **Signal:** Repository graph, project memory, old incident notes, generated configs, or previous curl output are reused for gateway closure after config edits. **Hidden risk:** stale graph or execution evidence certifies the wrong hop chain. **Required professional action:** treat graph and memory as selectors, rerun selected reads/probes, and mark stale evidence rejected. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** changed paths, accepted/rejected memory, graph freshness, probe command, exit code, report or artifact path.
 
 # Critical Details
 
@@ -84,6 +96,7 @@ Escalate to `security-privacy-gate` for auth header forwarding, client IP trust,
 
 The `SKILL.md` body carries L1/L2 routing, risk, and output-contract rules.
 
+Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete gateway/protocol record, incident handoff, or release checklist.
 Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when hop-chain, timeout/retry, CDN cache, WAF, DNS/TLS, path rewrite, or gateway rollout behavior needs deeper protocol benchmark support.
 Load [references/evidence-patterns.md](references/evidence-patterns.md) only when the handoff needs concrete curl/openssl/dig/config/log evidence, CDN cache safety proof, or rollback evidence patterns.
 Do not load references for ordinary REST DTO/API changes with no gateway, CDN, proxy, TLS, DNS, cache, or protocol behavior change.
@@ -104,9 +117,15 @@ Return a Network Protocol Gateway Record with:
 - `waf_origin_health_record` (WAF bypass rules, health check behavior, origin shielding, origin auth, failover)
 - `observability_contract` (gateway/upstream status, latency breakdown, retry count, trace id, log fields, alerts)
 - `decision_record` (change made, alternatives rejected, capacity and SLO rationale)
-- `validation_commands` (curl/openssl/dig/kubectl/nginx/envoy config test, synthetic request, log query, or not-run disclosure)
+- `validation_commands` (curl/openssl/dig/kubectl/nginx/envoy config test, synthetic request, log query, report, artifact, output, exit code, or not-run disclosure)
+- `validation_freshness` (commands or validators rerun after final gateway/protocol config edit; stale output rejected or named)
+- `what_evidence_proves` and `what_evidence_does_not_prove` (covered hop, client, provider, region, protocol, traffic shape, and limits)
 - `rollback_plan` (DNS/CDN/cache purge, certificate/gateway config restore, origin shielding or WAF revert)
 - `residual_risk` (untested client, region, resolver, edge provider, or production traffic pattern)
+
+# Evidence Contract
+
+Close a network/gateway record only when these answers are concrete: **boundaries inspected** across client, DNS, edge, WAF, load balancer, ingress/proxy, service mesh, app, upstream, and response path; direct source/config/log/probe evidence accepted or rejected; graph, memory, prior incident, generated config, and execution-trajectory claims marked accepted, rejected, stale, partial, or not used; validation evidence names command/test/validator/report/artifact, output summary, exit code or not-run status, and freshness after the final material edit; what evidence proves and does not prove for client, region, provider, live load, resolver cache, streaming silence, and failover; reuse and placement rationale for included configs and excluded hops; behavior preservation, rollback plan, residual risk owner, and next gate.
 
 # Quality Gate
 
@@ -119,7 +138,7 @@ Return a Network Protocol Gateway Record with:
 7. Security-sensitive gateway behavior is reviewed.
 8. Logs and metrics can identify the failing hop and correlate to app traces.
 9. Rollout and rollback are defined for DNS, certificate, CDN, ingress, or gateway config.
-10. Validation covers at least the changed protocol path or discloses why not.
+10. Validation covers at least the changed protocol path with command, output, exit code, report/artifact, or discloses why not.
 11. Residual risk names untested clients, regions, providers, or live-load behavior.
 
 # Used By

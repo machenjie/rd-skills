@@ -8,4 +8,7 @@
 - Define queue ordering, delivery semantics, retries, dead letter handling, and replay.
 - Define search indexing, reindexing, and reconciliation.
 - Define storage lifecycle, permissions, and recovery.
-- Add metrics, alerts, and regression tests.
+- Check migration forward path, rollback path, online/offline execution, batching, lock risk, and resumability.
+- Confirm dependency lifecycle for clients, pools, streams, subscriptions, and shutdown cleanup.
+- Add metrics, alerts, release-watch signals, and regression tests.
+- Record validation command, validator, output/report artifact, exit code, evidence limit, residual risk, and owner.

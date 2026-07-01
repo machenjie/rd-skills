@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-30T12:50:07.966971+00:00",
+  "generated_at": "2026-07-01T00:27:47.134209+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -105,8 +105,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (16)",
-      "score": 51,
-      "status": "acceptable",
+      "score": 59,
+      "status": "sample-grade",
       "warnings": []
     },
     {
@@ -177,7 +177,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (16)",
-      "score": 56,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -195,7 +195,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (3)",
-      "score": 56,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -285,7 +285,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (7)",
-      "score": 56,
+      "score": 59,
       "status": "sample-grade",
       "warnings": []
     },
@@ -915,7 +915,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (18)",
-      "score": 56,
+      "score": 60,
       "status": "sample-grade",
       "warnings": []
     },
@@ -933,7 +933,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (33)",
-      "score": 56,
+      "score": 60,
       "status": "sample-grade",
       "warnings": []
     },
@@ -1113,7 +1113,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (3)",
-      "score": 56,
+      "score": 60,
       "status": "sample-grade",
       "warnings": []
     }

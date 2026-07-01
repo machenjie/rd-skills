@@ -57,6 +57,7 @@ Start with direct code. Escalate only when a current force makes direct code wor
 - **Signal:** pattern hides network, database, cache, filesystem, queue, clock, randomness, process, thread, task, stream, subscription, or external API behavior behind a simple method call. **Hidden risk:** side-effect opacity causes timeout, retry, cleanup, cancellation, backpressure, lock, or observability gaps. **Required professional action:** expose side-effect boundary and route runtime/reliability capabilities before approval. **Route to:** `language-performance-safety`, `concurrency-control`, `reliability-observability-gate`, and `integration-change-builder` when external IO is present. **Evidence required:** side-effect map, lifecycle/cleanup owner, timeout/cancellation/backpressure rule, and validation command.
 - **Signal:** pattern changes public API, inheritance hierarchy, module boundary, dependency direction, generated client, SDK contract, or framework extension point. **Hidden risk:** local structure choice becomes downstream compatibility or architecture drift. **Required professional action:** require contract impact, substitutability, dependency-direction check, and migration/reversal plan. **Route to:** `architecture-impact-reviewer`, `contract-testing`, `consumer-impact-analysis`, and this capability. **Evidence required:** API/boundary diff, consumer inventory, compatibility tests, and rollback/deletion path.
 - **Signal:** pattern is introduced to make tests easier by exporting private helpers, mocking internals, or injecting a test-only abstraction. **Hidden risk:** tests freeze implementation details and miss public behavior. **Required professional action:** select public-behavior seam or reject the pattern. **Route to:** `testability-seam-design`, `quality-test-gate`, `code-clarity-maintainability`, and this capability. **Evidence required:** public behavior boundary, rejected private-helper access, seam map, and assertion that fails if the behavior branch is removed.
+- **Signal:** repository graph, project memory, prior execution trace, benchmark, or earlier validation is used to approve a pattern after the object graph, public contract, runtime path, or final diff has changed. **Hidden risk:** stale graph or memory accepts the wrong pattern and closes with unverified validation. **Required professional action:** verify current source graph, compare memory as hypothesis only, rerun stale execution evidence, and record the handoff owner for remaining risk. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`, and this capability. **Evidence required:** graph scan command or report, memory source/date, execution log path, validator exit code, stale evidence limit, and rollback note.
 
 # Risk Escalation Rules
 
@@ -64,7 +65,11 @@ Escalate to `architecture-impact-reviewer` when the pattern changes module bound
 
 # Reference Loading Policy
 
-Default mode is inline-only: this `SKILL.md` contains the active decision rules and output contract. Treat [references/pattern-matrix.md](references/pattern-matrix.md) as a deep reference and load it only for L3+ work, multiple pattern candidates, public interfaces/base classes/registries/providers, lifecycle/concurrency/IO/runtime risk, or AI-generated pattern usage without evidence.
+Default mode is inline-only: this `SKILL.md` contains the active decision rules and output contract. Load deep references only when the inline rules cannot safely close the decision:
+
+- [references/pattern-matrix.md](references/pattern-matrix.md): L3+ work, multiple pattern candidates, public interfaces/base classes/registries/providers, lifecycle/concurrency/IO/runtime risk, or AI-generated pattern usage without evidence.
+- [references/pattern-evidence-record.md](references/pattern-evidence-record.md): decisions that rely on repository graph, project memory, execution traces, prior validation, same-pattern scans, or stale evidence reconciliation.
+- [references/runtime-contract-coupling.md](references/runtime-contract-coupling.md): patterns that touch public contracts, generated clients, adapters, IO, concurrency, queues, pools, cancellation, backpressure, teardown, or production reliability.
 
 Do not load deep references for L1/L2 direct-code decisions where the inline output contract can name one local rule, one owner, no selected pattern, and no public API, lifecycle, concurrency, IO, or runtime risk.
 
@@ -77,6 +82,8 @@ Do not load deep references for L1/L2 direct-code decisions where the inline out
 - Behavioral patterns need current algorithm variation, state-machine behavior, command history, fan-out, traversal, or policy composition; otherwise direct code is cheaper.
 - Runtime patterns need measured contention, IO multiplexing, bounded concurrency, overload control, or dependency isolation; otherwise they add invisible lifecycle and cleanup obligations.
 - Load `references/pattern-matrix.md` when a detailed pattern-by-pattern use/reject/test comparison is needed.
+- Load `references/pattern-evidence-record.md` when graph, memory, or execution evidence could be stale or contradictory.
+- Load `references/runtime-contract-coupling.md` when a selected pattern could alter contracts, IO visibility, concurrency, queues, pools, cancellation, teardown, or reliability behavior.
 
 ## Pattern Anti-Patterns
 

@@ -64,6 +64,14 @@ Do not select it for every backend or frontend change. A simple local formatting
 
 Escalate when a business rule affects money, entitlement, tenant ownership, status/lifecycle, permission, audit, compliance, irreversible data, external contract, event semantics, or historical interpretation. Escalate when current source contradicts memory or graph suggestions, when a rule has no owner or tests, when a workflow has no forbidden transition coverage, or when a semantic change lacks owner review.
 
+# Proactive Professional Triggers
+
+- **Signal:** A task asks for business context, vocabulary, object meaning, or "understand the domain" without named source paths, owners, or current requirements. **Hidden risk:** project memory or broad prompt context becomes unverified business authority. **Required professional action:** classify each claim, inspect current source or owner material, and document open questions before implementation. **Route to:** `requirement-clarification`, `repository-context-map`. **Evidence required:** source path or owner review, claim class, accepted/rejected memory signal, open-question owner, and validation status.
+- **Signal:** A rule, policy, entitlement, reason code, calculation, tenant constraint, or permission appears only in SQL, controller code, UI logic, mapper defaults, fixtures, or tests. **Hidden risk:** hidden rule authority moves without catalog, owner, entry-point, or negative-case evidence. **Required professional action:** extract the rule record and map enforcement layer, entry points, reason codes, tests, and residual risk. **Route to:** `business-rule-extraction`, `permission-boundary-modeling`. **Evidence required:** rule_id, source path, owner, enforcement layer, positive/negative case, validation command or owner review.
+- **Signal:** Status, lifecycle, approval, cancellation, recovery, or enum changes are treated as simple data values. **Hidden risk:** forbidden transitions, actor authority, rollback, and historical state interpretation remain untested. **Required professional action:** model allowed and forbidden transitions and map each material transition to validation. **Route to:** `state-machine-modeling`, `quality-test-gate`. **Evidence required:** transition table, guard rule, actor, invalid-transition case, test or residual risk owner.
+- **Signal:** Repository graph, generated summaries, old tickets, or project memory are used to prove a business rule, owner, workflow, or golden case. **Hidden risk:** stale selector evidence certifies false business meaning. **Required professional action:** treat graph and memory as selectors, reread current source, and mark stale claims rejected or not verified. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** graph freshness, memory verdict, current-source confirmation, changed path, command/report, and evidence limit.
+- **Signal:** A refactor, generated patch, mapper/schema change, fixture update, or test rewrite changes names, defaults, filters, reason codes, or workflows. **Hidden risk:** clean code review misses semantic drift and business golden cases stop proving the intended behavior. **Required professional action:** compare the diff to the BSP and require semantic review before approval. **Route to:** `ai-code-review-refactor`, `validation-broker`. **Evidence required:** BSP diff, changed claim, source path, golden case or validation command, owner review, and residual semantic risk.
+
 # Critical Details
 
 The BSP is a precision artifact. It should record only the business semantics needed for the task and the evidence that proves or limits those claims. It must preserve evidence classes: `FACT`, `INFERENCE`, `ASSUMPTION`, `OPEN_QUESTION`, and `MEMORY_SIGNAL`. A memory event that says a rule changed is a `MEMORY_SIGNAL` until current source or owner review confirms the rule.
@@ -81,6 +89,10 @@ The BSP schema sections are `task_business_intent`, `business_vocabulary`, `busi
 - **Golden gap:** technical tests pass while business behavior is untested.
 - **Over-routing:** BSP is selected for a tiny local technical edit with no semantic signal.
 - **Under-routing:** high-risk business semantics route through coding only.
+
+# Reference Loading Policy
+
+The `SKILL.md` body carries L1/L2 BSP routing, scope, mode, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete BSP decision. Load [references/business-semantic-pack-policy.md](references/business-semantic-pack-policy.md) when a task needs the full BSP schema, evidence-class policy, or graph/memory selector limits. Load [references/business-semantic-review-policy.md](references/business-semantic-review-policy.md) when reviewing a diff, refactor, generated patch, fixture, SQL/controller/UI change, or stale-memory claim for semantic drift. Load [references/business-golden-case-policy.md](references/business-golden-case-policy.md) when business claims must map to golden cases, negative paths, validation commands, owner review, or residual risk. Use [examples/example-output.md](examples/example-output.md) only when the output shape is unclear. Do not load references for project-wide business corpus construction, personal archive mapping, or local technical edits with no semantic signal.
 
 # Output Contract
 
@@ -104,6 +116,10 @@ Return a `business_semantic_control_record` with:
 - `handoff`
 
 When a BSP artifact is produced, use `business_semantic_pack` schema version 1 and map each business claim to evidence class, source, validation/review target, and residual risk.
+
+# Evidence Contract
+
+Close a BSP decision only when these answers are concrete: **boundaries inspected** across current requirements, source paths, owners, domain objects, rule authority, workflow states, graph selectors, project memory, golden cases, tests, and review surfaces; every business claim classified as `FACT`, `INFERENCE`, `ASSUMPTION`, `OPEN_QUESTION`, or `MEMORY_SIGNAL`; graph, memory, prior summary, and execution-trajectory claims accepted, rejected, stale, partial, or not verified before they influence trust; validation evidence names command, test, validator, report, artifact, owner review, exit code or not-run status, and freshness after the final material edit; what evidence proves and does not prove for uninspected entry points, historical data, external consumers, generated artifacts, stale memory, and business owner decisions; selected/skipped reference rationale, behavior preservation, rollback note, residual risk owner, and next gate.
 
 # Quality Gate
 

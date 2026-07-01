@@ -19,6 +19,10 @@ Use when a change touches Makefiles, Ant, Bazel, Buck, Pants, Gradle, Maven, npm
 
 Do not use for a simple source-only code change where the existing build graph is not altered, for package dependency governance without build graph impact, or for shell-script safety that is better owned by `shell-cli-professional-usage`.
 
+# Stage Fit
+
+Use during planning, implementation, code-review, testing, release, and incident-repair stages when build graph, generated artifact, task-runner, cache, toolchain, or release artifact behavior can change correctness, reproducibility, test selection, or deployability. Re-enter after Makefile, BUILD, Gradle, Maven, npm/pnpm/yarn script, Nx/Turborepo/Pants/Buck, codegen config, lockfile, compiler flag, toolchain, CI target, cache, artifact packaging, or generated-output edits. Skip for source-only changes where the authoritative build graph, generated outputs, test-selection graph, caches, and release artifacts are unchanged.
+
 # Non-Negotiable Rules
 
 - Every generated artifact has a declared source, generator, output path, committed/ignored policy, and drift check.
@@ -43,6 +47,14 @@ Select when build graph, generated artifact, cache correctness, task orchestrati
 # Risk Escalation Rules
 
 Escalate to `delivery-release-gate` when build output is shipped, published, containerized, signed, or used for deployment. Escalate to `security-privacy-gate` for supply-chain provenance, untrusted codegen plugins, secrets in build logs, or network downloads. Escalate to `architecture-impact-reviewer` when build graph boundaries reveal module dependency drift. Escalate to `quality-test-gate` when build target changes alter test selection or generated-contract validation.
+
+# Proactive Professional Triggers
+
+- **Signal:** A build failure is "fixed" by changing only a local command, alias, glob, classpath, `PATH`, env var, or strict-deps flag. **Hidden risk:** the authoritative CI/release target still uses a different graph or hides an undeclared input. **Required professional action:** identify the source-of-truth target and compare local, CI, and release commands before accepting the fix. **Route to:** `ci-cd`, `validation-broker`. **Evidence required:** authoritative command, changed inputs/outputs, failing/passing target output, and mismatch or alignment note.
+- **Signal:** Generated files, clients, schemas, protobuf/OpenAPI outputs, lockfiles, or compiled assets change without the source spec, generator config, or drift command. **Hidden risk:** generated output becomes the false source of truth and consumers compile stale behavior. **Required professional action:** establish source/generator/output policy and run or disclose drift validation. **Route to:** `data-format-contract-usage`, `contract-testing`. **Evidence required:** source spec, generator version/config, output path, committed/ignored decision, drift command output or not-run owner.
+- **Signal:** Monorepo affected-test, task-cache, remote-cache, or build-cache behavior is trusted after changing generated inputs, package boundaries, lockfiles, env config, compiler flags, or toolchain versions. **Hidden risk:** graph under-selection or stale cache returns green evidence for untested consumers. **Required professional action:** verify task graph edges and cache-key inputs, then rerun without suspect cache when needed. **Route to:** `quality-test-gate`, `repository-graph-analysis`. **Evidence required:** affected target list, cache key inputs, generated/transitive consumers, cache bypass or invalidation result, and residual untested consumers.
+- **Signal:** Build validation writes to source, `dist/`, HOME, global caches, package registries, or network resources without permission and sandbox classification. **Hidden risk:** validation mutates user state, pollutes caches, leaks secrets, or turns a read check into a release action. **Required professional action:** classify tool permission before execution and isolate or dry-run writes. **Route to:** `agent-tool-permission-sandbox`, `security-privacy-gate`. **Evidence required:** command class, write paths, network behavior, sandbox boundary, redaction rule, and rollback or cleanup path.
+- **Signal:** Repository graph, project memory, previous CI logs, or old build artifacts are reused after build config, lockfile, generated source, toolchain, or task graph edits. **Hidden risk:** stale memory or graph evidence certifies the wrong build boundary. **Required professional action:** treat graph and memory as selectors, rerun selected source reads and build probes, and mark stale execution evidence rejected. **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `repository-graph-analysis`. **Evidence required:** accepted/rejected memory, graph freshness, changed paths, rerun validator command, exit code, and report/artifact path.
 
 # Critical Details
 
@@ -82,6 +94,7 @@ Escalate to `delivery-release-gate` when build output is shipped, published, con
 
 The `SKILL.md` body carries L1/L2 routing, risk, and output-contract rules.
 
+Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete build-tool usage record, generated-artifact handoff, cache/test-selection review, or release artifact checklist.
 Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when build graph semantics, generated-source policy, Make/Ant/Bazel/Maven/Gradle behavior, cache correctness, or artifact reproducibility needs deeper benchmark support.
 Load [references/evidence-patterns.md](references/evidence-patterns.md) only when the handoff needs concrete build evidence, generated-drift proof, cache/provenance records, or CI/local comparison patterns.
 Do not load references for source-only changes that do not alter build graph, generated outputs, cache keys, toolchains, or release artifacts.
@@ -102,8 +115,15 @@ Return a Build Tool Usage Record with:
 - `artifact_contract` (artifact path, checksum/digest, provenance/signing, reproducibility status)
 - `decision_record` (change made, alternatives rejected, placement rationale)
 - `validation_commands` (build, affected tests, codegen, cache/drift check, reproducibility check)
+- `validation_freshness` (commands or validators rerun after the final material build/config/generated edit; stale output rejected or named)
+- `what_evidence_proves` and `what_evidence_does_not_prove` (covered target, platform, cache mode, generated output, release artifact, and limits)
 - `tool_permission_boundary` (read-only vs generated-output write vs cache/artifact write)
+- `memory_graph_execution_record` (repository graph, project memory, previous log, or trajectory evidence accepted, rejected, stale, partial, or not used)
 - `residual_risk` (unproven platform, remote cache, release artifact, generator, or downstream consumer)
+
+# Evidence Contract
+
+Close a build-tool record only when these answers are concrete: **boundaries inspected** across build files, task runner config, generated sources, lockfiles, toolchain, environment, cache, CI target, release artifact, and write paths; direct source/config/build-output evidence accepted or rejected; repository graph, project memory, old CI logs, generated artifacts, and execution trajectory used only as selectors unless rerun against current source; validation evidence names command/test/validator/report/artifact, output summary, exit code or not-run status, and freshness after the final material edit; what evidence proves and does not prove for platform, cache mode, remote execution, generated drift, downstream consumers, and release artifact reproducibility; reuse and placement rationale for new build targets, generators, scripts, outputs, or cache rules; behavior preservation, rollback or cleanup path, residual risk owner, and next gate.
 
 # Quality Gate
 
@@ -115,7 +135,9 @@ Return a Build Tool Usage Record with:
 6. Monorepo affected-task graph includes generated and transitive consumers.
 7. Release artifacts have command, path, digest, and provenance/signing status where relevant.
 8. Tool permission boundary states generated-output, cache, artifact, HOME, and network behavior.
-9. Residual risk names untested platform, remote execution, downstream package, or cache state.
+9. Validation covers at least the changed build/generator/cache/artifact path with command output, exit code, report/artifact, or a not-run disclosure.
+10. Graph, memory, previous logs, and old artifacts are freshness-checked and cannot substitute for current source/build validation.
+11. Residual risk names untested platform, remote execution, downstream package, release artifact, generator, or cache state.
 
 # Used By
 
