@@ -1,9 +1,9 @@
 {
   "actual_output_comparison": "deterministic rule heuristic; auto mode compares baseline_output.md and with_skill_output.md when both exist",
-  "cases_checked": 30,
-  "comparison_cases_checked": 30,
+  "cases_checked": 31,
+  "comparison_cases_checked": 31,
   "errors": [],
-  "generated_at": "2026-07-01T06:20:51.670243+00:00",
+  "generated_at": "2026-07-01T08:42:31.035443+00:00",
   "mode": "auto",
   "results": [
     {
@@ -3963,6 +3963,160 @@
       "forbidden_behavior_hits": [],
       "missing_expected_items": [],
       "path": "evals/professional-benchmarks/release/migration-without-rollback",
+      "professional_delta_summary": {
+        "baseline_missing": [
+          "selected stage",
+          "selected professional skill",
+          "selected capabilities",
+          "expected hidden risks",
+          "expected evidence",
+          "expected output obligations",
+          "inspected boundaries",
+          "what evidence does not prove",
+          "residual risk",
+          "residual risk owner",
+          "next gate",
+          "validation command or not-verified disclosure",
+          "validation command outcome"
+        ],
+        "delta_score": 13,
+        "forbidden_behavior_hits": [],
+        "note": "deterministic rule heuristic; not an LLM judge",
+        "remaining_gaps": [],
+        "with_skill_present": [
+          "selected stage",
+          "selected professional skill",
+          "selected capabilities",
+          "expected hidden risks",
+          "forbidden behaviors avoided",
+          "expected evidence",
+          "expected output obligations",
+          "inspected boundaries",
+          "what evidence does not prove",
+          "residual risk",
+          "residual risk owner",
+          "next gate",
+          "validation command or not-verified disclosure",
+          "validation command outcome",
+          "route relevance"
+        ]
+      },
+      "remaining_gaps": [],
+      "schema_status": "pass",
+      "with_skill_obligation_coverage": [
+        "selected stage",
+        "selected professional skill",
+        "selected capabilities",
+        "expected hidden risks",
+        "forbidden behaviors avoided",
+        "expected evidence",
+        "expected output obligations",
+        "inspected boundaries",
+        "what evidence does not prove",
+        "residual risk",
+        "residual risk owner",
+        "next gate",
+        "validation command or not-verified disclosure",
+        "validation command outcome",
+        "route relevance"
+      ]
+    },
+    {
+      "adversarial_detection_status": "not-applicable",
+      "baseline_defect_hits": [
+        "accept internal skill-system changes without senior judgment because they are not product code"
+      ],
+      "benchmark_quality_status": "pass",
+      "case_id": "evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime",
+      "comparison": {
+        "baseline_coverage": {
+          "evidence_limits": false,
+          "expected_evidence": false,
+          "expected_hidden_risks": false,
+          "expected_output_obligations": false,
+          "forbidden_behaviors_absent": true,
+          "forbidden_hits": [],
+          "inspected_boundaries": false,
+          "matched_evidence": [],
+          "matched_hidden_risks": [],
+          "matched_obligations": [
+            "senior programming judgment summary"
+          ],
+          "next_gate": false,
+          "residual_risk": false,
+          "residual_risk_owner": false,
+          "route_relevance": true,
+          "score": 2,
+          "selected_capabilities": false,
+          "selected_professional_skill": false,
+          "selected_stage": false,
+          "validation_or_not_verified": false,
+          "validation_outcome": false
+        },
+        "baseline_defect_hits": [
+          "accept internal skill-system changes without senior judgment because they are not product code"
+        ],
+        "baseline_path": "evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime/baseline_output.md",
+        "baseline_score": 2,
+        "errors": [],
+        "improvement": 13,
+        "mode": "comparison",
+        "with_skill_coverage": {
+          "evidence_limits": true,
+          "expected_evidence": true,
+          "expected_hidden_risks": true,
+          "expected_output_obligations": true,
+          "forbidden_behaviors_absent": true,
+          "forbidden_hits": [],
+          "inspected_boundaries": true,
+          "matched_evidence": [
+            "senior_programming_judgment with purpose facts objects states behaviors rules invariants boundaries failure contract side effects reuse and placement minimality validation map observability map residual risk",
+            "focused hook tests for warning-only and existing block mode behavior",
+            "routing and professionalism eval fixtures proving senior-programming-judgment-core is selected"
+          ],
+          "matched_hidden_risks": [
+            "hook warning or block behavior changes without judgment evidence",
+            "router selects a generic persona or business semantic control plane instead of an evidence gate",
+            "eval coverage claims senior judgment without checking required fields"
+          ],
+          "matched_obligations": [
+            "senior programming judgment summary",
+            "source and generated boundary",
+            "validation evidence and residual risk"
+          ],
+          "next_gate": true,
+          "residual_risk": true,
+          "residual_risk_owner": true,
+          "route_relevance": true,
+          "score": 15,
+          "selected_capabilities": true,
+          "selected_professional_skill": true,
+          "selected_stage": true,
+          "validation_or_not_verified": true,
+          "validation_outcome": true
+        },
+        "with_skill_path": "evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime/with_skill_output.md",
+        "with_skill_score": 15
+      },
+      "comparison_status": "pass",
+      "delta_score": 13,
+      "errors": [],
+      "expected_capabilities": [
+        "senior-programming-judgment-core",
+        "engineering-stage-professionalism",
+        "skill-authoring-expert",
+        "implementation-structure-design",
+        "validation-broker",
+        "agent-execution-discipline"
+      ],
+      "expected_skills": [
+        "change-forge-router"
+      ],
+      "expected_stage": "skill-authoring",
+      "expected_with_skill_status": "pass",
+      "forbidden_behavior_hits": [],
+      "missing_expected_items": [],
+      "path": "evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime",
       "professional_delta_summary": {
         "baseline_missing": [
           "selected stage",

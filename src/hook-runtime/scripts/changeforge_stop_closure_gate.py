@@ -18,6 +18,7 @@ from changeforge_common import (
     extract_implementation_preflight_fields,
     extract_manifest_fields,
     extract_repository_context_fields,
+    extract_senior_programming_judgment_fields,
     is_stop,
     load_state,
     memory_closure_advice,
@@ -104,6 +105,20 @@ WORKFLOW_CLOSURE_KEYWORDS = {
         "re-run",
         "rerun",
         "latest edit",
+    ],
+    "senior_programming_judgment": [
+        "senior programming judgment",
+        "senior_programming_judgment",
+        "purpose",
+        "facts",
+        "objects",
+        "states",
+        "behaviors",
+        "rules",
+        "invariants",
+        "failure contract",
+        "validation map",
+        "observability map",
     ],
 }
 
@@ -525,6 +540,16 @@ def _main() -> int:
         skill_efficacy_benchmark_seen=signals["skill_efficacy"],
         plan_execution_consistency_seen=signals["plan_execution_consistency"],
         validation_freshness_seen=signals["validation_freshness"],
+        senior_programming_judgment_required=_senior_programming_judgment_required(state),
+        senior_programming_judgment_seen=bool(
+            state.get("senior_programming_judgment_seen")
+            or extract_senior_programming_judgment_fields(final_text).get("present")
+        ),
+        senior_programming_judgment_complete=signals["senior_programming_judgment"],
+        senior_programming_judgment_blocked=bool(
+            _senior_programming_judgment_required(state)
+            and not signals["senior_programming_judgment"]
+        ),
         implementation_preflight_required=bool(
             state.get("implementation_preflight_required")
         ),
@@ -594,6 +619,9 @@ def _has_closure_surface(state: dict) -> bool:
         or state.get("implementation_preflight_required")
         or state.get("implementation_preflight_seen")
         or state.get("implementation_preflight_complete")
+        or state.get("senior_programming_judgment_required")
+        or state.get("senior_programming_judgment_seen")
+        or state.get("senior_programming_judgment_complete")
         or state.get("pre_edit_structure_findings")
         or state.get("edit_without_preflight_seen")
         or state.get("post_edit_confirmed_preflight_gap")
@@ -643,6 +671,7 @@ def _closure_signals(
     """
     lowered = final_text.casefold()
     repository_context = extract_repository_context_fields(final_text)
+    senior_judgment = extract_senior_programming_judgment_fields(final_text)
 
     def has(group: str) -> bool:
         return any(keyword.casefold() in lowered for keyword in CLOSURE_KEYWORDS[group])
@@ -668,6 +697,12 @@ def _closure_signals(
         or bool(state.get("plan_execution_consistency_seen")),
         "validation_freshness": _has_workflow_keyword(lowered, "validation_freshness")
         or bool(state.get("validation_freshness_seen")),
+        "senior_programming_judgment": bool(senior_judgment.get("complete"))
+        or bool(state.get("senior_programming_judgment_complete"))
+        or (
+            senior_judgment.get("allowed_skip")
+            and _has_workflow_keyword(lowered, "senior_programming_judgment")
+        ),
         "completion_language": any(
             phrase.casefold() in lowered for phrase in COMPLETION_LANGUAGE
         ),
@@ -707,6 +742,7 @@ def _stop_findings(state: dict) -> dict[str, list[str]]:
             "branch_route_repair_summaries",
             "route_repair_forbidden_retries",
             "implementation_preflights",
+            "senior_programming_judgments",
             "pre_edit_structure_findings",
         )
     }
@@ -750,6 +786,10 @@ def _closure_message(
         details.append(
             f"- implementation preflights: {', '.join(state['implementation_preflights'][:4])}"
         )
+    if state.get("senior_programming_judgments"):
+        details.append(
+            f"- senior programming judgments: {', '.join(state['senior_programming_judgments'][:4])}"
+        )
     if state.get("edit_without_preflight_seen"):
         details.append("- edit occurred without complete implementation preflight")
     if state.get("risk_surfaces"):
@@ -773,6 +813,7 @@ def _closure_message(
         ("skill efficacy benchmark", "skill_efficacy_benchmark_seen"),
         ("plan-execution consistency", "plan_execution_consistency_seen"),
         ("validation freshness", "validation_freshness_seen"),
+        ("senior programming judgment", "senior_programming_judgment_complete"),
     ):
         if state.get(state_key):
             details.append(f"- {label} signal was observed")
@@ -866,6 +907,18 @@ def _closure_message(
             " object/module boundary rationale when relevant, test plan, residual"
             " risk, and rollback/revert path."
         )
+    if _senior_programming_judgment_required(state) and not _has_senior_programming_judgment_evidence(
+        final_text, state
+    ):
+        headline += (
+            " MISSING: senior programming judgment evidence is incomplete."
+            " Before final handoff, include the senior_programming_judgment"
+            " summary with purpose, facts, objects, states, behaviors, rules,"
+            " invariants, boundaries, failure contract, side effects, reuse and"
+            " placement, minimality decision, validation map, observability map,"
+            " and residual risk, or an allowed skip_reason for trivial or"
+            " no-semantic engineering work."
+        )
     stage_missing = _stage_missing_groups(final_text, state)
     if stage_missing:
         headline += (
@@ -894,6 +947,7 @@ This turn changed files, read code, reviewed artifacts, or triggered risk surfac
 - workflow state summary: current stage, allowed transition, owner/reviewer split, validation freshness, and repair/re-review state
 - tool permission/sandbox record when risky tools, connectors, network writes, deploys, migrations, destructive actions, or secret-bearing commands were used
 - changeforge_implementation_preflight summary when edits occurred: read evidence, placement decision, reuse ladder, object/module boundary, test plan, risk and rollback/revert path
+- senior_programming_judgment summary when non-trivial engineering edits occurred: purpose, facts, objects, states, behaviors, rules, invariants, boundaries, failure contract, side effects, reuse and placement, minimality decision, validation map, observability map, and residual risk
 - structure/reuse/placement rationale if structure gate fired
 - plan-execution consistency: accepted plan vs actual changed files, validation commands, skipped work, stale evidence, and residual risk
 - skill-efficacy benchmark evidence when skill, routing, stage, hook, eval, or benchmark behavior changed
@@ -1142,6 +1196,10 @@ def _missing_keyword_groups(
         text, state
     ):
         missing.append("implementation_preflight")
+    if _senior_programming_judgment_required(state) and not _has_senior_programming_judgment_evidence(
+        text, state
+    ):
+        missing.append("senior_programming_judgment")
     for group in _stage_missing_groups(text, state):
         if group not in missing:
             missing.append(group)
@@ -1286,6 +1344,7 @@ def _workflow_state_key(group: str) -> str:
         "skill_efficacy": "skill_efficacy_benchmark_seen",
         "plan_execution_consistency": "plan_execution_consistency_seen",
         "validation_freshness": "validation_freshness_seen",
+        "senior_programming_judgment": "senior_programming_judgment_complete",
     }.get(group, "")
 
 
@@ -1367,6 +1426,48 @@ def _has_implementation_preflight_evidence(text: str, state: dict) -> bool:
     if state.get("advanced_refactor_findings") or state.get("pre_edit_structure_findings"):
         return "object" in lowered or "boundary" in lowered or "module" in lowered
     return True
+
+
+def _senior_programming_judgment_required(state: dict) -> bool:
+    profile = _closure_profile(state)
+    if profile in {"silent", "read_review"}:
+        return False
+    return bool(
+        state.get("senior_programming_judgment_required")
+        or state.get("pre_edit_missing_senior_programming_judgment")
+        or state.get("changed_paths")
+    )
+
+
+def _has_senior_programming_judgment_evidence(text: str, state: dict) -> bool:
+    if state.get("senior_programming_judgment_complete"):
+        return True
+    if not text:
+        return False
+    manifest = extract_senior_programming_judgment_fields(text)
+    if manifest.get("present"):
+        return bool(manifest.get("complete"))
+    lowered = text.casefold()
+    required_terms = (
+        "senior programming judgment",
+        "purpose",
+        "facts",
+        "objects",
+        "states",
+        "behaviors",
+        "rules",
+        "invariants",
+        "boundaries",
+        "failure contract",
+        "side effects",
+        "reuse",
+        "placement",
+        "minimality",
+        "validation map",
+        "observability map",
+        "residual risk",
+    )
+    return all(term in lowered for term in required_terms)
 
 
 def _validation_broker_assessment(final_text: str, state: dict, mode: str) -> dict:

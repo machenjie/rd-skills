@@ -61,6 +61,7 @@ ENHANCED_FOUNDATION_CAPABILITIES = {
     "implementation-structure-design",
     "code-clarity-maintainability",
     "skill-authoring-expert",
+    "senior-programming-judgment-core",
 }
 
 KEY_FOUNDATION_CAPABILITIES = {
@@ -105,6 +106,7 @@ KEY_FOUNDATION_CAPABILITIES = {
     "cleanup-deletion-governance",
     "minimal-correct-implementation",
     "code-element-professionalism",
+    "senior-programming-judgment-core",
 }
 
 SECTION_ALIASES = {
@@ -344,6 +346,24 @@ MINIMAL_CORRECTNESS_TERMS = (
     "residual risk",
 )
 
+SENIOR_PROGRAMMING_JUDGMENT_TERMS = (
+    "purpose",
+    "facts",
+    "objects",
+    "states",
+    "behaviors",
+    "rules",
+    "invariants",
+    "boundaries",
+    "failure contract",
+    "side effects",
+    "reuse and placement",
+    "minimality",
+    "validation map",
+    "observability map",
+    "residual risk",
+)
+
 
 @dataclass
 class WarningRecord:
@@ -398,6 +418,7 @@ class CoverageRow:
     failure_modes: str
     quality_gate: str
     reference_loading_hint: str
+    senior_programming_judgment_coverage: str
     routing_coverage: str
     benchmark_coverage: str
     anti_bloat_status: str
@@ -1712,6 +1733,7 @@ def _build_coverage_matrix(items: list[SkillScore]) -> CoverageMatrixReport:
             title: _extract_section(body, title)
             for title in (
                 "Stage Fit",
+                "Selection Rules",
                 "Mode Matrix",
                 "Proactive Professional Triggers",
                 "Evidence Contract",
@@ -1757,6 +1779,10 @@ def _build_coverage_matrix(items: list[SkillScore]) -> CoverageMatrixReport:
             or any(term.casefold() in body.casefold() for term in REFERENCE_HINT_TERMS),
             partial=bool(_reference_files(path)),
         )
+        senior_programming_judgment_coverage = _senior_programming_judgment_coverage(
+            item.name,
+            body,
+        )
         routing_coverage = _coverage_count_cell(routing_counts.get(item.name, 0))
         benchmark_coverage = _coverage_count_cell(benchmark_counts.get(item.name, 0))
         if item.name == "change-forge-router":
@@ -1777,6 +1803,7 @@ def _build_coverage_matrix(items: list[SkillScore]) -> CoverageMatrixReport:
                 failure_modes=failure_modes,
                 quality_gate=quality_gate,
                 reference_loading_hint=reference_hint,
+                senior_programming_judgment_coverage=senior_programming_judgment_coverage,
                 routing_coverage=routing_coverage,
                 benchmark_coverage=benchmark_coverage,
                 anti_bloat_status=_anti_bloat_status(item.dimensions.get("anti_bloat_control", 0)),
@@ -1802,6 +1829,21 @@ def _coverage_cell(ok: bool, partial: bool = False) -> str:
 
 def _coverage_count_cell(count: int) -> str:
     return f"yes ({count})" if count else "no"
+
+
+def _senior_programming_judgment_coverage(name: str, body: str) -> str:
+    folded = re.sub(r"[_-]+", " ", body.casefold())
+    in_scope = (
+        name == "senior-programming-judgment-core"
+        or "senior programming judgment" in folded
+        or "senior programming judgment" in name.replace("-", " ")
+    )
+    if not in_scope:
+        return "n/a"
+    hits = sum(1 for term in SENIOR_PROGRAMMING_JUDGMENT_TERMS if term in folded)
+    if hits == len(SENIOR_PROGRAMMING_JUDGMENT_TERMS):
+        return "yes"
+    return f"partial ({hits}/{len(SENIOR_PROGRAMMING_JUDGMENT_TERMS)})" if hits else "no"
 
 
 def _routing_fixture_count() -> int:
@@ -1961,8 +2003,8 @@ def _render_coverage_markdown(report: CoverageMatrixReport) -> str:
         f"- Generated: {report.generated_at}",
         f"- Rows checked: {report.rows_checked}",
         "",
-        "| Item | Kind | Mode Matrix | Proactive Triggers | Evidence Contract | Output Contract | Failure Modes | Quality Gate | Reference Loading Hint | Routing Coverage | Benchmark Coverage | Anti-bloat Status | Status |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+        "| Item | Kind | Mode Matrix | Proactive Triggers | Evidence Contract | Output Contract | Failure Modes | Quality Gate | Reference Loading Hint | Senior Programming Judgment Coverage | Routing Coverage | Benchmark Coverage | Anti-bloat Status | Status |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for row in report.rows:
         lines.append(
@@ -1978,6 +2020,7 @@ def _render_coverage_markdown(report: CoverageMatrixReport) -> str:
                     row.failure_modes,
                     row.quality_gate,
                     row.reference_loading_hint,
+                    row.senior_programming_judgment_coverage,
                     row.routing_coverage,
                     row.benchmark_coverage,
                     row.anti_bloat_status,

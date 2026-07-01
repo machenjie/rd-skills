@@ -98,7 +98,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 
 - `recommended`: `pass` - recommended top-level count is 21
 - `full`: `pass` - full top-level count is 28
-- `dev`: `pass` - dev top-level count is 163
+- `dev`: `pass` - dev top-level count is 164
 
 ## Repair Hints
 

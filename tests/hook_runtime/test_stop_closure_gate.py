@@ -168,6 +168,66 @@ STAGE_ROUTE_MANIFEST = (
     "```\n"
 )
 
+SENIOR_JUDGMENT_MANIFEST = (
+    "```yaml\n"
+    "senior_programming_judgment:\n"
+    "  schema_version: 1\n"
+    "  required: true\n"
+    "  purpose:\n"
+    "    why_exists: hook closure behavior changed\n"
+    "    current_behavior: senior judgment is not checked\n"
+    "    desired_behavior: closure checks bounded senior judgment evidence\n"
+    "  facts:\n"
+    "    source_backed:\n"
+    "      - fact: stop gate owns closure reminders\n"
+    "        source: src/hook-runtime/scripts/changeforge_stop_closure_gate.py\n"
+    "  objects:\n"
+    "    - name: StopClosureGate\n"
+    "      kind: hook\n"
+    "      owner: src/hook-runtime/scripts/changeforge_stop_closure_gate.py\n"
+    "  states:\n"
+    "    - object: senior judgment state\n"
+    "      allowed_transitions: [required, complete]\n"
+    "  behaviors:\n"
+    "    - behavior: require senior judgment closure evidence\n"
+    "      owner_object_or_module: changeforge_stop_closure_gate.py\n"
+    "  rules:\n"
+    "    - rule: non-trivial engineering edits need senior judgment evidence\n"
+    "      enforcement_layer: stop closure hook\n"
+    "  invariants:\n"
+    "    - invariant: hooks remain warning-only unless block mode is configured\n"
+    "      protected_by: hook tests\n"
+    "  boundaries:\n"
+    "    module_boundaries:\n"
+    "      - src/hook-runtime/scripts\n"
+    "  failure_contract:\n"
+    "    expected_failures:\n"
+    "      - false positive warning\n"
+    "    rollback_or_compensation: revert patch\n"
+    "  side_effects:\n"
+    "    persistence:\n"
+    "      - bounded hook state\n"
+    "    external_io: []\n"
+    "  reuse_and_placement:\n"
+    "    selected_location: src/hook-runtime/scripts/changeforge_stop_closure_gate.py\n"
+    "    existing_candidates:\n"
+    "      - existing implementation preflight closure pattern\n"
+    "  minimality_decision:\n"
+    "    simplest_correct_path: add one bounded manifest check\n"
+    "    rejected_abstractions:\n"
+    "      - new parser dependency\n"
+    "  validation_map:\n"
+    "    acceptance_to_test:\n"
+    "      - python3 -m unittest tests/hook_runtime/test_stop_closure_gate.py\n"
+    "  observability_map:\n"
+    "    no_log_rationale: telemetry stores booleans and summaries only\n"
+    "  residual_risk:\n"
+    "    - risk: parser is line-oriented\n"
+    "      owner: quality-test-gate\n"
+    "      next_gate: test\n"
+    "```\n"
+)
+
 
 class StopClosureGateTests(unittest.TestCase):
     def test_skill_efficacy_required_uses_behavior_classifier(self) -> None:
@@ -233,6 +293,16 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertIn("implementation preflight evidence is incomplete", result.stdout)
         self.assertIn("implementation_preflight", result.stdout)
+
+    def test_changed_paths_without_senior_judgment_warns(self) -> None:
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": "Changed files. Risk noted."}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, changed_paths=["a.go"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("senior programming judgment evidence is incomplete", result.stdout)
+        self.assertIn("senior_programming_judgment", result.stdout)
 
     def test_edit_without_preflight_seen_requests_preflight_evidence(self) -> None:
         event = {"hook_event_name": "Stop", "runtime": "claude", "response": "Changed files. Risk noted."}
@@ -423,6 +493,7 @@ class StopClosureGateTests(unittest.TestCase):
                 "Validation freshness: latest edit covered by the hook validator. Next steps: deploy.\n\n"
                 f"{REPOSITORY_CONTEXT_MANIFEST}\n"
                 f"{PREFLIGHT_MANIFEST}\n"
+                f"{SENIOR_JUDGMENT_MANIFEST}\n"
                 f"{STAGE_ROUTE_MANIFEST}\n"
                 "```yaml\n"
                 "changeforge_route:\n"
@@ -430,6 +501,7 @@ class StopClosureGateTests(unittest.TestCase):
                 "    - backend-change-builder\n"
                 "  selected_capabilities:\n"
                 "    - implementation-structure-design\n"
+                "    - senior-programming-judgment-core\n"
                 "  required_references:\n"
                 "    - references/routing-rules.md\n"
                 "  required_quality_gates:\n"
@@ -466,6 +538,7 @@ class StopClosureGateTests(unittest.TestCase):
                 "Validation freshness: latest edit covered by the hook validator. Next steps: review.\n\n"
                 f"{REPOSITORY_CONTEXT_MANIFEST}\n"
                 f"{PREFLIGHT_MANIFEST}\n"
+                f"{SENIOR_JUDGMENT_MANIFEST}\n"
                 f"{STAGE_ROUTE_MANIFEST}\n"
                 "```yaml\n"
                 "changeforge_route:\n"
@@ -473,6 +546,7 @@ class StopClosureGateTests(unittest.TestCase):
                 "    - backend-change-builder\n"
                 "  selected_capabilities:\n"
                 "    - implementation-structure-design\n"
+                "    - senior-programming-judgment-core\n"
                 "  required_references:\n"
                 "    - references/routing-rules.md\n"
                 "  required_quality_gates:\n"
@@ -490,6 +564,61 @@ class StopClosureGateTests(unittest.TestCase):
                 implementation_preflight_required=True,
                 implementation_preflight_seen=True,
                 implementation_preflight_complete=True,
+                senior_programming_judgment_required=True,
+                senior_programming_judgment_seen=True,
+                senior_programming_judgment_complete=True,
+            )
+            result = run_stop(event, cwd, cache, mode="block", agent="codex")
+        self.assertEqual(result.returncode, 0)
+        payload = json.loads(result.stdout)
+        self.assertNotEqual(payload.get("decision"), "block")
+
+    def test_complete_senior_judgment_does_not_block(self) -> None:
+        response = (
+            "I used the ChangeForge skill path. Changed files are listed. "
+            "Validation: ran python3 scripts/validate-hooks.py, exit 0. Residual risk is none. "
+            "Repository context: owning surface and caller/callee flow inspected. "
+            "Workflow state: current stage testing, allowed transition review, owner/reviewer split recorded. "
+            "Plan-execution consistency: accepted plan vs actual changed files and validation commands reconciled. "
+            "Skill efficacy benchmark: senior programming judgment hook behavior has focused fixtures. "
+            "Senior programming judgment: purpose, facts, objects, states, behaviors, rules, invariants, boundaries, failure contract, side effects, reuse and placement, minimality decision, validation map, observability map, and residual risk are recorded. "
+            "Validation freshness: latest edit covered by the hook validator. Next steps: review.\n\n"
+            f"{REPOSITORY_CONTEXT_MANIFEST}\n"
+            f"{PREFLIGHT_MANIFEST}\n"
+            f"{SENIOR_JUDGMENT_MANIFEST}\n"
+            f"{STAGE_ROUTE_MANIFEST}\n"
+            "```yaml\n"
+            "changeforge_route:\n"
+            "  selected_skills:\n"
+            "    - backend-change-builder\n"
+            "  selected_capabilities:\n"
+            "    - implementation-structure-design\n"
+            "    - senior-programming-judgment-core\n"
+            "  required_references:\n"
+            "    - references/routing-rules.md\n"
+            "  required_quality_gates:\n"
+            "    - quality-test-gate\n"
+            "```\n"
+        )
+        event = {
+            "hook_event_name": "Stop",
+            "runtime": "codex",
+            "stop_hook_active": False,
+            "last_assistant_message": response,
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(
+                cwd,
+                cache,
+                runtime="codex",
+                changed_paths=["src/hook-runtime/scripts/changeforge_stop_closure_gate.py"],
+                implementation_preflight_required=True,
+                implementation_preflight_seen=True,
+                implementation_preflight_complete=True,
+                senior_programming_judgment_required=True,
+                senior_programming_judgment_seen=True,
+                senior_programming_judgment_complete=True,
             )
             result = run_stop(event, cwd, cache, mode="block", agent="codex")
         self.assertEqual(result.returncode, 0)

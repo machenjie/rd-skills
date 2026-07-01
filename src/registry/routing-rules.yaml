@@ -34,14 +34,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 21 professional skills
-    foundation_mode: 135 foundation capabilities compiled into professional references
+    foundation_mode: 136 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 21 professional skills and 7 domain extensions
-    foundation_mode: 135 foundation capabilities compiled into professional references
+    foundation_mode: 136 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 21 professional skills, 135 foundation capabilities, and 7 domain extensions
+    top_level: 21 professional skills, 136 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -346,6 +346,9 @@ risk_escalation_triggers:
   - edit before read
   - stop without residual risk
   - skipped engineering stage
+  - senior programming judgment missing
+  - non-trivial engineering without senior judgment
+  - senior_programming_judgment incomplete
 quality_gates:
   - PDD gate
   - DDD gate
@@ -574,6 +577,15 @@ risk_trigger_rules:
   - trigger: local convention scan missing
     required_capabilities: [repository-context-map, implementation-structure-design]
     required_quality_gates: [implementation gate]
+  - trigger: senior programming judgment missing
+    required_capabilities: [senior-programming-judgment-core, implementation-structure-design, validation-broker, agent-execution-discipline]
+    required_quality_gates: [implementation gate, test gate, execution discipline gate]
+  - trigger: non-trivial engineering without senior judgment
+    required_capabilities: [senior-programming-judgment-core, implementation-structure-design, validation-broker, agent-execution-discipline]
+    required_quality_gates: [implementation gate, test gate, execution discipline gate]
+  - trigger: senior_programming_judgment incomplete
+    required_capabilities: [senior-programming-judgment-core, validation-broker, plan-execution-consistency]
+    required_quality_gates: [test gate, execution discipline gate]
   - trigger: implementation before TDD signal
     required_skills: [acceptance-criteria-builder, quality-test-gate]
     required_capabilities: [acceptance-standard-definition, regression-testing, agent-execution-discipline]
@@ -1421,6 +1433,12 @@ failure_routing:
     route_to: agent-workflow-state-machine
   - condition: local fix without same pattern scan
     route_to: agent-execution-discipline
+  - condition: senior programming judgment missing
+    route_to: senior-programming-judgment-core
+  - condition: senior_programming_judgment incomplete
+    route_to: senior-programming-judgment-core
+  - condition: non-trivial engineering without senior judgment
+    route_to: senior-programming-judgment-core
   - condition: action before requirement clarification
     route_to: change-intake-compiler
   - condition: plan before target-project inspection
@@ -2307,6 +2325,12 @@ routing_rules:
     # Stage launcher outranks agent-execution-discipline (88) so stage selection
     # runs before per-change execution discipline when both apply.
     priority: 89
+  - route_to: senior-programming-judgment-core
+    triggers:
+      - senior programming judgment senior_programming_judgment purpose facts objects states behaviors rules invariants boundaries failure contract side effects reuse and placement minimality validation map observability map residual risk
+      - non trivial engineering change without judgment evidence hook runtime routing registry schema eval benchmark closure behavior source generated boundary warning block behavior
+      - object relationship state transition rule invariant side effect failure contract or validation evidence is material and no explicit trivial no semantic no engineering skip reason exists
+    priority: 87
   - route_to: documentation-generation
     triggers:
       - update docs for actual behavior API contracts migrations configuration operations and release impact

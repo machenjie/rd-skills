@@ -1,9 +1,9 @@
 # Professional Benchmarks Evaluation
 
-- Generated: 2026-07-01T06:20:51.670243+00:00
+- Generated: 2026-07-01T08:42:31.035443+00:00
 - Mode: auto
-- Cases checked: 30
-- Comparison cases checked: 30
+- Cases checked: 31
+- Comparison cases checked: 31
 - Errors: 0
 - Actual output comparison: deterministic rule heuristic; auto mode compares baseline_output.md and with_skill_output.md when both exist
 - Comparison note: this is a deterministic rule heuristic; it cannot replace human review or a real agent eval.
@@ -35,6 +35,7 @@
 | `evals/professional-benchmarks/refactoring/refactor-with-hidden-behavior-change` | pass | pass | `refactoring` | ai-code-review-refactor | 0 | 0 | baseline_missing: 14; with_skill_present: 15; remaining_gaps: 0; forbidden_behavior_hits: 0; delta_score: +14 | 0 |
 | `evals/professional-benchmarks/refactoring/shared-utils-business-logic-pollution` | pass | pass | `refactoring` | ai-code-review-refactor | 0 | 0 | baseline_missing: 13; with_skill_present: 15; remaining_gaps: 0; forbidden_behavior_hits: 0; delta_score: +13 | 0 |
 | `evals/professional-benchmarks/release/migration-without-rollback` | pass | pass | `release-delivery` | delivery-release-gate | 0 | 0 | baseline_missing: 13; with_skill_present: 15; remaining_gaps: 0; forbidden_behavior_hits: 0; delta_score: +13 | 0 |
+| `evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime` | pass | pass | `skill-authoring` | change-forge-router | 0 | 0 | baseline_missing: 13; with_skill_present: 15; remaining_gaps: 0; forbidden_behavior_hits: 0; delta_score: +13 | 0 |
 | `evals/professional-benchmarks/testing/e2e-test-used-for-unit-level-bug` | pass | pass | `testing` | quality-test-gate | 0 | 0 | baseline_missing: 14; with_skill_present: 15; remaining_gaps: 0; forbidden_behavior_hits: 0; delta_score: +14 | 0 |
 | `evals/professional-benchmarks/testing/integration-test-mocks-away-real-boundary` | pass | pass | `testing` | quality-test-gate | 0 | 0 | baseline_missing: 14; with_skill_present: 15; remaining_gaps: 0; forbidden_behavior_hits: 0; delta_score: +14 | 0 |
 | `evals/professional-benchmarks/testing/language-runtime-risk-wrong-test-layer` | pass | pass | `testing` | quality-test-gate | 0 | 0 | baseline_missing: 14; with_skill_present: 15; remaining_gaps: 0; forbidden_behavior_hits: 0; delta_score: +14 | 0 |
@@ -70,6 +71,7 @@
 | `evals/professional-benchmarks/refactoring/refactor-with-hidden-behavior-change` | pass | no | - | - | 3 | selected stage, selected professional skill, selected capabilities, expected hidden risks, forbidden behaviors avoided, expected evidence, expected output obligations, inspected boundaries, what evidence does not prove, residual risk, residual risk owner, next gate, validation command or not-verified disclosure, validation command outcome, route relevance | +14 | 0 |
 | `evals/professional-benchmarks/refactoring/shared-utils-business-logic-pollution` | pass | no | - | - | 1 | selected stage, selected professional skill, selected capabilities, expected hidden risks, forbidden behaviors avoided, expected evidence, expected output obligations, inspected boundaries, what evidence does not prove, residual risk, residual risk owner, next gate, validation command or not-verified disclosure, validation command outcome, route relevance | +13 | 0 |
 | `evals/professional-benchmarks/release/migration-without-rollback` | pass | no | - | - | 1 | selected stage, selected professional skill, selected capabilities, expected hidden risks, forbidden behaviors avoided, expected evidence, expected output obligations, inspected boundaries, what evidence does not prove, residual risk, residual risk owner, next gate, validation command or not-verified disclosure, validation command outcome, route relevance | +13 | 0 |
+| `evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime` | pass | no | - | - | 1 | selected stage, selected professional skill, selected capabilities, expected hidden risks, forbidden behaviors avoided, expected evidence, expected output obligations, inspected boundaries, what evidence does not prove, residual risk, residual risk owner, next gate, validation command or not-verified disclosure, validation command outcome, route relevance | +13 | 0 |
 | `evals/professional-benchmarks/testing/e2e-test-used-for-unit-level-bug` | pass | no | - | - | 3 | selected stage, selected professional skill, selected capabilities, expected hidden risks, forbidden behaviors avoided, expected evidence, expected output obligations, inspected boundaries, what evidence does not prove, residual risk, residual risk owner, next gate, validation command or not-verified disclosure, validation command outcome, route relevance | +14 | 0 |
 | `evals/professional-benchmarks/testing/integration-test-mocks-away-real-boundary` | pass | no | - | - | 3 | selected stage, selected professional skill, selected capabilities, expected hidden risks, forbidden behaviors avoided, expected evidence, expected output obligations, inspected boundaries, what evidence does not prove, residual risk, residual risk owner, next gate, validation command or not-verified disclosure, validation command outcome, route relevance | +14 | 0 |
 | `evals/professional-benchmarks/testing/language-runtime-risk-wrong-test-layer` | pass | no | - | - | 3 | selected stage, selected professional skill, selected capabilities, expected hidden risks, forbidden behaviors avoided, expected evidence, expected output obligations, inspected boundaries, what evidence does not prove, residual risk, residual risk owner, next gate, validation command or not-verified disclosure, validation command outcome, route relevance | +14 | 0 |

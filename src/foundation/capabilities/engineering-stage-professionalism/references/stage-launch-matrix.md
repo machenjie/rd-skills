@@ -8,8 +8,8 @@ Use this reference when the `SKILL.md` body is not enough to decide launch set, 
 | --- | --- | --- |
 | requirement-intake | `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition`, `acceptance-standard-definition`, `scenario-decomposition` | coding, language, testing, refactoring, release |
 | architecture-design | `architecture-style-selection`, `module-boundary-design`, `layered-architecture-design`, `architecture-tradeoff-analysis`, `extensibility-design`, `solution-optimality-evaluation` | language idiom, coding, test authoring |
-| implementation-planning | `repository-context-map`, `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` | full architecture review, release, deep performance profiling |
-| coding | matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling` | architecture deep review, release, full regression suite design |
+| implementation-planning | `repository-context-map`, `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `senior-programming-judgment-core` when object, state, rule, side-effect, failure, validation, observability, or residual-risk evidence is material | full architecture review, release, deep performance profiling |
+| coding | matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling`; add `senior-programming-judgment-core` for non-trivial behavior, state, rule, invariant, failure, side-effect, validation, or observability changes | architecture deep review, release, full regression suite design |
 | debugging-diagnosis | `failure-diagnosis`, `agent-execution-discipline`, `observability` | refactoring, new design |
 | bug-fix | `agent-execution-discipline`, `regression-testing`, `code-review`; add `minimal-correct-implementation` for minimal fix, delete/shrink, dependency, abstraction, wrapper-only delegation, shortcut, or overengineering signals | architecture redesign |
 | code-review | `code-review`, `plan-execution-consistency`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `ai-code-review-refactor` for generated code | release, deployment, infrastructure |
@@ -17,7 +17,7 @@ Use this reference when the `SKILL.md` body is not enough to decide launch set, 
 | testing | `test-strategy`, `plan-execution-consistency`, `language-testing-strategy`, `test-data-management`, matching test capability | architecture redesign, new feature coding |
 | release-delivery | `ci-cd`, `release-rollback`, `containerization`, `kubernetes-gateway`, `observability`, `backup-recovery` | language deep checks, coding |
 | documentation-handoff | `agent-workflow-state-machine`, `plan-execution-consistency`, `documentation-generation`, `agent-execution-discipline` | coding capabilities |
-| skill-authoring | `repository-context-map`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `documentation-generation`, `agent-execution-discipline`, `plan-execution-consistency` | product coding, language runtime, release |
+| skill-authoring | `repository-context-map`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `documentation-generation`, `agent-execution-discipline`, `plan-execution-consistency`; add `senior-programming-judgment-core` for hook, routing, registry, schema, eval, benchmark, or closure behavior changes | product coding, language runtime, release |
 
 ## Evidence By Stage
 
@@ -25,8 +25,8 @@ Use this reference when the `SKILL.md` body is not enough to decide launch set, 
 | --- | --- |
 | requirement-intake | current behavior, desired behavior, non-goals, constraints, assumptions, open questions, and testable completion signal |
 | architecture-design | affected boundaries, dependency direction, ownership, simpler alternative, tradeoff, and rollback implication |
-| implementation-planning | inspected target-project boundaries, reuse ladder, placement rationale, touched files, validation commands, and split/sequence decision |
-| coding | inspected local convention, selected capabilities, changed boundary, TDD or validation signal, tests or validators run, and residual risk |
+| implementation-planning | inspected target-project boundaries, reuse ladder, placement rationale, touched files, validation commands, senior programming judgment record or allowed skip reason, and split/sequence decision |
+| coding | inspected local convention, selected capabilities, changed boundary, TDD or validation signal, tests or validators run, senior programming judgment evidence when behavior is non-trivial, and residual risk |
 | debugging-diagnosis | symptom, hypothesis tested, method, verified cause, counter-evidence, and no same-path third retry |
 | bug-fix | verified cause, same-pattern scan, regression proof, old behavior preservation, and local/broad fix rationale |
 | code-review | independent review owner, severity-classified findings, boundary inspected, missing evidence, behavior-change risk, required fix owner, and re-review result when repaired |
@@ -34,7 +34,7 @@ Use this reference when the `SKILL.md` body is not enough to decide launch set, 
 | testing | risk-based test level, fixture/data owner, what the test proves, what it does not prove, and flaky-risk note |
 | release-delivery | rollout plan, rollback path, config/migration compatibility, monitoring signal, and owner acceptance |
 | documentation-handoff | affected artifacts, no-change rationales, validation/link checks, residual doc risk, and owner |
-| skill-authoring | source body/reference boundary, registry impact, validators/evals run, and no runtime architecture drift |
+| skill-authoring | source body/reference boundary, registry impact, senior programming judgment record when runtime or evaluation behavior changes, validators/evals run, and no runtime architecture drift |
 
 ## Transition Rules
 
@@ -50,6 +50,7 @@ Use this reference when the `SKILL.md` body is not enough to decide launch set, 
 ## Stage-Specific Hidden Risks
 
 - **Implementation-planning:** missing reuse/placement evidence creates helpers, public exports, or directories before ownership is known.
+- **Implementation-planning:** missing senior programming judgment lets code shape proceed without source-backed facts, object/state/rule mapping, side effects, failure contract, validation map, observability decision, or residual risk owner.
 - **Coding:** local code success can hide contract, tenant, transaction, retry, or release-skew risks selected by the active professional skill.
 - **Debugging-diagnosis:** symptom patching and same-path retry can produce a plausible diff without a verified cause.
 - **Bug-fix:** one local fix can leave the same defect pattern in sibling modules unless the same-pattern scan is recorded.

@@ -1333,3 +1333,30 @@ capabilities:
       - hidden business rule controller sql mapper dto memory business signal stale business memory graph selector business fact evidence owner review source-backed business rule
     risk_notes: [Business semantic changes can silently alter rules workflows owner intent or golden cases when graph or memory hints are treated as facts without current evidence]
     expected_outputs: [Business Semantic Control Record with task-scoped BSP scope intent vocabulary objects rules workflows memory graph golden cases validation map selected and skipped references evidence limits residual risk and handoff]
+  - id: "136"
+    name: senior-programming-judgment-core
+    group: engineering-workflow
+    path: src/foundation/capabilities/senior-programming-judgment-core
+    status: implemented
+    route_level_capability: true
+    used_by:
+      - change-forge-router
+      - development-process-orchestrator
+      - architecture-impact-reviewer
+      - backend-change-builder
+      - frontend-change-builder
+      - data-api-contract-changer
+      - data-middleware-change-builder
+      - integration-change-builder
+      - security-privacy-gate
+      - reliability-observability-gate
+      - quality-test-gate
+      - ai-code-review-refactor
+      - change-documentation-gate
+      - skill-authoring-expert
+    triggers:
+      - senior programming judgment purpose facts objects states behaviors rules invariants boundaries failure contract side effects reuse placement minimality validation observability residual risk
+      - non-trivial engineering structural edit helper shared common public API state transition hidden rule invariant side effect failure path validation map observability map
+      - skill authoring hook runtime routing registry eval benchmark closure behavior requires bounded judgment evidence
+    risk_notes: [Non-trivial changes can pass local checks while missing source-backed facts object ownership state/rule invariants side effects failure handling validation proof observability and residual risk]
+    expected_outputs: [Senior Programming Judgment Record with purpose source-backed facts objects states behaviors rules invariants boundaries failure contract side effects reuse and placement minimality decision validation map observability map residual risk and handoff]

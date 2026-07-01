@@ -279,6 +279,10 @@
       "description": "Bounded summaries of implementation preflight manifests seen this turn; never raw assistant messages.",
       "$ref": "#/$defs/stringList"
     },
+    "senior_programming_judgments": {
+      "description": "Bounded summaries of senior programming judgment manifests seen this turn; never raw assistant messages.",
+      "$ref": "#/$defs/stringList"
+    },
     "pre_edit_structure_findings": { "$ref": "#/$defs/stringList" },
     "active_skill_context": {
       "type": "object",
@@ -361,10 +365,18 @@
     },
     "implementation_preflight_required": { "type": "boolean" },
     "implementation_preflight_blocked": { "type": "boolean" },
+    "senior_programming_judgment_seen": { "type": "boolean" },
+    "senior_programming_judgment_complete": {
+      "description": "Whether a required senior programming judgment manifest or allowed skip reason was present and satisfied bounded closure fields.",
+      "type": "boolean"
+    },
+    "senior_programming_judgment_required": { "type": "boolean" },
+    "senior_programming_judgment_blocked": { "type": "boolean" },
     "pre_edit_missing_read_evidence": { "type": "boolean" },
     "pre_edit_missing_reuse_decision": { "type": "boolean" },
     "pre_edit_missing_placement_decision": { "type": "boolean" },
     "pre_edit_missing_test_plan": { "type": "boolean" },
+    "pre_edit_missing_senior_programming_judgment": { "type": "boolean" },
     "edit_without_preflight_seen": { "type": "boolean" },
     "post_edit_confirmed_preflight_gap": { "type": "boolean" },
     "validation_seen": {

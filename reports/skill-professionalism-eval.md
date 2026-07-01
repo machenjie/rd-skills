@@ -1,14 +1,15 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-07-01T06:20:37.614730+00:00
-- Skills/capabilities checked: 156
+- Generated: 2026-07-01T08:42:32.170409+00:00
+- Skills/capabilities checked: 157
 - Warning count: 0
-- Average score: 58.02/60
+- Average score: 58.01/60
 
 ## Scores
 
 | Item | Kind | Score | Status | Missing Sections | Warnings |
 | --- | --- | ---: | --- | ---: | ---: |
+| `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/go-professional-usage/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/i18n-timezone-money-safety/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/idempotency-retry-design/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
@@ -29,7 +30,6 @@
 | `src/foundation/capabilities/code-review/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/dto-schema-design/SKILL.md` | foundation-capability | 57/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/e2e-testing/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
-| `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/error-code-design/SKILL.md` | foundation-capability | 57/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/integration-testing/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/java-jvm-professional-usage/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
@@ -43,6 +43,7 @@
 | `src/foundation/capabilities/release-rollback/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/routing-navigation-design/SKILL.md` | foundation-capability | 57/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/rust-professional-usage/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
+| `src/foundation/capabilities/senior-programming-judgment-core/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/shell-cli-professional-usage/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/skill-authoring-expert/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/solution-optimality-evaluation/SKILL.md` | foundation-capability | 57/60 | acceptable | 0 | 0 |

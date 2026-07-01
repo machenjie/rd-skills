@@ -1,5 +1,5 @@
 {
-  "benchmark_cases_checked": 30,
+  "benchmark_cases_checked": 31,
   "benchmark_risk_coverage": [
     {
       "benchmark": "evals/professional-benchmarks/adversarial/keyword-stuffed-with-skill-gaps",
@@ -855,7 +855,8 @@
         "typescript-any-api-boundary-hidden-risk"
       ],
       "weak_matches": [
-        "low-level-rust-ffi-memory-safety"
+        "low-level-rust-ffi-memory-safety",
+        "senior-programming-judgment-missing"
       ]
     },
     {
@@ -1105,7 +1106,8 @@
       "weak_matches": [
         "go-backend-goroutine-leak-bugfix",
         "large-table-migration",
-        "low-level-rust-ffi-memory-safety"
+        "low-level-rust-ffi-memory-safety",
+        "senior-programming-judgment-missing"
       ]
     },
     {
@@ -1278,6 +1280,54 @@
       "routing_not_required_reason": "",
       "strong_matches": [
         "migration-without-rollback-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "hook warning or block behavior changes without judgment evidence",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-programming-judgment-missing"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-programming-judgment-missing"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "router selects a generic persona or business semantic control plane instead of an evidence gate",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-programming-judgment-missing"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-programming-judgment-missing"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "eval coverage claims senior judgment without checking required fields",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-programming-judgment-missing"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-programming-judgment-missing"
       ],
       "weak_matches": []
     },
@@ -1524,9 +1574,9 @@
   ],
   "expected_route_only_supplemental": 7,
   "findings": [],
-  "generated_at": "2026-07-01T06:20:31.393931+00:00",
-  "hidden_risks_checked": 91,
-  "hidden_risks_covered": 87,
+  "generated_at": "2026-07-01T08:42:49.158999+00:00",
+  "hidden_risks_checked": 94,
+  "hidden_risks_covered": 90,
   "hidden_risks_matched_by_expected_route_only": 7,
   "hidden_risks_needing_manual_review": 0,
   "hidden_risks_not_required": 4,
@@ -1536,7 +1586,7 @@
   "l1_anti_over_routing_count": 15,
   "matched_by_expected_route_only": 7,
   "needs_manual_review": 0,
-  "routing_cases_checked": 164,
+  "routing_cases_checked": 165,
   "runtime_fixture_cases_checked": 15,
   "runtime_fixture_coverage": [
     {
@@ -1582,6 +1632,6 @@
   ],
   "runtime_fixture_dirs_checked": 5,
   "status": "pass",
-  "strong_matches": 87,
+  "strong_matches": 90,
   "weak_matches": 6
 }

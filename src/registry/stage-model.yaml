@@ -52,6 +52,7 @@ stages:
       - consumer-impact-analysis
       - dependency-wiring-lifecycle
       - minimal-correct-implementation
+      - senior-programming-judgment-core
       - business-semantic-control-plane
     skip_by_default:
       - language idiom checks
@@ -98,6 +99,7 @@ stages:
       - agent-workflow-state-machine
       - repository-graph-analysis
       - plan-execution-consistency
+      - senior-programming-judgment-core
       - business-semantic-control-plane
     skip_by_default:
       - full architecture review
@@ -118,6 +120,7 @@ stages:
       - test placement
       - TDD or validation signal
       - business-to-code mapping and forbidden placement rationale when rules or workflows are affected
+      - senior programming judgment record when object relationships, states, rules, side effects, failure contract, validation map, or observability are materially affected
     required_quality_gates:
       - SDD gate
       - implementation gate
@@ -146,6 +149,7 @@ stages:
       - agent-tool-permission-sandbox
       - agent-workflow-state-machine
       - plan-execution-consistency
+      - senior-programming-judgment-core
       - business-semantic-control-plane
     skip_by_default:
       - architecture deep review
@@ -162,6 +166,7 @@ stages:
       - deleted or rejected complexity
       - tool permission and sandbox classification when risky tools or commands are used
       - business semantic claim-to-code mapping when implementation changes rules, objects, or workflow states
+      - senior programming judgment evidence when behavior, state, rule, invariant, boundary, failure, side effect, validation, or observability changes
     required_quality_gates:
       - TDD gate
       - implementation gate
@@ -214,6 +219,7 @@ stages:
       - project-memory-governance
       - plan-execution-consistency
       - agent-workflow-state-machine
+      - senior-programming-judgment-core
       - business-semantic-control-plane
     skip_by_default:
       - architecture redesign
@@ -226,6 +232,7 @@ stages:
       - blast-radius note
       - plan versus actual changed-file consistency
       - business semantic same-pattern scan when the defect is rule, status, permission, or workflow related
+      - senior programming judgment evidence for verified cause, same-pattern scan, failure contract, and regression proof when the fix is non-trivial
     required_quality_gates:
       - implementation gate
       - test gate
@@ -250,6 +257,7 @@ stages:
       - data-format-contract-usage
       - minimal-correct-implementation
       - agent-workflow-state-machine
+      - senior-programming-judgment-core
       - business-semantic-control-plane
     skip_by_default:
       - release
@@ -266,6 +274,7 @@ stages:
       - repair and re-review result
       - final diff covered by review scope
       - semantic review result for changed, hidden, stale, rejected, or untested business behavior
+      - senior programming judgment review result for changed object relationships, states, rules, invariants, boundaries, side effects, failure handling, validation, and observability
     required_quality_gates:
       - implementation gate
     allowed_next_stages:
@@ -294,6 +303,7 @@ stages:
       - data-side-effect-flow-tracing
       - cleanup-deletion-governance
       - minimal-correct-implementation
+      - senior-programming-judgment-core
       - business-semantic-control-plane
     skip_by_default:
       - feature design
@@ -305,6 +315,7 @@ stages:
       - deleted or rejected complexity
       - rollback path
       - business behavior preservation evidence when refactoring touches terms, rules, or workflows
+      - senior programming judgment before/after evidence when behavior preservation depends on object relationships, invariants, side effects, or validation mapping
     required_quality_gates:
       - implementation gate
       - test gate
@@ -340,6 +351,7 @@ stages:
       - validation-broker
       - repository-graph-analysis
       - business-semantic-control-plane
+      - senior-programming-judgment-core
     skip_by_default:
       - architecture redesign
       - coding of new features
@@ -352,6 +364,7 @@ stages:
       - minimal check rationale when lower-depth validation is selected
       - validation freshness after final material edits
       - business golden cases or explicit residual risk for material rule, reason-code, permission, and workflow claims
+      - senior programming judgment validation map for material state, invariant, failure, side-effect, and observability claims
     required_quality_gates:
       - test gate
     allowed_next_stages:
@@ -379,6 +392,7 @@ stages:
       - consumer-impact-analysis
       - cleanup-deletion-governance
       - minimal-correct-implementation
+      - senior-programming-judgment-core
     skip_by_default:
       - language deep checks
       - coding
@@ -390,6 +404,7 @@ stages:
       - alert ownership
       - shortcut ceiling and upgrade trigger when shortcuts remain
       - tool permission and rollback classification for release commands
+      - senior programming judgment residual risk and observability/no-log rationale when release changes non-trivial runtime behavior
     required_quality_gates:
       - delivery gate
     allowed_next_stages:
@@ -412,6 +427,7 @@ stages:
       - execution-trajectory-analysis
       - project-memory-governance
       - business-semantic-control-plane
+      - senior-programming-judgment-core
     skip_by_default:
       - coding capabilities
     required_evidence:
@@ -421,6 +437,7 @@ stages:
       - updated docs list
       - handoff target
       - business semantic residual risk, owner handoff, and selected/skipped reference rationale when BSP was selected
+      - senior programming judgment closure evidence, proof limits, rollback note, and residual risk when non-trivial engineering work changed behavior
     required_quality_gates:
       - documentation gate
     allowed_next_stages:
@@ -449,6 +466,7 @@ stages:
       - validation-broker
       - execution-trajectory-analysis
       - context-control-plane
+      - senior-programming-judgment-core
       - business-semantic-control-plane
     skip_by_default:
       - product coding
@@ -464,6 +482,7 @@ stages:
       - deleted or rejected complexity
       - shortcut ceiling and upgrade trigger when shortcuts remain
       - business semantic schema, fixture, routing, memory, graph, and validation impact when authoring BSP behavior
+      - senior programming judgment schema, hook, routing, fixture, validation, and closure impact when authoring engineering judgment behavior
     required_quality_gates:
       - documentation gate
       - test gate
@@ -500,6 +519,9 @@ process_stage_ownership:
   business_semantics:
     owner_skill: change-forge-router
     evidence: task-scoped Business Semantic Pack trigger decision, source-backed facts, memory/graph selector limits, selected and skipped references, validation map, and residual semantic risk
+  senior_programming_judgment:
+    owner_skill: change-forge-router
+    evidence: task-scoped senior programming judgment trigger decision, source-backed facts, object/state/rule/invariant map, boundary and side-effect evidence, failure contract, validation map, observability or no-log rationale, residual risk, and selected specialist handoff
 
 route_manifest_patterns:
   non_documentation_code_change:
@@ -635,10 +657,10 @@ product_surfaces:
     required_skill: development-process-orchestrator
     default_capabilities: [git-professional-usage, repository-context-map, validation-broker, plan-execution-consistency]
   - surface: skill-authoring
-    signals: [skill, capability, skill registry, routing rule, stage model, hook runtime, context control plane, context budget, reference bloat, selected references, skipped references]
+    signals: [skill, capability, skill registry, routing rule, stage model, hook runtime, context control plane, context budget, reference bloat, selected references, skipped references, senior programming judgment, senior_programming_judgment]
     required_skill: change-forge-router
     default_capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency, context-control-plane]
-    conditional_capabilities: [minimal-correct-implementation]
+    conditional_capabilities: [minimal-correct-implementation, senior-programming-judgment-core]
   - surface: agent-runtime-governance
     signals: [executor adapter, runtime adapter, adapter capabilities, normalized event, closure contract, unsupported runtime event]
     required_skill: change-forge-router

@@ -98,6 +98,7 @@ actual:
       - blast-radius note
       - plan versus actual changed-file consistency
       - business semantic same-pattern scan when the defect is rule, status, permission, or workflow related
+      - senior programming judgment evidence for verified cause, same-pattern scan, failure contract, and regression proof when the fix is non-trivial
     required_quality_gates:
       - requirement gate
       - impact gate
@@ -209,6 +210,7 @@ class EvalRoutingCandidateTests(unittest.TestCase):
             "      - blast-radius note\n"
             "      - plan versus actual changed-file consistency\n"
             "      - business semantic same-pattern scan when the defect is rule, status, permission, or workflow related\n"
+            "      - senior programming judgment evidence for verified cause, same-pattern scan, failure contract, and regression proof when the fix is non-trivial\n"
             "    required_quality_gates:\n"
             "      - requirement gate\n"
             "      - impact gate\n"

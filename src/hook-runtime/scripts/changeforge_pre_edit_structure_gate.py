@@ -16,6 +16,7 @@ from changeforge_common import (
     extract_changed_paths,
     extract_implementation_preflight_fields,
     extract_repository_context_fields,
+    extract_senior_programming_judgment_fields,
     is_pre_tool_use,
     load_state,
     memory_pre_edit_advice,
@@ -141,17 +142,27 @@ def _main() -> int:
         runtime,
         **snapshot_update,
         implementation_preflights=result["preflight_summaries"],
+        senior_programming_judgments=result["senior_judgment_summaries"],
         pre_edit_structure_findings=result["findings"],
         implementation_preflight_required=True,
         implementation_preflight_seen=bool(manifest.get("present")),
         implementation_preflight_complete=bool(result["preflight_complete"]),
         implementation_preflight_blocked=bool(result["block"]),
+        senior_programming_judgment_required=True,
+        senior_programming_judgment_seen=bool(result["senior_judgment"].get("present")),
+        senior_programming_judgment_complete=bool(result["senior_judgment_complete"]),
+        senior_programming_judgment_blocked=bool(result["block"]),
         repository_context_seen=bool(result["repository_context"].get("complete")),
         pre_edit_missing_read_evidence="read_evidence" in missing,
         pre_edit_missing_reuse_decision="reuse_decision" in missing,
         pre_edit_missing_placement_decision="placement_decision" in missing,
         pre_edit_missing_test_plan="test_plan" in missing,
-        suggested_capabilities=["implementation-structure-design", "test-strategy"],
+        pre_edit_missing_senior_programming_judgment="senior_programming_judgment" in missing,
+        suggested_capabilities=[
+            "implementation-structure-design",
+            "senior-programming-judgment-core",
+            "test-strategy",
+        ],
         suggested_gates=["quality-test-gate"],
     )
     write_telemetry_event(
@@ -171,7 +182,11 @@ def _main() -> int:
         config_changes=snapshot_update["config_changes"],
         added_paths=result["added_paths"],
         hook_findings={"missing": missing, "findings": result["findings"]},
-        suggested_capabilities=["implementation-structure-design", "test-strategy"],
+        suggested_capabilities=[
+            "implementation-structure-design",
+            "senior-programming-judgment-core",
+            "test-strategy",
+        ],
         suggested_gates=["quality-test-gate"],
         read_evidence_seen=bool(result["has_read_evidence"]),
         repository_context_seen=bool(result["repository_context"].get("complete")),
@@ -179,6 +194,10 @@ def _main() -> int:
         implementation_preflight_seen=bool(manifest.get("present")),
         implementation_preflight_complete=bool(result["preflight_complete"]),
         implementation_preflight_blocked=bool(result["block"]),
+        senior_programming_judgment_required=True,
+        senior_programming_judgment_seen=bool(result["senior_judgment"].get("present")),
+        senior_programming_judgment_complete=bool(result["senior_judgment_complete"]),
+        senior_programming_judgment_blocked=bool(result["block"]),
         edit_without_preflight_seen="implementation_preflight" in missing,
     )
     if not missing or mode == "monitor":
@@ -217,6 +236,7 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
     helper_paths = detect_new_helper_like_paths([*changed_paths, *added_paths])
     assistant_text = _assistant_text_from_event(event)
     manifest = extract_implementation_preflight_fields(assistant_text)
+    senior_judgment = extract_senior_programming_judgment_fields(assistant_text)
     repository_context = extract_repository_context_fields(assistant_text)
     has_read_evidence = _has_read_evidence(state, manifest)
     structural = _is_structural_edit(changed_paths, added_paths, helper_paths, patch_text, content_text)
@@ -229,6 +249,7 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
             missing=[],
             findings=[],
             manifest=manifest,
+            senior_judgment=senior_judgment,
             repository_context=repository_context,
             changed_paths=changed_paths,
             added_paths=added_paths,
@@ -262,6 +283,13 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
     if structural and not manifest.get("risk"):
         missing.append("risk")
         findings.append("structural edit lacks rollback or residual-risk note")
+    if not senior_judgment.get("complete"):
+        missing.append("senior_programming_judgment")
+        if not senior_judgment.get("present"):
+            findings.append("no senior_programming_judgment manifest")
+        else:
+            missing_sections = ",".join(senior_judgment.get("missing", [])[:6])
+            findings.append(f"senior_programming_judgment missing sections: {missing_sections}")
     memory_advice = (
         memory_pre_edit_advice(repo, changed_paths, state, assistant_text)
         if repo is not None
@@ -311,6 +339,7 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
         missing=_unique(missing),
         findings=_unique(findings),
         manifest=manifest,
+        senior_judgment=senior_judgment,
         repository_context=repository_context,
         changed_paths=changed_paths,
         added_paths=added_paths,
@@ -338,6 +367,11 @@ def render_message(result: dict) -> str:
         "    object_boundary: artifact type, owner, invariant, API compatibility\n"
         "    test_plan: nearby tests and validation commands\n"
         "    risk: residual risk and rollback/revert path\n"
+        "  senior_programming_judgment:\n"
+        "    purpose, facts, objects, states, behaviors, rules, invariants,\n"
+        "    boundaries, failure_contract, side_effects, reuse_and_placement,\n"
+        "    minimality_decision, validation_map, observability_map,\n"
+        "    residual_risk, or an allowed skip_reason for trivial/no-semantic work\n"
         "  repository_context:\n"
         "    source_of_truth/context_pack, reuse candidates, validation candidates,\n"
         "    graph_freshness, and residual_risk\n"
@@ -607,6 +641,7 @@ def _result(
     missing: list[str],
     findings: list[str],
     manifest: dict,
+    senior_judgment: dict,
     changed_paths: list[str],
     added_paths: list[str],
     helper_paths: list[str],
@@ -629,11 +664,17 @@ def _result(
             )
             if manifest.get(key)
         ]
+    senior_fields = []
+    if senior_judgment.get("present"):
+        senior_fields = list(senior_judgment.get("sections", []))
+        if senior_judgment.get("allowed_skip"):
+            senior_fields.append("allowed_skip")
     return {
         "required": required,
         "missing": missing,
         "findings": findings,
         "manifest": manifest,
+        "senior_judgment": senior_judgment,
         "repository_context": repository_context if isinstance(repository_context, dict) else {},
         "changed_paths": _unique(changed_paths),
         "added_paths": _unique(added_paths),
@@ -641,10 +682,16 @@ def _result(
         "has_read_evidence": has_read_evidence,
         "block": block,
         "preflight_complete": bool(preflight_complete),
+        "senior_judgment_complete": bool(senior_judgment.get("complete")),
         "preflight_summaries": [
             f"paths={','.join(_unique(changed_paths)[:5])}; fields={','.join(fields)}"
         ]
         if manifest.get("present")
+        else [],
+        "senior_judgment_summaries": [
+            f"paths={','.join(_unique(changed_paths)[:5])}; fields={','.join(senior_fields)}"
+        ]
+        if senior_judgment.get("present")
         else [],
     }
 

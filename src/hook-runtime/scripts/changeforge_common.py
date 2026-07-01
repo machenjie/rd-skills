@@ -111,6 +111,7 @@ STATE_LIST_FIELDS = (
     "context_budget_findings",
     "skipped_references",
     "implementation_preflights",
+    "senior_programming_judgments",
     "pre_edit_structure_findings",
 )
 STATE_SCALAR_STRING_FIELDS = (
@@ -146,10 +147,15 @@ STATE_BOOL_FIELDS = (
     "implementation_preflight_complete",
     "implementation_preflight_required",
     "implementation_preflight_blocked",
+    "senior_programming_judgment_seen",
+    "senior_programming_judgment_complete",
+    "senior_programming_judgment_required",
+    "senior_programming_judgment_blocked",
     "pre_edit_missing_read_evidence",
     "pre_edit_missing_reuse_decision",
     "pre_edit_missing_placement_decision",
     "pre_edit_missing_test_plan",
+    "pre_edit_missing_senior_programming_judgment",
     "edit_without_preflight_seen",
     "post_edit_confirmed_preflight_gap",
     "route_preflight_emitted",
@@ -793,6 +799,7 @@ def merge_state(
     context_budget_findings: Iterable[str] = (),
     skipped_references: Iterable[str] = (),
     implementation_preflights: Iterable[str] = (),
+    senior_programming_judgments: Iterable[str] = (),
     pre_edit_structure_findings: Iterable[str] = (),
     validation_command_seen: bool | None = None,
     validation_seen: bool | None = None,
@@ -820,10 +827,15 @@ def merge_state(
     implementation_preflight_complete: bool | None = None,
     implementation_preflight_required: bool | None = None,
     implementation_preflight_blocked: bool | None = None,
+    senior_programming_judgment_seen: bool | None = None,
+    senior_programming_judgment_complete: bool | None = None,
+    senior_programming_judgment_required: bool | None = None,
+    senior_programming_judgment_blocked: bool | None = None,
     pre_edit_missing_read_evidence: bool | None = None,
     pre_edit_missing_reuse_decision: bool | None = None,
     pre_edit_missing_placement_decision: bool | None = None,
     pre_edit_missing_test_plan: bool | None = None,
+    pre_edit_missing_senior_programming_judgment: bool | None = None,
     edit_without_preflight_seen: bool | None = None,
     post_edit_confirmed_preflight_gap: bool | None = None,
 ) -> dict:
@@ -891,6 +903,7 @@ def merge_state(
         "context_budget_findings": context_budget_findings,
         "skipped_references": skipped_references,
         "implementation_preflights": implementation_preflights,
+        "senior_programming_judgments": senior_programming_judgments,
         "pre_edit_structure_findings": pre_edit_structure_findings,
         "active_skill_context": active_skill_context,
         "turn_stage": turn_stage,
@@ -916,10 +929,15 @@ def merge_state(
         "implementation_preflight_complete": implementation_preflight_complete,
         "implementation_preflight_required": implementation_preflight_required,
         "implementation_preflight_blocked": implementation_preflight_blocked,
+        "senior_programming_judgment_seen": senior_programming_judgment_seen,
+        "senior_programming_judgment_complete": senior_programming_judgment_complete,
+        "senior_programming_judgment_required": senior_programming_judgment_required,
+        "senior_programming_judgment_blocked": senior_programming_judgment_blocked,
         "pre_edit_missing_read_evidence": pre_edit_missing_read_evidence,
         "pre_edit_missing_reuse_decision": pre_edit_missing_reuse_decision,
         "pre_edit_missing_placement_decision": pre_edit_missing_placement_decision,
         "pre_edit_missing_test_plan": pre_edit_missing_test_plan,
+        "pre_edit_missing_senior_programming_judgment": pre_edit_missing_senior_programming_judgment,
         "edit_without_preflight_seen": edit_without_preflight_seen,
         "post_edit_confirmed_preflight_gap": post_edit_confirmed_preflight_gap,
     }
@@ -1130,6 +1148,10 @@ def write_telemetry_event(
     implementation_preflight_seen: bool = False,
     implementation_preflight_complete: bool = False,
     implementation_preflight_blocked: bool = False,
+    senior_programming_judgment_required: bool = False,
+    senior_programming_judgment_seen: bool = False,
+    senior_programming_judgment_complete: bool = False,
+    senior_programming_judgment_blocked: bool = False,
     edit_without_preflight_seen: bool = False,
     post_edit_confirmed_preflight_gap: bool = False,
 ) -> None:
@@ -1306,6 +1328,10 @@ def write_telemetry_event(
             "implementation_preflight_seen": bool(implementation_preflight_seen),
             "implementation_preflight_complete": bool(implementation_preflight_complete),
             "implementation_preflight_blocked": bool(implementation_preflight_blocked),
+            "senior_programming_judgment_required": bool(senior_programming_judgment_required),
+            "senior_programming_judgment_seen": bool(senior_programming_judgment_seen),
+            "senior_programming_judgment_complete": bool(senior_programming_judgment_complete),
+            "senior_programming_judgment_blocked": bool(senior_programming_judgment_blocked),
             "edit_without_preflight_seen": bool(edit_without_preflight_seen),
             "post_edit_confirmed_preflight_gap": bool(post_edit_confirmed_preflight_gap),
         }
@@ -1524,7 +1550,35 @@ def _telemetry_session_id(repo: Path, repo_hash: str, provided: str) -> str:
 ROUTE_MANIFEST_KEY = "changeforge_route"
 STAGE_MANIFEST_KEY = "changeforge_stage_route"
 IMPLEMENTATION_PREFLIGHT_KEY = "changeforge_implementation_preflight"
+SENIOR_PROGRAMMING_JUDGMENT_KEY = "senior_programming_judgment"
 REPOSITORY_CONTEXT_KEY = "repository_context"
+SENIOR_PROGRAMMING_JUDGMENT_REQUIRED_SECTIONS = (
+    "purpose",
+    "facts",
+    "objects",
+    "states",
+    "behaviors",
+    "rules",
+    "invariants",
+    "boundaries",
+    "failure_contract",
+    "side_effects",
+    "reuse_and_placement",
+    "minimality_decision",
+    "validation_map",
+    "observability_map",
+    "residual_risk",
+)
+SENIOR_PROGRAMMING_JUDGMENT_SKIP_TERMS = (
+    "trivial",
+    "no semantic",
+    "no engineering",
+    "format",
+    "formatting",
+    "doc-only",
+    "docs-only",
+    "documentation-only",
+)
 _MANIFEST_LIST_KEYS = (
     "selected_skills",
     "selected_capabilities",
@@ -1629,6 +1683,51 @@ def extract_implementation_preflight_fields(text: str) -> dict:
         result["risk"] = _manifest_section_has_any_value(
             block, "risk", ("rollback_or_revert_path", "compatibility_risk")
         )
+    except Exception:
+        return result
+    return result
+
+
+def extract_senior_programming_judgment_fields(text: str) -> dict:
+    """Extract senior programming judgment manifest facts from text. Fail open."""
+    result: dict[str, Any] = {
+        "present": False,
+        "required": False,
+        "allowed_skip": False,
+        "complete": False,
+        "sections": [],
+        "missing": [],
+    }
+    if not isinstance(text, str) or not text:
+        return result
+    try:
+        block = _manifest_block(text, SENIOR_PROGRAMMING_JUDGMENT_KEY)
+        if not block:
+            return result
+        result["present"] = f"{SENIOR_PROGRAMMING_JUDGMENT_KEY}:" in block
+        if not result["present"]:
+            return result
+        required_scalar = _manifest_scalar_field(block, "required").casefold()
+        result["required"] = required_scalar not in {"false", "no", "0", "not_required"}
+        skip_values = _manifest_field_values(block, "skip_reason", allow_none=True)
+        skip_values.extend(_manifest_field_values(block, "skip_reasons", allow_none=True))
+        folded_skip = " ".join(skip_values).casefold()
+        result["allowed_skip"] = bool(
+            skip_values and any(term in folded_skip for term in SENIOR_PROGRAMMING_JUDGMENT_SKIP_TERMS)
+        )
+        sections = [
+            section
+            for section in SENIOR_PROGRAMMING_JUDGMENT_REQUIRED_SECTIONS
+            if _manifest_section_has_value(block, section)
+        ]
+        missing = [
+            section
+            for section in SENIOR_PROGRAMMING_JUDGMENT_REQUIRED_SECTIONS
+            if section not in sections
+        ]
+        result["sections"] = sections
+        result["missing"] = [] if result["allowed_skip"] else missing
+        result["complete"] = bool(result["allowed_skip"] or not missing)
     except Exception:
         return result
     return result
@@ -2660,6 +2759,7 @@ def _empty_state() -> dict:
         "context_budget_findings": [],
         "skipped_references": [],
         "implementation_preflights": [],
+        "senior_programming_judgments": [],
         "pre_edit_structure_findings": [],
         "active_skill_context": {},
         "turn_stage": "",
@@ -2685,10 +2785,15 @@ def _empty_state() -> dict:
         "implementation_preflight_complete": False,
         "implementation_preflight_required": False,
         "implementation_preflight_blocked": False,
+        "senior_programming_judgment_seen": False,
+        "senior_programming_judgment_complete": False,
+        "senior_programming_judgment_required": False,
+        "senior_programming_judgment_blocked": False,
         "pre_edit_missing_read_evidence": False,
         "pre_edit_missing_reuse_decision": False,
         "pre_edit_missing_placement_decision": False,
         "pre_edit_missing_test_plan": False,
+        "pre_edit_missing_senior_programming_judgment": False,
         "edit_without_preflight_seen": False,
         "post_edit_confirmed_preflight_gap": False,
         "validation_command_seen": False,

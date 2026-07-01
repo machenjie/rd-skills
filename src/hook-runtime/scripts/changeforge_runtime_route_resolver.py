@@ -347,6 +347,8 @@ PRODUCT_SURFACE_SIGNALS = {
         "reference bloat",
         "selected references",
         "skipped references",
+        "senior programming judgment",
+        "senior_programming_judgment",
     ),
     "agent-runtime-governance": (
         "executor adapter",
@@ -622,6 +624,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "consumer-impact-analysis",
         "dependency-wiring-lifecycle",
         "minimal-correct-implementation",
+        "senior-programming-judgment-core",
         "business-semantic-control-plane",
     ),
     "debugging-diagnosis": (
@@ -642,6 +645,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "agent-workflow-state-machine",
         "repository-graph-analysis",
         "plan-execution-consistency",
+        "senior-programming-judgment-core",
         "business-semantic-control-plane",
     ),
     "coding": (
@@ -656,6 +660,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "agent-tool-permission-sandbox",
         "agent-workflow-state-machine",
         "plan-execution-consistency",
+        "senior-programming-judgment-core",
         "business-semantic-control-plane",
     ),
     "bug-fix": (
@@ -666,6 +671,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "project-memory-governance",
         "plan-execution-consistency",
         "agent-workflow-state-machine",
+        "senior-programming-judgment-core",
         "business-semantic-control-plane",
     ),
     "code-review": (
@@ -673,6 +679,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "data-format-contract-usage",
         "minimal-correct-implementation",
         "agent-workflow-state-machine",
+        "senior-programming-judgment-core",
         "business-semantic-control-plane",
     ),
     "refactoring": (
@@ -682,6 +689,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "data-side-effect-flow-tracing",
         "cleanup-deletion-governance",
         "minimal-correct-implementation",
+        "senior-programming-judgment-core",
         "business-semantic-control-plane",
     ),
     "testing": (
@@ -701,6 +709,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "validation-broker",
         "repository-graph-analysis",
         "business-semantic-control-plane",
+        "senior-programming-judgment-core",
     ),
     "release-delivery": (
         "configuration-runtime-policy",
@@ -710,6 +719,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "consumer-impact-analysis",
         "cleanup-deletion-governance",
         "minimal-correct-implementation",
+        "senior-programming-judgment-core",
     ),
     "documentation-handoff": (
         "executor-adapter-protocol",
@@ -717,6 +727,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "execution-trajectory-analysis",
         "project-memory-governance",
         "business-semantic-control-plane",
+        "senior-programming-judgment-core",
     ),
     "skill-authoring": (
         "minimal-correct-implementation",
@@ -727,6 +738,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "validation-broker",
         "execution-trajectory-analysis",
         "context-control-plane",
+        "senior-programming-judgment-core",
         "business-semantic-control-plane",
     ),
 }
@@ -803,6 +815,18 @@ CAPABILITY_TRIGGERS: dict[str, tuple[str, ...]] = {
         "stale business memory",
         "graph used as business fact",
         "memory used as business fact",
+    ),
+    "senior-programming-judgment-core": (
+        "senior programming judgment",
+        "senior_programming_judgment",
+        "purpose facts objects states behaviors rules invariants",
+        "failure contract",
+        "side effects",
+        "reuse and placement",
+        "minimality",
+        "validation map",
+        "observability map",
+        "residual risk",
     ),
     "code-element-professionalism": (
         "variable uninitialized",
@@ -1010,6 +1034,7 @@ CAPABILITY_IDS = {
     "network-protocol-gateway-usage": "133",
     "data-format-contract-usage": "134",
     "business-semantic-control-plane": "135",
+    "senior-programming-judgment-core": "136",
 }
 
 

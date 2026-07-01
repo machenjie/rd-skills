@@ -97,6 +97,37 @@ changeforge_route:
         - <existing pattern or placement convention inspected>
       not_inspected:
         - <boundary not inspected and accepted risk, or omit when none>
+    senior_programming_judgment:
+      required: <true|false>
+      skip_reason: <explicit trivial/no-semantic/no-engineering/doc-only reason, or omit when required>
+      purpose: <why the change exists in product, system, or skill behavior terms>
+      facts:
+        - <source-backed fact used to make the engineering decision>
+      objects:
+        - <object, module, data shape, actor, or artifact being changed>
+      states:
+        - <state, lifecycle, transition, or workflow condition affected>
+      behaviors:
+        - <observable behavior or agent behavior affected>
+      rules:
+        - <business, engineering, routing, hook, schema, or validation rule>
+      invariants:
+        - <invariant that must remain true>
+      boundaries:
+        - <ownership, source/generated, trust, module, runtime, or side-effect boundary>
+      failure_contract:
+        - <failure mode, warning/blocking behavior, fallback, rollback, or disclosure>
+      side_effects:
+        - <state, file, cache, telemetry, generated artifact, network, or external side effect>
+      reuse_and_placement:
+        - <reuse scan and why the selected location owns the behavior>
+      minimality_decision: <why the change is the smallest sufficient change>
+      validation_map:
+        - <test, eval, validator, build, or manual check mapped to changed behavior>
+      observability_map:
+        - <log, telemetry, report, hook state, or not-applicable reason>
+      residual_risk:
+        - <remaining uncertainty with owner and next gate>
     tdd_signal:
       kind: <failing-test|new-test|updated-test|eval|validation-command|acceptance-check|not-verified>
       command_or_check: <command, check, or explicit not-verified reason>
@@ -138,6 +169,7 @@ Manifest rules:
 - `context_control` is required whenever `context-control-plane` is selected or when the route has context budget, reference bloat, selected/skipped reference, JIT retrieval, tool-output boundary, compaction, branch route-repair, or overhead-evidence risk. It must include selected and skipped reference rationale; do not emit a bare budget mode without reasons.
 - `context_control` must not include raw prompts, secrets, environment values, full command output, full diffs, full files, personal archives, or private mapping artifacts.
 - `runtime_prompt_flow` is required for target-project engineering changes and for direct specialist-skill invocation. Direct invocation may skip router reclassification when scope is known, but this nested manifest records that requirement clarification, read-before-plan evidence, TDD/validation signal, independent review, repair/re-review, validation evidence, and residual risk were not skipped.
+- `runtime_prompt_flow.senior_programming_judgment` is required for non-trivial engineering, skill-authoring, hook, routing, schema, eval, benchmark, or closure-behavior changes. It may be skipped only with an explicit trivial/no-semantic/no-engineering/formatting/doc-only reason. The field is evidence, not a persona route or business-semantic-control-plane replacement.
 - Each `runtime_prompt_flow.actions[]` entry must name an `owner_skill` and a different `review_skill`. A review finding requires `repair_route_if_review_fails`, `re_review_required: true`, and a concrete `re_review_result` before handoff can close.
 - `runtime_prompt_flow.closure_mode` separates planning from closure. `plan` may carry `re_review_result: pending` and `validation_evidence.outcome: planned`. `action-handoff` and `final-handoff` may close re-review only with `passed`, `blocked-with-residual-risk`, or `not-verified-with-owner`, and may close validation only with `passed`, `failed`, `not-run` plus disclosure, or `not-verified` plus residual risk.
 - Keep `selected_skills`, `selected_capabilities`, `required_quality_gates`, and `skipped_quality_gates` consistent with the Markdown sections; the manifest is a projection of the same decision, not a second route.

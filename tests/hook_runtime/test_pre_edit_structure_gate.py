@@ -104,6 +104,67 @@ def seed_read_state(cwd: Path, cache: Path) -> None:
             os.environ["XDG_CACHE_HOME"] = previous_cache
 
 
+SENIOR_JUDGMENT_MANIFEST = (
+    "```yaml\n"
+    "senior_programming_judgment:\n"
+    "  schema_version: 1\n"
+    "  required: true\n"
+    "  purpose:\n"
+    "    why_exists: structural edit changes a service boundary\n"
+    "    current_behavior: no senior judgment evidence is recorded\n"
+    "    desired_behavior: senior judgment evidence is closure-visible\n"
+    "  facts:\n"
+    "    source_backed:\n"
+    "      - fact: order service owns orchestration\n"
+    "        source: src/services/order_service.py\n"
+    "  objects:\n"
+    "    - name: OrderService\n"
+    "      kind: service\n"
+    "      owner: src/services/order_service.py\n"
+    "  states:\n"
+    "    - object: OrderService\n"
+    "      allowed_transitions: [created, validated]\n"
+    "  behaviors:\n"
+    "    - behavior: normalize invitation lookup\n"
+    "      owner_object_or_module: OrderService\n"
+    "  rules:\n"
+    "    - rule: service boundary owns orchestration\n"
+    "      enforcement_layer: service\n"
+    "  invariants:\n"
+    "    - invariant: tenant lookup remains normalized\n"
+    "      protected_by: regression test\n"
+    "  boundaries:\n"
+    "    module_boundaries:\n"
+    "      - src/services\n"
+    "  failure_contract:\n"
+    "    expected_failures:\n"
+    "      - validation failure\n"
+    "    rollback_or_compensation: revert patch\n"
+    "  side_effects:\n"
+    "    mutation:\n"
+    "      - source edit\n"
+    "    external_io: []\n"
+    "  reuse_and_placement:\n"
+    "    selected_location: src/services/order_service.py\n"
+    "    existing_candidates:\n"
+    "      - src/services/base.py\n"
+    "  minimality_decision:\n"
+    "    simplest_correct_path: extend existing service\n"
+    "    rejected_abstractions:\n"
+    "      - new helper package\n"
+    "  validation_map:\n"
+    "    acceptance_to_test:\n"
+    "      - pytest tests/test_order_service.py\n"
+    "  observability_map:\n"
+    "    no_log_rationale: no new runtime logging\n"
+    "  residual_risk:\n"
+    "    - risk: fixture coverage is local\n"
+    "      owner: quality-test-gate\n"
+    "      next_gate: test\n"
+    "```\n"
+)
+
+
 def patch_event(path: str = "src/services/order_service.py") -> dict:
     return {
         "runtime": "codex",
@@ -209,6 +270,7 @@ class PreEditStructureGateTests(unittest.TestCase):
             "  risk:\n"
             "    rollback_or_revert_path: revert patch\n"
             "```\n"
+            + SENIOR_JUDGMENT_MANIFEST
         )
         event = {**patch_event(), "last_assistant_message": manifest}
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
@@ -219,6 +281,74 @@ class PreEditStructureGateTests(unittest.TestCase):
         self.assertTrue(state["implementation_preflight_seen"])
         self.assertTrue(state["implementation_preflight_complete"])
         self.assertTrue(state["implementation_preflights"])
+
+    def test_senior_judgment_manifest_parser_requires_core_sections(self) -> None:
+        common = load_common()
+        complete = common.extract_senior_programming_judgment_fields(
+            SENIOR_JUDGMENT_MANIFEST
+        )
+        self.assertTrue(complete["present"])
+        self.assertTrue(complete["complete"])
+        self.assertEqual(complete["missing"], [])
+
+        incomplete = common.extract_senior_programming_judgment_fields(
+            "```yaml\n"
+            "senior_programming_judgment:\n"
+            "  schema_version: 1\n"
+            "  purpose:\n"
+            "    why_exists: structure changed\n"
+            "```\n"
+        )
+        self.assertTrue(incomplete["present"])
+        self.assertFalse(incomplete["complete"])
+        self.assertIn("facts", incomplete["missing"])
+
+    def test_structural_edit_without_senior_judgment_warns_and_records_state(self) -> None:
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_read_state(cwd, cache)
+            result = run_gate(patch_event(), cwd, cache)
+            state = load_state(cwd, cache)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("senior_programming_judgment", result.stdout)
+        self.assertTrue(state["senior_programming_judgment_required"])
+        self.assertTrue(state["pre_edit_missing_senior_programming_judgment"])
+        self.assertIn("senior-programming-judgment-core", state["suggested_capabilities"])
+
+    def test_complete_preflight_and_senior_judgment_records_without_warning(self) -> None:
+        manifest = (
+            "```yaml\n"
+            "changeforge_implementation_preflight:\n"
+            "  read_evidence:\n"
+            "    target_files:\n"
+            "      - src/services/order_service.py\n"
+            "  placement_decision:\n"
+            "    target_file: src/services/order_service.py\n"
+            "    reason: service module owns order orchestration\n"
+            "  reuse_decision:\n"
+            "    direct_reuse:\n"
+            "      - symbol_or_path: src/services/base.py\n"
+            "  object_boundary:\n"
+            "    artifact_type: class\n"
+            "    owner: src/services/order_service.py\n"
+            "    state_or_invariant: service class owns order orchestration boundary\n"
+            "  test_plan:\n"
+            "    validation_commands:\n"
+            "      - pytest tests/test_order_service.py\n"
+            "  risk:\n"
+            "    rollback_or_revert_path: revert patch\n"
+            "```\n"
+            + SENIOR_JUDGMENT_MANIFEST
+        )
+        event = {**patch_event(), "last_assistant_message": manifest}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            result = run_gate(event, cwd, cache)
+            state = load_state(cwd, cache)
+        self.assertEqual(result.stdout, "")
+        self.assertTrue(state["senior_programming_judgment_seen"])
+        self.assertTrue(state["senior_programming_judgment_complete"])
+        self.assertTrue(state["senior_programming_judgments"])
 
     def test_write_plain_class_content_requires_object_boundary(self) -> None:
         event = write_event("src/domain/order.py", "class OrderService:\n    pass\n")

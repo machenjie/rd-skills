@@ -39,6 +39,7 @@ Use for any non-trivial change that involves design, implementation planning, co
 13. **No default language deep checks at release.** The release-delivery stage does not launch language deep checks unless code still changes.
 14. **No default coding at documentation.** The documentation-handoff stage launches coding capabilities only when docs contain API or code examples.
 15. **Skill-authoring uses its owner.** The skill-authoring stage always launches `skill-authoring-expert`.
+16. **Senior judgment is conditional and evidence-bound.** Launch `senior-programming-judgment-core` when non-trivial engineering work affects behavior, object relationships, state/rule/invariant constraints, boundaries, failure contract, side effects, validation map, observability, or residual risk; skip it only with an explicit trivial/no-semantic/no-engineering rationale.
 
 # Stage Fit
 
@@ -90,6 +91,7 @@ Stage transitions require the entry evidence for the next stage and the exit evi
 - Escalate to `delivery-release-gate` when code or config reaches a rollout path.
 - Escalate to `architecture-impact-reviewer` when an implementation or refactor stage shifts module boundaries or dependency direction.
 - Escalate to `failure-diagnosis` when a third same-path retry is attempted; force a stage and route change.
+- Escalate to `senior-programming-judgment-core` when a stage needs explicit purpose, source-backed facts, objects, states, behaviors, rules, invariants, boundaries, failure contract, side effects, reuse/placement, minimality, validation, observability, and residual-risk evidence.
 
 # Proactive Professional Triggers
 
@@ -108,6 +110,11 @@ Stage transitions require the entry evidence for the next stage and the exit evi
   **Required professional action:** Downgrade to selector-only, compare with current source, and rerun stale validators.
   **Route to:** `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`.
   **Evidence required:** accepted/rejected memory or graph claim, freshness comparison, command/report path, residual owner.
+- **Signal:** A non-trivial stage proceeds with code shape, prose intent, or local validation but no senior judgment evidence.
+  **Hidden risk:** The stage can advance while source-backed facts, object relationships, state/rule invariants, side effects, failure behavior, validation proof, observability, or residual risk remain unexamined.
+  **Required professional action:** Launch `senior-programming-judgment-core` or record an allowed trivial/no-semantic/no-engineering skip reason.
+  **Route to:** `senior-programming-judgment-core`, `implementation-structure-design`, `quality-test-gate`.
+  **Evidence required:** `senior_programming_judgment` summary or explicit skip reason, selected specialist handoffs, validation map, proof limits, residual risk.
 
 # Critical Details
 
@@ -152,6 +159,7 @@ Return a **Stage Professional Launch Plan**:
 - Explicitly skipped capabilities:
 - Skip rationale:
 - Context budget decision:
+- Senior programming judgment:
 - Required evidence:
 - Required quality gates:
 - Stage transition condition:
@@ -173,6 +181,7 @@ Close a stage launch only when the plan states:
 - Skipped heavy capabilities with a concrete reason.
 - Boundaries inspected: product surface, language surface, risk surface, source files, callers, docs, configs, validators, and generated artifacts relevant to this stage.
 - Reuse and placement rationale: why the selected stage owner and capabilities are the minimum sufficient launch set and why skipped stages are deferred.
+- Senior programming judgment: complete `senior_programming_judgment` record or an allowed skip reason for trivial/no-semantic/no-engineering work.
 - Behavior preservation: old runtime profile, routing, skill, registry, docs, and source/dist behavior preserved or intentionally changed.
 - Repository context dependency: inspected files, callers, docs, configs, validators, generated artifacts, graph/memory claims, or accepted not-inspected risk.
 - Validation freshness: commands or review artifacts, exit code when available, whether files changed after evidence, and what the evidence proves/does not prove.
@@ -188,6 +197,7 @@ Close a stage launch only when the plan states:
 6. The handoff target names the next stage or a blocking owner.
 7. No stage, product, or language matrix is copied into this plan; it is referenced.
 8. Stage transition conditions are explicit; no cross-stage bundle is used as a substitute for handoff.
+9. Senior programming judgment is launched or explicitly skipped with rationale when non-trivial engineering behavior is present.
 
 # Used By
 

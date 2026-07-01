@@ -38,7 +38,7 @@ quality gates, and the allowed handoff target stage.
 - Launch: `repository-context-map`, `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` (naming only); add `minimal-correct-implementation` when new structure, dependency, file, class, config, or abstraction is proposed.
 - Conditional launch: `code-element-professionalism` when variable, expression, statement, default, cleanup, fallthrough, boolean-trap, side-effect-getter, or event-order hazards shape the plan; `repository-graph-analysis` when repo graph, context pack, generated artifact graph, affected-test graph, or source-of-truth uncertainty is part of the plan; `business-semantic-control-plane` when business rules or workflows need source-backed semantic mapping.
 - Do not launch by default: full architecture review, release gate, deep performance profiling.
-- Required evidence: SDD public API and module placement, SDD design decision points for material choices, user choice status for material design choices, safe assumption rationale when proceeding without user choice, target boundaries inspected before plan, repository context map with owning surface and caller/callee evidence, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal, business-to-code mapping and forbidden placement rationale when rules or workflows are affected.
+- Required evidence: SDD public API and module placement, SDD design decision points for material choices, user choice status for material design choices, safe assumption rationale when proceeding without user choice, target boundaries inspected before plan, repository context map with owning surface and caller/callee evidence, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal, business-to-code mapping and forbidden placement rationale when rules or workflows are affected, senior programming judgment record when object relationships, states, rules, side effects, failure contract, validation map, or observability are materially affected.
 - Required quality gates: implementation gate, SDD gate.
 - Handoff: coding.
 
@@ -47,7 +47,7 @@ quality gates, and the allowed handoff target stage.
 - Launch: matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling`, relevant builder skill; add `minimal-correct-implementation` when the implementation risks unnecessary scope.
 - Conditional launch: `code-element-professionalism` when implementation evidence includes variable, expression, statement, default, cleanup, fallthrough, boolean-trap, side-effect-getter, or event-order hazards.
 - Do not launch by default: architecture deep review, release gate, full regression suite design.
-- Required evidence: inspected implementation context, TDD or validation signal before code, PDD/DDD/SDD/TDD traceability, idiomatic implementation, validated inputs, released resources, minimal scope diff, deleted or rejected complexity when selected, tool permission and sandbox classification when risky tools or commands are used, business semantic claim-to-code mapping when implementation changes rules, objects, or workflow states.
+- Required evidence: inspected implementation context, TDD or validation signal before code, PDD/DDD/SDD/TDD traceability, idiomatic implementation, validated inputs, released resources, minimal scope diff, deleted or rejected complexity when selected, tool permission and sandbox classification when risky tools or commands are used, business semantic claim-to-code mapping when implementation changes rules, objects, or workflow states, senior programming judgment evidence when behavior, state, rule, invariant, boundary, failure, side effect, validation, or observability changes.
 - Required quality gates: implementation gate, TDD gate.
 - Handoff: testing or code-review.
 
@@ -64,7 +64,7 @@ quality gates, and the allowed handoff target stage.
 - Launch: relevant builder skill, `agent-execution-discipline`, `regression-testing`, `code-review`.
 - Conditional launch: `minimal-correct-implementation` when minimal fix, delete/shrink, dependency, abstraction, wrapper-only delegation, shortcut, or overengineering review signal exists.
 - Do not launch by default: architecture redesign, release gate unless the fix ships directly.
-- Required evidence: minimal diff, deleted or rejected complexity when selected, same-pattern scan record, regression test, blast-radius note, plan versus actual changed-file consistency, business semantic same-pattern scan when the defect is rule, status, permission, or workflow related.
+- Required evidence: minimal diff, deleted or rejected complexity when selected, same-pattern scan record, regression test, blast-radius note, plan versus actual changed-file consistency, business semantic same-pattern scan when the defect is rule, status, permission, or workflow related, senior programming judgment evidence for verified cause, same-pattern scan, failure contract, and regression proof when the fix is non-trivial.
 - Required quality gates: implementation gate, test gate.
 - Handoff: testing, code-review, or release-delivery.
 
@@ -73,7 +73,7 @@ quality gates, and the allowed handoff target stage.
 - Launch: `code-review`, `plan-execution-consistency`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `ai-code-review-refactor` for generated code as a professional skill.
 - Conditional launch: `code-element-professionalism` when review evidence includes variable, expression, statement, default, cleanup, fallthrough, boolean-trap, side-effect-getter, or event-order hazards; `minimal-correct-implementation` when minimal fix, delete/shrink, dependency, abstraction, wrapper-only delegation, shortcut, or overengineering review signal exists; add `execution-trajectory-analysis` or `project-memory-governance` when review must account for trajectory, repeated failure, fragile-file, or stale-context evidence.
 - Do not launch by default: release gate, deployment, infrastructure capabilities.
-- Required evidence: findings with severity, complexity-only delete/shrink findings when selected, evidence, impacted file, required fix, validation required, independent reviewer, repair and re-review result, final diff covered by review scope, semantic review result for changed, hidden, stale, rejected, or untested business behavior.
+- Required evidence: findings with severity, complexity-only delete/shrink findings when selected, evidence, impacted file, required fix, validation required, independent reviewer, repair and re-review result, final diff covered by review scope, semantic review result for changed, hidden, stale, rejected, or untested business behavior, senior programming judgment review result for changed object relationships, states, rules, invariants, boundaries, side effects, failure handling, validation, and observability.
 - Required quality gates: implementation gate.
 - Handoff: refactoring, bug-fix, testing, or documentation-handoff.
 
@@ -82,7 +82,7 @@ quality gates, and the allowed handoff target stage.
 - Launch: `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `code-review`, `regression-testing`; add `minimal-correct-implementation` for delete/shrink or speculative structure collapse.
 - Conditional launch: `code-element-professionalism` when refactoring changes variable lifetime, expression semantics, statement ordering, cleanup, fallthrough, boolean parameters, getter behavior, or event timing.
 - Do not launch by default: feature design, release gate. Add `architecture-impact-reviewer` only when boundaries shift.
-- Required evidence: characterization tests, preserved behavior, selection rationale, deleted or rejected complexity, rollback path, business behavior preservation evidence when refactoring touches terms, rules, or workflows.
+- Required evidence: characterization tests, preserved behavior, selection rationale, deleted or rejected complexity, rollback path, business behavior preservation evidence when refactoring touches terms, rules, or workflows, senior programming judgment before/after evidence when behavior preservation depends on object relationships, invariants, side effects, or validation mapping.
 - Required quality gates: implementation gate, test gate.
 - Handoff: testing, code-review, or documentation-handoff.
 
@@ -91,7 +91,7 @@ quality gates, and the allowed handoff target stage.
 - Launch: `test-strategy`, `plan-execution-consistency`, `language-testing-strategy`, the matching test capability (`unit-testing`, `integration-testing`, `contract-testing`, `e2e-testing`, `regression-testing`), `test-data-management`; add `minimal-correct-implementation` when lower-depth validation is proposed.
 - Conditional launch: `validation-broker` and `repository-graph-analysis` when changed-path mapping, affected-test selection, stale validation, or generated artifact validation is in scope.
 - Do not launch by default: architecture redesign, coding of new features.
-- Required evidence: risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected, validation freshness after final material edits, validation commands mapped to PDD/DDD/SDD, business golden cases or explicit residual risk for material rule, reason-code, permission, and workflow claims.
+- Required evidence: risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected, validation freshness after final material edits, validation commands mapped to PDD/DDD/SDD, business golden cases or explicit residual risk for material rule, reason-code, permission, and workflow claims, senior programming judgment validation map for material state, invariant, failure, side-effect, and observability claims.
 - Required quality gates: test gate.
 - Handoff: code-review, release-delivery, or documentation-handoff.
 
@@ -100,7 +100,7 @@ quality gates, and the allowed handoff target stage.
 - Launch: `ci-cd`, `release-rollback`, `containerization`, `kubernetes-gateway`, `observability`, `backup-recovery`.
 - Conditional launch: `minimal-correct-implementation` for new release machinery, shortcuts, stale flags, or config branches.
 - Do not launch by default: language deep checks and coding unless code still changes.
-- Required evidence: rollout sequence, rollback trigger, config compatibility, health checks, alert ownership, shortcut ceiling and upgrade trigger when shortcuts remain, tool permission and rollback classification for release commands.
+- Required evidence: rollout sequence, rollback trigger, config compatibility, health checks, alert ownership, shortcut ceiling and upgrade trigger when shortcuts remain, tool permission and rollback classification for release commands, senior programming judgment residual risk and observability/no-log rationale when release changes non-trivial runtime behavior.
 - Required quality gates: delivery gate.
 - Handoff: documentation-handoff or closed.
 
@@ -109,7 +109,7 @@ quality gates, and the allowed handoff target stage.
 - Launch: `agent-workflow-state-machine`, `plan-execution-consistency`, `documentation-generation`, `agent-execution-discipline`; pair with `change-documentation-gate` as the professional owner.
 - Conditional launch: `executor-adapter-protocol`, `validation-broker`, `execution-trajectory-analysis`, or `project-memory-governance` when closure depends on adapter support, validation freshness, trajectory review, or governed memory.
 - Do not launch by default: coding capabilities unless docs contain API or code examples.
-- Required evidence: validated boundary, validation freshness and plan-execution consistency, residual risk, updated docs list, handoff target, business semantic residual risk, owner handoff, and selected/skipped reference rationale when BSP was selected.
+- Required evidence: validated boundary, validation freshness and plan-execution consistency, residual risk, updated docs list, handoff target, business semantic residual risk, owner handoff, and selected/skipped reference rationale when BSP was selected, plus senior programming judgment closure evidence, proof limits, rollback note, and residual risk when non-trivial engineering work changed behavior.
 - Required quality gates: documentation gate.
 - Handoff: closed or requirement-intake for a next change.
 
@@ -118,7 +118,7 @@ quality gates, and the allowed handoff target stage.
 - Launch: `repository-context-map`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `documentation-generation`, `agent-execution-discipline`, `plan-execution-consistency`; add `minimal-correct-implementation` when skill source adds routing surface, references, benchmarks, shortcuts, or generated-review complexity; pair with `change-documentation-gate`, `ai-code-review-refactor`, or `quality-test-gate` when those professional owners are selected by risk.
 - Conditional launch: `executor-adapter-protocol`, `repository-graph-analysis`, `project-memory-governance`, `validation-broker`, and `execution-trajectory-analysis` when authoring or evaluating those runtime-governance surfaces.
 - Do not launch by default: product coding, language runtime, release capabilities.
-- Required evidence: boundary, trigger precision, output contract, registry/routing/validation impact, skill-efficacy benchmark impact when behavior claims change, minimal scope diff, deleted or rejected complexity, shortcut ceiling and upgrade trigger when shortcuts remain, business semantic schema, fixture, routing, memory, graph, and validation impact when authoring BSP behavior.
+- Required evidence: boundary, trigger precision, output contract, registry/routing/validation impact, skill-efficacy benchmark impact when behavior claims change, minimal scope diff, deleted or rejected complexity, shortcut ceiling and upgrade trigger when shortcuts remain, business semantic schema, fixture, routing, memory, graph, and validation impact when authoring BSP behavior, senior programming judgment schema, hook, routing, fixture, validation, and closure impact when authoring engineering judgment behavior.
 - Required quality gates: documentation gate, test gate.
 - Handoff: documentation-handoff or closed.
 

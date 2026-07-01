@@ -1,11 +1,11 @@
 # Professional Routing Coverage
 
-- Generated: 2026-07-01T06:20:31.393931+00:00
+- Generated: 2026-07-01T08:42:49.158999+00:00
 - Status: pass
-- Routing cases checked: 164
-- Benchmark cases checked: 30
-- Hidden risks checked: 91
-- Strongly covered: 87
+- Routing cases checked: 165
+- Benchmark cases checked: 31
+- Hidden risks checked: 94
+- Strongly covered: 90
 - Not required: 4
 - Weak-only: 0
 - Expected-route-only supplemental: 7
@@ -96,6 +96,9 @@
 | `evals/professional-benchmarks/release/migration-without-rollback` | covered | rollback fails because schema moved forward | migration-without-rollback-hidden-risk |
 | `evals/professional-benchmarks/release/migration-without-rollback` | covered | rolling deploy version skew breaks old pods or consumers | migration-without-rollback-hidden-risk |
 | `evals/professional-benchmarks/release/migration-without-rollback` | covered | contract phase removal before migration evidence | migration-without-rollback-hidden-risk |
+| `evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime` | covered | hook warning or block behavior changes without judgment evidence | senior-programming-judgment-missing |
+| `evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime` | covered | router selects a generic persona or business semantic control plane instead of an evidence gate | senior-programming-judgment-missing |
+| `evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime` | covered | eval coverage claims senior judgment without checking required fields | senior-programming-judgment-missing |
 | `evals/professional-benchmarks/testing/e2e-test-used-for-unit-level-bug` | covered | E2E test used for unit-level bug | e2e-layer-mismatch-unit-bug |
 | `evals/professional-benchmarks/testing/e2e-test-used-for-unit-level-bug` | covered | slow browser test hides cheaper unit coverage | e2e-layer-mismatch-unit-bug |
 | `evals/professional-benchmarks/testing/e2e-test-used-for-unit-level-bug` | covered | test layer selection inverted for local logic | e2e-layer-mismatch-unit-bug |
@@ -122,9 +125,9 @@
 | `evals/professional-benchmarks/backend/queue-consumer-missing-idempotency` | duplicate fulfillment from retry or redelivery | - | payment-idempotency, sev1-payment-outage |
 | `evals/professional-benchmarks/backend/queue-consumer-missing-idempotency` | lost replay path and invisible failure | - | web3-eip712-replay, webhook-signature-replay |
 | `evals/professional-benchmarks/data/relational-query-without-index-or-explain` | missing index or query plan evidence on large table | sql-dynamic-query-no-parameterization | sql-dynamic-query-no-parameterization |
-| `evals/professional-benchmarks/language/performance-unbounded-concurrency` | runtime safety invariant missing for concurrent hot path | low-level-rust-ffi-memory-safety | low-level-rust-ffi-memory-safety |
+| `evals/professional-benchmarks/language/performance-unbounded-concurrency` | runtime safety invariant missing for concurrent hot path | low-level-rust-ffi-memory-safety, senior-programming-judgment-missing | low-level-rust-ffi-memory-safety |
 | `evals/professional-benchmarks/language/sql-dynamic-query-without-parameterization` | tenant predicate missing from query test | large-table-migration | - |
-| `evals/professional-benchmarks/language/typescript-any-at-api-boundary` | runtime validation missing for external data | go-backend-goroutine-leak-bugfix, large-table-migration, low-level-rust-ffi-memory-safety | - |
+| `evals/professional-benchmarks/language/typescript-any-at-api-boundary` | runtime validation missing for external data | go-backend-goroutine-leak-bugfix, large-table-migration, low-level-rust-ffi-memory-safety, senior-programming-judgment-missing | - |
 | `evals/professional-benchmarks/release/migration-without-rollback` | rollback fails because schema moved forward | - | api-breaking-field-rename, bigdata-schema-evolution, helm-chart-secret-values, mobile-offline-sync-conflict |
 
 </details>

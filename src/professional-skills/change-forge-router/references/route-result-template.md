@@ -47,6 +47,24 @@ fields so the router body can stay compact.
 - Not inspected:
 - Risk accepted from not-inspected boundaries:
 
+### Senior Programming Judgment Gate
+- Required: yes / no
+- Skip reason when not required:
+- Purpose:
+- Source-backed facts:
+- Objects / relationships:
+- States / transitions:
+- Behaviors:
+- Rules / invariants:
+- Boundaries:
+- Failure contract:
+- Side effects:
+- Reuse and placement:
+- Minimality decision:
+- Validation map:
+- Observability map:
+- Residual risk:
+
 ### TDD Plan Gate
 - Failing or new test expected:
 - Updated test/eval expected:

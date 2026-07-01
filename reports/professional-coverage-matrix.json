@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-01T06:20:44.324453+00:00",
+  "generated_at": "2026-07-01T08:42:32.307035+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -16,6 +16,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (1)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -34,6 +35,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
       "score": 58,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -52,6 +54,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (1)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -70,6 +73,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (6)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -88,6 +92,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (3)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -106,6 +111,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (16)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -124,6 +130,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (13)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -142,6 +149,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (1)",
       "score": 58,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -160,6 +168,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -178,6 +187,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (16)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -196,6 +206,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (3)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -214,6 +225,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (4)",
       "score": 58,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -232,6 +244,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
       "score": 58,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -250,6 +263,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (4)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -268,6 +282,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (2)",
       "score": 58,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -286,6 +301,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (7)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -304,6 +320,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (2)",
       "score": 56,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -322,6 +339,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (11)",
       "score": 56,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -340,6 +358,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (12)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -358,6 +377,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (1)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -376,6 +396,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (6)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -394,6 +415,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (4)",
       "score": 56,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -412,6 +434,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (4)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -430,6 +453,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (7)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -448,6 +472,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (5)",
       "score": 58,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -466,6 +491,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (9)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -484,6 +510,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
       "score": 58,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -502,6 +529,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (37)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -520,6 +548,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (1)",
       "score": 58,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -538,6 +567,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (11)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -556,6 +586,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (48)",
       "score": 56,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -574,6 +605,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (3)",
       "score": 58,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -592,6 +624,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (20)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -610,6 +643,26 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (2)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
+      "status": "sample-grade",
+      "warnings": []
+    },
+    {
+      "anti_bloat_status": "ok",
+      "benchmark_coverage": "yes (1)",
+      "evidence_contract": "yes",
+      "failure_modes": "yes",
+      "kind": "foundation-capability",
+      "mode_matrix": "yes",
+      "name": "senior-programming-judgment-core",
+      "output_contract": "yes",
+      "path": "src/foundation/capabilities/senior-programming-judgment-core/SKILL.md",
+      "proactive_triggers": "partial",
+      "quality_gate": "yes",
+      "reference_loading_hint": "yes",
+      "routing_coverage": "yes (1)",
+      "score": 57,
+      "senior_programming_judgment_coverage": "yes",
       "status": "sample-grade",
       "warnings": []
     },
@@ -628,6 +681,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (1)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -646,6 +700,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (2)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -664,6 +719,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (9)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -682,6 +738,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
       "score": 56,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -700,6 +757,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (10)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -718,6 +776,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (3)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -736,6 +795,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (21)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -754,6 +814,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (6)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -770,8 +831,9 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (32)",
+      "routing_coverage": "yes (33)",
       "score": 58,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -788,8 +850,9 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (18)",
+      "routing_coverage": "yes (19)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -808,6 +871,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (64)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -826,6 +890,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (42)",
       "score": 58,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -842,8 +907,9 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "n/a (router owns routing fixture corpus; eval-routing cases=164)",
+      "routing_coverage": "n/a (router owns routing fixture corpus; eval-routing cases=165)",
       "score": 60,
+      "senior_programming_judgment_coverage": "yes",
       "status": "sample-grade",
       "warnings": []
     },
@@ -862,6 +928,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (17)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -880,6 +947,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (18)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -898,6 +966,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (20)",
       "score": 58,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -916,6 +985,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (18)",
       "score": 60,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -934,6 +1004,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (33)",
       "score": 60,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -952,6 +1023,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (2)",
       "score": 60,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -970,6 +1042,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (8)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -988,6 +1061,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (6)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -1006,6 +1080,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (17)",
       "score": 58,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -1024,6 +1099,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (16)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -1042,6 +1118,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
       "score": 60,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -1058,8 +1135,9 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (143)",
+      "routing_coverage": "yes (144)",
       "score": 59,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -1078,6 +1156,7 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (42)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -1094,8 +1173,9 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (37)",
+      "routing_coverage": "yes (38)",
       "score": 57,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     },
@@ -1114,9 +1194,10 @@
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (3)",
       "score": 60,
+      "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
     }
   ],
-  "rows_checked": 62
+  "rows_checked": 63
 }

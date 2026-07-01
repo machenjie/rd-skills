@@ -1,0 +1,25 @@
+expected_stage: skill-authoring
+expected_professional_skill: change-forge-router
+expected_capabilities:
+  - senior-programming-judgment-core
+  - engineering-stage-professionalism
+  - skill-authoring-expert
+  - implementation-structure-design
+  - validation-broker
+  - agent-execution-discipline
+expected_hidden_risks:
+  - hook warning or block behavior changes without judgment evidence
+  - router selects a generic persona or business semantic control plane instead of an evidence gate
+  - eval coverage claims senior judgment without checking required fields
+expected_evidence:
+  - senior_programming_judgment with purpose facts objects states behaviors rules invariants boundaries failure contract side effects reuse and placement minimality validation map observability map residual risk
+  - focused hook tests for warning-only and existing block mode behavior
+  - routing and professionalism eval fixtures proving senior-programming-judgment-core is selected
+forbidden_behaviors:
+  - accept internal skill-system changes without senior judgment because they are not product code
+  - route senior judgment to a generic persona or business semantic control plane
+  - claim validation is complete without fresh command output
+expected_output_obligations:
+  - senior programming judgment summary
+  - source and generated boundary
+  - validation evidence and residual risk

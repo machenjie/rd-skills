@@ -1,7 +1,7 @@
 {
-  "average_score": 58.02,
+  "average_score": 58.01,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-07-01T06:20:37.614730+00:00",
+  "generated_at": "2026-07-01T08:42:32.170409+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -129,7 +129,7 @@
       "warnings": []
     },
     {
-      "body_lines": 246,
+      "body_lines": 249,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1704,7 +1704,7 @@
       "warnings": []
     },
     {
-      "body_lines": 198,
+      "body_lines": 208,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1712,7 +1712,7 @@
         "failure_mode_coverage": 3,
         "mode_coverage": 5,
         "output_actionability": 5,
-        "proactive_trigger_quality": 5,
+        "proactive_trigger_quality": 4,
         "professional_depth": 5,
         "reference_precision": 4,
         "stage_fit": 5,
@@ -1725,7 +1725,7 @@
       "path": "src/foundation/capabilities/engineering-stage-professionalism/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 57,
+      "total": 56,
       "warnings": []
     },
     {
@@ -3329,6 +3329,31 @@
       "warnings": []
     },
     {
+      "body_lines": 193,
+      "dimensions": {
+        "anti_bloat_control": 5,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 5,
+        "mode_coverage": 5,
+        "output_actionability": 5,
+        "proactive_trigger_quality": 3,
+        "professional_depth": 5,
+        "reference_precision": 4,
+        "stage_fit": 5,
+        "trigger_accuracy": 5,
+        "validation_obligation": 5
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "senior-programming-judgment-core",
+      "path": "src/foundation/capabilities/senior-programming-judgment-core/SKILL.md",
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 57,
+      "warnings": []
+    },
+    {
       "body_lines": 151,
       "dimensions": {
         "anti_bloat_control": 5,
@@ -3904,6 +3929,6 @@
       "warnings": []
     }
   ],
-  "skills_checked": 156,
+  "skills_checked": 157,
   "warning_count": 0
 }

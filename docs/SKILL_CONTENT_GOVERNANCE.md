@@ -160,8 +160,8 @@ A move must preserve professional content. It is a relocation, never a deletion.
 - Professional skills remain the runtime top-level entry points.
 - Foundation capabilities remain compiled references in `recommended`/`full`; they are
   **not** promoted to top-level skills there.
-- Top-level skill counts stay fixed: `recommended` = 21, `full` = 28, `dev` = 163
-  (21 professional + 135 foundation + 7 domain).
+- Top-level skill counts stay fixed: `recommended` = 21, `full` = 28, `dev` = 164
+  (21 professional + 136 foundation + 7 domain).
 - References stay selectively loaded; nothing here makes them default-loaded.
 - Required sections (per `validate-skills.py`, `validate-capabilities.py`,
   `validate-domain-extensions.py`) remain present; oversized **required** sections are
