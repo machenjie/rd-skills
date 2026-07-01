@@ -15,6 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR_PATH = ROOT / "scripts" / "validate-codex-live-benchmark-reports.py"
 CONTEXT_CONTROL_REPORT = ROOT / "reports" / "context-control-plane-eval.json"
 CONTEXT_CONTROL_ROW = "context_control_overhead"
+HIGH_CONTEXT_INPUT_TOKEN_OVERHEAD_PCT = 100.0
+HIGH_CONTEXT_OUTPUT_TOKEN_OVERHEAD_PCT = 25.0
 
 
 def _default(path: str) -> Path:
@@ -59,7 +61,7 @@ def _context_control_expected_status(report: dict[str, Any] | None) -> str:
         return "fail"
     if overhead_status not in {"pass", "partial", "fail", "not_collected"}:
         return "fail"
-    if _high_overhead_neutral_pass_rate(overhead) and overhead_status == "pass":
+    if _high_token_overhead(overhead) and overhead_status == "pass":
         return "fail"
     if report_status == "fail" or overhead_status == "fail":
         return "fail"
@@ -72,16 +74,16 @@ def _context_control_expected_status(report: dict[str, Any] | None) -> str:
     return "pass"
 
 
-def _high_overhead_neutral_pass_rate(overhead: dict[str, Any]) -> bool:
+def _high_token_overhead(overhead: dict[str, Any]) -> bool:
     input_overhead = overhead.get("input_token_overhead_pct")
     output_overhead = overhead.get("output_token_overhead_pct")
-    pass_rate_delta = overhead.get("pass_rate_delta")
-    high_overhead = (
-        (isinstance(input_overhead, int | float) and float(input_overhead) > 100)
-        or (isinstance(output_overhead, int | float) and float(output_overhead) > 75)
+    return (
+        isinstance(input_overhead, int | float)
+        and float(input_overhead) > HIGH_CONTEXT_INPUT_TOKEN_OVERHEAD_PCT
+    ) or (
+        isinstance(output_overhead, int | float)
+        and float(output_overhead) > HIGH_CONTEXT_OUTPUT_TOKEN_OVERHEAD_PCT
     )
-    neutral = not isinstance(pass_rate_delta, int | float) or float(pass_rate_delta) <= 0
-    return high_overhead and neutral
 
 
 def context_control_report_consistency_errors(
@@ -96,10 +98,10 @@ def context_control_report_consistency_errors(
     expected_status = _context_control_expected_status(report if isinstance(report, dict) else None)
     if isinstance(report, dict):
         overhead = report.get("context_control_overhead")
-        if isinstance(overhead, dict) and _high_overhead_neutral_pass_rate(overhead):
+        if isinstance(overhead, dict) and _high_token_overhead(overhead):
             verdict = str(overhead.get("overhead_policy_verdict") or "").casefold()
-            if "not success" not in verdict and "do not claim" not in verdict:
-                errors.append("context_control_overhead high-overhead neutral case must document no-success boundary")
+            if "ungoverned p2 risk" not in verdict and "do not claim" not in verdict:
+                errors.append("context_control_overhead high-token-overhead case must document no-claim boundary")
         if expected_status == "fail":
             errors.append("context-control eval failure blocks pass")
         if isinstance(overhead, dict):

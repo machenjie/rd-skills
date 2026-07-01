@@ -63,16 +63,16 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 - release_status: `partial`
 - status: `partial`
 - quality_improvement_claim_allowed: `False`
-- input_token_overhead_pct: `234.06`
-- output_token_overhead_pct: `45.63`
+- input_token_overhead_pct: `228.79`
+- output_token_overhead_pct: `35.56`
 - turn_overhead: `None`
-- command_delta: `22.61`
-- pass_rate_delta: `0.0`
-- live_pass_rate: `{"pass_rate_delta": 0.0, "status": "collected"}`
-- token_overhead: `{"input_pct": 234.06, "output_pct": 45.63, "status": "collected"}`
+- command_delta: `19.91`
+- pass_rate_delta: `0.0417`
+- live_pass_rate: `{"pass_rate_delta": 0.0417, "status": "collected"}`
+- token_overhead: `{"input_pct": 228.79, "output_pct": 35.56, "status": "collected"}`
 - turn_overhead_detail: `{"status": "not_collected", "turn_overhead": null}`
-- runtime_telemetry: `{"command_delta": 22.61, "live_codex_executed": false, "source": "reports/codex-live-benchmark-summary.json", "status": "existing_report"}`
-- overhead_policy_verdict: `partial: structural fixtures pass, but live input/output overhead is high without pass-rate improvement; do not claim Context Control Plane quality improvement`
+- runtime_telemetry: `{"command_delta": 19.91, "live_codex_executed": false, "source": "reports/codex-live-benchmark-summary.json", "status": "existing_report"}`
+- overhead_policy_verdict: `partial: structural fixtures pass and live overhead is collected, but high token overhead remains an ungoverned P2 risk; do not claim Context Control Plane quality or cost improvement`
 - evidence_boundary: `Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead. High overhead without pass-rate improvement is not success.`
 
 ## Codex CLI Live Benchmark

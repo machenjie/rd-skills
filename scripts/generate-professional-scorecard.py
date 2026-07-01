@@ -51,6 +51,8 @@ RUNTIME_GOVERNANCE_FIXTURE_SUITES = {
     "trajectory": "execution-trajectory-analysis",
 }
 CONTEXT_CONTROL_OVERHEAD_DIMENSION = "context_control_overhead"
+HIGH_CONTEXT_INPUT_TOKEN_OVERHEAD_PCT = 100.0
+HIGH_CONTEXT_OUTPUT_TOKEN_OVERHEAD_PCT = 25.0
 STRICT_PROFILE_BUILD_DIMENSIONS = (
     "Registry source counts",
     "Profile build reproducibility",
@@ -503,8 +505,8 @@ def context_control_overhead_status(root: Path) -> tuple[str, str]:
     if status not in STATUSES:
         detail["invalid_status"] = status
         return "fail", json.dumps(detail, sort_keys=True)
-    if _context_control_high_neutral_overhead(detail) and status == "pass":
-        detail["invalid_status"] = "pass_with_high_overhead_neutral_pass_rate"
+    if _context_control_high_token_overhead(detail) and status == "pass":
+        detail["invalid_status"] = "pass_with_high_token_overhead_without_p2_governance"
         return "fail", json.dumps(detail, sort_keys=True)
     release_status = str(detail.get("release_status") or report_status)
     if release_status == "fail":
@@ -517,16 +519,16 @@ def context_control_overhead_status(root: Path) -> tuple[str, str]:
     return status, json.dumps(detail, sort_keys=True)
 
 
-def _context_control_high_neutral_overhead(detail: dict[str, Any]) -> bool:
+def _context_control_high_token_overhead(detail: dict[str, Any]) -> bool:
     input_overhead = detail.get("input_token_overhead_pct")
     output_overhead = detail.get("output_token_overhead_pct")
-    pass_rate_delta = detail.get("pass_rate_delta")
-    high_overhead = (
-        (isinstance(input_overhead, int | float) and float(input_overhead) > 100)
-        or (isinstance(output_overhead, int | float) and float(output_overhead) > 75)
+    return (
+        isinstance(input_overhead, int | float)
+        and float(input_overhead) > HIGH_CONTEXT_INPUT_TOKEN_OVERHEAD_PCT
+    ) or (
+        isinstance(output_overhead, int | float)
+        and float(output_overhead) > HIGH_CONTEXT_OUTPUT_TOKEN_OVERHEAD_PCT
     )
-    neutral = not isinstance(pass_rate_delta, int | float) or float(pass_rate_delta) <= 0
-    return high_overhead and neutral
 
 
 def executor_adapter_eval_status(root: Path) -> tuple[str, str]:

@@ -106,17 +106,17 @@
       "status": "collected"
     },
     "output_token_overhead_pct": 35.56,
-    "overhead_policy_verdict": "pass: structural fixtures pass and collected overhead is within policy threshold",
-    "overhead_status": "pass",
+    "overhead_policy_verdict": "partial: structural fixtures pass and live overhead is collected, but high token overhead remains an ungoverned P2 risk; do not claim Context Control Plane quality or cost improvement",
+    "overhead_status": "partial",
     "pass_rate_delta": 0.0417,
-    "quality_improvement_claim_allowed": true,
+    "quality_improvement_claim_allowed": false,
     "runtime_telemetry": {
       "command_delta": 19.91,
       "live_codex_executed": false,
       "source": "reports/codex-live-benchmark-summary.json",
       "status": "existing_report"
     },
-    "status": "pass",
+    "status": "partial",
     "structural_fixture_status": "pass",
     "token_overhead": {
       "input_pct": 228.79,
@@ -132,10 +132,10 @@
   "fixture_status": "pass",
   "generated_by": "scripts/eval-context-control-plane.py",
   "global_errors": [],
-  "overhead_status": "pass",
-  "release_status": "pass",
+  "overhead_status": "partial",
+  "release_status": "partial",
   "schema_version": 1,
-  "status": "pass",
+  "status": "partial",
   "summary": {
     "capability": "context-control-plane",
     "capability_id": "128",

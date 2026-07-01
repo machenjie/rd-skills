@@ -34,6 +34,8 @@ REQUIRED_FIXTURES = (
 )
 VALID_STATUSES = {"pass", "partial", "fail", "not_collected"}
 VALID_BUDGET_MODES = {"minimal", "single-stage", "staged-plan", "full"}
+HIGH_INPUT_TOKEN_OVERHEAD_PCT = 100.0
+HIGH_OUTPUT_TOKEN_OVERHEAD_PCT = 25.0
 MODE_REFERENCE_LIMITS = {
     "minimal": 8,
     "single-stage": 12,
@@ -532,22 +534,22 @@ def _context_control_overhead(
     improvement_claim = bool(quality.get("large_quality_improvement_claim")) or bool(quality.get("efficiency_improvement_claim"))
     improvement_claim = improvement_claim or str(live_summary.get("effect_status") or "").casefold() == "improved"
     improvement_claim = improvement_claim or str(live_summary.get("effect_verdict") or "").casefold() == "positive"
-    high_input = isinstance(input_overhead, int | float) and input_overhead > 100
-    high_output = isinstance(output_overhead, int | float) and output_overhead > 75
+    high_token_overhead = _high_token_overhead(input_overhead, output_overhead)
     neutral_or_worse = not isinstance(pass_rate_delta, int | float) or pass_rate_delta <= 0
     collected = any(isinstance(value, int | float) for value in (input_overhead, output_overhead, command_delta, pass_rate_delta))
-    if improvement_claim and neutral_or_worse and (high_input or high_output):
+    if improvement_claim and neutral_or_worse and high_token_overhead:
         base["status"] = "fail"
         base["overhead_status"] = "fail"
         base["overhead_policy_verdict"] = (
             "fail: live report claims improvement while pass-rate delta is neutral or negative and overhead is high"
         )
-    elif collected and (high_input or high_output) and neutral_or_worse:
+    elif collected and high_token_overhead:
         base["status"] = "partial"
         base["overhead_status"] = "partial"
+        base["quality_improvement_claim_allowed"] = False
         base["overhead_policy_verdict"] = (
-            "partial: structural fixtures pass, but live input/output overhead is high without pass-rate improvement; "
-            "do not claim Context Control Plane quality improvement"
+            "partial: structural fixtures pass and live overhead is collected, but high token overhead remains an "
+            "ungoverned P2 risk; do not claim Context Control Plane quality or cost improvement"
         )
     elif collected:
         base["status"] = "pass"
@@ -559,6 +561,16 @@ def _context_control_overhead(
         base["overhead_status"] = "partial"
         base["overhead_policy_verdict"] = "partial: structural fixtures pass but live overhead is not collected"
     return base
+
+
+def _high_token_overhead(input_overhead: Any, output_overhead: Any) -> bool:
+    return (
+        isinstance(input_overhead, int | float)
+        and float(input_overhead) > HIGH_INPUT_TOKEN_OVERHEAD_PCT
+    ) or (
+        isinstance(output_overhead, int | float)
+        and float(output_overhead) > HIGH_OUTPUT_TOKEN_OVERHEAD_PCT
+    )
 
 
 def _ratio_to_percent(value: Any) -> float | None:

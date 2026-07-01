@@ -59,7 +59,10 @@ def _context_report(status: str = "partial", overhead_status: str = "partial") -
                 "command_delta": 22.61,
             },
             "quality_improvement_claim_allowed": False,
-            "overhead_policy_verdict": "partial: high overhead without pass-rate improvement is not success",
+            "overhead_policy_verdict": (
+                "partial: structural fixtures pass and live overhead is collected, but high token overhead remains "
+                "an ungoverned P2 risk; do not claim Context Control Plane quality or cost improvement"
+            ),
             "evidence_boundary": "Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead.",
         },
     }
@@ -173,6 +176,46 @@ class ContextControlOverheadReportingTests(unittest.TestCase):
         self.assertIn("Structural fixture pass is not live quality improvement", markdown)
         self.assertIn('"live_codex_executed": false', markdown)
 
+    def test_high_overhead_positive_pass_rate_without_p2_governance_stays_partial(self) -> None:
+        summary = {
+            "cost_summary": {
+                "cost_is_telemetry_only": True,
+                "telemetry_only_note": "No efficiency improvement claim is made.",
+                "cost_adjusted_delta": {
+                    "skills_with_hooks_clean_vs_baseline_clean": {
+                        "average_input_token_overhead_pct": 2.2879,
+                        "average_output_token_overhead_pct": 0.3556,
+                        "average_command_execution_delta": 19.91,
+                        "pass_rate_delta": 0.0417,
+                    }
+                },
+            },
+            "quality_improvement_summary": {
+                "large_quality_improvement_claim": False,
+                "efficiency_improvement_claim": False,
+            },
+            "effect_status": "improved",
+            "effect_verdict": "positive",
+        }
+
+        overhead = CONTEXT_EVAL._context_control_overhead(
+            fixtures_pass=True,
+            raw_leak_count=0,
+            live_summary=summary,
+        )
+
+        self.assertEqual(overhead["status"], "partial")
+        self.assertEqual(overhead["overhead_status"], "partial")
+        self.assertEqual(overhead["input_token_overhead_pct"], 228.79)
+        self.assertEqual(overhead["output_token_overhead_pct"], 35.56)
+        self.assertEqual(overhead["command_delta"], 19.91)
+        self.assertEqual(overhead["pass_rate_delta"], 0.0417)
+        self.assertFalse(overhead["quality_improvement_claim_allowed"])
+        self.assertEqual(overhead["runtime_telemetry"]["status"], "existing_report")
+        self.assertFalse(overhead["runtime_telemetry"]["live_codex_executed"])
+        self.assertIn("ungoverned P2 risk", overhead["overhead_policy_verdict"])
+        self.assertIn("do not claim Context Control Plane quality or cost improvement", overhead["overhead_policy_verdict"])
+
     def test_context_control_eval_partial_overhead_keeps_top_level_partial(self) -> None:
         self.assertEqual(
             CONTEXT_EVAL._overall_status(fixtures_pass=True, overhead_status="partial"),
@@ -278,6 +321,32 @@ class ContextControlOverheadReportingTests(unittest.TestCase):
 
         self.assertEqual(status, "fail")
         self.assertTrue(any("blocks pass" in error for error in errors), errors)
+
+    def test_context_control_eval_pass_with_high_positive_overhead_blocks_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            report_path = reports / "context-control-plane-eval.json"
+            report = _context_report(status="pass", overhead_status="pass")
+            report["release_status"] = "pass"
+            report["context_control_overhead"]["status"] = "pass"
+            report["context_control_overhead"]["overhead_status"] = "pass"
+            report["context_control_overhead"]["pass_rate_delta"] = 0.0417
+            report["context_control_overhead"]["live_pass_rate"] = {"status": "collected", "pass_rate_delta": 0.0417}
+            report["context_control_overhead"]["quality_improvement_claim_allowed"] = True
+            report["context_control_overhead"]["overhead_policy_verdict"] = "pass: within policy threshold"
+            report_path.write_text(json.dumps(report), encoding="utf-8")
+
+            status, detail_json = SCORECARD.context_control_overhead_status(root)
+            errors = REPORT_CONSISTENCY.context_control_report_consistency_errors(
+                context_report_path=report_path,
+            )
+
+        detail = json.loads(detail_json)
+        self.assertEqual(status, "fail")
+        self.assertEqual(detail["invalid_status"], "pass_with_high_token_overhead_without_p2_governance")
+        self.assertTrue(any("failure blocks pass" in error for error in errors), errors)
 
     def test_context_control_eval_partial_with_partial_overhead_is_partial(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
