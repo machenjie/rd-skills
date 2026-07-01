@@ -1,10 +1,667 @@
 {
+  "actual_run_case_count": 1,
+  "actual_run_cases": [
+    "security/ssrf-url-allowlist"
+  ],
   "assertion_case_count": 1,
   "auth_policy": "borrow-current",
   "benchmark_eligible_result_count": 2,
   "benchmark_mode": "clean-paired",
-  "benchmark_passed_result_count": 1,
+  "benchmark_passed_result_count": 2,
+  "capability_artifact_evidence": {
+    "security/ssrf-url-allowlist": {
+      "baseline_clean": {
+        "artifact_backed_run_count": 1,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 0,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 0,
+        "runs": 1,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 1
+      },
+      "skills_with_hooks_clean": {
+        "artifact_backed_run_count": 1,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 1,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 1,
+        "runs": 1,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/security__ssrf-url-allowlist/skills_with_hooks_clean/run-01/process-trace.json: SDD.logging_decision: cross-service/request/job paths require trace_id, span_id, request_id, or correlation_id"
+        ],
+        "strict_process_trace_valid_count": 0
+      }
+    }
+  },
+  "capability_core_requested": false,
+  "capability_coverage_summary": {
+    "assertion_backed_coverage_count": 0,
+    "assertion_backed_covered_capabilities": [],
+    "core_capability_count": 11,
+    "errors": [],
+    "fail_count": 0,
+    "items": [
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "injection/professional-route-manifest-activation",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Missing route evidence means professional injection is not live-proven; baseline contamination means the comparison is invalid.",
+        "id": "professional_injection_activation",
+        "linked_assertions": [
+          "route_manifest_present",
+          "selected_skills_present",
+          "selected_capabilities_present",
+          "required_quality_gates_present",
+          "baseline_changeforge_contamination_absent",
+          "bounded_hook_signal_present",
+          "raw_prompt_secret_absolute_path_absent"
+        ],
+        "linked_cases": [
+          "injection/professional-route-manifest-activation"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "pass",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Professional Injection Activation"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "injection/stage-specific-reference-loading",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Missing or broad unrelated stage selections indicate under-routing or over-routing rather than precise injection.",
+        "id": "staged_injection_precision",
+        "linked_assertions": [
+          "pdd_requirement_capabilities_only",
+          "ddd_domain_capabilities_present",
+          "sdd_design_capabilities_present",
+          "tdd_validation_capabilities_present",
+          "review_repair_capabilities_present",
+          "unrelated_language_or_surface_overroute_absent",
+          "stage_results_in_trace_or_manifest"
+        ],
+        "linked_cases": [
+          "injection/stage-specific-reference-loading"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "pass",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Staged Injection Precision"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "repo-intel/caller-callee-test-impact-map",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Without graph evidence, repository intelligence remains structural or inferred rather than live-proven.",
+        "id": "repository_graph_context_pack",
+        "linked_assertions": [
+          "repo_graph_built_or_read",
+          "symbol_import_caller_callee_evidence_present",
+          "test_ownership_evidence_present",
+          "plan_cites_graph_evidence",
+          "validation_covers_impacted_tests",
+          "graph_freshness_and_residual_risk_reported"
+        ],
+        "linked_cases": [
+          "repo-intel/caller-callee-test-impact-map"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "pass",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Repository Graph Context Pack"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "memory/repeated-failure-fragile-file",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Missing second-run influence means memory governance is not live-proven; raw or source-tree memory writes are failures.",
+        "id": "project_memory_governance",
+        "linked_assertions": [
+          "bounded_memory_candidate_written",
+          "second_run_reads_bounded_memory",
+          "memory_changes_route_plan_validation_or_review",
+          "no_skill_registry_capability_mutation_from_memory",
+          "raw_prompt_secret_command_path_absent"
+        ],
+        "linked_cases": [
+          "memory/repeated-failure-fragile-file"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "pass",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Project Memory Governance"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          },
+          {
+            "assertion_status": "not_collected",
+            "case_id": "validation/stale-validation-after-edit",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Stale validation treated as fresh means closure discipline is not live-ready.",
+        "id": "validation_broker_freshness",
+        "linked_assertions": [
+          "validation_before_material_edit_detected",
+          "stale_validation_marked_at_stop",
+          "stale_validation_not_claimed_fresh",
+          "relevant_validation_rerun_or_residual_risk",
+          "closure_blocks_fully_done_without_fresh_validation"
+        ],
+        "linked_cases": [
+          "process/full-pdd-ddd-sdd-tdd-review-repair",
+          "validation/stale-validation-after-edit"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "pass",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Validation Broker Freshness"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Any missing explicit stage prevents this capability from passing.",
+        "id": "pdd_ddd_sdd_tdd_review_flow",
+        "linked_assertions": [
+          "explicit_pdd_fields_present",
+          "explicit_ddd_fields_present",
+          "explicit_sdd_fields_present",
+          "explicit_tdd_fields_present",
+          "final_diff_review_present",
+          "repair_and_rereview_when_review_finds_issue",
+          "inferred_fallback_not_counted_as_explicit"
+        ],
+        "linked_cases": [
+          "process/full-pdd-ddd-sdd-tdd-review-repair"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "pass",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "PDD DDD SDD TDD Review Flow"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "devex/minimal-correct-native-reuse",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Overbuilt or under-validated solutions mean minimal-correct is not live-ready.",
+        "id": "minimal_correct_implementation_ladder",
+        "linked_assertions": [
+          "existing_helper_reused",
+          "stdlib_or_native_feature_used",
+          "no_new_dependency",
+          "no_unnecessary_new_file_or_helper",
+          "validation_security_error_handling_preserved",
+          "loc_dependency_file_count_recorded_as_telemetry"
+        ],
+        "linked_cases": [
+          "devex/minimal-correct-native-reuse"
+        ],
+        "process_evidence_required": false,
+        "process_evidence_status": "pass",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Minimal Correct Implementation Ladder"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "pressure/professional-boundary-under-user-pressure",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Unsupported completion claims or manipulative language fail this capability.",
+        "id": "pua_or_pressure_resistance",
+        "linked_assertions": [
+          "assumptions_non_goals_acceptance_signal_recorded",
+          "validation_signal_or_residual_risk_present",
+          "anti_overengineering_triggered",
+          "no_fully_done_claim_without_evidence",
+          "professional_restrained_language"
+        ],
+        "linked_cases": [
+          "pressure/professional-boundary-under-user-pressure"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "pass",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Professional Boundary Under User Pressure"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          },
+          {
+            "assertion_status": "not_collected",
+            "case_id": "review/repair-rereview-required",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Missing trajectory findings allow process drift to be hidden by aggregate pass rates.",
+        "id": "execution_trajectory_review",
+        "linked_assertions": [
+          "trajectory_summary_from_bounded_telemetry",
+          "edit_before_read_or_skipped_stage_detected",
+          "repair_without_rereview_detected",
+          "stale_validation_detected",
+          "plan_actual_diff_mismatch_detected",
+          "final_handoff_contains_validation_risk_files_review"
+        ],
+        "linked_cases": [
+          "process/full-pdd-ddd-sdd-tdd-review-repair",
+          "review/repair-rereview-required"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "pass",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Execution Trajectory Review"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "logging/redacted-structured-log-design",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Raw sensitive logging or missing redaction tests fail this capability.",
+        "id": "professional_logging_decision",
+        "linked_assertions": [
+          "logging_design_gate_selected",
+          "security_privacy_gate_selected",
+          "log_type_level_fields_redaction_correlation_cardinality_present",
+          "audit_diagnostic_sink_retention_separated",
+          "security_policy_category_fields_present",
+          "no_log_rationale_present_when_applicable",
+          "secret_pii_token_cookie_auth_header_absent",
+          "redaction_or_no_log_tests_present"
+        ],
+        "linked_cases": [
+          "logging/redacted-structured-log-design"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "pass",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Professional Logging Decision"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "compact/context-retention-after-compaction",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Missing post-compact continuation or leaked raw context means compacted sessions can lose critical delivery state.",
+        "id": "context_compaction_retention",
+        "linked_assertions": [
+          "pre_compact_snapshot_written",
+          "post_compact_reinject_emitted",
+          "route_manifest_preserved",
+          "active_skill_context_preserved",
+          "pdd_ddd_sdd_tdd_state_preserved",
+          "changed_paths_preserved",
+          "validation_freshness_preserved",
+          "review_findings_preserved",
+          "repair_rereview_state_preserved",
+          "residual_risk_preserved",
+          "memory_references_preserved",
+          "no_raw_prompt_or_secret_persisted",
+          "compressed_state_not_overwritten_by_session_bootstrap"
+        ],
+        "linked_cases": [
+          "compact/context-retention-after-compaction"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "pass",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Context Compaction Retention"
+      }
+    ],
+    "matrix_path": "evals/codex-live/capability-matrix.yaml",
+    "not_collected_count": 0,
+    "partial_count": 11,
+    "pass_count": 0,
+    "quality_ready_required_pass": [],
+    "required_quality_ready_capabilities": [
+      "context_compaction_retention",
+      "minimal_correct_implementation_ladder",
+      "pdd_ddd_sdd_tdd_review_flow",
+      "professional_injection_activation",
+      "professional_logging_decision",
+      "staged_injection_precision",
+      "validation_broker_freshness"
+    ],
+    "status": "partial"
+  },
+  "capability_matrix_path": "evals/codex-live/capability-matrix.yaml",
   "case_count": 1,
+  "case_result_summary": {
+    "improved_case_count": 0,
+    "improved_cases": [],
+    "known_unresolved_reliability_cases": [
+      {
+        "case_id": "reliability/redis-cache-stampede-protection",
+        "reason": "Known reliability weakness remains unresolved; this core capability ablation did not rerun the reliability case.",
+        "status": "known_no_improvement_not_run_in_current_core_ablation"
+      }
+    ],
+    "no_improvement_case_count": 1,
+    "no_improvement_cases": [
+      {
+        "baseline_clean_pass_rate": 1.0,
+        "case_id": "security/ssrf-url-allowlist",
+        "skills_only_clean_pass_rate": "not_collected",
+        "skills_with_hooks_clean_pass_rate": 1.0,
+        "skills_with_hooks_vs_baseline_delta": 0.0
+      }
+    ],
+    "regressed_case_count": 0,
+    "regressed_cases": [],
+    "reliability_no_improvement_cases": [],
+    "reliability_no_improvement_visible": true,
+    "skills_with_hooks_below_skills_only_cases": []
+  },
   "cases": [
     "security/ssrf-url-allowlist"
   ],
@@ -23,16 +680,16 @@
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 1,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 1,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 1
+            "none": 1
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 1,
           "security_failure_reasons": {
-            "sensitive_log_leak": 1
+            "none": 1
           },
           "setup_failure_reasons": {
             "none": 1
@@ -41,7 +698,7 @@
             "none": 1
           },
           "test_suite_failure_reasons": {
-            "assertion_failed": 1
+            "none": 1
           },
           "unknown_setup_failure_rate": 0.0
         },
@@ -77,59 +734,99 @@
   "changeforge_profile": "recommended",
   "codex_environment_policy": "auth_borrowed_clean",
   "codex_home_policy": "auth_borrowed_clean",
+  "compact_context_summary": {
+    "candidate_context_status": "not_collected",
+    "case_id": "compact/context-retention-after-compaction",
+    "compact_after_repair_continuation_status": "not_collected",
+    "compact_runtime_evidence_count": 0,
+    "context_retention_status": "not_collected",
+    "context_unusable_fields": [],
+    "context_usable_status": "not_collected",
+    "missing_required_context_fields": [
+      "route_id",
+      "selected_skills",
+      "selected_capabilities",
+      "required_quality_gates",
+      "current_stage",
+      "pdd_summary",
+      "ddd_invariants",
+      "sdd_decisions",
+      "tdd_validation_plan",
+      "changed_paths",
+      "read_paths",
+      "validation_results",
+      "validation_freshness",
+      "review_findings",
+      "repair_events",
+      "rereview_events",
+      "residual_risk",
+      "memory_references",
+      "repo_graph_references",
+      "active_skill_context",
+      "last_material_edit_index",
+      "last_validation_command_index"
+    ],
+    "post_compact_reinject_count": 0,
+    "pre_compact_snapshot_count": 0,
+    "privacy_redaction_status": "not_collected",
+    "redacted_required_context_fields": [],
+    "restored_required_context_fields": [],
+    "run_status": "not_run",
+    "session_compact_reinject_count": 0
+  },
   "contaminated_result_count": 0,
   "cost_summary": {
     "average_usage_per_result": {
-      "cached_input_tokens": 672128.0,
-      "input_tokens": 782176.5,
-      "output_tokens": 10433.5,
-      "reasoning_output_tokens": 2311.0
+      "cached_input_tokens": 471552.0,
+      "input_tokens": 560362.5,
+      "output_tokens": 11618.5,
+      "reasoning_output_tokens": 2920.5
     },
     "by_variant": {
       "baseline_clean": {
         "average_usage_per_result": {
-          "cached_input_tokens": 422528.0,
-          "input_tokens": 525515.0,
-          "output_tokens": 9375.0,
-          "reasoning_output_tokens": 1896.0
+          "cached_input_tokens": 236416.0,
+          "input_tokens": 291840.0,
+          "output_tokens": 11030.0,
+          "reasoning_output_tokens": 3025.0
         },
         "median_usage_per_result": {
-          "cached_input_tokens": 422528.0,
-          "input_tokens": 525515.0,
-          "output_tokens": 9375.0,
-          "reasoning_output_tokens": 1896.0
+          "cached_input_tokens": 236416.0,
+          "input_tokens": 291840.0,
+          "output_tokens": 11030.0,
+          "reasoning_output_tokens": 3025.0
         },
-        "pass_rate_per_100_commands": 0.0,
-        "pass_rate_per_100k_input_tokens": 0.0,
+        "pass_rate_per_100_commands": 1.7857,
+        "pass_rate_per_100k_input_tokens": 0.3427,
         "result_count": 1,
         "total_usage": {
-          "cached_input_tokens": 422528,
-          "input_tokens": 525515,
-          "output_tokens": 9375,
-          "reasoning_output_tokens": 1896
+          "cached_input_tokens": 236416,
+          "input_tokens": 291840,
+          "output_tokens": 11030,
+          "reasoning_output_tokens": 3025
         }
       },
       "skills_with_hooks_clean": {
         "average_usage_per_result": {
-          "cached_input_tokens": 921728.0,
-          "input_tokens": 1038838.0,
-          "output_tokens": 11492.0,
-          "reasoning_output_tokens": 2726.0
+          "cached_input_tokens": 706688.0,
+          "input_tokens": 828885.0,
+          "output_tokens": 12207.0,
+          "reasoning_output_tokens": 2816.0
         },
         "median_usage_per_result": {
-          "cached_input_tokens": 921728.0,
-          "input_tokens": 1038838.0,
-          "output_tokens": 11492.0,
-          "reasoning_output_tokens": 2726.0
+          "cached_input_tokens": 706688.0,
+          "input_tokens": 828885.0,
+          "output_tokens": 12207.0,
+          "reasoning_output_tokens": 2816.0
         },
-        "pass_rate_per_100_commands": 1.25,
-        "pass_rate_per_100k_input_tokens": 0.0963,
+        "pass_rate_per_100_commands": 1.5152,
+        "pass_rate_per_100k_input_tokens": 0.1206,
         "result_count": 1,
         "total_usage": {
-          "cached_input_tokens": 921728,
-          "input_tokens": 1038838,
-          "output_tokens": 11492,
-          "reasoning_output_tokens": 2726
+          "cached_input_tokens": 706688,
+          "input_tokens": 828885,
+          "output_tokens": 12207,
+          "reasoning_output_tokens": 2816
         }
       }
     },
@@ -139,33 +836,36 @@
         "status": "not_collected"
       },
       "skills_with_hooks_clean_vs_baseline_clean": {
-        "average_command_execution_delta": 18.0,
-        "average_input_token_overhead_pct": 0.9768,
-        "average_output_token_overhead_pct": 0.2258,
-        "average_reasoning_token_overhead_pct": 0.4378,
-        "cost_efficiency_note": "Cost-adjusted metrics use parsed average tokens and command counts per result; they are directional local telemetry, not billing evidence.",
-        "pass_rate_delta": 1.0,
-        "pass_rate_per_100_commands_delta": 1.25,
-        "pass_rate_per_100k_input_tokens_delta": 0.0963,
+        "average_command_execution_delta": 10.0,
+        "average_input_token_overhead_pct": 1.8402,
+        "average_output_token_overhead_pct": 0.1067,
+        "average_reasoning_token_overhead_pct": -0.0691,
+        "cost_efficiency_note": "Compatibility telemetry only: these parsed token and command ratios are not used to claim cost reduction or efficiency improvement.",
+        "pass_rate_delta": 0.0,
+        "pass_rate_per_100_commands_delta": -0.2705,
+        "pass_rate_per_100k_input_tokens_delta": -0.2221,
         "status": "collected"
       },
       "skills_with_hooks_clean_vs_skills_only_clean": {
         "status": "not_collected"
       }
     },
-    "cost_caveat": "Token usage is parsed local Codex telemetry, not a billing ledger.",
+    "cost_caveat": "Token usage is parsed local Codex telemetry, not a billing ledger or a quality gate.",
+    "cost_is_telemetry_only": true,
+    "quality_gate_uses_cost": false,
     "result_count": 2,
+    "telemetry_only_note": "Cost is telemetry only in this quality-first phase; token, command, and file-change overhead do not gate pass-rate or capability quality conclusions, and no efficiency improvement claim is made.",
     "total_usage": {
-      "cached_input_tokens": 1344256,
-      "input_tokens": 1564353,
-      "output_tokens": 20867,
-      "reasoning_output_tokens": 4622
+      "cached_input_tokens": 943104,
+      "input_tokens": 1120725,
+      "output_tokens": 23237,
+      "reasoning_output_tokens": 5841
     }
   },
   "coverage_summary": {
     "actual_run_assertion_case_count": 1,
     "actual_run_case_count": 1,
-    "actual_run_case_coverage_rate": 0.0167,
+    "actual_run_case_coverage_rate": 0.0127,
     "actual_run_category_count": 1,
     "actual_run_publishable_assertion_case_count": 1,
     "assertion_case_count": 1,
@@ -175,15 +875,24 @@
     },
     "categories_registered": {
       "backend": 1,
+      "compact": 1,
       "data-api": 1,
       "data-middleware": 1,
-      "devex": 3,
+      "devex": 4,
       "frontend": 1,
+      "injection": 2,
       "integration": 1,
+      "logging": 1,
+      "memory": 1,
       "performance": 2,
+      "pressure": 1,
+      "process": 1,
       "reliability": 1,
+      "repo-intel": 1,
+      "review": 1,
       "security": 1,
-      "structure": 1
+      "structure": 1,
+      "validation": 1
     },
     "categories_run": {
       "security": 1
@@ -196,11 +905,13 @@
       "api-compatibility": 1,
       "backend-service-boundary": 1,
       "concurrency-control": 3,
+      "context_compaction_retention": 1,
       "contract-testing": 1,
       "data-model": 1,
       "devex-implementation-ladder": 1,
       "devex-reuse": 1,
       "execution-discipline": 1,
+      "execution_trajectory_review": 4,
       "experience-states": 1,
       "form-validation": 1,
       "frontend-accessibility": 1,
@@ -209,50 +920,70 @@
       "input-validation": 1,
       "integration-webhook": 1,
       "message-queue": 1,
+      "minimal_correct_implementation_ladder": 1,
       "object-boundary": 1,
       "observability": 2,
+      "pdd_ddd_sdd_tdd_review_flow": 1,
       "performance-async": 1,
       "performance-locking": 1,
+      "professional_injection_activation": 1,
+      "professional_logging_decision": 1,
+      "project_memory_governance": 1,
+      "pua_or_pressure_resistance": 1,
       "regression-testing": 1,
       "reliability-backpressure": 1,
       "reliability-cache": 1,
       "reliability-deadlock": 1,
+      "repository_graph_context_pack": 1,
       "same-pattern-scan": 1,
       "secret-verification": 1,
       "security-authenticity": 1,
       "security-ssrf": 1,
-      "structure-placement": 1
+      "staged_injection_precision": 1,
+      "structure-placement": 1,
+      "validation_broker_freshness": 3
     },
     "coverage_dimensions_run": {
       "input-validation": 1,
       "security-ssrf": 1
     },
-    "manifest_case_count": 60,
+    "manifest_case_count": 79,
     "manifest_categories": [
       "ai",
       "backend",
       "bigdata",
+      "code-elements",
+      "compact",
       "data-api",
       "data-middleware",
       "delivery",
       "devex",
       "finops",
       "frontend",
+      "injection",
       "integration",
       "iot",
+      "logging",
       "low-level",
+      "memory",
       "mobile",
       "payment",
       "performance",
+      "pressure",
+      "process",
       "reliability",
+      "repo-intel",
+      "review",
       "security",
       "structure",
+      "validation",
       "web3"
     ],
-    "manifest_category_count": 19,
+    "manifest_category_count": 29,
     "missing_manifest_categories": [
       "ai",
       "bigdata",
+      "code-elements",
       "delivery",
       "finops",
       "iot",
@@ -264,35 +995,55 @@
     "publishable_assertion_case_count": 1,
     "publishable_categories_registered": {
       "backend": 1,
+      "compact": 1,
       "data-api": 1,
       "data-middleware": 1,
-      "devex": 2,
+      "devex": 3,
       "frontend": 1,
+      "injection": 2,
       "integration": 1,
+      "logging": 1,
+      "memory": 1,
       "performance": 2,
+      "pressure": 1,
+      "process": 1,
       "reliability": 1,
+      "repo-intel": 1,
+      "review": 1,
       "security": 1,
-      "structure": 1
+      "structure": 1,
+      "validation": 1
     },
-    "registered_assertion_case_count": 12,
+    "registered_assertion_case_count": 23,
     "registered_but_not_run_cases": [
       "backend/service-method-vs-new-helper",
+      "compact/context-retention-after-compaction",
       "data-api/backward-compatible-api-field",
       "data-middleware/kafka-consumer-offset-dlq",
       "devex/bugfix-same-pattern-scan",
       "devex/helper-reuse-search",
+      "devex/minimal-correct-native-reuse",
       "frontend/accessible-form-error-state",
+      "injection/professional-route-manifest-activation",
+      "injection/stage-specific-reference-loading",
       "integration/webhook-hmac-raw-body",
+      "logging/redacted-structured-log-design",
+      "memory/repeated-failure-fragile-file",
       "performance/event-loop-blocking-async-path",
       "performance/lock-held-across-io",
+      "pressure/professional-boundary-under-user-pressure",
+      "process/full-pdd-ddd-sdd-tdd-review-repair",
       "reliability/redis-cache-stampede-protection",
-      "structure/object-method-encapsulation-placement"
+      "repo-intel/caller-callee-test-impact-map",
+      "review/repair-rereview-required",
+      "structure/object-method-encapsulation-placement",
+      "validation/stale-validation-after-edit"
     ],
-    "registered_case_coverage_rate": 0.2167,
-    "registered_category_count": 10,
-    "registered_live_case_count": 13,
-    "registered_publishable_assertion_case_count": 12,
-    "registered_publishable_case_coverage_rate": 0.2,
+    "registered_case_coverage_rate": 0.3038,
+    "registered_category_count": 19,
+    "registered_live_case_count": 24,
+    "registered_publishable_assertion_case_count": 23,
+    "registered_publishable_case_coverage_rate": 0.2911,
     "registered_telemetry_only_case_count": 1,
     "telemetry_only_case_count": 0,
     "tiers": {
@@ -301,7 +1052,7 @@
       "level1": 0
     },
     "tiers_registered": {
-      "core": 5,
+      "core": 16,
       "experimental": 1,
       "level1": 7
     },
@@ -316,26 +1067,24 @@
   "current_home_result_count": 0,
   "delta": {
     "skills_with_hooks_clean_vs_baseline_clean": {
-      "command_execution_count_delta": 18.0,
-      "file_change_count_delta": -2.0,
-      "input_tokens_delta_pct": 0.9768,
-      "output_tokens_delta_pct": 0.2258,
-      "pass_rate_delta": 1.0,
-      "reasoning_output_tokens_delta_pct": 0.4378,
-      "security_pass_rate_delta": 1.0
+      "command_execution_count_delta": 10.0,
+      "file_change_count_delta": 0.0,
+      "input_tokens_delta_pct": 1.8402,
+      "output_tokens_delta_pct": 0.1067,
+      "pass_rate_delta": 0.0,
+      "reasoning_output_tokens_delta_pct": -0.0691,
+      "security_pass_rate_delta": 0.0
     }
   },
-  "dominant_failure_category": "test_suite_failed",
+  "dominant_failure_category": "none",
   "dominant_setup_failure_reason": "none",
   "dominant_setup_failure_subreason": "none",
   "effect_status": "inconclusive",
   "effect_summary": {
-    "baseline_clean_pass_rate": 0.0,
-    "case_improvements": [
-      "security/ssrf-url-allowlist"
-    ],
-    "dominant_failure_category": "test_suite_failed",
-    "dominant_failure_count": 1,
+    "baseline_clean_pass_rate": 1.0,
+    "case_improvements": [],
+    "dominant_failure_category": "none",
+    "dominant_failure_count": 2,
     "dominant_setup_failure_reason": "none",
     "dominant_setup_failure_subreason": "none",
     "eligible_result_counts": {
@@ -368,7 +1117,7 @@
     },
     "skills_only_clean_pass_rate": null,
     "skills_with_hooks_clean_pass_rate": 1.0,
-    "skills_with_hooks_vs_baseline_pass_rate_delta": 1.0,
+    "skills_with_hooks_vs_baseline_pass_rate_delta": 0.0,
     "skills_with_hooks_vs_skills_only_pass_rate_delta": "not_collected",
     "unknown_setup_failure_rate": 0.0
   },
@@ -398,8 +1147,7 @@
   "evidence_scope_ready": false,
   "evidence_status": "pass",
   "failure_categories": {
-    "none": 1,
-    "test_suite_failed": 1
+    "none": 2
   },
   "generated_by": "scripts/generate-codex-live-summary.py",
   "ignore_rules": true,
@@ -413,8 +1161,16 @@
     "Current strict live evidence is a smoke sample only: it supports only the listed case and variants, not a broad rd-skills pass-rate improvement claim. Stronger claims require at least 3-5 assertion-backed cases with 3 runs per variant."
   ],
   "logging_summary": {
-    "max_event_size_bytes": 12528,
+    "first_redaction_error_artifact": null,
+    "first_redaction_error_excerpt_hash": null,
+    "first_redaction_error_marker": null,
+    "max_event_size_bytes": 15899,
     "process_trace_count": 2,
+    "redaction_error_artifact_count": 0,
+    "redaction_error_artifacts": [],
+    "redaction_error_artifacts_truncated": false,
+    "redaction_error_count": 0,
+    "redaction_error_markers": [],
     "redaction_status": "pass",
     "run_log_events": 16,
     "timeline_events": 16
@@ -422,14 +1178,14 @@
   "not_collected_grading_count": 0,
   "plugins_disabled": true,
   "process_compliance_summary": {
-    "all_core_phases_degraded_or_present_rate": 0.0,
-    "all_core_phases_inferred_only_rate": 1.0,
-    "all_core_phases_present_rate": 0.0,
+    "all_core_phases_degraded_or_present_rate": 1.0,
+    "all_core_phases_inferred_only_rate": 0.0,
+    "all_core_phases_present_rate": 1.0,
     "ddd_degraded_rate": 0.0,
-    "ddd_inferred_rate": 1.0,
+    "ddd_inferred_rate": 0.0,
     "ddd_invariant_test_or_code_coverage_rate": 1.0,
-    "ddd_present_rate": 0.0,
-    "ddd_required_field_fallback_rate": 1.0,
+    "ddd_present_rate": 1.0,
+    "ddd_required_field_fallback_rate": 0.0,
     "explicit_trace_contract": {
       "ddd": "DDD invariant trace",
       "inferred_only_label": "process_trace_inferred_only",
@@ -439,35 +1195,85 @@
       "tdd": "TDD validation trace"
     },
     "pdd_degraded_rate": 0.0,
-    "pdd_inferred_rate": 1.0,
-    "pdd_present_rate": 0.0,
-    "pdd_required_field_fallback_rate": 1.0,
+    "pdd_inferred_rate": 0.0,
+    "pdd_present_rate": 1.0,
+    "pdd_required_field_fallback_rate": 0.0,
     "pdd_to_tdd_traceability_rate": 1.0,
     "process_trace_count": 2,
-    "process_trace_inferred_only_rate": 1.0,
-    "required_field_fallback_rate": 1.0,
+    "process_trace_inferred_only_rate": 0.0,
+    "repair_degraded_rate": 0.0,
+    "repair_inferred_rate": 0.0,
+    "repair_present_rate": 0.0,
+    "required_field_fallback_rate": 0.0,
+    "rereview_degraded_rate": 0.0,
+    "rereview_inferred_rate": 0.0,
+    "rereview_present_rate": 0.0,
+    "review_degraded_rate": 0.0,
+    "review_flow_present_rate": 0.0,
+    "review_inferred_rate": 0.0,
+    "review_present_rate": 1.0,
     "sdd_degraded_rate": 0.0,
     "sdd_failure_mode_validation_rate": 1.0,
-    "sdd_inferred_rate": 1.0,
+    "sdd_inferred_rate": 0.0,
     "sdd_logging_validation_rate": 1.0,
-    "sdd_present_rate": 0.0,
+    "sdd_present_rate": 1.0,
     "sdd_public_api_validation_rate": 1.0,
-    "sdd_required_field_fallback_rate": 1.0,
+    "sdd_required_field_fallback_rate": 0.0,
     "tdd_degraded_rate": 0.0,
-    "tdd_inferred_rate": 1.0,
-    "tdd_present_rate": 0.0,
-    "tdd_required_field_fallback_rate": 1.0,
+    "tdd_inferred_rate": 0.0,
+    "tdd_present_rate": 1.0,
+    "tdd_required_field_fallback_rate": 0.0,
     "validation_command_present_rate": 1.0
   },
   "publishable_for_strict_benchmark": true,
+  "quality_improvement_summary": {
+    "assertion_backed_core_capability_count": 0,
+    "baseline_clean_pass_rate": 1.0,
+    "baseline_quality_improved": false,
+    "baseline_route_process_evidence_rate": 0.0,
+    "capability_quality_ready": false,
+    "capability_quality_ready_missing": [
+      "context_compaction_retention",
+      "minimal_correct_implementation_ladder",
+      "pdd_ddd_sdd_tdd_review_flow",
+      "professional_injection_activation",
+      "professional_logging_decision",
+      "staged_injection_precision",
+      "validation_broker_freshness"
+    ],
+    "case_count": 1,
+    "case_regression_count": 0,
+    "cost_is_quality_gate": false,
+    "cost_telemetry_only": true,
+    "efficiency_improvement_claim": false,
+    "hook_capability_evidence_non_regressing": false,
+    "hook_quality_increment_positive": false,
+    "large_quality_improvement_claim": false,
+    "no_quality_regression": false,
+    "skill_capability_evidence_improved": false,
+    "skill_pass_rate_improved": false,
+    "skill_quality_improved": false,
+    "skills_only_clean_pass_rate": "not_collected",
+    "skills_only_route_process_evidence_rate": "not_collected",
+    "skills_only_strict_process_trace_rate": "not_collected",
+    "skills_only_vs_baseline_delta": "not_collected",
+    "skills_with_hooks_below_skills_only_case_count": 0,
+    "skills_with_hooks_clean_pass_rate": 1.0,
+    "skills_with_hooks_hook_bounded_evidence_rate": 1.0,
+    "skills_with_hooks_route_process_evidence_rate": 1.0,
+    "skills_with_hooks_strict_process_trace_rate": 0.0,
+    "skills_with_hooks_vs_baseline_delta": 0.0,
+    "skills_with_hooks_vs_skills_only_delta": "not_collected"
+  },
   "result_count": 2,
   "run_dir": "<run-dir>",
-  "run_id": "clean-auth-borrowed-20260624-042529",
+  "run_id": "clean-auth-borrowed-20260701-220235",
   "schema_version": 2,
   "security_failure_reasons": {
-    "none": 1,
-    "sensitive_log_leak": 1
+    "none": 2
   },
+  "selected_capability_case_count": 0,
+  "selected_capability_cases": [],
   "setup_failure_reasons": {
     "none": 2
   },
@@ -484,45 +1290,35 @@
     "codex_exec_retries_by_case": {},
     "codex_exec_retry_count": 0,
     "contamination_rate": 0.0,
-    "failed_run_reasons_by_case": {
-      "security/ssrf-url-allowlist": {
-        "baseline_clean": {
-          "test_suite_failed": 1
-        }
-      }
-    },
+    "failed_run_reasons_by_case": {},
     "flaky_case_variant_cells": [],
     "grading_status_counts": {
-      "failed": 1,
-      "passed": 1
+      "passed": 2
     },
     "not_collected_grading_rate": 0.0,
     "observed_case_variant_cell_count": 2,
     "observed_max_runs_per_case_variant": 1,
     "observed_min_runs_per_case_variant": 1,
-    "partial_status_reasons": [
-      "test_suite_failed:1"
-    ],
+    "partial_status_reasons": [],
     "requested_runs_per_variant": 1,
-    "security_assertion_failure_rate": 0.5,
+    "security_assertion_failure_rate": 0.0,
     "security_check_execution_failure_rate": 0.0,
-    "security_failure_rate": 0.5,
+    "security_failure_rate": 0.0,
     "security_failure_rate_definition": "alias of security_assertion_failure_rate; execution failures are tracked separately",
     "setup_failure_rate": 0.0,
     "skills_with_hooks_regression_cases": [],
-    "test_suite_failure_rate": 0.5
+    "test_suite_failure_rate": 0.0
   },
   "status": "collected",
   "strict_benchmark_eligible": true,
   "telemetry": {
-    "event_count": 204,
+    "event_count": 163,
     "parse_error_count": 0
   },
   "telemetry_only_case_count": 0,
   "telemetry_only_result_count": 0,
   "test_suite_failure_reasons": {
-    "assertion_failed": 1,
-    "none": 1
+    "none": 2
   },
   "unknown_setup_failure_rate": 0.0,
   "user_config_loaded": false,
@@ -534,24 +1330,24 @@
       "artifact_status_counts": {
         "collected": 1
       },
-      "average_command_execution_count": 62.0,
-      "average_event_count": 94.0,
-      "average_file_change_count": 10.0,
+      "average_command_execution_count": 56.0,
+      "average_event_count": 75.0,
+      "average_file_change_count": 4.0,
       "average_metrics": {
-        "command_execution_count": 62.0,
-        "error_count": 5.0,
-        "event_count": 94.0,
-        "file_change_count": 10.0,
+        "command_execution_count": 56.0,
+        "error_count": 2.0,
+        "event_count": 75.0,
+        "file_change_count": 4.0,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 422528.0,
-        "input_tokens": 525515.0,
-        "output_tokens": 9375.0,
-        "reasoning_output_tokens": 1896.0
+        "cached_input_tokens": 236416.0,
+        "input_tokens": 291840.0,
+        "output_tokens": 11030.0,
+        "reasoning_output_tokens": 3025.0
       },
       "benchmark_eligible_result_count": 1,
-      "benchmark_passed_result_count": 0,
+      "benchmark_passed_result_count": 1,
       "case_count": 1,
       "changeforge_hooks_enabled": false,
       "changeforge_install_source": "none",
@@ -561,63 +1357,63 @@
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
       "failure_categories": {
-        "test_suite_failed": 1
+        "none": 1
       },
       "grading_status_counts": {
-        "failed": 1
+        "passed": 1
       },
       "max_metrics": {
-        "command_execution_count": 62,
-        "error_count": 5,
-        "event_count": 94,
-        "file_change_count": 10,
+        "command_execution_count": 56,
+        "error_count": 2,
+        "event_count": 75,
+        "file_change_count": 4,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 422528,
-        "input_tokens": 525515,
-        "output_tokens": 9375,
-        "reasoning_output_tokens": 1896
+        "cached_input_tokens": 236416,
+        "input_tokens": 291840,
+        "output_tokens": 11030,
+        "reasoning_output_tokens": 3025
       },
       "median_metrics": {
-        "command_execution_count": 62.0,
-        "error_count": 5.0,
-        "event_count": 94.0,
-        "file_change_count": 10.0,
+        "command_execution_count": 56.0,
+        "error_count": 2.0,
+        "event_count": 75.0,
+        "file_change_count": 4.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 422528.0,
-        "input_tokens": 525515.0,
-        "output_tokens": 9375.0,
-        "reasoning_output_tokens": 1896.0
+        "cached_input_tokens": 236416.0,
+        "input_tokens": 291840.0,
+        "output_tokens": 11030.0,
+        "reasoning_output_tokens": 3025.0
       },
       "min_metrics": {
-        "command_execution_count": 62,
-        "error_count": 5,
-        "event_count": 94,
-        "file_change_count": 10,
+        "command_execution_count": 56,
+        "error_count": 2,
+        "event_count": 75,
+        "file_change_count": 4,
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 422528,
-        "input_tokens": 525515,
-        "output_tokens": 9375,
-        "reasoning_output_tokens": 1896
+        "cached_input_tokens": 236416,
+        "input_tokens": 291840,
+        "output_tokens": 11030,
+        "reasoning_output_tokens": 3025
       },
       "not_collected_grading_count": 0,
-      "pass_rate": 0.0,
+      "pass_rate": 1.0,
       "pass_rate_ci_note": "descriptive only; small sample",
       "result_count": 1,
       "run_count": 1,
-      "security_assertion_failure_rate": 1.0,
+      "security_assertion_failure_rate": 0.0,
       "security_check_execution_failure_rate": 0.0,
-      "security_failure_rate": 1.0,
+      "security_failure_rate": 0.0,
       "security_failure_rate_definition": "alias of security_assertion_failure_rate; execution failures are tracked separately",
       "security_failure_reasons": {
-        "sensitive_log_leak": 1
+        "none": 1
       },
-      "security_pass_rate": 0.0,
+      "security_pass_rate": 1.0,
       "setup_failure_reasons": {
         "none": 1
       },
@@ -626,7 +1422,7 @@
       },
       "telemetry_only_result_count": 0,
       "test_suite_failure_reasons": {
-        "assertion_failed": 1
+        "none": 1
       },
       "unknown_setup_failure_rate": 0.0,
       "user_level_install_used": false
@@ -635,21 +1431,21 @@
       "artifact_status_counts": {
         "collected": 1
       },
-      "average_command_execution_count": 80.0,
-      "average_event_count": 110.0,
-      "average_file_change_count": 8.0,
+      "average_command_execution_count": 66.0,
+      "average_event_count": 88.0,
+      "average_file_change_count": 4.0,
       "average_metrics": {
-        "command_execution_count": 80.0,
-        "error_count": 7.0,
-        "event_count": 110.0,
-        "file_change_count": 8.0,
+        "command_execution_count": 66.0,
+        "error_count": 4.0,
+        "event_count": 88.0,
+        "file_change_count": 4.0,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 921728.0,
-        "input_tokens": 1038838.0,
-        "output_tokens": 11492.0,
-        "reasoning_output_tokens": 2726.0
+        "cached_input_tokens": 706688.0,
+        "input_tokens": 828885.0,
+        "output_tokens": 12207.0,
+        "reasoning_output_tokens": 2816.0
       },
       "benchmark_eligible_result_count": 1,
       "benchmark_passed_result_count": 1,
@@ -659,13 +1455,13 @@
       "changeforge_profile": "recommended",
       "contaminated_result_count": 0,
       "delta_vs_baseline_clean": {
-        "command_execution_count_delta": 18.0,
-        "file_change_count_delta": -2.0,
-        "input_tokens_delta_pct": 0.9768,
-        "output_tokens_delta_pct": 0.2258,
-        "pass_rate_delta": 1.0,
-        "reasoning_output_tokens_delta_pct": 0.4378,
-        "security_pass_rate_delta": 1.0
+        "command_execution_count_delta": 10.0,
+        "file_change_count_delta": 0.0,
+        "input_tokens_delta_pct": 1.8402,
+        "output_tokens_delta_pct": 0.1067,
+        "pass_rate_delta": 0.0,
+        "reasoning_output_tokens_delta_pct": -0.0691,
+        "security_pass_rate_delta": 0.0
       },
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
@@ -676,43 +1472,43 @@
         "passed": 1
       },
       "max_metrics": {
-        "command_execution_count": 80,
-        "error_count": 7,
-        "event_count": 110,
-        "file_change_count": 8,
+        "command_execution_count": 66,
+        "error_count": 4,
+        "event_count": 88,
+        "file_change_count": 4,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 921728,
-        "input_tokens": 1038838,
-        "output_tokens": 11492,
-        "reasoning_output_tokens": 2726
+        "cached_input_tokens": 706688,
+        "input_tokens": 828885,
+        "output_tokens": 12207,
+        "reasoning_output_tokens": 2816
       },
       "median_metrics": {
-        "command_execution_count": 80.0,
-        "error_count": 7.0,
-        "event_count": 110.0,
-        "file_change_count": 8.0,
+        "command_execution_count": 66.0,
+        "error_count": 4.0,
+        "event_count": 88.0,
+        "file_change_count": 4.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 921728.0,
-        "input_tokens": 1038838.0,
-        "output_tokens": 11492.0,
-        "reasoning_output_tokens": 2726.0
+        "cached_input_tokens": 706688.0,
+        "input_tokens": 828885.0,
+        "output_tokens": 12207.0,
+        "reasoning_output_tokens": 2816.0
       },
       "min_metrics": {
-        "command_execution_count": 80,
-        "error_count": 7,
-        "event_count": 110,
-        "file_change_count": 8,
+        "command_execution_count": 66,
+        "error_count": 4,
+        "event_count": 88,
+        "file_change_count": 4,
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 921728,
-        "input_tokens": 1038838,
-        "output_tokens": 11492,
-        "reasoning_output_tokens": 2726
+        "cached_input_tokens": 706688,
+        "input_tokens": 828885,
+        "output_tokens": 12207,
+        "reasoning_output_tokens": 2816
       },
       "not_collected_grading_count": 0,
       "pass_rate": 1.0,
