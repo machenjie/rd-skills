@@ -42,7 +42,7 @@ Source truth is current handlers, services, consumers, external-write adapters, 
 # Stage Fit
 
 - **Planning:** use when a write, submit, external call, webhook, queue consumer, or replay path can execute more than once and the safe duplicate behavior is not yet explicit.
-- **Implementation / review:** verify key generation point, caller binding, payload hash, in-flight state, atomic dedupe/side-effect ordering, retry classification, circuit interaction, and terminal state.
+- **Coding / bug-fix / debugging / code-review / refactoring:** verify key generation point, caller binding, payload hash, in-flight state, atomic dedupe/side-effect ordering, retry classification, circuit interaction, and terminal state before changing helpers, adapters, consumers, or retry wrappers.
 - **Testing / validation:** map duplicate request, same-key payload mismatch, in-flight duplicate, timeout recovery, retry exhaustion, DLQ/replay, and cross-caller replay to executable or explicitly not-run evidence.
 - **Release / operations:** require retry-rate, duplicate-detected, idempotency-store-error, DLQ depth, replay, reconciliation, and circuit-state signals with owners and rollback or stop criteria.
 - **Graph / memory / execution coupling:** treat graph, memory, runbook, incident, and old report claims as leads; reconcile them against current source, final command order, and validation freshness before closure.
@@ -104,18 +104,18 @@ The most dangerous failure in idempotency design is quiet: a duplicate operation
 
 # Failure Modes
 
-- New UUID per payment retry: 3 retries = 3 charges; customer charged $300 instead of $100; refund required; P0 incident.
-- Payload mismatch accepted: $200 charge replayed with $500 payload; cached $200 returned; ledger shows $200; bank processed $500; financial discrepancy.
-- Idempotency key expiry before retry: key expires in 1 hour; retry at hour 2; new charge created; duplicate.
-- Retry on 503 with no circuit breaker: 1000 RPS retry storm; dependency overloaded; recovery time 3x longer; cascading failure.
-- Webhook max retries exhausted; silently discarded; no DLQ; consuming service never receives event; order stuck in "pending" state forever.
-- Timeout recovery without idempotency key: payment committed server-side; response lost; retry creates second charge; customer dispute.
-- Key not bound to caller: API key leaked; attacker replays idempotency keys; injects payment results for other merchants.
-- No dead-letter table: background job fails 5 times; silently dropped; 10,000 invoices not generated; discovered in monthly billing reconciliation.
+- **New UUID per retry:** New UUID per payment retry: 3 retries = 3 charges; customer charged $300 instead of $100; refund required; P0 incident.
+- **Payload mismatch accepted:** Payload mismatch accepted: $200 charge replayed with $500 payload; cached $200 returned; ledger shows $200; bank processed $500; financial discrepancy.
+- **Expired key reprocesses:** Idempotency key expiry before retry: key expires in 1 hour; retry at hour 2; new charge created; duplicate.
+- **Retry storm:** Retry on 503 with no circuit breaker: 1000 RPS retry storm; dependency overloaded; recovery time 3x longer; cascading failure.
+- **Silent webhook drop:** Webhook max retries exhausted; silently discarded; no DLQ; consuming service never receives event; order stuck in "pending" state forever.
+- **Unknown timeout duplicate:** Timeout recovery without idempotency key: payment committed server-side; response lost; retry creates second charge; customer dispute.
+- **Cross-caller replay:** Key not bound to caller: API key leaked; attacker replays idempotency keys; injects payment results for other merchants.
+- **Missing dead-letter table:** No dead-letter table: background job fails 5 times; silently dropped; 10,000 invoices not generated; discovered in monthly billing reconciliation.
 
 # Reference Loading Policy
 
-Use the `SKILL.md` body for L1/L2 routing, stage fit, mode selection, triggers, output contract, evidence, and quality gates. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete idempotency/retry design for payments, subscriptions, orders, webhooks, queue consumers, retries, redelivery, scheduled jobs, external writes, or harmful duplicate side effects. Load [references/industry-benchmarks.md](references/industry-benchmarks.md) when release evidence, audit, high-risk provider behavior, retry-budget math, outbox/inbox, or named benchmark support is required. Use [examples/example-output.md](examples/example-output.md) only when the final output shape is unclear. Do not load deep references for read-only retry wrappers or local-only retries with no external side effect.
+Use the `SKILL.md` body for L1/L2 routing, stage fit, mode selection, triggers, output contract, evidence, and quality gates. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete idempotency/retry design for payments, subscriptions, orders, webhooks, queue consumers, retries, redelivery, scheduled jobs, external writes, or harmful duplicate side effects. Load [references/evidence-patterns.md](references/evidence-patterns.md) only when the handoff needs source-to-validation mapping, graph/memory/execution freshness, tool permission boundary, replay/reconciliation evidence, or residual-risk wording. Load [references/industry-benchmarks.md](references/industry-benchmarks.md) when release evidence, audit, high-risk provider behavior, retry-budget math, outbox/inbox, or named benchmark support is required. Use [examples/example-output.md](examples/example-output.md) only when the final output shape is unclear. Do not load deep references for read-only retry wrappers or local-only retries with no external side effect.
 
 # Output Contract
 

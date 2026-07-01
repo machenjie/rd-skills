@@ -1,30 +1,14 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-07-01T10:23:26.017758+00:00
+- Generated: 2026-07-01T13:56:55.748327+00:00
 - Skills/capabilities checked: 157
 - Warning count: 0
-- Average score: 58.03/60
+- Average score: 58.34/60
 
 ## Scores
 
 | Item | Kind | Score | Status | Missing Sections | Warnings |
 | --- | --- | ---: | --- | ---: | ---: |
-| `src/foundation/capabilities/go-professional-usage/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
-| `src/foundation/capabilities/i18n-timezone-money-safety/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/idempotency-retry-design/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
-| `src/foundation/capabilities/kubernetes-gateway/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/language-performance-safety/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
-| `src/foundation/capabilities/language-runtime-selection/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/microservice-splitting/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/page-component-decomposition/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/regression-testing/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
-| `src/foundation/capabilities/requirement-structuring/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/task-dag-decomposition/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/technology-stack-selection/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/testability-seam-design/SKILL.md` | foundation-capability | 56/60 | sample-grade | 0 | 0 |
-| `src/foundation/capabilities/use-case-modeling/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/user-role-identification/SKILL.md` | foundation-capability | 56/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/backup-recovery/SKILL.md` | foundation-capability | 57/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/code-review/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/dto-schema-design/SKILL.md` | foundation-capability | 57/60 | acceptable | 0 | 0 |
@@ -139,22 +123,38 @@
 | `src/foundation/capabilities/failure-diagnosis/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/frontend-testing/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/git-professional-usage/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/go-professional-usage/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
+| `src/foundation/capabilities/i18n-timezone-money-safety/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/idempotency-retry-design/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/implementation-structure-design/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/indexing-query-optimization/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/input-validation/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/kubernetes-gateway/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/language-performance-safety/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
+| `src/foundation/capabilities/language-runtime-selection/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/linux-systems-professional-usage/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/logging-error-handling/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
+| `src/foundation/capabilities/microservice-splitting/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/network-protocol-gateway-usage/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/observability/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/package-dependency-management/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/page-component-decomposition/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/permission-boundary-modeling/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/refactoring/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
+| `src/foundation/capabilities/regression-testing/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/repository-graph-analysis/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/requirement-clarification/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/requirement-structuring/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/task-dag-decomposition/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/technology-stack-selection/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/test-strategy/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
+| `src/foundation/capabilities/testability-seam-design/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/threat-modeling/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/transaction-consistency/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/unit-testing/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
+| `src/foundation/capabilities/use-case-modeling/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/user-role-identification/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/validation-broker/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/professional-skills/backend-change-builder/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/experience-impact-modeler/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |

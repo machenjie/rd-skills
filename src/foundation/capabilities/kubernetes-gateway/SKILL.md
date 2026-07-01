@@ -96,7 +96,7 @@ Escalate when a workload is public-facing, exposure expands, privileged or root 
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries routing, gates, and closure rules. Load [references/checklist.md](references/checklist.md) when drafting a concrete manifest/chart review, production/shared-environment Kubernetes plan, Gateway/Ingress exposure review, RBAC/NetworkPolicy/secret review, Helm/GitOps release plan, CRD/hook decision, or rollout/rollback checklist. Do not load it for a local-only design note with no cluster, release, route, or secret surface.
+The `SKILL.md` body carries routing, gates, and closure rules. Load [references/checklist.md](references/checklist.md) when drafting a concrete manifest/chart review, production/shared-environment Kubernetes plan, Gateway/Ingress exposure review, RBAC/NetworkPolicy/secret review, Helm/GitOps release plan, CRD/hook decision, or rollout/rollback checklist. Load [references/evidence-patterns.md](references/evidence-patterns.md) only when the handoff needs rendered-manifest evidence, graph/memory/execution freshness, live-command tool boundary, provider/cluster evidence limits, or residual-risk wording. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when Kubernetes version/tooling baselines, hardening standards, Gateway/Helm/GitOps patterns, or accepted deviations need named benchmark support. Do not load references for a local-only design note with no cluster, release, route, or secret surface.
 
 # Output Contract
 
@@ -108,6 +108,8 @@ Return a `kubernetes_gateway_plan` with:
 - `traffic_security`: Service, Ingress/Gateway, DNS/CDN/WAF/load balancer, TLS/auth/timeouts/rate limits, ServiceAccount/RBAC, NetworkPolicy, secret source, and security context.
 - `release_validation`: command, validator/test, output, exit code, rendered artifact/report, diff, policy result, and freshness status.
 - `rollback_plan`: image, config, secret, route, schema, CRD, hook, and external dependency rollback or forward-fix scope.
+- `graph_memory_execution_coupling`: repository graph, project memory, generated reports, prior deploy notes, and validation trajectory accepted, rejected, stale, unknown, and freshness after final edit.
+- `tool_permission_boundary`: read-only, render-only, dry-run, live cluster/cloud/DNS/WAF/secret mutation, sandbox/approval state, write scope, rollback path, and redaction rule.
 - `residual_risk` and next gate or handoff owner.
 
 # Evidence Contract

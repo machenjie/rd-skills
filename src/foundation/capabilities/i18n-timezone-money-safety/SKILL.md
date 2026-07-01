@@ -25,7 +25,7 @@ Do not use this capability for copy edits with no locale, formatting, time, nume
 
 # Stage Fit
 
-Use during intake when locale, timezone, calendar, currency, number, sorting, pluralization, or formatting assumptions are hidden in a request. Use during design when API/storage/display boundaries, civil-time semantics, migration/backfill, locale fallback, or money precision must be decided before implementation. Use during review when repository graph, project memory, or previous execution suggests existing formatting helpers, tzdata baselines, money fields, translation keys, or currency rules that must be current-source confirmed. Hand off when the primary question is payment ledger policy, API contract rollout, SQL physical tuning, frontend display implementation, backend persistence, migration execution, or executable test strategy.
+Use during intake when locale, timezone, calendar, currency, number, sorting, pluralization, or formatting assumptions are hidden in a request. Use during design when API/storage/display boundaries, civil-time semantics, migration/backfill, locale fallback, or money precision must be decided before implementation. Use during coding, bug-fix, debugging, code-review, refactoring, testing, and release readiness when behavior depends on locale/time/money correctness. Use during review when repository graph, project memory, or previous execution suggests existing formatting helpers, tzdata baselines, money fields, translation keys, or currency rules that must be current-source confirmed. Hand off when the primary question is payment ledger policy, API contract rollout, SQL physical tuning, frontend display implementation, backend persistence, migration execution, or executable test strategy.
 
 # Non-Negotiable Rules
 
@@ -91,46 +91,46 @@ Select this capability when correctness depends on locale, timezone, date/time, 
 
 # Failure Modes
 
-- Symptom: invoice issued with wrong cutoff date for an Australia/Sydney customer.
+- **Wrong cutoff date:** Symptom: invoice issued with wrong cutoff date for an Australia/Sydney customer.
   Cause: cutoff computed in server (UTC) local time.
   Detection: integration test with non-server timezone and DST transition day.
   Impact: revenue mis-recognition, customer dispute.
-- Symptom: monetary total drifts by cents over many transactions.
+- **Cent drift:** Symptom: monetary total drifts by cents over many transactions.
   Cause: amounts stored as `float` / `double` / JS `Number`.
   Detection: linter forbids float types for money fields; reconciliation test sums 10 000 random amounts and asserts exact equality.
   Impact: ledger imbalance, audit finding.
-- Symptom: mobile client fails to parse API date.
+- **Unparseable API date:** Symptom: mobile client fails to parse API date.
   Cause: API emits locale-formatted string instead of RFC 3339.
   Detection: contract test asserts ISO 8601 with `Z` or explicit offset.
   Impact: client crash, broken release.
-- Symptom: recurring "Monday 09:00 NY" event fires at 08:00 NY for half the year.
+- **UTC-only recurrence:** Symptom: recurring "Monday 09:00 NY" event fires at 08:00 NY for half the year.
   Cause: stored as UTC instant instead of `(local_time, IANA zone)`.
   Detection: DST-boundary test (March / November US transition).
   Impact: missed meetings, missed SLAs.
-- Symptom: untranslated English strings appear in zh-CN UI.
+- **Silent translation fallback:** Symptom: untranslated English strings appear in zh-CN UI.
   Cause: fallback silently substituted source locale; no coverage metric.
   Detection: CI runs `i18n-coverage` per locale; warns < 95 %, fails < 85 %.
   Impact: brand / quality perception, missed launch criteria.
-- Symptom: search by user name fails for `Müller` when stored as `Mueller`.
+- **Non-normalized search:** Symptom: search by user name fails for `Müller` when stored as `Mueller`.
   Cause: byte-wise comparison; no NFC normalization; no locale-aware collation.
   Detection: collation unit test for de-DE phone-book order.
   Impact: broken search, duplicate accounts.
-- Symptom: Arabic UI shows "1 file(s)" or grammatical errors.
+- **English plural ternary:** Symptom: Arabic UI shows "1 file(s)" or grammatical errors.
   Cause: English-only plural ternary; no ICU MessageFormat.
   Detection: pseudo-localization run in CI exercises plural and gender forms.
   Impact: user trust loss in localized markets.
-- Symptom: pricing rounds 1.005 to 1.00 instead of 1.01.
+- **Binary-float rounding:** Symptom: pricing rounds 1.005 to 1.00 instead of 1.01.
   Cause: IEEE 754 binary float (1.005 is actually 1.00499...) plus `HALF_UP`.
   Detection: decimal rounding test with documented mode.
   Impact: regulatory exposure, customer complaint.
-- Symptom: chargeback after tzdata update changes a historical offset.
+- **Tzdata reinterpretation:** Symptom: chargeback after tzdata update changes a historical offset.
   Cause: stored civil time without zone, reinterpreted under new tzdata.
   Detection: data audit; pin tzdata at runtime and at processing job; convert at ingest and store both instant and (local_time, zone).
   Impact: financial discrepancy.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 i18n/time/money selection, stage fit, routing, evidence, output, and quality gates. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete locale, timezone, date/time, money, number, collation, translation, API/storage, migration, or test plan. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when runtime/tooling baselines, field-classification matrices, DST gap/overlap policy, rounding/exponent rules, graph/memory/trajectory reuse, compatibility, or anti-pattern depth is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for copy-only or pure routing work where this body is enough.
+The `SKILL.md` body carries L1/L2 i18n/time/money selection, stage fit, routing, evidence, output, and quality gates. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete locale, timezone, date/time, money, number, collation, translation, API/storage, migration, or test plan. Load [references/evidence-patterns.md](references/evidence-patterns.md) only when the handoff needs source-to-validation mapping, graph/memory/trajectory freshness, runtime baseline proof, tool permission boundary, or residual-risk wording. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when runtime/tooling baselines, field-classification matrices, DST gap/overlap policy, rounding/exponent rules, graph/memory/trajectory reuse, compatibility, or anti-pattern depth is needed. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load references for copy-only or pure routing work where this body is enough.
 
 # Output Contract
 

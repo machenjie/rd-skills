@@ -9,11 +9,21 @@
       "src/domain-extensions/payment-trading-extension/SKILL.md",
       "src/domain-extensions/web3-product-extension/SKILL.md"
     ],
+    "**route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`, and this capability.": [
+      "src/foundation/capabilities/language-runtime-selection/SKILL.md",
+      "src/foundation/capabilities/technology-stack-selection/SKILL.md",
+      "src/foundation/capabilities/threat-modeling/SKILL.md"
+    ],
     "**route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`.": [
       "src/foundation/capabilities/concurrency-control/SKILL.md",
       "src/foundation/capabilities/dependency-vulnerability-scanning/SKILL.md",
       "src/foundation/capabilities/non-goal-boundary-definition/SKILL.md",
       "src/foundation/capabilities/scenario-decomposition/SKILL.md"
+    ],
+    "**route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-governance`.": [
+      "src/foundation/capabilities/file-storage-processing/SKILL.md",
+      "src/foundation/capabilities/performance-budgeting/SKILL.md",
+      "src/foundation/capabilities/user-role-identification/SKILL.md"
     ],
     "**route to:** `validation-broker`, `quality-test-gate`.": [
       "src/foundation/capabilities/agent-tool-permission-sandbox/SKILL.md",
@@ -2993,7 +3003,7 @@
       "bullet_count": 81,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
-      "context_efficiency_score": 88,
+      "context_efficiency_score": 86,
       "critical_details_length": 13,
       "description_findings": [],
       "description_length": 182,
@@ -3014,7 +3024,7 @@
       "professionalism_score": 100,
       "recommended_phase": "-",
       "reference_link_count": 5,
-      "repeated_phrase_count": 1,
+      "repeated_phrase_count": 2,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
       "split_candidate_score": 0,
@@ -3193,7 +3203,7 @@
       "path": "src/foundation/capabilities/go-professional-usage/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 2,
+      "reference_link_count": 4,
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -3201,7 +3211,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 6,
-      "word_count": 2814
+      "word_count": 2867
     },
     {
       "anti_example_section_length": 0,
@@ -3229,7 +3239,7 @@
       "path": "src/foundation/capabilities/i18n-timezone-money-safety/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 5,
+      "reference_link_count": 6,
       "repeated_phrase_count": 1,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -3237,7 +3247,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 9,
-      "word_count": 3114
+      "word_count": 3173
     },
     {
       "anti_example_section_length": 13,
@@ -3265,7 +3275,7 @@
       "path": "src/foundation/capabilities/idempotency-retry-design/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 4,
+      "reference_link_count": 5,
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -3273,7 +3283,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 3,
-      "word_count": 3179
+      "word_count": 3235
     },
     {
       "anti_example_section_length": 0,
@@ -3530,7 +3540,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 62,
+      "bullet_count": 64,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -3544,16 +3554,16 @@
       "largest_section_lines": 16,
       "largest_section_title": "Quality Gate",
       "largest_table_rows": 7,
-      "line_count": 151,
+      "line_count": 153,
       "name": "kubernetes-gateway",
       "optimality_section_length": 0,
-      "output_contract_length": 12,
+      "output_contract_length": 14,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/kubernetes-gateway/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 2,
+      "reference_link_count": 4,
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -3561,7 +3571,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 2,
-      "word_count": 2267
+      "word_count": 2345
     },
     {
       "anti_example_section_length": 0,
@@ -3625,7 +3635,7 @@
       "path": "src/foundation/capabilities/language-performance-safety/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 1,
+      "reference_link_count": 3,
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -3633,7 +3643,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 9,
-      "word_count": 2608
+      "word_count": 2653
     },
     {
       "anti_example_section_length": 0,
@@ -3641,7 +3651,7 @@
       "bullet_count": 90,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
-      "context_efficiency_score": 98,
+      "context_efficiency_score": 96,
       "critical_details_length": 9,
       "description_findings": [],
       "description_length": 234,
@@ -3649,10 +3659,10 @@
       "has_shared_optimality": false,
       "heading_count": 22,
       "kind": "foundation-capability",
-      "largest_section_lines": 19,
-      "largest_section_title": "Output Contract",
+      "largest_section_lines": 30,
+      "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 0,
-      "line_count": 179,
+      "line_count": 199,
       "name": "language-runtime-selection",
       "optimality_section_length": 0,
       "output_contract_length": 19,
@@ -3661,15 +3671,15 @@
       "path": "src/foundation/capabilities/language-runtime-selection/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 3,
-      "repeated_phrase_count": 1,
+      "reference_link_count": 4,
+      "repeated_phrase_count": 2,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 6,
-      "word_count": 2820
+      "word_count": 2850
     },
     {
       "anti_example_section_length": 0,
@@ -3854,7 +3864,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 63,
+      "bullet_count": 69,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -3868,7 +3878,7 @@
       "largest_section_lines": 16,
       "largest_section_title": "Quality Gate",
       "largest_table_rows": 6,
-      "line_count": 152,
+      "line_count": 157,
       "name": "microservice-splitting",
       "optimality_section_length": 0,
       "output_contract_length": 14,
@@ -3877,7 +3887,7 @@
       "path": "src/foundation/capabilities/microservice-splitting/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 3,
+      "reference_link_count": 7,
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -3885,7 +3895,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 2,
-      "word_count": 2166
+      "word_count": 2299
     },
     {
       "anti_example_section_length": 0,
@@ -4178,7 +4188,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 68,
+      "bullet_count": 74,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -4192,7 +4202,7 @@
       "largest_section_lines": 25,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 7,
-      "line_count": 155,
+      "line_count": 160,
       "name": "page-component-decomposition",
       "optimality_section_length": 0,
       "output_contract_length": 25,
@@ -4201,7 +4211,7 @@
       "path": "src/foundation/capabilities/page-component-decomposition/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 4,
+      "reference_link_count": 6,
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -4209,7 +4219,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 2,
-      "word_count": 3203
+      "word_count": 3296
     },
     {
       "anti_example_section_length": 11,
@@ -4217,7 +4227,7 @@
       "bullet_count": 81,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
-      "context_efficiency_score": 100,
+      "context_efficiency_score": 98,
       "critical_details_length": 19,
       "description_findings": [],
       "description_length": 141,
@@ -4238,7 +4248,7 @@
       "professionalism_score": 100,
       "recommended_phase": "-",
       "reference_link_count": 4,
-      "repeated_phrase_count": 0,
+      "repeated_phrase_count": 1,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
       "split_candidate_score": 0,
@@ -4538,7 +4548,7 @@
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 4,
-      "bullet_count": 60,
+      "bullet_count": 62,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -4552,7 +4562,7 @@
       "largest_section_lines": 19,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 7,
-      "line_count": 152,
+      "line_count": 154,
       "name": "regression-testing",
       "optimality_section_length": 0,
       "output_contract_length": 19,
@@ -4561,7 +4571,7 @@
       "path": "src/foundation/capabilities/regression-testing/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 3,
+      "reference_link_count": 7,
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -4569,7 +4579,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 2,
-      "word_count": 2861
+      "word_count": 2966
     },
     {
       "anti_example_section_length": 11,
@@ -4790,7 +4800,7 @@
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 4,
-      "bullet_count": 77,
+      "bullet_count": 79,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -4804,7 +4814,7 @@
       "largest_section_lines": 22,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 7,
-      "line_count": 177,
+      "line_count": 183,
       "name": "requirement-structuring",
       "optimality_section_length": 0,
       "output_contract_length": 22,
@@ -4813,7 +4823,7 @@
       "path": "src/foundation/capabilities/requirement-structuring/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 0,
+      "reference_link_count": 7,
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -4821,7 +4831,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 1,
-      "word_count": 2962
+      "word_count": 3288
     },
     {
       "anti_example_section_length": 11,
@@ -5185,8 +5195,8 @@
     },
     {
       "anti_example_section_length": 0,
-      "benchmark_section_length": 7,
-      "bullet_count": 91,
+      "benchmark_section_length": 9,
+      "bullet_count": 97,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -5200,7 +5210,7 @@
       "largest_section_lines": 20,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 5,
-      "line_count": 151,
+      "line_count": 160,
       "name": "skill-efficacy-benchmark",
       "optimality_section_length": 0,
       "output_contract_length": 20,
@@ -5209,7 +5219,7 @@
       "path": "src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 0,
+      "reference_link_count": 6,
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -5217,7 +5227,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 6,
-      "word_count": 2212
+      "word_count": 2401
     },
     {
       "anti_example_section_length": 0,
@@ -5366,7 +5376,7 @@
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 4,
-      "bullet_count": 71,
+      "bullet_count": 79,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -5380,7 +5390,7 @@
       "largest_section_lines": 20,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 7,
-      "line_count": 175,
+      "line_count": 184,
       "name": "task-dag-decomposition",
       "optimality_section_length": 0,
       "output_contract_length": 19,
@@ -5389,7 +5399,7 @@
       "path": "src/foundation/capabilities/task-dag-decomposition/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 5,
+      "reference_link_count": 7,
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -5397,15 +5407,15 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 1,
-      "word_count": 3183
+      "word_count": 3519
     },
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 11,
-      "bullet_count": 86,
+      "bullet_count": 88,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
-      "context_efficiency_score": 100,
+      "context_efficiency_score": 88,
       "critical_details_length": 9,
       "description_findings": [],
       "description_length": 245,
@@ -5416,7 +5426,7 @@
       "largest_section_lines": 38,
       "largest_section_title": "Selection Rules",
       "largest_table_rows": 0,
-      "line_count": 192,
+      "line_count": 216,
       "name": "technology-stack-selection",
       "optimality_section_length": 0,
       "output_contract_length": 21,
@@ -5425,15 +5435,15 @@
       "path": "src/foundation/capabilities/technology-stack-selection/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 0,
-      "repeated_phrase_count": 0,
+      "reference_link_count": 4,
+      "repeated_phrase_count": 1,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 5,
-      "word_count": 3083
+      "word_count": 3171
     },
     {
       "anti_example_section_length": 11,
@@ -5510,7 +5520,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 78,
+      "bullet_count": 84,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 98,
@@ -5524,7 +5534,7 @@
       "largest_section_lines": 15,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 8,
-      "line_count": 171,
+      "line_count": 174,
       "name": "testability-seam-design",
       "optimality_section_length": 0,
       "output_contract_length": 14,
@@ -5533,7 +5543,7 @@
       "path": "src/foundation/capabilities/testability-seam-design/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 0,
+      "reference_link_count": 3,
       "repeated_phrase_count": 1,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -5541,7 +5551,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 6,
-      "word_count": 2768
+      "word_count": 2890
     },
     {
       "anti_example_section_length": 11,
@@ -5549,7 +5559,7 @@
       "bullet_count": 81,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
-      "context_efficiency_score": 90,
+      "context_efficiency_score": 88,
       "critical_details_length": 18,
       "description_findings": [],
       "description_length": 155,
@@ -5570,7 +5580,7 @@
       "professionalism_score": 100,
       "recommended_phase": "-",
       "reference_link_count": 4,
-      "repeated_phrase_count": 0,
+      "repeated_phrase_count": 1,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
       "split_candidate_score": 0,
@@ -5690,7 +5700,7 @@
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 4,
-      "bullet_count": 67,
+      "bullet_count": 72,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -5704,7 +5714,7 @@
       "largest_section_lines": 25,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 7,
-      "line_count": 166,
+      "line_count": 176,
       "name": "use-case-modeling",
       "optimality_section_length": 0,
       "output_contract_length": 25,
@@ -5713,7 +5723,7 @@
       "path": "src/foundation/capabilities/use-case-modeling/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 3,
+      "reference_link_count": 4,
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -5721,7 +5731,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 2,
-      "word_count": 3381
+      "word_count": 3469
     },
     {
       "anti_example_section_length": 11,
@@ -5765,7 +5775,7 @@
       "bullet_count": 66,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
-      "context_efficiency_score": 100,
+      "context_efficiency_score": 98,
       "critical_details_length": 7,
       "description_findings": [],
       "description_length": 148,
@@ -5776,7 +5786,7 @@
       "largest_section_lines": 21,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 6,
-      "line_count": 154,
+      "line_count": 162,
       "name": "user-role-identification",
       "optimality_section_length": 0,
       "output_contract_length": 21,
@@ -5785,15 +5795,15 @@
       "path": "src/foundation/capabilities/user-role-identification/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 4,
-      "repeated_phrase_count": 0,
+      "reference_link_count": 5,
+      "repeated_phrase_count": 1,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 3,
-      "word_count": 2595
+      "word_count": 2716
     },
     {
       "anti_example_section_length": 0,

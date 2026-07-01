@@ -82,7 +82,7 @@ Skip it only when the inspected path has no runtime sensitivity and no performan
 # Proactive Professional Triggers
 
 - **Signal:** A change claims lower latency, higher throughput, fewer allocations, faster parsing, or "hot path" status without profile or benchmark evidence.
-  **Hidden risk:** optimization may add complexity to a cold path or move the bottleneck to GC, locks, IO, pool wait, or memory.
+  **Hidden risk:** wrong optimization may add complexity to a cold path or hide the real bottleneck in GC, locks, IO, pool wait, or memory.
   **Required professional action:** classify the path and require a before/after measurement or not-verified disclosure before approval.
   **Route to:** `profiling`, `solution-optimality-evaluation`, `quality-test-gate`.
   **Evidence required:** profile/benchmark command, top bottleneck, baseline metric, target metric, and residual measurement gap.
@@ -131,7 +131,7 @@ Skip it only when the inspected path has no runtime sensitivity and no performan
 
 # Reference Loading Policy
 
-The body carries routing, decision, evidence, and output rules. Load [references/checklist.md](references/checklist.md) when a change touches hot paths, allocation, GC, async/event-loop behavior, pools, locks, backpressure, cancellation, unsafe/FFI boundaries, native resources, reusable clients, cleanup, unbounded growth, or when drafting the concrete assessment. Do not load the checklist for cold-path readability edits with no performance/safety claim.
+The body carries routing, decision, evidence, and output rules. Load [references/checklist.md](references/checklist.md) when a change touches hot paths, allocation, GC, async/event-loop behavior, pools, locks, backpressure, cancellation, unsafe/FFI boundaries, native resources, reusable clients, cleanup, unbounded growth, or when drafting the concrete assessment. Load [references/evidence-patterns.md](references/evidence-patterns.md) only when closure depends on current repository graph, project memory, execution trajectory, measurement freshness, source-to-validation mapping, tool permission boundaries, or residual-risk wording. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when choosing profiling/benchmark evidence, calibrating runtime safety patterns, comparing allocation/GC/async/pool/fan-out tradeoffs, or accepting a performance/safety deviation. Do not load deep references for cold-path readability edits with no performance/safety claim.
 
 # Failure Modes
 

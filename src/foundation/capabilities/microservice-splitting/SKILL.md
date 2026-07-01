@@ -21,7 +21,12 @@ Do not use this capability to split because a folder is large, a team wants a di
 
 # Stage Fit
 
-Use during architecture planning when a concrete service boundary is proposed, during code review when a change introduces a network call or deployable unit, during testing when contract/rollback/observability evidence is missing, during release planning when split rollout affects multiple services, and during handoff when the decision must state approve/defer/reject with evidence limits.
+- **planning / architecture:** test split force, bounded-context fit, data ownership, contract readiness, operational ownership, and rejected in-process alternatives before a runtime boundary is accepted.
+- **coding / refactoring:** route any extraction that turns imports into network calls, moves data ownership, adds deployable units, or creates branch-by-abstraction seams through this capability before structure spreads.
+- **bug-fix / debugging:** use when an incident, rollback failure, shared database break, timeout cascade, orphan service, or lockstep release reveals an existing split is unsafe.
+- **code-review:** reject split proposals that lack owner, contract, migration, rollback, failure handling, observability, or simpler modular alternative evidence.
+- **testing / validation:** require contract, compatibility, failure-mode, migration rehearsal, graph, telemetry, or explicit not-verified evidence for the decision scope.
+- **release / handoff:** state approve/defer/reject/merge, evidence limits, residual split risk, rollback or next in-process boundary gate, and owner.
 
 # Non-Negotiable Rules
 
@@ -35,7 +40,7 @@ Use during architecture planning when a concrete service boundary is proposed, d
 
 # Industry Benchmarks
 
-Anchor against Domain-Driven Design bounded contexts, Sam Newman service extraction and strangler patterns, Fowler's microservice trade-offs and monolith-first heuristic, Team Topologies ownership, Pact/consumer-driven contract testing, transactional outbox and Saga patterns, CAP/PACELC tradeoffs, SRE SLO/runbook discipline, and DORA deployment independence. Keep detailed scoring and decision aids in [references/checklist.md](references/checklist.md).
+Anchor against Domain-Driven Design bounded contexts, Sam Newman service extraction and strangler patterns, Fowler's microservice trade-offs and monolith-first heuristic, Team Topologies ownership, Pact/consumer-driven contract testing, transactional outbox and Saga patterns, CAP/PACELC tradeoffs, SRE SLO/runbook discipline, and DORA deployment independence. Keep detailed scoring and decision aids in [references/checklist.md](references/checklist.md), source-to-evidence closure in [references/evidence-patterns.md](references/evidence-patterns.md), and benchmark/pattern calibration in [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md).
 
 # Mode Matrix
 
@@ -95,7 +100,7 @@ Escalate when a split crosses financial, entitlement, inventory, identity, or re
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries routing, gates, and closure rules. Load [references/checklist.md](references/checklist.md) when drafting a concrete service split assessment, scoring readiness, comparing split vs module boundary, reviewing data/contract/transaction readiness, or planning migration/rollback. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for pure routing or wording-only edits.
+The `SKILL.md` body carries routing, gates, and closure rules. Load [references/checklist.md](references/checklist.md) when drafting a concrete service split assessment, scoring readiness, comparing split vs module boundary, reviewing data/contract/transaction readiness, or planning migration/rollback. Load [references/evidence-patterns.md](references/evidence-patterns.md) only when closure depends on current repository graph, project memory, execution trajectory, source-to-validation mapping, tool permission boundaries, or residual-risk wording. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when calibrating split-force scorecards, migration patterns, distributed-consistency choices, operability readiness, or anti-pattern review. Use [examples/example-output.md](examples/example-output.md) only when output shape is unclear. Do not load references for pure routing or wording-only edits.
 
 # Output Contract
 

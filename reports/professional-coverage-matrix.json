@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-01T10:23:27.260508+00:00",
+  "generated_at": "2026-07-01T13:56:57.005630+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -319,7 +319,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (2)",
-      "score": 56,
+      "score": 59,
       "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
@@ -338,7 +338,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (12)",
-      "score": 56,
+      "score": 59,
       "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
@@ -414,7 +414,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (4)",
-      "score": 56,
+      "score": 59,
       "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
@@ -585,7 +585,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (48)",
-      "score": 56,
+      "score": 59,
       "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []
@@ -737,7 +737,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "no",
-      "score": 56,
+      "score": 59,
       "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
       "warnings": []

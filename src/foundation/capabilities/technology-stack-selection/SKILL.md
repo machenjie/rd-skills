@@ -90,19 +90,43 @@ Select this capability when the request involves: choosing or replacing a primar
 
 Use this capability proactively, even when the request does not ask for stack selection:
 
-- **Signal:** a diff introduces a new framework family, datastore category, queue/streaming platform, observability system, cloud-managed service, or deployment substrate. **Hidden risk:** stack sprawl adds long-lived operational, security, hiring, observability, and incident-response cost without explicit ownership. **Required professional action:** compare against the approved stack inventory, quantify operational tax, name the owning team, and reject novelty unless constraints prove existing-stack insufficiency. **Route to:** `technology-stack-selection`, `architecture-impact-reviewer`, `delivery-release-gate`, and `security-privacy-gate` when trust boundaries or supply chain change. **Evidence required:** graph paths, existing-stack scan, owner acceptance, TCO estimate, and rejected simpler path.
-- **Signal:** project memory, previous ADRs, templates, benchmark notes, or generated summaries justify a stack decision. **Hidden risk:** stale memory can preserve unsupported versions, dead owners, outdated constraints, or benchmark assumptions from a different workload. **Required professional action:** treat memory as a hypothesis, compare it with current repository graph and execution evidence, and record accepted/rejected assumptions. **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`, and this capability. **Evidence required:** memory source/date, current graph delta, support policy, benchmark freshness, and explicit unknowns.
-- **Signal:** performance, cost, security, reliability, or scale claims decide between candidate stacks. **Hidden risk:** reputation-level claims can hide workload mismatch, hidden managed-service cost, weak supply-chain posture, or missing production readiness. **Required professional action:** require workload-shaped validation and route specialist gates for the deciding risk. **Route to:** `solution-optimality-evaluation`, `validation-broker`, `reliability-observability-gate`, and `security-privacy-gate`. **Evidence required:** measured or planned harness, cost model, security posture, production-readiness checklist, and residual risk owner.
-- **Signal:** a new stack crosses package manager, runtime, SDK, generated client, container, CI/CD, or deployment boundaries. **Hidden risk:** local proof can pass while build lanes, lockfiles, generated artifacts, deploy targets, or rollback paths diverge. **Required professional action:** map stack choice to runtime/dependency/build/deploy validation before approval. **Route to:** `language-runtime-selection`, `package-dependency-management`, `containerization`, `ci-cd`, and `validation-broker`. **Evidence required:** toolchain inventory, dependency/build graph, generated-file policy, deployment target, validation command, and rollback path.
-- **Signal:** a stack choice is effectively irreversible because it locks data shape, cloud primitives, customer integration contracts, or team operating model. **Hidden risk:** rollback becomes a rewrite, not a release action, and future pricing/EOL/security changes become product risk. **Required professional action:** require ADR, exit-cost budget, migration/coexistence plan, re-evaluation trigger, and explicit accountable owner. **Route to:** `architecture-tradeoff-analysis`, `release-rollback`, `data-api-contract-changer`, and this capability. **Evidence required:** reversibility class, exit estimate, migration window, rollback trigger, owner, and re-evaluation date.
+- **Signal:** a diff introduces a new framework family, datastore category, queue/streaming platform, observability system, cloud-managed service, or deployment substrate.
+  **Hidden risk:** hidden stack sprawl and missing ownership add long-lived operational, security, hiring, observability, and incident-response cost.
+  **Required professional action:** compare against the approved stack inventory, quantify operational tax, name the owning team, and reject novelty unless constraints prove existing-stack insufficiency.
+  **Route to:** `technology-stack-selection`, `architecture-impact-reviewer`, `delivery-release-gate`, and `security-privacy-gate` when trust boundaries or supply chain change.
+  **Evidence required:** graph paths, existing-stack scan, owner acceptance, TCO estimate, and rejected simpler path.
+- **Signal:** project memory, previous ADRs, templates, benchmark notes, or generated summaries justify a stack decision.
+  **Hidden risk:** stale memory can preserve unsupported versions, dead owners, outdated constraints, or benchmark assumptions from a different workload.
+  **Required professional action:** treat memory as a hypothesis, compare it with current repository graph and execution evidence, and record accepted/rejected assumptions.
+  **Route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-trajectory-analysis`, and this capability.
+  **Evidence required:** memory source date, current graph delta report, official support policy, benchmark command or report, and explicit unknowns.
+- **Signal:** performance, cost, security, reliability, or scale claims decide between candidate stacks.
+  **Hidden risk:** reputation-level claims can hide workload mismatch, hidden managed-service cost, weak supply-chain posture, or missing production readiness.
+  **Required professional action:** require workload-shaped validation and route specialist gates for the deciding risk.
+  **Route to:** `solution-optimality-evaluation`, `validation-broker`, `reliability-observability-gate`, and `security-privacy-gate`.
+  **Evidence required:** measured or planned harness, cost model, security posture, production-readiness checklist, and residual risk owner.
+- **Signal:** a new stack crosses package manager, runtime, SDK, generated client, container, CI/CD, or deployment boundaries.
+  **Hidden risk:** local proof can pass while build lanes, lockfiles, generated artifacts, deploy targets, or rollback paths diverge.
+  **Required professional action:** verify the stack choice against runtime, dependency, build, and deploy validation before approval.
+  **Route to:** `language-runtime-selection`, `package-dependency-management`, `containerization`, `ci-cd`, and `validation-broker`.
+  **Evidence required:** toolchain inventory, dependency/build graph, generated-file policy, deployment target, validation command, and rollback path.
+- **Signal:** a stack choice is effectively irreversible because it locks data shape, cloud primitives, customer integration contracts, or team operating model.
+  **Hidden risk:** rollback becomes a rewrite, not a release action, and future pricing/EOL/security changes become product risk.
+  **Required professional action:** require ADR, exit-cost budget, migration/coexistence plan, re-evaluation trigger, and explicit accountable owner.
+  **Route to:** `architecture-tradeoff-analysis`, `release-rollback`, `data-api-contract-changer`, and this capability.
+  **Evidence required:** reversibility class, exit estimate, migration window, rollback trigger, owner, and re-evaluation date.
 
 # Reference Loading Policy
 
-- **L1 default:** read this `SKILL.md` for routing, rejection signals, and the stack decision shape.
-- **L2 decision work:** load `references/checklist.md` when selecting, reviewing, rejecting, or reopening a stack decision.
-- **L3 output shaping:** load `examples/example-output.md` when drafting a concise stack decision record or ADR summary.
-- **L4 evidence coupling:** pair with `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, and `validation-broker` when approved-stack inventory, prior decisions, benchmark traces, or validation freshness determine approval.
-- **L5 implementation coupling:** pair only the selected specialist gates: `language-runtime-selection`, `package-dependency-management`, `architecture-tradeoff-analysis`, `solution-optimality-evaluation`, `security-privacy-gate`, `delivery-release-gate`, `containerization`, `ci-cd`, `release-rollback`, or relevant data/API capability.
+The `SKILL.md` body carries normal routing, trigger, evidence, and closure rules. Load references only when their decision surface is active:
+
+- **L1 default:** read this `SKILL.md` only for routing, rejection signals, and compact stack decision shape.
+- **L2 decision work:** load [references/checklist.md](references/checklist.md) when selecting, reviewing, rejecting, or reopening a concrete stack decision.
+- **L3 tradeoff depth:** load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when candidate matrices, decision rubric details, stack-to-validation mapping, managed-vs-self-managed economics, reversibility classes, or anti-pattern review are needed.
+- **Evidence closure:** load [references/evidence-patterns.md](references/evidence-patterns.md) when approval depends on current repository graph, project memory, execution trajectory, official support policy, validation freshness, tool permission boundary, or residual-risk wording.
+- **Shape example:** load [examples/example-output.md](examples/example-output.md) only when drafting a concise stack decision record or ADR summary.
+- **Specialist coupling:** pair only the selected specialist gates: `language-runtime-selection`, `package-dependency-management`, `architecture-tradeoff-analysis`, `solution-optimality-evaluation`, `security-privacy-gate`, `delivery-release-gate`, `containerization`, `ci-cd`, `release-rollback`, or relevant data/API capability.
+- **Anti-bloat rule:** do not load unrelated language/domain references, full benchmark logs, package registry dumps, old ADR archives, or "all candidate docs" unless a selected decision claim requires them.
 
 # Risk Escalation Rules
 

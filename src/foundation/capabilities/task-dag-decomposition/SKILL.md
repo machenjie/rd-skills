@@ -21,7 +21,7 @@ Do not use this capability for: single-file changes with no cross-cutting depend
 
 # Stage Fit
 
-Use during planning after requirement and repository context are sufficient, before implementation or multi-agent handoff. Use again before handoff when the actual changed files, validation commands, repairs, or skipped work must be reconciled against the accepted DAG. Do not let this capability replace `repository-context-map`, `quality-test-gate`, or `release-rollback`; it consumes their evidence and turns it into executable task nodes and dependency edges.
+Use during the planning stage after requirement and repository context are sufficient, before implementation or multi-agent handoff. Use again before handoff when the actual changed files, validation commands, repairs, or skipped work must be reconciled against the accepted DAG. Do not let this capability replace `repository-context-map`, `quality-test-gate`, or `release-rollback`; it consumes their evidence and turns it into executable task nodes and dependency edges.
 
 # Non-Negotiable Rules
 
@@ -37,17 +37,17 @@ Use during planning after requirement and repository context are sufficient, bef
 
 # Industry Benchmarks
 
-Anchor against WBS work packages, trunk-based small batches, progressive delivery, DORA small-batch evidence, dependency-graph formalisms, and LLM agent task design. Keep this body focused on selection, rules, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for task record templates, dependency matrices, graph-memory-trajectory coupling, sequencing decision trees, and anti-pattern examples.
+Anchor against WBS work packages, trunk-based small batches, progressive delivery, DORA small-batch evidence, dependency-graph formalisms, and LLM agent task design. Keep this body focused on selection, rules, output, and gates; load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for task record templates, dependency matrices, graph-memory-trajectory coupling, sequencing decision trees, and anti-pattern examples. Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on validation freshness, graph or memory evidence, repair/re-review, tool boundaries, or plan-execution consistency.
 
 # Mode Matrix
 
-| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities |
-| --- | --- | --- | --- | --- |
-| Plan handoff | L1/L2 change has several steps but one owner and low release risk. | Keep a compact task list with validation and stop condition. | Files to inspect/change, validation command, residual risk. | `context-packaging`, `quality-test-gate` |
-| Multi-surface DAG | Change crosses frontend/backend/API/data/docs/tests or multiple owners. | Split by independently reviewable artifact, dependency edge, and owner surface. | Nodes, edges, file scopes, critical path, review gates. | `repository-context-map`, `change-impact-analyzer` |
-| Safety sequencing | Migration, feature flag, secret, compatibility shim, rollout, or rollback is in scope. | Put safety prerequisites and recovery nodes before dependents. | Forward/rollback ordering, approval gates, verification artifacts. | `release-rollback`, `data-migration-design` |
-| Parallelization review | Multiple agents/teams can work concurrently or shared files are likely. | Allow parallel work only after shared mutable resources are ruled out. | Shared-resource scan, non-overlap proof, serialization edges. | `architecture-impact-reviewer`, `implementation-structure-design` |
-| Execution recovery | Prior attempt failed, validation is stale, repair changed files, or stop condition is unclear. | Add route-repair, re-review, and validation freshness nodes. | Trajectory summary, failed command, repair route, next validator. | `agent-execution-discipline`, `execution-trajectory-analysis` |
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+| --- | --- | --- | --- | --- | --- |
+| Plan handoff | L1/L2 change has several steps but one owner and low release risk. | Keep a compact task list with validation and stop condition. | Files to inspect/change, validation command, residual risk. | `context-packaging`, `quality-test-gate` | Full multi-agent graph when one owner can execute safely. |
+| Multi-surface DAG | Change crosses frontend/backend/API/data/docs/tests or multiple owners. | Split by independently reviewable artifact, dependency edge, and owner surface. | Nodes, edges, file scopes, critical path, review gates. | `repository-context-map`, `change-impact-analyzer` | Implementation tasks until source ownership and edges are known. |
+| Safety sequencing | Migration, feature flag, secret, compatibility shim, rollout, or rollback is in scope. | Put safety prerequisites and recovery nodes before dependents. | Forward/rollback ordering, approval gates, verification artifacts. | `release-rollback`, `data-migration-design` | Parallel execution across safety prerequisites. |
+| Parallelization review | Multiple agents/teams can work concurrently or shared files are likely. | Allow parallel work only after shared mutable resources are ruled out. | Shared-resource scan, non-overlap proof, serialization edges. | `architecture-impact-reviewer`, `implementation-structure-design` | Parallel group claims without allowed-file comparison. |
+| Execution recovery | Prior attempt failed, validation is stale, repair changed files, or stop condition is unclear. | Add route-repair, re-review, and validation freshness nodes. | Trajectory summary, failed command, repair route, next validator. | `agent-execution-discipline`, `execution-trajectory-analysis` | Downstream unblock before repair evidence is reviewed. |
 
 # Selection Rules
 
@@ -71,7 +71,8 @@ Evaluate the DAG against task size, owner surface, dependency type, shared file/
 - **Signal:** A task title bundles migration, API contract, authorization, implementation, tests, and deployment. **Hidden risk:** separate risk domains are hidden inside one review unit. **Required professional action:** split by independently reviewable artifact and edge. **Route to:** `task-dag-decomposition`, `quality-test-gate`. **Evidence required:** before/after node split, dependency edge, validation artifact per node, and reviewer for each node.
 - **Signal:** Parallel tasks share a router, generated file, migration chain, config file, fixture, queue/topic, database table, feature flag, or public contract. **Hidden risk:** parallel execution creates merge conflict, stale generated output, or inconsistent contract ownership. **Required professional action:** add a serialization edge or split shared-surface ownership before execution. **Route to:** `repository-context-map`, `architecture-impact-reviewer`. **Evidence required:** shared-resource scan, allowed_files comparison, blocked/unblocked parallelism rationale.
 - **Signal:** A migration, rollout, secret rotation, or feature flag node lacks forward order, rollback order, owner approval, or old/new coexistence. **Hidden risk:** release cannot roll forward or back without data loss, outage, or secret exposure. **Required professional action:** add safety prerequisite, rollback/recovery node, and validation gate. **Route to:** `release-rollback`, `delivery-release-gate`. **Evidence required:** forward/rollback sequence, validation command, rollback owner, and irreversible-operation flag.
-- **Signal:** DAG depends on stale project memory, unrefreshed repository graph, prior validation, or a repair made after review. **Hidden risk:** execution follows stale context or starts downstream work from unreviewed changes. **Required professional action:** require current source confirmation, validation freshness, and repair re-review before unblocking downstream nodes. **Route to:** `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected graph-memory-trajectory judgment, freshness timestamp or direct-source fallback, repair ledger, and re-review result.
+- **Signal:** DAG depends on stale project memory, unrefreshed repository graph, prior validation, or a repair made after review. **Hidden risk:** execution follows stale context or starts downstream work from unreviewed changes. **Required professional action:** require current source confirmation, validation freshness, and repair re-review before unblocking downstream nodes. **Route to:** `project-memory-governance`, `execution-trajectory-analysis`. **Evidence required:** accepted/rejected graph-memory-trajectory judgment, source-inspection map, validation command or report timestamp, repair ledger, re-review output, and stale/not-run disclosure.
+- **Signal:** A DAG lists tasks and edges but no changed-task-to-validation map for nodes, skipped scopes, safety flags, parallel groups, or repair routes. **Hidden risk:** stale or unverified validation is reported for work that was not exercised, while unplanned files or skipped checks create silent regression risk. **Required professional action:** map every task decision to validator, review evidence, owner response, or explicit residual risk before closure. **Route to:** `validation-broker`, `plan-execution-consistency`, `quality-test-gate`. **Evidence required:** changed-task-to-validation matrix, command output or review artifact per node, skipped-scope owner, and residual-risk owner.
 
 # Risk Escalation Rules
 
@@ -99,19 +100,27 @@ Escalate when: a task modifies data that cannot be rolled back without data loss
 
 # Failure Modes
 
-- Migration deployed after ORM code: column does not exist; application crashes on first query.
-- Parallel tasks write to same file: second agent's change overwrites first; silent data loss.
-- Feature flag not pre-created: code reads undefined flag; default behavior incorrect; silent rollout failure.
-- Rollback triggered on data-destructive migration without backup: permanent data loss.
-- Cyclic task dependency: Task A depends on B, B depends on A; neither can start; deadlock.
-- Task scope too large: 15-file task reviewed in 2 minutes; defect missed in review; escapes to production.
-- Verification deferred to post-merge integration test: defect discovered after merge; rollback required.
-- Project memory says a dependent file is irrelevant, but current graph/source inspection would have shown it changed.
-- Repair updates a task node after review and downstream work starts without re-review.
+- **Missing migration edge:** migration deployed after ORM code; column does not exist and the application crashes on first query.
+- **Parallel file collision:** parallel tasks write to the same file; the second agent overwrites the first change or creates an avoidable merge conflict.
+- **Missing flag prerequisite:** feature flag is not pre-created; code reads an undefined flag and silently chooses the wrong default.
+- **Unsafe rollback:** data-destructive migration rolls back without backup or owner approval; production data is permanently lost.
+- **Dependency cycle:** Task A depends on B and B depends on A; neither can start and the handoff deadlocks.
+- **Oversized task:** 15-file task is reviewed in two minutes; review misses a defect that escapes to staging or production.
+- **Deferred verification:** verification waits for a post-merge integration test; the defect is discovered only after merge and requires rollback.
+- **Selector overclaim:** project memory says a dependent file is irrelevant, but current graph/source inspection would have shown it changed.
+- **Unreviewed repair:** repair updates a task node after review and downstream work starts before independent re-review.
+- **Validation-map gap:** final handoff cites a green command but does not map the changed node, skipped scope, or parallelism decision to the evidence.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 selection, rules, output, and gates. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete DAG. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when task templates, dependency classification, graph-memory-trajectory coupling, migration/API/feature-flag sequencing, parallelism review, or validation mapping needs more depth. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear.
+The `SKILL.md` body carries L1/L2 selection, rules, output, and gates. Load references only when their decision surface is active:
+
+- **L1:** Use this `SKILL.md` only for route selection, compact plan handoff, or small review where task order and validation are obvious.
+- **L2:** Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete DAG, dependency edge list, parallel-group decision, safety sequencing note, or handoff checklist.
+- **L3:** Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when task templates, dependency classification, graph-memory-trajectory coupling, migration/API/feature-flag sequencing, parallelism review, or validation mapping needs more depth.
+- **Evidence closure:** Load [references/evidence-patterns.md](references/evidence-patterns.md) when validation freshness, graph or memory evidence, execution trajectory, repair/re-review, tool permission, generated reports, or plan-execution consistency decides whether the DAG can close.
+- **Shape example:** Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear or a filled compact DAG example is needed.
+- **Anti-bloat rule:** Do not load adjacent capability references, full graph dumps, old plans, run logs, or all task artifacts unless the selected task node requires them.
 
 # Output Contract
 

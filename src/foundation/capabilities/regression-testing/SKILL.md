@@ -38,7 +38,7 @@ Use during bug-fix, testing, code-review, refactoring, and final validation. Per
 
 # Industry Benchmarks
 
-Anchor against TDD red-green repair discipline, Feathers-style characterization tests for legacy change, test-pyramid level selection, OWASP non-regression evidence for fixed vulnerabilities, traceability standards for regulated work, DORA change-failure reduction, and mutation testing that proves the guard fails when the defect is reintroduced. Keep detailed templates in [references/checklist.md](references/checklist.md) so the loaded body stays focused on routing, evidence, and gates.
+Anchor against TDD red-green repair discipline, Feathers-style characterization tests for legacy change, test-pyramid level selection, OWASP non-regression evidence for fixed vulnerabilities, traceability standards for regulated work, DORA change-failure reduction, and mutation testing that proves the guard fails when the defect is reintroduced. Keep detailed templates in [references/checklist.md](references/checklist.md), source-to-evidence closure in [references/evidence-patterns.md](references/evidence-patterns.md), and regression benchmark patterns in [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) so the loaded body stays focused on routing, evidence, and gates.
 
 # Mode Matrix
 
@@ -92,10 +92,12 @@ Escalate when: a defect cannot be regression-tested and the residual risk is HIG
 - **Missing defect link** — test is deleted during cleanup because its purpose is unclear; defect recurs.
 - **Timing-sensitive CI test** — intermittent failures lead to disablement; defect recurs without signal.
 - **Shared database integration test** — mutates shared data, breaks other tests, and is removed instead of repaired.
+- **Stale coverage claim** — old CI output or project memory says the defect is covered, but current source, fixtures, or generated inputs changed after the run.
+- **Over-broad regression suite** — an expensive E2E guard is added for a local rule; teams skip or quarantine it, so the recurrence path loses merge-gate protection.
 
 # Reference Loading Policy
 
-Load [references/checklist.md](references/checklist.md) when the defect is security-sensitive, concurrency-sensitive, production incident driven, difficult to reproduce, disputed in review, or when level selection / untestable documentation templates are needed. Use [examples/example-output.md](examples/example-output.md) when the required output shape is unclear. Do not load references for a simple deterministic bug when the defect report, failing test command, and red/green evidence are already sufficient.
+Load [references/checklist.md](references/checklist.md) when the defect is security-sensitive, concurrency-sensitive, production incident driven, difficult to reproduce, disputed in review, or when level selection / untestable documentation templates are needed. Load [references/evidence-patterns.md](references/evidence-patterns.md) only when closure depends on current repository graph, project memory, execution trajectory, red/green validation freshness, changed-defect-to-test mapping, tool permission boundaries, or residual-risk wording. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) only when selecting regression level, fixture fidelity, mutation/characterization strategy, hard-to-reproduce controls, or anti-pattern review. Use [examples/example-output.md](examples/example-output.md) when the required output shape is unclear. Do not load references for a simple deterministic bug when the defect report, failing test command, and red/green evidence are already sufficient.
 
 # Output Contract
 

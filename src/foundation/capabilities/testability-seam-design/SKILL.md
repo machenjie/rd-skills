@@ -81,11 +81,14 @@ Escalate to `quality-test-gate` when test layer selection, fixture ownership, as
 
 # Reference Loading Policy
 
-Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active seam-design rules.
+The `SKILL.md` body carries normal routing, seam-selection, and output contract / evidence closure rules. Use inline-only mode by default; load a deep reference only when the active seam risk needs deeper support:
 
-If deep references are added later, load them only for L3+ work, AI-generated tests, private-helper export pressure, unclear public behavior boundaries, external contract doubles, uncontrolled time/randomness/IO risks, dependency graph overrides, flaky repair, characterization-test planning, or validation freshness disputes.
-
-Do not load deep references for L1/L2 local changes where the output contract can be satisfied from the inline public-boundary, seam map, deterministic-test, fixture-owner, and validation-freshness rules.
+- **L1/L2 default:** stay in this `SKILL.md` when a local change only needs public-boundary, seam inventory, deterministic-control, fixture-owner, or validation-freshness output.
+- **Checklist closure:** load [references/checklist.md](references/checklist.md) when reviewing whether a proposed test seam is sufficient, too broad, too private, or too expensive.
+- **L3 benchmark and pattern depth:** load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for private-helper export pressure, fake/stub/mock/spy selection, dependency graph overrides, deterministic source design, characterization planning, property/mutation triggers, or test-only architecture rejection.
+- **Evidence closure:** load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on repository graph, project memory, execution trajectory, validation freshness, tool permission boundary, or a changed-path-to-seam map.
+- **Specialist coupling:** pair only the selected gates: `quality-test-gate`, `implementation-structure-design`, `contract-testing`, `integration-testing`, `dependency-wiring-lifecycle`, `language-testing-strategy`, `security-privacy-gate`, or `reliability-observability-gate`.
+- **Anti-bloat rule:** do not load broad testing tutorials, full framework docs, unrelated language references, old coverage reports, or every fixture/golden file unless a selected seam claim requires them.
 
 # Critical Details
 
@@ -104,15 +107,15 @@ Do not load deep references for L1/L2 local changes where the output contract ca
 
 # Failure Modes
 
-- Exporting `_calculateDiscount`, `privateNormalize`, a hook helper, or a local mapper only so tests can import it.
-- Mocking internal call order while public behavior is untested.
-- Using a mock for a database, HTTP provider, queue, auth provider, SDK, or cache without contract or integration evidence.
-- Tests patch module globals, singleton containers, or private registry state and pass against a graph production cannot build.
-- Sharing a fixture factory across modules until a local change breaks unrelated tests.
-- Using real wall clock time, random UUIDs, sleeps, current locale/timezone, external services, or shared ports in tests.
-- Refactoring first and adding characterization tests later.
-- Treating snapshot, golden update, or mock call count as proof without naming the behavior protected.
-- Reporting validation as current after fixture, seam, mock, generated input, or public-boundary changes.
+- **Private-helper export:** exporting `_calculateDiscount`, `privateNormalize`, a hook helper, or a local mapper only so tests can import it.
+- **Internal choreography mock:** mocking internal call order while public behavior is untested.
+- **Low-fidelity external double:** using a mock for a database, HTTP provider, queue, auth provider, SDK, or cache without contract or integration evidence.
+- **Impossible test graph:** patching module globals, singleton containers, or private registry state until tests pass against a graph production cannot build.
+- **Shared fixture coupling:** sharing a fixture factory across modules until a local change breaks unrelated tests.
+- **Uncontrolled nondeterminism:** using real wall clock time, random UUIDs, sleeps, current locale/timezone, external services, or shared ports in tests.
+- **Late characterization:** refactoring first and adding characterization tests later.
+- **Proof by artifact shape:** treating snapshot, golden update, or mock call count as proof without naming the behavior protected.
+- **Stale validation handoff:** reporting validation as current after fixture, seam, mock, generated input, or public-boundary changes.
 
 # Output Contract
 
@@ -125,7 +128,7 @@ Return a `testability_seam_plan` with:
 - `minimal_verification_decision`: smallest sufficient public-boundary check, rejected heavier/lighter tests, and risk reason for broader integration/contract/E2E proof when required.
 - `test_split`: unit, integration, contract, regression, property-based, mutation, and E2E responsibilities with what each proves and does not prove.
 - `characterization_plan`: current behavior to lock before refactor, fixture inputs, expected outputs, bugs preserved, and command to run before movement.
-- `graph_memory_execution_validation`: repository graph edges inspected, memory claims accepted/rejected, execution order/freshness, validation map, negative evidence, and residual risk.
+- `graph_memory_execution_validation`: repository graph edges inspected, memory claims accepted/rejected, execution order/freshness, validation map, validator or report path, exit code, negative evidence, and residual risk.
 - `rejected_testability_shortcuts`: private export, over-mock, global patch, shared fixture, snapshot/golden-only, sleep/retry, or test-only interface rejected with reason.
 
 # Evidence Contract
@@ -136,7 +139,7 @@ Close the plan only when these answers are concrete:
 - **Fidelity:** dependencies replaced by seams, test-double choices, real-provider contract/integration evidence, and double limitations.
 - **Determinism:** time/random/UUID/concurrency/env/IO controls, fixture ownership, reset/cleanup, and flake mitigation.
 - **Graph and memory:** current source, graph edges, fixture/mock/generator owners, accepted/rejected memory claims, and stale-context limits.
-- **Validation:** command outcomes, freshness, stale/not-run scope, changed-path-to-test map, what evidence proves and does not prove, residual flake/integration risk, and next gate.
+- **Validation:** command outcomes, validator/report path, exit code, freshness, stale/not-run scope, changed-path-to-test map, what evidence proves and does not prove, residual flake/integration risk, and next gate.
 
 # Benchmark Coverage
 

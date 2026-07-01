@@ -21,7 +21,7 @@ Do not use this capability for: low-level code execution sequences (method A cal
 
 # Stage Fit
 
-Owns product-domain behavior-contract discovery before acceptance criteria, implementation placement, state-machine design, API contract design, and test scenario decomposition. In review, it checks whether a diff changed an actor goal, entry gate, trigger, path, external actor, durable outcome, side effect, or recovery promise without updating the use case and acceptance trace. Repository search, graph, project memory, and execution trajectory can locate existing behavior, but current source, tests, docs, or registry evidence must confirm the use case before the output treats it as authoritative.
+Owns product-domain behavior-contract discovery before acceptance criteria, implementation placement, state-machine design, API contract design, and test scenario decomposition. During code-review, testing, and release handoff, it checks whether a diff changed an actor goal, entry gate, trigger, path, external actor, durable outcome, side effect, or recovery promise without updating the use case and acceptance trace. Repository search, graph, project memory, and execution trajectory can locate existing behavior, but current source, tests, docs, or registry evidence must confirm the use case before the output treats it as authoritative.
 
 # Non-Negotiable Rules
 
@@ -61,7 +61,11 @@ Escalate when: an alternate path affects authorization (a different actor can re
 - **Signal:** One story contains multiple roles, system actors, or actor goals. **Hidden risk:** alternate paths become unrelated use cases and permissions or tests miss role-specific outcomes. **Required professional action:** split by primary actor and goal, then link shared included behavior explicitly. **Route to:** `user-role-identification`, `permission-boundary-modeling`. **Evidence required:** decomposed use case list, shared behavior, rejected combined scope, and role-specific denied paths.
 - **Signal:** A webhook, scheduled job, queue consumer, import, or integration initiates the behavior. **Hidden risk:** trust boundary, idempotency, duplicate delivery, timeout, and replay behavior are absent from the product contract. **Required professional action:** model the external or system actor and name authentication, duplicate, retry, and terminal outcomes. **Route to:** `domain-event-modeling`, `integration-change-builder`. **Evidence required:** actor identity, precondition, idempotency key or duplicate rule, failure state, and recovery owner.
 - **Signal:** An alternate or failure path ends with "show error," "retry later," or "support will handle it." **Hidden risk:** partial state, lost input, audit gaps, or unrecoverable stuck records are left unspecified. **Required professional action:** define state preservation, retry window, recovery owner, audit visibility, and terminal postcondition. **Route to:** `state-machine-modeling`, `quality-test-gate`. **Evidence required:** failure postcondition, preserved data, retry/compensation rule, support or operator visibility, and test case.
-- **Signal:** A prior project memory note, repository graph edge, or execution trajectory suggests the use case already exists. **Hidden risk:** stale memory or graph proximity is treated as semantic proof and the changed behavior is under-specified. **Required professional action:** confirm with current source, tests, docs, or registry entries before reusing the use case. **Route to:** `repository-context-map`, `repository-graph-analysis`, `execution-trajectory-analysis`. **Evidence required:** inspected paths, freshness, matching behavior, mismatches, and evidence limits.
+- **Signal:** A prior project memory note, repository graph edge, or execution trajectory suggests the use case already exists.
+  **Hidden risk:** stale memory or graph proximity is treated as semantic proof and the changed behavior is under-specified.
+  **Required professional action:** verify current source, tests, docs, or registry entries and document accepted/rejected evidence before reusing the use case.
+  **Route to:** `repository-context-map`, `repository-graph-analysis`, `execution-trajectory-analysis`.
+  **Evidence required:** inspected paths, freshness report, matching behavior, mismatches, validation command, and evidence limits.
 
 # Critical Details
 
@@ -72,7 +76,13 @@ Escalate when: an alternate path affects authorization (a different actor can re
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries normal L1/L2 actor-goal modeling rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete use case, when path coverage or guarantees are uncertain, or before implementation/test planning depends on the use case. Load [references/fully-dressed-template.md](references/fully-dressed-template.md) when a complete Cockburn-style template is needed or when reviewing whether a use case has enough professional detail. Use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear. Do not load these references for pure routing decisions or trivial wording work where the output contract and quality gate are enough.
+The `SKILL.md` body carries normal L1/L2 actor-goal modeling rules and the output contract. Use inline-only mode for routing and small wording decisions; load a deep reference only when the current use-case claim needs more detail:
+
+- **L1/L2 checklist closure:** load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete use case, when path coverage or guarantees are uncertain, or before implementation/test planning depends on the use case.
+- **L3 fully dressed template:** load [references/fully-dressed-template.md](references/fully-dressed-template.md) when a complete Cockburn-style template is needed or when reviewing whether a use case has enough professional detail.
+- **Evidence closure:** load [references/evidence-patterns.md](references/evidence-patterns.md) when the use case depends on repository graph, project memory, execution trajectory, source freshness, validation command output, tool permission boundary, or a changed-use-case-to-acceptance map.
+- **Shape example:** use [examples/example-output.md](examples/example-output.md) only when the expected output shape is unclear.
+- **Anti-bloat rule:** do not load these references for pure routing decisions, trivial wording work, full scenario matrices, UI flow design, or implementation placement when the output contract and quality gate are enough.
 
 ### Anti-examples
 

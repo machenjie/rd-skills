@@ -16,7 +16,7 @@
 | Split candidates (score ≥ 60) | 0 |
 | Low-professionalism candidates (< 70) | 0 |
 | Move-to-reference candidates | 1 |
-| Shared duplicated lines (≥ 3 files) | 21 |
+| Shared duplicated lines (≥ 3 files) | 23 |
 
 Suggested-action distribution:
 
@@ -157,8 +157,9 @@ No frontmatter description risks detected.
 | `package-dependency-management` | 224 | 3516 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `authentication-authorization` | 221 | 3201 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `controller-api-implementation` | 219 | 3413 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
-| `threat-modeling` | 216 | 4093 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
-| `file-storage-processing` | 215 | 3100 | 100 | 88 | 100 | 0 | KEEP_AS_IS | - | low |
+| `technology-stack-selection` | 216 | 3171 | 100 | 88 | 100 | 0 | KEEP_AS_IS | - | low |
+| `threat-modeling` | 216 | 4093 | 100 | 88 | 100 | 0 | KEEP_AS_IS | - | low |
+| `file-storage-processing` | 215 | 3100 | 100 | 86 | 100 | 0 | KEEP_AS_IS | - | low |
 | `secret-configuration-security` | 214 | 4508 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `context-packaging` | 212 | 3865 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `project-initialization` | 211 | 3432 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -177,25 +178,25 @@ No frontmatter description risks detected.
 | `domain-event-modeling` | 202 | 3369 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `scenario-decomposition` | 202 | 3481 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `agent-execution-discipline` | 200 | 2620 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `i18n-timezone-money-safety` | 200 | 3114 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `i18n-timezone-money-safety` | 200 | 3173 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `acceptance-standard-definition` | 199 | 2628 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `ci-cd` | 199 | 3121 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `data-side-effect-flow-tracing` | 199 | 2964 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `performance-budgeting` | 199 | 3829 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `language-runtime-selection` | 199 | 2850 | 100 | 96 | 100 | 0 | KEEP_AS_IS | - | low |
+| `performance-budgeting` | 199 | 3829 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `code-clarity-maintainability` | 198 | 3182 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `domain-object-identification` | 198 | 2582 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `language-performance-safety` | 197 | 2608 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `language-performance-safety` | 197 | 2653 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `module-boundary-design` | 197 | 3798 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `rust-professional-usage` | 196 | 2934 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `java-jvm-professional-usage` | 195 | 3264 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `senior-programming-judgment-core` | 195 | 2189 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `test-data-management` | 195 | 4006 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `idempotency-retry-design` | 194 | 3179 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `idempotency-retry-design` | 194 | 3235 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `api-contract-design` | 193 | 3009 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `contract-testing` | 193 | 2908 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `minimal-correct-implementation` | 193 | 2472 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `technology-stack-selection` | 192 | 3083 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `go-professional-usage` | 191 | 2814 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `go-professional-usage` | 191 | 2867 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `model-boundary-mapping` | 191 | 2903 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `skill-authoring-expert` | 190 | 2297 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `sql-professional-usage` | 190 | 3066 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -214,8 +215,10 @@ No frontmatter description risks detected.
 | `async-job-design` | 184 | 2990 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `dependency-wiring-lifecycle` | 184 | 3144 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `git-professional-usage` | 184 | 2529 | 100 | 96 | 100 | 0 | KEEP_AS_IS | - | low |
+| `task-dag-decomposition` | 184 | 3519 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `architecture-style-selection` | 183 | 3110 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `data-model-design` | 183 | 3572 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `requirement-structuring` | 183 | 3288 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `version-compatibility` | 183 | 3791 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `configuration-runtime-policy` | 182 | 2765 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `information-architecture` | 182 | 3414 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -223,18 +226,17 @@ No frontmatter description risks detected.
 | `e2e-testing` | 181 | 2554 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `typescript-professional-usage` | 181 | 2647 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `repository-graph-analysis` | 180 | 2386 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `language-runtime-selection` | 179 | 2820 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `event-driven-architecture` | 178 | 3027 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `test-strategy` | 178 | 2245 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `frontend-testing` | 177 | 2948 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `integration-testing` | 177 | 2905 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `python-professional-usage` | 177 | 2748 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `requirement-structuring` | 177 | 2962 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `cleanup-deletion-governance` | 176 | 2810 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `solution-optimality-evaluation` | 176 | 3455 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `task-dag-decomposition` | 175 | 3183 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `use-case-modeling` | 176 | 3469 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `form-validation-design` | 174 | 3104 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `language-idiom-enforcement` | 174 | 2592 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `testability-seam-design` | 174 | 2890 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `degradation-circuit-breaking` | 173 | 3472 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `requirement-clarification` | 173 | 2524 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `algorithm-data-structure-selection` | 172 | 2678 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -242,37 +244,35 @@ No frontmatter description risks detected.
 | `frontend-api-integration` | 172 | 3151 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `non-goal-boundary-definition` | 172 | 2758 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `agent-tool-permission-sandbox` | 171 | 2597 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `testability-seam-design` | 171 | 2768 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `unit-testing` | 171 | 3368 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `indexing-query-optimization` | 169 | 3169 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `agent-workflow-state-machine` | 168 | 2329 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `layered-architecture-design` | 168 | 3150 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `consumer-impact-analysis` | 166 | 2613 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `execution-trajectory-analysis` | 166 | 2291 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `use-case-modeling` | 166 | 3381 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `context-control-plane` | 165 | 2275 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `interaction-state-modeling` | 163 | 2823 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `logging-error-handling` | 163 | 3173 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `design-pattern-selection` | 162 | 2728 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `message-queue-design` | 162 | 3133 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `user-flow-modeling` | 162 | 3650 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `user-role-identification` | 162 | 2716 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `permission-boundary-modeling` | 161 | 3441 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `documentation-generation` | 160 | 2669 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `page-component-decomposition` | 160 | 3296 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `skill-efficacy-benchmark` | 160 | 2401 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `relational-database` | 159 | 3358 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `language-testing-strategy` | 158 | 2341 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `microservice-splitting` | 157 | 2299 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `state-management-design` | 157 | 3068 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `transaction-consistency` | 157 | 3263 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `prototype-description` | 156 | 3156 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `page-component-decomposition` | 155 | 3203 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `regression-testing` | 154 | 2966 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `routing-navigation-design` | 154 | 3004 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `user-role-identification` | 154 | 2595 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `microservice-splitting` | 152 | 2166 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `kubernetes-gateway` | 153 | 2345 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `project-memory-governance` | 152 | 2357 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `regression-testing` | 152 | 2861 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `data-format-contract-usage` | 151 | 2179 | 100 | 96 | 100 | 0 | KEEP_AS_IS | - | low |
-| `kubernetes-gateway` | 151 | 2267 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `service-business-logic` | 151 | 2633 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `skill-efficacy-benchmark` | 151 | 2212 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `linux-systems-professional-usage` | 150 | 2199 | 100 | 96 | 100 | 0 | KEEP_AS_IS | - | low |
 | `repository-persistence` | 150 | 3227 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `domain-logic-implementation` | 147 | 2768 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -315,23 +315,25 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | --- | --- |
 | 18 | do not load every reference by default. treat references as targeted support selected by t |
 | 18 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
+| 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
-| 14 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 14 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 14 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 14 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 11 | these triggers are hidden-risk escalators, not ordinary checklist items. |
 | 7 | **block/pass decision** with required conditions for approval. |
 | 6 | non-trivial direct use still requires `repository-context-map` before planning when affect |
-| 5 | the `skill.md` body carries l1/l2 routing, risk, and output-contract rules. |
 | 5 | references are just-in-time support, not default-loaded encyclopedia content. |
+| 5 | the `skill.md` body carries l1/l2 routing, risk, and output-contract rules. |
 | 5 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 4 | **route to:** `validation-broker`, `quality-test-gate`. |
 | 4 | **route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-gover |
 | 4 | selected mode, source evidence, and graph/memory/trajectory reuse judgment are explicit. |
 | 3 | close the plan only when these answers are concrete: |
 | 3 | mode, inspected boundaries, source evidence, graph-memory-trajectory judgment, and evidenc |
+| 3 | **route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-gover |
+| 3 | **route to:** `project-memory-governance`, `repository-graph-analysis`, `execution-traject |
 | 3 | repository graph, project memory, and execution trajectory evidence are source-confirmed o |
 | 3 | `reuse_and_freshness_judgment` (accepted/rejected graph, memory, or execution-trajectory e |
 

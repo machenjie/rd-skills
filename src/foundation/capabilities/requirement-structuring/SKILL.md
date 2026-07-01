@@ -23,7 +23,7 @@ Do not use this capability to: resolve unresolved authority questions (use `requ
 
 # Stage Fit
 
-- **Requirement intake:** turn confirmed facts into an implementation-neutral change brief after blocking unknowns are resolved.
+- **Requirement intake stage:** turn confirmed facts into an implementation-neutral change brief after blocking unknowns are resolved.
 - **Planning:** make scope, non-goals, constraints, dependencies, and verification paths stable before tasks are sequenced.
 - **Review:** reject plans or diffs that cannot trace back to current behavior, desired behavior, non-goals, constraints, and acceptance signals.
 - **Handoff:** pass explicit evidence limits, residual unknowns, and next capability owner instead of letting downstream skills infer intent.
@@ -40,19 +40,21 @@ Do not use this capability to: resolve unresolved authority questions (use `requ
 
 # Industry Benchmarks
 
-Anchor against ISO/IEC/IEEE 29148 and IEEE 830 for complete, consistent, unambiguous, verifiable, traceable, and feasible requirements; BDD/Gherkin for Given/When/Then acceptance language; ATDD for pre-implementation acceptance thinking; INVEST for small, testable requirement slicing; agile ready criteria for dependencies and authority; and ISO/IEC 25010 for quality constraints. Keep templates in `examples/example-output.md` and concrete review prompts in `references/checklist.md` so this body stays focused on routing, evidence, and gates.
+Anchor against ISO/IEC/IEEE 29148 and IEEE 830 for complete, consistent, unambiguous, verifiable, traceable, and feasible requirements; BDD/Gherkin for Given/When/Then acceptance language; ATDD for pre-implementation acceptance thinking; INVEST for small, testable requirement slicing; agile ready criteria for dependencies and authority; RFC 2119 for binding language; and ISO/IEC 25010 for quality constraints. Keep templates in `examples/example-output.md`, concrete review prompts in [references/checklist.md](references/checklist.md), deeper matrices in [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md), and closure proof rules in [references/evidence-patterns.md](references/evidence-patterns.md) so this body stays focused on routing, evidence, and gates.
 
 # Mode Matrix
 
-| Mode | Minimum professional output |
-| --- | --- |
-| Brief creation | current behavior, desired behavior, actor, trigger, scope, non-goals, constraints, dependencies, assumptions, and acceptance signals |
-| Traceability | requirement-to-test/review map, verification type, evidence owner, and unresolved evidence gaps |
-| Scope boundary | in-scope surfaces, excluded surfaces, adjacent capabilities, non-goal not-present checks, and authority owner |
-| Evidence freshness | accepted/rejected repository, graph, memory, stakeholder, and execution evidence with source and freshness limit |
-| Handoff | next capability, residual unknowns, validation obligations, and what the brief does not authorize |
+| Mode | Trigger signal | Minimum professional output | Evidence required | Handoff / skip by default |
+| --- | --- | --- | --- | --- |
+| Brief creation | Confirmed facts are known but not stable enough for coding, bug-fix planning, refactoring, or release review. | Current behavior, desired behavior, actor, trigger, scope, non-goals, constraints, dependencies, assumptions, and acceptance signals. | Source of current behavior, owner of desired behavior, and skipped boundary rationale. | Hand off to scenario, acceptance, or implementation planning; skip implementation design. |
+| Traceability | Requirement, non-goal, constraint, or dependency lacks a test/review path. | Requirement-to-test/review map, verification type, evidence owner, and unresolved evidence gaps. | Planned test/review artifact, evidence owner, and what evidence does not prove. | Hand off to `quality-test-gate`; skip test implementation details. |
+| Scope boundary | Confirmed facts span multiple surfaces or have ambiguous exclusions. | In-scope surfaces, excluded surfaces, adjacent capabilities, non-goal not-present checks, and authority owner. | Affected graph surfaces, forbidden artifacts, and owner for disputed scope. | Hand off to `non-goal-boundary-definition`; skip speculative future scaffolding. |
+| Evidence freshness | Repository graph, project memory, stakeholder claim, old validation, or generated artifact is reused. | Accepted/rejected repository, graph, memory, stakeholder, and execution evidence with source and freshness limit. | Current-source check, memory status, execution freshness, and validation gap. | Hand off to graph, memory, or validation owner; skip treating memory as fact. |
+| Handoff | Downstream plan, code-review, testing, or release gate needs an authoritative requirement anchor. | Next capability, residual unknowns, validation obligations, and what the brief does not authorize. | Brief-to-downstream map, residual-risk owner, and plan-vs-brief consistency check. | Hand off to the next selected capability; skip closure if traceability is missing. |
 
 # Selection Rules
+
+Selection boundary: use this capability to stabilize confirmed requirement facts into a behavior-first brief; do not use it to answer unresolved authority questions, define implementation design, or replace downstream acceptance/scenario planning.
 
 Select this capability when **known requirement facts need professional structure before implementation begins**. Route elsewhere when: `requirement-clarification` is primary (open questions must be resolved before structuring); `acceptance-standard-definition` is primary (the behavior is known, but what "done" looks like needs precision); `use-case-modeling` is primary (a complex multi-actor workflow needs path-level decomposition — single actor + single flow briefs may be insufficient); `scenario-decomposition` is primary (a large brief needs to be decomposed into independently implementable scenarios for task planning).
 
@@ -73,10 +75,14 @@ Escalate when: the structured brief reveals conflicting desired behaviors (two a
 
 # Reference Loading Policy
 
-- **L1:** Read this `SKILL.md` only for routing, compact brief creation, or small review.
-- **L2:** Read `references/checklist.md` when drafting or reviewing a concrete structured brief, traceability matrix, or scope/non-goal checklist.
-- **L3:** Read `examples/example-output.md` when the expected response shape is unclear or the user needs a filled compact brief format.
-- **Do not load adjacent skills by default.** Load `requirement-clarification`, `acceptance-standard-definition`, `scenario-decomposition`, or `non-goal-boundary-definition` only when unresolved authority, done standards, scenario coverage, or exclusions are the primary gap.
+The `SKILL.md` body carries L1/L2 routing, selection rules, output contract, and quality gates. Load references only when their decision surface is active:
+
+- **L1:** Read this `SKILL.md` only for routing, compact brief creation, or small review where the brief shape is obvious.
+- **L2:** Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete structured brief, traceability matrix, or scope/non-goal checklist.
+- **L3:** Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when benchmark anchors, requirement quality matrices, behavior-first conversion, compatibility, constraint classification, graph/memory/execution coupling, or anti-pattern review needs more depth.
+- **Evidence closure:** Load [references/evidence-patterns.md](references/evidence-patterns.md) when repository evidence, project memory, repository graph, execution trajectory, validation freshness, forbidden-artifact checks, tool boundary, or proof limits decide whether a brief can hand off.
+- **Shape example:** Use [examples/example-output.md](examples/example-output.md) only when the expected response shape is unclear or the user needs a filled compact brief format.
+- **Adjacent skills:** Do not load adjacent skills by default. Load `requirement-clarification`, `acceptance-standard-definition`, `scenario-decomposition`, or `non-goal-boundary-definition` only when unresolved authority, done standards, scenario coverage, or exclusions are the primary gap.
 
 # Critical Details
 
