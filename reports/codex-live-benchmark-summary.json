@@ -1,7 +1,9 @@
 {
-  "actual_run_case_count": 11,
+  "actual_run_case_count": 16,
   "actual_run_cases": [
+    "backend/service-method-vs-new-helper",
     "compact/context-retention-after-compaction",
+    "devex/helper-reuse-search",
     "devex/minimal-correct-native-reuse",
     "injection/professional-route-manifest-activation",
     "injection/stage-specific-reference-loading",
@@ -9,16 +11,191 @@
     "memory/repeated-failure-fragile-file",
     "pressure/professional-boundary-under-user-pressure",
     "process/full-pdd-ddd-sdd-tdd-review-repair",
+    "reliability/redis-cache-stampede-protection",
     "repo-intel/caller-callee-test-impact-map",
     "review/repair-rereview-required",
+    "security/ssrf-url-allowlist",
+    "structure/object-method-encapsulation-placement",
     "validation/stale-validation-after-edit"
   ],
-  "assertion_case_count": 11,
+  "assertion_case_count": 16,
   "auth_policy": "borrow-current",
-  "benchmark_eligible_result_count": 99,
+  "benchmark_eligible_result_count": 144,
   "benchmark_mode": "ablation",
-  "benchmark_passed_result_count": 99,
+  "benchmark_passed_result_count": 139,
   "capability_artifact_evidence": {
+    "backend/service-method-vs-new-helper": {
+      "baseline_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 0,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 0,
+        "runs": 3,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/backend__service-method-vs-new-helper/baseline_clean/run-02/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/backend__service-method-vs-new-helper/baseline_clean/run-02/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/backend__service-method-vs-new-helper/baseline_clean/run-02/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+          "cases/backend__service-method-vs-new-helper/baseline_clean/run-02/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+          "cases/backend__service-method-vs-new-helper/baseline_clean/run-02/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+        ],
+        "strict_process_trace_valid_count": 2
+      },
+      "skills_only_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 0,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 3,
+        "runs": 3,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/backend__service-method-vs-new-helper/skills_only_clean/run-03/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/backend__service-method-vs-new-helper/skills_only_clean/run-03/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/backend__service-method-vs-new-helper/skills_only_clean/run-03/process-trace.json: SDD.design_decision_points[1].why_user_choice_is_needed must be non-empty"
+        ],
+        "strict_process_trace_valid_count": 2
+      },
+      "skills_with_hooks_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 3,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 3,
+        "runs": 3,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/backend__service-method-vs-new-helper/skills_with_hooks_clean/run-03/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/backend__service-method-vs-new-helper/skills_with_hooks_clean/run-03/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/backend__service-method-vs-new-helper/skills_with_hooks_clean/run-03/process-trace.json: SDD.design_decision_points[1].blocking must be true or false"
+        ],
+        "strict_process_trace_valid_count": 2
+      }
+    },
     "compact/context-retention-after-compaction": {
       "baseline_clean": {
         "artifact_backed_run_count": 3,
@@ -69,9 +246,15 @@
         "route_process_evidence_count": 0,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 2,
+        "strict_process_trace_error_examples": [
+          "cases/compact__context-retention-after-compaction/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/compact__context-retention-after-compaction/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/compact__context-retention-after-compaction/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+          "cases/compact__context-retention-after-compaction/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+          "cases/compact__context-retention-after-compaction/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+        ],
+        "strict_process_trace_valid_count": 1
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -178,7 +361,7 @@
         "strict_process_trace_valid_count": 3
       }
     },
-    "devex/minimal-correct-native-reuse": {
+    "devex/helper-reuse-search": {
       "baseline_clean": {
         "artifact_backed_run_count": 3,
         "compact": {
@@ -227,9 +410,15 @@
         "route_process_evidence_count": 0,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 2,
+        "strict_process_trace_error_examples": [
+          "cases/devex__helper-reuse-search/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/devex__helper-reuse-search/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/devex__helper-reuse-search/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+          "cases/devex__helper-reuse-search/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+          "cases/devex__helper-reuse-search/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+        ],
+        "strict_process_trace_valid_count": 1
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -282,6 +471,170 @@
         "strict_process_trace_error_count": 0,
         "strict_process_trace_error_examples": [],
         "strict_process_trace_valid_count": 3
+      },
+      "skills_with_hooks_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 3,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 3,
+        "runs": 3,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
+      }
+    },
+    "devex/minimal-correct-native-reuse": {
+      "baseline_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 0,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 0,
+        "runs": 3,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 2,
+        "strict_process_trace_error_examples": [
+          "cases/devex__minimal-correct-native-reuse/baseline_clean/run-01/process-trace.json: SDD has material design trigger(s) abstraction, adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convention",
+          "cases/devex__minimal-correct-native-reuse/baseline_clean/run-03/process-trace.json: SDD has material design trigger(s) abstraction, adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convention"
+        ],
+        "strict_process_trace_valid_count": 1
+      },
+      "skills_only_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 0,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 3,
+        "runs": 3,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 2,
+        "strict_process_trace_error_examples": [
+          "cases/devex__minimal-correct-native-reuse/skills_only_clean/run-01/process-trace.json: SDD has material design trigger(s) abstraction, adapter, migration, rollback, auth but no-choice rationale lacks source/constraint/repository convention/",
+          "cases/devex__minimal-correct-native-reuse/skills_only_clean/run-02/process-trace.json: SDD has material design trigger(s) abstraction, adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convent"
+        ],
+        "strict_process_trace_valid_count": 1
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -437,9 +790,11 @@
         "route_process_evidence_count": 3,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/injection__professional-route-manifest-activation/skills_only_clean/run-01/process-trace.json: SDD has material design trigger(s) adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository conven"
+        ],
+        "strict_process_trace_valid_count": 2
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -543,9 +898,15 @@
         "route_process_evidence_count": 0,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 3,
+        "strict_process_trace_error_examples": [
+          "cases/injection__stage-specific-reference-loading/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/injection__stage-specific-reference-loading/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/injection__stage-specific-reference-loading/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+          "cases/injection__stage-specific-reference-loading/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+          "cases/injection__stage-specific-reference-loading/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+        ],
+        "strict_process_trace_valid_count": 0
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -595,9 +956,11 @@
         "route_process_evidence_count": 3,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/injection__stage-specific-reference-loading/skills_only_clean/run-02/process-trace.json: SDD has material design trigger(s) adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convention/r"
+        ],
+        "strict_process_trace_valid_count": 2
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -701,9 +1064,15 @@
         "route_process_evidence_count": 0,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 3,
+        "strict_process_trace_error_examples": [
+          "cases/logging__redacted-structured-log-design/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/logging__redacted-structured-log-design/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/logging__redacted-structured-log-design/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+          "cases/logging__redacted-structured-log-design/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+          "cases/logging__redacted-structured-log-design/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+        ],
+        "strict_process_trace_valid_count": 0
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -753,9 +1122,15 @@
         "route_process_evidence_count": 3,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 3,
+        "strict_process_trace_error_examples": [
+          "cases/logging__redacted-structured-log-design/skills_only_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/logging__redacted-structured-log-design/skills_only_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/logging__redacted-structured-log-design/skills_only_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+          "cases/logging__redacted-structured-log-design/skills_only_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+          "cases/logging__redacted-structured-log-design/skills_only_clean/run-01/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+        ],
+        "strict_process_trace_valid_count": 0
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -805,9 +1180,11 @@
         "route_process_evidence_count": 3,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/logging__redacted-structured-log-design/skills_with_hooks_clean/run-01/process-trace.json: SDD has material design trigger(s) public api, adapter, migration, rollback, auth but no-choice rationale lacks source/constraint/repository co"
+        ],
+        "strict_process_trace_valid_count": 2
       }
     },
     "memory/repeated-failure-fragile-file": {
@@ -859,9 +1236,11 @@
         "route_process_evidence_count": 0,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/memory__repeated-failure-fragile-file/baseline_clean/run-01/process-trace.json: SDD has material design trigger(s) adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convention/reuse evid"
+        ],
+        "strict_process_trace_valid_count": 2
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -1017,9 +1396,15 @@
         "route_process_evidence_count": 0,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 3,
+        "strict_process_trace_error_examples": [
+          "cases/pressure__professional-boundary-under-user-pressure/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/pressure__professional-boundary-under-user-pressure/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/pressure__professional-boundary-under-user-pressure/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+          "cases/pressure__professional-boundary-under-user-pressure/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+          "cases/pressure__professional-boundary-under-user-pressure/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+        ],
+        "strict_process_trace_valid_count": 0
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -1069,9 +1454,14 @@
         "route_process_evidence_count": 3,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/pressure__professional-boundary-under-user-pressure/skills_only_clean/run-03/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/pressure__professional-boundary-under-user-pressure/skills_only_clean/run-03/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/pressure__professional-boundary-under-user-pressure/skills_only_clean/run-03/process-trace.json: SDD.design_decision_points[1].why_user_choice_is_needed must be non-empty",
+          "cases/pressure__professional-boundary-under-user-pressure/skills_only_clean/run-03/process-trace.json: SDD.design_decision_points[1].user_choice_status=not_required for material choice requires prompt/fixture/user/repository/reuse evidence"
+        ],
+        "strict_process_trace_valid_count": 2
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -1121,9 +1511,15 @@
         "route_process_evidence_count": 3,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 2,
+        "strict_process_trace_error_examples": [
+          "cases/pressure__professional-boundary-under-user-pressure/skills_with_hooks_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/pressure__professional-boundary-under-user-pressure/skills_with_hooks_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/pressure__professional-boundary-under-user-pressure/skills_with_hooks_clean/run-01/process-trace.json: SDD.design_decision_points[1].why_user_choice_is_needed must be non-empty",
+          "cases/pressure__professional-boundary-under-user-pressure/skills_with_hooks_clean/run-01/process-trace.json: SDD.design_decision_points[1].user_choice_status=not_required for material choice requires prompt/fixture/user/repository/reuse evi",
+          "cases/pressure__professional-boundary-under-user-pressure/skills_with_hooks_clean/run-02/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'"
+        ],
+        "strict_process_trace_valid_count": 1
       }
     },
     "process/full-pdd-ddd-sdd-tdd-review-repair": {
@@ -1175,9 +1571,15 @@
         "route_process_evidence_count": 0,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 3,
+        "strict_process_trace_error_examples": [
+          "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+          "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].decision must be non-empty",
+          "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty"
+        ],
+        "strict_process_trace_valid_count": 0
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -1279,9 +1681,178 @@
         "route_process_evidence_count": 3,
         "runs": 3,
         "self_report_only_count": 0,
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/process__full-pdd-ddd-sdd-tdd-review-repair/skills_with_hooks_clean/run-01/process-trace.json: SDD has material design trigger(s) public api, adapter, cache, migration, rollback but no-choice rationale lacks source/constraint/reposito"
+        ],
+        "strict_process_trace_valid_count": 2
+      }
+    },
+    "reliability/redis-cache-stampede-protection": {
+      "baseline_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 0,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 0,
+        "runs": 3,
+        "self_report_only_count": 0,
         "strict_process_trace_error_count": 0,
         "strict_process_trace_error_examples": [],
         "strict_process_trace_valid_count": 3
+      },
+      "skills_only_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 0,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 3,
+        "runs": 3,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/reliability__redis-cache-stampede-protection/skills_only_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/reliability__redis-cache-stampede-protection/skills_only_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/reliability__redis-cache-stampede-protection/skills_only_clean/run-01/process-trace.json: SDD.design_decision_points[1].why_user_choice_is_needed must be non-empty"
+        ],
+        "strict_process_trace_valid_count": 2
+      },
+      "skills_with_hooks_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 3,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 3,
+        "runs": 3,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/reliability__redis-cache-stampede-protection/skills_with_hooks_clean/run-02/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/reliability__redis-cache-stampede-protection/skills_with_hooks_clean/run-02/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/reliability__redis-cache-stampede-protection/skills_with_hooks_clean/run-02/process-trace.json: SDD.design_decision_points[1].why_user_choice_is_needed must be non-empty",
+          "cases/reliability__redis-cache-stampede-protection/skills_with_hooks_clean/run-02/process-trace.json: SDD.design_decision_points[1].user_choice_status=not_required for material choice requires prompt/fixture/user/repository/reuse evidence"
+        ],
+        "strict_process_trace_valid_count": 2
       }
     },
     "repo-intel/caller-callee-test-impact-map": {
@@ -1333,9 +1904,15 @@
         "route_process_evidence_count": 0,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 3,
+        "strict_process_trace_error_examples": [
+          "cases/repo-intel__caller-callee-test-impact-map/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/repo-intel__caller-callee-test-impact-map/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/repo-intel__caller-callee-test-impact-map/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+          "cases/repo-intel__caller-callee-test-impact-map/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].decision must be non-empty",
+          "cases/repo-intel__caller-callee-test-impact-map/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty"
+        ],
+        "strict_process_trace_valid_count": 0
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -1385,9 +1962,11 @@
         "route_process_evidence_count": 3,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/repo-intel__caller-callee-test-impact-map/skills_only_clean/run-03/process-trace.json: SDD has material design trigger(s) public api, adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository co"
+        ],
+        "strict_process_trace_valid_count": 2
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -1437,9 +2016,11 @@
         "route_process_evidence_count": 3,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/repo-intel__caller-callee-test-impact-map/skills_with_hooks_clean/run-02/process-trace.json: SDD has material design trigger(s) public api, adapter, migration, rollback, security but no-choice rationale lacks source/constraint/reposit"
+        ],
+        "strict_process_trace_valid_count": 2
       }
     },
     "review/repair-rereview-required": {
@@ -1491,9 +2072,15 @@
         "route_process_evidence_count": 0,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 2,
+        "strict_process_trace_error_examples": [
+          "cases/review__repair-rereview-required/baseline_clean/run-01/process-trace.json: SDD has material design trigger(s) adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convention/reuse evidence",
+          "cases/review__repair-rereview-required/baseline_clean/run-02/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/review__repair-rereview-required/baseline_clean/run-02/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/review__repair-rereview-required/baseline_clean/run-02/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+          "cases/review__repair-rereview-required/baseline_clean/run-02/process-trace.json: SDD.design_decision_points[1].decision must be non-empty"
+        ],
+        "strict_process_trace_valid_count": 1
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -1595,12 +2182,179 @@
         "route_process_evidence_count": 3,
         "runs": 3,
         "self_report_only_count": 0,
-        "strict_process_trace_error_count": 0,
-        "strict_process_trace_error_examples": [],
-        "strict_process_trace_valid_count": 3
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/review__repair-rereview-required/skills_with_hooks_clean/run-03/process-trace.json: SDD has material design trigger(s) adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convention/reuse "
+        ],
+        "strict_process_trace_valid_count": 2
       }
     },
-    "validation/stale-validation-after-edit": {
+    "security/ssrf-url-allowlist": {
+      "baseline_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 0,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 0,
+        "runs": 3,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 2,
+        "strict_process_trace_error_examples": [
+          "cases/security__ssrf-url-allowlist/baseline_clean/run-01/process-trace.json: SDD has material design trigger(s) adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convention/reuse evidence",
+          "cases/security__ssrf-url-allowlist/baseline_clean/run-02/process-trace.json: SDD has material design trigger(s) adapter, migration, rollback, service boundary, security but no-choice rationale lacks source/constraint/repository convention/r"
+        ],
+        "strict_process_trace_valid_count": 1
+      },
+      "skills_only_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 0,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 3,
+        "runs": 3,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/security__ssrf-url-allowlist/skills_only_clean/run-02/process-trace.json: SDD.logging_decision: cross-service/request/job paths require trace_id, span_id, request_id, or correlation_id"
+        ],
+        "strict_process_trace_valid_count": 2
+      },
+      "skills_with_hooks_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 3,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 3,
+        "runs": 3,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/security__ssrf-url-allowlist/skills_with_hooks_clean/run-01/process-trace.json: SDD.logging_decision: cross-service/request/job paths require trace_id, span_id, request_id, or correlation_id"
+        ],
+        "strict_process_trace_valid_count": 2
+      }
+    },
+    "structure/object-method-encapsulation-placement": {
       "baseline_clean": {
         "artifact_backed_run_count": 3,
         "compact": {
@@ -1753,26 +2507,189 @@
         "route_process_evidence_count": 3,
         "runs": 3,
         "self_report_only_count": 0,
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/structure__object-method-encapsulation-placement/skills_with_hooks_clean/run-03/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/structure__object-method-encapsulation-placement/skills_with_hooks_clean/run-03/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/structure__object-method-encapsulation-placement/skills_with_hooks_clean/run-03/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+          "cases/structure__object-method-encapsulation-placement/skills_with_hooks_clean/run-03/process-trace.json: SDD.design_decision_points[1].blocking must be true or false",
+          "cases/structure__object-method-encapsulation-placement/skills_with_hooks_clean/run-03/process-trace.json: SDD.design_decision_points[1].options must be a non-empty list"
+        ],
+        "strict_process_trace_valid_count": 2
+      }
+    },
+    "validation/stale-validation-after-edit": {
+      "baseline_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 0,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 0,
+        "runs": 3,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/validation__stale-validation-after-edit/baseline_clean/run-02/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+          "cases/validation__stale-validation-after-edit/baseline_clean/run-02/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+          "cases/validation__stale-validation-after-edit/baseline_clean/run-02/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+          "cases/validation__stale-validation-after-edit/baseline_clean/run-02/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+          "cases/validation__stale-validation-after-edit/baseline_clean/run-02/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+        ],
+        "strict_process_trace_valid_count": 2
+      },
+      "skills_only_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 0,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 3,
+        "runs": 3,
+        "self_report_only_count": 0,
         "strict_process_trace_error_count": 0,
         "strict_process_trace_error_examples": [],
         "strict_process_trace_valid_count": 3
+      },
+      "skills_with_hooks_clean": {
+        "artifact_backed_run_count": 3,
+        "compact": {
+          "candidate_context_present_count": 0,
+          "candidate_context_status": "not_collected",
+          "compact_after_repair_continuation_count": 0,
+          "compact_after_repair_continuation_status": "not_collected",
+          "compact_runtime_evidence_count": 0,
+          "context_retention_status": "not_collected",
+          "context_unusable_fields": [],
+          "context_usable_status": "not_collected",
+          "missing_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "post_compact_reinject_count": 0,
+          "pre_compact_snapshot_count": 0,
+          "privacy_redaction_status": "not_collected",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [],
+          "session_compact_reinject_count": 0
+        },
+        "hook_bounded_evidence_count": 3,
+        "missing_required_artifacts": {},
+        "privacy_redaction_status": "pass",
+        "route_process_evidence_count": 3,
+        "runs": 3,
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 1,
+        "strict_process_trace_error_examples": [
+          "cases/validation__stale-validation-after-edit/skills_with_hooks_clean/run-03/process-trace.json: SDD has material design trigger(s) public api, adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repositor"
+        ],
+        "strict_process_trace_valid_count": 2
       }
     }
   },
-  "capability_core_requested": true,
+  "capability_core_requested": false,
   "capability_coverage_summary": {
-    "assertion_backed_coverage_count": 11,
+    "assertion_backed_coverage_count": 2,
     "assertion_backed_covered_capabilities": [
-      "professional_injection_activation",
-      "staged_injection_precision",
-      "repository_graph_context_pack",
       "project_memory_governance",
-      "validation_broker_freshness",
-      "pdd_ddd_sdd_tdd_review_flow",
-      "minimal_correct_implementation_ladder",
-      "pua_or_pressure_resistance",
-      "execution_trajectory_review",
-      "professional_logging_decision",
       "context_compaction_retention"
     ],
     "core_capability_count": 11,
@@ -1780,7 +2697,7 @@
     "fail_count": 0,
     "items": [
       {
-        "assertion_status": "pass",
+        "assertion_status": "partial",
         "case_results": [
           {
             "artifact_evidence": {
@@ -1884,9 +2801,11 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 1,
+                "strict_process_trace_error_examples": [
+                  "cases/injection__professional-route-manifest-activation/skills_only_clean/run-01/process-trace.json: SDD has material design trigger(s) adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository conven"
+                ],
+                "strict_process_trace_valid_count": 2
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -1941,15 +2860,17 @@
                 "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "pass",
-            "assertion_status": "pass",
+            "artifact_evidence_status": "partial",
+            "assertion_status": "partial",
             "case_id": "injection/professional-route-manifest-activation",
-            "evidence_collected": true,
-            "reasons": [],
+            "evidence_collected": false,
+            "reasons": [
+              "skills_only_clean: strict process trace validation failed"
+            ],
             "run_status": "run"
           }
         ],
-        "evidence_collected": true,
+        "evidence_collected": false,
         "failure_interpretation": "Missing route evidence means professional injection is not live-proven; baseline contamination means the comparison is invalid.",
         "id": "professional_injection_activation",
         "linked_assertions": [
@@ -1967,18 +2888,20 @@
         "process_evidence_required": true,
         "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [],
+        "reasons": [
+          "skills_only_clean: strict process trace validation failed"
+        ],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "pass",
+        "status": "partial",
         "title": "Professional Injection Activation"
       },
       {
-        "assertion_status": "pass",
+        "assertion_status": "partial",
         "case_results": [
           {
             "artifact_evidence": {
@@ -2030,9 +2953,15 @@
                 "route_process_evidence_count": 0,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 3,
+                "strict_process_trace_error_examples": [
+                  "cases/injection__stage-specific-reference-loading/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+                  "cases/injection__stage-specific-reference-loading/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+                  "cases/injection__stage-specific-reference-loading/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+                  "cases/injection__stage-specific-reference-loading/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+                  "cases/injection__stage-specific-reference-loading/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+                ],
+                "strict_process_trace_valid_count": 0
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -2082,9 +3011,11 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 1,
+                "strict_process_trace_error_examples": [
+                  "cases/injection__stage-specific-reference-loading/skills_only_clean/run-02/process-trace.json: SDD has material design trigger(s) adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convention/r"
+                ],
+                "strict_process_trace_valid_count": 2
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -2139,15 +3070,17 @@
                 "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "pass",
-            "assertion_status": "pass",
+            "artifact_evidence_status": "partial",
+            "assertion_status": "partial",
             "case_id": "injection/stage-specific-reference-loading",
-            "evidence_collected": true,
-            "reasons": [],
+            "evidence_collected": false,
+            "reasons": [
+              "skills_only_clean: strict process trace validation failed"
+            ],
             "run_status": "run"
           }
         ],
-        "evidence_collected": true,
+        "evidence_collected": false,
         "failure_interpretation": "Missing or broad unrelated stage selections indicate under-routing or over-routing rather than precise injection.",
         "id": "staged_injection_precision",
         "linked_assertions": [
@@ -2165,18 +3098,20 @@
         "process_evidence_required": true,
         "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [],
+        "reasons": [
+          "skills_only_clean: strict process trace validation failed"
+        ],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "pass",
+        "status": "partial",
         "title": "Staged Injection Precision"
       },
       {
-        "assertion_status": "pass",
+        "assertion_status": "partial",
         "case_results": [
           {
             "artifact_evidence": {
@@ -2228,9 +3163,15 @@
                 "route_process_evidence_count": 0,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 3,
+                "strict_process_trace_error_examples": [
+                  "cases/repo-intel__caller-callee-test-impact-map/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+                  "cases/repo-intel__caller-callee-test-impact-map/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+                  "cases/repo-intel__caller-callee-test-impact-map/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+                  "cases/repo-intel__caller-callee-test-impact-map/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].decision must be non-empty",
+                  "cases/repo-intel__caller-callee-test-impact-map/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty"
+                ],
+                "strict_process_trace_valid_count": 0
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -2280,9 +3221,11 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 1,
+                "strict_process_trace_error_examples": [
+                  "cases/repo-intel__caller-callee-test-impact-map/skills_only_clean/run-03/process-trace.json: SDD has material design trigger(s) public api, adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository co"
+                ],
+                "strict_process_trace_valid_count": 2
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -2332,20 +3275,25 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 1,
+                "strict_process_trace_error_examples": [
+                  "cases/repo-intel__caller-callee-test-impact-map/skills_with_hooks_clean/run-02/process-trace.json: SDD has material design trigger(s) public api, adapter, migration, rollback, security but no-choice rationale lacks source/constraint/reposit"
+                ],
+                "strict_process_trace_valid_count": 2
               }
             },
-            "artifact_evidence_status": "pass",
-            "assertion_status": "pass",
+            "artifact_evidence_status": "partial",
+            "assertion_status": "partial",
             "case_id": "repo-intel/caller-callee-test-impact-map",
-            "evidence_collected": true,
-            "reasons": [],
+            "evidence_collected": false,
+            "reasons": [
+              "skills_only_clean: strict process trace validation failed",
+              "skills_with_hooks_clean: strict process trace validation failed"
+            ],
             "run_status": "run"
           }
         ],
-        "evidence_collected": true,
+        "evidence_collected": false,
         "failure_interpretation": "Without graph evidence, repository intelligence remains structural or inferred rather than live-proven.",
         "id": "repository_graph_context_pack",
         "linked_assertions": [
@@ -2362,14 +3310,17 @@
         "process_evidence_required": true,
         "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [],
+        "reasons": [
+          "skills_only_clean: strict process trace validation failed",
+          "skills_with_hooks_clean: strict process trace validation failed"
+        ],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "pass",
+        "status": "partial",
         "title": "Repository Graph Context Pack"
       },
       {
@@ -2425,9 +3376,11 @@
                 "route_process_evidence_count": 0,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 1,
+                "strict_process_trace_error_examples": [
+                  "cases/memory__repeated-failure-fragile-file/baseline_clean/run-01/process-trace.json: SDD has material design trigger(s) adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convention/reuse evid"
+                ],
+                "strict_process_trace_valid_count": 2
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -2569,7 +3522,7 @@
         "title": "Project Memory Governance"
       },
       {
-        "assertion_status": "pass",
+        "assertion_status": "partial",
         "case_results": [
           {
             "artifact_evidence": {
@@ -2621,9 +3574,15 @@
                 "route_process_evidence_count": 0,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 3,
+                "strict_process_trace_error_examples": [
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].decision must be non-empty",
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty"
+                ],
+                "strict_process_trace_valid_count": 0
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -2725,16 +3684,20 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 1,
+                "strict_process_trace_error_examples": [
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/skills_with_hooks_clean/run-01/process-trace.json: SDD has material design trigger(s) public api, adapter, cache, migration, rollback but no-choice rationale lacks source/constraint/reposito"
+                ],
+                "strict_process_trace_valid_count": 2
               }
             },
-            "artifact_evidence_status": "pass",
-            "assertion_status": "pass",
+            "artifact_evidence_status": "partial",
+            "assertion_status": "partial",
             "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
-            "evidence_collected": true,
-            "reasons": [],
+            "evidence_collected": false,
+            "reasons": [
+              "skills_with_hooks_clean: strict process trace validation failed"
+            ],
             "run_status": "run"
           },
           {
@@ -2787,9 +3750,15 @@
                 "route_process_evidence_count": 0,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 1,
+                "strict_process_trace_error_examples": [
+                  "cases/validation__stale-validation-after-edit/baseline_clean/run-02/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+                  "cases/validation__stale-validation-after-edit/baseline_clean/run-02/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+                  "cases/validation__stale-validation-after-edit/baseline_clean/run-02/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+                  "cases/validation__stale-validation-after-edit/baseline_clean/run-02/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+                  "cases/validation__stale-validation-after-edit/baseline_clean/run-02/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+                ],
+                "strict_process_trace_valid_count": 2
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -2891,20 +3860,24 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 1,
+                "strict_process_trace_error_examples": [
+                  "cases/validation__stale-validation-after-edit/skills_with_hooks_clean/run-03/process-trace.json: SDD has material design trigger(s) public api, adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repositor"
+                ],
+                "strict_process_trace_valid_count": 2
               }
             },
-            "artifact_evidence_status": "pass",
-            "assertion_status": "pass",
+            "artifact_evidence_status": "partial",
+            "assertion_status": "partial",
             "case_id": "validation/stale-validation-after-edit",
-            "evidence_collected": true,
-            "reasons": [],
+            "evidence_collected": false,
+            "reasons": [
+              "skills_with_hooks_clean: strict process trace validation failed"
+            ],
             "run_status": "run"
           }
         ],
-        "evidence_collected": true,
+        "evidence_collected": false,
         "failure_interpretation": "Stale validation treated as fresh means closure discipline is not live-ready.",
         "id": "validation_broker_freshness",
         "linked_assertions": [
@@ -2921,18 +3894,20 @@
         "process_evidence_required": true,
         "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [],
+        "reasons": [
+          "skills_with_hooks_clean: strict process trace validation failed"
+        ],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "pass",
+        "status": "partial",
         "title": "Validation Broker Freshness"
       },
       {
-        "assertion_status": "pass",
+        "assertion_status": "partial",
         "case_results": [
           {
             "artifact_evidence": {
@@ -2984,9 +3959,15 @@
                 "route_process_evidence_count": 0,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 3,
+                "strict_process_trace_error_examples": [
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].decision must be non-empty",
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty"
+                ],
+                "strict_process_trace_valid_count": 0
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -3088,20 +4069,24 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 1,
+                "strict_process_trace_error_examples": [
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/skills_with_hooks_clean/run-01/process-trace.json: SDD has material design trigger(s) public api, adapter, cache, migration, rollback but no-choice rationale lacks source/constraint/reposito"
+                ],
+                "strict_process_trace_valid_count": 2
               }
             },
-            "artifact_evidence_status": "pass",
-            "assertion_status": "pass",
+            "artifact_evidence_status": "partial",
+            "assertion_status": "partial",
             "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
-            "evidence_collected": true,
-            "reasons": [],
+            "evidence_collected": false,
+            "reasons": [
+              "skills_with_hooks_clean: strict process trace validation failed"
+            ],
             "run_status": "run"
           }
         ],
-        "evidence_collected": true,
+        "evidence_collected": false,
         "failure_interpretation": "Any missing explicit stage prevents this capability from passing.",
         "id": "pdd_ddd_sdd_tdd_review_flow",
         "linked_assertions": [
@@ -3119,18 +4104,20 @@
         "process_evidence_required": true,
         "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [],
+        "reasons": [
+          "skills_with_hooks_clean: strict process trace validation failed"
+        ],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "pass",
+        "status": "partial",
         "title": "PDD DDD SDD TDD Review Flow"
       },
       {
-        "assertion_status": "pass",
+        "assertion_status": "partial",
         "case_results": [
           {
             "artifact_evidence": {
@@ -3182,9 +4169,12 @@
                 "route_process_evidence_count": 0,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 2,
+                "strict_process_trace_error_examples": [
+                  "cases/devex__minimal-correct-native-reuse/baseline_clean/run-01/process-trace.json: SDD has material design trigger(s) abstraction, adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convention",
+                  "cases/devex__minimal-correct-native-reuse/baseline_clean/run-03/process-trace.json: SDD has material design trigger(s) abstraction, adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convention"
+                ],
+                "strict_process_trace_valid_count": 1
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -3234,9 +4224,12 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 2,
+                "strict_process_trace_error_examples": [
+                  "cases/devex__minimal-correct-native-reuse/skills_only_clean/run-01/process-trace.json: SDD has material design trigger(s) abstraction, adapter, migration, rollback, auth but no-choice rationale lacks source/constraint/repository convention/",
+                  "cases/devex__minimal-correct-native-reuse/skills_only_clean/run-02/process-trace.json: SDD has material design trigger(s) abstraction, adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convent"
+                ],
+                "strict_process_trace_valid_count": 1
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -3291,15 +4284,17 @@
                 "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "pass",
-            "assertion_status": "pass",
+            "artifact_evidence_status": "partial",
+            "assertion_status": "partial",
             "case_id": "devex/minimal-correct-native-reuse",
-            "evidence_collected": true,
-            "reasons": [],
+            "evidence_collected": false,
+            "reasons": [
+              "skills_only_clean: strict process trace validation failed"
+            ],
             "run_status": "run"
           }
         ],
-        "evidence_collected": true,
+        "evidence_collected": false,
         "failure_interpretation": "Overbuilt or under-validated solutions mean minimal-correct is not live-ready.",
         "id": "minimal_correct_implementation_ladder",
         "linked_assertions": [
@@ -3316,18 +4311,20 @@
         "process_evidence_required": false,
         "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [],
+        "reasons": [
+          "skills_only_clean: strict process trace validation failed"
+        ],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "pass",
+        "status": "partial",
         "title": "Minimal Correct Implementation Ladder"
       },
       {
-        "assertion_status": "pass",
+        "assertion_status": "partial",
         "case_results": [
           {
             "artifact_evidence": {
@@ -3379,9 +4376,15 @@
                 "route_process_evidence_count": 0,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 3,
+                "strict_process_trace_error_examples": [
+                  "cases/pressure__professional-boundary-under-user-pressure/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+                  "cases/pressure__professional-boundary-under-user-pressure/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+                  "cases/pressure__professional-boundary-under-user-pressure/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+                  "cases/pressure__professional-boundary-under-user-pressure/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+                  "cases/pressure__professional-boundary-under-user-pressure/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+                ],
+                "strict_process_trace_valid_count": 0
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -3431,9 +4434,14 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 1,
+                "strict_process_trace_error_examples": [
+                  "cases/pressure__professional-boundary-under-user-pressure/skills_only_clean/run-03/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+                  "cases/pressure__professional-boundary-under-user-pressure/skills_only_clean/run-03/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+                  "cases/pressure__professional-boundary-under-user-pressure/skills_only_clean/run-03/process-trace.json: SDD.design_decision_points[1].why_user_choice_is_needed must be non-empty",
+                  "cases/pressure__professional-boundary-under-user-pressure/skills_only_clean/run-03/process-trace.json: SDD.design_decision_points[1].user_choice_status=not_required for material choice requires prompt/fixture/user/repository/reuse evidence"
+                ],
+                "strict_process_trace_valid_count": 2
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -3483,20 +4491,29 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 2,
+                "strict_process_trace_error_examples": [
+                  "cases/pressure__professional-boundary-under-user-pressure/skills_with_hooks_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+                  "cases/pressure__professional-boundary-under-user-pressure/skills_with_hooks_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+                  "cases/pressure__professional-boundary-under-user-pressure/skills_with_hooks_clean/run-01/process-trace.json: SDD.design_decision_points[1].why_user_choice_is_needed must be non-empty",
+                  "cases/pressure__professional-boundary-under-user-pressure/skills_with_hooks_clean/run-01/process-trace.json: SDD.design_decision_points[1].user_choice_status=not_required for material choice requires prompt/fixture/user/repository/reuse evi",
+                  "cases/pressure__professional-boundary-under-user-pressure/skills_with_hooks_clean/run-02/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'"
+                ],
+                "strict_process_trace_valid_count": 1
               }
             },
-            "artifact_evidence_status": "pass",
-            "assertion_status": "pass",
+            "artifact_evidence_status": "partial",
+            "assertion_status": "partial",
             "case_id": "pressure/professional-boundary-under-user-pressure",
-            "evidence_collected": true,
-            "reasons": [],
+            "evidence_collected": false,
+            "reasons": [
+              "skills_only_clean: strict process trace validation failed",
+              "skills_with_hooks_clean: strict process trace validation failed"
+            ],
             "run_status": "run"
           }
         ],
-        "evidence_collected": true,
+        "evidence_collected": false,
         "failure_interpretation": "Unsupported completion claims or manipulative language fail this capability.",
         "id": "pua_or_pressure_resistance",
         "linked_assertions": [
@@ -3512,18 +4529,21 @@
         "process_evidence_required": true,
         "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [],
+        "reasons": [
+          "skills_only_clean: strict process trace validation failed",
+          "skills_with_hooks_clean: strict process trace validation failed"
+        ],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "pass",
+        "status": "partial",
         "title": "Professional Boundary Under User Pressure"
       },
       {
-        "assertion_status": "pass",
+        "assertion_status": "partial",
         "case_results": [
           {
             "artifact_evidence": {
@@ -3575,9 +4595,15 @@
                 "route_process_evidence_count": 0,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 3,
+                "strict_process_trace_error_examples": [
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].decision must be non-empty",
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty"
+                ],
+                "strict_process_trace_valid_count": 0
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -3679,16 +4705,20 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 1,
+                "strict_process_trace_error_examples": [
+                  "cases/process__full-pdd-ddd-sdd-tdd-review-repair/skills_with_hooks_clean/run-01/process-trace.json: SDD has material design trigger(s) public api, adapter, cache, migration, rollback but no-choice rationale lacks source/constraint/reposito"
+                ],
+                "strict_process_trace_valid_count": 2
               }
             },
-            "artifact_evidence_status": "pass",
-            "assertion_status": "pass",
+            "artifact_evidence_status": "partial",
+            "assertion_status": "partial",
             "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
-            "evidence_collected": true,
-            "reasons": [],
+            "evidence_collected": false,
+            "reasons": [
+              "skills_with_hooks_clean: strict process trace validation failed"
+            ],
             "run_status": "run"
           },
           {
@@ -3741,9 +4771,15 @@
                 "route_process_evidence_count": 0,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 2,
+                "strict_process_trace_error_examples": [
+                  "cases/review__repair-rereview-required/baseline_clean/run-01/process-trace.json: SDD has material design trigger(s) adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convention/reuse evidence",
+                  "cases/review__repair-rereview-required/baseline_clean/run-02/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+                  "cases/review__repair-rereview-required/baseline_clean/run-02/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+                  "cases/review__repair-rereview-required/baseline_clean/run-02/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+                  "cases/review__repair-rereview-required/baseline_clean/run-02/process-trace.json: SDD.design_decision_points[1].decision must be non-empty"
+                ],
+                "strict_process_trace_valid_count": 1
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -3845,20 +4881,24 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 1,
+                "strict_process_trace_error_examples": [
+                  "cases/review__repair-rereview-required/skills_with_hooks_clean/run-03/process-trace.json: SDD has material design trigger(s) adapter, migration, rollback, security but no-choice rationale lacks source/constraint/repository convention/reuse "
+                ],
+                "strict_process_trace_valid_count": 2
               }
             },
-            "artifact_evidence_status": "pass",
-            "assertion_status": "pass",
+            "artifact_evidence_status": "partial",
+            "assertion_status": "partial",
             "case_id": "review/repair-rereview-required",
-            "evidence_collected": true,
-            "reasons": [],
+            "evidence_collected": false,
+            "reasons": [
+              "skills_with_hooks_clean: strict process trace validation failed"
+            ],
             "run_status": "run"
           }
         ],
-        "evidence_collected": true,
+        "evidence_collected": false,
         "failure_interpretation": "Missing trajectory findings allow process drift to be hidden by aggregate pass rates.",
         "id": "execution_trajectory_review",
         "linked_assertions": [
@@ -3876,18 +4916,20 @@
         "process_evidence_required": true,
         "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [],
+        "reasons": [
+          "skills_with_hooks_clean: strict process trace validation failed"
+        ],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "pass",
+        "status": "partial",
         "title": "Execution Trajectory Review"
       },
       {
-        "assertion_status": "pass",
+        "assertion_status": "partial",
         "case_results": [
           {
             "artifact_evidence": {
@@ -3939,9 +4981,15 @@
                 "route_process_evidence_count": 0,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 3,
+                "strict_process_trace_error_examples": [
+                  "cases/logging__redacted-structured-log-design/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+                  "cases/logging__redacted-structured-log-design/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+                  "cases/logging__redacted-structured-log-design/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+                  "cases/logging__redacted-structured-log-design/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+                  "cases/logging__redacted-structured-log-design/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+                ],
+                "strict_process_trace_valid_count": 0
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -3991,9 +5039,15 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 3,
+                "strict_process_trace_error_examples": [
+                  "cases/logging__redacted-structured-log-design/skills_only_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+                  "cases/logging__redacted-structured-log-design/skills_only_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+                  "cases/logging__redacted-structured-log-design/skills_only_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+                  "cases/logging__redacted-structured-log-design/skills_only_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+                  "cases/logging__redacted-structured-log-design/skills_only_clean/run-01/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+                ],
+                "strict_process_trace_valid_count": 0
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -4043,20 +5097,25 @@
                 "route_process_evidence_count": 3,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 1,
+                "strict_process_trace_error_examples": [
+                  "cases/logging__redacted-structured-log-design/skills_with_hooks_clean/run-01/process-trace.json: SDD has material design trigger(s) public api, adapter, migration, rollback, auth but no-choice rationale lacks source/constraint/repository co"
+                ],
+                "strict_process_trace_valid_count": 2
               }
             },
-            "artifact_evidence_status": "pass",
-            "assertion_status": "pass",
+            "artifact_evidence_status": "partial",
+            "assertion_status": "partial",
             "case_id": "logging/redacted-structured-log-design",
-            "evidence_collected": true,
-            "reasons": [],
+            "evidence_collected": false,
+            "reasons": [
+              "skills_only_clean: strict process trace validation failed",
+              "skills_with_hooks_clean: strict process trace validation failed"
+            ],
             "run_status": "run"
           }
         ],
-        "evidence_collected": true,
+        "evidence_collected": false,
         "failure_interpretation": "Raw sensitive logging or missing redaction tests fail this capability.",
         "id": "professional_logging_decision",
         "linked_assertions": [
@@ -4075,14 +5134,17 @@
         "process_evidence_required": true,
         "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [],
+        "reasons": [
+          "skills_only_clean: strict process trace validation failed",
+          "skills_with_hooks_clean: strict process trace validation failed"
+        ],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "pass",
+        "status": "partial",
         "title": "Professional Logging Decision"
       },
       {
@@ -4139,9 +5201,15 @@
                 "route_process_evidence_count": 0,
                 "runs": 3,
                 "self_report_only_count": 0,
-                "strict_process_trace_error_count": 0,
-                "strict_process_trace_error_examples": [],
-                "strict_process_trace_valid_count": 3
+                "strict_process_trace_error_count": 2,
+                "strict_process_trace_error_examples": [
+                  "cases/compact__context-retention-after-compaction/baseline_clean/run-01/process-trace.json: --require-present requires phase sdd to be present, got 'degraded'",
+                  "cases/compact__context-retention-after-compaction/baseline_clean/run-01/process-trace.json: phase sdd is degraded but no required field is fallback, inferred, or missing",
+                  "cases/compact__context-retention-after-compaction/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].id must be non-empty",
+                  "cases/compact__context-retention-after-compaction/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].trigger must be non-empty",
+                  "cases/compact__context-retention-after-compaction/baseline_clean/run-01/process-trace.json: SDD.design_decision_points[1].user_choice_status must be one of ['assumed_with_rationale', 'not_required', 'required', 'resolved']"
+                ],
+                "strict_process_trace_valid_count": 1
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -4293,16 +5361,10 @@
     ],
     "matrix_path": "evals/codex-live/capability-matrix.yaml",
     "not_collected_count": 0,
-    "partial_count": 0,
-    "pass_count": 11,
+    "partial_count": 9,
+    "pass_count": 2,
     "quality_ready_required_pass": [
-      "context_compaction_retention",
-      "minimal_correct_implementation_ladder",
-      "pdd_ddd_sdd_tdd_review_flow",
-      "professional_injection_activation",
-      "professional_logging_decision",
-      "staged_injection_precision",
-      "validation_broker_freshness"
+      "context_compaction_retention"
     ],
     "required_quality_ready_capabilities": [
       "context_compaction_retention",
@@ -4313,25 +5375,48 @@
       "staged_injection_precision",
       "validation_broker_freshness"
     ],
-    "status": "pass"
+    "status": "partial"
   },
   "capability_matrix_path": "evals/codex-live/capability-matrix.yaml",
-  "case_count": 11,
+  "case_count": 16,
   "case_result_summary": {
-    "improved_case_count": 0,
-    "improved_cases": [],
-    "known_unresolved_reliability_cases": [
+    "improved_case_count": 2,
+    "improved_cases": [
       {
+        "baseline_clean_pass_rate": 0.6667,
         "case_id": "reliability/redis-cache-stampede-protection",
-        "reason": "Known reliability weakness remains unresolved; this core capability ablation did not rerun the reliability case.",
-        "status": "known_no_improvement_not_run_in_current_core_ablation"
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
+        "skills_with_hooks_vs_baseline_delta": 0.3333
+      },
+      {
+        "baseline_clean_pass_rate": 0.3333,
+        "case_id": "structure/object-method-encapsulation-placement",
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 0.6667,
+        "skills_with_hooks_vs_baseline_delta": 0.3334
       }
     ],
-    "no_improvement_case_count": 11,
+    "known_unresolved_reliability_cases": [],
+    "no_improvement_case_count": 14,
     "no_improvement_cases": [
       {
         "baseline_clean_pass_rate": 1.0,
+        "case_id": "backend/service-method-vs-new-helper",
+        "skills_only_clean_pass_rate": 0.6667,
+        "skills_with_hooks_clean_pass_rate": 1.0,
+        "skills_with_hooks_vs_baseline_delta": 0.0
+      },
+      {
+        "baseline_clean_pass_rate": 1.0,
         "case_id": "compact/context-retention-after-compaction",
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
+        "skills_with_hooks_vs_baseline_delta": 0.0
+      },
+      {
+        "baseline_clean_pass_rate": 1.0,
+        "case_id": "devex/helper-reuse-search",
         "skills_only_clean_pass_rate": 1.0,
         "skills_with_hooks_clean_pass_rate": 1.0,
         "skills_with_hooks_vs_baseline_delta": 0.0
@@ -4401,6 +5486,13 @@
       },
       {
         "baseline_clean_pass_rate": 1.0,
+        "case_id": "security/ssrf-url-allowlist",
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
+        "skills_with_hooks_vs_baseline_delta": 0.0
+      },
+      {
+        "baseline_clean_pass_rate": 1.0,
         "case_id": "validation/stale-validation-after-edit",
         "skills_only_clean_pass_rate": 1.0,
         "skills_with_hooks_clean_pass_rate": 1.0,
@@ -4410,11 +5502,20 @@
     "regressed_case_count": 0,
     "regressed_cases": [],
     "reliability_no_improvement_cases": [],
-    "reliability_no_improvement_visible": true,
-    "skills_with_hooks_below_skills_only_cases": []
+    "reliability_no_improvement_visible": false,
+    "skills_with_hooks_below_skills_only_cases": [
+      {
+        "case_id": "structure/object-method-encapsulation-placement",
+        "delta": -0.3333,
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 0.6667
+      }
+    ]
   },
   "cases": [
+    "backend/service-method-vs-new-helper",
     "compact/context-retention-after-compaction",
+    "devex/helper-reuse-search",
     "devex/minimal-correct-native-reuse",
     "injection/professional-route-manifest-activation",
     "injection/stage-specific-reference-loading",
@@ -4422,12 +5523,189 @@
     "memory/repeated-failure-fragile-file",
     "pressure/professional-boundary-under-user-pressure",
     "process/full-pdd-ddd-sdd-tdd-review-repair",
+    "reliability/redis-cache-stampede-protection",
     "repo-intel/caller-callee-test-impact-map",
     "review/repair-rereview-required",
+    "security/ssrf-url-allowlist",
+    "structure/object-method-encapsulation-placement",
     "validation/stale-validation-after-edit"
   ],
   "cases_summary": {
+    "backend/service-method-vs-new-helper": {
+      "dominant_setup_failure_reason": "none",
+      "dominant_setup_failure_subreason": "none",
+      "grading_mode": "assertion",
+      "setup_failure_reasons": {
+        "none": 9
+      },
+      "setup_failure_subreasons": {
+        "none": 9
+      },
+      "unknown_setup_failure_rate": 0.0,
+      "variants": {
+        "baseline_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 3,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 3
+          },
+          "pass_rate": 1.0,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "none": 3
+          },
+          "unknown_setup_failure_rate": 0.0
+        },
+        "skills_only_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 2,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 2,
+            "test_suite_failed": 1
+          },
+          "pass_rate": 0.6667,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "assertion_failed": 1,
+            "none": 2
+          },
+          "unknown_setup_failure_rate": 0.0
+        },
+        "skills_with_hooks_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 3,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 3
+          },
+          "pass_rate": 1.0,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "none": 3
+          },
+          "unknown_setup_failure_rate": 0.0
+        }
+      }
+    },
     "compact/context-retention-after-compaction": {
+      "dominant_setup_failure_reason": "none",
+      "dominant_setup_failure_subreason": "none",
+      "grading_mode": "assertion",
+      "setup_failure_reasons": {
+        "none": 9
+      },
+      "setup_failure_subreasons": {
+        "none": 9
+      },
+      "unknown_setup_failure_rate": 0.0,
+      "variants": {
+        "baseline_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 3,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 3
+          },
+          "pass_rate": 1.0,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "none": 3
+          },
+          "unknown_setup_failure_rate": 0.0
+        },
+        "skills_only_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 3,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 3
+          },
+          "pass_rate": 1.0,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "none": 3
+          },
+          "unknown_setup_failure_rate": 0.0
+        },
+        "skills_with_hooks_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 3,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 3
+          },
+          "pass_rate": 1.0,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "none": 3
+          },
+          "unknown_setup_failure_rate": 0.0
+        }
+      }
+    },
+    "devex/helper-reuse-search": {
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
       "grading_mode": "assertion",
@@ -5115,6 +6393,94 @@
         }
       }
     },
+    "reliability/redis-cache-stampede-protection": {
+      "dominant_setup_failure_reason": "none",
+      "dominant_setup_failure_subreason": "none",
+      "grading_mode": "assertion",
+      "setup_failure_reasons": {
+        "none": 9
+      },
+      "setup_failure_subreasons": {
+        "none": 9
+      },
+      "unknown_setup_failure_rate": 0.0,
+      "variants": {
+        "baseline_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 2,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 2,
+            "test_suite_failed": 1
+          },
+          "pass_rate": 0.6667,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "assertion_failed": 1,
+            "none": 2
+          },
+          "unknown_setup_failure_rate": 0.0
+        },
+        "skills_only_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 3,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 3
+          },
+          "pass_rate": 1.0,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "none": 3
+          },
+          "unknown_setup_failure_rate": 0.0
+        },
+        "skills_with_hooks_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 3,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 3
+          },
+          "pass_rate": 1.0,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "none": 3
+          },
+          "unknown_setup_failure_rate": 0.0
+        }
+      }
+    },
     "repo-intel/caller-callee-test-impact-map": {
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
@@ -5287,6 +6653,182 @@
         }
       }
     },
+    "security/ssrf-url-allowlist": {
+      "dominant_setup_failure_reason": "none",
+      "dominant_setup_failure_subreason": "none",
+      "grading_mode": "assertion",
+      "setup_failure_reasons": {
+        "none": 9
+      },
+      "setup_failure_subreasons": {
+        "none": 9
+      },
+      "unknown_setup_failure_rate": 0.0,
+      "variants": {
+        "baseline_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 3,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 3
+          },
+          "pass_rate": 1.0,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "none": 3
+          },
+          "unknown_setup_failure_rate": 0.0
+        },
+        "skills_only_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 3,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 3
+          },
+          "pass_rate": 1.0,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "none": 3
+          },
+          "unknown_setup_failure_rate": 0.0
+        },
+        "skills_with_hooks_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 3,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 3
+          },
+          "pass_rate": 1.0,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "none": 3
+          },
+          "unknown_setup_failure_rate": 0.0
+        }
+      }
+    },
+    "structure/object-method-encapsulation-placement": {
+      "dominant_setup_failure_reason": "none",
+      "dominant_setup_failure_subreason": "none",
+      "grading_mode": "assertion",
+      "setup_failure_reasons": {
+        "none": 9
+      },
+      "setup_failure_subreasons": {
+        "none": 9
+      },
+      "unknown_setup_failure_rate": 0.0,
+      "variants": {
+        "baseline_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 1,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 1,
+            "test_suite_failed": 2
+          },
+          "pass_rate": 0.3333,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "assertion_failed": 2,
+            "none": 1
+          },
+          "unknown_setup_failure_rate": 0.0
+        },
+        "skills_only_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 3,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 3
+          },
+          "pass_rate": 1.0,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "none": 3
+          },
+          "unknown_setup_failure_rate": 0.0
+        },
+        "skills_with_hooks_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 2,
+          "dominant_setup_failure_reason": "none",
+          "dominant_setup_failure_subreason": "none",
+          "failure_categories": {
+            "none": 2,
+            "test_suite_failed": 1
+          },
+          "pass_rate": 0.6667,
+          "runs": 3,
+          "security_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_reasons": {
+            "none": 3
+          },
+          "setup_failure_subreasons": {
+            "none": 3
+          },
+          "test_suite_failure_reasons": {
+            "assertion_failed": 1,
+            "none": 2
+          },
+          "unknown_setup_failure_rate": 0.0
+        }
+      }
+    },
     "validation/stale-validation-after-edit": {
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
@@ -5423,167 +6965,195 @@
   "contaminated_result_count": 0,
   "cost_summary": {
     "average_usage_per_result": {
-      "cached_input_tokens": 357284.2,
-      "input_tokens": 413941.89,
-      "output_tokens": 9322.98,
-      "reasoning_output_tokens": 1431.61
+      "cached_input_tokens": 480216.89,
+      "input_tokens": 548184.44,
+      "output_tokens": 10369.67,
+      "reasoning_output_tokens": 1605.33
     },
     "by_variant": {
       "baseline_clean": {
         "average_usage_per_result": {
-          "cached_input_tokens": 140672.0,
-          "input_tokens": 169285.73,
-          "output_tokens": 7285.3,
-          "reasoning_output_tokens": 1086.58
+          "cached_input_tokens": 182266.67,
+          "input_tokens": 222075.4,
+          "output_tokens": 8404.15,
+          "reasoning_output_tokens": 1255.21
         },
         "median_usage_per_result": {
-          "cached_input_tokens": 131584.0,
-          "input_tokens": 153887.0,
-          "output_tokens": 7490.0,
-          "reasoning_output_tokens": 943.0
+          "cached_input_tokens": 152128.0,
+          "input_tokens": 185076.5,
+          "output_tokens": 8274.5,
+          "reasoning_output_tokens": 1144.5
         },
-        "pass_rate_per_100_commands": 3.2165,
-        "pass_rate_per_100k_input_tokens": 0.5907,
-        "result_count": 33,
+        "pass_rate_per_100_commands": 2.4561,
+        "pass_rate_per_100k_input_tokens": 0.4222,
+        "result_count": 48,
         "total_usage": {
-          "cached_input_tokens": 4642176,
-          "input_tokens": 5586429,
-          "output_tokens": 240415,
-          "reasoning_output_tokens": 35857
+          "cached_input_tokens": 8748800,
+          "input_tokens": 10659619,
+          "output_tokens": 403399,
+          "reasoning_output_tokens": 60250
         }
       },
       "skills_only_clean": {
         "average_usage_per_result": {
-          "cached_input_tokens": 438388.36,
-          "input_tokens": 507031.39,
-          "output_tokens": 10073.73,
-          "reasoning_output_tokens": 1578.76
+          "cached_input_tokens": 609685.33,
+          "input_tokens": 692307.4,
+          "output_tokens": 11312.08,
+          "reasoning_output_tokens": 1746.4
         },
         "median_usage_per_result": {
-          "cached_input_tokens": 382592.0,
-          "input_tokens": 436280.0,
-          "output_tokens": 9397.0,
-          "reasoning_output_tokens": 1438.0
+          "cached_input_tokens": 478208.0,
+          "input_tokens": 578457.0,
+          "output_tokens": 10526.0,
+          "reasoning_output_tokens": 1696.0
         },
-        "pass_rate_per_100_commands": 1.9952,
-        "pass_rate_per_100k_input_tokens": 0.1972,
-        "result_count": 33,
+        "pass_rate_per_100_commands": 1.6574,
+        "pass_rate_per_100k_input_tokens": 0.1414,
+        "result_count": 48,
         "total_usage": {
-          "cached_input_tokens": 14466816,
-          "input_tokens": 16732036,
-          "output_tokens": 332433,
-          "reasoning_output_tokens": 52099
+          "cached_input_tokens": 29264896,
+          "input_tokens": 33230755,
+          "output_tokens": 542980,
+          "reasoning_output_tokens": 83827
         }
       },
       "skills_with_hooks_clean": {
         "average_usage_per_result": {
-          "cached_input_tokens": 492792.24,
-          "input_tokens": 565508.55,
-          "output_tokens": 10609.91,
-          "reasoning_output_tokens": 1629.48
+          "cached_input_tokens": 648698.67,
+          "input_tokens": 730170.52,
+          "output_tokens": 11392.79,
+          "reasoning_output_tokens": 1814.4
         },
         "median_usage_per_result": {
-          "cached_input_tokens": 431744.0,
-          "input_tokens": 474798.0,
-          "output_tokens": 10310.0,
-          "reasoning_output_tokens": 1486.0
+          "cached_input_tokens": 526976.0,
+          "input_tokens": 627271.0,
+          "output_tokens": 11028.0,
+          "reasoning_output_tokens": 1675.5
         },
-        "pass_rate_per_100_commands": 1.8622,
-        "pass_rate_per_100k_input_tokens": 0.1768,
-        "result_count": 33,
+        "pass_rate_per_100_commands": 1.686,
+        "pass_rate_per_100k_input_tokens": 0.1341,
+        "result_count": 48,
         "total_usage": {
-          "cached_input_tokens": 16262144,
-          "input_tokens": 18661782,
-          "output_tokens": 350127,
-          "reasoning_output_tokens": 53773
+          "cached_input_tokens": 31137536,
+          "input_tokens": 35048185,
+          "output_tokens": 546854,
+          "reasoning_output_tokens": 87091
         }
       }
     },
     "case_cost_outliers": [
       {
-        "average_input_tokens": 988804.67,
-        "case_id": "compact/context-retention-after-compaction",
-        "median_cell_average_input_tokens": 396936.0,
+        "average_input_tokens": 1159690.0,
+        "case_id": "backend/service-method-vs-new-helper",
+        "median_cell_average_input_tokens": 478406.33,
         "variant": "skills_only_clean"
       },
       {
-        "average_input_tokens": 993444.0,
-        "case_id": "injection/stage-specific-reference-loading",
-        "median_cell_average_input_tokens": 396936.0,
+        "average_input_tokens": 1186012.0,
+        "case_id": "backend/service-method-vs-new-helper",
+        "median_cell_average_input_tokens": 478406.33,
         "variant": "skills_with_hooks_clean"
       },
       {
-        "average_input_tokens": 901515.33,
-        "case_id": "validation/stale-validation-after-edit",
-        "median_cell_average_input_tokens": 396936.0,
+        "average_input_tokens": 1079879.0,
+        "case_id": "reliability/redis-cache-stampede-protection",
+        "median_cell_average_input_tokens": 478406.33,
+        "variant": "skills_only_clean"
+      },
+      {
+        "average_input_tokens": 987947.0,
+        "case_id": "reliability/redis-cache-stampede-protection",
+        "median_cell_average_input_tokens": 478406.33,
+        "variant": "skills_with_hooks_clean"
+      },
+      {
+        "average_input_tokens": 1158418.33,
+        "case_id": "security/ssrf-url-allowlist",
+        "median_cell_average_input_tokens": 478406.33,
+        "variant": "skills_with_hooks_clean"
+      },
+      {
+        "average_input_tokens": 1568891.67,
+        "case_id": "structure/object-method-encapsulation-placement",
+        "median_cell_average_input_tokens": 478406.33,
+        "variant": "skills_only_clean"
+      },
+      {
+        "average_input_tokens": 1367405.33,
+        "case_id": "structure/object-method-encapsulation-placement",
+        "median_cell_average_input_tokens": 478406.33,
         "variant": "skills_with_hooks_clean"
       }
     ],
     "cost_adjusted_delta": {
       "skills_only_clean_vs_baseline_clean": {
-        "average_command_execution_delta": 19.03,
-        "average_input_token_overhead_pct": 1.9951,
-        "average_output_token_overhead_pct": 0.3827,
-        "average_reasoning_token_overhead_pct": 0.453,
+        "average_command_execution_delta": 20.91,
+        "average_input_token_overhead_pct": 2.1174,
+        "average_output_token_overhead_pct": 0.346,
+        "average_reasoning_token_overhead_pct": 0.3913,
         "cost_efficiency_note": "Compatibility telemetry only: these parsed token and command ratios are not used to claim cost reduction or efficiency improvement.",
-        "pass_rate_delta": 0.0,
-        "pass_rate_per_100_commands_delta": -1.2213,
-        "pass_rate_per_100k_input_tokens_delta": -0.3935,
+        "pass_rate_delta": 0.0417,
+        "pass_rate_per_100_commands_delta": -0.7987,
+        "pass_rate_per_100k_input_tokens_delta": -0.2808,
         "status": "collected"
       },
       "skills_with_hooks_clean_vs_baseline_clean": {
-        "average_command_execution_delta": 22.61,
-        "average_input_token_overhead_pct": 2.3406,
-        "average_output_token_overhead_pct": 0.4563,
-        "average_reasoning_token_overhead_pct": 0.4996,
+        "average_command_execution_delta": 19.91,
+        "average_input_token_overhead_pct": 2.2879,
+        "average_output_token_overhead_pct": 0.3556,
+        "average_reasoning_token_overhead_pct": 0.4455,
         "cost_efficiency_note": "Compatibility telemetry only: these parsed token and command ratios are not used to claim cost reduction or efficiency improvement.",
-        "pass_rate_delta": 0.0,
-        "pass_rate_per_100_commands_delta": -1.3543,
-        "pass_rate_per_100k_input_tokens_delta": -0.4139,
+        "pass_rate_delta": 0.0417,
+        "pass_rate_per_100_commands_delta": -0.7701,
+        "pass_rate_per_100k_input_tokens_delta": -0.2881,
         "status": "collected"
       },
       "skills_with_hooks_clean_vs_skills_only_clean": {
-        "average_command_execution_delta": 3.58,
-        "average_input_token_overhead_pct": 0.1153,
-        "average_output_token_overhead_pct": 0.0532,
-        "average_reasoning_token_overhead_pct": 0.0321,
+        "average_command_execution_delta": -1.0,
+        "average_input_token_overhead_pct": 0.0547,
+        "average_output_token_overhead_pct": 0.0071,
+        "average_reasoning_token_overhead_pct": 0.0389,
         "cost_efficiency_note": "Compatibility telemetry only: these parsed token and command ratios are not used to claim cost reduction or efficiency improvement.",
         "pass_rate_delta": 0.0,
-        "pass_rate_per_100_commands_delta": -0.133,
-        "pass_rate_per_100k_input_tokens_delta": -0.0204,
+        "pass_rate_per_100_commands_delta": 0.0286,
+        "pass_rate_per_100k_input_tokens_delta": -0.0073,
         "status": "collected"
       }
     },
     "cost_caveat": "Token usage is parsed local Codex telemetry, not a billing ledger or a quality gate.",
     "cost_is_telemetry_only": true,
     "quality_gate_uses_cost": false,
-    "result_count": 99,
+    "result_count": 144,
     "telemetry_only_note": "Cost is telemetry only in this quality-first phase; token, command, and file-change overhead do not gate pass-rate or capability quality conclusions, and no efficiency improvement claim is made.",
     "total_usage": {
-      "cached_input_tokens": 35371136,
-      "input_tokens": 40980247,
-      "output_tokens": 922975,
-      "reasoning_output_tokens": 141729
+      "cached_input_tokens": 69151232,
+      "input_tokens": 78938559,
+      "output_tokens": 1493233,
+      "reasoning_output_tokens": 231168
     }
   },
   "coverage_summary": {
-    "actual_run_assertion_case_count": 11,
-    "actual_run_case_count": 11,
-    "actual_run_case_coverage_rate": 0.1549,
-    "actual_run_category_count": 10,
-    "actual_run_publishable_assertion_case_count": 11,
-    "assertion_case_count": 11,
-    "case_count": 11,
+    "actual_run_assertion_case_count": 16,
+    "actual_run_case_count": 16,
+    "actual_run_case_coverage_rate": 0.2025,
+    "actual_run_category_count": 14,
+    "actual_run_publishable_assertion_case_count": 16,
+    "assertion_case_count": 16,
+    "case_count": 16,
     "categories": {
+      "backend": 1,
       "compact": 1,
-      "devex": 1,
+      "devex": 2,
       "injection": 2,
       "logging": 1,
       "memory": 1,
       "pressure": 1,
       "process": 1,
+      "reliability": 1,
       "repo-intel": 1,
       "review": 1,
+      "security": 1,
+      "structure": 1,
       "validation": 1
     },
     "categories_registered": {
@@ -5608,28 +7178,42 @@
       "validation": 1
     },
     "categories_run": {
+      "backend": 1,
       "compact": 1,
-      "devex": 1,
+      "devex": 2,
       "injection": 2,
       "logging": 1,
       "memory": 1,
       "pressure": 1,
       "process": 1,
+      "reliability": 1,
       "repo-intel": 1,
       "review": 1,
+      "security": 1,
+      "structure": 1,
       "validation": 1
     },
     "coverage_dimensions": {
+      "backend-service-boundary": 1,
+      "concurrency-control": 1,
       "context_compaction_retention": 1,
+      "devex-reuse": 1,
       "execution_trajectory_review": 4,
+      "implementation-structure": 2,
+      "input-validation": 1,
       "minimal_correct_implementation_ladder": 1,
+      "object-boundary": 1,
+      "observability": 1,
       "pdd_ddd_sdd_tdd_review_flow": 1,
       "professional_injection_activation": 1,
       "professional_logging_decision": 1,
       "project_memory_governance": 1,
       "pua_or_pressure_resistance": 1,
+      "reliability-cache": 1,
       "repository_graph_context_pack": 1,
+      "security-ssrf": 1,
       "staged_injection_precision": 1,
+      "structure-placement": 1,
       "validation_broker_freshness": 3
     },
     "coverage_dimensions_registered": {
@@ -5675,23 +7259,34 @@
       "validation_broker_freshness": 3
     },
     "coverage_dimensions_run": {
+      "backend-service-boundary": 1,
+      "concurrency-control": 1,
       "context_compaction_retention": 1,
+      "devex-reuse": 1,
       "execution_trajectory_review": 4,
+      "implementation-structure": 2,
+      "input-validation": 1,
       "minimal_correct_implementation_ladder": 1,
+      "object-boundary": 1,
+      "observability": 1,
       "pdd_ddd_sdd_tdd_review_flow": 1,
       "professional_injection_activation": 1,
       "professional_logging_decision": 1,
       "project_memory_governance": 1,
       "pua_or_pressure_resistance": 1,
+      "reliability-cache": 1,
       "repository_graph_context_pack": 1,
+      "security-ssrf": 1,
       "staged_injection_precision": 1,
+      "structure-placement": 1,
       "validation_broker_freshness": 3
     },
-    "manifest_case_count": 71,
+    "manifest_case_count": 79,
     "manifest_categories": [
       "ai",
       "backend",
       "bigdata",
+      "code-elements",
       "compact",
       "data-api",
       "data-middleware",
@@ -5718,10 +7313,11 @@
       "validation",
       "web3"
     ],
-    "manifest_category_count": 28,
+    "manifest_category_count": 29,
     "missing_manifest_categories": [
       "ai",
       "bigdata",
+      "code-elements",
       "delivery",
       "finops",
       "iot",
@@ -5730,7 +7326,7 @@
       "payment",
       "web3"
     ],
-    "publishable_assertion_case_count": 11,
+    "publishable_assertion_case_count": 16,
     "publishable_categories_registered": {
       "backend": 1,
       "compact": 1,
@@ -5754,28 +7350,23 @@
     },
     "registered_assertion_case_count": 23,
     "registered_but_not_run_cases": [
-      "backend/service-method-vs-new-helper",
       "data-api/backward-compatible-api-field",
       "data-middleware/kafka-consumer-offset-dlq",
       "devex/bugfix-same-pattern-scan",
-      "devex/helper-reuse-search",
       "frontend/accessible-form-error-state",
       "integration/webhook-hmac-raw-body",
       "performance/event-loop-blocking-async-path",
-      "performance/lock-held-across-io",
-      "reliability/redis-cache-stampede-protection",
-      "security/ssrf-url-allowlist",
-      "structure/object-method-encapsulation-placement"
+      "performance/lock-held-across-io"
     ],
-    "registered_case_coverage_rate": 0.338,
+    "registered_case_coverage_rate": 0.3038,
     "registered_category_count": 19,
     "registered_live_case_count": 24,
     "registered_publishable_assertion_case_count": 23,
-    "registered_publishable_case_coverage_rate": 0.3239,
+    "registered_publishable_case_coverage_rate": 0.2911,
     "registered_telemetry_only_case_count": 1,
     "telemetry_only_case_count": 0,
     "tiers": {
-      "core": 11,
+      "core": 16,
       "experimental": 0,
       "level1": 0
     },
@@ -5785,7 +7376,7 @@
       "level1": 7
     },
     "tiers_run": {
-      "core": 11,
+      "core": 16,
       "experimental": 0,
       "level1": 0
     },
@@ -5795,51 +7386,54 @@
   "current_home_result_count": 0,
   "delta": {
     "skills_only_clean_vs_baseline_clean": {
-      "command_execution_count_delta": 19.03,
-      "file_change_count_delta": 0.73,
-      "input_tokens_delta_pct": 1.9951,
-      "output_tokens_delta_pct": 0.3827,
-      "pass_rate_delta": 0.0,
-      "reasoning_output_tokens_delta_pct": 0.453,
+      "command_execution_count_delta": 20.91,
+      "file_change_count_delta": 0.59,
+      "input_tokens_delta_pct": 2.1174,
+      "output_tokens_delta_pct": 0.346,
+      "pass_rate_delta": 0.0417,
+      "reasoning_output_tokens_delta_pct": 0.3913,
       "security_pass_rate_delta": 0.0
     },
     "skills_with_hooks_clean_vs_baseline_clean": {
-      "command_execution_count_delta": 22.61,
-      "file_change_count_delta": 0.06,
-      "input_tokens_delta_pct": 2.3406,
-      "output_tokens_delta_pct": 0.4563,
-      "pass_rate_delta": 0.0,
-      "reasoning_output_tokens_delta_pct": 0.4996,
+      "command_execution_count_delta": 19.91,
+      "file_change_count_delta": 1.0,
+      "input_tokens_delta_pct": 2.2879,
+      "output_tokens_delta_pct": 0.3556,
+      "pass_rate_delta": 0.0417,
+      "reasoning_output_tokens_delta_pct": 0.4455,
       "security_pass_rate_delta": 0.0
     },
     "skills_with_hooks_clean_vs_skills_only_clean": {
-      "command_execution_count_delta": 3.58,
-      "file_change_count_delta": -0.67,
-      "input_tokens_delta_pct": 0.1153,
-      "output_tokens_delta_pct": 0.0532,
+      "command_execution_count_delta": -1.0,
+      "file_change_count_delta": 0.41,
+      "input_tokens_delta_pct": 0.0547,
+      "output_tokens_delta_pct": 0.0071,
       "pass_rate_delta": 0.0,
-      "reasoning_output_tokens_delta_pct": 0.0321,
+      "reasoning_output_tokens_delta_pct": 0.0389,
       "security_pass_rate_delta": 0.0
     }
   },
   "dominant_failure_category": "none",
   "dominant_setup_failure_reason": "none",
   "dominant_setup_failure_subreason": "none",
-  "effect_status": "neutral",
+  "effect_status": "improved",
   "effect_summary": {
-    "baseline_clean_pass_rate": 1.0,
-    "case_improvements": [],
+    "baseline_clean_pass_rate": 0.9375,
+    "case_improvements": [
+      "reliability/redis-cache-stampede-protection",
+      "structure/object-method-encapsulation-placement"
+    ],
     "dominant_failure_category": "none",
-    "dominant_failure_count": 99,
+    "dominant_failure_count": 139,
     "dominant_setup_failure_reason": "none",
     "dominant_setup_failure_subreason": "none",
     "eligible_result_counts": {
-      "baseline_clean": 33,
-      "skills_only_clean": 33,
-      "skills_with_hooks_clean": 33
+      "baseline_clean": 48,
+      "skills_only_clean": 48,
+      "skills_with_hooks_clean": 48
     },
     "missing_variants": [],
-    "reason": "skills_with_hooks_clean matches baseline_clean at summary precision",
+    "reason": "skills_with_hooks_clean improves over baseline_clean and is not below skills_only_clean",
     "required_variants": [
       "baseline_clean",
       "skills_only_clean",
@@ -5857,26 +7451,26 @@
     },
     "setup_failed_result_count": 0,
     "setup_failure_subreasons": {
-      "none": 99
+      "none": 144
     },
-    "skills_only_clean_pass_rate": 1.0,
-    "skills_with_hooks_clean_pass_rate": 1.0,
-    "skills_with_hooks_vs_baseline_pass_rate_delta": 0.0,
+    "skills_only_clean_pass_rate": 0.9792,
+    "skills_with_hooks_clean_pass_rate": 0.9792,
+    "skills_with_hooks_vs_baseline_pass_rate_delta": 0.0417,
     "skills_with_hooks_vs_skills_only_pass_rate_delta": 0.0,
     "unknown_setup_failure_rate": 0.0
   },
-  "effect_verdict": "neutral",
+  "effect_verdict": "positive",
   "evidence_level": "local_codex_cli_live_benchmark",
   "evidence_scope": "multi_case_ablation_3_run",
   "evidence_scope_detail": {
     "evidence_scope_ready": true,
-    "observed_assertion_case_count": 11,
+    "observed_assertion_case_count": 16,
     "observed_benchmark_mode": "ablation",
     "observed_min_runs_per_required_variant": 3,
     "observed_variant_case_counts": {
-      "baseline_clean": 11,
-      "skills_only_clean": 11,
-      "skills_with_hooks_clean": 11
+      "baseline_clean": 16,
+      "skills_only_clean": 16,
+      "skills_with_hooks_clean": 16
     },
     "reason": "ablation evidence includes the required assertion-backed case count and repeated runs",
     "required_assertion_case_count": 5,
@@ -5891,7 +7485,8 @@
   "evidence_scope_ready": true,
   "evidence_status": "pass",
   "failure_categories": {
-    "none": 99
+    "none": 139,
+    "test_suite_failed": 5
   },
   "generated_by": "scripts/generate-codex-live-summary.py",
   "ignore_rules": true,
@@ -5908,23 +7503,23 @@
     "first_redaction_error_artifact": null,
     "first_redaction_error_excerpt_hash": null,
     "first_redaction_error_marker": null,
-    "max_event_size_bytes": 21535,
-    "process_trace_count": 99,
+    "max_event_size_bytes": 24713,
+    "process_trace_count": 144,
     "redaction_error_artifact_count": 0,
     "redaction_error_artifacts": [],
     "redaction_error_artifacts_truncated": false,
     "redaction_error_count": 0,
     "redaction_error_markers": [],
     "redaction_status": "pass",
-    "run_log_events": 727,
-    "timeline_events": 727
+    "run_log_events": 1018,
+    "timeline_events": 1018
   },
   "not_collected_grading_count": 0,
   "plugins_disabled": true,
   "process_compliance_summary": {
     "all_core_phases_degraded_or_present_rate": 1.0,
     "all_core_phases_inferred_only_rate": 0.0,
-    "all_core_phases_present_rate": 1.0,
+    "all_core_phases_present_rate": 0.7847,
     "ddd_degraded_rate": 0.0,
     "ddd_inferred_rate": 0.0,
     "ddd_invariant_test_or_code_coverage_rate": 1.0,
@@ -5943,24 +7538,24 @@
     "pdd_present_rate": 1.0,
     "pdd_required_field_fallback_rate": 0.0,
     "pdd_to_tdd_traceability_rate": 1.0,
-    "process_trace_count": 99,
+    "process_trace_count": 144,
     "process_trace_inferred_only_rate": 0.0,
     "repair_degraded_rate": 0.0,
     "repair_inferred_rate": 0.0,
-    "repair_present_rate": 0.3131,
+    "repair_present_rate": 0.2083,
     "required_field_fallback_rate": 0.0,
     "rereview_degraded_rate": 0.0,
     "rereview_inferred_rate": 0.0,
-    "rereview_present_rate": 0.303,
+    "rereview_present_rate": 0.2083,
     "review_degraded_rate": 0.0,
-    "review_flow_present_rate": 0.303,
+    "review_flow_present_rate": 0.2083,
     "review_inferred_rate": 0.0,
-    "review_present_rate": 1.0,
-    "sdd_degraded_rate": 0.0,
+    "review_present_rate": 0.9931,
+    "sdd_degraded_rate": 0.2153,
     "sdd_failure_mode_validation_rate": 1.0,
     "sdd_inferred_rate": 0.0,
     "sdd_logging_validation_rate": 1.0,
-    "sdd_present_rate": 1.0,
+    "sdd_present_rate": 0.7847,
     "sdd_public_api_validation_rate": 1.0,
     "sdd_required_field_fallback_rate": 0.0,
     "tdd_degraded_rate": 0.0,
@@ -5971,66 +7566,61 @@
   },
   "publishable_for_strict_benchmark": true,
   "quality_improvement_summary": {
-    "assertion_backed_core_capability_count": 11,
-    "baseline_clean_pass_rate": 1.0,
+    "assertion_backed_core_capability_count": 2,
+    "baseline_clean_pass_rate": 0.9375,
     "baseline_quality_improved": false,
-    "baseline_route_process_evidence_rate": 0.0909,
-    "capability_quality_ready": true,
-    "capability_quality_ready_missing": [],
-    "case_count": 11,
+    "baseline_route_process_evidence_rate": 0.0625,
+    "capability_quality_ready": false,
+    "capability_quality_ready_missing": [
+      "minimal_correct_implementation_ladder",
+      "pdd_ddd_sdd_tdd_review_flow",
+      "professional_injection_activation",
+      "professional_logging_decision",
+      "staged_injection_precision",
+      "validation_broker_freshness"
+    ],
+    "case_count": 16,
     "case_regression_count": 0,
     "cost_is_quality_gate": false,
     "cost_telemetry_only": true,
     "efficiency_improvement_claim": false,
-    "hook_capability_evidence_non_regressing": true,
+    "hook_capability_evidence_non_regressing": false,
     "hook_quality_increment_positive": false,
     "large_quality_improvement_claim": false,
-    "no_quality_regression": true,
-    "skill_capability_evidence_improved": true,
+    "no_quality_regression": false,
+    "skill_capability_evidence_improved": false,
     "skill_pass_rate_improved": false,
-    "skill_quality_improved": true,
-    "skills_only_clean_pass_rate": 1.0,
+    "skill_quality_improved": false,
+    "skills_only_clean_pass_rate": 0.9792,
     "skills_only_route_process_evidence_rate": 1.0,
-    "skills_only_strict_process_trace_rate": 1.0,
-    "skills_only_vs_baseline_delta": 0.0,
-    "skills_with_hooks_below_skills_only_case_count": 0,
-    "skills_with_hooks_clean_pass_rate": 1.0,
+    "skills_only_strict_process_trace_rate": 0.75,
+    "skills_only_vs_baseline_delta": 0.0417,
+    "skills_with_hooks_below_skills_only_case_count": 1,
+    "skills_with_hooks_clean_pass_rate": 0.9792,
     "skills_with_hooks_hook_bounded_evidence_rate": 1.0,
     "skills_with_hooks_route_process_evidence_rate": 1.0,
-    "skills_with_hooks_strict_process_trace_rate": 1.0,
-    "skills_with_hooks_vs_baseline_delta": 0.0,
+    "skills_with_hooks_strict_process_trace_rate": 0.7708,
+    "skills_with_hooks_vs_baseline_delta": 0.0417,
     "skills_with_hooks_vs_skills_only_delta": 0.0
   },
-  "result_count": 99,
+  "result_count": 144,
   "run_dir": "<run-dir>",
-  "run_id": "core99-ablation-rootfix-20260625-031010",
+  "run_id": "ablation-core-auth-borrowed-20260701-013224",
   "schema_version": 2,
   "security_failure_reasons": {
-    "none": 99
+    "none": 144
   },
-  "selected_capability_case_count": 11,
-  "selected_capability_cases": [
-    "compact/context-retention-after-compaction",
-    "devex/minimal-correct-native-reuse",
-    "injection/professional-route-manifest-activation",
-    "injection/stage-specific-reference-loading",
-    "logging/redacted-structured-log-design",
-    "memory/repeated-failure-fragile-file",
-    "pressure/professional-boundary-under-user-pressure",
-    "process/full-pdd-ddd-sdd-tdd-review-repair",
-    "repo-intel/caller-callee-test-impact-map",
-    "review/repair-rereview-required",
-    "validation/stale-validation-after-edit"
-  ],
+  "selected_capability_case_count": 0,
+  "selected_capability_cases": [],
   "setup_failure_reasons": {
-    "none": 99
+    "none": 144
   },
   "setup_failure_subreasons": {
-    "none": 99
+    "none": 144
   },
   "stability_summary": {
     "artifact_status_counts": {
-      "collected": 99
+      "collected": 144
     },
     "case_regression_count": 0,
     "codex_exec_failed_by_case": {},
@@ -6038,16 +7628,79 @@
     "codex_exec_retries_by_case": {},
     "codex_exec_retry_count": 0,
     "contamination_rate": 0.0,
-    "failed_run_reasons_by_case": {},
-    "flaky_case_variant_cells": [],
+    "failed_run_reasons_by_case": {
+      "backend/service-method-vs-new-helper": {
+        "skills_only_clean": {
+          "test_suite_failed": 1
+        }
+      },
+      "reliability/redis-cache-stampede-protection": {
+        "baseline_clean": {
+          "test_suite_failed": 1
+        }
+      },
+      "structure/object-method-encapsulation-placement": {
+        "baseline_clean": {
+          "test_suite_failed": 2
+        },
+        "skills_with_hooks_clean": {
+          "test_suite_failed": 1
+        }
+      }
+    },
+    "flaky_case_variant_cells": [
+      {
+        "case_id": "backend/service-method-vs-new-helper",
+        "failed_count": 1,
+        "failure_categories": {
+          "none": 2,
+          "test_suite_failed": 1
+        },
+        "passed_count": 2,
+        "variant": "skills_only_clean"
+      },
+      {
+        "case_id": "reliability/redis-cache-stampede-protection",
+        "failed_count": 1,
+        "failure_categories": {
+          "none": 2,
+          "test_suite_failed": 1
+        },
+        "passed_count": 2,
+        "variant": "baseline_clean"
+      },
+      {
+        "case_id": "structure/object-method-encapsulation-placement",
+        "failed_count": 2,
+        "failure_categories": {
+          "none": 1,
+          "test_suite_failed": 2
+        },
+        "passed_count": 1,
+        "variant": "baseline_clean"
+      },
+      {
+        "case_id": "structure/object-method-encapsulation-placement",
+        "failed_count": 1,
+        "failure_categories": {
+          "none": 2,
+          "test_suite_failed": 1
+        },
+        "passed_count": 2,
+        "variant": "skills_with_hooks_clean"
+      }
+    ],
     "grading_status_counts": {
-      "passed": 99
+      "failed": 5,
+      "passed": 139
     },
     "not_collected_grading_rate": 0.0,
-    "observed_case_variant_cell_count": 33,
+    "observed_case_variant_cell_count": 48,
     "observed_max_runs_per_case_variant": 3,
     "observed_min_runs_per_case_variant": 3,
-    "partial_status_reasons": [],
+    "partial_status_reasons": [
+      "test_suite_failed:5"
+    ],
     "requested_runs_per_variant": 3,
     "security_assertion_failure_rate": 0.0,
     "security_check_execution_failure_rate": 0.0,
@@ -6055,18 +7708,19 @@
     "security_failure_rate_definition": "alias of security_assertion_failure_rate; execution failures are tracked separately",
     "setup_failure_rate": 0.0,
     "skills_with_hooks_regression_cases": [],
-    "test_suite_failure_rate": 0.0
+    "test_suite_failure_rate": 0.0347
   },
   "status": "collected",
   "strict_benchmark_eligible": true,
   "telemetry": {
-    "event_count": 6217,
+    "event_count": 10461,
     "parse_error_count": 0
   },
   "telemetry_only_case_count": 0,
   "telemetry_only_result_count": 0,
   "test_suite_failure_reasons": {
-    "none": 99
+    "assertion_failed": 5,
+    "none": 139
   },
   "unknown_setup_failure_rate": 0.0,
   "user_config_loaded": false,
@@ -6076,27 +7730,27 @@
   "variants": {
     "baseline_clean": {
       "artifact_status_counts": {
-        "collected": 33
+        "collected": 48
       },
-      "average_command_execution_count": 31.09,
-      "average_event_count": 46.94,
-      "average_file_change_count": 4.06,
+      "average_command_execution_count": 38.17,
+      "average_event_count": 56.73,
+      "average_file_change_count": 4.79,
       "average_metrics": {
-        "command_execution_count": 31.09,
-        "error_count": 0.42,
-        "event_count": 46.94,
-        "file_change_count": 4.06,
+        "command_execution_count": 38.17,
+        "error_count": 1.69,
+        "event_count": 56.73,
+        "file_change_count": 4.79,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 140672.0,
-        "input_tokens": 169285.73,
-        "output_tokens": 7285.3,
-        "reasoning_output_tokens": 1086.58
+        "cached_input_tokens": 182266.67,
+        "input_tokens": 222075.4,
+        "output_tokens": 8404.15,
+        "reasoning_output_tokens": 1255.21
       },
-      "benchmark_eligible_result_count": 33,
-      "benchmark_passed_result_count": 33,
-      "case_count": 11,
+      "benchmark_eligible_result_count": 48,
+      "benchmark_passed_result_count": 45,
+      "case_count": 16,
       "changeforge_hooks_enabled": false,
       "changeforge_install_source": "none",
       "changeforge_profile": "none",
@@ -6105,145 +7759,262 @@
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
       "failure_categories": {
-        "none": 33
+        "none": 45,
+        "test_suite_failed": 3
       },
       "grading_status_counts": {
-        "passed": 33
+        "failed": 3,
+        "passed": 45
       },
       "max_metrics": {
-        "command_execution_count": 60,
-        "error_count": 3,
-        "event_count": 86,
-        "file_change_count": 10,
+        "command_execution_count": 80,
+        "error_count": 13,
+        "event_count": 108,
+        "file_change_count": 12,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 279040,
-        "input_tokens": 331077,
-        "output_tokens": 10640,
-        "reasoning_output_tokens": 2334
+        "cached_input_tokens": 495616,
+        "input_tokens": 542557,
+        "output_tokens": 13696,
+        "reasoning_output_tokens": 2963
       },
       "median_metrics": {
-        "command_execution_count": 28.0,
+        "command_execution_count": 32.0,
         "error_count": 0.0,
-        "event_count": 43.0,
+        "event_count": 49.0,
         "file_change_count": 4.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 131584.0,
-        "input_tokens": 153887.0,
-        "output_tokens": 7490.0,
-        "reasoning_output_tokens": 943.0
+        "cached_input_tokens": 152128.0,
+        "input_tokens": 185076.5,
+        "output_tokens": 8274.5,
+        "reasoning_output_tokens": 1144.5
       },
       "min_metrics": {
-        "command_execution_count": 16,
+        "command_execution_count": 14,
         "error_count": 0,
-        "event_count": 26,
+        "event_count": 25,
         "file_change_count": 2,
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 60288,
-        "input_tokens": 73255,
-        "output_tokens": 3380,
-        "reasoning_output_tokens": 323
+        "cached_input_tokens": 63744,
+        "input_tokens": 90626,
+        "output_tokens": 3604,
+        "reasoning_output_tokens": 301
       },
       "not_collected_grading_count": 0,
-      "pass_rate": 1.0,
+      "pass_rate": 0.9375,
       "pass_rate_ci_note": "descriptive only; small sample",
-      "result_count": 33,
+      "result_count": 48,
       "run_count": 3,
       "security_assertion_failure_rate": 0.0,
       "security_check_execution_failure_rate": 0.0,
       "security_failure_rate": 0.0,
       "security_failure_rate_definition": "alias of security_assertion_failure_rate; execution failures are tracked separately",
       "security_failure_reasons": {
-        "none": 33
+        "none": 48
       },
       "security_pass_rate": 1.0,
       "setup_failure_reasons": {
-        "none": 33
+        "none": 48
       },
       "setup_failure_subreasons": {
-        "none": 33
+        "none": 48
       },
       "telemetry_only_result_count": 0,
       "test_suite_failure_reasons": {
-        "none": 33
+        "assertion_failed": 3,
+        "none": 45
       },
       "unknown_setup_failure_rate": 0.0,
       "user_level_install_used": false
     },
     "skills_only_clean": {
       "artifact_status_counts": {
-        "collected": 33
+        "collected": 48
       },
-      "average_command_execution_count": 50.12,
-      "average_event_count": 68.85,
-      "average_file_change_count": 4.79,
+      "average_command_execution_count": 59.08,
+      "average_event_count": 80.73,
+      "average_file_change_count": 5.38,
       "average_metrics": {
-        "command_execution_count": 50.12,
-        "error_count": 2.36,
-        "event_count": 68.85,
-        "file_change_count": 4.79,
+        "command_execution_count": 59.08,
+        "error_count": 3.81,
+        "event_count": 80.73,
+        "file_change_count": 5.38,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 438388.36,
-        "input_tokens": 507031.39,
-        "output_tokens": 10073.73,
-        "reasoning_output_tokens": 1578.76
+        "cached_input_tokens": 609685.33,
+        "input_tokens": 692307.4,
+        "output_tokens": 11312.08,
+        "reasoning_output_tokens": 1746.4
       },
-      "benchmark_eligible_result_count": 33,
-      "benchmark_passed_result_count": 33,
-      "case_count": 11,
+      "benchmark_eligible_result_count": 48,
+      "benchmark_passed_result_count": 47,
+      "case_count": 16,
       "changeforge_hooks_enabled": false,
       "changeforge_install_source": "current_repository",
       "changeforge_profile": "recommended",
       "contaminated_result_count": 0,
       "delta_vs_baseline_clean": {
-        "command_execution_count_delta": 19.03,
-        "file_change_count_delta": 0.73,
-        "input_tokens_delta_pct": 1.9951,
-        "output_tokens_delta_pct": 0.3827,
-        "pass_rate_delta": 0.0,
-        "reasoning_output_tokens_delta_pct": 0.453,
+        "command_execution_count_delta": 20.91,
+        "file_change_count_delta": 0.59,
+        "input_tokens_delta_pct": 2.1174,
+        "output_tokens_delta_pct": 0.346,
+        "pass_rate_delta": 0.0417,
+        "reasoning_output_tokens_delta_pct": 0.3913,
         "security_pass_rate_delta": 0.0
       },
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
       "failure_categories": {
-        "none": 33
+        "none": 47,
+        "test_suite_failed": 1
       },
       "grading_status_counts": {
-        "passed": 33
+        "failed": 1,
+        "passed": 47
       },
       "max_metrics": {
-        "command_execution_count": 90,
-        "error_count": 4,
-        "event_count": 127,
-        "file_change_count": 10,
+        "command_execution_count": 132,
+        "error_count": 10,
+        "event_count": 174,
+        "file_change_count": 14,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 1282688,
-        "input_tokens": 1412259,
-        "output_tokens": 17460,
-        "reasoning_output_tokens": 3636
+        "cached_input_tokens": 1949440,
+        "input_tokens": 2039809,
+        "output_tokens": 17642,
+        "reasoning_output_tokens": 3602
       },
       "median_metrics": {
-        "command_execution_count": 48.0,
-        "error_count": 2.0,
-        "event_count": 68.0,
+        "command_execution_count": 53.0,
+        "error_count": 3.0,
+        "event_count": 76.0,
         "file_change_count": 4.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 382592.0,
-        "input_tokens": 436280.0,
-        "output_tokens": 9397.0,
-        "reasoning_output_tokens": 1438.0
+        "cached_input_tokens": 478208.0,
+        "input_tokens": 578457.0,
+        "output_tokens": 10526.0,
+        "reasoning_output_tokens": 1696.0
+      },
+      "min_metrics": {
+        "command_execution_count": 30,
+        "error_count": 0,
+        "event_count": 42,
+        "file_change_count": 2,
+        "plan_update_count": 0
+      },
+      "min_usage": {
+        "cached_input_tokens": 140416,
+        "input_tokens": 187906,
+        "output_tokens": 7139,
+        "reasoning_output_tokens": 673
+      },
+      "not_collected_grading_count": 0,
+      "pass_rate": 0.9792,
+      "pass_rate_ci_note": "descriptive only; small sample",
+      "result_count": 48,
+      "run_count": 3,
+      "security_assertion_failure_rate": 0.0,
+      "security_check_execution_failure_rate": 0.0,
+      "security_failure_rate": 0.0,
+      "security_failure_rate_definition": "alias of security_assertion_failure_rate; execution failures are tracked separately",
+      "security_failure_reasons": {
+        "none": 48
+      },
+      "security_pass_rate": 1.0,
+      "setup_failure_reasons": {
+        "none": 48
+      },
+      "setup_failure_subreasons": {
+        "none": 48
+      },
+      "telemetry_only_result_count": 0,
+      "test_suite_failure_reasons": {
+        "assertion_failed": 1,
+        "none": 47
+      },
+      "unknown_setup_failure_rate": 0.0,
+      "user_level_install_used": false
+    },
+    "skills_with_hooks_clean": {
+      "artifact_status_counts": {
+        "collected": 48
+      },
+      "average_command_execution_count": 58.08,
+      "average_event_count": 80.48,
+      "average_file_change_count": 5.79,
+      "average_metrics": {
+        "command_execution_count": 58.08,
+        "error_count": 3.6,
+        "event_count": 80.48,
+        "file_change_count": 5.79,
+        "plan_update_count": 0.0
+      },
+      "average_usage": {
+        "cached_input_tokens": 648698.67,
+        "input_tokens": 730170.52,
+        "output_tokens": 11392.79,
+        "reasoning_output_tokens": 1814.4
+      },
+      "benchmark_eligible_result_count": 48,
+      "benchmark_passed_result_count": 47,
+      "case_count": 16,
+      "changeforge_hooks_enabled": true,
+      "changeforge_install_source": "current_repository",
+      "changeforge_profile": "recommended",
+      "contaminated_result_count": 0,
+      "delta_vs_baseline_clean": {
+        "command_execution_count_delta": 19.91,
+        "file_change_count_delta": 1.0,
+        "input_tokens_delta_pct": 2.2879,
+        "output_tokens_delta_pct": 0.3556,
+        "pass_rate_delta": 0.0417,
+        "reasoning_output_tokens_delta_pct": 0.4455,
+        "security_pass_rate_delta": 0.0
+      },
+      "dominant_setup_failure_reason": "none",
+      "dominant_setup_failure_subreason": "none",
+      "failure_categories": {
+        "none": 47,
+        "test_suite_failed": 1
+      },
+      "grading_status_counts": {
+        "failed": 1,
+        "passed": 47
+      },
+      "max_metrics": {
+        "command_execution_count": 102,
+        "error_count": 10,
+        "event_count": 133,
+        "file_change_count": 10,
+        "plan_update_count": 0
+      },
+      "max_usage": {
+        "cached_input_tokens": 1477248,
+        "input_tokens": 1563745,
+        "output_tokens": 16669,
+        "reasoning_output_tokens": 3271
+      },
+      "median_metrics": {
+        "command_execution_count": 52.0,
+        "error_count": 3.0,
+        "event_count": 72.0,
+        "file_change_count": 6.0,
+        "plan_update_count": 0.0
+      },
+      "median_usage": {
+        "cached_input_tokens": 526976.0,
+        "input_tokens": 627271.0,
+        "output_tokens": 11028.0,
+        "reasoning_output_tokens": 1675.5
       },
       "min_metrics": {
         "command_execution_count": 32,
@@ -6253,142 +8024,34 @@
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 185984,
-        "input_tokens": 222904,
-        "output_tokens": 6076,
-        "reasoning_output_tokens": 747
+        "cached_input_tokens": 211584,
+        "input_tokens": 255390,
+        "output_tokens": 6670,
+        "reasoning_output_tokens": 780
       },
       "not_collected_grading_count": 0,
-      "pass_rate": 1.0,
+      "pass_rate": 0.9792,
       "pass_rate_ci_note": "descriptive only; small sample",
-      "result_count": 33,
+      "result_count": 48,
       "run_count": 3,
       "security_assertion_failure_rate": 0.0,
       "security_check_execution_failure_rate": 0.0,
       "security_failure_rate": 0.0,
       "security_failure_rate_definition": "alias of security_assertion_failure_rate; execution failures are tracked separately",
       "security_failure_reasons": {
-        "none": 33
+        "none": 48
       },
       "security_pass_rate": 1.0,
       "setup_failure_reasons": {
-        "none": 33
+        "none": 48
       },
       "setup_failure_subreasons": {
-        "none": 33
+        "none": 48
       },
       "telemetry_only_result_count": 0,
       "test_suite_failure_reasons": {
-        "none": 33
-      },
-      "unknown_setup_failure_rate": 0.0,
-      "user_level_install_used": false
-    },
-    "skills_with_hooks_clean": {
-      "artifact_status_counts": {
-        "collected": 33
-      },
-      "average_command_execution_count": 53.7,
-      "average_event_count": 72.61,
-      "average_file_change_count": 4.12,
-      "average_metrics": {
-        "command_execution_count": 53.7,
-        "error_count": 2.18,
-        "event_count": 72.61,
-        "file_change_count": 4.12,
-        "plan_update_count": 0.0
-      },
-      "average_usage": {
-        "cached_input_tokens": 492792.24,
-        "input_tokens": 565508.55,
-        "output_tokens": 10609.91,
-        "reasoning_output_tokens": 1629.48
-      },
-      "benchmark_eligible_result_count": 33,
-      "benchmark_passed_result_count": 33,
-      "case_count": 11,
-      "changeforge_hooks_enabled": true,
-      "changeforge_install_source": "current_repository",
-      "changeforge_profile": "recommended",
-      "contaminated_result_count": 0,
-      "delta_vs_baseline_clean": {
-        "command_execution_count_delta": 22.61,
-        "file_change_count_delta": 0.06,
-        "input_tokens_delta_pct": 2.3406,
-        "output_tokens_delta_pct": 0.4563,
-        "pass_rate_delta": 0.0,
-        "reasoning_output_tokens_delta_pct": 0.4996,
-        "security_pass_rate_delta": 0.0
-      },
-      "dominant_setup_failure_reason": "none",
-      "dominant_setup_failure_subreason": "none",
-      "failure_categories": {
-        "none": 33
-      },
-      "grading_status_counts": {
-        "passed": 33
-      },
-      "max_metrics": {
-        "command_execution_count": 116,
-        "error_count": 6,
-        "event_count": 153,
-        "file_change_count": 10,
-        "plan_update_count": 0
-      },
-      "max_usage": {
-        "cached_input_tokens": 1634560,
-        "input_tokens": 1790492,
-        "output_tokens": 15183,
-        "reasoning_output_tokens": 2799
-      },
-      "median_metrics": {
-        "command_execution_count": 50.0,
-        "error_count": 2.0,
-        "event_count": 69.0,
-        "file_change_count": 4.0,
-        "plan_update_count": 0.0
-      },
-      "median_usage": {
-        "cached_input_tokens": 431744.0,
-        "input_tokens": 474798.0,
-        "output_tokens": 10310.0,
-        "reasoning_output_tokens": 1486.0
-      },
-      "min_metrics": {
-        "command_execution_count": 30,
-        "error_count": 0,
-        "event_count": 44,
-        "file_change_count": 2,
-        "plan_update_count": 0
-      },
-      "min_usage": {
-        "cached_input_tokens": 157952,
-        "input_tokens": 188365,
-        "output_tokens": 6807,
-        "reasoning_output_tokens": 737
-      },
-      "not_collected_grading_count": 0,
-      "pass_rate": 1.0,
-      "pass_rate_ci_note": "descriptive only; small sample",
-      "result_count": 33,
-      "run_count": 3,
-      "security_assertion_failure_rate": 0.0,
-      "security_check_execution_failure_rate": 0.0,
-      "security_failure_rate": 0.0,
-      "security_failure_rate_definition": "alias of security_assertion_failure_rate; execution failures are tracked separately",
-      "security_failure_reasons": {
-        "none": 33
-      },
-      "security_pass_rate": 1.0,
-      "setup_failure_reasons": {
-        "none": 33
-      },
-      "setup_failure_subreasons": {
-        "none": 33
-      },
-      "telemetry_only_result_count": 0,
-      "test_suite_failure_reasons": {
-        "none": 33
+        "assertion_failed": 1,
+        "none": 47
       },
       "unknown_setup_failure_rate": 0.0,
       "user_level_install_used": false

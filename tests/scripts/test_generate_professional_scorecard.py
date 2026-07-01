@@ -129,6 +129,41 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         self.assertIn("Executor adapter token overhead", dimension_names)
         self.assertIn("Executor adapter turn overhead", dimension_names)
 
+    def test_render_markdown_includes_codex_live_hooks_pass_rate(self) -> None:
+        module = _load_module()
+        payload = {
+            "status_summary": {"pass": 1},
+            "evidence_levels": {},
+            "dimensions": [
+                {
+                    "name": module.CODEX_LIVE_PASS_RATE_BENCHMARK_NAME,
+                    "status": "pass",
+                    "source": "reports/codex-live-benchmark-summary.json",
+                    "verification_command": (
+                        "python3 scripts/validate-codex-live-benchmark-reports.py "
+                        "--summary reports/codex-live-benchmark-summary.json"
+                    ),
+                    "detail": json.dumps(
+                        {
+                            "run_id": "live-run",
+                            "effect_verdict": "positive",
+                            "evidence_status": "pass",
+                            "benchmark_passed_result_count": 139,
+                            "benchmark_eligible_result_count": 144,
+                            "variants": {"skills_with_hooks_clean": {"pass_rate": 0.9792}},
+                        }
+                    ),
+                }
+            ],
+            "profile_counts": {},
+        }
+
+        markdown = module.render_markdown(payload)
+
+        self.assertIn("## Codex CLI Live Benchmark", markdown)
+        self.assertIn("- run_id: `live-run`", markdown)
+        self.assertIn("- skills_with_hooks_clean.pass_rate: `0.9792`", markdown)
+
     def test_strict_profile_builds_rejects_unknown_manifest_dimension(self) -> None:
         module = _load_module()
         payload = {

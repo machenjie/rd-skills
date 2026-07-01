@@ -4,8 +4,8 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 
 ## Summary
 
-- `pass`: 18
-- `partial`: 4
+- `pass`: 17
+- `partial`: 5
 - `fail`: 0
 - `unknown`: 0
 - `not_collected`: 4
@@ -21,7 +21,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 | live pass-rate | `not_collected` | Measured real-task success rate. |
 | token overhead | `not_collected` | Measured additional token cost. |
 | turn overhead | `not_collected` | Measured additional turn cost. |
-| local_codex_cli_live_benchmark | `pass` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
+| local_codex_cli_live_benchmark | `partial` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
 
 ## Dimensions
 
@@ -46,7 +46,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 | Executor adapter token overhead | `not_collected` | reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter turn overhead | `not_collected` | reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
 | Codex CLI live pass-rate benchmark | `pass` | reports/codex-live-benchmark-summary.json | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
-| Codex CLI live capability coverage | `pass` | reports/codex-live-benchmark-summary.json and evals/codex-live/capability-matrix.yaml | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
+| Codex CLI live capability coverage | `partial` | reports/codex-live-benchmark-summary.json and evals/codex-live/capability-matrix.yaml | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
 | Example coverage | `pass` | examples/ and scripts/validate-examples.py | `python3 scripts/validate-examples.py` |
 | Productization assets | `pass` | docs/productization assets, schemas, and scripts | `python3 scripts/validate-productization-assets.py` |
 | Marketplace index validation | `pass` | scripts/validate-marketplace-index.py | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |
@@ -75,6 +75,25 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 - overhead_policy_verdict: `partial: structural fixtures pass, but live input/output overhead is high without pass-rate improvement; do not claim Context Control Plane quality improvement`
 - evidence_boundary: `Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead. High overhead without pass-rate improvement is not success.`
 
+## Codex CLI Live Benchmark
+
+### Codex CLI live pass-rate benchmark
+- run_id: `ablation-core-auth-borrowed-20260701-013224`
+- effect_verdict: `positive`
+- evidence_status: `pass`
+- benchmark_passed_result_count: `139`
+- benchmark_eligible_result_count: `144`
+- skills_with_hooks_clean.pass_rate: `0.9792`
+
+### Codex CLI live capability coverage
+- run_id: `ablation-core-auth-borrowed-20260701-013224`
+- effect_verdict: `positive`
+- evidence_status: `partial`
+- benchmark_passed_result_count: `139`
+- benchmark_eligible_result_count: `144`
+- skills_with_hooks_clean.pass_rate: `0.9792`
+
+
 ## Profile Counts
 
 - `recommended`: `pass` - recommended top-level count is 21
@@ -90,4 +109,5 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 - Executor adapter live pass-rate: Collect a real measured run before changing this status from not_collected.
 - Executor adapter token overhead: Collect a real measured run before changing this status from not_collected.
 - Executor adapter turn overhead: Collect a real measured run before changing this status from not_collected.
+- Codex CLI live capability coverage: skills_only_clean: strict process trace validation failed; skills_with_hooks_clean: strict process trace validation failed; register every core capability linked case; run linked cases in baseline_clean, skills_only_clean, and skills_with_hooks_clean; keep linked cases assertion-backed and publishable_for_strict=true; collect explicit process-trace evidence instead of inferred/fallback fields; rerun reports after capability cases pass
 - Open-source readiness: Owner must select an OSI license, update package metadata, confirm contribution licensing, and configure private vulnerability reporting before open-source publication.

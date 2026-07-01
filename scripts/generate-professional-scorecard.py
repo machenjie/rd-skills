@@ -1237,6 +1237,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
             f"| {dimension['name']} | `{dimension['status']}` | {dimension['source']} | `{dimension['verification_command']}` |"
         )
     _append_context_control_overhead_detail(lines, payload)
+    _append_codex_live_benchmark_detail(lines, payload)
     lines.extend(["", "## Profile Counts", ""])
     for profile, detail in payload["profile_counts"].items():
         lines.append(f"- `{profile}`: `{detail['status']}` - {detail['detail']}")
@@ -1276,6 +1277,38 @@ def _append_context_control_overhead_detail(lines: list[str], payload: dict[str,
         ):
             lines.append(f"- {field}: `{_markdown_detail_value(detail.get(field, 'not_collected'))}`")
         return
+
+
+def _append_codex_live_benchmark_detail(lines: list[str], payload: dict[str, Any]) -> None:
+    live_dimensions = [
+        dimension
+        for dimension in payload.get("dimensions", [])
+        if isinstance(dimension, dict)
+        and dimension.get("name") in {CODEX_LIVE_PASS_RATE_BENCHMARK_NAME, CODEX_LIVE_CAPABILITY_COVERAGE_NAME}
+    ]
+    if not live_dimensions:
+        return
+
+    lines.extend(["", "## Codex CLI Live Benchmark", ""])
+    for dimension in live_dimensions:
+        detail = _json_detail(str(dimension.get("detail", "")))
+        lines.append(f"### {dimension.get('name', 'Codex CLI live benchmark')}")
+        for field in (
+            "run_id",
+            "effect_verdict",
+            "evidence_status",
+            "benchmark_passed_result_count",
+            "benchmark_eligible_result_count",
+        ):
+            lines.append(f"- {field}: `{_markdown_detail_value(detail.get(field, 'not_collected'))}`")
+        variants = detail.get("variants")
+        hooks = variants.get("skills_with_hooks_clean") if isinstance(variants, dict) else None
+        if isinstance(hooks, dict):
+            lines.append(
+                "- skills_with_hooks_clean.pass_rate: "
+                f"`{_markdown_detail_value(hooks.get('pass_rate', 'not_collected'))}`"
+            )
+        lines.append("")
 
 
 def _markdown_detail_value(value: Any) -> str:

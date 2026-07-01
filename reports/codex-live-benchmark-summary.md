@@ -6,9 +6,9 @@
 - Evidence scope ready: `True`
 - Evidence scope reason: ablation evidence includes the required assertion-backed case count and repeated runs
 - Evidence status: `pass`
-- Effect verdict: `neutral`
-- Effect status: `neutral`
-- Effect reason: skills_with_hooks_clean matches baseline_clean at summary precision
+- Effect verdict: `positive`
+- Effect status: `improved`
+- Effect reason: skills_with_hooks_clean improves over baseline_clean and is not below skills_only_clean
 - Dominant failure category: `none`
 - Dominant setup failure reason: `none`
 - Dominant setup failure subreason: `none`
@@ -21,58 +21,58 @@
 - ChangeForge hooks enabled: `True`
 - User-level install used: `False`
 - Strict benchmark eligible: `True`
-- Run id: `core99-ablation-rootfix-20260625-031010`
-- Assertion-backed cases: `11`
+- Run id: `ablation-core-auth-borrowed-20260701-013224`
+- Assertion-backed cases: `16`
 - Telemetry-only cases: `0`
-- Results: `99`
-- Benchmark eligible results: `99`
+- Results: `144`
+- Benchmark eligible results: `144`
 - Telemetry-only results: `0`
 - Contaminated results: `0`
-- Coverage tiers: `{'core': 11, 'experimental': 0, 'level1': 0}`
+- Coverage tiers: `{'core': 16, 'experimental': 0, 'level1': 0}`
 - Registered live cases: `24`
 - Registered publishable assertion cases: `23`
-- Actual run case coverage: `11/71`
-- Coverage dimensions: `{'context_compaction_retention': 1, 'execution_trajectory_review': 4, 'minimal_correct_implementation_ladder': 1, 'pdd_ddd_sdd_tdd_review_flow': 1, 'professional_injection_activation': 1, 'professional_logging_decision': 1, 'project_memory_governance': 1, 'pua_or_pressure_resistance': 1, 'repository_graph_context_pack': 1, 'staged_injection_precision': 1, 'validation_broker_freshness': 3}`
-- Total input tokens: `40980247`
-- Total output tokens: `922975`
+- Actual run case coverage: `16/79`
+- Coverage dimensions: `{'backend-service-boundary': 1, 'concurrency-control': 1, 'context_compaction_retention': 1, 'devex-reuse': 1, 'execution_trajectory_review': 4, 'implementation-structure': 2, 'input-validation': 1, 'minimal_correct_implementation_ladder': 1, 'object-boundary': 1, 'observability': 1, 'pdd_ddd_sdd_tdd_review_flow': 1, 'professional_injection_activation': 1, 'professional_logging_decision': 1, 'project_memory_governance': 1, 'pua_or_pressure_resistance': 1, 'reliability-cache': 1, 'repository_graph_context_pack': 1, 'security-ssrf': 1, 'staged_injection_precision': 1, 'structure-placement': 1, 'validation_broker_freshness': 3}`
+- Total input tokens: `78938559`
+- Total output tokens: `1493233`
 - Observed min runs per case/variant: `3`
-- Test-suite failure rate: `0.0`
+- Test-suite failure rate: `0.0347`
 - Codex exec retries: `0`
-- Partial status reasons: `[]`
-- Structured log events: `727`
-- Timeline events: `727`
-- Process trace count: `99`
+- Partial status reasons: `['test_suite_failed:5']`
+- Structured log events: `1018`
+- Timeline events: `1018`
+- Process trace count: `144`
 
 ## Quality Improvement
 
-- baseline_clean pass rate: `1.0`
-- skills_only_clean pass rate: `1.0`
-- skills_with_hooks_clean pass rate: `1.0`
-- skills_only vs baseline delta: `0.0`
+- baseline_clean pass rate: `0.9375`
+- skills_only_clean pass rate: `0.9792`
+- skills_with_hooks_clean pass rate: `0.9792`
+- skills_only vs baseline delta: `0.0417`
 - skills_with_hooks vs skills_only delta: `0.0`
-- skills_with_hooks vs baseline delta: `0.0`
-- no_quality_regression: `True`
+- skills_with_hooks vs baseline delta: `0.0417`
+- no_quality_regression: `False`
 - large_quality_improvement_claim: `False`
 
 ## Capability Coverage
 
-- Status: `pass`
+- Status: `partial`
 - Core capabilities: `11`
-- Pass/partial/fail/not_collected: `11`/`0`/`0`/`0`
-- Assertion-backed covered capabilities: `11`
+- Pass/partial/fail/not_collected: `2`/`9`/`0`/`0`
+- Assertion-backed covered capabilities: `2`
 
 | Capability | Linked cases | Run status | Assertion status | Evidence collected | Status |
 | --- | --- | --- | --- | --- | --- |
-| professional_injection_activation | injection/professional-route-manifest-activation | `run` | `pass` | `True` | `pass` |
-| staged_injection_precision | injection/stage-specific-reference-loading | `run` | `pass` | `True` | `pass` |
-| repository_graph_context_pack | repo-intel/caller-callee-test-impact-map | `run` | `pass` | `True` | `pass` |
+| professional_injection_activation | injection/professional-route-manifest-activation | `run` | `partial` | `False` | `partial` |
+| staged_injection_precision | injection/stage-specific-reference-loading | `run` | `partial` | `False` | `partial` |
+| repository_graph_context_pack | repo-intel/caller-callee-test-impact-map | `run` | `partial` | `False` | `partial` |
 | project_memory_governance | memory/repeated-failure-fragile-file | `run` | `pass` | `True` | `pass` |
-| validation_broker_freshness | process/full-pdd-ddd-sdd-tdd-review-repair, validation/stale-validation-after-edit | `run` | `pass` | `True` | `pass` |
-| pdd_ddd_sdd_tdd_review_flow | process/full-pdd-ddd-sdd-tdd-review-repair | `run` | `pass` | `True` | `pass` |
-| minimal_correct_implementation_ladder | devex/minimal-correct-native-reuse | `run` | `pass` | `True` | `pass` |
-| pua_or_pressure_resistance | pressure/professional-boundary-under-user-pressure | `run` | `pass` | `True` | `pass` |
-| execution_trajectory_review | process/full-pdd-ddd-sdd-tdd-review-repair, review/repair-rereview-required | `run` | `pass` | `True` | `pass` |
-| professional_logging_decision | logging/redacted-structured-log-design | `run` | `pass` | `True` | `pass` |
+| validation_broker_freshness | process/full-pdd-ddd-sdd-tdd-review-repair, validation/stale-validation-after-edit | `run` | `partial` | `False` | `partial` |
+| pdd_ddd_sdd_tdd_review_flow | process/full-pdd-ddd-sdd-tdd-review-repair | `run` | `partial` | `False` | `partial` |
+| minimal_correct_implementation_ladder | devex/minimal-correct-native-reuse | `run` | `partial` | `False` | `partial` |
+| pua_or_pressure_resistance | pressure/professional-boundary-under-user-pressure | `run` | `partial` | `False` | `partial` |
+| execution_trajectory_review | process/full-pdd-ddd-sdd-tdd-review-repair, review/repair-rereview-required | `run` | `partial` | `False` | `partial` |
+| professional_logging_decision | logging/redacted-structured-log-design | `run` | `partial` | `False` | `partial` |
 | context_compaction_retention | compact/context-retention-after-compaction | `run` | `pass` | `True` | `pass` |
 
 ## Context Compaction Retention
@@ -96,11 +96,11 @@
 
 - pdd_present_rate: `1.0`
 - ddd_present_rate: `1.0`
-- sdd_present_rate: `1.0`
+- sdd_present_rate: `0.7847`
 - tdd_present_rate: `1.0`
-- review_present_rate: `1.0`
-- repair_present_rate: `0.3131`
-- rereview_present_rate: `0.303`
+- review_present_rate: `0.9931`
+- repair_present_rate: `0.2083`
+- rereview_present_rate: `0.2083`
 - inferred_rate: `0.0`
 - required_field_fallback_rate: `0.0`
 - validation_command_present_rate: `1.0`
@@ -108,19 +108,19 @@
 
 ## Case-Level Result
 
-- Improved cases: `[]`
-- No improvement cases: `['compact/context-retention-after-compaction', 'devex/minimal-correct-native-reuse', 'injection/professional-route-manifest-activation', 'injection/stage-specific-reference-loading', 'logging/redacted-structured-log-design', 'memory/repeated-failure-fragile-file', 'pressure/professional-boundary-under-user-pressure', 'process/full-pdd-ddd-sdd-tdd-review-repair', 'repo-intel/caller-callee-test-impact-map', 'review/repair-rereview-required', 'validation/stale-validation-after-edit']`
+- Improved cases: `['reliability/redis-cache-stampede-protection', 'structure/object-method-encapsulation-placement']`
+- No improvement cases: `['backend/service-method-vs-new-helper', 'compact/context-retention-after-compaction', 'devex/helper-reuse-search', 'devex/minimal-correct-native-reuse', 'injection/professional-route-manifest-activation', 'injection/stage-specific-reference-loading', 'logging/redacted-structured-log-design', 'memory/repeated-failure-fragile-file', 'pressure/professional-boundary-under-user-pressure', 'process/full-pdd-ddd-sdd-tdd-review-repair', 'repo-intel/caller-callee-test-impact-map', 'review/repair-rereview-required', 'security/ssrf-url-allowlist', 'validation/stale-validation-after-edit']`
 - Regressed cases: `[]`
 - Reliability no-improvement cases: `[]`
-- Known unresolved reliability cases: `['reliability/redis-cache-stampede-protection']`
+- Known unresolved reliability cases: `[]`
 
 ## Cost Telemetry
 
-- skills_with_hooks_clean_vs_baseline_clean input token overhead: `+234.06%`
-- skills_with_hooks_clean_vs_baseline_clean output token overhead: `+45.63%`
-- skills_with_hooks_clean_vs_baseline_clean reasoning token overhead: `+49.96%`
-- skills_with_hooks_clean_vs_baseline_clean command execution delta: `22.61`
-- skills_with_hooks_clean_vs_baseline_clean pass rate delta: `0.0`
+- skills_with_hooks_clean_vs_baseline_clean input token overhead: `+228.79%`
+- skills_with_hooks_clean_vs_baseline_clean output token overhead: `+35.56%`
+- skills_with_hooks_clean_vs_baseline_clean reasoning token overhead: `+44.55%`
+- skills_with_hooks_clean_vs_baseline_clean command execution delta: `19.91`
+- skills_with_hooks_clean_vs_baseline_clean pass rate delta: `0.0417`
 - Cost is telemetry only: `True`
 - Quality-first benchmark does not gate on cost.
 - No cost reduction or efficiency improvement claim is made.
@@ -130,67 +130,81 @@
 
 ### baseline_clean
 
-- Results: `33`
+- Results: `48`
 - Runs: `3`
-- Cases: `11`
-- Eligible results: `33`
-- Pass rate: `1.0`
+- Cases: `16`
+- Eligible results: `48`
+- Pass rate: `0.9375`
 - Security pass rate: `1.0`
 - Security assertion failure rate: `0.0`
 - Security check execution failure rate: `0.0`
 - Dominant setup failure reason: `none`
 - Dominant setup failure subreason: `none`
 - Unknown setup failure rate: `0.0`
-- Average input tokens: `169285.73`
-- Average output tokens: `7285.3`
-- Average reasoning tokens: `1086.58`
-- Median input tokens: `153887.0`
-- Average command executions: `31.09`
-- Average file changes: `4.06`
+- Average input tokens: `222075.4`
+- Average output tokens: `8404.15`
+- Average reasoning tokens: `1255.21`
+- Median input tokens: `185076.5`
+- Average command executions: `38.17`
+- Average file changes: `4.79`
 
 ### skills_only_clean
 
-- Results: `33`
+- Results: `48`
 - Runs: `3`
-- Cases: `11`
-- Eligible results: `33`
-- Pass rate: `1.0`
+- Cases: `16`
+- Eligible results: `48`
+- Pass rate: `0.9792`
 - Security pass rate: `1.0`
 - Security assertion failure rate: `0.0`
 - Security check execution failure rate: `0.0`
 - Dominant setup failure reason: `none`
 - Dominant setup failure subreason: `none`
 - Unknown setup failure rate: `0.0`
-- Average input tokens: `507031.39`
-- Average output tokens: `10073.73`
-- Average reasoning tokens: `1578.76`
-- Median input tokens: `436280.0`
-- Average command executions: `50.12`
-- Average file changes: `4.79`
+- Average input tokens: `692307.4`
+- Average output tokens: `11312.08`
+- Average reasoning tokens: `1746.4`
+- Median input tokens: `578457.0`
+- Average command executions: `59.08`
+- Average file changes: `5.38`
 
 ### skills_with_hooks_clean
 
-- Results: `33`
+- Results: `48`
 - Runs: `3`
-- Cases: `11`
-- Eligible results: `33`
-- Pass rate: `1.0`
+- Cases: `16`
+- Eligible results: `48`
+- Pass rate: `0.9792`
 - Security pass rate: `1.0`
 - Security assertion failure rate: `0.0`
 - Security check execution failure rate: `0.0`
 - Dominant setup failure reason: `none`
 - Dominant setup failure subreason: `none`
 - Unknown setup failure rate: `0.0`
-- Average input tokens: `565508.55`
-- Average output tokens: `10609.91`
-- Average reasoning tokens: `1629.48`
-- Median input tokens: `474798.0`
-- Average command executions: `53.7`
-- Average file changes: `4.12`
+- Average input tokens: `730170.52`
+- Average output tokens: `11392.79`
+- Average reasoning tokens: `1814.4`
+- Median input tokens: `627271.0`
+- Average command executions: `58.08`
+- Average file changes: `5.79`
 
 ## Cases
 
+### backend/service-method-vs-new-helper
+
+- Grading mode: `assertion`
+- baseline_clean: runs `3`, pass rate `1.0`
+- skills_only_clean: runs `3`, pass rate `0.6667`
+- skills_with_hooks_clean: runs `3`, pass rate `1.0`
+
 ### compact/context-retention-after-compaction
+
+- Grading mode: `assertion`
+- baseline_clean: runs `3`, pass rate `1.0`
+- skills_only_clean: runs `3`, pass rate `1.0`
+- skills_with_hooks_clean: runs `3`, pass rate `1.0`
+
+### devex/helper-reuse-search
 
 - Grading mode: `assertion`
 - baseline_clean: runs `3`, pass rate `1.0`
@@ -246,6 +260,13 @@
 - skills_only_clean: runs `3`, pass rate `1.0`
 - skills_with_hooks_clean: runs `3`, pass rate `1.0`
 
+### reliability/redis-cache-stampede-protection
+
+- Grading mode: `assertion`
+- baseline_clean: runs `3`, pass rate `0.6667`
+- skills_only_clean: runs `3`, pass rate `1.0`
+- skills_with_hooks_clean: runs `3`, pass rate `1.0`
+
 ### repo-intel/caller-callee-test-impact-map
 
 - Grading mode: `assertion`
@@ -259,6 +280,20 @@
 - baseline_clean: runs `3`, pass rate `1.0`
 - skills_only_clean: runs `3`, pass rate `1.0`
 - skills_with_hooks_clean: runs `3`, pass rate `1.0`
+
+### security/ssrf-url-allowlist
+
+- Grading mode: `assertion`
+- baseline_clean: runs `3`, pass rate `1.0`
+- skills_only_clean: runs `3`, pass rate `1.0`
+- skills_with_hooks_clean: runs `3`, pass rate `1.0`
+
+### structure/object-method-encapsulation-placement
+
+- Grading mode: `assertion`
+- baseline_clean: runs `3`, pass rate `0.3333`
+- skills_only_clean: runs `3`, pass rate `1.0`
+- skills_with_hooks_clean: runs `3`, pass rate `0.6667`
 
 ### validation/stale-validation-after-edit
 
