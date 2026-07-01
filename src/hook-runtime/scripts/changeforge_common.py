@@ -1569,15 +1569,12 @@ SENIOR_PROGRAMMING_JUDGMENT_REQUIRED_SECTIONS = (
     "observability_map",
     "residual_risk",
 )
-SENIOR_PROGRAMMING_JUDGMENT_SKIP_TERMS = (
-    "trivial",
-    "no semantic",
-    "no engineering",
-    "format",
-    "formatting",
-    "doc-only",
-    "docs-only",
-    "documentation-only",
+SENIOR_PROGRAMMING_JUDGMENT_ALLOWED_SKIP_REASONS = (
+    "trivial-local-edit",
+    "no-semantic-impact",
+    "no-engineering-action",
+    "formatting-only",
+    "documentation-only-no-behavior-change",
 )
 _MANIFEST_LIST_KEYS = (
     "selected_skills",
@@ -1722,10 +1719,7 @@ def extract_senior_programming_judgment_fields(
         result["required"] = required_scalar not in {"false", "no", "0", "not_required"}
         skip_values = _manifest_field_values(block, "skip_reason", allow_none=True)
         skip_values.extend(_manifest_field_values(block, "skip_reasons", allow_none=True))
-        folded_skip = " ".join(skip_values).casefold()
-        result["allowed_skip"] = bool(
-            skip_values and any(term in folded_skip for term in SENIOR_PROGRAMMING_JUDGMENT_SKIP_TERMS)
-        )
+        result["allowed_skip"] = _senior_judgment_allowed_skip(skip_values)
         sections = [
             section
             for section in required
@@ -1745,6 +1739,14 @@ def extract_senior_programming_judgment_fields(
     except Exception:
         return result
     return result
+
+
+def _senior_judgment_allowed_skip(skip_values: Iterable[str]) -> bool:
+    allowed = set(SENIOR_PROGRAMMING_JUDGMENT_ALLOWED_SKIP_REASONS)
+    return any(
+        _manifest_unquote(str(value)).strip().casefold() in allowed
+        for value in skip_values
+    )
 
 
 def _senior_judgment_section_complete(segment: str, key: str) -> bool:

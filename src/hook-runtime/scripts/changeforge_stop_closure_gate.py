@@ -916,8 +916,9 @@ def _closure_message(
             " summary with purpose, facts, objects, states, behaviors, rules,"
             " invariants, boundaries, failure contract, side effects, reuse and"
             " placement, minimality decision, validation map, observability map,"
-            " and residual risk, or an allowed skip_reason for trivial or"
-            " no-semantic engineering work."
+            " and residual risk, or an allowed skip_reason: trivial-local-edit,"
+            " no-semantic-impact, no-engineering-action, formatting-only, or"
+            " documentation-only-no-behavior-change."
         )
     stage_missing = _stage_missing_groups(final_text, state)
     if stage_missing:

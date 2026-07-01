@@ -356,6 +356,49 @@ class PreEditStructureGateTests(unittest.TestCase):
         self.assertFalse(incomplete["complete"])
         self.assertIn("facts", incomplete["missing"])
 
+    def test_senior_judgment_parser_allows_only_enumerated_skip_reasons(self) -> None:
+        common = load_common()
+        allowed_reasons = (
+            "trivial-local-edit",
+            "no-semantic-impact",
+            "no-engineering-action",
+            "formatting-only",
+            "documentation-only-no-behavior-change",
+        )
+        for reason in allowed_reasons:
+            with self.subTest(reason=reason):
+                result = common.extract_senior_programming_judgment_fields(
+                    "```yaml\n"
+                    "senior_programming_judgment:\n"
+                    "  required: false\n"
+                    f"  skip_reason: {reason}\n"
+                    "```\n"
+                )
+                self.assertTrue(result["allowed_skip"])
+                self.assertTrue(result["complete"])
+
+    def test_senior_judgment_parser_rejects_skip_reason_substrings(self) -> None:
+        common = load_common()
+        rejected_reasons = (
+            # Regression: "format" inside data/API language is not a formatting-only skip.
+            "data format contract handled elsewhere",
+            "format",
+            "formatting",
+            "documentation-only",
+            "single trivial docs correction",
+        )
+        for reason in rejected_reasons:
+            with self.subTest(reason=reason):
+                result = common.extract_senior_programming_judgment_fields(
+                    "```yaml\n"
+                    "senior_programming_judgment:\n"
+                    "  required: false\n"
+                    f"  skip_reason: {reason}\n"
+                    "```\n"
+                )
+                self.assertFalse(result["allowed_skip"])
+                self.assertFalse(result["complete"])
+
     def test_senior_judgment_parser_rejects_placeholder_quality_fields(self) -> None:
         common = load_common()
         result = common.extract_senior_programming_judgment_fields(

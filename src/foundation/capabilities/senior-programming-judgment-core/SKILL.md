@@ -22,7 +22,7 @@ Use before edits when a structural gate, route, or stage plan indicates new file
 # Do Not Use When
 
 - Do not use as a persona, title, generic senior-developer article, motivational text, or top-level professional skill.
-- Do not use for trivial typo, formatting, copy-only, or docs-only edits with no semantic or engineering behavior impact; record an allowed skip reason instead.
+- Do not use for trivial typo, formatting, copy-only, or docs-only edits with no semantic or engineering behavior impact; record one allowed skip_reason enum value instead.
 - Do not use to load personal archives, private corpora, private mapping artifacts, project-wide business documents, or user-specific technical content.
 - Do not use to make `business-semantic-control-plane` own every programming judgment; BSP remains limited to task-scoped business meaning.
 - Do not duplicate detailed placement, business, validation, failure, or side-effect rules already owned by specialist capabilities; select those capabilities when their risk is primary.
@@ -62,7 +62,7 @@ Select this capability when any of these are true:
 - Hook runtime, stage routing, eval fixtures, capability registries, or closure requirements change agent behavior.
 - Validation could pass while the real behavior, invariant, side effect, or boundary remains unproven.
 
-Skip with an explicit `skip_reason` only for trivial, no-semantic, no-engineering, formatting, or docs-only changes. The skip reason must state why no behavior, state, rule, boundary, side effect, validation, or observability evidence is needed.
+Skip only with one explicit skip_reason value: "trivial-local-edit", "no-semantic-impact", "no-engineering-action", "formatting-only", or "documentation-only-no-behavior-change". Do not use broader prose or substrings such as "format"; the selected value must mean no behavior, state, rule, boundary, side effect, validation, or observability evidence is needed.
 
 # Proactive Professional Triggers
 

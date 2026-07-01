@@ -100,7 +100,7 @@ changeforge_route:
     senior_programming_judgment:
       schema_version: 1
       required: <true|false>
-      skip_reason: <explicit trivial/no-semantic/no-engineering/doc-only reason, or omit when required>
+      skip_reason: <trivial-local-edit|no-semantic-impact|no-engineering-action|formatting-only|documentation-only-no-behavior-change, or omit when required>
       stage_fit: <current stage and why senior judgment is required or skipped>
       purpose:
         why_exists: <why the change exists in product, system, or skill behavior terms>
@@ -200,7 +200,7 @@ Manifest rules:
 - `context_control` is required whenever `context-control-plane` is selected or when the route has context budget, reference bloat, selected/skipped reference, JIT retrieval, tool-output boundary, compaction, branch route-repair, or overhead-evidence risk. It must include selected and skipped reference rationale; do not emit a bare budget mode without reasons.
 - `context_control` must not include raw prompts, secrets, environment values, full command output, full diffs, full files, personal archives, or private mapping artifacts.
 - `runtime_prompt_flow` is required for target-project engineering changes and for direct specialist-skill invocation. Direct invocation may skip router reclassification when scope is known, but this nested manifest records that requirement clarification, read-before-plan evidence, TDD/validation signal, independent review, repair/re-review, validation evidence, and residual risk were not skipped.
-- `runtime_prompt_flow.senior_programming_judgment` is required for non-trivial engineering, skill-authoring, hook, routing, schema, eval, benchmark, or closure-behavior changes. It may be skipped only with an explicit trivial/no-semantic/no-engineering/formatting/doc-only reason. The field is evidence, not a persona route or business-semantic-control-plane replacement.
+- `runtime_prompt_flow.senior_programming_judgment` is required for non-trivial engineering, skill-authoring, hook, routing, schema, eval, benchmark, or closure-behavior changes. It may be skipped only with one allowed skip_reason value: trivial-local-edit, no-semantic-impact, no-engineering-action, formatting-only, or documentation-only-no-behavior-change. The field is evidence, not a persona route or business-semantic-control-plane replacement.
 - Each `runtime_prompt_flow.actions[]` entry must name an `owner_skill` and a different `review_skill`. A review finding requires `repair_route_if_review_fails`, `re_review_required: true`, and a concrete `re_review_result` before handoff can close.
 - `runtime_prompt_flow.closure_mode` separates planning from closure. `plan` may carry `re_review_result: pending` and `validation_evidence.outcome: planned`. `action-handoff` and `final-handoff` may close re-review only with `passed`, `blocked-with-residual-risk`, or `not-verified-with-owner`, and may close validation only with `passed`, `failed`, `not-run` plus disclosure, or `not-verified` plus residual risk.
 - Keep `selected_skills`, `selected_capabilities`, `required_quality_gates`, and `skipped_quality_gates` consistent with the Markdown sections; the manifest is a projection of the same decision, not a second route.
