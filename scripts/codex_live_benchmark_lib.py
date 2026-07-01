@@ -93,6 +93,7 @@ MODE_DEFAULT_VARIANTS = {
 }
 GRADING_MODES = ("assertion", "telemetry_only")
 CASE_TIERS = ("core", "level1", "experimental")
+CASE_TIER_SELECTORS = (*CASE_TIERS, "all")
 PROFILES = ("recommended", "full", "dev")
 SANDBOXES = ("read-only", "workspace-write", "danger-full-access")
 AUTH_POLICIES = ("isolated-api-key", "borrow-current", "current-home-full")

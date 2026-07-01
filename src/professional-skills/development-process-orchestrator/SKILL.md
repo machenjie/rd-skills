@@ -89,17 +89,68 @@ SDD defines how the change will be implemented and operated.
 
 Schema anchor: `"logging_decision"` plus modules, files, public API, data flow, error contract, failure modes, observability, constraints, migration, and rollback.
 
-SDD Design Choice Gate schema anchor: include `"design_decision_points"` with `id`, `decision`, `trigger`, `options`, `recommended_option`, `blocking`, `user_choice_status`, `resolution_evidence`, and `residual_risk`; include `no_design_choice_rationale` when the list is empty; set `"assumption_policy"` to `block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior`. Load `references/process-phase-contracts.md` for the full JSON schema.
+SDD Design Choice Gate schema anchor: include `"design_decision_points"` with `id`, `trigger`, `decision`, `blocking`, `user_choice_status`, `options`, `recommended_option`, `why_user_choice_is_needed`, `resolution_evidence`, and `residual_risk`; include `no_design_choice_rationale` when the list is empty; set `"assumption_policy"` to `block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior`. Load `references/process-phase-contracts.md` for the full JSON schema.
 
 SDD design choice rules:
 - `design_decision_points` is always present and is a list. It may be empty only with a concrete `no_design_choice_rationale` tied to user constraints, source evidence, repository convention, or reuse evidence.
+- `id` is stable, non-empty, and snake_case or kebab-case. `trigger` names the concrete code, requirement, risk, prompt, fixture, or repository fact that created the choice.
+- `blocking` is a boolean. Do not write `"true"`, `"false"`, `yes`, `no`, or omit it.
 - `user_choice_status` is exactly one of `required`, `resolved`, `not_required`, or `assumed_with_rationale`.
-- Required, blocking, material, or high-risk choices must provide user-visible `options`; required or blocking choices need at least two. Each option needs `label` and `summary`, and required/blocking options need `pros` or `cons`.
+- Required, blocking, material, or high-risk choices must provide user-visible `options`; required, blocking, material, or high-risk choices need at least two. Each option needs `label` and `summary`, plus `pros` or `cons`.
 - `recommended_option` is the agent's recommendation, not the user's selection; resolved material choices still need `resolution_evidence`.
-- `not_required` material choices need prompt, fixture, explicit-user, repository-convention, or reuse evidence.
+- `why_user_choice_is_needed` is required for required, blocking, material, or high-risk choices and must state why a wrong answer changes architecture, public API, data, security, migration, rollback, acceptance, or user-visible behavior.
+- `resolved` means a choice was decided by prompt, fixture, explicit user choice, repository convention, existing code pattern, or reuse evidence. It must include `resolution_evidence`.
+- `not_required` and `assumed_with_rationale` must cite at least one concrete source: prompt constraint, fixture constraint, explicit user instruction, repository convention, existing code pattern, reuse evidence, local reversible same-file change, or acceptance-neutral proof.
 - `blocking=true` with `user_choice_status=required` cannot close as implementable SDD evidence.
 - `assumed_with_rationale` is only for low-risk, local, reversible, conventional, acceptance-neutral choices.
 - If a wrong answer could alter contract, architecture, data, security, acceptance, migration, rollback, public API, or user-visible behavior, the choice must be `required` or `resolved`, not a safe assumption.
+- Do not use generic no-choice rationales such as "no choice needed", "not required", "none", "n/a", "safe assumption", or "follow existing pattern" unless the same sentence includes the concrete source, fixture, prompt, repository convention, existing code pattern, reuse evidence, local reversibility, and acceptance-neutral proof that makes the choice non-material.
+- For new public APIs, public exports, interfaces, protocols, adapters, plugins, shared utilities, cache, queue, async workers, migrations, rollback/config switches, security/auth/permission/tenant/privacy, data models, schemas, contracts, or user-visible behavior, do not claim `not_required` unless prompt, fixture, explicit user instruction, repository convention, or reuse evidence decides the choice. Otherwise stop and present options.
+
+Strict SDD trace skeleton:
+
+```yaml
+sdd:
+  status: present
+  modules:
+    - existing module or new module with rationale
+  public_api:
+    - changed API or "none; evidence: prompt/fixture/repository convention"
+  error_contract:
+    - failure mode and caller-visible behavior
+  failure_modes:
+    - mode: named failure
+      handling: caller-visible handling
+  logging_decision:
+    event_names:
+      - specific.event.name
+    redaction:
+      - field or reason
+  design_decision_points:
+    - id: stable_choice_id
+      trigger: concrete prompt, fixture, source, repository, or risk fact
+      decision: current design decision or unresolved design question
+      blocking: true
+      user_choice_status: required
+      options:
+        - label: A
+          summary: first viable option
+          pros:
+            - specific benefit
+          cons:
+            - specific cost or risk
+        - label: B
+          summary: second viable option
+          pros:
+            - specific benefit
+          cons:
+            - specific cost or risk
+      recommended_option: A
+      why_user_choice_is_needed: wrong choice changes contract, architecture, data, security, acceptance, migration, rollback, or user-visible behavior
+      resolution_evidence: not resolved until user chooses
+      residual_risk: remaining material risk
+  assumption_policy: block_when_wrong_answer_changes_contract_architecture_data_security_acceptance_or_user_visible_behavior
+```
 
 SDD logging decision rules:
 - Retry, fallback, and degradation paths distinguish retryable, intermediate, and final failure.

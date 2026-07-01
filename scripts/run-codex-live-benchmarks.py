@@ -22,7 +22,7 @@ from typing import Any
 from codex_live_benchmark_lib import (
     AUTH_POLICIES,
     BENCHMARK_MODES,
-    CASE_TIERS,
+    CASE_TIER_SELECTORS,
     MODE_DEFAULT_VARIANTS,
     PROFILES,
     ROOT,
@@ -288,7 +288,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--benchmark", action="append", default=[])
     parser.add_argument("--category", action="append", default=[])
-    parser.add_argument("--tier", action="append", choices=CASE_TIERS, default=[])
+    parser.add_argument(
+        "--tier",
+        action="append",
+        choices=CASE_TIER_SELECTORS,
+        default=[],
+        help=(
+            "Case tier to run. Use core for the core strong-evidence subset, level1 for "
+            "additional publishable assertion cases, experimental for telemetry-only cases, "
+            "or all for every publishable assertion-backed case."
+        ),
+    )
     parser.add_argument(
         "--capability-core",
         action="store_true",
@@ -380,7 +390,14 @@ def select_cases(
         selected = [case for case in selected if case.category in requested_categories]
     if tiers:
         requested_tiers = set(tiers)
-        selected = [case for case in selected if case.tier in requested_tiers]
+        if "all" in requested_tiers:
+            selected = [
+                case
+                for case in selected
+                if case.grading_mode == "assertion" and case.publishable_for_strict
+            ]
+        else:
+            selected = [case for case in selected if case.tier in requested_tiers]
     return selected
 
 
@@ -3925,7 +3942,11 @@ def main(argv: list[str] | None = None) -> int:
         for case in cases:
             state = "enabled" if case.enabled else "disabled"
             dimensions = ",".join(case.coverage_dimensions)
-            print(f"{case.id}\t{state}\ttier={case.tier}\tcoverage={dimensions}\tvariants={','.join(case.variants)}")
+            print(
+                f"{case.id}\t{state}\ttier={case.tier}"
+                f"\tgrading={case.grading_mode}\tpublishable={str(case.publishable_for_strict).lower()}"
+                f"\tcoverage={dimensions}\tvariants={','.join(case.variants)}"
+            )
         return 0
 
     selected = select_cases(

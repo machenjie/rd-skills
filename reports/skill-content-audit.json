@@ -638,38 +638,46 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 7,
-      "bullet_count": 134,
-      "classification": "KEEP_AS_IS",
-      "code_block_count": 1,
-      "context_efficiency_score": 98,
+      "bullet_count": 140,
+      "classification": "MOVE_SECTIONS_TO_REFERENCES",
+      "code_block_count": 2,
+      "context_efficiency_score": 75,
       "critical_details_length": 17,
       "description_findings": [],
       "description_length": 205,
-      "findings": [],
+      "findings": [
+        "body 299 lines exceeds review threshold 250",
+        "section 'SDD - System / Software / Structure Design Discipline' is 93 lines (> 80) \u2014 reference candidate"
+      ],
       "has_shared_optimality": false,
       "heading_count": 22,
       "kind": "professional-skill",
-      "largest_section_lines": 42,
+      "largest_section_lines": 93,
       "largest_section_title": "SDD - System / Software / Structure Design Discipline",
       "largest_table_rows": 5,
-      "line_count": 248,
+      "line_count": 299,
       "name": "development-process-orchestrator",
       "optimality_section_length": 0,
       "output_contract_length": 18,
-      "oversized_sections": [],
+      "oversized_sections": [
+        {
+          "lines": 93,
+          "title": "SDD - System / Software / Structure Design Discipline"
+        }
+      ],
       "oversized_tables": [],
       "path": "src/professional-skills/development-process-orchestrator/SKILL.md",
       "professionalism_score": 100,
-      "recommended_phase": "-",
+      "recommended_phase": "P2",
       "reference_link_count": 3,
       "repeated_phrase_count": 1,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
-      "split_candidate_score": 0,
-      "suggested_action": "Within size and professionalism budget; no action required.",
+      "split_candidate_score": 32,
+      "suggested_action": "Move oversized sections/tables into references/*.md; keep a concise body summary.",
       "table_count": 1,
       "used_by_count": 0,
-      "word_count": 2998
+      "word_count": 3352
     },
     {
       "anti_example_section_length": 10,
@@ -6114,7 +6122,8 @@
   ],
   "summary": {
     "classifications": {
-      "KEEP_AS_IS": 160,
+      "KEEP_AS_IS": 159,
+      "MOVE_SECTIONS_TO_REFERENCES": 1,
       "TIGHTEN_BODY": 3
     },
     "domain_extensions": 7,
@@ -6123,7 +6132,7 @@
     "heavy_foundation": 0,
     "heavy_professional": 0,
     "low_professionalism": 0,
-    "move_to_reference": 0,
+    "move_to_reference": 1,
     "professional_skills": 21,
     "split_candidates": 0
   },

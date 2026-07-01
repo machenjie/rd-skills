@@ -1148,6 +1148,40 @@ def _coverage_summary_errors(payload: Any) -> list[str]:
         value = payload.get(field)
         if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
             errors.append(f"summary coverage_summary.{field} must be a list of strings")
+    if not errors:
+        registered_live = payload["registered_live_case_count"]
+        registered_publishable = payload["registered_publishable_assertion_case_count"]
+        actual_run = payload["actual_run_case_count"]
+        actual_publishable = payload["actual_run_publishable_assertion_case_count"]
+        missing_publishable = payload["registered_but_not_run_cases"]
+        if registered_publishable > registered_live:
+            errors.append(
+                "summary coverage_summary.registered_publishable_assertion_case_count cannot exceed registered_live_case_count"
+            )
+        if actual_publishable > actual_run:
+            errors.append(
+                "summary coverage_summary.actual_run_publishable_assertion_case_count cannot exceed actual_run_case_count"
+            )
+        if actual_publishable > registered_publishable:
+            errors.append(
+                "summary coverage_summary.actual_run_publishable_assertion_case_count cannot exceed registered_publishable_assertion_case_count"
+            )
+        expected_missing_count = registered_publishable - actual_publishable
+        if expected_missing_count < 0:
+            expected_missing_count = 0
+        if len(missing_publishable) != expected_missing_count:
+            errors.append(
+                "summary coverage_summary.registered_but_not_run_cases count must equal "
+                "registered_publishable_assertion_case_count - actual_run_publishable_assertion_case_count"
+            )
+        if actual_publishable < registered_publishable and not missing_publishable:
+            errors.append(
+                "summary coverage_summary.registered_but_not_run_cases must list missing publishable assertion cases"
+            )
+        if actual_publishable == registered_publishable and missing_publishable:
+            errors.append(
+                "summary coverage_summary.registered_but_not_run_cases must be empty when all publishable assertion cases ran"
+            )
     return errors
 
 

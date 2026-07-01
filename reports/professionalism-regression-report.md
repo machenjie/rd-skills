@@ -1,9 +1,9 @@
 # Professionalism Regression Report
 
-- Generated: 2026-07-01T00:27:47.373011+00:00
-- Mode: strict
+- Generated: 2026-07-01T05:31:18.961424+00:00
+- Mode: default
 - Status: pass
-- Strict: true
+- Strict: false
 - Report only: false
 - Blockers: 0
 - Warnings: 0

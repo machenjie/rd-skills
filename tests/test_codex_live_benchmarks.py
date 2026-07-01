@@ -2760,12 +2760,29 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
 
         core_cases = runner.select_cases(cases, benchmarks=[], categories=[], tiers=["core"])
         level1_cases = runner.select_cases(cases, benchmarks=[], categories=[], tiers=["level1"])
+        all_publishable_cases = runner.select_cases(cases, benchmarks=[], categories=[], tiers=["all"])
+        expected_publishable_ids = {
+            case.id
+            for case in cases
+            if case.enabled and case.grading_mode == "assertion" and case.publishable_for_strict
+        }
 
         self.assertTrue(core_cases)
         self.assertTrue(level1_cases)
+        self.assertTrue(all_publishable_cases)
         self.assertTrue(all(case.tier == "core" for case in core_cases))
         self.assertTrue(all(case.tier == "level1" for case in level1_cases))
+        self.assertEqual({case.id for case in all_publishable_cases}, expected_publishable_ids)
+        self.assertTrue(all(case.grading_mode == "assertion" for case in all_publishable_cases))
+        self.assertTrue(all(case.publishable_for_strict for case in all_publishable_cases))
+        self.assertTrue(any(case.tier == "level1" for case in all_publishable_cases))
         self.assertNotIn("devex/minimal-correct-implementation-ladder", {case.id for case in core_cases})
+        self.assertNotIn("devex/minimal-correct-implementation-ladder", {case.id for case in all_publishable_cases})
+
+    def test_runner_accepts_tier_all_argument(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_tier_all_args", "scripts/run-codex-live-benchmarks.py")
+        args = runner.parse_args(["--tier", "all", "--dry-run"])
+        self.assertEqual(args.tier, ["all"])
 
     def test_runner_selects_failed_cells_and_shards_cases_deterministically(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_runtime_selection", "scripts/run-codex-live-benchmarks.py")

@@ -69,11 +69,13 @@ final answer that includes:
   and `diagnostic`, state separate sink and retention rationale explicitly;
 - SDD must include `design_decision_points` and `assumption_policy`. Required,
   blocking, material, or high-risk choices need user-visible `options`,
-  `recommended_option`, `user_choice_status`, `why_user_choice_is_needed`, and
-  `residual_risk`; required/blocking choices need at least two options, each
-  with `label`, `summary`, and `pros` or `cons`. `recommended_option` is the
-  recommendation, not user selection; unresolved required/blocking choices cannot
-  close as SDD present. Resolved material choices require `resolution_evidence`;
+  `recommended_option`, `user_choice_status`, `why_user_choice_is_needed`,
+  boolean `blocking`, `resolution_evidence`, and `residual_risk`;
+  required/blocking/material/high-risk choices need at least two options, each
+  with `label`, `summary`, and `pros` or `cons`. `blocking` must be true or
+  false, not a string. `recommended_option` is the recommendation, not user
+  selection; unresolved required/blocking choices cannot close as SDD present.
+  Resolved material choices require `resolution_evidence`;
   material `not_required` choices require prompt, fixture, explicit-user,
   repository, or reuse evidence. If interactive user choice is unavailable,
   state why the prompt/fixture already decides, why the choice is a safe

@@ -125,8 +125,10 @@ Output schema:
   "design_decision_points": [
     {
       "id": "sdd-choice-1",
-      "decision": "What design decision must be made?",
       "trigger": "Why this decision exists",
+      "decision": "What design decision must be made?",
+      "blocking": true,
+      "user_choice_status": "required | resolved | not_required | assumed_with_rationale",
       "why_user_choice_is_needed": "Why the agent must not silently choose",
       "options": [
         {
@@ -135,12 +137,16 @@ Output schema:
           "pros": ["specific benefit"],
           "cons": ["specific cost or risk"],
           "recommended_when": "When this option is appropriate"
+        },
+        {
+          "label": "B",
+          "summary": "Alternative option summary",
+          "pros": ["specific benefit"],
+          "cons": ["specific cost or risk"]
         }
       ],
       "recommended_option": "A",
       "safe_default_if_user_unavailable": "A or none",
-      "blocking": true,
-      "user_choice_status": "required | resolved | not_required | assumed_with_rationale",
       "resolution_evidence": "user-selected option, explicit prior instruction, repository convention, or not resolved",
       "residual_risk": "what remains risky if any"
     }
@@ -158,9 +164,11 @@ SDD Design Choice Gate rules:
 - Ask the user when the answer can change architecture, public API, data model, security, permissions, migration, rollback, acceptance, long-term maintenance shape, or user-visible behavior.
 - Typical blocking choices include new public APIs or exports, new modules/directories/services/shared packages, reuse versus new boundary, function versus class/object hierarchy, inheritance versus composition, cache/queue/worker/plugin/registry choices, config switches, migrations, permission/security/privacy changes, irreversible operations, and vague "optimize/enhance/refactor/professionalize" requests where cost/benefit depends on user preference.
 - Do not ask for mechanical fixes, typo/format changes, local reversible choices, repository-conventional placement, code-fact-determined minimum fixes, or benchmark cases where the prompt/fixture already decides the option.
+- Every decision point must include non-empty `id`, `trigger`, `decision`, `user_choice_status`, `why_user_choice_is_needed` when material, `resolution_evidence`, and `residual_risk`; `blocking` must be a boolean, not a string.
 - Empty `design_decision_points` requires a concrete `no_design_choice_rationale`; generic "no choice needed" is not evidence.
-- Required, blocking, material, or high-risk choices require `options`, `recommended_option`, `why_user_choice_is_needed`, and `residual_risk`; required/blocking choices need at least two options. Each option needs `label` and `summary`; required/blocking options also need `pros` or `cons`.
+- Required, blocking, material, or high-risk choices require `options`, `recommended_option`, `why_user_choice_is_needed`, and `residual_risk`; required, blocking, material, or high-risk choices need at least two options. Each option needs `label` and `summary`; these choices also need `pros` or `cons`.
 - `recommended_option` records the recommendation only, not user selection. Unresolved required/blocking choices cannot close as SDD present; resolved material choices require `resolution_evidence`; `not_required` material choices require prompt, fixture, user, repository, or reuse evidence.
+- Generic no-choice rationales such as "not required", "none", "n/a", "safe assumption", or "follow existing pattern" are invalid unless the rationale names concrete prompt, fixture, user, repository convention, existing code pattern, reuse, local reversibility, or acceptance-neutral evidence.
 - `assumed_with_rationale` requires a safe default plus local, reversible, conventional, and acceptance-neutral rationale, and must not be used for security, data, API, migration, rollback, auth, payment, irreversible, or permission choices.
 
 SDD logging decision rules:

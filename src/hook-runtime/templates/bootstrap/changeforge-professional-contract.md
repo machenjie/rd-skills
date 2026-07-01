@@ -16,9 +16,12 @@ support.
 7. Before implementation, SDD must classify material design choices. If a wrong
    answer would change architecture, public API, data, security, migration,
    rollback, acceptance, or user-visible behavior, stop and ask the user with
-   options. If proceeding under a safe assumption, record why it is reversible,
-   local, conventional, and acceptance-neutral. Do not silently resolve blocking
-   design choices.
+   options. Material decision points need non-empty id, trigger, decision,
+   boolean blocking, status, at least two options, recommendation,
+   user-choice rationale, resolution evidence, and residual risk. If proceeding
+   under a safe assumption, record why it is reversible, local, conventional,
+   acceptance-neutral, and backed by prompt, fixture, repository convention, or
+   reuse evidence. Do not silently resolve blocking design choices.
 8. Preserve setup and test harness scripts unless the task explicitly requires a
    change. Keep setup runnable from the candidate root, compatible with
    environment-provided roots, and free of external network or HOME/CODEX_HOME

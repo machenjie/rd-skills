@@ -159,10 +159,12 @@ python3 scripts/run-codex-live-benchmarks.py \
   --publish-summary
 ```
 
-To run the stronger hook ablation, use the same clean auth-borrowing policy with
-`baseline_clean`, `skills_only_clean`, and `skills_with_hooks_clean`. Omit
-`--benchmark` to run all publishable assertion-backed live cases; use
-`--runs 3` or higher when making repeated-run local evidence claims:
+To run the core strong-evidence hook ablation subset, use the same clean
+auth-borrowing policy with `baseline_clean`, `skills_only_clean`, and
+`skills_with_hooks_clean`. The core tier is currently 16 assertion-backed cases
+and is the focused capability/pass-rate subset used by the latest canonical
+summary. Use `--runs 3` or higher when making repeated-run local evidence
+claims:
 
 ```bash
 CHANGEFORGE_ENABLE_CODEX_LIVE_BENCHMARK=1 \
@@ -172,7 +174,25 @@ python3 scripts/run-codex-live-benchmarks.py \
   --runs 3 \
   --profile recommended \
   --sandbox workspace-write \
+  --tier core \
   --out reports/codex-live-runs/ablation-auth-borrowed-$(date +%Y%m%d-%H%M%S) \
+  --publish-summary
+```
+
+To cover all registered publishable assertion-backed live cases, use
+`--tier all`. This includes core and Level 1 publishable assertion cases and
+excludes telemetry-only experimental cases:
+
+```bash
+CHANGEFORGE_ENABLE_CODEX_LIVE_BENCHMARK=1 \
+python3 scripts/run-codex-live-benchmarks.py \
+  --benchmark-mode ablation \
+  --auth-policy borrow-current \
+  --runs 3 \
+  --profile recommended \
+  --sandbox workspace-write \
+  --tier all \
+  --out reports/codex-live-runs/ablation-all-auth-borrowed-$(date +%Y%m%d-%H%M%S) \
   --publish-summary
 ```
 
@@ -184,6 +204,11 @@ PDD/DDD/SDD/TDD/review flow, minimal-correct reuse, pressure resistance,
 repair/re-review, and logging/security decisions. Telemetry-only cases are
 listed in run outputs but do not contribute to pass-rate or capability coverage
 evidence.
+
+Coverage claims must distinguish registered coverage from actual run coverage.
+When Level 1 cases are registered but not run, the live summary must keep them
+in `registered_but_not_run_cases`; pass-rate and capability results from a core
+run must not be promoted as full publishable assertion coverage.
 
 The scorecard intentionally splits Codex live evidence into two dimensions:
 the pass-rate benchmark shows assertion-backed codegen quality deltas, while

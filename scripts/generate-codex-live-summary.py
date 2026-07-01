@@ -2416,6 +2416,12 @@ def render_markdown(summary: dict[str, Any]) -> str:
     """Render a concise Markdown summary."""
     process = summary.get("process_compliance_summary") if isinstance(summary.get("process_compliance_summary"), dict) else {}
     coverage = summary.get("coverage_summary") if isinstance(summary.get("coverage_summary"), dict) else {}
+    registered_but_not_run = coverage.get("registered_but_not_run_cases", "not_collected")
+    registered_but_not_run_display = (
+        ", ".join(str(case_id) for case_id in registered_but_not_run)
+        if isinstance(registered_but_not_run, list) and registered_but_not_run
+        else "none" if isinstance(registered_but_not_run, list) else "not_collected"
+    )
     quality = (
         summary.get("quality_improvement_summary")
         if isinstance(summary.get("quality_improvement_summary"), dict)
@@ -2484,6 +2490,8 @@ def render_markdown(summary: dict[str, Any]) -> str:
         f"- Registered live cases: `{coverage.get('registered_live_case_count', 'not_collected')}`",
         f"- Registered publishable assertion cases: `{coverage.get('registered_publishable_assertion_case_count', 'not_collected')}`",
         f"- Actual run case coverage: `{coverage.get('actual_run_case_count', 'not_collected')}/{coverage.get('manifest_case_count', 'not_collected')}`",
+        f"- Actual run publishable assertion cases: `{coverage.get('actual_run_publishable_assertion_case_count', 'not_collected')}/{coverage.get('registered_publishable_assertion_case_count', 'not_collected')}`",
+        f"- Registered-but-not-run publishable assertion cases: `{registered_but_not_run_display}`",
         f"- Coverage dimensions: `{coverage.get('coverage_dimensions', 'not_collected')}`",
         f"- Total input tokens: `{total_usage.get('input_tokens', 'not_collected')}`",
         f"- Total output tokens: `{total_usage.get('output_tokens', 'not_collected')}`",

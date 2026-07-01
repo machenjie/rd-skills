@@ -1450,7 +1450,10 @@ def _professional_focus_lines(context: dict[str, Any]) -> list[str]:
         or current_stage in {"implementation-planning", "refactoring", "code-review"}
     ):
         lines.append(
-            "- structure_focus: keep public API tests, document object-method ownership/rejected alternatives, keep side effects in adapters, and keep helpers private."
+            "- structure_focus: locate the existing object/module owner first, extend the owning method/object when it already protects the invariant, keep public API tests, document object-method ownership/rejected alternatives in candidate-visible evidence when requested, keep side effects in adapters, reject shared utilities/helper bags without reuse evidence, and keep helpers private."
+        )
+        lines.append(
+            "- sdd_choice_gate: material structure choices need id, trigger, decision, boolean blocking, options, recommendation, user-choice rationale, resolution evidence, and residual risk; no-choice rationales need prompt, fixture, repository convention, existing pattern, or reuse evidence."
         )
     if "code-element-professionalism" in capabilities:
         lines.append(

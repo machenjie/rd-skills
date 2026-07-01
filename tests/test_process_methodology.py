@@ -87,8 +87,12 @@ def test_process_skill_has_professional_pdd_ddd_sdd_tdd_methodology() -> None:
         '"logging_decision"',
         '"design_decision_points"',
         "`user_choice_status`",
+        "`why_user_choice_is_needed`",
+        "`blocking` is a boolean",
         '"assumption_policy"',
         "block_when_wrong_answer_changes",
+        "Strict SDD trace skeleton",
+        "Do not use generic no-choice rationales",
         "safe assumption",
         "SDD logging decision rules",
         "SDD pass criteria",
@@ -882,6 +886,127 @@ def test_sdd_not_required_material_choice_without_evidence_fails() -> None:
         in error
         for error in errors
     )
+
+
+def test_sdd_material_choice_without_options_fails() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["sdd"]["design_decision_points"] = [
+        {
+            "id": "public-api-boundary",
+            "decision": "Choose whether to add a new public API",
+            "trigger": "The prompt could be satisfied by existing API reuse or a new public API.",
+            "blocking": False,
+            "user_choice_status": "resolved",
+            "recommended_option": "reuse existing API",
+            "why_user_choice_is_needed": "Wrong choice changes the public contract.",
+            "resolution_evidence": "Prompt source and fixture assertion require existing public API reuse.",
+            "residual_risk": "No unresolved public contract risk.",
+        }
+    ]
+    errors = _run_trace_errors(trace)
+    assert any(".options must be a non-empty list" in error for error in errors)
+
+
+def test_sdd_blocking_string_fails() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["sdd"]["design_decision_points"] = [
+        {
+            "id": "api-boundary",
+            "decision": "Choose whether to add a new public API",
+            "trigger": "The wrong answer changes public API.",
+            "blocking": "true",
+            "user_choice_status": "required",
+            "options": [
+                {"label": "A", "summary": "Reuse existing API", "pros": ["keeps compatibility"]},
+                {"label": "B", "summary": "Add API", "cons": ["new contract"]},
+            ],
+            "recommended_option": "A",
+            "why_user_choice_is_needed": "Wrong choice changes the public contract.",
+            "residual_risk": "Unresolved public API shape.",
+        }
+    ]
+    errors = _run_trace_errors(trace)
+    assert any(".blocking must be true or false" in error for error in errors)
+
+
+def test_sdd_not_required_material_choice_with_repository_reuse_evidence_passes() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["sdd"]["design_decision_points"] = [
+        {
+            "id": "api-boundary",
+            "decision": "Choose whether a new public API is needed",
+            "trigger": "A public API could be created, but the fixture imports the existing entrypoint.",
+            "blocking": False,
+            "user_choice_status": "not_required",
+            "options": [
+                {
+                    "label": "A",
+                    "summary": "Reuse existing public entrypoint",
+                    "pros": ["matches fixture import and repository convention"],
+                    "cons": ["does not introduce a dedicated facade"],
+                },
+                {
+                    "label": "B",
+                    "summary": "Add a new public facade",
+                    "pros": ["clear dedicated API"],
+                    "cons": ["breaks fixture and adds contract surface"],
+                },
+            ],
+            "recommended_option": "A",
+            "why_user_choice_is_needed": (
+                "A wrong choice would change the public API, but fixture constraint and repository convention decide it."
+            ),
+            "resolution_evidence": (
+                "Fixture constraint imports the existing entrypoint; repository convention and reuse evidence favor no new API."
+            ),
+            "residual_risk": "Low; public API remains unchanged.",
+        }
+    ]
+    assert _run_trace_errors(trace) == []
+
+
+def test_sdd_resolved_choice_without_resolution_evidence_fails() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["sdd"]["design_decision_points"] = [
+        {
+            "id": "api-boundary",
+            "decision": "Choose public API shape",
+            "trigger": "The wrong answer changes public API.",
+            "blocking": False,
+            "user_choice_status": "resolved",
+            "options": [
+                {"label": "A", "summary": "Reuse existing API", "pros": ["keeps compatibility"]},
+                {"label": "B", "summary": "Add API", "cons": ["new contract"]},
+            ],
+            "recommended_option": "A",
+            "why_user_choice_is_needed": "Wrong choice changes the public contract.",
+            "residual_risk": "No unresolved public API risk.",
+        }
+    ]
+    errors = _run_trace_errors(trace)
+    assert any("user_choice_status=resolved requires resolution_evidence" in error for error in errors)
+
+
+def test_sdd_decision_point_missing_id_trigger_and_why_fails() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["sdd"]["design_decision_points"] = [
+        {
+            "decision": "Choose whether to add a new public API",
+            "blocking": False,
+            "user_choice_status": "resolved",
+            "options": [
+                {"label": "A", "summary": "Reuse existing API", "pros": ["keeps compatibility"]},
+                {"label": "B", "summary": "Add API", "cons": ["new contract"]},
+            ],
+            "recommended_option": "A",
+            "resolution_evidence": "Prompt source and fixture decide option A.",
+            "residual_risk": "Low.",
+        }
+    ]
+    errors = _run_trace_errors(trace)
+    assert any(".id must be non-empty" in error for error in errors)
+    assert any(".trigger must be non-empty" in error for error in errors)
+    assert any(".why_user_choice_is_needed must be non-empty" in error for error in errors)
 
 
 def test_sdd_high_risk_safe_assumption_fails() -> None:

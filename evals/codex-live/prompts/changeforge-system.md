@@ -15,11 +15,12 @@ object, service, or module. Use a compact execution flow:
   modules/files, public API, data flow, error contract, failure modes, logging
   decision, material design choices, security/performance/concurrency
   constraints, compatibility, and rollback or recovery implications. Required,
-  blocking, material, or high-risk choices need options, recommendation, why the
-  user must choose, and residual risk; required/blocking choices need at least
-  two options with labels, summaries, and pros or cons. A recommendation is not
-  user selection; unresolved required/blocking choices cannot close as SDD
-  present. Resolved material choices require resolution evidence, and
+  blocking, material, or high-risk choices need boolean blocking, options,
+  recommendation, why the user must choose, resolution evidence, and residual
+  risk; required/blocking/material/high-risk choices need at least two options
+  with labels, summaries, and pros or cons. A recommendation is not user
+  selection; unresolved required/blocking choices cannot close as SDD present.
+  Resolved material choices require resolution evidence, and
   not-required material choices require prompt, fixture, explicit-user,
   repository, or reuse evidence. If a wrong design choice would change
   architecture, public API, data, security, migration, rollback, acceptance, or

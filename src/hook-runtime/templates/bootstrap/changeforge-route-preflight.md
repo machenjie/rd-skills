@@ -26,12 +26,24 @@ skill path:
 - Use TDD-oriented planning before implementation: name the failing, new, or
   updated test, eval, validation command, acceptance check, or explicit
   not-verified risk.
+- SDD material choice gate is strict: each material design decision point needs
+  non-empty `id`, `trigger`, `decision`, boolean `blocking`,
+  `user_choice_status`, at least two `options` for material/blocking choices,
+  `recommended_option`, `why_user_choice_is_needed`, `resolution_evidence`, and
+  `residual_risk`. A no-choice rationale must cite prompt, fixture, explicit
+  user instruction, repository convention, existing pattern, or reuse evidence.
 - Split work into actions. Each action needs an owner skill or capability and a
   different review skill or capability.
 - Review findings must route to repair, then return to review before handoff.
 - Adds or changes a function, class, file, directory, helper, service,
   repository, adapter, or utility — require `implementation-structure-design`
   (reuse search and placement rationale) before new structure is accepted.
+- Object/method placement work must locate the existing object/module owner
+  before creating helpers. Prefer extending the owning method/object when it
+  already protects the invariant; reject shared utilities or helper bags unless
+  reuse evidence proves current multi-owner value. If the prompt asks for an
+  Object-Method Encapsulation Decision, put accepted/rejected object candidates
+  and side-effect adapter boundaries in candidate-visible evidence.
 - A completion claim is coming — bind it to `agent-execution-discipline`: no
   completion claim without fresh validation evidence and residual risk.
 - Business semantics are in scope — business terms, rule authority, workflow

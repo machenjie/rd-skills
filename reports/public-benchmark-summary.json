@@ -643,46 +643,6 @@
           "redaction_error_markers": [],
           "redaction_status": "pass"
         },
-        "previous_current_comparison": {
-          "current_run_id": "ablation-core-auth-borrowed-20260701-013224",
-          "previous_run_id": "core99-ablation-rootfix-20260625-031010",
-          "setup_failed_by_variant": {
-            "after": {
-              "baseline_clean": 0,
-              "skills_only_clean": 0,
-              "skills_with_hooks_clean": 0
-            },
-            "before": {
-              "baseline_clean": 0,
-              "skills_only_clean": 0,
-              "skills_with_hooks_clean": 0
-            }
-          },
-          "setup_script_modified_bad_path": {
-            "after": 0,
-            "before": 0
-          },
-          "skills_with_hooks_vs_baseline": {
-            "after": {
-              "baseline_clean_pass_rate": 0.9375,
-              "pass_rate_delta": 0.0417,
-              "skills_with_hooks_clean_pass_rate": 0.9792
-            },
-            "before": {
-              "baseline_clean_pass_rate": 1.0,
-              "pass_rate_delta": 0.0,
-              "skills_with_hooks_clean_pass_rate": 1.0
-            }
-          },
-          "starter_fragile_path": {
-            "after": 0,
-            "before": 0
-          },
-          "unknown_setup_failure_rate": {
-            "after": 0.0,
-            "before": 0.0
-          }
-        },
         "process_compliance_summary": {
           "all_core_phases_degraded_or_present_rate": 1.0,
           "all_core_phases_inferred_only_rate": 0.0,
@@ -1296,46 +1256,6 @@
           "redaction_error_count": 0,
           "redaction_error_markers": [],
           "redaction_status": "pass"
-        },
-        "previous_current_comparison": {
-          "current_run_id": "ablation-core-auth-borrowed-20260701-013224",
-          "previous_run_id": "core99-ablation-rootfix-20260625-031010",
-          "setup_failed_by_variant": {
-            "after": {
-              "baseline_clean": 0,
-              "skills_only_clean": 0,
-              "skills_with_hooks_clean": 0
-            },
-            "before": {
-              "baseline_clean": 0,
-              "skills_only_clean": 0,
-              "skills_with_hooks_clean": 0
-            }
-          },
-          "setup_script_modified_bad_path": {
-            "after": 0,
-            "before": 0
-          },
-          "skills_with_hooks_vs_baseline": {
-            "after": {
-              "baseline_clean_pass_rate": 0.9375,
-              "pass_rate_delta": 0.0417,
-              "skills_with_hooks_clean_pass_rate": 0.9792
-            },
-            "before": {
-              "baseline_clean_pass_rate": 1.0,
-              "pass_rate_delta": 0.0,
-              "skills_with_hooks_clean_pass_rate": 1.0
-            }
-          },
-          "starter_fragile_path": {
-            "after": 0,
-            "before": 0
-          },
-          "unknown_setup_failure_rate": {
-            "after": 0.0,
-            "before": 0.0
-          }
         },
         "process_compliance_summary": {
           "all_core_phases_degraded_or_present_rate": 1.0,
