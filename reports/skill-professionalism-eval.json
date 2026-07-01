@@ -1,7 +1,7 @@
 {
-  "average_score": 58.01,
+  "average_score": 58.0,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-07-01T08:42:32.170409+00:00",
+  "generated_at": "2026-07-01T09:19:15.049471+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -129,9 +129,9 @@
       "warnings": []
     },
     {
-      "body_lines": 249,
+      "body_lines": 252,
       "dimensions": {
-        "anti_bloat_control": 5,
+        "anti_bloat_control": 4,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
         "failure_mode_coverage": 5,
@@ -148,10 +148,22 @@
       "likely_missing_sections": [],
       "name": "change-forge-router",
       "path": "src/professional-skills/change-forge-router/SKILL.md",
-      "recommended_fixes": [],
-      "status": "sample-grade",
-      "total": 60,
-      "warnings": []
+      "recommended_fixes": [
+        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
+      ],
+      "status": "acceptable",
+      "total": 59,
+      "warnings": [
+        {
+          "item": "change-forge-router",
+          "item_kind": "professional-skill",
+          "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "body_bloat_exception"
+        }
+      ]
     },
     {
       "body_lines": 215,
@@ -3329,7 +3341,7 @@
       "warnings": []
     },
     {
-      "body_lines": 193,
+      "body_lines": 195,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -3930,5 +3942,5 @@
     }
   ],
   "skills_checked": 157,
-  "warning_count": 0
+  "warning_count": 1
 }

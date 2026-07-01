@@ -422,21 +422,23 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 3,
-      "bullet_count": 121,
-      "classification": "KEEP_AS_IS",
+      "bullet_count": 123,
+      "classification": "TIGHTEN_BODY",
       "code_block_count": 0,
-      "context_efficiency_score": 96,
+      "context_efficiency_score": 81,
       "critical_details_length": 20,
       "description_findings": [],
       "description_length": 308,
-      "findings": [],
+      "findings": [
+        "body 252 lines exceeds review threshold 250"
+      ],
       "has_shared_optimality": false,
       "heading_count": 21,
       "kind": "professional-skill",
       "largest_section_lines": 55,
       "largest_section_title": "Technical Selection Criteria",
-      "largest_table_rows": 14,
-      "line_count": 249,
+      "largest_table_rows": 15,
+      "line_count": 252,
       "name": "change-forge-router",
       "optimality_section_length": 0,
       "output_contract_length": 25,
@@ -444,16 +446,16 @@
       "oversized_tables": [],
       "path": "src/professional-skills/change-forge-router/SKILL.md",
       "professionalism_score": 100,
-      "recommended_phase": "-",
+      "recommended_phase": "P2",
       "reference_link_count": 0,
       "repeated_phrase_count": 2,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
-      "split_candidate_score": 0,
-      "suggested_action": "Within size and professionalism budget; no action required.",
+      "split_candidate_score": 18,
+      "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 5318
+      "word_count": 5461
     },
     {
       "anti_example_section_length": 10,
@@ -2733,7 +2735,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 8,
-      "word_count": 2379
+      "word_count": 2393
     },
     {
       "anti_example_section_length": 12,
@@ -5042,7 +5044,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 94,
+      "bullet_count": 96,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -5056,7 +5058,7 @@
       "largest_section_lines": 26,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 6,
-      "line_count": 193,
+      "line_count": 195,
       "name": "senior-programming-judgment-core",
       "optimality_section_length": 0,
       "output_contract_length": 26,
@@ -5072,8 +5074,8 @@
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
-      "used_by_count": 14,
-      "word_count": 2176
+      "used_by_count": 16,
+      "word_count": 2180
     },
     {
       "anti_example_section_length": 0,
@@ -6158,9 +6160,9 @@
   ],
   "summary": {
     "classifications": {
-      "KEEP_AS_IS": 160,
+      "KEEP_AS_IS": 159,
       "MOVE_SECTIONS_TO_REFERENCES": 1,
-      "TIGHTEN_BODY": 3
+      "TIGHTEN_BODY": 4
     },
     "domain_extensions": 7,
     "foundation_capabilities": 136,

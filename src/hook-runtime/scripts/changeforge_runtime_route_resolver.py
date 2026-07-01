@@ -618,6 +618,7 @@ STAGE_CAPABILITIES = {
 STAGE_CONDITIONAL_CAPABILITIES = {
     "requirement-intake": (
         "business-semantic-control-plane",
+        "senior-programming-judgment-core",
     ),
     "architecture-design": (
         "architecture-enforcement-tooling",
@@ -629,6 +630,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
     ),
     "debugging-diagnosis": (
         "data-format-contract-usage",
+        "senior-programming-judgment-core",
     ),
     "implementation-planning": (
         "code-element-professionalism",

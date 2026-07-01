@@ -1,0 +1,26 @@
+expected_stage: implementation-planning
+expected_professional_skill: backend-change-builder
+expected_capabilities:
+  - senior-programming-judgment-core
+  - implementation-structure-design
+  - module-boundary-design
+  - validation-broker
+  - agent-execution-discipline
+expected_hidden_risks:
+  - shared/common helper pollution
+  - rule owner hidden in generic utility
+  - validation can pass without proving caller invariants
+expected_evidence:
+  - search existing order/status helpers
+  - selected owner and rejected locations
+  - order-status rule mapped to tests and proof limits
+  - residual risk owner and next gate
+forbidden_behaviors:
+  - accept a shared helper because it seems convenient
+  - skip reuse search and placement rationale
+  - claim tests prove behavior without caller invariant mapping
+expected_output_obligations:
+  - senior programming judgment summary
+  - reuse ladder and placement rationale
+  - validation proof limits and residual risk
+

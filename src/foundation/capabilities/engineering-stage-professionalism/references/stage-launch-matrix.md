@@ -6,11 +6,11 @@ Use this reference when the `SKILL.md` body is not enough to decide launch set, 
 
 | Stage | Launch focus | Skip by default |
 | --- | --- | --- |
-| requirement-intake | `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition`, `acceptance-standard-definition`, `scenario-decomposition` | coding, language, testing, refactoring, release |
-| architecture-design | `architecture-style-selection`, `module-boundary-design`, `layered-architecture-design`, `architecture-tradeoff-analysis`, `extensibility-design`, `solution-optimality-evaluation` | language idiom, coding, test authoring |
+| requirement-intake | `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition`, `acceptance-standard-definition`, `scenario-decomposition`; add `senior-programming-judgment-core` for non-trivial engineering purpose/fact/success/failure boundary evidence | coding, language, testing, refactoring, release |
+| architecture-design | `architecture-style-selection`, `module-boundary-design`, `layered-architecture-design`, `architecture-tradeoff-analysis`, `extensibility-design`, `solution-optimality-evaluation`; add `senior-programming-judgment-core` when architecture changes object, module, workflow, rule, or ownership boundaries | language idiom, coding, test authoring |
 | implementation-planning | `repository-context-map`, `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `senior-programming-judgment-core` when object, state, rule, side-effect, failure, validation, observability, or residual-risk evidence is material | full architecture review, release, deep performance profiling |
 | coding | matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling`; add `senior-programming-judgment-core` for non-trivial behavior, state, rule, invariant, failure, side-effect, validation, or observability changes | architecture deep review, release, full regression suite design |
-| debugging-diagnosis | `failure-diagnosis`, `agent-execution-discipline`, `observability` | refactoring, new design |
+| debugging-diagnosis | `failure-diagnosis`, `agent-execution-discipline`, `observability`; add `senior-programming-judgment-core` when symptoms or causes need mapping to violated fact, invariant, boundary, state transition, side effect, or failure contract | refactoring, new design |
 | bug-fix | `agent-execution-discipline`, `regression-testing`, `code-review`; add `minimal-correct-implementation` for minimal fix, delete/shrink, dependency, abstraction, wrapper-only delegation, shortcut, or overengineering signals | architecture redesign |
 | code-review | `code-review`, `plan-execution-consistency`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `ai-code-review-refactor` for generated code | release, deployment, infrastructure |
 | refactoring | `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `code-review`, `regression-testing` | feature design, release |
@@ -23,11 +23,11 @@ Use this reference when the `SKILL.md` body is not enough to decide launch set, 
 
 | Stage | Professional evidence required |
 | --- | --- |
-| requirement-intake | current behavior, desired behavior, non-goals, constraints, assumptions, open questions, and testable completion signal |
-| architecture-design | affected boundaries, dependency direction, ownership, simpler alternative, tradeoff, and rollback implication |
+| requirement-intake | current behavior, desired behavior, non-goals, constraints, assumptions, open questions, testable completion signal, and senior programming purpose/fact/success/failure boundary for non-trivial engineering work |
+| architecture-design | affected boundaries, dependency direction, ownership, simpler alternative, tradeoff, rollback implication, and object-state-behavior-rule-invariant map when architecture changes object, module, workflow, rule, or ownership boundaries |
 | implementation-planning | inspected target-project boundaries, reuse ladder, placement rationale, touched files, validation commands, senior programming judgment record or allowed skip reason, and split/sequence decision |
 | coding | inspected local convention, selected capabilities, changed boundary, TDD or validation signal, tests or validators run, senior programming judgment evidence when behavior is non-trivial, and residual risk |
-| debugging-diagnosis | symptom, hypothesis tested, method, verified cause, counter-evidence, and no same-path third retry |
+| debugging-diagnosis | symptom, hypothesis tested, method, verified cause, counter-evidence, no same-path third retry, and symptom/root cause mapped to violated fact, invariant, boundary, state transition, side effect, or failure contract when applicable |
 | bug-fix | verified cause, same-pattern scan, regression proof, old behavior preservation, and local/broad fix rationale |
 | code-review | independent review owner, severity-classified findings, boundary inspected, missing evidence, behavior-change risk, required fix owner, and re-review result when repaired |
 | refactoring | before/after behavior preservation, affected callers, deletion path, placement decision, and regression evidence |

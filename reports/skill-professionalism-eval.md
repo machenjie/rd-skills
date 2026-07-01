@@ -1,9 +1,9 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-07-01T08:42:32.170409+00:00
+- Generated: 2026-07-01T09:19:15.049471+00:00
 - Skills/capabilities checked: 157
-- Warning count: 0
-- Average score: 58.01/60
+- Warning count: 1
+- Average score: 58.00/60
 
 ## Scores
 
@@ -158,9 +158,9 @@
 | `src/foundation/capabilities/unit-testing/SKILL.md` | foundation-capability | 59/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/validation-broker/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/professional-skills/backend-change-builder/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/change-forge-router/SKILL.md` | professional-skill | 59/60 | acceptable | 0 | 1 |
 | `src/professional-skills/experience-impact-modeler/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/quality-test-gate/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/change-forge-router/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/data-middleware-change-builder/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/delivery-release-gate/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/development-process-orchestrator/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |
@@ -169,4 +169,8 @@
 
 ## Warnings
 
-No warnings.
+### `src/professional-skills/change-forge-router/SKILL.md`
+- message: long Markdown table in SKILL.md body (16 rows); consider moving deep table to references | type: body_bloat_exception | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
+
+Recommended fixes:
+- Move low-frequency tables/examples into owned references and remove duplicated template prose.

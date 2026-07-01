@@ -74,7 +74,7 @@ Compact current-stage default launch summary:
 | documentation-handoff | `agent-workflow-state-machine`, `plan-execution-consistency`, `documentation-generation`, `agent-execution-discipline` |
 | skill-authoring | `repository-context-map`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `documentation-generation`, `agent-execution-discipline`, `plan-execution-consistency` |
 
-Use [references/stage-launch-matrix.md](references/stage-launch-matrix.md) for the human-readable launch matrix. Pair with `change-forge-router` for the overall path, `agent-workflow-state-machine` for legal transitions, and `agent-execution-discipline` for evidence and handoff discipline.
+Use [references/stage-launch-matrix.md](references/stage-launch-matrix.md) for the human-readable launch matrix, including conditional senior judgment launch rules for requirement-intake, architecture-design, debugging-diagnosis, implementation-planning, coding, and skill-authoring. Pair with `change-forge-router` for the overall path, `agent-workflow-state-machine` for legal transitions, and `agent-execution-discipline` for evidence and handoff discipline.
 
 # Professional Evidence By Stage
 

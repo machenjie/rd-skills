@@ -1338,9 +1338,9 @@ capabilities:
     group: engineering-workflow
     path: src/foundation/capabilities/senior-programming-judgment-core
     status: implemented
-    route_level_capability: true
     used_by:
       - change-forge-router
+      - change-intake-compiler
       - development-process-orchestrator
       - architecture-impact-reviewer
       - backend-change-builder
@@ -1354,6 +1354,7 @@ capabilities:
       - ai-code-review-refactor
       - change-documentation-gate
       - skill-authoring-expert
+      - agent-execution-discipline
     triggers:
       - senior programming judgment purpose facts objects states behaviors rules invariants boundaries failure contract side effects reuse placement minimality validation observability residual risk
       - non-trivial engineering structural edit helper shared common public API state transition hidden rule invariant side effect failure path validation map observability map

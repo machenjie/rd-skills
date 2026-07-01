@@ -113,14 +113,25 @@ SENIOR_JUDGMENT_MANIFEST = (
     "    why_exists: structural edit changes a service boundary\n"
     "    current_behavior: no senior judgment evidence is recorded\n"
     "    desired_behavior: senior judgment evidence is closure-visible\n"
+    "    success_signal: pre-edit gate accepts complete bounded judgment\n"
+    "    failure_signal: pre-edit gate reports missing senior_programming_judgment\n"
+    "    non_goals:\n"
+    "      - changing runtime business behavior\n"
     "  facts:\n"
     "    source_backed:\n"
     "      - fact: order service owns orchestration\n"
     "        source: src/services/order_service.py\n"
+    "    assumptions: []\n"
+    "    open_questions: []\n"
     "  objects:\n"
     "    - name: OrderService\n"
     "      kind: service\n"
     "      owner: src/services/order_service.py\n"
+    "      lifecycle: changed\n"
+    "      relationships:\n"
+    "        - service owns order orchestration\n"
+    "      rejected_meanings:\n"
+    "        - generic utility ownership\n"
     "  states:\n"
     "    - object: OrderService\n"
     "      allowed_transitions: [created, validated]\n"
@@ -155,10 +166,52 @@ SENIOR_JUDGMENT_MANIFEST = (
     "  validation_map:\n"
     "    acceptance_to_test:\n"
     "      - pytest tests/test_order_service.py\n"
+    "    invariant_to_test:\n"
+    "      - pytest tests/test_order_service.py\n"
+    "    failure_path_to_test:\n"
+    "      - pytest tests/test_order_service.py\n"
+    "    command_or_not_verified: pytest tests/test_order_service.py\n"
+    "    what_evidence_proves: service-boundary behavior is covered by local regression tests\n"
+    "    what_evidence_does_not_prove: unrelated service callers are not exhaustively scanned\n"
     "  observability_map:\n"
     "    no_log_rationale: no new runtime logging\n"
     "  residual_risk:\n"
     "    - risk: fixture coverage is local\n"
+    "      owner: quality-test-gate\n"
+    "      next_gate: test\n"
+    "```\n"
+)
+
+PUBLIC_API_SENIOR_JUDGMENT_MANIFEST = (
+    "```yaml\n"
+    "senior_programming_judgment:\n"
+    "  schema_version: 1\n"
+    "  required: true\n"
+    "  purpose:\n"
+    "    why_exists: public API behavior changes\n"
+    "    current_behavior: order lookup API has no explicit compatibility evidence\n"
+    "    desired_behavior: order lookup API has bounded compatibility evidence\n"
+    "    success_signal: API contract validation covers lookup response\n"
+    "    failure_signal: API contract validation detects incompatible response\n"
+    "    non_goals:\n"
+    "      - changing persistence behavior\n"
+    "  facts:\n"
+    "    source_backed:\n"
+    "      - fact: orders API owns lookup response shape\n"
+    "        source: web/src/api/orders.ts\n"
+    "    assumptions: []\n"
+    "    open_questions: []\n"
+    "  boundaries:\n"
+    "    public_api:\n"
+    "      - web/src/api/orders.ts\n"
+    "  validation_map:\n"
+    "    acceptance_to_test:\n"
+    "      - pytest tests/test_orders_api.py\n"
+    "    command_or_not_verified: pytest tests/test_orders_api.py\n"
+    "    what_evidence_proves: public API response compatibility is checked\n"
+    "    what_evidence_does_not_prove: unrelated clients outside the contract fixture\n"
+    "  residual_risk:\n"
+    "    - risk: consumer coverage is fixture-scoped\n"
     "      owner: quality-test-gate\n"
     "      next_gate: test\n"
     "```\n"
@@ -302,6 +355,100 @@ class PreEditStructureGateTests(unittest.TestCase):
         self.assertTrue(incomplete["present"])
         self.assertFalse(incomplete["complete"])
         self.assertIn("facts", incomplete["missing"])
+
+    def test_senior_judgment_parser_rejects_placeholder_quality_fields(self) -> None:
+        common = load_common()
+        result = common.extract_senior_programming_judgment_fields(
+            "```yaml\n"
+            "senior_programming_judgment:\n"
+            "  schema_version: 1\n"
+            "  required: true\n"
+            "  purpose:\n"
+            "    why_exists: structure changed\n"
+            "    current_behavior: old\n"
+            "    desired_behavior: new\n"
+            "    success_signal: pass\n"
+            "    failure_signal: fail\n"
+            "  facts:\n"
+            "    source_backed:\n"
+            "      - fact: something changed\n"
+            "  validation_map:\n"
+            "    acceptance_to_test:\n"
+            "      - pytest tests/test_order_service.py\n"
+            "    command_or_not_verified: pytest tests/test_order_service.py\n"
+            "    what_evidence_proves: done\n"
+            "  residual_risk:\n"
+            "    - risk: maybe incomplete\n"
+            "```\n",
+            required_sections=("purpose", "facts", "validation_map", "residual_risk"),
+        )
+        self.assertTrue(result["present"])
+        self.assertFalse(result["complete"])
+        self.assertIn("facts", result["missing"])
+        self.assertIn("validation_map", result["missing"])
+        self.assertIn("residual_risk", result["missing"])
+
+    def test_public_api_senior_judgment_requires_only_api_relevant_sections(self) -> None:
+        gate = load_gate()
+        event = {
+            "runtime": "codex",
+            "hook_event_name": "PreToolUse",
+            "tool_name": "apply_patch",
+            "tool_input": {
+                "patch": (
+                    "*** Begin Patch\n"
+                    "*** Update File: web/src/api/orders.ts\n"
+                    "@@\n"
+                    "+export function lookupOrder() { return 1; }\n"
+                    "*** End Patch\n"
+                )
+            },
+        }
+        result = gate.evaluate_pre_edit(event, {}, ROOT)
+        self.assertIn("purpose", result["senior_required_sections"])
+        self.assertIn("facts", result["senior_required_sections"])
+        self.assertIn("validation_map", result["senior_required_sections"])
+        self.assertIn("residual_risk", result["senior_required_sections"])
+        self.assertNotIn("states", result["senior_required_sections"])
+        self.assertNotIn("observability_map", result["senior_required_sections"])
+
+    def test_public_api_senior_judgment_allows_trigger_specific_manifest(self) -> None:
+        manifest = (
+            "```yaml\n"
+            "changeforge_implementation_preflight:\n"
+            "  read_evidence:\n"
+            "    target_files:\n"
+            "      - web/src/api/orders.ts\n"
+            "  object_boundary:\n"
+            "    artifact_type: public API function\n"
+            "    owner: web/src/api/orders.ts\n"
+            "    state_or_invariant: public response compatibility remains explicit\n"
+            "  test_plan:\n"
+            "    validation_commands:\n"
+            "      - pytest tests/test_orders_api.py\n"
+            "  risk:\n"
+            "    rollback_or_revert_path: revert patch\n"
+            "```\n"
+            + PUBLIC_API_SENIOR_JUDGMENT_MANIFEST
+        )
+        event = {
+            "runtime": "codex",
+            "hook_event_name": "PreToolUse",
+            "tool_name": "apply_patch",
+            "tool_input": {
+                "patch": (
+                    "*** Begin Patch\n"
+                    "*** Update File: web/src/api/orders.ts\n"
+                    "@@\n"
+                    "+export function lookupOrder() { return 1; }\n"
+                    "*** End Patch\n"
+                )
+            },
+            "last_assistant_message": manifest,
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            result = run_gate(event, Path(cwd_s), Path(cache_s))
+        self.assertEqual(result.stdout, "")
 
     def test_structural_edit_without_senior_judgment_warns_and_records_state(self) -> None:
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:

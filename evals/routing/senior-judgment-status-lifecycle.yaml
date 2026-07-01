@@ -1,0 +1,56 @@
+---
+id: senior-judgment-status-lifecycle
+description: |
+  Status enum and lifecycle changes require senior judgment over states, rules,
+  invariants, transitions, validation, and residual risk.
+prompt: |
+  Add a new `SUSPENDED` account status and allow transitions from ACTIVE and
+  PENDING. The agent only updates the enum and a serializer test; it does not
+  explain allowed/forbidden transitions, rule authority, invariant protection,
+  failure signal, or validation map.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - senior programming judgment missing
+    - business invariant changed
+    - business workflow state unclear
+  skills:
+    - domain-impact-modeler
+    - backend-change-builder
+    - quality-test-gate
+    - ai-code-review-refactor
+  capabilities:
+    - senior-programming-judgment-core
+    - business-semantic-control-plane
+    - business-rule-extraction
+    - state-machine-modeling
+    - validation-broker
+    - implementation-structure-design
+    - agent-execution-discipline
+  domain_extensions: []
+  quality_gates:
+    - domain gate
+    - implementation gate
+    - test gate
+    - AI review gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - release-rollback
+    - cache-design
+  domain_extensions:
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  A status enum is not just a data shape; it is a lifecycle and invariant change
+  when transitions and rule authority change.
+  Hidden risks covered: enum-only patch changes lifecycle behavior; forbidden
+  transitions may become possible; serializer tests do not prove business
+  invariants.

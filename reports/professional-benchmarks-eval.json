@@ -1,9 +1,9 @@
 {
   "actual_output_comparison": "deterministic rule heuristic; auto mode compares baseline_output.md and with_skill_output.md when both exist",
-  "cases_checked": 31,
-  "comparison_cases_checked": 31,
+  "cases_checked": 35,
+  "comparison_cases_checked": 35,
   "errors": [],
-  "generated_at": "2026-07-01T08:42:31.035443+00:00",
+  "generated_at": "2026-07-01T09:22:25.059641+00:00",
   "mode": "auto",
   "results": [
     {
@@ -507,6 +507,170 @@
     {
       "adversarial_detection_status": "not-applicable",
       "baseline_defect_hits": [
+        "accept a public API change with only a unit test",
+        "omit consumer compatibility facts"
+      ],
+      "benchmark_quality_status": "pass",
+      "case_id": "evals/professional-benchmarks/api/public-export-without-compatibility-proof",
+      "comparison": {
+        "baseline_coverage": {
+          "evidence_limits": false,
+          "expected_evidence": false,
+          "expected_hidden_risks": false,
+          "expected_output_obligations": false,
+          "forbidden_behaviors_absent": false,
+          "forbidden_hits": [
+            "accept a public API change with only a unit test",
+            "omit consumer compatibility facts"
+          ],
+          "inspected_boundaries": false,
+          "matched_evidence": [
+            "consumer impact facts"
+          ],
+          "matched_hidden_risks": [
+            "public export may break SDK consumers"
+          ],
+          "matched_obligations": [],
+          "next_gate": false,
+          "residual_risk": false,
+          "residual_risk_owner": false,
+          "route_relevance": true,
+          "score": 1,
+          "selected_capabilities": false,
+          "selected_professional_skill": false,
+          "selected_stage": false,
+          "validation_or_not_verified": false,
+          "validation_outcome": false
+        },
+        "baseline_defect_hits": [
+          "accept a public API change with only a unit test",
+          "omit consumer compatibility facts"
+        ],
+        "baseline_path": "evals/professional-benchmarks/api/public-export-without-compatibility-proof/baseline_output.md",
+        "baseline_score": 1,
+        "errors": [],
+        "improvement": 14,
+        "mode": "comparison",
+        "with_skill_coverage": {
+          "evidence_limits": true,
+          "expected_evidence": true,
+          "expected_hidden_risks": true,
+          "expected_output_obligations": true,
+          "forbidden_behaviors_absent": true,
+          "forbidden_hits": [],
+          "inspected_boundaries": true,
+          "matched_evidence": [
+            "consumer impact facts",
+            "compatibility plan and contract test mapping",
+            "validation proof limits",
+            "residual risk and next gate"
+          ],
+          "matched_hidden_risks": [
+            "public export may break SDK consumers",
+            "unit tests may not prove contract compatibility",
+            "residual risk lacks owner"
+          ],
+          "matched_obligations": [
+            "public contract boundary",
+            "validation map with proof limits",
+            "consumer compatibility residual risk owner"
+          ],
+          "next_gate": true,
+          "residual_risk": true,
+          "residual_risk_owner": true,
+          "route_relevance": true,
+          "score": 15,
+          "selected_capabilities": true,
+          "selected_professional_skill": true,
+          "selected_stage": true,
+          "validation_or_not_verified": true,
+          "validation_outcome": true
+        },
+        "with_skill_path": "evals/professional-benchmarks/api/public-export-without-compatibility-proof/with_skill_output.md",
+        "with_skill_score": 15
+      },
+      "comparison_status": "pass",
+      "delta_score": 14,
+      "errors": [],
+      "expected_capabilities": [
+        "senior-programming-judgment-core",
+        "consumer-impact-analysis",
+        "version-compatibility",
+        "api-contract-design",
+        "contract-testing",
+        "validation-broker",
+        "implementation-structure-design"
+      ],
+      "expected_skills": [
+        "data-api-contract-changer"
+      ],
+      "expected_stage": "implementation-planning",
+      "expected_with_skill_status": "pass",
+      "forbidden_behavior_hits": [],
+      "missing_expected_items": [],
+      "path": "evals/professional-benchmarks/api/public-export-without-compatibility-proof",
+      "professional_delta_summary": {
+        "baseline_missing": [
+          "selected stage",
+          "selected professional skill",
+          "selected capabilities",
+          "expected hidden risks",
+          "forbidden behaviors absent",
+          "expected evidence",
+          "expected output obligations",
+          "inspected boundaries",
+          "what evidence does not prove",
+          "residual risk",
+          "residual risk owner",
+          "next gate",
+          "validation command or not-verified disclosure",
+          "validation command outcome"
+        ],
+        "delta_score": 14,
+        "forbidden_behavior_hits": [],
+        "note": "deterministic rule heuristic; not an LLM judge",
+        "remaining_gaps": [],
+        "with_skill_present": [
+          "selected stage",
+          "selected professional skill",
+          "selected capabilities",
+          "expected hidden risks",
+          "forbidden behaviors avoided",
+          "expected evidence",
+          "expected output obligations",
+          "inspected boundaries",
+          "what evidence does not prove",
+          "residual risk",
+          "residual risk owner",
+          "next gate",
+          "validation command or not-verified disclosure",
+          "validation command outcome",
+          "route relevance"
+        ]
+      },
+      "remaining_gaps": [],
+      "schema_status": "pass",
+      "with_skill_obligation_coverage": [
+        "selected stage",
+        "selected professional skill",
+        "selected capabilities",
+        "expected hidden risks",
+        "forbidden behaviors avoided",
+        "expected evidence",
+        "expected output obligations",
+        "inspected boundaries",
+        "what evidence does not prove",
+        "residual risk",
+        "residual risk owner",
+        "next gate",
+        "validation command or not-verified disclosure",
+        "validation command outcome",
+        "route relevance"
+      ]
+    },
+    {
+      "adversarial_detection_status": "not-applicable",
+      "baseline_defect_hits": [
         "claim completion without test or scan output"
       ],
       "benchmark_quality_status": "pass",
@@ -911,6 +1075,161 @@
       "forbidden_behavior_hits": [],
       "missing_expected_items": [],
       "path": "evals/professional-benchmarks/backend/queue-consumer-missing-idempotency",
+      "professional_delta_summary": {
+        "baseline_missing": [
+          "selected stage",
+          "selected professional skill",
+          "selected capabilities",
+          "expected hidden risks",
+          "expected evidence",
+          "expected output obligations",
+          "inspected boundaries",
+          "what evidence does not prove",
+          "residual risk",
+          "residual risk owner",
+          "next gate",
+          "validation command or not-verified disclosure",
+          "validation command outcome"
+        ],
+        "delta_score": 13,
+        "forbidden_behavior_hits": [],
+        "note": "deterministic rule heuristic; not an LLM judge",
+        "remaining_gaps": [],
+        "with_skill_present": [
+          "selected stage",
+          "selected professional skill",
+          "selected capabilities",
+          "expected hidden risks",
+          "forbidden behaviors avoided",
+          "expected evidence",
+          "expected output obligations",
+          "inspected boundaries",
+          "what evidence does not prove",
+          "residual risk",
+          "residual risk owner",
+          "next gate",
+          "validation command or not-verified disclosure",
+          "validation command outcome",
+          "route relevance"
+        ]
+      },
+      "remaining_gaps": [],
+      "schema_status": "pass",
+      "with_skill_obligation_coverage": [
+        "selected stage",
+        "selected professional skill",
+        "selected capabilities",
+        "expected hidden risks",
+        "forbidden behaviors avoided",
+        "expected evidence",
+        "expected output obligations",
+        "inspected boundaries",
+        "what evidence does not prove",
+        "residual risk",
+        "residual risk owner",
+        "next gate",
+        "validation command or not-verified disclosure",
+        "validation command outcome",
+        "route relevance"
+      ]
+    },
+    {
+      "adversarial_detection_status": "not-applicable",
+      "baseline_defect_hits": [
+        "treat status enum edits as serialization-only",
+        "skip allowed and forbidden transition evidence"
+      ],
+      "benchmark_quality_status": "pass",
+      "case_id": "evals/professional-benchmarks/backend/status-lifecycle-without-invariant-map",
+      "comparison": {
+        "baseline_coverage": {
+          "evidence_limits": false,
+          "expected_evidence": false,
+          "expected_hidden_risks": false,
+          "expected_output_obligations": false,
+          "forbidden_behaviors_absent": true,
+          "forbidden_hits": [],
+          "inspected_boundaries": false,
+          "matched_evidence": [],
+          "matched_hidden_risks": [],
+          "matched_obligations": [],
+          "next_gate": false,
+          "residual_risk": false,
+          "residual_risk_owner": false,
+          "route_relevance": true,
+          "score": 2,
+          "selected_capabilities": false,
+          "selected_professional_skill": false,
+          "selected_stage": false,
+          "validation_or_not_verified": false,
+          "validation_outcome": false
+        },
+        "baseline_defect_hits": [
+          "treat status enum edits as serialization-only",
+          "skip allowed and forbidden transition evidence"
+        ],
+        "baseline_path": "evals/professional-benchmarks/backend/status-lifecycle-without-invariant-map/baseline_output.md",
+        "baseline_score": 2,
+        "errors": [],
+        "improvement": 13,
+        "mode": "comparison",
+        "with_skill_coverage": {
+          "evidence_limits": true,
+          "expected_evidence": true,
+          "expected_hidden_risks": true,
+          "expected_output_obligations": true,
+          "forbidden_behaviors_absent": true,
+          "forbidden_hits": [],
+          "inspected_boundaries": true,
+          "matched_evidence": [
+            "state transition table",
+            "rule authority and invariant-to-test mapping",
+            "failure signal for invalid transition",
+            "proof limits and next gate"
+          ],
+          "matched_hidden_risks": [
+            "enum-only patch changes lifecycle behavior",
+            "forbidden transitions may become possible",
+            "serializer tests do not prove business invariants"
+          ],
+          "matched_obligations": [
+            "object state behavior rule invariant map",
+            "validation map with proof limits",
+            "lifecycle residual risk owner"
+          ],
+          "next_gate": true,
+          "residual_risk": true,
+          "residual_risk_owner": true,
+          "route_relevance": true,
+          "score": 15,
+          "selected_capabilities": true,
+          "selected_professional_skill": true,
+          "selected_stage": true,
+          "validation_or_not_verified": true,
+          "validation_outcome": true
+        },
+        "with_skill_path": "evals/professional-benchmarks/backend/status-lifecycle-without-invariant-map/with_skill_output.md",
+        "with_skill_score": 15
+      },
+      "comparison_status": "pass",
+      "delta_score": 13,
+      "errors": [],
+      "expected_capabilities": [
+        "senior-programming-judgment-core",
+        "business-semantic-control-plane",
+        "business-rule-extraction",
+        "state-machine-modeling",
+        "validation-broker",
+        "implementation-structure-design"
+      ],
+      "expected_skills": [
+        "domain-impact-modeler"
+      ],
+      "expected_stage": "implementation-planning",
+      "expected_with_skill_status": "pass",
+      "forbidden_behavior_hits": [],
+      "missing_expected_items": [],
+      "path": "evals/professional-benchmarks/backend/status-lifecycle-without-invariant-map",
       "professional_delta_summary": {
         "baseline_missing": [
           "selected stage",
@@ -1550,6 +1869,173 @@
       "forbidden_behavior_hits": [],
       "missing_expected_items": [],
       "path": "evals/professional-benchmarks/debugging/retry-same-failed-approach",
+      "professional_delta_summary": {
+        "baseline_missing": [
+          "selected stage",
+          "selected professional skill",
+          "selected capabilities",
+          "expected hidden risks",
+          "forbidden behaviors absent",
+          "expected evidence",
+          "expected output obligations",
+          "inspected boundaries",
+          "what evidence does not prove",
+          "residual risk",
+          "residual risk owner",
+          "next gate",
+          "validation command or not-verified disclosure",
+          "validation command outcome"
+        ],
+        "delta_score": 14,
+        "forbidden_behavior_hits": [],
+        "note": "deterministic rule heuristic; not an LLM judge",
+        "remaining_gaps": [],
+        "with_skill_present": [
+          "selected stage",
+          "selected professional skill",
+          "selected capabilities",
+          "expected hidden risks",
+          "forbidden behaviors avoided",
+          "expected evidence",
+          "expected output obligations",
+          "inspected boundaries",
+          "what evidence does not prove",
+          "residual risk",
+          "residual risk owner",
+          "next gate",
+          "validation command or not-verified disclosure",
+          "validation command outcome",
+          "route relevance"
+        ]
+      },
+      "remaining_gaps": [],
+      "schema_status": "pass",
+      "with_skill_obligation_coverage": [
+        "selected stage",
+        "selected professional skill",
+        "selected capabilities",
+        "expected hidden risks",
+        "forbidden behaviors avoided",
+        "expected evidence",
+        "expected output obligations",
+        "inspected boundaries",
+        "what evidence does not prove",
+        "residual risk",
+        "residual risk owner",
+        "next gate",
+        "validation command or not-verified disclosure",
+        "validation command outcome",
+        "route relevance"
+      ]
+    },
+    {
+      "adversarial_detection_status": "not-applicable",
+      "baseline_defect_hits": [
+        "propose a patch before mapping the violated invariant",
+        "treat timeout as root cause without proof"
+      ],
+      "benchmark_quality_status": "pass",
+      "case_id": "evals/professional-benchmarks/debugging/root-cause-without-failure-contract-map",
+      "comparison": {
+        "baseline_coverage": {
+          "evidence_limits": false,
+          "expected_evidence": false,
+          "expected_hidden_risks": false,
+          "expected_output_obligations": false,
+          "forbidden_behaviors_absent": false,
+          "forbidden_hits": [
+            "propose a patch before mapping the violated invariant",
+            "treat timeout as root cause without proof"
+          ],
+          "inspected_boundaries": false,
+          "matched_evidence": [
+            "validation proof limits"
+          ],
+          "matched_hidden_risks": [
+            "timeout label is not a verified violated invariant"
+          ],
+          "matched_obligations": [
+            "validation evidence with proof limits"
+          ],
+          "next_gate": false,
+          "residual_risk": false,
+          "residual_risk_owner": false,
+          "route_relevance": true,
+          "score": 1,
+          "selected_capabilities": false,
+          "selected_professional_skill": false,
+          "selected_stage": false,
+          "validation_or_not_verified": false,
+          "validation_outcome": false
+        },
+        "baseline_defect_hits": [
+          "propose a patch before mapping the violated invariant",
+          "treat timeout as root cause without proof"
+        ],
+        "baseline_path": "evals/professional-benchmarks/debugging/root-cause-without-failure-contract-map/baseline_output.md",
+        "baseline_score": 1,
+        "errors": [],
+        "improvement": 14,
+        "mode": "comparison",
+        "with_skill_coverage": {
+          "evidence_limits": true,
+          "expected_evidence": true,
+          "expected_hidden_risks": true,
+          "expected_output_obligations": true,
+          "forbidden_behaviors_absent": true,
+          "forbidden_hits": [],
+          "inspected_boundaries": true,
+          "matched_evidence": [
+            "reproduction and eliminated hypotheses",
+            "idempotency invariant and retry/failure contract",
+            "side-effect ordering",
+            "validation proof limits"
+          ],
+          "matched_hidden_risks": [
+            "timeout label is not a verified violated invariant",
+            "duplicate charge is a side effect",
+            "patch-first diagnosis may miss retry and failure-contract boundaries"
+          ],
+          "matched_obligations": [
+            "symptom/root-cause-to-invariant map",
+            "failure contract and side-effect evidence map",
+            "validation evidence with proof limits",
+            "residual risk owner and next gate"
+          ],
+          "next_gate": true,
+          "residual_risk": true,
+          "residual_risk_owner": true,
+          "route_relevance": true,
+          "score": 15,
+          "selected_capabilities": true,
+          "selected_professional_skill": true,
+          "selected_stage": true,
+          "validation_or_not_verified": true,
+          "validation_outcome": true
+        },
+        "with_skill_path": "evals/professional-benchmarks/debugging/root-cause-without-failure-contract-map/with_skill_output.md",
+        "with_skill_score": 15
+      },
+      "comparison_status": "pass",
+      "delta_score": 14,
+      "errors": [],
+      "expected_capabilities": [
+        "senior-programming-judgment-core",
+        "failure-diagnosis",
+        "failure-contract-design",
+        "idempotency-retry-design",
+        "observability",
+        "validation-broker",
+        "agent-execution-discipline"
+      ],
+      "expected_skills": [
+        "backend-change-builder"
+      ],
+      "expected_stage": "debugging-diagnosis",
+      "expected_with_skill_status": "pass",
+      "forbidden_behavior_hits": [],
+      "missing_expected_items": [],
+      "path": "evals/professional-benchmarks/debugging/root-cause-without-failure-contract-map",
       "professional_delta_summary": {
         "baseline_missing": [
           "selected stage",
@@ -3656,6 +4142,168 @@
       "forbidden_behavior_hits": [],
       "missing_expected_items": [],
       "path": "evals/professional-benchmarks/refactoring/refactor-with-hidden-behavior-change",
+      "professional_delta_summary": {
+        "baseline_missing": [
+          "selected stage",
+          "selected professional skill",
+          "selected capabilities",
+          "expected hidden risks",
+          "forbidden behaviors absent",
+          "expected evidence",
+          "expected output obligations",
+          "inspected boundaries",
+          "what evidence does not prove",
+          "residual risk",
+          "residual risk owner",
+          "next gate",
+          "validation command or not-verified disclosure",
+          "validation command outcome"
+        ],
+        "delta_score": 14,
+        "forbidden_behavior_hits": [],
+        "note": "deterministic rule heuristic; not an LLM judge",
+        "remaining_gaps": [],
+        "with_skill_present": [
+          "selected stage",
+          "selected professional skill",
+          "selected capabilities",
+          "expected hidden risks",
+          "forbidden behaviors avoided",
+          "expected evidence",
+          "expected output obligations",
+          "inspected boundaries",
+          "what evidence does not prove",
+          "residual risk",
+          "residual risk owner",
+          "next gate",
+          "validation command or not-verified disclosure",
+          "validation command outcome",
+          "route relevance"
+        ]
+      },
+      "remaining_gaps": [],
+      "schema_status": "pass",
+      "with_skill_obligation_coverage": [
+        "selected stage",
+        "selected professional skill",
+        "selected capabilities",
+        "expected hidden risks",
+        "forbidden behaviors avoided",
+        "expected evidence",
+        "expected output obligations",
+        "inspected boundaries",
+        "what evidence does not prove",
+        "residual risk",
+        "residual risk owner",
+        "next gate",
+        "validation command or not-verified disclosure",
+        "validation command outcome",
+        "route relevance"
+      ]
+    },
+    {
+      "adversarial_detection_status": "not-applicable",
+      "baseline_defect_hits": [
+        "accept a shared helper because it seems convenient",
+        "skip reuse search and placement rationale"
+      ],
+      "benchmark_quality_status": "pass",
+      "case_id": "evals/professional-benchmarks/refactoring/senior-shared-helper-without-placement",
+      "comparison": {
+        "baseline_coverage": {
+          "evidence_limits": false,
+          "expected_evidence": false,
+          "expected_hidden_risks": false,
+          "expected_output_obligations": false,
+          "forbidden_behaviors_absent": false,
+          "forbidden_hits": [
+            "accept a shared helper because it seems convenient",
+            "skip reuse search and placement rationale"
+          ],
+          "inspected_boundaries": false,
+          "matched_evidence": [],
+          "matched_hidden_risks": [
+            "shared/common helper pollution"
+          ],
+          "matched_obligations": [
+            "reuse ladder and placement rationale"
+          ],
+          "next_gate": false,
+          "residual_risk": false,
+          "residual_risk_owner": false,
+          "route_relevance": true,
+          "score": 1,
+          "selected_capabilities": false,
+          "selected_professional_skill": false,
+          "selected_stage": false,
+          "validation_or_not_verified": false,
+          "validation_outcome": false
+        },
+        "baseline_defect_hits": [
+          "accept a shared helper because it seems convenient",
+          "skip reuse search and placement rationale"
+        ],
+        "baseline_path": "evals/professional-benchmarks/refactoring/senior-shared-helper-without-placement/baseline_output.md",
+        "baseline_score": 1,
+        "errors": [],
+        "improvement": 14,
+        "mode": "comparison",
+        "with_skill_coverage": {
+          "evidence_limits": true,
+          "expected_evidence": true,
+          "expected_hidden_risks": true,
+          "expected_output_obligations": true,
+          "forbidden_behaviors_absent": true,
+          "forbidden_hits": [],
+          "inspected_boundaries": true,
+          "matched_evidence": [
+            "search existing order/status helpers",
+            "selected owner and rejected locations",
+            "order-status rule mapped to tests and proof limits",
+            "residual risk owner and next gate"
+          ],
+          "matched_hidden_risks": [
+            "shared/common helper pollution",
+            "rule owner hidden in generic utility",
+            "validation can pass without proving caller invariants"
+          ],
+          "matched_obligations": [
+            "senior programming judgment summary",
+            "reuse ladder and placement rationale",
+            "validation proof limits and residual risk"
+          ],
+          "next_gate": true,
+          "residual_risk": true,
+          "residual_risk_owner": true,
+          "route_relevance": true,
+          "score": 15,
+          "selected_capabilities": true,
+          "selected_professional_skill": true,
+          "selected_stage": true,
+          "validation_or_not_verified": true,
+          "validation_outcome": true
+        },
+        "with_skill_path": "evals/professional-benchmarks/refactoring/senior-shared-helper-without-placement/with_skill_output.md",
+        "with_skill_score": 15
+      },
+      "comparison_status": "pass",
+      "delta_score": 14,
+      "errors": [],
+      "expected_capabilities": [
+        "senior-programming-judgment-core",
+        "implementation-structure-design",
+        "module-boundary-design",
+        "validation-broker",
+        "agent-execution-discipline"
+      ],
+      "expected_skills": [
+        "backend-change-builder"
+      ],
+      "expected_stage": "implementation-planning",
+      "expected_with_skill_status": "pass",
+      "forbidden_behavior_hits": [],
+      "missing_expected_items": [],
+      "path": "evals/professional-benchmarks/refactoring/senior-shared-helper-without-placement",
       "professional_delta_summary": {
         "baseline_missing": [
           "selected stage",

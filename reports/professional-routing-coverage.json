@@ -1,5 +1,5 @@
 {
-  "benchmark_cases_checked": 31,
+  "benchmark_cases_checked": 35,
   "benchmark_risk_coverage": [
     {
       "benchmark": "evals/professional-benchmarks/adversarial/keyword-stuffed-with-skill-gaps",
@@ -146,6 +146,59 @@
       "weak_matches": []
     },
     {
+      "benchmark": "evals/professional-benchmarks/api/public-export-without-compatibility-proof",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "public export may break SDK consumers",
+      "matched_by_expected_route_only": [
+        "bigdata-schema-evolution",
+        "low-level-abi-break"
+      ],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-public-api-compatibility"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-public-api-compatibility"
+      ],
+      "weak_matches": [
+        "low-level-abi-break"
+      ]
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/api/public-export-without-compatibility-proof",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "unit tests may not prove contract compatibility",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-public-api-compatibility"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-public-api-compatibility"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/api/public-export-without-compatibility-proof",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "residual risk lacks owner",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-public-api-compatibility"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-public-api-compatibility"
+      ],
+      "weak_matches": []
+    },
+    {
       "benchmark": "evals/professional-benchmarks/backend/idor-local-fix-without-same-pattern-scan",
       "coverage_status": "covered",
       "covered": true,
@@ -153,7 +206,8 @@
       "matched_by_expected_route_only": [
         "bugfix-missing-same-pattern-scan",
         "go-backend-goroutine-leak-bugfix",
-        "low-level-rust-ffi-memory-safety"
+        "low-level-rust-ffi-memory-safety",
+        "senior-judgment-shared-helper-placement"
       ],
       "needs_manual_review": false,
       "routing_cases": [
@@ -166,7 +220,8 @@
         "backend-idor-tenant-leak-hidden-risk"
       ],
       "weak_matches": [
-        "bugfix-missing-same-pattern-scan"
+        "bugfix-missing-same-pattern-scan",
+        "senior-judgment-shared-helper-placement"
       ]
     },
     {
@@ -267,6 +322,7 @@
       "hidden_risk": "duplicate fulfillment from retry or redelivery",
       "matched_by_expected_route_only": [
         "payment-idempotency",
+        "senior-judgment-debug-failure-contract",
         "sev1-payment-outage"
       ],
       "needs_manual_review": false,
@@ -323,6 +379,54 @@
         "l3-webhook-signature-verification",
         "queue-consumer-idempotency-hidden-risk",
         "webhook-signature-replay-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/status-lifecycle-without-invariant-map",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "enum-only patch changes lifecycle behavior",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-status-lifecycle"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-status-lifecycle"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/status-lifecycle-without-invariant-map",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "forbidden transitions may become possible",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-status-lifecycle"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-status-lifecycle"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/status-lifecycle-without-invariant-map",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "serializer tests do not prove business invariants",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-status-lifecycle"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-status-lifecycle"
       ],
       "weak_matches": []
     },
@@ -522,11 +626,67 @@
       "matched_by_expected_route_only": [],
       "needs_manual_review": false,
       "routing_cases": [
-        "guessed-environment-diagnosis"
+        "guessed-environment-diagnosis",
+        "senior-judgment-debug-failure-contract"
       ],
       "routing_not_required_reason": "",
       "strong_matches": [
-        "guessed-environment-diagnosis"
+        "guessed-environment-diagnosis",
+        "senior-judgment-debug-failure-contract"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/debugging/root-cause-without-failure-contract-map",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "timeout label is not a verified violated invariant",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-debug-failure-contract"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-debug-failure-contract"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/debugging/root-cause-without-failure-contract-map",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "duplicate charge is a side effect",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "payment-idempotency",
+        "redis-hot-key-lock-duplicate",
+        "senior-judgment-debug-failure-contract",
+        "sev1-payment-outage"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "payment-idempotency",
+        "redis-hot-key-lock-duplicate",
+        "senior-judgment-debug-failure-contract",
+        "sev1-payment-outage"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/debugging/root-cause-without-failure-contract-map",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "patch-first diagnosis may miss retry and failure-contract boundaries",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-debug-failure-contract"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-debug-failure-contract"
       ],
       "weak_matches": []
     },
@@ -1154,7 +1314,8 @@
         "implementation-naming-taxonomy",
         "k8s-probe-rbac-networkpolicy",
         "oversized-directory-module-split",
-        "refactor-shared-utility-pollution-hidden-risk"
+        "refactor-shared-utility-pollution-hidden-risk",
+        "senior-judgment-public-api-compatibility"
       ],
       "routing_not_required_reason": "",
       "strong_matches": [
@@ -1162,7 +1323,8 @@
         "implementation-naming-taxonomy",
         "k8s-probe-rbac-networkpolicy",
         "oversized-directory-module-split",
-        "refactor-shared-utility-pollution-hidden-risk"
+        "refactor-shared-utility-pollution-hidden-risk",
+        "senior-judgment-public-api-compatibility"
       ],
       "weak_matches": []
     },
@@ -1179,6 +1341,54 @@
       "routing_not_required_reason": "",
       "strong_matches": [
         "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/refactoring/senior-shared-helper-without-placement",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "shared/common helper pollution",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-shared-helper-placement"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-shared-helper-placement"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/refactoring/senior-shared-helper-without-placement",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "rule owner hidden in generic utility",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-shared-helper-placement"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-shared-helper-placement"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/refactoring/senior-shared-helper-without-placement",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "validation can pass without proving caller invariants",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-shared-helper-placement"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-shared-helper-placement"
       ],
       "weak_matches": []
     },
@@ -1572,21 +1782,21 @@
       "weak_matches": []
     }
   ],
-  "expected_route_only_supplemental": 7,
+  "expected_route_only_supplemental": 8,
   "findings": [],
-  "generated_at": "2026-07-01T08:42:49.158999+00:00",
-  "hidden_risks_checked": 94,
-  "hidden_risks_covered": 90,
-  "hidden_risks_matched_by_expected_route_only": 7,
+  "generated_at": "2026-07-01T09:22:26.883105+00:00",
+  "hidden_risks_checked": 106,
+  "hidden_risks_covered": 102,
+  "hidden_risks_matched_by_expected_route_only": 8,
   "hidden_risks_needing_manual_review": 0,
   "hidden_risks_not_required": 4,
   "hidden_risks_uncovered": 0,
   "hidden_risks_weak_only": 0,
-  "hidden_risks_with_weak_matches": 6,
+  "hidden_risks_with_weak_matches": 7,
   "l1_anti_over_routing_count": 15,
-  "matched_by_expected_route_only": 7,
+  "matched_by_expected_route_only": 8,
   "needs_manual_review": 0,
-  "routing_cases_checked": 165,
+  "routing_cases_checked": 169,
   "runtime_fixture_cases_checked": 15,
   "runtime_fixture_coverage": [
     {
@@ -1632,6 +1842,6 @@
   ],
   "runtime_fixture_dirs_checked": 5,
   "status": "pass",
-  "strong_matches": 90,
-  "weak_matches": 6
+  "strong_matches": 102,
+  "weak_matches": 7
 }

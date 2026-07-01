@@ -84,6 +84,31 @@ EXISTING_EXTENSION_CONTENT_RE = re.compile(
     r"^\s*.*\b(case|elif|else if|switch|if|strategy|adapter|extends|implements|fallback|compat)\b",
     re.IGNORECASE | re.MULTILINE,
 )
+STATUS_LIFECYCLE_RE = re.compile(
+    r"\b(status|state|enum|lifecycle|transition|guard|invariant)\b",
+    re.IGNORECASE,
+)
+FAILURE_SIDE_EFFECT_RE = re.compile(
+    r"\b(retry|cache|queue|transaction|commit|rollback|event|webhook|external\s+io|"
+    r"external_io|network|file\s+io|persistence|side\s*effect)\b",
+    re.IGNORECASE,
+)
+SKILL_RUNTIME_PATH_TOKENS = {
+    "skill",
+    "skills",
+    "routing",
+    "router",
+    "registry",
+    "stage",
+    "hook",
+    "runtime",
+    "eval",
+    "evals",
+    "benchmark",
+    "benchmarks",
+    "schema",
+    "schemas",
+}
 
 
 def main() -> int:
@@ -236,10 +261,20 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
     helper_paths = detect_new_helper_like_paths([*changed_paths, *added_paths])
     assistant_text = _assistant_text_from_event(event)
     manifest = extract_implementation_preflight_fields(assistant_text)
-    senior_judgment = extract_senior_programming_judgment_fields(assistant_text)
     repository_context = extract_repository_context_fields(assistant_text)
     has_read_evidence = _has_read_evidence(state, manifest)
     structural = _is_structural_edit(changed_paths, added_paths, helper_paths, patch_text, content_text)
+    senior_required_sections = _senior_judgment_required_sections(
+        changed_paths,
+        added_paths,
+        helper_paths,
+        patch_text,
+        content_text,
+    )
+    senior_judgment = extract_senior_programming_judgment_fields(
+        assistant_text,
+        required_sections=senior_required_sections,
+    )
     required = _is_pre_edit_event(event) and structural
     missing: list[str] = []
     findings: list[str] = []
@@ -256,6 +291,7 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
             helper_paths=helper_paths,
             has_read_evidence=has_read_evidence,
             block=False,
+            senior_required_sections=senior_required_sections,
         )
     if not has_read_evidence:
         missing.append("read_evidence")
@@ -347,6 +383,7 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
         has_read_evidence=has_read_evidence,
         block=block,
         preflight_complete=preflight_complete,
+        senior_required_sections=senior_required_sections,
     )
 
 
@@ -368,10 +405,9 @@ def render_message(result: dict) -> str:
         "    test_plan: nearby tests and validation commands\n"
         "    risk: residual risk and rollback/revert path\n"
         "  senior_programming_judgment:\n"
-        "    purpose, facts, objects, states, behaviors, rules, invariants,\n"
-        "    boundaries, failure_contract, side_effects, reuse_and_placement,\n"
-        "    minimality_decision, validation_map, observability_map,\n"
-        "    residual_risk, or an allowed skip_reason for trivial/no-semantic work\n"
+        "    trigger-specific required sections plus source-backed facts,\n"
+        "    validation proof limits, residual risk owner/next gate,\n"
+        "    or an allowed skip_reason for trivial/no-semantic work\n"
         "  repository_context:\n"
         "    source_of_truth/context_pack, reuse candidates, validation candidates,\n"
         "    graph_freshness, and residual_risk\n"
@@ -531,6 +567,50 @@ def _is_structural_edit(
     )
 
 
+def _senior_judgment_required_sections(
+    changed_paths: list[str],
+    added_paths: list[str],
+    helper_paths: list[str],
+    patch_text: str,
+    content_text: str,
+) -> tuple[str, ...]:
+    sections: list[str] = []
+    combined = "\n".join([patch_text or "", content_text or ""])
+    all_paths = [*changed_paths, *added_paths]
+    if detect_public_api_patch(patch_text, content_text):
+        sections.extend(("purpose", "facts", "boundaries", "validation_map", "residual_risk"))
+    if detect_class_or_object_patch(patch_text, content_text):
+        sections.extend(("objects", "behaviors", "boundaries", "reuse_and_placement"))
+    if STATUS_LIFECYCLE_RE.search(combined):
+        sections.extend(("states", "rules", "invariants", "validation_map"))
+    if FAILURE_SIDE_EFFECT_RE.search(combined):
+        sections.extend(("failure_contract", "side_effects", "observability_map"))
+    if helper_paths:
+        sections.extend(("reuse_and_placement", "boundaries", "minimality_decision"))
+    if any(_is_skill_runtime_path(path) for path in all_paths):
+        sections.extend(
+            (
+                "purpose",
+                "facts",
+                "boundaries",
+                "failure_contract",
+                "validation_map",
+                "residual_risk",
+            )
+        )
+    if not sections:
+        sections.extend(("purpose", "facts", "boundaries", "validation_map", "residual_risk"))
+    return tuple(_unique(sections))
+
+
+def _is_skill_runtime_path(path: str) -> bool:
+    normalized = normalize_path(path).casefold()
+    registry_source_prefix = "src/" + "registry/"
+    if normalized.startswith(("src/hook-runtime/", registry_source_prefix, "evals/")):
+        return True
+    return bool(_path_tokens(normalized) & SKILL_RUNTIME_PATH_TOKENS)
+
+
 def _is_structural_path(path: str) -> bool:
     normalized = normalize_path(path).casefold()
     suffix = Path(normalized).suffix
@@ -649,6 +729,7 @@ def _result(
     block: bool,
     preflight_complete: bool = False,
     repository_context: dict | None = None,
+    senior_required_sections: tuple[str, ...] = (),
 ) -> dict:
     fields = []
     if manifest.get("present"):
@@ -683,6 +764,7 @@ def _result(
         "block": block,
         "preflight_complete": bool(preflight_complete),
         "senior_judgment_complete": bool(senior_judgment.get("complete")),
+        "senior_required_sections": list(senior_required_sections),
         "preflight_summaries": [
             f"paths={','.join(_unique(changed_paths)[:5])}; fields={','.join(fields)}"
         ]

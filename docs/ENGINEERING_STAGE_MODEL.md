@@ -19,17 +19,18 @@ quality gates, and the allowed handoff target stage.
 ### requirement-intake
 - Purpose: understand requirement, clarify scope, name non-goals, define acceptance.
 - Launch: `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition`, `acceptance-standard-definition`, `scenario-decomposition`.
+- Conditional launch: `business-semantic-control-plane` when business terms are present; `senior-programming-judgment-core` for non-trivial engineering work that needs purpose, facts, success/failure, and boundary judgment before action.
 - Do not launch by default: coding, language, testing, refactoring, release capabilities.
-- Required evidence: clarified scope, explicit non-goals, testable acceptance signal, clarification status before action, PDD acceptance criteria, business semantic intent, vocabulary, and open questions when business terms are present.
+- Required evidence: clarified scope, explicit non-goals, testable acceptance signal, clarification status before action, PDD acceptance criteria, business semantic intent, vocabulary, and open questions when business terms are present, senior programming purpose/fact/success/failure boundary for non-trivial engineering work.
 - Required quality gates: requirement gate, PDD gate.
 - Handoff: architecture-design or implementation-planning.
 
 ### architecture-design
 - Purpose: module boundaries, layering, dependency direction, data ownership, service boundaries, extensibility, reversibility.
 - Launch: `architecture-style-selection`, `module-boundary-design`, `layered-architecture-design`, `architecture-tradeoff-analysis`, `extensibility-design`, `solution-optimality-evaluation`.
-- Conditional launch: `architecture-enforcement-tooling`, `consumer-impact-analysis`, `dependency-wiring-lifecycle`, and `minimal-correct-implementation` when extensibility, stack complexity, or future-proofing is proposed; `business-semantic-control-plane` when business objects, rule authority, or workflow states affect architecture.
+- Conditional launch: `architecture-enforcement-tooling`, `consumer-impact-analysis`, `dependency-wiring-lifecycle`, and `minimal-correct-implementation` when extensibility, stack complexity, or future-proofing is proposed; `senior-programming-judgment-core` when architecture changes object, module, workflow, rule, or ownership boundaries; `business-semantic-control-plane` when business objects, rule authority, or workflow states affect architecture.
 - Do not launch by default: language idiom checks, coding, test authoring.
-- Required evidence: boundary owners, dependency direction, rejected alternatives, simplicity ladder result when extensibility or stack complexity is proposed, reversibility classification, DDD domain invariants, business object ownership, rule authority, and workflow boundary when business semantics affect architecture.
+- Required evidence: boundary owners, dependency direction, rejected alternatives, simplicity ladder result when extensibility or stack complexity is proposed, reversibility classification, DDD domain invariants, business object ownership, rule authority, and workflow boundary when business semantics affect architecture, object-state-behavior-rule-invariant map when architecture changes object, module, workflow, rule, or ownership boundaries.
 - Required quality gates: architecture gate, DDD gate.
 - Handoff: implementation-planning.
 
@@ -54,8 +55,9 @@ quality gates, and the allowed handoff target stage.
 ### debugging-diagnosis
 - Purpose: reproduce, collect evidence, gather logs/metrics/traces, eliminate hypotheses, locate verified root cause.
 - Launch: `failure-diagnosis`, `agent-execution-discipline`, `observability`, matching language professional usage capability.
+- Conditional launch: `data-format-contract-usage` when serialized input/output shape is material; `senior-programming-judgment-core` when the diagnosis must map symptoms or causes to violated facts, invariants, boundaries, state transitions, side effects, or failure contracts.
 - Do not launch by default: refactoring, release gate, new feature design. Launch refactoring only if root cause requires structural change.
-- Required evidence: reproduction, symptom/root-cause/contributing-factor split, eliminated hypotheses, verified cause.
+- Required evidence: reproduction, symptom/root-cause/contributing-factor split, eliminated hypotheses, verified cause, symptom/root cause mapped to violated fact, invariant, boundary, state transition, side effect, or failure contract when applicable.
 - Required quality gates: execution discipline gate.
 - Handoff: bug-fix or implementation-planning.
 

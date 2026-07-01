@@ -98,13 +98,34 @@ changeforge_route:
       not_inspected:
         - <boundary not inspected and accepted risk, or omit when none>
     senior_programming_judgment:
+      schema_version: 1
       required: <true|false>
       skip_reason: <explicit trivial/no-semantic/no-engineering/doc-only reason, or omit when required>
-      purpose: <why the change exists in product, system, or skill behavior terms>
+      stage_fit: <current stage and why senior judgment is required or skipped>
+      purpose:
+        why_exists: <why the change exists in product, system, or skill behavior terms>
+        current_behavior: <current behavior or evidence gap>
+        desired_behavior: <desired behavior or evidence obligation>
+        success_signal: <observable success signal>
+        failure_signal: <observable failure or regression signal>
+        non_goals:
+          - <explicit boundary outside this judgment>
       facts:
-        - <source-backed fact used to make the engineering decision>
+        source_backed:
+          - fact: <fact used to make the engineering decision>
+            source: <current code/config/docs/user source/owner review/validation evidence>
+        assumptions:
+          - <assumption accepted with risk>
+        open_questions:
+          - <question that remains open, or omit when none>
       objects:
-        - <object, module, data shape, actor, or artifact being changed>
+        - name: <object, module, data shape, actor, or artifact being changed>
+          owner: <owning module, skill, or team>
+          lifecycle: <created/changed/deleted/steady-state/unknown>
+          relationships:
+            - <relationship or dependency>
+          rejected_meanings:
+            - <meaning or ownership rejected>
       states:
         - <state, lifecycle, transition, or workflow condition affected>
       behaviors:
@@ -123,11 +144,21 @@ changeforge_route:
         - <reuse scan and why the selected location owns the behavior>
       minimality_decision: <why the change is the smallest sufficient change>
       validation_map:
-        - <test, eval, validator, build, or manual check mapped to changed behavior>
+        acceptance_to_test:
+          - <acceptance item mapped to test/eval/validator/manual check>
+        invariant_to_test:
+          - <invariant mapped to test/eval/validator/manual check>
+        failure_path_to_test:
+          - <failure path mapped to test/eval/validator/manual check>
+        command_or_not_verified: <command/check run or explicit not-verified reason>
+        what_evidence_proves: <what the validation evidence proves>
+        what_evidence_does_not_prove: <what remains unproven>
       observability_map:
         - <log, telemetry, report, hook state, or not-applicable reason>
       residual_risk:
-        - <remaining uncertainty with owner and next gate>
+        - risk: <remaining uncertainty>
+          owner: <skill, gate, or human owner>
+          next_gate: <next gate or closed>
     tdd_signal:
       kind: <failing-test|new-test|updated-test|eval|validation-command|acceptance-check|not-verified>
       command_or_check: <command, check, or explicit not-verified reason>

@@ -13,6 +13,7 @@ stages:
       - scenario-decomposition
     conditional_capabilities:
       - business-semantic-control-plane
+      - senior-programming-judgment-core
     skip_by_default:
       - coding
       - language
@@ -26,6 +27,7 @@ stages:
       - testable acceptance signal
       - clarification status before action
       - business semantic intent, vocabulary, and open questions when business terms are present
+      - senior programming purpose/fact/success/failure boundary for non-trivial engineering work
     required_quality_gates:
       - PDD gate
       - requirement gate
@@ -66,6 +68,7 @@ stages:
       - simplicity ladder result when extensibility or stack complexity is proposed
       - reversibility classification
       - business object ownership, rule authority, and workflow boundary when business semantics affect architecture
+      - object-state-behavior-rule-invariant map when architecture changes object, module, workflow, rule, or ownership boundaries
     required_quality_gates:
       - DDD gate
       - architecture gate
@@ -186,6 +189,7 @@ stages:
       - observability
     conditional_capabilities:
       - data-format-contract-usage
+      - senior-programming-judgment-core
     skip_by_default:
       - refactoring
       - release
@@ -195,6 +199,7 @@ stages:
       - symptom/root-cause/contributing-factor split
       - eliminated hypotheses
       - verified cause
+      - symptom/root cause mapped to violated fact, invariant, boundary, state transition, side effect, or failure contract when applicable
     required_quality_gates:
       - execution discipline gate
     allowed_next_stages:

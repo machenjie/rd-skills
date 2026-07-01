@@ -178,6 +178,7 @@ Closure requires concrete answers for:
 # Used By
 
 - change-forge-router
+- change-intake-compiler
 - development-process-orchestrator
 - architecture-impact-reviewer
 - backend-change-builder
@@ -191,6 +192,7 @@ Closure requires concrete answers for:
 - ai-code-review-refactor
 - change-documentation-gate
 - skill-authoring-expert
+- agent-execution-discipline
 
 # Handoff
 

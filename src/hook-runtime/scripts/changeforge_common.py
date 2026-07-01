@@ -1688,7 +1688,10 @@ def extract_implementation_preflight_fields(text: str) -> dict:
     return result
 
 
-def extract_senior_programming_judgment_fields(text: str) -> dict:
+def extract_senior_programming_judgment_fields(
+    text: str,
+    required_sections: Iterable[str] | None = None,
+) -> dict:
     """Extract senior programming judgment manifest facts from text. Fail open."""
     result: dict[str, Any] = {
         "present": False,
@@ -1697,10 +1700,18 @@ def extract_senior_programming_judgment_fields(text: str) -> dict:
         "complete": False,
         "sections": [],
         "missing": [],
+        "required_sections": [],
+        "quality_missing": [],
     }
     if not isinstance(text, str) or not text:
         return result
     try:
+        required = tuple(
+            section
+            for section in _unique(required_sections or SENIOR_PROGRAMMING_JUDGMENT_REQUIRED_SECTIONS)
+            if section in SENIOR_PROGRAMMING_JUDGMENT_REQUIRED_SECTIONS
+        )
+        result["required_sections"] = list(required)
         block = _manifest_block(text, SENIOR_PROGRAMMING_JUDGMENT_KEY)
         if not block:
             return result
@@ -1717,20 +1728,120 @@ def extract_senior_programming_judgment_fields(text: str) -> dict:
         )
         sections = [
             section
-            for section in SENIOR_PROGRAMMING_JUDGMENT_REQUIRED_SECTIONS
-            if _manifest_section_has_value(block, section)
+            for section in required
+            if _senior_judgment_section_complete(block, section)
         ]
         missing = [
             section
-            for section in SENIOR_PROGRAMMING_JUDGMENT_REQUIRED_SECTIONS
+            for section in required
             if section not in sections
         ]
+        quality_missing = _senior_judgment_quality_missing(block, required)
+        missing = _unique([*missing, *quality_missing])
         result["sections"] = sections
+        result["quality_missing"] = [] if result["allowed_skip"] else quality_missing
         result["missing"] = [] if result["allowed_skip"] else missing
-        result["complete"] = bool(result["allowed_skip"] or not missing)
+        result["complete"] = bool(result["allowed_skip"] or not result["missing"])
     except Exception:
         return result
     return result
+
+
+def _senior_judgment_section_complete(segment: str, key: str) -> bool:
+    if not _manifest_section_has_value(segment, key):
+        return False
+    section = _manifest_section_block(segment, key)
+    if key == "purpose":
+        return all(
+            _manifest_child_has_meaningful_value(section, child)
+            for child in (
+                "why_exists",
+                "current_behavior",
+                "desired_behavior",
+                "success_signal",
+                "failure_signal",
+            )
+        )
+    if key == "facts":
+        return _manifest_section_has_value(section, "source_backed") and _manifest_child_key_seen(
+            section,
+            "source",
+        )
+    if key == "objects":
+        return _manifest_child_key_seen(section, "owner")
+    if key == "reuse_and_placement":
+        return _manifest_child_has_meaningful_value(
+            section,
+            "selected_location",
+        ) and (
+            _manifest_section_has_value(section, "existing_candidates")
+            or _manifest_section_has_value(section, "rejected_locations")
+            or _manifest_child_has_meaningful_value(section, "new_code_justification")
+            or _manifest_explicit_boolean(section, "no_reuse_candidate_found")
+        )
+    if key == "minimality_decision":
+        return _manifest_child_has_meaningful_value(section, "simplest_correct_path")
+    if key == "failure_contract":
+        return _manifest_section_has_value(section, "expected_failures") or any(
+            _manifest_child_has_meaningful_value(section, child)
+            for child in ("rollback_or_compensation", "fallback", "degradation_behavior")
+        )
+    if key == "side_effects":
+        return any(
+            _manifest_section_has_value(section, child)
+            or _manifest_child_has_meaningful_value(section, child)
+            for child in (
+                "mutation",
+                "persistence",
+                "cache",
+                "event",
+                "external_io",
+                "telemetry",
+                "generated_output",
+                "no_side_effects",
+            )
+        )
+    if key == "validation_map":
+        has_mapping = any(
+            _manifest_section_has_value(section, child)
+            for child in ("acceptance_to_test", "invariant_to_test", "failure_path_to_test")
+        )
+        return has_mapping and all(
+            _manifest_child_has_meaningful_value(section, child)
+            for child in (
+                "command_or_not_verified",
+                "what_evidence_proves",
+                "what_evidence_does_not_prove",
+            )
+        )
+    if key == "observability_map":
+        return any(
+            _manifest_child_has_meaningful_value(section, child)
+            or _manifest_section_has_value(section, child)
+            for child in (
+                "logs",
+                "metrics",
+                "traces",
+                "telemetry",
+                "hook_state",
+                "report",
+                "no_log_rationale",
+            )
+        )
+    if key == "residual_risk":
+        return all(
+            _manifest_child_key_seen(section, child)
+            for child in ("risk", "owner", "next_gate")
+        )
+    return True
+
+
+def _senior_judgment_quality_missing(segment: str, required: tuple[str, ...]) -> list[str]:
+    missing: list[str] = []
+    for section in required:
+        if not _senior_judgment_section_complete(segment, section):
+            missing.append(section)
+    return _unique(missing)
 
 
 def extract_repository_context_fields(text: str) -> dict:
@@ -1926,7 +2037,7 @@ def _manifest_section_has_value(segment: str, key: str) -> bool:
             if not match:
                 continue
             inline = match.group(2).strip()
-            if inline and inline not in ("{}", "[]", "|", ">", "|-", ">-"):
+            if inline not in ("", "|", ">", "|-", ">-") and _manifest_meaningful_value(inline):
                 return True
             key_indent = len(match.group(1))
             capturing = True
@@ -1937,7 +2048,8 @@ def _manifest_section_has_value(segment: str, key: str) -> bool:
         if indent <= key_indent:
             return False
         text = line.strip()
-        if text not in ("-", "[]", "{}"):
+        value = text[1:].strip() if text.startswith("-") else text
+        if text not in ("-", "[]", "{}") and _manifest_meaningful_value(value):
             return True
     return False
 
@@ -1985,11 +2097,42 @@ def _manifest_child_has_meaningful_value(segment: str, key: str) -> bool:
     return any(_manifest_meaningful_value(value) for value in _manifest_list_field(segment, key))
 
 
+def _manifest_child_key_seen(segment: str, key: str) -> bool:
+    pattern = re.compile(r"^\s*(?:-\s*)?" + re.escape(key) + r":\s*(.*)$", re.MULTILINE)
+    match = pattern.search(segment)
+    if not match:
+        return False
+    value = match.group(1).strip()
+    return _manifest_meaningful_value(value)
+
+
 def _manifest_meaningful_value(value: str) -> bool:
     text = _manifest_unquote(str(value or ""))
     if not text:
         return False
-    return text.casefold() not in {"yes", "true", "ok", "n/a", "na", "none", "{}", "[]"}
+    folded = text.casefold()
+    return folded not in {
+        "yes",
+        "true",
+        "ok",
+        "okay",
+        "good",
+        "done",
+        "n/a",
+        "na",
+        "none",
+        "not applicable",
+        "not_applicable",
+        "unknown",
+        "todo",
+        "tbd",
+        "placeholder",
+        "fill me",
+        "straightforward",
+        "looks straightforward",
+        "{}",
+        "[]",
+    }
 
 
 def _manifest_skipped_gates(segment: str) -> list[str]:
