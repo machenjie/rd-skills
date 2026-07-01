@@ -112,7 +112,7 @@ Stage transitions require the entry evidence for the next stage and the exit evi
   **Evidence required:** accepted/rejected memory or graph claim, freshness comparison, command/report path, residual owner.
 - **Signal:** A non-trivial stage proceeds with code shape, prose intent, or local validation but no senior judgment evidence.
   **Hidden risk:** The stage can advance while source-backed facts, object relationships, state/rule invariants, side effects, failure behavior, validation proof, observability, or residual risk remain unexamined.
-  **Required professional action:** Launch `senior-programming-judgment-core` or record an allowed trivial/no-semantic/no-engineering skip reason.
+  **Required professional action:** Require `senior-programming-judgment-core` evidence or document an allowed trivial/no-semantic/no-engineering skip reason.
   **Route to:** `senior-programming-judgment-core`, `implementation-structure-design`, `quality-test-gate`.
   **Evidence required:** `senior_programming_judgment` summary or explicit skip reason, selected specialist handoffs, validation map, proof limits, residual risk.
 
@@ -133,17 +133,18 @@ Hidden risks include missing reuse/placement evidence, local success hiding cont
 
 # Failure Modes
 
-- Loading every relevant capability at once, bloating context and hiding the next action.
-- Skipping a heavy capability without recording a reason, so a needed gate is silently lost.
-- Treating a cross-stage task as one step and launching design, coding, testing, and release capabilities together.
-- Launching architecture deep review during coding, or the release gate during code review.
-- Launching refactoring during debugging before a verified root cause exists.
-- Copying the stage, product, or language matrix into multiple skill bodies, creating drift.
-- Failing to re-run when the active stage changes, so the launch set no longer matches the work.
+- **Capability flood:** loading every relevant capability at once bloats context and hides the next action.
+- **Silent skip:** skipping a heavy capability without recording a reason loses a needed gate.
+- **Cross-stage bundle:** treating a cross-stage task as one step launches design, coding, testing, and release capabilities together.
+- **Out-of-stage review:** launching architecture deep review during coding, or the release gate during code review, shifts ownership away from the active stage.
+- **Premature refactor:** launching refactoring during debugging before a verified root cause exists changes structure without cause evidence.
+- **Matrix drift:** copying the stage, product, or language matrix into multiple skill bodies creates stale launch rules.
+- **Stale launch set:** failing to re-run when the active stage changes leaves capabilities matched to the previous work.
+- **Stale stage evidence:** accepting repository graph, project memory, prior validation, or execution trajectory as current proof advances the wrong stage with unverified evidence.
 
 # Reference Loading Policy
 
-The `SKILL.md` body carries L1/L2 stage selection, launch, output, and closure rules. Load [references/checklist.md](references/checklist.md) for quick stage-launch review. Load [references/stage-launch-matrix.md](references/stage-launch-matrix.md) when the launch set, evidence obligation, transition, skipped-heavy rationale, graph/memory/execution coupling, or stage-specific risk needs detail. Do not load deep references for trivial single-stage edits where the stage, launch set, and validation signal are already explicit.
+The `SKILL.md` body carries L1/L2 stage selection, launch, output, and closure rules. Load [references/checklist.md](references/checklist.md) for quick stage-launch review. Load [references/stage-launch-matrix.md](references/stage-launch-matrix.md) when the launch set, evidence obligation, transition, skipped-heavy rationale, graph/memory/execution coupling, or stage-specific risk needs detail. Load [references/stage-evidence-freshness.md](references/stage-evidence-freshness.md) when current stage selection or handoff depends on repository graph, project memory, prior validation, generated reports, execution trajectory, repair/re-review order, or validation freshness after final source, registry, reference, report, package, or install-output edits. Do not load deep references for trivial single-stage edits where the stage, launch set, and validation signal are already explicit.
 
 # Output Contract
 

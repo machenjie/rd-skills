@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-01T09:19:15.191228+00:00",
+  "generated_at": "2026-07-01T10:23:27.260508+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -451,7 +451,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (7)",
+      "routing_coverage": "yes (8)",
       "score": 59,
       "senior_programming_judgment_coverage": "n/a",
       "status": "sample-grade",
@@ -908,20 +908,10 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "n/a (router owns routing fixture corpus; eval-routing cases=169)",
-      "score": 59,
+      "score": 60,
       "senior_programming_judgment_coverage": "yes",
-      "status": "acceptable",
-      "warnings": [
-        {
-          "item": "change-forge-router",
-          "item_kind": "professional-skill",
-          "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
-          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
-          "release_relevance": "release-blocking",
-          "scope": "professional-skill",
-          "type": "body_bloat_exception"
-        }
-      ]
+      "status": "sample-grade",
+      "warnings": []
     },
     {
       "anti_bloat_status": "ok",

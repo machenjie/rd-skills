@@ -1,7 +1,7 @@
 {
-  "average_score": 58.0,
+  "average_score": 58.03,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-07-01T09:19:15.049471+00:00",
+  "generated_at": "2026-07-01T10:23:26.017758+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -129,9 +129,9 @@
       "warnings": []
     },
     {
-      "body_lines": 252,
+      "body_lines": 237,
       "dimensions": {
-        "anti_bloat_control": 4,
+        "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
         "failure_mode_coverage": 5,
@@ -148,22 +148,10 @@
       "likely_missing_sections": [],
       "name": "change-forge-router",
       "path": "src/professional-skills/change-forge-router/SKILL.md",
-      "recommended_fixes": [
-        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
-      ],
-      "status": "acceptable",
-      "total": 59,
-      "warnings": [
-        {
-          "item": "change-forge-router",
-          "item_kind": "professional-skill",
-          "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
-          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
-          "release_relevance": "release-blocking",
-          "scope": "professional-skill",
-          "type": "body_bloat_exception"
-        }
-      ]
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 60,
+      "warnings": []
     },
     {
       "body_lines": 215,
@@ -1716,17 +1704,17 @@
       "warnings": []
     },
     {
-      "body_lines": 208,
+      "body_lines": 209,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 3,
+        "failure_mode_coverage": 5,
         "mode_coverage": 5,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
-        "reference_precision": 4,
+        "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
         "validation_obligation": 5
@@ -1737,7 +1725,7 @@
       "path": "src/foundation/capabilities/engineering-stage-professionalism/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 56,
+      "total": 60,
       "warnings": []
     },
     {
@@ -3942,5 +3930,5 @@
     }
   ],
   "skills_checked": 157,
-  "warning_count": 1
+  "warning_count": 0
 }

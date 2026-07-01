@@ -136,22 +136,7 @@ Escalate to L5 when regulated, financial, Web3, AI, migration, or production-cri
 ## Action-Specific Owner And Review Routing
 Select only rows that match the actual action; the owner and review skill must differ.
 
-| Action type | Owner skill / capability | Typical review skill / capability |
-| --- | --- | --- |
-| Requirement clarification | `change-intake-compiler` with `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition` | `acceptance-criteria-builder` or `quality-test-gate` |
-| Acceptance / TDD | `acceptance-criteria-builder` with `acceptance-standard-definition`, `scenario-decomposition` | `quality-test-gate` |
-| Impact analysis | `change-impact-analyzer` with `context-packaging` | `change-forge-router` or `quality-test-gate` |
-| Planning | `task-dag-planner` with `task-dag-decomposition`, `engineering-stage-professionalism` | `change-impact-analyzer` or `quality-test-gate` |
-| Senior programming judgment | Current action owner with `senior-programming-judgment-core` evidence attached | `quality-test-gate` or `ai-code-review-refactor` |
-| Frontend implementation | `frontend-change-builder` | `quality-test-gate` or `ai-code-review-refactor` |
-| Backend implementation | `backend-change-builder` | `quality-test-gate` or `ai-code-review-refactor` |
-| API/data contract | `data-api-contract-changer` | `quality-test-gate` or `architecture-impact-reviewer` |
-| Data middleware | `data-middleware-change-builder` | `reliability-observability-gate` or `quality-test-gate` |
-| External integration | `integration-change-builder` | `security-privacy-gate`, `reliability-observability-gate`, or `quality-test-gate` |
-| Security-sensitive work | relevant implementation owner | `security-privacy-gate` |
-| Reliability/performance | relevant implementation owner or `reliability-observability-gate` | `reliability-observability-gate` or `quality-test-gate` |
-| Documentation | `change-documentation-gate` | `change-forge-router` or `quality-test-gate` |
-| Final handoff | `agent-execution-discipline` | `quality-test-gate` |
+Keep the main body on the invariant: every action has a specific owner, selected capabilities, an output, a different reviewer, review evidence, and a repair route. Load [references/routing-signals.md](references/routing-signals.md#action-specific-owner-and-review-routing) for the detailed owner/reviewer lookup table when building a non-trivial action map.
 
 ## Critical Details
 Read `references/checklist.md` for non-trivial routing. Read `references/routing-signals.md` when the request has broad, hidden-risk, skill-authoring, runtime, language, or domain-specific route signals. Use generated router references for the current skill registry, capability index, domain extension index, and routing rules when available.

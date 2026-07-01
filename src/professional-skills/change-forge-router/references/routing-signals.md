@@ -2,6 +2,12 @@
 
 Load this reference when a route has broad, hidden-risk, skill-authoring, runtime, language, or domain-specific signals. Keep the main router body focused on classification, protocol, output, and quality gates.
 
+## Contents
+
+- Foundation Capability Groups
+- Signal Routing
+- Action-Specific Owner And Review Routing
+
 ## Foundation Capability Groups
 
 - Intake requirements: 01 `requirement-clarification`, 02 `requirement-structuring`, 03 `user-role-identification`, 04 `scenario-decomposition`, 05 `acceptance-standard-definition`, 06 `non-goal-boundary-definition`.
@@ -102,3 +108,24 @@ Route by evidence in the request:
 - If the request touches upload, download, object storage, large file handling, media/image processing, MIME detection, virus scanning, signed URLs, retention, or cleanup, select `file-storage-processing`.
 - If the request touches internationalization, localization, timezone, date/time, currency, money precision, number formatting, collation, pluralization, or locale fallback, select `i18n-timezone-money-safety`.
 - If high-risk code generation occurs in any language, select `solution-optimality-evaluation` and the matching language professional usage capability.
+
+## Action-Specific Owner And Review Routing
+
+Select only rows that match the actual action; the owner and review skill must differ.
+
+| Action type | Owner skill / capability | Typical review skill / capability |
+| --- | --- | --- |
+| Requirement clarification | `change-intake-compiler` with `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition` | `acceptance-criteria-builder` or `quality-test-gate` |
+| Acceptance / TDD | `acceptance-criteria-builder` with `acceptance-standard-definition`, `scenario-decomposition` | `quality-test-gate` |
+| Impact analysis | `change-impact-analyzer` with `context-packaging` | `change-forge-router` or `quality-test-gate` |
+| Planning | `task-dag-planner` with `task-dag-decomposition`, `engineering-stage-professionalism` | `change-impact-analyzer` or `quality-test-gate` |
+| Senior programming judgment | Current action owner with `senior-programming-judgment-core` evidence attached | `quality-test-gate` or `ai-code-review-refactor` |
+| Frontend implementation | `frontend-change-builder` | `quality-test-gate` or `ai-code-review-refactor` |
+| Backend implementation | `backend-change-builder` | `quality-test-gate` or `ai-code-review-refactor` |
+| API/data contract | `data-api-contract-changer` | `quality-test-gate` or `architecture-impact-reviewer` |
+| Data middleware | `data-middleware-change-builder` | `reliability-observability-gate` or `quality-test-gate` |
+| External integration | `integration-change-builder` | `security-privacy-gate`, `reliability-observability-gate`, or `quality-test-gate` |
+| Security-sensitive work | relevant implementation owner | `security-privacy-gate` |
+| Reliability/performance | relevant implementation owner or `reliability-observability-gate` | `reliability-observability-gate` or `quality-test-gate` |
+| Documentation | `change-documentation-gate` | `change-forge-router` or `quality-test-gate` |
+| Final handoff | `agent-execution-discipline` | `quality-test-gate` |

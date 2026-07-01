@@ -1,6 +1,6 @@
 # Professional Coverage Matrix
 
-- Generated: 2026-07-01T09:19:15.191228+00:00
+- Generated: 2026-07-01T10:23:27.260508+00:00
 - Rows checked: 63
 
 | Item | Kind | Mode Matrix | Proactive Triggers | Evidence Contract | Output Contract | Failure Modes | Quality Gate | Reference Loading Hint | Senior Programming Judgment Coverage | Routing Coverage | Benchmark Coverage | Anti-bloat Status | Status |
@@ -28,7 +28,7 @@
 | `language-idiom-enforcement` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (6) | yes (9) | ok | sample-grade |
 | `language-performance-safety` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (4) | yes (9) | ok | sample-grade |
 | `language-testing-strategy` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (4) | yes (5) | ok | sample-grade |
-| `logging-error-handling` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (7) | yes (5) | ok | sample-grade |
+| `logging-error-handling` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (8) | yes (5) | ok | sample-grade |
 | `message-queue-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (5) | yes (4) | ok | sample-grade |
 | `minimal-correct-implementation` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (9) | yes (3) | ok | sample-grade |
 | `model-boundary-mapping` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | no | yes (1) | ok | sample-grade |
@@ -52,7 +52,7 @@
 | `architecture-impact-reviewer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (20) | yes (5) | ok | sample-grade |
 | `backend-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (67) | yes (67) | ok | sample-grade |
 | `change-documentation-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (42) | yes (14) | ok | sample-grade |
-| `change-forge-router` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes | n/a (router owns routing fixture corpus; eval-routing cases=169) | n/a (covered by eval-routing and agent-behavior) | ok | acceptable |
+| `change-forge-router` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes | n/a (router owns routing fixture corpus; eval-routing cases=169) | n/a (covered by eval-routing and agent-behavior) | ok | sample-grade |
 | `change-impact-analyzer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (18) | yes (4) | ok | sample-grade |
 | `change-intake-compiler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (18) | yes (7) | ok | sample-grade |
 | `data-api-contract-changer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (21) | yes (11) | ok | sample-grade |
