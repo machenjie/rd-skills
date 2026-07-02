@@ -31,6 +31,43 @@ def load_hook_closure_contract():
     return module
 
 
+def _complete_phase_ledger(
+    *,
+    digest: str | None = None,
+    missing_review_id: str | None = None,
+    not_applicable: dict[str, str] | None = None,
+) -> dict:
+    digest = digest or "sha256:" + ("a" * 64)
+    phases = ("pdd", "ddd", "sdd", "tdd")
+    not_applicable = not_applicable or {}
+    statuses = {
+        phase: "not_applicable" if phase in not_applicable else "reviewed"
+        for phase in phases
+    }
+    artifact_digests = {
+        phase: digest
+        for phase in phases
+        if phase not in not_applicable
+    }
+    review_ids = {
+        phase: f"{phase}-review-1"
+        for phase in phases
+        if phase not in not_applicable and phase != missing_review_id
+    }
+    ledger = {
+        "route_id": "active-runtime-route",
+        "current_phase": "implementation",
+        "required_phases": list(phases),
+        "phase_status": statuses,
+        "artifact_digests": artifact_digests,
+        "review_ids": review_ids,
+        "validation_signal_present": True,
+    }
+    if not_applicable:
+        ledger["not_applicable_reasons"] = not_applicable
+    return ledger
+
+
 class ClosureContractTests(unittest.TestCase):
     def test_ready_when_required_evidence_is_strong_and_current(self) -> None:
         ledger = EvidenceLedger.from_telemetry_facts(
@@ -300,6 +337,7 @@ class HookClosurePhaseContractTests(unittest.TestCase):
             "changed_paths": ["src/runtime_governance/process_phase.py"],
             "validation_freshness_seen": True,
             "process_phase_ledger_seen": True,
+            "process_phase_ledgers": [_complete_phase_ledger()],
             "pdd_reviewed": True,
             "ddd_reviewed": True,
             "sdd_reviewed": True,
@@ -403,10 +441,76 @@ class HookClosurePhaseContractTests(unittest.TestCase):
                 "turn_stage": "coding",
                 "changed_paths": ["src/runtime_governance/process_phase.py"],
                 "process_phase_ledger_seen": True,
+                "process_phase_ledgers": [_complete_phase_ledger()],
                 "pdd_reviewed": True,
                 "ddd_reviewed": True,
                 "sdd_reviewed": True,
                 "tdd_reviewed": True,
+            }
+        )
+        self.assertNotIn("phase_reviews", contract.missing_items)
+
+    def test_engineering_closure_with_bool_only_phase_reviews_still_needs_phase_reviews(self) -> None:
+        contract = self._contract(
+            {
+                "runtime": "codex",
+                "turn_stage": "coding",
+                "changed_paths": ["src/runtime_governance/process_phase.py"],
+                "process_phase_ledger_seen": True,
+                "pdd_reviewed": True,
+                "ddd_reviewed": True,
+                "sdd_reviewed": True,
+                "tdd_reviewed": True,
+            }
+        )
+        self.assertIn("phase_reviews", contract.missing_items)
+
+    def test_engineering_closure_with_ledger_digest_review_id_allows_phase_reviews(self) -> None:
+        contract = self._contract(
+            {
+                "runtime": "codex",
+                "turn_stage": "coding",
+                "changed_paths": ["src/runtime_governance/process_phase.py"],
+                "process_phase_ledger_seen": True,
+                "process_phase_ledgers": [_complete_phase_ledger()],
+                "pdd_reviewed": True,
+                "ddd_reviewed": True,
+                "sdd_reviewed": True,
+                "tdd_reviewed": True,
+            }
+        )
+        self.assertNotIn("phase_reviews", contract.missing_items)
+
+    def test_engineering_closure_with_ledger_missing_review_id_needs_phase_reviews(self) -> None:
+        contract = self._contract(
+            {
+                "runtime": "codex",
+                "turn_stage": "coding",
+                "changed_paths": ["src/runtime_governance/process_phase.py"],
+                "process_phase_ledger_seen": True,
+                "process_phase_ledgers": [_complete_phase_ledger(missing_review_id="tdd")],
+                "pdd_reviewed": True,
+                "ddd_reviewed": True,
+                "sdd_reviewed": True,
+                "tdd_reviewed": True,
+            }
+        )
+        self.assertIn("phase_reviews", contract.missing_items)
+
+    def test_engineering_closure_with_not_applicable_reason_allows_phase_skip(self) -> None:
+        contract = self._contract(
+            {
+                "runtime": "codex",
+                "turn_stage": "coding",
+                "changed_paths": ["docs/HOOKS.md"],
+                "process_phase_ledger_seen": True,
+                "process_phase_ledgers": [
+                    _complete_phase_ledger(
+                        not_applicable={
+                            "ddd": "documentation-only local typo fix with no domain ownership change"
+                        }
+                    )
+                ],
             }
         )
         self.assertNotIn("phase_reviews", contract.missing_items)

@@ -25,12 +25,35 @@ def _load_common():
     return module
 
 
+def _complete_phase_state() -> dict[str, object]:
+    digest = "sha256:" + ("a" * 64)
+    phases = ("pdd", "ddd", "sdd", "tdd")
+    return {
+        "process_phase_ledger_seen": True,
+        "process_phase_ledgers": [
+            {
+                "route_id": "active-runtime-route",
+                "current_phase": "implementation",
+                "required_phases": list(phases),
+                "phase_status": {phase: "reviewed" for phase in phases},
+                "artifact_digests": {phase: digest for phase in phases},
+                "review_ids": {phase: f"{phase}-review-1" for phase in phases},
+                "validation_signal_present": True,
+            }
+        ],
+        "pdd_reviewed": True,
+        "ddd_reviewed": True,
+        "sdd_reviewed": True,
+        "tdd_reviewed": True,
+    }
+
+
 def _seed_state(cwd: Path, cache: Path, **fields: object) -> None:
     common = _load_common()
     previous_cache = os.environ.get("XDG_CACHE_HOME")
     os.environ["XDG_CACHE_HOME"] = str(cache)
     try:
-        state: dict[str, object] = {"runtime": "copilot"}
+        state: dict[str, object] = {"runtime": "copilot", **_complete_phase_state()}
         state.update(fields)
         common.save_state(cwd, state)
     finally:
@@ -177,33 +200,15 @@ class CopilotRuntimeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.strip(), "")
 
-    def test_stop_block_mode_is_silent_advisory_for_copilot(self) -> None:
-        # Copilot has no non-blocking Stop advisory channel; advisory Stop output is silent.
+    def test_stop_block_mode_blocks_incomplete_evidence_for_copilot(self) -> None:
+        # Copilot block mode must not silently continue when closure evidence is incomplete.
         with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
             env = os.environ.copy()
             env["XDG_CACHE_HOME"] = cache
             env["CHANGEFORGE_AGENT"] = "copilot"
             env["CHANGEFORGE_HOOK_MODE"] = "block"
 
-            seed = subprocess.run(
-                [
-                    sys.executable,
-                    "-c",
-                    (
-                        "import importlib.util, pathlib, os; "
-                        f"p=pathlib.Path({str(SCRIPT_DIR / 'changeforge_common.py')!r}); "
-                        "s=importlib.util.spec_from_file_location('cf', p); "
-                        "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
-                        f"m.save_state(pathlib.Path({cwd!r}), {{'runtime':'copilot','changed_paths':['a.py']}})"
-                    ),
-                ],
-                text=True,
-                capture_output=True,
-                cwd=cwd,
-                env=env,
-                check=False,
-            )
-            self.assertEqual(seed.returncode, 0, seed.stderr)
+            _seed_state(Path(cwd), Path(cache), changed_paths=["a.py"])
 
             result = subprocess.run(
                 [sys.executable, str(SCRIPT_DIR / "changeforge_stop_closure_gate.py")],
@@ -222,7 +227,9 @@ class CopilotRuntimeTests(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(result.stdout.strip(), "")
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload.get("decision"), "block")
+            self.assertIn("ChangeForge Closure Gate reminder", payload.get("reason", ""))
 
     def test_stop_block_mode_does_not_block_when_closure_evidence_is_complete(self) -> None:
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:

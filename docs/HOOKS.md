@@ -417,6 +417,10 @@ Hook state is merged through explicit reducers:
   `process_phase_ledger_seen`, `phase_review_seen`,
   `phase_repair_required`, `phase_rereview_required`, and
   `phase_rereview_passed`;
+- `pdd_reviewed`, `ddd_reviewed`, `sdd_reviewed`, and `tdd_reviewed` are
+  telemetry shortcuts only. Closure proof requires the latest
+  `process_phase_ledger` to show each required phase as `reviewed` with an
+  artifact digest and review ID, or `not_applicable` with a concrete reason;
 - booleans such as `read_evidence_seen`, `review_evidence_seen`, and
   `implementation_preflight_required` use OR semantics, so `False` cannot erase
   a prior `True`;

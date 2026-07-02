@@ -247,9 +247,22 @@ SENIOR_JUDGMENT_MANIFEST = (
 )
 
 
-def complete_phase_state() -> dict[str, bool]:
+def complete_phase_state() -> dict[str, object]:
+    digest = "sha256:" + ("a" * 64)
+    phases = ("pdd", "ddd", "sdd", "tdd")
     return {
         "process_phase_ledger_seen": True,
+        "process_phase_ledgers": [
+            {
+                "route_id": "active-runtime-route",
+                "current_phase": "implementation",
+                "required_phases": list(phases),
+                "phase_status": {phase: "reviewed" for phase in phases},
+                "artifact_digests": {phase: digest for phase in phases},
+                "review_ids": {phase: f"{phase}-review-1" for phase in phases},
+                "validation_signal_present": True,
+            }
+        ],
         "pdd_reviewed": True,
         "ddd_reviewed": True,
         "sdd_reviewed": True,

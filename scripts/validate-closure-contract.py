@@ -44,12 +44,25 @@ def _contract(state: dict[str, Any], *, runtime: str = "codex"):
 
 
 def _phase_state(**overrides: object) -> dict[str, object]:
+    digest = "sha256:" + ("a" * 64)
+    phases = ("pdd", "ddd", "sdd", "tdd")
     state: dict[str, object] = {
         "runtime": "codex",
         "turn_stage": "repair",
         "changed_paths": ["src/runtime_governance/process_phase.py"],
         "validation_freshness_seen": True,
         "process_phase_ledger_seen": True,
+        "process_phase_ledgers": [
+            {
+                "route_id": "active-runtime-route",
+                "current_phase": "implementation",
+                "required_phases": list(phases),
+                "phase_status": {phase: "reviewed" for phase in phases},
+                "artifact_digests": {phase: digest for phase in phases},
+                "review_ids": {phase: f"{phase}-review-1" for phase in phases},
+                "validation_signal_present": True,
+            }
+        ],
         "pdd_reviewed": True,
         "ddd_reviewed": True,
         "sdd_reviewed": True,

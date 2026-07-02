@@ -17,9 +17,32 @@ from changeforge_adapter_capabilities import adapter_capabilities_for  # noqa: E
 from changeforge_closure_contract import ClosureContract  # noqa: E402
 
 
+def _complete_phase_state() -> dict[str, object]:
+    digest = "sha256:" + ("a" * 64)
+    phases = ("pdd", "ddd", "sdd", "tdd")
+    return {
+        "process_phase_ledger_seen": True,
+        "process_phase_ledgers": [
+            {
+                "route_id": "active-runtime-route",
+                "current_phase": "implementation",
+                "required_phases": list(phases),
+                "phase_status": {phase: "reviewed" for phase in phases},
+                "artifact_digests": {phase: digest for phase in phases},
+                "review_ids": {phase: f"{phase}-review-1" for phase in phases},
+                "validation_signal_present": True,
+            }
+        ],
+        "pdd_reviewed": True,
+        "ddd_reviewed": True,
+        "sdd_reviewed": True,
+        "tdd_reviewed": True,
+    }
+
+
 def complete_contract(state: dict, *, runtime: str = "codex") -> ClosureContract:
     return ClosureContract.from_state(
-        state,
+        {**_complete_phase_state(), **state},
         route_manifest_complete=True,
         repository_context_present=True,
         implementation_preflight_complete=True,

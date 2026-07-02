@@ -116,8 +116,8 @@ No frontmatter description risks detected.
 | `data-api-contract-changer` | 231 | 3938 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `domain-impact-modeler` | 222 | 3662 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `acceptance-criteria-builder` | 217 | 3037 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `phase-review-capsule` | 217 | 1890 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-impact-analyzer` | 215 | 3386 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `phase-review-capsule` | 213 | 1859 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-intake-compiler` | 203 | 3337 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `logging-design-gate` | 183 | 2545 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `development-process-orchestrator` | 310 | 3460 | 100 | 75 | 100 | 32 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
@@ -314,14 +314,14 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 
 | Files | Excerpt |
 | --- | --- |
-| 18 | do not load every reference by default. treat references as targeted support selected by t |
 | 18 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
+| 18 | do not load every reference by default. treat references as targeted support selected by t |
 | 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
-| 14 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
-| 14 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 14 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
+| 14 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 14 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 12 | these triggers are hidden-risk escalators, not ordinary checklist items. |
 | 7 | **block/pass decision** with required conditions for approval. |
 | 6 | non-trivial direct use still requires `repository-context-map` before planning when affect |

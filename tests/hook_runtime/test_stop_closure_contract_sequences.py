@@ -16,11 +16,35 @@ from changeforge_adapter_capabilities import adapter_capabilities_for  # noqa: E
 from changeforge_closure_contract import ClosureContract  # noqa: E402
 
 
+def _complete_phase_state() -> dict[str, object]:
+    digest = "sha256:" + ("a" * 64)
+    phases = ("pdd", "ddd", "sdd", "tdd")
+    return {
+        "process_phase_ledger_seen": True,
+        "process_phase_ledgers": [
+            {
+                "route_id": "active-runtime-route",
+                "current_phase": "implementation",
+                "required_phases": list(phases),
+                "phase_status": {phase: "reviewed" for phase in phases},
+                "artifact_digests": {phase: digest for phase in phases},
+                "review_ids": {phase: f"{phase}-review-1" for phase in phases},
+                "validation_signal_present": True,
+            }
+        ],
+        "pdd_reviewed": True,
+        "ddd_reviewed": True,
+        "sdd_reviewed": True,
+        "tdd_reviewed": True,
+    }
+
+
 def _complete_contract(state: dict, *, runtime: str = "codex") -> ClosureContract:
+    complete_state = {**_complete_phase_state(), **state}
     return ClosureContract.from_state(
-        state,
+        complete_state,
         route_manifest_complete=True,
-        stage_route_present=bool(state.get("stage_route_present", True)),
+        stage_route_present=bool(complete_state.get("stage_route_present", True)),
         repository_context_present=True,
         implementation_preflight_complete=True,
         validation_evidence_present=True,
@@ -326,6 +350,7 @@ class StopClosureContractSequenceTests(unittest.TestCase):
     def test_command_only_validation_remains_weak(self) -> None:
         contract = ClosureContract.from_state(
             {
+                **_complete_phase_state(),
                 "turn_stage": "coding",
                 "changed_paths": ["src/runtime_governance/closure.py"],
                 "validation_results": ["candidate:python -m unittest"],

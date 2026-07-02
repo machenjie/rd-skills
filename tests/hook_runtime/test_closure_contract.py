@@ -13,6 +13,29 @@ from changeforge_adapter_capabilities import adapter_capabilities_for  # noqa: E
 from changeforge_closure_contract import ClosureContract  # noqa: E402
 
 
+def _complete_phase_state() -> dict[str, object]:
+    digest = "sha256:" + ("a" * 64)
+    phases = ("pdd", "ddd", "sdd", "tdd")
+    return {
+        "process_phase_ledger_seen": True,
+        "process_phase_ledgers": [
+            {
+                "route_id": "active-runtime-route",
+                "current_phase": "implementation",
+                "required_phases": list(phases),
+                "phase_status": {phase: "reviewed" for phase in phases},
+                "artifact_digests": {phase: digest for phase in phases},
+                "review_ids": {phase: f"{phase}-review-1" for phase in phases},
+                "validation_signal_present": True,
+            }
+        ],
+        "pdd_reviewed": True,
+        "ddd_reviewed": True,
+        "sdd_reviewed": True,
+        "tdd_reviewed": True,
+    }
+
+
 class ClosureContractTests(unittest.TestCase):
     def test_engineering_contract_flags_missing_route_validation_and_risk(self) -> None:
         contract = ClosureContract.from_state(
@@ -59,6 +82,7 @@ class ClosureContractTests(unittest.TestCase):
     def test_ordinary_codex_closure_is_ready_despite_catalog_unsupported_checks(self) -> None:
         contract = ClosureContract.from_state(
             {
+                **_complete_phase_state(),
                 "turn_stage": "coding",
                 "changed_paths": ["src/app.py"],
                 "runtime_adapter": {
@@ -114,6 +138,7 @@ class ClosureContractTests(unittest.TestCase):
     def test_route_repair_without_branch_summary_is_not_ready(self) -> None:
         contract = ClosureContract.from_state(
             {
+                **_complete_phase_state(),
                 "turn_stage": "coding",
                 "changed_paths": ["src/runtime_governance/closure.py"],
                 "validation_results": ["pass:python -m unittest"],
@@ -143,6 +168,7 @@ class ClosureContractTests(unittest.TestCase):
     def test_route_repair_with_branch_summary_can_close_ready(self) -> None:
         contract = ClosureContract.from_state(
             {
+                **_complete_phase_state(),
                 "turn_stage": "coding",
                 "changed_paths": ["src/runtime_governance/closure.py"],
                 "validation_results": ["pass:python -m unittest"],

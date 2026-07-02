@@ -553,9 +553,6 @@ def _phase_evidence_required(state: dict) -> bool:
 
 
 def _phase_reviews_complete(state: dict) -> bool:
-    phase_flags = ("pdd_reviewed", "ddd_reviewed", "sdd_reviewed", "tdd_reviewed")
-    if all(state.get(flag) is True for flag in phase_flags):
-        return True
     ledger = _latest_phase_ledger(state)
     if not ledger:
         return False
@@ -563,7 +560,18 @@ def _phase_reviews_complete(state: dict) -> bool:
     digests = ledger.get("artifact_digests") if isinstance(ledger.get("artifact_digests"), dict) else {}
     review_ids = ledger.get("review_ids") if isinstance(ledger.get("review_ids"), dict) else {}
     reasons = ledger.get("not_applicable_reasons") if isinstance(ledger.get("not_applicable_reasons"), dict) else {}
-    for phase in ("pdd", "ddd", "sdd", "tdd"):
+    required = (
+        ledger.get("required_phases")
+        if isinstance(ledger.get("required_phases"), list)
+        else ["pdd", "ddd", "sdd", "tdd"]
+    )
+    required = [phase for phase in required if phase in {"pdd", "ddd", "sdd", "tdd"}] or [
+        "pdd",
+        "ddd",
+        "sdd",
+        "tdd",
+    ]
+    for phase in required:
         status = statuses.get(phase)
         if status == "reviewed" and digests.get(phase) and review_ids.get(phase):
             continue

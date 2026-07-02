@@ -873,7 +873,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 6,
-      "bullet_count": 68,
+      "bullet_count": 69,
       "classification": "KEEP_AS_IS",
       "code_block_count": 2,
       "context_efficiency_score": 98,
@@ -887,7 +887,7 @@
       "largest_section_lines": 66,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 5,
-      "line_count": 213,
+      "line_count": 217,
       "name": "phase-review-capsule",
       "optimality_section_length": 0,
       "output_contract_length": 66,
@@ -904,7 +904,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 1,
       "used_by_count": 0,
-      "word_count": 1859
+      "word_count": 1890
     },
     {
       "anti_example_section_length": 10,

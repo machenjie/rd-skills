@@ -20,8 +20,12 @@ phase has an independent passing `phase_review_result` with a digest matching
 the current capsule or ledger artifact. Reviewed phase status requires both an
 artifact digest and review ID; implementer self-approval, generic template
 content, unresolved SDD material choices, or TDD without validation signal block
-the next stage. Blocking review findings require a repair event tied to the
-finding ID and a passing re-review before closure.
+the next stage. The `pdd_reviewed`, `ddd_reviewed`, `sdd_reviewed`, and
+`tdd_reviewed` state booleans are telemetry shortcuts only; final closure proof
+requires the latest ledger-backed phase status with artifact digest and review
+ID, or a `not_applicable` status with a concrete reason. Blocking review
+findings require a repair event tied to the finding ID and a passing re-review
+before closure.
 Adapters that cannot enforce a phase gate must disclose degraded evidence rather
 than reporting full enforcement.
 

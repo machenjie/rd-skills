@@ -27,6 +27,10 @@ Provide a bounded contract for independent phase review. The skill turns parent-
 - The parent context may provide only `review_capsule` fields: bounded request summary, accepted constraints, bounded source evidence, artifact digest, and artifact summary.
 - The reviewer must return only `phase_review_result`; raw reasoning and transcript text are not parent-state evidence.
 - Implementer self-approval cannot pass a phase review.
+- `pdd_reviewed`, `ddd_reviewed`, `sdd_reviewed`, and `tdd_reviewed` booleans
+  are telemetry shortcuts only; closure proof requires ledger-backed reviewed
+  phase status with an artifact digest and review ID, or `not_applicable` with a
+  concrete reason.
 - `fail`, `needs_user_choice`, and `insufficient_evidence` verdicts block the next phase.
 - Every blocking finding must include `finding_id`, severity, evidence, required fix, and `blocks_next_stage`.
 - Repair must cite the original `finding_id`; re-review must cite the same `finding_id` and pass.

@@ -48,6 +48,29 @@ def run_hook(
     )
 
 
+def complete_phase_state() -> dict[str, object]:
+    digest = "sha256:" + ("a" * 64)
+    phases = ("pdd", "ddd", "sdd", "tdd")
+    return {
+        "process_phase_ledger_seen": True,
+        "process_phase_ledgers": [
+            {
+                "route_id": "active-runtime-route",
+                "current_phase": "implementation",
+                "required_phases": list(phases),
+                "phase_status": {phase: "reviewed" for phase in phases},
+                "artifact_digests": {phase: digest for phase in phases},
+                "review_ids": {phase: f"{phase}-review-1" for phase in phases},
+                "validation_signal_present": True,
+            }
+        ],
+        "pdd_reviewed": True,
+        "ddd_reviewed": True,
+        "sdd_reviewed": True,
+        "tdd_reviewed": True,
+    }
+
+
 def seed_state(cwd: Path, cache: Path) -> None:
     common = load_common()
     previous_cache = os.environ.get("XDG_CACHE_HOME")
@@ -56,6 +79,7 @@ def seed_state(cwd: Path, cache: Path) -> None:
         common.save_state(
             cwd,
             {
+                **complete_phase_state(),
                 "runtime": "codex",
                 "changed_paths": ["src/services/order_service.py"],
                 "structure_findings": ["src/services/order_service.py: new file"],
@@ -156,7 +180,7 @@ class CodexOutputProtocolTests(unittest.TestCase):
         self.assertIn("systemMessage", payload)
         self.assertIn("ChangeForge Closure Gate reminder", payload["systemMessage"])
 
-    def test_stop_block_mode_outputs_advisory_system_message(self) -> None:
+    def test_stop_block_mode_blocks_incomplete_closure_evidence(self) -> None:
         event = {
             "hook_event_name": "Stop",
             "stop_hook_active": False,
@@ -175,8 +199,8 @@ class CodexOutputProtocolTests(unittest.TestCase):
             )
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
-        self.assertNotIn("decision", payload)
-        self.assertIn("systemMessage", payload)
+        self.assertEqual(payload.get("decision"), "block")
+        self.assertIn("ChangeForge Closure Gate reminder", payload.get("reason", ""))
 
     def test_stop_block_with_active_stop_hook_does_not_continue(self) -> None:
         event = {
@@ -197,8 +221,8 @@ class CodexOutputProtocolTests(unittest.TestCase):
             )
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
-        self.assertNotEqual(payload.get("decision"), "block")
-        self.assertIn("systemMessage", payload)
+        self.assertEqual(payload.get("decision"), "block")
+        self.assertIn("ChangeForge Closure Gate reminder", payload.get("reason", ""))
 
     def test_post_tool_use_includes_comment_quality_context(self) -> None:
         event = {
