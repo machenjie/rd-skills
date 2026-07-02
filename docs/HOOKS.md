@@ -17,7 +17,9 @@ The hook runtime is bounded runtime support for ChangeForge workflows. It:
 - records bounded read/edit/test/review/repair evidence for closure checks;
 - blocks high-confidence user-owned SDD material choices before mutation or
   handoff when the adapter supports blocking;
-- blocks Stop only when required closure evidence is missing and the runtime
+- records Stop closure gaps as closure risk and telemetry facts by default; it
+  only blocks Stop when a maintainer explicitly sets
+  `CHANGEFORGE_STOP_MODE=block` or `CHANGEFORGE_HOOK_MODE=block` and the runtime
   supports a blocking Stop decision.
 
 The hook runtime is not a skill, not a router, not a replacement for direct

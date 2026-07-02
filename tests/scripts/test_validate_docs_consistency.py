@@ -184,6 +184,35 @@ class ValidateDocsConsistencyTests(unittest.TestCase):
         errors = self._errors_for(lambda root: _write(root / "docs" / "HOOKS.md", "stop_closure: block\n"))
         self.assertTrue(any("stop_closure: block" in error for error in errors), errors)
 
+    def test_stop_closure_blocks_required_evidence_phrase_fails(self) -> None:
+        errors = self._errors_for(
+            lambda root: _write(
+                root / "docs" / "HOOKS.md",
+                "blocks Stop only when required closure evidence is missing and the runtime supports a blocking Stop decision.\n",
+            )
+        )
+        self.assertTrue(any("blocks Stop only when required closure evidence is missing" in error for error in errors), errors)
+
+    def test_stop_closure_only_blocks_without_override_phrase_fails(self) -> None:
+        errors = self._errors_for(
+            lambda root: _write(root / "docs" / "HOOKS.md", "Stop closure only blocks Stop when evidence is missing.\n")
+        )
+        self.assertTrue(any("blocks Stop only when" in error for error in errors), errors)
+
+    def test_stop_closure_explicit_block_override_phrase_does_not_fail(self) -> None:
+        errors = self._errors_for(
+            lambda root: _write(
+                root / "docs" / "USAGE.md",
+                "\n".join(
+                    [
+                        "Stop closure records gaps as closure risk and telemetry facts by default; it only blocks Stop when a maintainer explicitly sets",
+                        "`CHANGEFORGE_STOP_MODE=block` or `CHANGEFORGE_HOOK_MODE=block` and the runtime supports a blocking Stop decision.",
+                    ]
+                ),
+            )
+        )
+        self.assertEqual(errors, [])
+
     def test_stop_closure_advisory_phrase_does_not_fail(self) -> None:
         errors = self._errors_for(
             lambda root: _write(

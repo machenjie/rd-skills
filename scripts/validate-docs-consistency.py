@@ -117,7 +117,22 @@ STOP_CLOSURE_BLOCK_PATTERNS = (
         "strict/blocking Stop policy",
         r"strict/blocking\s+stop\s+policy",
     ),
+    (
+        "blocks Stop when required closure evidence is missing",
+        r"blocks\s+stop\s+when\s+required\s+closure\s+evidence\s+is\s+missing",
+    ),
+    (
+        "blocks Stop only when required closure evidence is missing",
+        r"blocks\s+stop\s+only\s+when\s+required\s+closure\s+evidence\s+is\s+missing",
+    ),
+    (
+        "blocks Stop only when",
+        r"(?:blocks\s+stop\s+only\s+when(?!\s+required\s+closure\s+evidence\s+is\s+missing)|only\s+blocks\s+stop\s+when)",
+    ),
 )
+STOP_CLOSURE_OVERRIDE_PATTERNS = {
+    "blocks Stop only when",
+}
 LICENSE_STALE_MARKERS = (
     "proprietary",
     "owner decision required before open-source publication",
@@ -239,6 +254,27 @@ def _hook_default_errors(root: Path, markdown_files: list[Path]) -> list[str]:
     return errors
 
 
+def _has_explicit_stop_block_override(lines: list[str], number: int) -> bool:
+    context = " ".join(lines[max(0, number - 2) : min(len(lines), number + 3)])
+    normalized = re.sub(r"[`\s]+", " ", context.casefold()).strip()
+    has_block_override = (
+        "changeforge_stop_mode=block" in normalized
+        or "changeforge_hook_mode=block" in normalized
+    )
+    has_explicit_override_language = any(
+        phrase in normalized
+        for phrase in (
+            "explicit",
+            "configured",
+            "maintainer",
+            "override",
+            "sets changeforge_stop_mode=block",
+            "sets changeforge_hook_mode=block",
+        )
+    )
+    return has_block_override and has_explicit_override_language
+
+
 def _stop_closure_default_errors(root: Path, markdown_files: list[Path]) -> list[str]:
     errors: list[str] = []
     for path in markdown_files:
@@ -248,6 +284,11 @@ def _stop_closure_default_errors(root: Path, markdown_files: list[Path]) -> list
             normalized = re.sub(r"[`\s]+", " ", line.casefold()).strip()
             for label, pattern in STOP_CLOSURE_BLOCK_PATTERNS:
                 if re.search(pattern, normalized):
+                    if label in STOP_CLOSURE_OVERRIDE_PATTERNS and _has_explicit_stop_block_override(
+                        lines,
+                        number,
+                    ):
+                        continue
                     errors.append(f"{rel}:{number}: stale Stop closure block-default phrase: {label}")
             if "stop closure follows the stop closure policy on supported events" in normalized:
                 context = " ".join(lines[max(0, number - 3) : min(len(lines), number + 2)]).casefold()
