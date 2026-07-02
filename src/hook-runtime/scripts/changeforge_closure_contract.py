@@ -540,15 +540,56 @@ def _phase_closure_findings(state: dict) -> tuple[list[str], list[str]]:
 def _phase_evidence_required(state: dict) -> bool:
     if _profile(state) != "engineering":
         return False
-    stage = str(state.get("turn_stage") or "").strip()
+    if _phase_ledgers(state):
+        return True
+    if state.get("process_phase_blocked") or state.get("process_phase_ledger_seen"):
+        return True
+    if _has_process_phase_signal(state):
+        return True
+    if any(_path_targets_process_phase(path) for path in _phase_candidate_paths(state)):
+        return True
+    return False
+
+
+def _has_process_phase_signal(state: dict) -> bool:
+    fields = (
+        "phase_review_results",
+        "phase_review_findings",
+        "phase_repair_events",
+        "phase_rereview_events",
+    )
+    if any(_list(state.get(field)) for field in fields):
+        return True
+    if any(
+        state.get(field)
+        for field in (
+            "phase_review_seen",
+            "phase_repair_required",
+            "phase_rereview_required",
+            "phase_rereview_passed",
+        )
+    ):
+        return True
+    values = [
+        *_active_requirement_text(state),
+        *_list(state.get("closure_required_checks")),
+    ]
+    return any("process_phase" in str(value).casefold() for value in values)
+
+
+def _phase_candidate_paths(state: dict) -> list[str]:
+    paths: list[str] = []
+    for key in ("changed_paths", "deleted_paths", "generated_paths", "config_changes"):
+        paths.extend(_list(state.get(key)))
+    return paths
+
+
+def _path_targets_process_phase(path: str) -> bool:
+    normalized = str(path or "").replace("\\", "/").casefold()
     return bool(
-        state.get("changed_paths")
-        or state.get("deleted_paths")
-        or state.get("generated_paths")
-        or state.get("config_changes")
-        or _phase_ledgers(state)
-        or state.get("process_phase_blocked")
-        or stage in {"coding", "implementation", "repair", "review", "validation", "closure"}
+        "process_phase" in normalized
+        or "process-phase" in normalized
+        or "changeforge_process_phase" in normalized
     )
 
 
