@@ -69,6 +69,22 @@ class HookPolicyTests(unittest.TestCase):
             self.assertTrue(self.policy.should_block("stop_closure", confidence="high"))
             self.assertFalse(self.policy.should_block("stop_closure", confidence="medium"))
 
+    def test_global_warn_mode_downgrades_default_block_gates(self) -> None:
+        with patch.dict(os.environ, {"CHANGEFORGE_HOOK_MODE": "warn"}, clear=True):
+            self.assertEqual(self.policy.gate_mode("sdd_material_choice"), "warn")
+            self.assertEqual(self.policy.gate_mode("pre_edit_structure"), "warn")
+            self.assertEqual(self.policy.gate_mode("stop_closure"), "warn")
+
+    def test_gate_specific_mode_overrides_global_warn(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"CHANGEFORGE_HOOK_MODE": "warn", "CHANGEFORGE_SDD_CHOICE_MODE": "block"},
+            clear=True,
+        ):
+            self.assertEqual(self.policy.gate_mode("sdd_material_choice"), "block")
+            self.assertEqual(self.policy.gate_mode("pre_edit_structure"), "warn")
+            self.assertEqual(self.policy.gate_mode("stop_closure"), "warn")
+
     def test_gate_specific_mode_overrides_default(self) -> None:
         with patch.dict(
             os.environ,

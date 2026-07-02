@@ -346,6 +346,78 @@ class InstallHooksTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("only supported for codex, claude, and copilot", result.stderr)
 
+    def test_unsupported_agent_explicit_professional_injection_errors(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(INSTALL_SCRIPT),
+                    "--agent",
+                    "cline",
+                    "--scope",
+                    "project",
+                    "--target",
+                    str(project),
+                    "--profile",
+                    "recommended",
+                    "--professional-injection",
+                    "--dry-run",
+                ],
+                text=True,
+                capture_output=True,
+                cwd=str(ROOT),
+                env=os.environ.copy(),
+                check=False,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("only supported for codex, claude, and copilot", result.stderr)
+
+    def test_unsupported_scope_default_skips_hooks_without_error(self) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(INSTALL_SCRIPT),
+                "--agent",
+                "codex",
+                "--scope",
+                "admin",
+                "--profile",
+                "recommended",
+                "--dry-run",
+            ],
+            text=True,
+            capture_output=True,
+            cwd=str(ROOT),
+            env=os.environ.copy(),
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("hooks unsupported for codex admin", result.stdout)
+
+    def test_unsupported_scope_explicit_hooks_errors(self) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(INSTALL_SCRIPT),
+                "--agent",
+                "codex",
+                "--scope",
+                "admin",
+                "--profile",
+                "recommended",
+                "--with-hooks",
+                "--dry-run",
+            ],
+            text=True,
+            capture_output=True,
+            cwd=str(ROOT),
+            env=os.environ.copy(),
+            check=False,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("only supported for codex, claude, and copilot", result.stderr)
+
     def test_hook_support_package_manifest_rejects_path_like_names(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             manifest = Path(tmp) / ".changeforge-hook-manifest.json"

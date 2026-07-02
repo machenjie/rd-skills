@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import zipfile
@@ -28,6 +29,7 @@ from validation_utils import (
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST_DIR = ROOT / "dist"
+HOOK_RUNTIME_ROOT = ROOT / "src" / "hook-runtime"
 REGISTRY_DIR = ROOT / "src" / "registry"
 PROFILE_NAMES = ("recommended", "full", "dev")
 NON_DEV_PROFILES = {"recommended", "full"}
@@ -235,6 +237,39 @@ HOOK_SUPPORT_IMPORT_ROOTS = (
     "copilot/project/.github/hooks/changeforge",
     "copilot/user/.copilot/hooks/changeforge",
 )
+HOOK_TEMPLATE_DIST_SPECS = (
+    (
+        HOOK_RUNTIME_ROOT / "templates" / "codex" / "hooks.json",
+        DIST_DIR / "codex" / "project" / ".codex" / "hooks",
+    ),
+    (
+        HOOK_RUNTIME_ROOT / "templates" / "codex-user" / "hooks.json",
+        DIST_DIR / "codex" / "user" / ".codex" / "hooks",
+    ),
+    (
+        HOOK_RUNTIME_ROOT
+        / "templates"
+        / "claude"
+        / "settings.changeforge-hooks.fragment.json",
+        DIST_DIR / "claude" / "project" / ".claude" / "hooks",
+    ),
+    (
+        HOOK_RUNTIME_ROOT
+        / "templates"
+        / "claude-user"
+        / "settings.changeforge-hooks.fragment.json",
+        DIST_DIR / "claude" / "user" / ".claude" / "hooks",
+    ),
+    (
+        HOOK_RUNTIME_ROOT / "templates" / "copilot" / "changeforge-hooks.json",
+        DIST_DIR / "copilot" / "project" / ".github" / "hooks" / "changeforge",
+    ),
+    (
+        HOOK_RUNTIME_ROOT / "templates" / "copilot-user" / "changeforge-hooks.json",
+        DIST_DIR / "copilot" / "user" / ".copilot" / "hooks" / "changeforge",
+    ),
+)
+HOOK_SCRIPT_REFERENCE_RE = re.compile(r"\b(changeforge_[A-Za-z0-9_]+\.py)\b")
 HOOK_SAFE_SOURCE_REFERENCE_FILES = (
     "repository_intelligence/graph/file_classifier.py",
 )
@@ -562,6 +597,7 @@ def _validate_hook_runtime(errors: list[str]) -> None:
         path = DIST_DIR / relative
         if not path.is_file():
             errors.append(f"missing hook runtime file: dist/{relative}")
+    _validate_hook_template_script_references(errors)
     _validate_hook_support_imports(errors)
     _validate_hook_manifest(
         DIST_DIR / "codex/project/.codex/.changeforge-hook-manifest.json",
@@ -673,6 +709,49 @@ def _validate_hook_manifest(path: Path, *, agent: str, scope: str, errors: list[
         errors.append(
             f"{relpath(ROOT, path)}: session_bootstrap_hook must be True"
         )
+
+
+def _validate_hook_template_script_references(errors: list[str]) -> None:
+    for template_path, dist_hooks_dir in HOOK_TEMPLATE_DIST_SPECS:
+        if not template_path.is_file():
+            errors.append(f"missing hook template: {relpath(ROOT, template_path)}")
+            continue
+        try:
+            data = json.loads(template_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            errors.append(f"{relpath(ROOT, template_path)}: invalid JSON: {exc}")
+            continue
+        if not isinstance(data, dict):
+            errors.append(f"{relpath(ROOT, template_path)}: hook template must be a JSON object")
+            continue
+        for script_name in _referenced_hook_scripts(data):
+            dist_script = dist_hooks_dir / script_name
+            if not dist_script.is_file():
+                errors.append(
+                    f"{relpath(ROOT, template_path)}: references {script_name} but "
+                    f"{relpath(ROOT, dist_script)} is missing"
+                )
+
+
+def _referenced_hook_scripts(data: dict[str, Any]) -> list[str]:
+    scripts: set[str] = set()
+    for command in _template_commands(data.get("hooks", {})):
+        scripts.update(match.group(1) for match in HOOK_SCRIPT_REFERENCE_RE.finditer(command))
+    return sorted(scripts)
+
+
+def _template_commands(value: Any) -> list[str]:
+    commands: list[str] = []
+    if isinstance(value, dict):
+        command = value.get("command")
+        if isinstance(command, str):
+            commands.append(command)
+        for child in value.values():
+            commands.extend(_template_commands(child))
+    elif isinstance(value, list):
+        for child in value:
+            commands.extend(_template_commands(child))
+    return commands
 
 
 def _expected_profile_names(

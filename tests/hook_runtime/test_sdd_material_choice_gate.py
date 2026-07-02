@@ -33,6 +33,7 @@ def run_gate(
     cache: Path,
     *,
     mode: str | None = None,
+    global_mode: str | None = None,
     script: Path = GATE_SCRIPT,
 ) -> subprocess.CompletedProcess[str]:
     payload = {**event, "cwd": str(cwd)}
@@ -41,6 +42,8 @@ def run_gate(
     env["CHANGEFORGE_AGENT"] = "codex"
     env.pop("CHANGEFORGE_HOOK_MODE", None)
     env.pop("CHANGEFORGE_SDD_CHOICE_MODE", None)
+    if global_mode is not None:
+        env["CHANGEFORGE_HOOK_MODE"] = global_mode
     if mode is not None:
         env["CHANGEFORGE_SDD_CHOICE_MODE"] = mode
     return subprocess.run(
@@ -93,6 +96,9 @@ def assert_blocked(test_case: unittest.TestCase, result: subprocess.CompletedPro
     test_case.assertEqual(result.returncode, 0, result.stderr)
     payload = parsed_stdout(result)
     test_case.assertEqual(payload.get("decision"), "block", result.stdout)
+    test_case.assertIn("reason", payload, result.stdout)
+    test_case.assertNotIn("hookSpecificOutput", payload, result.stdout)
+    test_case.assertNotIn("additionalContext", payload, result.stdout)
     reason = str(payload.get("reason", ""))
     test_case.assertIn("ChangeForge SDD Material Choice Gate: BLOCKED", reason)
     return reason
@@ -154,6 +160,52 @@ def assumed_choice(evidence: str) -> str:
 
 
 class SddMaterialChoiceGateTests(unittest.TestCase):
+    def test_pretool_codex_block_protocol_for_material_mutation_tools(self) -> None:
+        patch = (
+            "*** Begin Patch\n"
+            "*** Add File: src/shared/utils/date_helpers.ts\n"
+            "+export function formatDate(value: Date) { return value.toISOString(); }\n"
+            "*** End Patch\n"
+        )
+        events = [
+            public_api_event(),
+            {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "src/api/payments.ts",
+                    "content": "export function createPayment() { return null; }",
+                },
+            },
+            {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "MultiEdit",
+                "tool_input": {
+                    "file_path": "src/security/authz.ts",
+                    "edits": [
+                        {
+                            "old_string": "",
+                            "new_string": "export function canAccessTenant() { return true; }",
+                        }
+                    ],
+                },
+            },
+            {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "apply_patch",
+                "tool_input": {"command": patch},
+            },
+            {
+                "hook_event_name": "PreToolUse",
+                "tool_name": "Bash",
+                "tool_input": {"command": "python manage.py migrate billing"},
+            },
+        ]
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            for event in events:
+                with self.subTest(tool=event["tool_name"]):
+                    assert_blocked(self, run_gate(event, Path(tmp), Path(cache)))
+
     def test_pretool_edit_new_public_api_without_choice_blocks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
             reason = assert_blocked(self, run_gate(public_api_event(), Path(tmp), Path(cache)))
@@ -268,6 +320,28 @@ class SddMaterialChoiceGateTests(unittest.TestCase):
             self.assertNotEqual(payload.get("decision"), "block")
             context = payload.get("hookSpecificOutput", {}).get("additionalContext", "")
             self.assertIn("ChangeForge SDD Material Choice Gate: advisory", context)
+
+    def test_global_warn_mode_downgrades_sdd_choice_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            result = run_gate(public_api_event(), Path(tmp), Path(cache), global_mode="warn")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = parsed_stdout(result)
+            self.assertNotEqual(payload.get("decision"), "block")
+            self.assertIn(
+                "ChangeForge SDD Material Choice Gate: advisory",
+                payload.get("hookSpecificOutput", {}).get("additionalContext", ""),
+            )
+
+    def test_gate_specific_block_overrides_global_warn_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            result = run_gate(
+                public_api_event(),
+                Path(tmp),
+                Path(cache),
+                mode="block",
+                global_mode="warn",
+            )
+            assert_blocked(self, result)
 
     def test_off_mode_is_silent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:

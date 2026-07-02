@@ -53,6 +53,7 @@ except Exception:  # pragma: no cover - hook runtime must fail open.
 
 MAX_TRANSCRIPT_BYTES = 1_000_000
 _GATE_RUNTIME = ""
+MATERIAL_CHOICE_REVIEW_FINDING = "material_sdd_choice_without_user_resolution"
 
 CLOSURE_KEYWORDS = {
     "skills": ["skill", "ChangeForge", "router", "路由", "技能"],
@@ -628,6 +629,7 @@ def _has_closure_surface(state: dict) -> bool:
         or state.get("read_evidence_seen")
         or state.get("review_evidence_seen")
         or state.get("reviewed_diff_evidence_seen")
+        or _has_unresolved_material_choice_review_finding(state)
         or state.get("repair_evidence_seen")
         or state.get("permission_gate_seen")
         or explicit_engineering_stage
@@ -728,6 +730,12 @@ def _stop_findings(state: dict) -> dict[str, list[str]]:
             "repair_findings",
             "repair_events",
             "rereview_events",
+            "choice_ids",
+            "choice_triggers",
+            "choice_status",
+            "material_choice_surfaces",
+            "blocked_tool_category",
+            "bounded_paths",
             "validation_results",
             "changed_path_risk_surfaces",
             "command_risk_surfaces",
@@ -804,6 +812,12 @@ def _closure_message(
         details.append(f"- read paths: {', '.join(state['read_paths'][:8])}")
     if state.get("review_targets"):
         details.append(f"- review targets: {', '.join(state['review_targets'][:8])}")
+    if state.get("review_findings"):
+        details.append(f"- review findings: {', '.join(state['review_findings'][:8])}")
+    if state.get("material_choice_surfaces"):
+        details.append(
+            f"- material choice surfaces: {', '.join(state['material_choice_surfaces'][:8])}"
+        )
     if state.get("permission_decisions"):
         details.append(f"- permission decisions: {', '.join(state['permission_decisions'][:8])}")
     for label, state_key in (
@@ -919,6 +933,12 @@ def _closure_message(
             " and residual risk, or an allowed skip_reason: trivial-local-edit,"
             " no-semantic-impact, no-engineering-action, formatting-only, or"
             " documentation-only-no-behavior-change."
+        )
+    if "material_choice_resolution" in missing:
+        headline += (
+            " MISSING: review found an unresolved material SDD choice."
+            " Ask the user to choose the design direction or include structured"
+            " changeforge_sdd_choice resolution_evidence before ready handoff."
         )
     stage_missing = _stage_missing_groups(final_text, state)
     if stage_missing:
@@ -1151,6 +1171,10 @@ def _missing_keyword_groups(
         for group in _stage_missing_groups(text, state):
             if group not in missing:
                 missing.append(group)
+        if _has_unresolved_material_choice_review_finding(state) and not _has_material_choice_resolution(
+            text, state
+        ):
+            missing.append("material_choice_resolution")
         if not _has_any_keyword(lowered, READ_REVIEW_RISK_KEYWORDS):
             missing.append("risk")
         if _unverified_completion(text, state) and "completion_evidence" not in missing:
@@ -1193,6 +1217,10 @@ def _missing_keyword_groups(
             missing.append(group)
     if _unverified_completion(text, state) and "completion_evidence" not in missing:
         missing.append("completion_evidence")
+    if _has_unresolved_material_choice_review_finding(state) and not _has_material_choice_resolution(
+        text, state
+    ):
+        missing.append("material_choice_resolution")
     if _implementation_preflight_required(state) and not _has_implementation_preflight_evidence(
         text, state
     ):
@@ -1212,6 +1240,31 @@ def _missing_keyword_groups(
     if broker_outcome in {"blocked", "needs_validation"}:
         missing.append(f"validation_broker_{broker_outcome}")
     return missing
+
+
+def _has_unresolved_material_choice_review_finding(state: dict) -> bool:
+    if state.get("choice_resolution_evidence_seen"):
+        return False
+    findings = state.get("review_findings", [])
+    if not isinstance(findings, (list, tuple, set)):
+        return False
+    return MATERIAL_CHOICE_REVIEW_FINDING in {str(item) for item in findings}
+
+
+def _has_material_choice_resolution(text: str, state: dict) -> bool:
+    if state.get("choice_resolution_evidence_seen"):
+        return True
+    lowered = text.casefold()
+    return (
+        "changeforge_sdd_choice" in lowered
+        and "resolution_evidence" in lowered
+        and (
+            "status: resolved" in lowered
+            or "user selected" in lowered
+            or "user chose" in lowered
+            or "用户选择" in lowered
+        )
+    )
 
 
 def _closure_contract(

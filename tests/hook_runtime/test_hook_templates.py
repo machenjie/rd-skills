@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
 HOOK_ROOT = ROOT / "src" / "hook-runtime"
+DIST_ROOT = ROOT / "dist"
+HOOK_SCRIPT_RE = re.compile(r"\b(changeforge_[A-Za-z0-9_]+\.py)\b")
 
 
 class HookTemplateTests(unittest.TestCase):
@@ -49,6 +52,12 @@ class HookTemplateTests(unittest.TestCase):
         for command in self.collect_commands(value):
             names.append(command.split("/")[-1].split(".py")[0].strip('"'))
         return names
+
+    def command_script_files(self, value: object) -> list[str]:
+        scripts: set[str] = set()
+        for command in self.collect_commands(value):
+            scripts.update(match.group(1) for match in HOOK_SCRIPT_RE.finditer(command))
+        return sorted(scripts)
 
     def test_codex_hooks_json_parses(self) -> None:
         data = json.loads((HOOK_ROOT / "templates" / "codex" / "hooks.json").read_text())
@@ -144,6 +153,38 @@ class HookTemplateTests(unittest.TestCase):
                 stop_names.index("changeforge_stop_closure_gate"),
                 template.name,
             )
+
+    def test_template_referenced_scripts_exist_in_matching_dist_hook_dir(self) -> None:
+        specs = (
+            (
+                HOOK_ROOT / "templates" / "codex" / "hooks.json",
+                DIST_ROOT / "codex" / "project" / ".codex" / "hooks",
+            ),
+            (
+                HOOK_ROOT / "templates" / "codex-user" / "hooks.json",
+                DIST_ROOT / "codex" / "user" / ".codex" / "hooks",
+            ),
+            (
+                HOOK_ROOT / "templates" / "claude" / "settings.changeforge-hooks.fragment.json",
+                DIST_ROOT / "claude" / "project" / ".claude" / "hooks",
+            ),
+            (
+                HOOK_ROOT / "templates" / "claude-user" / "settings.changeforge-hooks.fragment.json",
+                DIST_ROOT / "claude" / "user" / ".claude" / "hooks",
+            ),
+            (
+                HOOK_ROOT / "templates" / "copilot" / "changeforge-hooks.json",
+                DIST_ROOT / "copilot" / "project" / ".github" / "hooks" / "changeforge",
+            ),
+            (
+                HOOK_ROOT / "templates" / "copilot-user" / "changeforge-hooks.json",
+                DIST_ROOT / "copilot" / "user" / ".copilot" / "hooks" / "changeforge",
+            ),
+        )
+        for template, hooks_dir in specs:
+            data = json.loads(template.read_text())
+            for script_name in self.command_script_files(data["hooks"]):
+                self.assertTrue((hooks_dir / script_name).is_file(), f"{template}: {script_name}")
 
     def test_codex_user_template_resolves_from_codex_home(self) -> None:
         # The user template mirrors the project events but resolves its command

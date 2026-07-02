@@ -223,6 +223,41 @@ class QuickstartTests(unittest.TestCase):
                 )
             )
 
+    def test_with_hooks_rejects_unsupported_runtime(self) -> None:
+        module = _load_module()
+        with self.assertRaisesRegex(ValueError, "hooks activation"):
+            module.build_plan(
+                _args(
+                    agent="cline",
+                    scope="project",
+                    target=Path("/tmp/project"),
+                    with_hooks=True,
+                )
+            )
+
+    def test_professional_injection_rejects_unsupported_scope(self) -> None:
+        module = _load_module()
+        with self.assertRaisesRegex(ValueError, "hooks activation"):
+            module.build_plan(
+                _args(
+                    agent="codex",
+                    scope="admin",
+                    activation_level="professional-injection",
+                )
+            )
+
+    def test_without_hooks_conflicts_with_explicit_hook_activation(self) -> None:
+        module = _load_module()
+        with self.assertRaisesRegex(ValueError, "cannot be combined"):
+            module.build_plan(_args(with_hooks=True, without_hooks=True))
+        with self.assertRaisesRegex(ValueError, "cannot be combined"):
+            module.build_plan(
+                _args(
+                    activation_level="professional-injection",
+                    without_hooks=True,
+                )
+            )
+
     def test_dry_run_does_not_execute_commands(self) -> None:
         module = _load_module()
         executed: list[list[str]] = []

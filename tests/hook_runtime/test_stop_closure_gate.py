@@ -858,6 +858,37 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertIn("review_artifact", result.stdout)
         self.assertIn("review_findings", result.stdout)
 
+    def test_stop_blocks_unresolved_material_choice_review_finding(self) -> None:
+        event = {
+            "hook_event_name": "Stop",
+            "runtime": "codex",
+            "response": (
+                "Reviewed src/api/orders.ts. Finding: no ordinary code issue. "
+                "Residual risk: material design choice remains unresolved. "
+                "Next action: ask user for the design direction."
+            ),
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(
+                cwd,
+                cache,
+                runtime="codex",
+                turn_stage="review",
+                review_targets=["src/api/orders.ts"],
+                review_findings=["material_sdd_choice_without_user_resolution"],
+                material_choice_surfaces=["public_api_or_export"],
+                choice_gate_seen=True,
+                choice_gate_blocked=True,
+                bounded_paths=["src/api/orders.ts"],
+            )
+            result = run_stop(event, cwd, cache, agent="codex")
+        self.assertEqual(result.returncode, 0)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["decision"], "block")
+        self.assertIn("material_choice_resolution", payload["reason"])
+        self.assertIn("unresolved material SDD choice", payload["reason"])
+
     def test_stop_read_no_change_profile_is_silent_when_evidence_complete(self) -> None:
         # Regression: read-only turns should not require edit-style route or changed-file closure.
         event = {

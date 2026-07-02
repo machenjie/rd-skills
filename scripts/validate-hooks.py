@@ -15,6 +15,7 @@ from validation_utils import fail_many, load_yaml_file, relpath
 
 
 ROOT = Path(__file__).resolve().parents[1]
+DIST_DIR = ROOT / "dist"
 HOOK_RUNTIME_ROOT = ROOT / "src" / "hook-runtime"
 HOOK_SCRIPTS_DIR = HOOK_RUNTIME_ROOT / "scripts"
 HOOK_SCHEMAS_DIR = HOOK_RUNTIME_ROOT / "schemas"
@@ -44,6 +45,14 @@ COPILOT_USER_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "copilot-user" / "changeforge-hooks.json"
 )
 COPILOT_TEMPLATES = (COPILOT_TEMPLATE, COPILOT_USER_TEMPLATE)
+HOOK_TEMPLATE_DIST_DIRS = {
+    CODEX_TEMPLATE: DIST_DIR / "codex" / "project" / ".codex" / "hooks",
+    CODEX_USER_TEMPLATE: DIST_DIR / "codex" / "user" / ".codex" / "hooks",
+    CLAUDE_TEMPLATE: DIST_DIR / "claude" / "project" / ".claude" / "hooks",
+    CLAUDE_USER_TEMPLATE: DIST_DIR / "claude" / "user" / ".claude" / "hooks",
+    COPILOT_TEMPLATE: DIST_DIR / "copilot" / "project" / ".github" / "hooks" / "changeforge",
+    COPILOT_USER_TEMPLATE: DIST_DIR / "copilot" / "user" / ".copilot" / "hooks" / "changeforge",
+}
 HOOKS_DOC = ROOT / "docs" / "HOOKS.md"
 RICH_EVENT_SCRIPTS = {
     "SessionStart": (
@@ -166,6 +175,7 @@ PROJECT_SOURCE_WRITE_RE = re.compile(
 GIT_MUTATION_RE = re.compile(
     r"git\s+(commit|checkout|reset|push|rebase|cherry-pick|clean|stash)\b"
 )
+HOOK_SCRIPT_REFERENCE_RE = re.compile(r"\b(changeforge_[A-Za-z0-9_]+\.py)\b")
 STATE_FINDING_FIELDS = (
     "file_naming_findings",
     "reuse_findings",
@@ -241,6 +251,16 @@ def main(argv: list[str] | None = None) -> int:
         _validate_copilot_template(copilot, COPILOT_TEMPLATE, errors=errors)
     if isinstance(copilot_user, dict):
         _validate_copilot_template(copilot_user, COPILOT_USER_TEMPLATE, errors=errors)
+    for template_path, template_data in (
+        (CODEX_TEMPLATE, codex),
+        (CODEX_USER_TEMPLATE, codex_user),
+        (CLAUDE_TEMPLATE, claude),
+        (CLAUDE_USER_TEMPLATE, claude_user),
+        (COPILOT_TEMPLATE, copilot),
+        (COPILOT_USER_TEMPLATE, copilot_user),
+    ):
+        if isinstance(template_data, dict):
+            _validate_template_script_references(template_data, template_path, errors)
     _validate_hook_behavior(errors)
     _validate_runtime_route_resolver(errors)
 
@@ -1070,6 +1090,35 @@ def _command_entries(value: Any, context: str = "hooks") -> list[tuple[dict[str,
         for index, child in enumerate(value):
             result.extend(_command_entries(child, f"{context}[{index}]"))
     return result
+
+
+def _validate_template_script_references(
+    data: dict[str, Any],
+    path: Path,
+    errors: list[str],
+) -> None:
+    dist_hooks_dir = HOOK_TEMPLATE_DIST_DIRS.get(path)
+    if dist_hooks_dir is None:
+        return
+    for script_name in _referenced_hook_scripts(data):
+        source_script = HOOK_SCRIPTS_DIR / script_name
+        if not source_script.is_file():
+            errors.append(
+                f"{relpath(ROOT, path)}: references missing source hook script {script_name}"
+            )
+        dist_script = dist_hooks_dir / script_name
+        if not dist_script.is_file():
+            errors.append(
+                f"{relpath(ROOT, path)}: references {script_name} but "
+                f"{relpath(ROOT, dist_script)} is missing"
+            )
+
+
+def _referenced_hook_scripts(data: dict[str, Any]) -> list[str]:
+    scripts: set[str] = set()
+    for command, _context in _commands(data.get("hooks", {})):
+        scripts.update(match.group(1) for match in HOOK_SCRIPT_REFERENCE_RE.finditer(command))
+    return sorted(scripts)
 
 
 def _event_invokes(hooks: dict[str, Any], event: str, script: str) -> bool:
