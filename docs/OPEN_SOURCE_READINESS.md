@@ -73,8 +73,9 @@ be `partial`, not `pass`.
 ## Publication Gate
 
 A release should not be described as open source until **Release Gate** from
-[VALIDATION.md](VALIDATION.md) passes, `python3 scripts/validate-open-source-readiness.py`
-passes with owner decisions complete, and the generated scorecard/open-source
-readiness evidence has been refreshed.
+[VALIDATION.md#release-gate](VALIDATION.md#release-gate) passes,
+`python3 scripts/validate-open-source-readiness.py` passes with owner decisions
+complete, and the generated scorecard/open-source readiness evidence has been
+refreshed.
 
 The release handoff should include validation output, profile counts, installer smoke evidence, license decision, security contact status, and unresolved assumptions.

@@ -79,9 +79,21 @@ STALE_HOOK_PHRASES = (
     "hook opt-in",
     "executable hooks remain opt-in",
     "bootstrap by default",
+    "default to warn, not block",
+    "defaults to warn, not block",
+    "codex and claude default to warn",
+    "do not block codex or claude by default",
+    "default mode is warn",
+    "only changeforge_pre_edit_mode=block enables",
+    "the default is warn and fail_open",
 )
 VALIDATION_COMMAND_RE = re.compile(
     r"^\s*python3\s+(?:-m\s+unittest|scripts/(?:validate-|eval-|build\.py|run-codegen|generate-))"
+)
+VALIDATION_COMMAND_BLOCK_RE = re.compile(
+    r"\bpython3(?:\s|\\\s*\n)+"
+    r"(?:-m(?:\s|\\\s*\n)+unittest|scripts/(?:validate-|eval-|build\.py|run-codegen|generate-))",
+    re.IGNORECASE,
 )
 LINK_RE = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 
@@ -158,8 +170,10 @@ def _hook_default_errors(root: Path, markdown_files: list[Path]) -> list[str]:
         lines = _read(path).splitlines()
         for number, line in enumerate(lines, start=1):
             lowered = line.casefold()
+            normalized = re.sub(r"[`\s]+", " ", lowered).strip()
             for phrase in STALE_HOOK_PHRASES:
-                if phrase in lowered:
+                pattern = rf"(?<![\w-]){re.escape(phrase)}(?![\w-])"
+                if re.search(pattern, normalized):
                     errors.append(f"{rel}:{number}: stale hook default phrase: {phrase}")
             if "--with-hooks" not in line:
                 continue
@@ -176,15 +190,47 @@ def _hook_default_errors(root: Path, markdown_files: list[Path]) -> list[str]:
     return errors
 
 
+def _validation_command_count(text: str) -> int:
+    return len(VALIDATION_COMMAND_BLOCK_RE.findall(text))
+
+
+def _fenced_code_blocks(text: str) -> list[tuple[int, str]]:
+    blocks: list[tuple[int, str]] = []
+    in_block = False
+    start = 0
+    collected: list[str] = []
+    for number, line in enumerate(text.splitlines(), start=1):
+        if line.lstrip().startswith("```"):
+            if in_block:
+                blocks.append((start, "\n".join(collected)))
+                collected = []
+                in_block = False
+            else:
+                in_block = True
+                start = number
+                collected = []
+            continue
+        if in_block:
+            collected.append(line)
+    return blocks
+
+
 def _validation_command_duplication_errors(root: Path, markdown_files: list[Path]) -> list[str]:
     errors: list[str] = []
     for path in markdown_files:
         rel = _rel(root, path)
         if rel in COMMAND_DUPLICATION_EXCLUDES or rel.startswith("reports/"):
             continue
+        text = _read(path)
+        for start, code in _fenced_code_blocks(text):
+            command_count = _validation_command_count(code)
+            if command_count >= 10:
+                errors.append(
+                    f"{rel}:{start}: duplicated validation command fenced block has {command_count} commands"
+                )
         run_start = 0
         run_length = 0
-        for number, line in enumerate(_read(path).splitlines(), start=1):
+        for number, line in enumerate(text.splitlines(), start=1):
             if VALIDATION_COMMAND_RE.match(line):
                 if run_length == 0:
                     run_start = number
@@ -195,6 +241,106 @@ def _validation_command_duplication_errors(root: Path, markdown_files: list[Path
                 run_length = 0
         if run_length >= 10:
             errors.append(f"{rel}:{run_start}: duplicated validation command block has {run_length} lines")
+    return errors
+
+
+def _hook_policy_consistency_errors(root: Path) -> list[str]:
+    errors: list[str] = []
+    policy_path = root / "src" / "hook-runtime" / "scripts" / "changeforge_hook_policy.py"
+    if not policy_path.exists():
+        return ["src/hook-runtime/scripts/changeforge_hook_policy.py: missing hook policy source"]
+    policy = _read(policy_path)
+    policy_checks = (
+        ("DEFAULT_GATE_MODES", r"\bDEFAULT_GATE_MODES\b"),
+        ('"sdd_material_choice": "block"', r"['\"]sdd_material_choice['\"]\s*:\s*['\"]block['\"]"),
+        ('"pre_edit_structure": "block"', r"['\"]pre_edit_structure['\"]\s*:\s*['\"]block['\"]"),
+        ('"stop_closure": "block"', r"['\"]stop_closure['\"]\s*:\s*['\"]block['\"]"),
+        (
+            'DEFAULT_GATE_MODES.get(gate_key, "warn")',
+            r"DEFAULT_GATE_MODES\.get\(\s*gate_key\s*,\s*['\"]warn['\"]\s*\)",
+        ),
+        ('global_failure or "fail_open"', r"global_failure\s+or\s+['\"]fail_open['\"]"),
+    )
+    for label, pattern in policy_checks:
+        if not re.search(pattern, policy):
+            errors.append(f"{policy_path.relative_to(root)}: missing hook policy fact: {label}")
+
+    doc_checks = (
+        (
+            "SDD material choice defaults to block",
+            lambda text: (
+                ("sdd material choice" in text or "sdd_material_choice=block" in text)
+                and "default" in text
+                and "block" in text
+            ),
+        ),
+        (
+            "pre-edit structure defaults to block",
+            lambda text: (
+                (
+                    "pre-edit structure" in text
+                    or "pre edit structure" in text
+                    or "pre_edit_structure=block" in text
+                )
+                and "default" in text
+                and "block" in text
+            ),
+        ),
+        (
+            "Stop closure defaults to block",
+            lambda text: (
+                ("stop closure" in text or "stop_closure=block" in text)
+                and "default" in text
+                and "block" in text
+            ),
+        ),
+        (
+            "unspecified or ordinary advisory gates fallback to warn",
+            lambda text: (
+                "unspecified gates fallback to warn" in text
+                or "ordinary advisory gates default to warn" in text
+                or "ordinary advisory context defaults to warn" in text
+            ),
+        ),
+        (
+            "failures default to fail_open",
+            lambda text: (
+                "failure mode defaults to fail_open" in text
+                or "failures default to fail_open" in text
+                or "hook failures default to fail_open" in text
+            ),
+        ),
+    )
+    for rel in ("docs/HOOKS.md", "src/hook-runtime/README.md"):
+        path = root / rel
+        if not path.exists():
+            errors.append(f"{rel}: missing hook policy documentation")
+            continue
+        text = re.sub(r"[`\s]+", " ", _read(path).casefold()).strip()
+        for label, predicate in doc_checks:
+            if not predicate(text):
+                errors.append(f"{rel}: missing hook policy fact: {label}")
+    return errors
+
+
+def _release_gate_anchor_errors(root: Path, markdown_files: list[Path]) -> list[str]:
+    errors: list[str] = []
+    validation = root / "docs" / "VALIDATION.md"
+    validation_has_release_gate = (
+        validation.exists() and re.search(r"^##\s+Release Gate\s*$", _read(validation), re.MULTILINE)
+    )
+    validation_referenced_from_release_gate = False
+    link_required = {"docs/README.md", "docs/RELEASE.md", "docs/OPEN_SOURCE_READINESS.md"}
+    for path in markdown_files:
+        rel = _rel(root, path)
+        text = _read(path)
+        lowered = text.casefold()
+        if "release gate" in lowered and "validation.md" in lowered:
+            validation_referenced_from_release_gate = True
+            if rel in link_required and "validation.md#release-gate" not in lowered:
+                errors.append(f"{rel}: Release Gate reference must link to VALIDATION.md#release-gate")
+    if validation_referenced_from_release_gate and not validation_has_release_gate:
+        errors.append("docs/VALIDATION.md: missing ## Release Gate section referenced by docs")
     return errors
 
 
@@ -313,6 +459,8 @@ def validate_docs_consistency(root: Path) -> list[str]:
     errors: list[str] = []
     errors.extend(_profile_count_errors(root, markdown_files))
     errors.extend(_hook_default_errors(root, markdown_files))
+    errors.extend(_hook_policy_consistency_errors(root))
+    errors.extend(_release_gate_anchor_errors(root, markdown_files))
     errors.extend(_validation_command_duplication_errors(root, markdown_files))
     errors.extend(_generated_banner_errors(root))
     errors.extend(_marketplace_claim_errors(root, markdown_files))

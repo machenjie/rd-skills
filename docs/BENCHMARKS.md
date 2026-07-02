@@ -286,8 +286,9 @@ python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex
 ## Recommended Evidence Refresh
 
 Before publishing a scorecard, run **Release Gate** from
-[VALIDATION.md](VALIDATION.md), then regenerate the scorecard, dashboard, README
-summary block, and public benchmark summary through their generator scripts.
+[VALIDATION.md#release-gate](VALIDATION.md#release-gate), then regenerate the
+scorecard, dashboard, README summary block, and public benchmark summary through
+their generator scripts.
 `docs/VALIDATION.md` is the canonical command source; this page describes the
 evidence model and publication boundaries rather than duplicating the full
 suite.

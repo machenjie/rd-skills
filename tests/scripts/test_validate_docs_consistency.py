@@ -42,6 +42,18 @@ def _write_minimal_repo(root: Path) -> None:
         ),
     )
     _write(
+        root / "docs" / "HOOKS.md",
+        "\n".join(
+            [
+                "# Hooks",
+                "",
+                "Default gate modes are `sdd_material_choice=block`, `pre_edit_structure=block`, and `stop_closure=block`.",
+                "Unspecified gates fallback to `warn`; ordinary advisory gates default to `warn`.",
+                "Failure mode defaults to `fail_open`.",
+            ]
+        ),
+    )
+    _write(
         root / "docs" / "MARKETPLACE.md",
         "# Marketplace\n\nThis is a local discovery index. Official marketplace publishing is intentionally not implemented.\n",
     )
@@ -63,6 +75,36 @@ def _write_minimal_repo(root: Path) -> None:
     _write(
         root / "config" / "open-source-release.yaml",
         "selected_license: null\ncontribution_licensing_confirmed: false\nsecurity_contact_confirmed: false\n",
+    )
+    _write(
+        root / "src" / "hook-runtime" / "README.md",
+        "\n".join(
+            [
+                "# Hook Runtime",
+                "",
+                "Default gate modes are `sdd_material_choice=block`, `pre_edit_structure=block`, and `stop_closure=block`.",
+                "Unspecified gates fallback to `warn`; ordinary advisory gates default to `warn`.",
+                "Failure mode defaults to `fail_open`.",
+            ]
+        ),
+    )
+    _write(
+        root / "src" / "hook-runtime" / "scripts" / "changeforge_hook_policy.py",
+        "\n".join(
+            [
+                "DEFAULT_GATE_MODES = {",
+                '    "sdd_material_choice": "block",',
+                '    "pre_edit_structure": "block",',
+                '    "stop_closure": "block",',
+                "}",
+                "",
+                "def gate_mode(gate_key):",
+                '    return DEFAULT_GATE_MODES.get(gate_key, "warn")',
+                "",
+                "def failure_mode(global_failure=None):",
+                '    return global_failure or "fail_open"',
+            ]
+        ),
     )
 
 
@@ -94,7 +136,44 @@ class ValidateDocsConsistencyTests(unittest.TestCase):
         errors = self._errors_for(
             lambda root: _write(
                 root / "docs" / "HOOKS.md",
-                "`--with-hooks` remains accepted for backward compatibility but is no longer required.\n",
+                "\n".join(
+                    [
+                        "`--with-hooks` remains accepted for backward compatibility but is no longer required.",
+                        "Default gate modes are `sdd_material_choice=block`, `pre_edit_structure=block`, and `stop_closure=block`.",
+                        "Unspecified gates fallback to `warn`; ordinary advisory gates default to `warn`.",
+                        "Failure mode defaults to `fail_open`.",
+                    ]
+                ),
+            )
+        )
+        self.assertEqual(errors, [])
+
+    def test_codex_claude_default_warn_phrase_fails(self) -> None:
+        errors = self._errors_for(
+            lambda root: _write(
+                root / "src" / "hook-runtime" / "README.md",
+                "Codex and Claude default to warn, not block.\n",
+            )
+        )
+        self.assertTrue(any("default to warn, not block" in error for error in errors), errors)
+
+    def test_do_not_block_codex_claude_default_phrase_fails(self) -> None:
+        errors = self._errors_for(
+            lambda root: _write(
+                root / "src" / "hook-runtime" / "README.md",
+                "Do not block Codex or Claude by default.\n",
+            )
+        )
+        self.assertTrue(
+            any("do not block codex or claude by default" in error for error in errors),
+            errors,
+        )
+
+    def test_legal_unspecified_warn_fail_open_phrase_does_not_fail(self) -> None:
+        errors = self._errors_for(
+            lambda root: _write(
+                root / "docs" / "USAGE.md",
+                "Unspecified gates fallback to warn and failure mode defaults to fail_open.\n",
             )
         )
         self.assertEqual(errors, [])
@@ -111,6 +190,48 @@ class ValidateDocsConsistencyTests(unittest.TestCase):
         block = "\n".join(["python3 scripts/validate-skills.py" for _ in range(10)])
         errors = self._errors_for(lambda root: _write(root / "docs" / "RELEASE.md", f"```bash\n{block}\n```\n"))
         self.assertTrue(any("duplicated validation command block" in error for error in errors), errors)
+
+    def test_release_gate_reference_requires_validation_section(self) -> None:
+        errors = self._errors_for(
+            lambda root: _write(
+                root / "docs" / "RELEASE.md",
+                "Run [Release Gate](VALIDATION.md#release-gate) before publication.\n",
+            )
+        )
+        self.assertTrue(any("missing ## Release Gate" in error for error in errors), errors)
+
+    def test_release_gate_section_satisfies_reference(self) -> None:
+        def mutate(root: Path) -> None:
+            _write(
+                root / "docs" / "RELEASE.md",
+                "Run [Release Gate](VALIDATION.md#release-gate) before publication.\n",
+            )
+            _write(root / "docs" / "VALIDATION.md", "# Validation\n\n## Release Gate\n\nRun Full Local.\n")
+
+        self.assertEqual(self._errors_for(mutate), [])
+
+    def test_fenced_validation_commands_with_comments_and_blanks_fail(self) -> None:
+        commands = []
+        for index in range(10):
+            commands.extend(
+                [
+                    f"# command {index}",
+                    "",
+                    "python3 scripts/validate-skills.py",
+                ]
+            )
+        block = "\n".join(commands)
+        errors = self._errors_for(
+            lambda root: _write(root / "docs" / "RELEASE.md", f"```bash\n{block}\n```\n")
+        )
+        self.assertTrue(any("fenced block has 10 commands" in error for error in errors), errors)
+
+    def test_validation_doc_long_command_block_is_allowed(self) -> None:
+        block = "\n".join(["python3 scripts/validate-skills.py" for _ in range(10)])
+        errors = self._errors_for(
+            lambda root: _write(root / "docs" / "VALIDATION.md", f"# Validation\n\n```bash\n{block}\n```\n")
+        )
+        self.assertEqual(errors, [])
 
 
 if __name__ == "__main__":

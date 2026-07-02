@@ -270,11 +270,13 @@ The first-stage runtime provides these reminder gates:
   `SubagentStart` so a spawned subagent inherits the route preflight and skill
   summary.
 
-Codex and Claude default to strongest supported behavior: SDD material choice
-and pre-edit structure block by default, while Stop closure and most other
-context remain advisory. Copilot keeps SessionStart, SubagentStart, PostToolUse,
-and Stop closure advisory. A hook failure still fails open unless a maintainer
-explicitly configures fail-closed.
+Codex and Claude default to strongest supported behavior: SDD material choice,
+pre-edit structure, and Stop closure policy modes are `block` by default, while
+ordinary advisory context remains `warn`. Copilot keeps SessionStart,
+SubagentStart, PostToolUse, and Stop closure compensation on supported events.
+The closure contract still records missing evidence as a warning/risk status for
+compatibility. A hook failure still fails open unless a maintainer explicitly
+configures fail-closed.
 
 ## Hook Policy
 
@@ -308,13 +310,12 @@ Default enforcement modes are:
 ```text
 sdd_material_choice: block
 pre_edit_structure: block
-stop_closure: warn
+stop_closure: block
 ```
 
 Precedence is gate-specific mode, then `CHANGEFORGE_HOOK_MODE`, then these
-default gate modes, then `warn`. For `stop_closure`, `block` is accepted for
-compatibility but resolves to `warn`; missing close-report evidence never forces
-continuation.
+default gate modes, then `warn`; unspecified gates fallback to `warn`, and
+ordinary advisory gates default to `warn`.
 Failure mode defaults to `fail_open`. The policy model also carries timeout,
 retry, retry delay, max concurrency, and queue-limit fields for richer lifecycle
 policy expression, while the shipped scripts remain synchronous and bounded.
@@ -600,11 +601,12 @@ exit code or explicit outcome, the result is `pass` or `fail`; otherwise it is
 change, or config change after validation marks that validation stale. Stop
 closure carries this freshness through the ledger and closure contract.
 
-Stop closure remains warning/fail-open. Missing, stale, failed, or unknown
-validation evidence is reported as closure risk rather than forced continuation.
-Broker telemetry records only bounded fields such as outcome, freshness, command
-kind, and covered path/risk patterns; it never records raw stdout, prompts,
-secrets, environment variables, or full command output.
+Stop closure policy defaults to `block`, while hook runtime errors still default
+to `fail_open`. Missing, stale, failed, or unknown validation evidence is
+reported as closure risk in the compatibility contract. Broker telemetry records
+only bounded fields such as outcome, freshness, command kind, and covered
+path/risk patterns; it never records raw stdout, prompts, secrets, environment
+variables, or full command output.
 
 Trajectory inspection consumes these bounded broker fields alongside hook
 telemetry and optional memory facts. It reconstructs an ordered evidence view
@@ -692,9 +694,10 @@ events whose advisory output Copilot actually consumes:
   risk-surface gates after edits and commands. Claude also wires the
   tool-output-boundary gate for `PostToolUseFailure` and `PostToolBatch`; Copilot
   uses only its supported `PostToolUse` event.
-- `Stop` runs the closure gate. Closure evidence gaps are advisory and do not
-  emit top-level `decision`/`reason`. `SubagentStop` emits an advisory reminder
-  only where supported by Codex and Claude.
+- `Stop` runs the closure gate. Closure evidence gaps follow the Stop closure
+  policy mode and are also recorded as warning/risk status in the closure
+  contract. `SubagentStop` emits an advisory reminder only where supported by
+  Codex and Claude.
 
 The shared hook scripts recognize both Codex/Claude tool names
 (`edit`, `write`, `apply_patch`, `bash`) and VS Code Copilot tool names
@@ -704,8 +707,9 @@ VS Code Copilot uses the flat (matcher-less) hook config format with
 `version: 1` and `timeoutSec`. It uses PascalCase event names so payloads carry
 VS Code-compatible snake_case fields. ChangeForge emits top-level
 `additionalContext` only for Copilot context-capable events such as
-`SessionStart`, `SubagentStart`, and `PostToolUse`; Copilot Stop closure is
-advisory-only and has no non-blocking display channel. Codex and Claude use
+`SessionStart`, `SubagentStart`, and `PostToolUse`; Copilot Stop closure uses
+the supported Stop decision channel when policy requires it and otherwise has no
+non-blocking display channel. Codex and Claude use
 `hookSpecificOutput.additionalContext` for context hooks and `systemMessage` for
 warning-only Stop/SubagentStop output.
 
@@ -713,8 +717,9 @@ These remain execution-time guardrails. They detect edited paths, patch signals,
 risk surfaces, and missing closure evidence, and they remind the agent to route;
 they never select a complete route and never replace `change-forge-router` or
 `implementation-structure-design`. Codex and Claude block SDD material choice
-and pre-edit structure gaps by default; Stop closure gaps remain advisory.
-Copilot's blocking is limited by its supported events; it cannot enforce
+and pre-edit structure gaps by default; Stop closure policy also defaults to
+`block`, while the compatibility closure contract records gaps as warning/risk
+status. Copilot's blocking is limited by its supported events; it cannot enforce
 Codex/Claude-style PreToolUse gates.
 
 ## Hook Capability Boundary
@@ -858,7 +863,7 @@ Code hook input also uses snake_case fields. Claude `timeout` values are seconds
 and stay within the 10-second budget. The Copilot layout wires only
 `SessionStart`, `SubagentStart`, `PostToolUse`, and `Stop`; it emits top-level
 `additionalContext` for session/subagent start and post-tool gates, and Stop
-closure remains advisory. VS Code Copilot loads every
+closure follows the Stop closure policy on supported events. VS Code Copilot loads every
 `*.json` in the hook folder, so its managed config is the dedicated
 `changeforge-hooks.json` and the scripts plus manifest live in a `changeforge/`
 subfolder VS Code does not scan for config. Do not install `src/hook-runtime`

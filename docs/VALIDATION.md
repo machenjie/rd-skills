@@ -181,6 +181,32 @@ python3 scripts/validate-marketplace-index.py --profile full
 python3 scripts/validate-marketplace-index.py --profile dev
 ```
 
+## Release Gate
+
+Release Gate is the validation layer before release handoff or a publication
+decision. It does not replace Full Local; it is the release-specific closure
+that runs after Full Local and confirms build, install, generated evidence, and
+publication boundaries are still conservative.
+
+Release Gate includes:
+
+1. Run Full Local.
+2. Build all profiles: `recommended`, `full`, and `dev`.
+3. Validate runtime reference links.
+4. Validate installation.
+5. Validate marketplace indexes for `recommended`, `full`, and `dev`.
+6. Regenerate or check generated snapshots.
+7. Run installer dry-run and smoke checks from
+   [INSTALLATION.md#final-smoke-checks](INSTALLATION.md#final-smoke-checks).
+8. Validate open-source readiness when publishing publicly.
+9. Verify scorecard, benchmark, and reports remain conservative and do not
+   overclaim live evidence.
+
+Live Codex benchmarks are still opt-in and are not part of the default Release
+Gate unless a maintainer explicitly wants to update live evidence claims.
+Generated evidence snapshots must be regenerated from source commands or
+checked for drift; do not hand-edit their numbers.
+
 ## Doctor And CI
 
 `installers/doctor.py` is a structural health check. It prints skill registry,

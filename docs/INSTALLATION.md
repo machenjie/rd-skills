@@ -61,14 +61,15 @@ professional injection, SDD material choice gate, pre-edit risk preview
 (`PreToolUse`), structure/risk gates after edits (`PostToolUse`), subagent
 preflight (`SubagentStart`), subagent closure reminder (`SubagentStop`), and
 Stop gates. In default strongest mode, SDD material choice and pre-edit
-structure are blocking by default; Stop closure is advisory and does not force a
-final close report.
+structure are blocking by default, and Stop closure policy also defaults to
+`block`. The Stop closure contract still records missing evidence as
+warning/risk status for compatibility.
 Claude commands explicitly set `CHANGEFORGE_AGENT=claude` and use 10-second
 `timeout` values because Claude Code measures timeout in seconds. Copilot local
 hooks wire only `SessionStart`, `SubagentStart`, `PostToolUse`, and `Stop`, so
 Copilot cannot enforce PreToolUse material-choice blocking; its Stop closure
-path also remains advisory. The shared scripts recognize Codex,
-Claude, and VS Code Copilot tool names.
+path relies on PostToolUse and Stop compensation where supported. The shared
+scripts recognize Codex, Claude, and VS Code Copilot tool names.
 
 Cline, Roo, and OpenHands support is staged adapter support, not executable
 hook support. Cline can install skills into `.cline/skills`; Roo mode-policy

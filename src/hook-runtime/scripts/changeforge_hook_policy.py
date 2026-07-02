@@ -29,7 +29,7 @@ GATE_MODE_ENV = {
 DEFAULT_GATE_MODES = {
     "sdd_material_choice": "block",
     "pre_edit_structure": "block",
-    "stop_closure": "warn",
+    "stop_closure": "block",
 }
 
 
@@ -72,8 +72,7 @@ def gate_mode(gate_name: str) -> str:
 
 
 def _effective_gate_mode(gate_key: str, mode: str) -> str:
-    if gate_key == "stop_closure" and mode == "block":
-        return "warn"
+    _ = gate_key
     return mode
 
 

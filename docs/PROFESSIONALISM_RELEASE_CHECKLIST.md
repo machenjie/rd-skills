@@ -21,28 +21,10 @@ coverage matrix reports for compatibility with release checklists that call it s
 
 Also run the repository validation/build suite listed in `AGENTS.md`.
 
-For productization releases, also run:
-
-```bash
-python3 scripts/validate-examples.py
-python3 scripts/validate-productization-assets.py
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
-python3 scripts/validate-runtime-reference-links.py
-python3 scripts/validate-installation.py
-python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json
-python3 scripts/export-marketplace-index.py --profile full --out /tmp/full-marketplace-index.json
-python3 scripts/export-marketplace-index.py --profile dev --out /tmp/dev-marketplace-index.json
-python3 scripts/validate-marketplace-index.py --profile recommended
-python3 scripts/validate-marketplace-index.py --profile full
-python3 scripts/validate-marketplace-index.py --profile dev
-python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
-python3 scripts/render-scorecard-dashboard.py --scorecard /tmp/professional-scorecard.json --out /tmp/scorecard-dashboard.md
-python3 scripts/generate-public-benchmark-summary.py --scorecard /tmp/professional-scorecard.json --out /tmp/public-benchmark-summary.md --json-out /tmp/public-benchmark-summary.json
-python3 scripts/generate-examples-showcase.py --check --out docs/SHOWCASE.md
-python3 scripts/generate-marketplace-catalog.py --profile recommended --check --out docs/MARKETPLACE_CATALOG.md
-```
+For productization releases, also run [Release Gate](VALIDATION.md#release-gate).
+`docs/VALIDATION.md` owns the full local, profile build, runtime link,
+installation, marketplace, generated snapshot, and smoke-check command set so
+this checklist does not drift from the canonical release validation commands.
 
 ## Blocking Conditions
 

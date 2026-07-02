@@ -42,9 +42,9 @@ Each zip must contain exactly one top-level skill folder and exactly one root `S
 
 ## Validation
 
-Run **Release Gate** from [VALIDATION.md](VALIDATION.md). `docs/VALIDATION.md`
-is the canonical developer command set; do not copy the full suite into this
-runbook.
+Run **Release Gate** from [VALIDATION.md#release-gate](VALIDATION.md#release-gate).
+`docs/VALIDATION.md` is the canonical developer command set; do not copy the
+full suite into this runbook.
 
 Run extended routing fixture comparison when updating or verifying captured
 actual router outputs:

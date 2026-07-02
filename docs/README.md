@@ -38,6 +38,6 @@ Start here when you need the current documentation map for ChangeForge Skill Mes
 - [Showcase](SHOWCASE.md): generated scenario showcase from `examples/`.
 - [Reports](../reports/README.md): generated validation, benchmark, and release-readiness snapshots.
 
-`docs/VALIDATION.md` is the canonical developer command set. Other documents should reference its Fast Source Invariants, Full Local, and Release Gate sections instead of copying long validation suites.
+`docs/VALIDATION.md` is the canonical developer command set. Other documents should reference its Fast Source Invariants, Full Local, and [Release Gate](VALIDATION.md#release-gate) sections instead of copying long validation suites.
 
 `docs/INSTALLATION.md` is the installation and hook behavior fact source. Other documents may summarize profile choice and hook defaults, but detailed install matrices, activation levels, upgrade, uninstall, doctor, and smoke checks belong there.

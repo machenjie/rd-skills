@@ -5,9 +5,9 @@ It does not replace change-forge-router.
 It adds execution-time reminders across the agent lifecycle: at session and
 subagent start, per user prompt, before and after tools run, and before the
 agent or a subagent stops.
-Stop closure reminders are advisory across runtimes; supported blocking remains
-reserved for earlier high-confidence gates such as SDD material choice and
-pre-edit structure.
+Supported blocking is reserved for high-confidence gates: SDD material choice,
+pre-edit structure, and Stop closure. Ordinary advisory context remains warning
+only.
 
 The hook runtime is a small project-level reminder layer for agent execution. It
 does not route work, does not read all skill references, and does not become a
@@ -39,8 +39,8 @@ The runtime provides these reminder hooks:
   check structural edit tools for read evidence and a
   `changeforge_implementation_preflight` summary before the first edit lands.
   It requires or reminds on placement, reuse, object/module boundary, test plan,
-  residual risk, and rollback/revert path. Default mode is warn; only
-  `CHANGEFORGE_PRE_EDIT_MODE=block` enables high-confidence blocking.
+  residual risk, and rollback/revert path. The default gate mode is `block` for
+  supported hooks. Set `CHANGEFORGE_PRE_EDIT_MODE=warn` to downgrade locally.
   Copilot templates do not wire unsupported `PreToolUse` advisory, so PostToolUse
   and Stop report preflight gaps for Copilot.
 - Post-Edit Structure Gate: after edit tools run, detect structural code changes
@@ -65,8 +65,9 @@ The runtime provides these reminder hooks:
 - Do not read every `references/` file.
 - Do not read, record, log, or echo user prompt text.
 - Do not choose the full route; the router remains the semantic source of truth.
-- Do not block Codex or Claude by default. Copilot's strict Stop gate is an
-  explicit local-hook policy for missing closure evidence.
+- Do not block unsupported or advisory-only gates by default.
+- Do not fail closed on hook runtime errors unless explicitly configured.
+- Do not turn hooks into router, skills, or source-of-truth.
 - Do not install `src/hook-runtime` directly.
 - Do not install `src/` or `src/registry` as runtime content.
 
@@ -101,8 +102,12 @@ the flat (matcher-less) hook config format with `version: 1` and `timeoutSec`
 and loads every `*.json` in its hook folder, so its config is the dedicated
 `changeforge-hooks.json` and the scripts, manifest, and bootstrap fragment live
 in a `changeforge/` subfolder. Copilot context output is top-level
-`additionalContext` for supported events; Copilot Stop closure runs advisory-only
-and does not force `CHANGEFORGE_HOOK_MODE=block`. Claude commands set
+`additionalContext` for supported events. Copilot cannot run Codex/Claude
+`PreToolUse` blocking gates, so it relies on PostToolUse and Stop closure
+compensation where those facts are available. Copilot Stop closure where
+supported follows the strict/blocking Stop policy decision channel; the
+compatibility closure contract still records missing evidence as warning/risk
+status. Claude commands set
 `CHANGEFORGE_AGENT=claude` explicitly, emit `hookSpecificOutput.additionalContext`
 for context-bearing events, and use 10-second `timeout` values because Claude
 Code measures timeout in seconds.
@@ -110,8 +115,10 @@ Each layout includes `.changeforge-hook-manifest.json` so installation
 validation can prove which hook scripts and scope were emitted.
 
 Supported Codex, Claude, and Copilot project/user installs include hooks and
-professional injection by default. Use `--without-hooks` to opt out.
-`--with-hooks` remains accepted as a backward-compatible explicit enable.
+professional injection by default. Use `--without-hooks` or
+`--activation-level none` to opt out. `--activation-level bootstrap` installs
+only the non-executable route-preflight fragment. `--with-hooks` remains
+accepted as a backward-compatible explicit enable, but is no longer required.
 Existing hook configuration is always preserved and hooks are never trusted
 automatically.
 
@@ -159,9 +166,12 @@ CHANGEFORGE_STOP_MODE=off|monitor|warn|block
 CHANGEFORGE_HOOK_FAILURE_MODE=fail_open|fail_closed
 ```
 
-The default is `warn` and `fail_open`. `changeforge_hook_policy.py` also exposes
-timeout, retry, retry-delay, max-concurrency, and queue-limit policy fields for
-future lifecycle adapters, without changing the synchronous script behavior.
+Default gate modes are `sdd_material_choice=block`,
+`pre_edit_structure=block`, and `stop_closure=block`. Unspecified gates fallback
+to `warn`, and ordinary advisory gates default to `warn`. Failure mode defaults
+to `fail_open`. `changeforge_hook_policy.py` also exposes timeout, retry,
+retry-delay, max-concurrency, and queue-limit policy fields for future lifecycle
+adapters, without changing the synchronous script behavior.
 
 `changeforge_state_reducer.py` owns state merge semantics. Lists are additive,
 deduped, and capped; booleans use OR semantics; scalar stage/owner fields keep
@@ -218,7 +228,9 @@ python3 installers/install.py --agent copilot --scope project --target <repo> --
 Supported project/user installs include hooks and professional injection by
 default. `--without-hooks` installs skills without executable hooks.
 `--with-hooks` and `--professional-injection` remain backward-compatible
-explicit enables. `--with-universal-bootstrap` installs both the route preflight
-and professional bootstrap fragments under `.changeforge/`.
+explicit enables. `--activation-level bootstrap` installs only the
+non-executable route-preflight fragment; `--with-universal-bootstrap` installs
+both the route preflight and professional bootstrap fragments under
+`.changeforge/`.
 `--with-copilot-instructions` creates
 `.github/copilot-instructions.md` only when that file does not already exist.

@@ -59,15 +59,15 @@ class HookPolicyTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             self.assertEqual(self.policy.gate_mode("sdd_material_choice"), "block")
             self.assertEqual(self.policy.gate_mode("pre_edit_structure"), "block")
-            self.assertEqual(self.policy.gate_mode("stop_closure"), "warn")
+            self.assertEqual(self.policy.gate_mode("stop_closure"), "block")
             self.assertEqual(self.policy.gate_mode("permission_policy"), "warn")
             self.assertTrue(self.policy.should_emit_context("pre_edit_structure"))
 
-    def test_global_block_mode_keeps_stop_closure_advisory(self) -> None:
+    def test_global_block_mode_preserves_stop_closure_block_policy(self) -> None:
         with patch.dict(os.environ, {"CHANGEFORGE_HOOK_MODE": "block"}, clear=True):
             self.assertEqual(self.policy.gate_mode("sdd_material_choice"), "block")
-            self.assertEqual(self.policy.gate_mode("stop_closure"), "warn")
-            self.assertFalse(self.policy.should_block("stop_closure", confidence="high"))
+            self.assertEqual(self.policy.gate_mode("stop_closure"), "block")
+            self.assertTrue(self.policy.should_block("stop_closure", confidence="high"))
             self.assertFalse(self.policy.should_block("stop_closure", confidence="medium"))
 
     def test_global_warn_mode_downgrades_default_block_gates(self) -> None:
@@ -95,10 +95,10 @@ class HookPolicyTests(unittest.TestCase):
             self.assertEqual(self.policy.gate_mode("pre_edit_structure"), "monitor")
             self.assertEqual(self.policy.gate_mode("permission_policy"), "warn")
 
-    def test_stop_specific_block_mode_stays_advisory(self) -> None:
+    def test_stop_specific_block_mode_blocks_high_confidence(self) -> None:
         with patch.dict(os.environ, {"CHANGEFORGE_STOP_MODE": "block"}, clear=True):
-            self.assertEqual(self.policy.gate_mode("stop_closure"), "warn")
-            self.assertFalse(self.policy.should_block("stop_closure", confidence="high"))
+            self.assertEqual(self.policy.gate_mode("stop_closure"), "block")
+            self.assertTrue(self.policy.should_block("stop_closure", confidence="high"))
 
     def test_failure_mode_default_fail_open(self) -> None:
         with patch.dict(os.environ, {}, clear=True):
