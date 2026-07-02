@@ -1095,12 +1095,15 @@ def _validate_template_script_references(
     dist_hooks_dir = HOOK_TEMPLATE_DIST_DIRS.get(path)
     if dist_hooks_dir is None:
         return
+    dist_available = DIST_DIR.is_dir()
     for script_name in _referenced_hook_scripts(data):
         source_script = HOOK_SCRIPTS_DIR / script_name
         if not source_script.is_file():
             errors.append(
                 f"{relpath(ROOT, path)}: references missing source hook script {script_name}"
             )
+        if not dist_available:
+            continue
         dist_script = dist_hooks_dir / script_name
         if not dist_script.is_file():
             errors.append(

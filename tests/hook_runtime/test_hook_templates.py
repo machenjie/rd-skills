@@ -1,15 +1,32 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+SCRIPTS = ROOT / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
 HOOK_ROOT = ROOT / "src" / "hook-runtime"
 DIST_ROOT = ROOT / "dist"
 HOOK_SCRIPT_RE = re.compile(r"\b(changeforge_[A-Za-z0-9_]+\.py)\b")
+
+
+def _load_hook_validator():
+    path = SCRIPTS / "validate-hooks.py"
+    spec = importlib.util.spec_from_file_location("validate_hooks_under_test", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 class HookTemplateTests(unittest.TestCase):
@@ -155,6 +172,8 @@ class HookTemplateTests(unittest.TestCase):
             )
 
     def test_template_referenced_scripts_exist_in_matching_dist_hook_dir(self) -> None:
+        if not DIST_ROOT.is_dir():
+            self.skipTest("dist runtime output is not built")
         specs = (
             (
                 HOOK_ROOT / "templates" / "codex" / "hooks.json",
@@ -185,6 +204,25 @@ class HookTemplateTests(unittest.TestCase):
             data = json.loads(template.read_text())
             for script_name in self.command_script_files(data["hooks"]):
                 self.assertTrue((hooks_dir / script_name).is_file(), f"{template}: {script_name}")
+
+    def test_validate_hooks_allows_missing_dist_for_source_only_reference_check(self) -> None:
+        # Regression: source validation must pass before generated dist artifacts exist.
+        validator = _load_hook_validator()
+        original_dist_dir = validator.DIST_DIR
+        try:
+            with tempfile.TemporaryDirectory() as raw:
+                validator.DIST_DIR = Path(raw) / "missing-dist"
+                errors: list[str] = []
+                data = json.loads(validator.CODEX_TEMPLATE.read_text(encoding="utf-8"))
+
+                validator._validate_template_script_references(
+                    data,
+                    validator.CODEX_TEMPLATE,
+                    errors,
+                )
+        finally:
+            validator.DIST_DIR = original_dist_dir
+        self.assertEqual([], errors)
 
     def test_codex_user_template_resolves_from_codex_home(self) -> None:
         # The user template mirrors the project events but resolves its command
