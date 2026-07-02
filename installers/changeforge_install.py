@@ -104,43 +104,6 @@ HOOK_AUX_SUBDIR = {
     "copilot": Path("hooks") / "changeforge",
 }
 HOOK_MANIFEST_NAME = ".changeforge-hook-manifest.json"
-HOOK_SCRIPT_NAMES = (
-    "changeforge_common.py",
-    "changeforge_adapter_capabilities.py",
-    "changeforge_runtime_adapters.py",
-    "changeforge_hook_policy.py",
-    "changeforge_state_reducer.py",
-    "changeforge_compaction_contract.py",
-    "changeforge_normalized_event.py",
-    "changeforge_lifecycle_state.py",
-    "changeforge_evidence_ledger.py",
-    "changeforge_gate_result.py",
-    "changeforge_closure_contract.py",
-    "changeforge_executor_adapter_core.py",
-    "changeforge_action_classifier.py",
-    "changeforge_context_control_policy.py",
-    "changeforge_tool_output_boundary.py",
-    "changeforge_branch_route_summary.py",
-    "changeforge_runtime_route_resolver.py",
-    "changeforge_skill_index.py",
-    "changeforge_session_bootstrap.py",
-    "changeforge_user_prompt_route_reminder.py",
-    "changeforge_sdd_material_choice_gate.py",
-    "changeforge_pre_edit_structure_gate.py",
-    "changeforge_pre_tool_risk_preview.py",
-    "changeforge_professional_injector.py",
-    "changeforge_read_context_gate.py",
-    "changeforge_tool_output_boundary_gate.py",
-    "changeforge_review_gate.py",
-    "changeforge_permission_policy_gate.py",
-    "changeforge_compaction_snapshot.py",
-    "changeforge_compaction_reinject.py",
-    "changeforge_subagent_skill_contract.py",
-    "changeforge_post_edit_structure_gate.py",
-    "changeforge_risk_surface_gate.py",
-    "changeforge_subagent_stop_reminder.py",
-    "changeforge_stop_closure_gate.py",
-)
 COMMON_HOOK_SUPPORT_FILES = ("changeforge_professional_contract.md",)
 COPILOT_HOOK_SUPPORT_FILES = (
     "changeforge_copilot_skill_summary.md",
@@ -567,7 +530,15 @@ def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
     scripts_subdir = HOOK_SCRIPTS_SUBDIR[agent]
     aux_subdir = HOOK_AUX_SUBDIR[agent]
     manifest_source = source_root / aux_subdir / HOOK_MANIFEST_NAME
-    for script_name in HOOK_SCRIPT_NAMES:
+    scripts_root = source_root / scripts_subdir
+    script_names = tuple(
+        path.name
+        for path in sorted(scripts_root.glob("changeforge_*.py"))
+        if path.is_file()
+    )
+    if not script_names:
+        raise InstallError(f"no built hook scripts found in {scripts_root}")
+    for script_name in script_names:
         source_script = source_root / scripts_subdir / script_name
         if not source_script.is_file():
             raise InstallError(f"missing built hook script {source_script.relative_to(ROOT)}")

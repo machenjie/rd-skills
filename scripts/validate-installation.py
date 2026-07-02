@@ -52,43 +52,10 @@ REQUIRED_DIST_DIRS = (
     "openai-api/zips",
 )
 
-HOOK_SCRIPT_FILENAMES = (
-    "changeforge_common.py",
-    "changeforge_adapter_capabilities.py",
-    "changeforge_runtime_adapters.py",
-    "changeforge_hook_policy.py",
-    "changeforge_state_reducer.py",
-    "changeforge_compaction_contract.py",
-    "changeforge_normalized_event.py",
-    "changeforge_lifecycle_state.py",
-    "changeforge_evidence_ledger.py",
-    "changeforge_gate_result.py",
-    "changeforge_closure_contract.py",
-    "changeforge_executor_adapter_core.py",
-    "changeforge_action_classifier.py",
-    "changeforge_runtime_route_resolver.py",
-    "changeforge_skill_index.py",
-    "changeforge_session_bootstrap.py",
-    "changeforge_user_prompt_route_reminder.py",
-    "changeforge_process_phase_gate.py",
-    "changeforge_sdd_material_choice_gate.py",
-    "changeforge_pre_edit_structure_gate.py",
-    "changeforge_pre_tool_risk_preview.py",
-    "changeforge_professional_injector.py",
-    "changeforge_tool_output_boundary.py",
-    "changeforge_branch_route_summary.py",
-    "changeforge_read_context_gate.py",
-    "changeforge_tool_output_boundary_gate.py",
-    "changeforge_review_gate.py",
-    "changeforge_permission_policy_gate.py",
-    "changeforge_compaction_snapshot.py",
-    "changeforge_compaction_reinject.py",
-    "changeforge_subagent_skill_contract.py",
-    "changeforge_subagent_review_gate.py",
-    "changeforge_post_edit_structure_gate.py",
-    "changeforge_risk_surface_gate.py",
-    "changeforge_subagent_stop_reminder.py",
-    "changeforge_stop_closure_gate.py",
+HOOK_SCRIPT_FILENAMES = tuple(
+    path.name
+    for path in sorted((HOOK_RUNTIME_ROOT / "scripts").glob("changeforge_*.py"))
+    if path.is_file()
 )
 COMMON_HOOK_SUPPORT_FILES = ("changeforge_professional_contract.md",)
 COPILOT_HOOK_SUPPORT_FILES = (

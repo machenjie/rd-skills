@@ -29,6 +29,17 @@ def _load_hook_validator():
     return module
 
 
+def _load_build_module():
+    path = SCRIPTS / "build.py"
+    spec = importlib.util.spec_from_file_location("build_under_test", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 class HookTemplateTests(unittest.TestCase):
     def collect_commands(self, value: object) -> list[str]:
         commands: list[str] = []
@@ -386,24 +397,29 @@ class HookTemplateTests(unittest.TestCase):
                 self.assertNotIn(event, data["hooks"])
             self.assertNotIn("changeforge_pre_edit_structure_gate", json.dumps(data))
 
-    def test_new_hook_runtime_scripts_listed_in_build_manifest(self) -> None:
-        build_text = (ROOT / "scripts" / "build.py").read_text(encoding="utf-8")
-        for script in (
-            "changeforge_adapter_capabilities",
-            "changeforge_normalized_event",
-            "changeforge_lifecycle_state",
-            "changeforge_evidence_ledger",
-            "changeforge_gate_result",
-            "changeforge_closure_contract",
-            "changeforge_executor_adapter_core",
-            "changeforge_hook_policy",
-            "changeforge_state_reducer",
-            "changeforge_pre_edit_structure_gate",
-            "changeforge_tool_output_boundary",
-            "changeforge_branch_route_summary",
-            "changeforge_tool_output_boundary_gate",
-        ):
-            self.assertIn(script, build_text)
+    def test_hook_manifest_discovers_built_runtime_scripts(self) -> None:
+        build_module = _load_build_module()
+        source_scripts = sorted((HOOK_ROOT / "scripts").glob("changeforge_*.py"))
+        self.assertGreater(len(source_scripts), 0)
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / ".codex"
+            scripts_dir = target / "hooks"
+            scripts_dir.mkdir(parents=True)
+            for script in source_scripts:
+                (scripts_dir / script.name).write_text("#!/usr/bin/env python3\n", encoding="utf-8")
+            (scripts_dir / "changeforge_new_runtime_gate.py").write_text(
+                "#!/usr/bin/env python3\n",
+                encoding="utf-8",
+            )
+
+            build_module._write_hook_manifest(target, agent="codex", scope="project")
+
+            manifest = json.loads(
+                (target / ".changeforge-hook-manifest.json").read_text(encoding="utf-8")
+            )
+            expected_hooks = {path.stem for path in source_scripts}
+            expected_hooks.add("changeforge_new_runtime_gate")
+            self.assertEqual(set(manifest["hooks"]), expected_hooks)
 
     def test_bootstrap_fragment_exists_and_points_to_router(self) -> None:
         fragment = (

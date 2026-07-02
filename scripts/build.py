@@ -807,44 +807,14 @@ def _write_hook_manifest(
     # Each interactive runtime wires the route-preflight bootstrap and ships the
     # same lifecycle hook scripts. Runtime-specific output differences stay in
     # changeforge_common.py and the templates, not in the manifest.
+    scripts_root = target / "hooks" if (target / "hooks").is_dir() else target
     hooks = [
-        "changeforge_common",
-        "changeforge_adapter_capabilities",
-        "changeforge_hook_policy",
-        "changeforge_state_reducer",
-        "changeforge_compaction_contract",
-        "changeforge_normalized_event",
-        "changeforge_lifecycle_state",
-        "changeforge_evidence_ledger",
-        "changeforge_gate_result",
-        "changeforge_closure_contract",
-        "changeforge_executor_adapter_core",
-        "changeforge_session_bootstrap",
-        "changeforge_user_prompt_route_reminder",
-        "changeforge_process_phase_gate",
-        "changeforge_sdd_material_choice_gate",
-        "changeforge_pre_edit_structure_gate",
-        "changeforge_pre_tool_risk_preview",
-        "changeforge_professional_injector",
-        "changeforge_runtime_adapters",
-        "changeforge_action_classifier",
-        "changeforge_runtime_route_resolver",
-        "changeforge_tool_output_boundary",
-        "changeforge_branch_route_summary",
-        "changeforge_skill_index",
-        "changeforge_read_context_gate",
-        "changeforge_tool_output_boundary_gate",
-        "changeforge_review_gate",
-        "changeforge_permission_policy_gate",
-        "changeforge_compaction_snapshot",
-        "changeforge_compaction_reinject",
-        "changeforge_subagent_skill_contract",
-        "changeforge_subagent_review_gate",
-        "changeforge_post_edit_structure_gate",
-        "changeforge_risk_surface_gate",
-        "changeforge_subagent_stop_reminder",
-        "changeforge_stop_closure_gate",
+        path.stem
+        for path in sorted(scripts_root.glob("changeforge_*.py"))
+        if path.is_file()
     ]
+    if not hooks:
+        raise BuildError(f"no hook scripts were built in {scripts_root.relative_to(ROOT)}")
     manifest = {
         "kind": "changeforge-hook-runtime",
         "agent": agent,

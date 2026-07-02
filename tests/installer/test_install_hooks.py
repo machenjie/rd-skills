@@ -24,7 +24,8 @@ DIST_COPILOT_HOOK_SUPPORT = (
     / "changeforge"
     / "changeforge_copilot_skill_summary.md"
 )
-EXPECTED_HOOK_SCRIPT_COUNT = 35
+SOURCE_HOOK_SCRIPTS = ROOT / "src" / "hook-runtime" / "scripts"
+EXPECTED_HOOK_SCRIPT_COUNT = len(tuple(SOURCE_HOOK_SCRIPTS.glob("changeforge_*.py")))
 RUNTIME_ROUTE_RESOLVER_NAME = "changeforge_runtime_route_resolver.py"
 RUNTIME_ROUTE_INDEX_NAME = "changeforge_runtime_route_index.json"
 EXPECTED_COMMON_SUPPORT_FILES = [
@@ -62,6 +63,10 @@ def _built_manifest_has_support_packages(path: Path) -> bool:
     except (FileNotFoundError, json.JSONDecodeError):
         return False
     return manifest.get("support_packages") == EXPECTED_SUPPORT_PACKAGES
+
+
+def _built_hook_scripts_complete(hooks_dir: Path) -> bool:
+    return len(tuple(hooks_dir.glob("changeforge_*.py"))) == EXPECTED_HOOK_SCRIPT_COUNT
 
 
 def _built_repository_intelligence_subset_complete(hooks_dir: Path) -> bool:
@@ -135,6 +140,8 @@ class InstallHooksTests(unittest.TestCase):
             DIST_CODEX_HOOKS / "hooks" / "changeforge_sdd_material_choice_gate.py"
         ).is_file() or not _built_manifest_has_support_packages(
             DIST_CODEX_HOOKS / ".changeforge-hook-manifest.json"
+        ) or not _built_hook_scripts_complete(
+            DIST_CODEX_HOOKS / "hooks"
         ) or not _built_repository_intelligence_subset_complete(
             DIST_CODEX_HOOKS / "hooks"
         ):
@@ -183,6 +190,9 @@ class InstallHooksTests(unittest.TestCase):
             self.assertTrue(
                 (codex_dir / "hooks" / "changeforge_sdd_material_choice_gate.py").is_file()
             )
+            self.assertTrue((codex_dir / "hooks" / "changeforge_process_phase_gate.py").is_file())
+            self.assertTrue((codex_dir / "hooks" / "changeforge_subagent_review_gate.py").is_file())
+            self.assertTrue((codex_dir / "hooks" / "changeforge_context_control_policy.py").is_file())
             self.assertTrue((codex_dir / "hooks" / "changeforge_compaction_contract.py").is_file())
             self.assertTrue((codex_dir / "hooks" / RUNTIME_ROUTE_RESOLVER_NAME).is_file())
             self.assertTrue(
@@ -193,8 +203,47 @@ class InstallHooksTests(unittest.TestCase):
             self.assertTrue((codex_dir / "hooks" / RUNTIME_ROUTE_INDEX_NAME).is_file())
             self.assertTrue(manifest.is_file())
             self.assertTrue(hooks_json.is_file())
+            manifest_data = json.loads(manifest.read_text(encoding="utf-8"))
+            self.assertEqual(set(manifest_data["hooks"]), {path.stem for path in scripts})
             _assert_action_classifier_smoke(self, codex_dir / "hooks")
             _assert_hook_support_import_smoke(self, codex_dir / "hooks")
+
+    def test_hook_plan_discovers_new_built_script(self) -> None:
+        # Regression: installer script planning must not miss hook files added after a static allowlist.
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            source_root = tmp_path / "built" / ".codex"
+            scripts_root = source_root / "hooks"
+            scripts_root.mkdir(parents=True)
+            for script_name in ("changeforge_existing.py", "changeforge_new_runtime_gate.py"):
+                (scripts_root / script_name).write_text(
+                    "#!/usr/bin/env python3\nprint('ok')\n",
+                    encoding="utf-8",
+                )
+            (source_root / "hooks.json").write_text(json.dumps({"hooks": {}}), encoding="utf-8")
+            (source_root / ".changeforge-hook-manifest.json").write_text(
+                json.dumps({"support_files": [], "support_packages": []}),
+                encoding="utf-8",
+            )
+            original_source = changeforge_install.HOOK_SOURCE_ROOTS[("codex", "project")]
+            changeforge_install.HOOK_SOURCE_ROOTS[("codex", "project")] = source_root
+            try:
+                plan = changeforge_install.plan_hook_install(
+                    "codex",
+                    "project",
+                    tmp_path / "project",
+                )
+                planned = {destination.name for _source, destination, _action in plan.script_actions}
+                self.assertEqual(
+                    planned,
+                    {"changeforge_existing.py", "changeforge_new_runtime_gate.py"},
+                )
+                changeforge_install.apply_hook_install(plan, dry_run=False)
+                installed = tmp_path / "project" / ".codex" / "hooks"
+                self.assertTrue((installed / "changeforge_existing.py").is_file())
+                self.assertTrue((installed / "changeforge_new_runtime_gate.py").is_file())
+            finally:
+                changeforge_install.HOOK_SOURCE_ROOTS[("codex", "project")] = original_source
 
     def test_merge_preserves_existing_user_hook(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -450,6 +499,7 @@ class InstallCopilotHooksTests(unittest.TestCase):
             or not _built_manifest_has_support_packages(
                 DIST_COPILOT_HOOK_SUPPORT.parent / ".changeforge-hook-manifest.json"
             )
+            or not _built_hook_scripts_complete(DIST_COPILOT_HOOK_SUPPORT.parent)
             or not _built_repository_intelligence_subset_complete(DIST_COPILOT_HOOK_SUPPORT.parent)
         ):
             _build_recommended()
@@ -496,6 +546,10 @@ class InstallCopilotHooksTests(unittest.TestCase):
             self.assertTrue((scripts_dir / ".changeforge-hook-manifest.json").is_file())
             manifest = json.loads(
                 (scripts_dir / ".changeforge-hook-manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(
+                set(manifest["hooks"]),
+                {path.stem for path in scripts},
             )
             self.assertEqual(sorted(manifest["support_files"]), EXPECTED_COPILOT_SUPPORT_FILES)
             self.assertEqual(manifest["support_packages"], EXPECTED_SUPPORT_PACKAGES)
@@ -626,7 +680,9 @@ class InstallClaudeHooksTests(unittest.TestCase):
             claude_hooks / "changeforge_sdd_material_choice_gate.py"
         ).is_file() or not (
             ROOT / "dist" / "claude" / "project" / ".claude" / ".changeforge-hook-manifest.json"
-        ).is_file() or not _built_repository_intelligence_subset_complete(claude_hooks):
+        ).is_file() or not _built_hook_scripts_complete(
+            claude_hooks
+        ) or not _built_repository_intelligence_subset_complete(claude_hooks):
             _build_recommended()
 
     def test_claude_project_hook_support_packages_import(self) -> None:
