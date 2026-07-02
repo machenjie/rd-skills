@@ -192,14 +192,16 @@ class ProcessPhaseGateTests(unittest.TestCase):
             reason = assert_blocked(self, run_gate(edit_event(), Path(tmp), Path(cache)))
             self.assertIn("TDD reviewed requires validation_signal_present=true", reason)
 
-    def test_copilot_records_degraded_rather_than_claiming_block(self) -> None:
+    def test_copilot_pretool_blocks_with_permission_decision(self) -> None:
         with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
             result = run_gate(edit_event(), Path(tmp), Path(cache), agent="copilot")
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(result.stdout.strip(), "")
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload.get("permissionDecision"), "deny")
+            self.assertIn("ChangeForge Process Phase Gate: BLOCKED", payload.get("permissionDecisionReason", ""))
             state = load_state(Path(tmp), Path(cache))
             self.assertTrue(state["process_phase_blocked"])
-            self.assertIn("copilot lacks PreToolUse hard blocking", state["process_phase_blocked_reason"])
+            self.assertNotIn("lacks PreToolUse", state["process_phase_blocked_reason"])
 
     def test_passing_reviews_populate_missing_digests_and_allow_edit(self) -> None:
         digests = {phase: "sha256:" + str(index) * 64 for index, phase in enumerate(("pdd", "ddd", "sdd", "tdd"), start=1)}

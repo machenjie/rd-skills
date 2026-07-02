@@ -285,8 +285,12 @@ class HookTemplateTests(unittest.TestCase):
         hooks = data["hooks"]
         for event, script in (
             ("SessionStart", "changeforge_session_bootstrap"),
+            ("PreToolUse", "changeforge_pre_edit_structure_gate"),
             ("PostToolUse", "changeforge_tool_output_boundary_gate"),
+            ("PostToolUseFailure", "changeforge_tool_output_boundary_gate"),
             ("SubagentStart", "changeforge_session_bootstrap"),
+            ("SubagentStop", "changeforge_subagent_review_gate"),
+            ("PreCompact", "changeforge_compaction_snapshot"),
             ("Stop", "changeforge_stop_closure_gate"),
         ):
             self.assertIn(event, hooks)
@@ -298,8 +302,8 @@ class HookTemplateTests(unittest.TestCase):
             self.assertNotIn("matcher", json.dumps(entries))
             self.assertIn(script, json.dumps(entries))
         self.assertNotIn("UserPromptSubmit", hooks)
-        self.assertNotIn("PreToolUse", hooks)
-        self.assertNotIn("SubagentStop", hooks)
+        self.assertNotIn("PermissionRequest", hooks)
+        self.assertNotIn("changeforge_pre_tool_risk_preview", json.dumps(hooks))
         commands = json.dumps(hooks)
         self.assertIn("CHANGEFORGE_AGENT=copilot", commands)
         self.assertIn("/.github/hooks/changeforge/", commands)
@@ -314,8 +318,10 @@ class HookTemplateTests(unittest.TestCase):
         self.assertEqual(data["version"], 1)
         commands = json.dumps(data["hooks"])
         self.assertNotIn("UserPromptSubmit", data["hooks"])
-        self.assertNotIn("PreToolUse", data["hooks"])
-        self.assertNotIn("SubagentStop", data["hooks"])
+        self.assertNotIn("PermissionRequest", data["hooks"])
+        self.assertIn("PreToolUse", data["hooks"])
+        self.assertIn("SubagentStop", data["hooks"])
+        self.assertNotIn("changeforge_pre_tool_risk_preview", commands)
         self.assertIn("${HOME}/.copilot/hooks/changeforge/", commands)
         self.assertIn("CHANGEFORGE_AGENT=copilot", commands)
         self.assertNotIn("CHANGEFORGE_HOOK_MODE=block", json.dumps(data["hooks"]["Stop"]))
@@ -393,9 +399,11 @@ class HookTemplateTests(unittest.TestCase):
             HOOK_ROOT / "templates" / "copilot-user" / "changeforge-hooks.json",
         ):
             data = json.loads(template.read_text())
-            for event in ("UserPromptSubmit", "PreToolUse", "SubagentStop", "PostToolBatch"):
+            for event in ("UserPromptSubmit", "PermissionRequest", "PostToolBatch"):
                 self.assertNotIn(event, data["hooks"])
-            self.assertNotIn("changeforge_pre_edit_structure_gate", json.dumps(data))
+            rendered = json.dumps(data)
+            self.assertIn("changeforge_pre_edit_structure_gate", rendered)
+            self.assertNotIn("changeforge_pre_tool_risk_preview", rendered)
 
     def test_hook_manifest_discovers_built_runtime_scripts(self) -> None:
         build_module = _load_build_module()

@@ -30,8 +30,8 @@ class StateReducerDegradedFactsTests(unittest.TestCase):
             {
                 "runtime_adapter": {
                     "adapter": "copilot",
-                    "active_degradation": ["copilot_pre_tool_use_unsupported"],
-                    "degraded_capabilities": ["copilot_pre_tool_use_unsupported"],
+                    "active_degradation": ["copilot_pre_tool_advisory_context_unsupported"],
+                    "degraded_capabilities": ["copilot_pre_tool_advisory_context_unsupported"],
                     "unsupported_checks": ["pre_tool_advisory_context"],
                     "visibility": {"validation_outcome": "partial"},
                 }
@@ -50,8 +50,8 @@ class StateReducerDegradedFactsTests(unittest.TestCase):
         )
 
         adapter = state["runtime_adapter"]
-        self.assertIn("copilot_pre_tool_use_unsupported", adapter["active_degradation"])
-        self.assertIn("copilot_pre_tool_use_unsupported", adapter["degraded_capabilities"])
+        self.assertIn("copilot_pre_tool_advisory_context_unsupported", adapter["active_degradation"])
+        self.assertIn("copilot_pre_tool_advisory_context_unsupported", adapter["degraded_capabilities"])
         self.assertIn("pre_tool_advisory_context", adapter["unsupported_checks"])
         self.assertEqual(adapter["supported_checks"], ["validation_broker"])
 

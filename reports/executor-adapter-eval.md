@@ -17,7 +17,7 @@ This generated report uses deterministic local fixtures. It is structural eviden
 
 - Runtimes: claude=5, cline=2, codex=6, copilot=4, openhands=2, roo=1
 - Coverage targets: closure_verdict, command_risk, degradation, event_recognition, path_normalization, permission_decision, privacy_redaction, tool_category, validation_freshness_after_edits, validation_outcome
-- Pressure cases: absolute_user_path, claude_post_tool_failure, codex_destructive_permission_request, copilot_unsupported_pre_tool, edit_after_validation, failed_validation, full_command_output_field, large_path_list_cap, ready_after_rereview, ready_closure, repair_without_rereview, required_unsupported_check_degraded_ready, review_finding_without_repair, secret_like_payload_field, targeted_test_reported_as_full, unknown_event, unsupported_runtime_event, validation_pass_then_file_changed
+- Pressure cases: absolute_user_path, claude_post_tool_failure, codex_destructive_permission_request, copilot_pre_tool_advisory_context_unsupported, copilot_pre_tool_decision_supported, edit_after_validation, failed_validation, full_command_output_field, large_path_list_cap, ready_after_rereview, ready_closure, repair_without_rereview, required_unsupported_check_degraded_ready, review_finding_without_repair, secret_like_payload_field, targeted_test_reported_as_full, unknown_event, unsupported_runtime_event, validation_pass_then_file_changed
 
 ## Cases
 
@@ -39,7 +39,7 @@ This generated report uses deterministic local fixtures. It is structural eviden
 | copilot-degraded-ready-required-unsupported | copilot | `pass` | `stop` | `pass` | `degraded_ready` | none |
 | copilot-repair-without-rereview | copilot | `pass` | `stop` | `pass` | `needs_review` | none |
 | copilot-review-finding-without-repair | copilot | `pass` | `stop` | `pass` | `needs_repair` | none |
-| copilot-unsupported-pre-tool | copilot | `pass` | `pre_tool_use` | `degraded` | `needs_validation` | command:kind_only |
+| copilot-pre-tool-supported | copilot | `pass` | `pre_tool_use` | `pass` | `needs_validation` | command:kind_only |
 | openhands-absolute-path-normalization | openhands | `pass` | `file_changed` | `pass` | `needs_validation` | none |
 | openhands-test-command-pass | openhands | `pass` | `post_tool_use` | `pass` | `needs_validation` | command:kind_only |
 | roo-unsupported-runtime-event | roo | `pass` | `post_tool_use` | `degraded` | `needs_validation` | none |

@@ -424,10 +424,10 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
-        self.assertNotIn("decision", payload)
-        self.assertIn("hookSpecificOutput", payload)
+        self.assertEqual(payload["decision"], "block")
+        self.assertIn("destructive", payload["reason"])
         self.assertTrue(state["permission_gate_seen"])
-        self.assertIn("warn:kubectl", state["permission_decisions"])
+        self.assertIn("block:kubectl", state["permission_decisions"])
 
     def test_permission_gate_uses_summarize_command_program(self) -> None:
         event = {

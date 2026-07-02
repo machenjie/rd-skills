@@ -109,6 +109,12 @@ COPILOT_EVENT_SCRIPTS = {
         "changeforge_compaction_snapshot",
         "changeforge_compaction_reinject",
     ),
+    "PreToolUse": (
+        "changeforge_process_phase_gate",
+        "changeforge_sdd_material_choice_gate",
+        "changeforge_pre_edit_structure_gate",
+        "changeforge_permission_policy_gate",
+    ),
     "PostToolUse": (
         "changeforge_professional_injector",
         "changeforge_read_context_gate",
@@ -117,12 +123,15 @@ COPILOT_EVENT_SCRIPTS = {
         "changeforge_post_edit_structure_gate",
         "changeforge_risk_surface_gate",
     ),
+    "PostToolUseFailure": ("changeforge_tool_output_boundary_gate",),
     "SubagentStart": (
         "changeforge_session_bootstrap",
         "changeforge_professional_injector",
         "changeforge_subagent_skill_contract",
         "changeforge_subagent_review_gate",
     ),
+    "SubagentStop": ("changeforge_subagent_review_gate",),
+    "PreCompact": ("changeforge_compaction_snapshot",),
     "Stop": ("changeforge_process_phase_gate", "changeforge_stop_closure_gate"),
 }
 BOOTSTRAP_TEMPLATE = (
@@ -546,14 +555,20 @@ def _validate_adapter_capabilities(errors: list[str]) -> None:
             if data.get("command_output_visibility") == "full":
                 errors.append("adapter capabilities: OpenHands must not claim full command output visibility")
     copilot = capabilities.adapter_capabilities_for("copilot")
-    for event in ("UserPromptSubmit", "PreToolUse", "SubagentStop"):
+    for event in ("PreToolUse", "PostToolUseFailure", "SubagentStop", "PreCompact"):
+        if not copilot.supports_event(event):
+            errors.append(f"adapter capabilities: Copilot must support {event}")
+    for event in ("UserPromptSubmit", "PermissionRequest"):
         if event not in copilot.unsupported_events:
             errors.append(f"adapter capabilities: Copilot must mark {event} unsupported")
         if copilot.supports_event(event):
             errors.append(f"adapter capabilities: Copilot must not support {event}")
-    for check in ("pre_tool_advisory_context", "user_prompt_advisory_context", "subagent_stop_context"):
+    for check in ("pre_tool_advisory_context", "user_prompt_advisory_context"):
         if check not in copilot.unsupported_checks:
             errors.append(f"adapter capabilities: Copilot must mark {check} unsupported")
+    for check in ("pre_tool_block", "post_tool_failure_context", "subagent_stop_context"):
+        if check not in copilot.supported_checks:
+            errors.append(f"adapter capabilities: Copilot must support {check}")
     claude = capabilities.adapter_capabilities_for("claude")
     for event in (
         "PostToolUseFailure",

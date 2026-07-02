@@ -191,7 +191,7 @@ KNOWN_RUNTIMES = {"codex", "claude", "copilot", "generic", "cline", "roo", "open
 # Runtimes that consume structured JSON stdout. Codex and Claude wrap
 # event-specific context in hookSpecificOutput; Copilot command hooks consume
 # top-level additionalContext only for context-capable events and top-level
-# decision fields for Stop.
+# decision fields for Stop/SubagentStop and permissionDecision fields for PreToolUse.
 JSON_OUTPUT_RUNTIMES = {"codex", "claude", "copilot"}
 HOOK_MODES = {"off", "monitor", "warn", "block"}
 
@@ -690,7 +690,11 @@ def emit_block(runtime: str, hook_event_name: str, reason: str) -> None:
     """Only used when hook mode is block."""
     if runtime not in KNOWN_RUNTIMES:
         return
-    print(json.dumps({"decision": "block", "reason": bounded_hook_text(reason)}, sort_keys=True))
+    text = bounded_hook_text(reason)
+    if runtime == "copilot" and _compact(hook_event_name) == "pretooluse":
+        print(json.dumps({"permissionDecision": "deny", "permissionDecisionReason": text}, sort_keys=True))
+        return
+    print(json.dumps({"decision": "block", "reason": text}, sort_keys=True))
 
 
 def _emit_hook_specific_context(hook_event_name: str, text: str) -> None:

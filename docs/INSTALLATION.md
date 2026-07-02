@@ -66,11 +66,10 @@ Unsupported adapters record degraded closure instead of claiming enforcement.
 Hook runtime failures still fail open unless explicitly configured fail-closed.
 Claude commands explicitly set `CHANGEFORGE_AGENT=claude` and use 10-second
 `timeout` values because Claude Code measures timeout in seconds. Copilot local
-hooks wire only `SessionStart`, `SubagentStart`, `PostToolUse`, and `Stop`, so
-Copilot receives SessionStart/SubagentStart/PostToolUse context and Stop
-closure compensation where supported. Copilot cannot enforce Codex/Claude-style
-`PreToolUse` or `SubagentStop` gates, so missing phase evidence is disclosed as
-degraded enforcement. The shared scripts recognize Codex,
+hooks wire SessionStart/SubagentStart/PostToolUse context, PostToolUseFailure
+context, supported `PreToolUse` permission decisions, `SubagentStop` review
+checks, and Stop closure compensation where supported. `UserPromptSubmit` and
+`PreToolUse` advisory context remain unsupported. The shared scripts recognize Codex,
 Claude, and VS Code Copilot tool names.
 
 Cline, Roo, and OpenHands support is staged adapter support, not executable

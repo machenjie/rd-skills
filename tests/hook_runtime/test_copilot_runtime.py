@@ -176,6 +176,19 @@ class CopilotRuntimeTests(unittest.TestCase):
         self.assertNotIn("permissionDecision", result.stdout)
         self.assertNotIn("\"decision\"", result.stdout)
 
+    def test_permission_policy_blocks_destructive_pretool_with_copilot_decision(self) -> None:
+        event = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "runTerminalCommand",
+            "tool_input": {"command": "git reset --hard HEAD"},
+        }
+        result = _run("changeforge_permission_policy_gate.py", event, mode="block")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload.get("permissionDecision"), "deny")
+        self.assertIn("destructive", payload.get("permissionDecisionReason", ""))
+        self.assertNotIn("decision", payload)
+
     def test_non_risk_vscode_edit_is_silent(self) -> None:
         event = {
             "hook_event_name": "PostToolUse",

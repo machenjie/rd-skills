@@ -73,7 +73,7 @@ It is a foundation capability, not a top-level professional skill. The router se
 
 ## Hook Runtime Support
 
-ChangeForge Hook Runtime is a bounded support artifact, not a skill and not a replacement for `change-forge-router`. Codex and Claude hooks may block high-confidence phase, structure, SDD choice, and closure gaps where the adapter supports hard decisions. Copilot local hooks use advisory context where Copilot consumes it and record degraded enforcement where events such as `PreToolUse` or `SubagentStop` are unsupported. The runtime must not select a complete route, read every compiled reference, ingest personal content, or install raw `src/hook-runtime`.
+ChangeForge Hook Runtime is a bounded support artifact, not a skill and not a replacement for `change-forge-router`. Codex and Claude hooks may block high-confidence phase, structure, SDD choice, and closure gaps where the adapter supports hard decisions. Copilot local hooks use advisory context where Copilot consumes it, supported blocking decisions for `PreToolUse`/`SubagentStop`, and degraded disclosure for unsupported advisory paths such as `UserPromptSubmit` and `PreToolUse` context. The runtime must not select a complete route, read every compiled reference, ingest personal content, or install raw `src/hook-runtime`.
 
 Codex and Claude block SDD material choice, pre-edit structure, process phase,
 and Stop closure by default where supported. Unsupported adapters record

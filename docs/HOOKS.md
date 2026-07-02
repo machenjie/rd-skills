@@ -126,7 +126,7 @@ behavior, adapter support, telemetry boundaries, and closure semantics.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Codex | `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `Stop`, `SubagentStart`, `SubagentStop`, `Compact` | `UserPromptExpansion`, `PostToolUseFailure`, `PostToolBatch`, `StopFailure`, `SessionEnd`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact` | yes | yes | read_paths=partial, changed_paths=partial, command_kind=partial, command_risk=partial, validation_outcome=partial, permission_decision=partial, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=stop_closure | bounded adapter facts only; no raw prompt or command output |
 | Claude | `SessionStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Stop`, `StopFailure`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `PreCompact`, `PostCompact`, `Compact` | `WorktreeCreate`, `WorktreeRemove` | yes | yes | read_paths=partial, changed_paths=partial, command_kind=partial, command_risk=partial, validation_outcome=partial, permission_decision=partial, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=stop_closure | bounded adapter facts only; no raw prompt or command output |
-| Copilot | `SessionStart`, `PostToolUse`, `Stop`, `SubagentStart` | `UserPromptSubmit`, `PreToolUse`, `SubagentStop`, `UserPromptExpansion`, `PermissionRequest`, `PostToolUseFailure`, `PostToolBatch`, `StopFailure`, `SessionEnd`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `Compact` | yes | yes | read_paths=partial, changed_paths=partial, command_kind=partial, command_risk=partial, validation_outcome=partial, permission_decision=none, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=stop_closure | bounded adapter facts only; no raw prompt or command output |
+| Copilot | `SessionStart`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `Stop`, `SubagentStart`, `SubagentStop`, `PreCompact` | `UserPromptSubmit`, `PermissionRequest`, `UserPromptExpansion`, `PostToolBatch`, `StopFailure`, `SessionEnd`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PostCompact`, `Compact` | yes | yes | read_paths=partial, changed_paths=partial, command_kind=partial, command_risk=partial, validation_outcome=partial, permission_decision=partial, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=stop_closure | bounded adapter facts only; no raw prompt or command output |
 | Generic fallback | `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop` | `UserPromptExpansion`, `PermissionRequest`, `PostToolUseFailure`, `PostToolBatch`, `StopFailure`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `Compact` | yes | no | read_paths=partial, changed_paths=partial, command_kind=none, command_risk=none, validation_outcome=none, permission_decision=none, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=none | bounded adapter facts only; no raw prompt or command output |
 | Cline staged target | none | `SessionStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Stop`, `StopFailure`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `Compact` | no | no | read_paths=none, changed_paths=none, command_kind=none, command_risk=none, validation_outcome=none, permission_decision=none, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=none | staged adapter target; no executable hook lifecycle |
 | Roo staged target | none | `SessionStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Stop`, `StopFailure`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `Compact` | no | no | read_paths=none, changed_paths=none, command_kind=none, command_risk=none, validation_outcome=none, permission_decision=none, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=none | staged adapter target; no executable hook lifecycle |
@@ -241,8 +241,8 @@ The first-stage runtime provides these reminder gates:
   placement, reuse, object/module boundary, test plan, risk, and rollback. This
   moves the critical structure decision before the edit instead of relying only
   on post-edit review. Default mode is block for supported hooks; set
-  `CHANGEFORGE_PRE_EDIT_MODE=warn` to downgrade. Copilot templates do not wire unsupported `PreToolUse`
-  advisory and instead rely on PostToolUse and Stop compensation.
+  `CHANGEFORGE_PRE_EDIT_MODE=warn` to downgrade. Copilot templates wire supported
+  `PreToolUse` blocking gates, while advisory context remains unsupported.
 - Process Phase Gate (`UserPromptSubmit`, `PreToolUse`, and `Stop`, Codex and
   Claude): initializes a bounded `process_phase_ledger` for non-trivial
   engineering prompts, blocks `PreToolUse` mutation where the adapter supports
@@ -253,9 +253,9 @@ The first-stage runtime provides these reminder gates:
   or raw prompt text. Reviewed phase status requires both an artifact digest and
   review ID. `process_phase_ledger_seen` and the phase-reviewed booleans are
   telemetry shortcuts only; final closure proof requires the latest ledger
-  record. Copilot cannot enforce `PreToolUse`; it records degraded enforcement
-  and relies on parent-context review evidence, PostToolUse facts,
-  and Stop closure.
+  record. Copilot enforces supported `PreToolUse` blocking decisions and relies
+  on parent-context review evidence, PostToolUse facts, and Stop closure for
+  advisory/context gaps.
 
 - Post-Edit Structure Gate: runs after edit tools and warns when changed paths
   look like structural code, shared utilities, public interfaces, SDK/client
@@ -285,9 +285,8 @@ The first-stage runtime provides these reminder gates:
   the review capsule or phase ledger. Missing review results are recorded as
   `insufficient_evidence`; raw subagent transcript, raw prompt text, secrets,
   and implementer self-approval are not merged.
-  Copilot receives `SubagentStart` capsule context but does not wire unsupported
-  `SubagentStop`, so it records degraded enforcement and requires parent-context
-  review evidence or CI validation.
+  Copilot receives `SubagentStart` capsule context and wires supported
+  `SubagentStop` review checks.
 
 Codex and Claude block SDD material choice, pre-edit structure, process phase,
 and Stop closure gaps by default where supported. Stop closure no longer treats
@@ -296,10 +295,10 @@ has a hard Stop channel, and records `blocked_but_unenforceable` when an adapter
 cannot enforce the missing evidence. Hook runtime failures still fail open
 unless explicitly configured fail-closed.
 
-Copilot receives SessionStart/SubagentStart/PostToolUse context and Stop closure
-compensation where supported. Copilot cannot enforce Codex/Claude-style
-`PreToolUse` or `SubagentStop` gates, so missing phase evidence is disclosed as
-degraded enforcement rather than claimed as fully blocked.
+Copilot receives SessionStart/SubagentStart/PostToolUse context,
+PostToolUseFailure context, supported `PreToolUse` decisions, `SubagentStop`
+review checks, and Stop closure compensation where supported. `UserPromptSubmit`
+and `PreToolUse` advisory context remain unsupported.
 
 ## Hook Policy
 
@@ -766,8 +765,7 @@ non-trivial; they never select a complete route and never replace
 block SDD material choice, process phase, and pre-edit structure gaps by
 default; Stop closure policy also defaults to `block`, while the compatibility
 closure contract records degraded gaps when enforcement is unsupported.
-Copilot's blocking is limited by its supported events; it cannot enforce
-Codex/Claude-style `PreToolUse` or `SubagentStop` gates.
+Copilot's blocking is limited by its supported event outputs; it can enforce `PreToolUse` decisions and `SubagentStop` decisions, but cannot consume `PreToolUse` advisory context.
 
 ## Hook Capability Boundary
 
@@ -779,9 +777,9 @@ Hooks can:
 - remind on routing per user prompt (Codex and Claude `UserPromptSubmit`;
   Copilot does not wire this unsupported advisory path);
 - preview risk surfaces before an edit or command runs (Codex and Claude
-  `PreToolUse`; Copilot cannot consume advisory preview context);
+  `PreToolUse`; Copilot cannot consume advisory preview context, but blocking gates use `permissionDecision`);
 - require or remind on implementation preflight evidence before structural edits
-  (Codex and Claude `PreToolUse`; Copilot compensates after edit and at Stop);
+  (Codex and Claude advisory `PreToolUse`; Copilot blocking gates run at `PreToolUse` and still compensate after edit and at Stop);
 - require PDD, DDD, SDD, and TDD phase reviews before non-trivial engineering
   mutation when `PreToolUse` blocking is supported;
 - block material SDD choices before mutation and recheck unresolved choices at

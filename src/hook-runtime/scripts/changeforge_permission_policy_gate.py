@@ -98,7 +98,7 @@ def _main() -> int:
     command = extract_bash_command(event)
     decision, reason = _decision(command)
     risk_class = _command_risk_class(command)
-    recorded_decision = "warn" if pretool_bash_event else decision
+    recorded_decision = "block" if pretool_bash_event and decision == "block" and mode == "block" else ("warn" if pretool_bash_event else decision)
     repo = repo_root(cwd_from_event(event))
     program = summarize_command_program(command) or "unknown"
     snapshot = snapshot_from_event_state(
@@ -147,7 +147,7 @@ def _main() -> int:
     if pretool_bash_event and decision == "allow":
         return 0
     adapter = adapter_for(runtime)
-    if permission_event and decision == "block" and mode == "block":
+    if (permission_event or pretool_bash_event) and decision == "block" and mode == "block":
         adapter.emit_permission_decision("block", reason)
     elif mode != "monitor":
         adapter.emit_warning(event_name(event) or "PermissionRequest", reason)

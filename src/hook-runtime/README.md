@@ -35,16 +35,16 @@ The runtime provides these reminder hooks:
   the prompt text.
 - Pre-Edit Risk Preview: at Codex and Claude `PreToolUse`, preview risk surfaces
   before an edit or command runs. Advisory only; never denies the tool call.
-  Copilot templates do not wire `PreToolUse` because Copilot only consumes
-  permission decisions or argument modifications for that event.
+  Copilot uses blocking `permission` decisions for supported `PreToolUse` gates,
+  but does not consume advisory context for that event.
 - Pre-Edit Implementation Structure Gate: at Codex and Claude `PreToolUse`,
   check structural edit tools for read evidence and a
   `changeforge_implementation_preflight` summary before the first edit lands.
   It requires or reminds on placement, reuse, object/module boundary, test plan,
   residual risk, and rollback/revert path. The default gate mode is `block` for
   supported hooks. Set `CHANGEFORGE_PRE_EDIT_MODE=warn` to downgrade locally.
-  Copilot templates do not wire unsupported `PreToolUse` advisory, so PostToolUse
-  and Stop report preflight gaps for Copilot.
+  Copilot templates wire supported `PreToolUse` blocking gates, while PostToolUse
+  and Stop still report advisory/context gaps for Copilot.
 - Process Phase Gate: at Codex and Claude `UserPromptSubmit`, `PreToolUse`, and
   `Stop`, initialize a bounded process phase ledger for non-trivial engineering
   prompts, block `PreToolUse` mutation where the adapter supports pre-tool
@@ -56,8 +56,8 @@ The runtime provides these reminder hooks:
   and `tdd_reviewed` booleans are telemetry shortcuts only; final closure proof
   comes from the latest ledger record plus digest/review ID, or
   `not_applicable` with a reason.
-  Copilot cannot enforce `PreToolUse`, so it records degraded phase enforcement
-  and relies on parent-context review evidence, PostToolUse facts, and Stop.
+  Copilot enforces supported `PreToolUse` blocking decisions and relies on
+  parent-context review evidence, PostToolUse facts, and Stop for advisory gaps.
 - Post-Edit Structure Gate: after edit tools run, detect structural code changes
   that should preserve reuse, placement, ownership, dependency direction, public
   API decisions, same-pattern scans, and nearby tests.
@@ -76,10 +76,8 @@ The runtime provides these reminder hooks:
   `phase_review_result` records back into parent state. A passing phase review
   must match the current artifact digest from the review capsule or phase
   ledger. Raw subagent transcript, raw prompts, secrets, and implementer
-  self-approval are not merged. Copilot
-  receives `SubagentStart` capsule context but does not wire unsupported
-  `SubagentStop`, so it records degraded enforcement and requires parent-context
-  review evidence or CI validation.
+  self-approval are not merged. Copilot receives `SubagentStart` capsule context and wires supported
+  `SubagentStop` review checks.
 
 ## Non-Goals
 
@@ -125,11 +123,9 @@ the flat (matcher-less) hook config format with `version: 1` and `timeoutSec`
 and loads every `*.json` in its hook folder, so its config is the dedicated
 `changeforge-hooks.json` and the scripts, manifest, and bootstrap fragment live
 in a `changeforge/` subfolder. Copilot context output is top-level
-`additionalContext` for supported events. Copilot cannot run Codex/Claude
-`PreToolUse` blocking gates or `SubagentStop` review collection, so it relies on
-PostToolUse, parent-context review evidence, and Stop closure compensation where
-those facts are available. Missing hard-enforcement support is recorded as
-degraded evidence rather than a pass. Claude commands set
+`additionalContext` for supported context events. Copilot uses `permission`
+decisions for `PreToolUse` and decision output for `SubagentStop`; unsupported
+advisory paths are recorded as degraded evidence rather than a pass. Claude commands set
 `CHANGEFORGE_AGENT=claude` explicitly, emit `hookSpecificOutput.additionalContext`
 for context-bearing events, and use 10-second `timeout` values because Claude
 Code measures timeout in seconds.

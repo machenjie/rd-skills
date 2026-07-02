@@ -111,7 +111,7 @@ CONTEXT_EVENTS_BY_RUNTIME = {
         "SubagentStop",
         "Compact",
     },
-    "copilot": {"SessionStart", "PostToolUse", "SubagentStart"},
+    "copilot": {"SessionStart", "PostToolUse", "PostToolUseFailure", "SubagentStart"},
     "generic": {"SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse"},
     "cline": set(),
     "roo": set(),
@@ -120,7 +120,7 @@ CONTEXT_EVENTS_BY_RUNTIME = {
 
 SUPPORTED_RUNTIMES = ("codex", "claude", "copilot", "generic", "cline", "roo", "openhands")
 PLACEHOLDER_RUNTIMES = ("gemini-cli", "goose")
-COPILOT_UNSUPPORTED_ADVISORY_EVENTS = ("UserPromptSubmit", "PreToolUse", "SubagentStop")
+COPILOT_UNSUPPORTED_ADVISORY_EVENTS = ("UserPromptSubmit", "PermissionRequest")
 DOCS_MATRIX_START = "<!-- changeforge-adapter-capability-matrix:start -->"
 DOCS_MATRIX_END = "<!-- changeforge-adapter-capability-matrix:end -->"
 VISIBILITY_FIELDS = (
@@ -268,16 +268,17 @@ COPILOT_SUPPORTED_CHECKS = (
     *DEFAULT_SUPPORTED_CHECKS,
     "post_tool_context",
     "subagent_start_context",
-)
-COPILOT_UNSUPPORTED_CHECKS = (
-    "pre_tool_advisory_context",
-    "user_prompt_advisory_context",
     "subagent_stop_context",
     "permission_signal",
     "permission_decision",
     "pre_tool_block",
-    "tool_batch_context",
     "post_tool_failure_context",
+    "compact_direction",
+)
+COPILOT_UNSUPPORTED_CHECKS = (
+    "pre_tool_advisory_context",
+    "user_prompt_advisory_context",
+    "tool_batch_context",
 )
 GENERIC_UNSUPPORTED_CHECKS = (
     "stop_block",
@@ -1112,7 +1113,8 @@ def _capabilities(
         supports_context_injection=bool(advisory_events),
         supports_pre_tool_block=stop_block_supported
         and bool({"PreToolUse", "PermissionRequest"} & set(supported)),
-        supports_permission_decision=permission_signal_observable and "PermissionRequest" in supported,
+        supports_permission_decision=permission_signal_observable
+        and bool({"PreToolUse", "PermissionRequest"} & set(supported)),
         supports_post_tool_success="PostToolUse" in supported,
         supports_post_tool_failure="PostToolUseFailure" in supported,
         supports_tool_batch="PostToolBatch" in supported,
@@ -1174,6 +1176,7 @@ CAPABILITIES_BY_RUNTIME = {
         command_output_visibility="partial",
         changed_path_visibility="partial",
         validation_output_visibility="partial",
+        permission_decision_visibility="partial",
         default_gate_modes={
             "default": "warn",
             "sdd_material_choice": "block",
@@ -1239,7 +1242,16 @@ CAPABILITIES_BY_RUNTIME = {
     ),
     "copilot": _capabilities(
         "copilot",
-        supported_events=("SessionStart", "PostToolUse", "Stop", "SubagentStart"),
+        supported_events=(
+            "SessionStart",
+            "PreToolUse",
+            "PostToolUse",
+            "PostToolUseFailure",
+            "Stop",
+            "SubagentStart",
+            "SubagentStop",
+            "PreCompact",
+        ),
         unsupported_events=COPILOT_UNSUPPORTED_ADVISORY_EVENTS,
         advisory_context_events=CONTEXT_EVENTS_BY_RUNTIME["copilot"],
         observable_payload_fields=(
@@ -1252,15 +1264,30 @@ CAPABILITIES_BY_RUNTIME = {
             "cwd",
             "transcript_path",
             "transcriptPath",
+            "sessionId",
+            "toolArgs",
+            "toolResult",
+            "error",
+            "agentName",
+            "stopReason",
+            "trigger",
+            "reason",
         ),
         stop_block_supported=True,
         command_outcome_observable="partial",
         path_observable=True,
-        permission_signal_observable=False,
+        permission_signal_observable=True,
         command_output_visibility="partial",
         changed_path_visibility="partial",
         validation_output_visibility="partial",
-        default_gate_modes={"default": "warn", "stop": "block"},
+        default_gate_modes={
+            "default": "warn",
+            "sdd_material_choice": "block",
+            "pre_edit_structure": "block",
+            "process_phase": "block",
+            "permission_policy": "block",
+            "stop": "block",
+        },
         supported_checks=COPILOT_SUPPORTED_CHECKS,
         unsupported_checks=COPILOT_UNSUPPORTED_CHECKS,
     ),

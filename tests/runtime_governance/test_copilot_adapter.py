@@ -15,14 +15,12 @@ from runtime_governance.gates import GateOutcome  # noqa: E402
 
 
 class CopilotAdapterTests(unittest.TestCase):
-    def test_pre_tool_degrades_and_does_not_offer_fake_context(self) -> None:
+    def test_pre_tool_is_supported_without_fake_context(self) -> None:
         adapter = CopilotAdapter()
         result = adapter.normalize_event({"eventName": "PreToolUse", "toolName": "Bash"})
-        self.assertEqual(result.gate_result.outcome, GateOutcome.DEGRADED.value)
-        self.assertIn(
-            "copilot_pre_tool_use_unsupported",
-            result.normalized_event.capability_degradation,
-        )
+        self.assertEqual(result.gate_result.outcome, GateOutcome.PASS.value)
+        self.assertEqual(result.normalized_event.event_kind, "pre_tool_use")
+        self.assertEqual(result.normalized_event.capability_degradation, [])
         self.assertIsNone(adapter.advisory_context_for("PreToolUse", "context"))
 
     def test_stop_block_requires_configuration_and_capability(self) -> None:

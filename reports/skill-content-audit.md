@@ -316,17 +316,17 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | --- | --- |
 | 18 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
 | 18 | do not load every reference by default. treat references as targeted support selected by t |
-| 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
-| 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
-| 14 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
+| 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 14 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 14 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 14 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 12 | these triggers are hidden-risk escalators, not ordinary checklist items. |
 | 7 | **block/pass decision** with required conditions for approval. |
 | 6 | non-trivial direct use still requires `repository-context-map` before planning when affect |
-| 5 | references are just-in-time support, not default-loaded encyclopedia content. |
 | 5 | the `skill.md` body carries l1/l2 routing, risk, and output-contract rules. |
+| 5 | references are just-in-time support, not default-loaded encyclopedia content. |
 | 5 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 4 | **route to:** `validation-broker`, `quality-test-gate`. |
 | 4 | **route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-gover |

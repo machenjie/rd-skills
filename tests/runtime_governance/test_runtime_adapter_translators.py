@@ -202,13 +202,14 @@ class RuntimeAdapterTranslatorTests(unittest.TestCase):
         self.assertEqual([event.event_kind for event in events], ["pre_compact", "post_compact"])
         self.assertTrue(all(not event.capability_degradation for event in events))
 
-    def test_copilot_pretool_unsupported_degrades_without_fake_pre_edit_confidence(self) -> None:
+    def test_copilot_pretool_supports_decision_without_fake_context(self) -> None:
         adapter = runtime_adapter_for("copilot")
         result = adapter.normalize_event(load_fixture("copilot_pretool_unsupported_degrades.json"))
         event = result.normalized_event
-        self.assertEqual(result.gate_result.outcome, GateOutcome.DEGRADED.value)
+        self.assertEqual(result.gate_result.outcome, GateOutcome.PASS.value)
         self.assertEqual(event.event_kind, "pre_tool_use")
-        self.assertIn("copilot_pre_tool_use_unsupported", event.capability_degradation)
+        self.assertEqual(event.capability_degradation, [])
+        self.assertTrue(adapter.capabilities.supports_pre_tool_block)
         self.assertFalse(adapter.capabilities.supports_context_event("PreToolUse"))
 
     def test_copilot_posttool_edit_is_post_edit_compensation(self) -> None:
@@ -223,14 +224,14 @@ class RuntimeAdapterTranslatorTests(unittest.TestCase):
         self.assertEqual(event.command_outcome, "pass")
         self.assertEqual(event.changed_paths, ["src/auth/login.py"])
 
-    def test_copilot_stop_is_supported_but_pretool_checks_remain_residual_risk(self) -> None:
+    def test_copilot_stop_is_supported_but_advisory_context_remains_residual_risk(self) -> None:
         adapter = runtime_adapter_for("copilot")
         result = adapter.normalize_event(load_fixture("copilot_stop_closure_unsupported_checks.json"))
         self.assertEqual(result.gate_result.outcome, GateOutcome.PASS.value)
         self.assertEqual(result.normalized_event.event_kind, "stop")
         self.assertEqual(adapter.capabilities.default_gate_mode("stop"), "block")
         self.assertIn("pre_tool_advisory_context", adapter.capabilities.unsupported_checks)
-        self.assertIn("pre_tool_block", adapter.capabilities.unsupported_checks)
+        self.assertNotIn("pre_tool_block", adapter.capabilities.unsupported_checks)
 
     def test_cline_plan_mode_edit_evidence_degrades(self) -> None:
         result = runtime_adapter_for("cline").normalize_event(

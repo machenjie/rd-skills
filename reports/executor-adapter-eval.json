@@ -1670,7 +1670,8 @@
       },
       "path": "evals/executor-adapter/copilot/degraded-ready-required-unsupported.yaml",
       "pressure_cases": [
-        "required_unsupported_check_degraded_ready"
+        "required_unsupported_check_degraded_ready",
+        "copilot_pre_tool_advisory_context_unsupported"
       ],
       "runtime": "copilot",
       "status": "pass"
@@ -1885,12 +1886,8 @@
     },
     {
       "closure_effect": {
-        "degraded_capabilities": [
-          "copilot_pre_tool_use_unsupported",
-          "copilot-unsupported-pre-tool"
-        ],
+        "degraded_capabilities": [],
         "freshness": {
-          "adapter_degradation": "current",
           "command_risk": "current",
           "validation": "current"
         },
@@ -1901,17 +1898,14 @@
         ],
         "negative_evidence": [],
         "residual_risk": [
-          "validation command was observed without outcome",
-          "unsupported runtime checks remain"
+          "validation command was observed without outcome"
         ],
         "review_status": {
           "repair_present": false,
           "rereview_present": false,
           "review_outcome": ""
         },
-        "unsupported_checks": [
-          "runtime_adapter_degradation"
-        ],
+        "unsupported_checks": [],
         "validation_status": {
           "freshness": "current",
           "outcome": "no_outcome",
@@ -1920,19 +1914,19 @@
         "verdict": "needs_validation"
       },
       "coverage_targets": [
-        "degradation",
+        "event_recognition",
         "tool_category",
         "privacy_redaction"
       ],
       "evidence_delta": {
-        "adapter_degradation_strength": "partial",
+        "adapter_degradation_strength": "none",
         "bounded_path_count": 0,
         "changed_files": [],
         "command_risk_outcome": "safe",
         "deleted_files": [],
         "event_count": 1,
         "generated_files": [],
-        "normalized_event_supported": false,
+        "normalized_event_supported": true,
         "permission_outcome": "",
         "permission_strength": "none",
         "privacy_redaction_count": 1,
@@ -1948,31 +1942,27 @@
       "failures": [],
       "gate_result": {
         "evidence_refs": [
-          "copilot-unsupported-pre-tool"
+          "copilot-pre-tool-supported"
         ],
         "gate_name": "executor_adapter",
-        "outcome": "degraded",
-        "reason": "unsupported runtime event for copilot: PreToolUse",
-        "residual_risk": [
-          "copilot_pre_tool_use_unsupported"
-        ],
-        "severity": "warning"
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
       },
-      "id": "copilot-unsupported-pre-tool",
+      "id": "copilot-pre-tool-supported",
       "normalized_event": {
         "action_type": "RunTerminalCommand",
         "adapter": "copilot",
         "bounded_paths": [],
-        "capability_degradation": [
-          "copilot_pre_tool_use_unsupported"
-        ],
+        "capability_degradation": [],
         "changed_paths": [],
         "checkpoint_id": null,
         "command_kind": "pytest",
         "command_outcome": "not_observable",
         "command_risk": "safe",
         "deleted_paths": [],
-        "event_id": "copilot-unsupported-pre-tool",
+        "event_id": "copilot-pre-tool-supported",
         "event_kind": "pre_tool_use",
         "executor_event_name": "PreToolUse",
         "executor_event_phase": "before",
@@ -1994,9 +1984,9 @@
         "validation_freshness": null,
         "validation_outcome": null
       },
-      "path": "evals/executor-adapter/copilot/unsupported-pre-tool.yaml",
+      "path": "evals/executor-adapter/copilot/supported-pre-tool.yaml",
       "pressure_cases": [
-        "copilot_unsupported_pre_tool"
+        "copilot_pre_tool_decision_supported"
       ],
       "runtime": "copilot",
       "status": "pass"
@@ -2368,7 +2358,8 @@
       "absolute_user_path",
       "claude_post_tool_failure",
       "codex_destructive_permission_request",
-      "copilot_unsupported_pre_tool",
+      "copilot_pre_tool_advisory_context_unsupported",
+      "copilot_pre_tool_decision_supported",
       "edit_after_validation",
       "failed_validation",
       "full_command_output_field",

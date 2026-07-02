@@ -7,7 +7,7 @@
     "needs_validation": 13,
     "ready": 2
   },
-  "degraded_event_count": 4,
+  "degraded_event_count": 3,
   "event_count": 20,
   "evidence_level": "runtime telemetry fixture sample",
   "generated_by": "scripts/eval-executor-adapters.py",
@@ -86,7 +86,7 @@
       "validation_freshness": "current"
     },
     {
-      "case_id": "copilot-unsupported-pre-tool",
+      "case_id": "copilot-pre-tool-supported",
       "validation_freshness": "current"
     },
     {

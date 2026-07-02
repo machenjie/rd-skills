@@ -40,8 +40,11 @@ class AdapterCapabilitiesTests(unittest.TestCase):
 
     def test_copilot_unsupported_advisory_events_are_centralized(self) -> None:
         capabilities = adapter_capabilities_for("copilot")
-        for event in ("UserPromptSubmit", "PreToolUse", "SubagentStop"):
+        for event in ("UserPromptSubmit", "PermissionRequest"):
             self.assertIn(event, capabilities.unsupported_events)
+        self.assertTrue(capabilities.supports_event("PreToolUse"))
+        self.assertTrue(capabilities.supports_event("SubagentStop"))
+        self.assertFalse(capabilities.supports_context_event("PreToolUse"))
         self.assertEqual(unsupported_events_for("copilot"), capabilities.unsupported_events)
         for event in capabilities.unsupported_events:
             self.assertFalse(capabilities.supports_event(event))
@@ -51,6 +54,7 @@ class AdapterCapabilitiesTests(unittest.TestCase):
         self.assertTrue(adapter_for("codex").supports_context_event("PreToolUse"))
         self.assertTrue(adapter_for("claude").supports_permission_event())
         self.assertFalse(adapter_for("copilot").supports_context_event("PreToolUse"))
+        self.assertTrue(adapter_for("copilot").supports_permission_event())
         self.assertTrue(adapter_for("copilot").supports_stop_block())
         self.assertEqual(adapter_for("unknown").runtime, "generic")
         self.assertEqual(runtime_adapter_for("codex").__class__.__name__, "CodexAdapter")

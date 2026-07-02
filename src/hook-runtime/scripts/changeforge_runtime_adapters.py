@@ -100,7 +100,12 @@ class RuntimeAdapter:
         if self.runtime == "generic":
             print(f"{decision}: {bounded_hook_text(reason)}")
             return
-        print(json.dumps({"decision": decision, "reason": bounded_hook_text(reason)}, sort_keys=True))
+        text = bounded_hook_text(reason)
+        if self.runtime == "copilot":
+            mapped = "deny" if decision == "block" else decision
+            print(json.dumps({"permissionDecision": mapped, "permissionDecisionReason": text}, sort_keys=True))
+            return
+        print(json.dumps({"decision": decision, "reason": text}, sort_keys=True))
 
 
 def adapter_for(runtime: str) -> RuntimeAdapter:

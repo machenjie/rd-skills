@@ -68,7 +68,12 @@ class AdapterCapabilitiesProtocolTests(unittest.TestCase):
 
     def test_copilot_advisory_gaps_are_declared(self) -> None:
         capabilities = adapter_capabilities_for("copilot")
-        self.assertIn("PreToolUse", capabilities.unsupported_events)
+        self.assertTrue(capabilities.supports_event("PreToolUse"))
+        self.assertTrue(capabilities.supports_pre_tool_block)
+        self.assertTrue(capabilities.supports_permission_decision)
+        self.assertTrue(capabilities.supports_post_tool_failure)
+        self.assertTrue(capabilities.supports_subagent_stop)
+        self.assertIn("PermissionRequest", capabilities.unsupported_events)
         self.assertIn("pre_tool_advisory_context", capabilities.unsupported_checks)
         self.assertFalse(capabilities.supports_context_event("PreToolUse"))
         self.assertEqual(capabilities.default_gate_mode("stop"), "block")

@@ -64,7 +64,7 @@ REQUIRED_PRESSURE_CASES = {
     "failed_validation",
     "review_finding_without_repair",
     "repair_without_rereview",
-    "copilot_unsupported_pre_tool",
+    "copilot_pre_tool_advisory_context_unsupported",
     "claude_post_tool_failure",
     "codex_destructive_permission_request",
     "ready_closure",

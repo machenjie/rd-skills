@@ -181,7 +181,7 @@ class SubagentReviewCapsuleTests(unittest.TestCase):
             self.assertNotIn("raw_prompt", rendered)
             self.assertNotIn("secret_token", rendered)
 
-    def test_copilot_unsupported_subagent_stop_records_degraded_capability(self) -> None:
+    def test_copilot_subagent_stop_records_review_result_without_adapter_degradation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
             seed_state(Path(tmp), Path(cache), review_capsules=[review_capsule()])
             result = run_gate(
@@ -192,8 +192,10 @@ class SubagentReviewCapsuleTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             state = load_state(Path(tmp), Path(cache))
-            self.assertTrue(state["process_phase_blocked"])
-            self.assertIn("copilot lacks SubagentStop support", state["process_phase_blocked_reason"])
+            self.assertTrue(state["phase_review_seen"])
+            self.assertTrue(state["sdd_reviewed"])
+            self.assertFalse(state["process_phase_blocked"])
+            self.assertNotIn("copilot lacks SubagentStop support", state["process_phase_blocked_reason"])
 
     def test_subagent_review_digest_must_match_capsule_digest(self) -> None:
         digest = "sha256:" + ("c" * 64)

@@ -23,6 +23,28 @@
         "timeoutSec": 10
       }
     ],
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_process_phase_gate.py\"",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_sdd_material_choice_gate.py\"",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_pre_edit_structure_gate.py\"",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_permission_policy_gate.py\"",
+        "timeoutSec": 10
+      }
+    ],
     "PostToolUse": [
       {
         "type": "command",
@@ -55,6 +77,13 @@
         "timeoutSec": 10
       }
     ],
+    "PostToolUseFailure": [
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_tool_output_boundary_gate.py\"",
+        "timeoutSec": 10
+      }
+    ],
     "SubagentStart": [
       {
         "type": "command",
@@ -74,6 +103,20 @@
       {
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_subagent_review_gate.py\"",
+        "timeoutSec": 10
+      }
+    ],
+    "SubagentStop": [
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_subagent_review_gate.py\"",
+        "timeoutSec": 10
+      }
+    ],
+    "PreCompact": [
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_compaction_snapshot.py\"",
         "timeoutSec": 10
       }
     ],

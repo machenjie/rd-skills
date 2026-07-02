@@ -20,6 +20,7 @@ from .base import (
 _COPILOT_EVENT_ALIASES = {
     "sessionstart": "SessionStart",
     "posttooluse": "PostToolUse",
+    "posttoolusefailure": "PostToolUseFailure",
     "stop": "Stop",
     "agentstop": "Stop",
     "subagentstart": "SubagentStart",
@@ -27,6 +28,9 @@ _COPILOT_EVENT_ALIASES = {
     "userpromptsubmitted": "UserPromptSubmit",
     "pretooluse": "PreToolUse",
     "subagentstop": "SubagentStop",
+    "precompact": "PreCompact",
+    "sessionend": "SessionEnd",
+    "permissionrequest": "PermissionRequest",
 }
 
 
@@ -50,7 +54,7 @@ class CopilotAdapter(BaseRuntimeAdapter):
         return _COPILOT_EVENT_ALIASES.get(compact, _canonical_event_name(raw))
 
     def classify_tool_category(self, payload: Mapping[str, Any]) -> str | None:
-        if self.canonical_event_name(payload) != "PostToolUse":
+        if self.canonical_event_name(payload) not in {"PreToolUse", "PostToolUse", "PostToolUseFailure"}:
             return super().classify_tool_category(payload)
         tool = _compact_token(self.extract_tool_name(payload))
         if tool in {"read_file", "readfile", "grep_search", "grep", "search", "list_dir", "listdirectory"}:
@@ -89,7 +93,7 @@ class CopilotAdapter(BaseRuntimeAdapter):
         *,
         base_path: str | None = None,
     ) -> dict[str, list[str]]:
-        if self.canonical_event_name(payload) != "PostToolUse":
+        if self.canonical_event_name(payload) not in {"PreToolUse", "PostToolUse", "PostToolUseFailure"}:
             return super().extract_path_groups(payload, base_path=base_path)
         category = self.classify_tool_category(payload)
         generic_paths = _paths_from_payload(payload, base_path=base_path)
@@ -114,7 +118,7 @@ class CopilotAdapter(BaseRuntimeAdapter):
         command_kind: str | None,
         payload: Mapping[str, Any],
     ) -> str | None:
-        if self.canonical_event_name(payload) != "PostToolUse":
+        if self.canonical_event_name(payload) not in {"PreToolUse", "PostToolUse", "PostToolUseFailure"}:
             return super().classify_command_risk(command_kind, payload)
         category = self.classify_tool_category(payload)
         if category == "edit" and not command_kind:
