@@ -28,12 +28,12 @@ class GateResultTests(unittest.TestCase):
     def test_hook_policy_legacy_helpers_use_gate_result(self) -> None:
         with patch.dict(os.environ, {"CHANGEFORGE_HOOK_MODE": "block"}, clear=True):
             self.assertTrue(should_emit_context("stop_closure"))
-            self.assertTrue(should_block("stop_closure", confidence="high"))
+            self.assertFalse(should_block("stop_closure", confidence="high"))
             self.assertFalse(should_block("stop_closure", confidence="medium"))
             result = gate_result("stop_closure", confidence="high", message="missing route")
         self.assertEqual(result.gate_name, "stop_closure")
         self.assertEqual(result.message, "missing route")
-        self.assertTrue(result.should_block)
+        self.assertFalse(result.should_block)
 
 
 if __name__ == "__main__":

@@ -75,7 +75,7 @@
     "Stop": [
       {
         "type": "command",
-        "command": "CHANGEFORGE_AGENT=copilot CHANGEFORGE_HOOK_MODE=block /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_stop_closure_gate.py\"",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_stop_closure_gate.py\"",
         "timeoutSec": 10
       }
     ]

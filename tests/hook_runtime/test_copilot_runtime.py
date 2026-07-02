@@ -177,8 +177,8 @@ class CopilotRuntimeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.strip(), "")
 
-    def test_stop_block_mode_emits_top_level_decision(self) -> None:
-        # Regression: Copilot agentStop consumes top-level decision/reason, not Codex hookSpecificOutput.
+    def test_stop_block_mode_is_silent_advisory_for_copilot(self) -> None:
+        # Copilot has no non-blocking Stop advisory channel; advisory Stop output is silent.
         with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
             env = os.environ.copy()
             env["XDG_CACHE_HOME"] = cache
@@ -222,10 +222,7 @@ class CopilotRuntimeTests(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            payload = json.loads(result.stdout)
-            self.assertEqual(payload["decision"], "block")
-            self.assertIn("changeforge_route", payload["reason"])
-            self.assertNotIn("hookSpecificOutput", payload)
+            self.assertEqual(result.stdout.strip(), "")
 
     def test_stop_block_mode_does_not_block_when_closure_evidence_is_complete(self) -> None:
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:

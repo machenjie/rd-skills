@@ -5,8 +5,9 @@ It does not replace change-forge-router.
 It adds execution-time reminders across the agent lifecycle: at session and
 subagent start, per user prompt, before and after tools run, and before the
 agent or a subagent stops.
-Codex and Claude default to warn, not block. Copilot local hooks default to a
-strict Stop closure gate while keeping context hooks advisory.
+Stop closure reminders are advisory across runtimes; supported blocking remains
+reserved for earlier high-confidence gates such as SDD material choice and
+pre-edit structure.
 
 The hook runtime is a small project-level reminder layer for agent execution. It
 does not route work, does not read all skill references, and does not become a
@@ -100,11 +101,11 @@ the flat (matcher-less) hook config format with `version: 1` and `timeoutSec`
 and loads every `*.json` in its hook folder, so its config is the dedicated
 `changeforge-hooks.json` and the scripts, manifest, and bootstrap fragment live
 in a `changeforge/` subfolder. Copilot context output is top-level
-`additionalContext` for supported events; the Copilot Stop command sets
-`CHANGEFORGE_HOOK_MODE=block` and emits top-level `decision`/`reason` only when
-closure evidence is missing. Claude commands set `CHANGEFORGE_AGENT=claude` explicitly,
-emit `hookSpecificOutput.additionalContext` for context-bearing events, and use
-10-second `timeout` values because Claude Code measures timeout in seconds.
+`additionalContext` for supported events; Copilot Stop closure runs advisory-only
+and does not force `CHANGEFORGE_HOOK_MODE=block`. Claude commands set
+`CHANGEFORGE_AGENT=claude` explicitly, emit `hookSpecificOutput.additionalContext`
+for context-bearing events, and use 10-second `timeout` values because Claude
+Code measures timeout in seconds.
 Each layout includes `.changeforge-hook-manifest.json` so installation
 validation can prove which hook scripts and scope were emitted.
 

@@ -156,7 +156,7 @@ class CodexOutputProtocolTests(unittest.TestCase):
         self.assertIn("systemMessage", payload)
         self.assertIn("ChangeForge Closure Gate reminder", payload["systemMessage"])
 
-    def test_stop_block_outputs_continuation_decision(self) -> None:
+    def test_stop_block_mode_outputs_advisory_system_message(self) -> None:
         event = {
             "hook_event_name": "Stop",
             "stop_hook_active": False,
@@ -175,8 +175,8 @@ class CodexOutputProtocolTests(unittest.TestCase):
             )
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
-        self.assertEqual(payload["decision"], "block")
-        self.assertIn("reason", payload)
+        self.assertNotIn("decision", payload)
+        self.assertIn("systemMessage", payload)
 
     def test_stop_block_with_active_stop_hook_does_not_continue(self) -> None:
         event = {

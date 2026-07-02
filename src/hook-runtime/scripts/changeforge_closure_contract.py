@@ -206,16 +206,7 @@ class ClosureContract:
         )
         missing.extend(extra_missing)
         missing = _unique(missing)
-        fail_closed_allowed = "stop_closure" in _list(
-            getattr(capabilities, "fail_closed_allowed_checks", ())
-        )
-        status = (
-            "block"
-            if missing and block_mode and capabilities.supports_blocking and fail_closed_allowed
-            else "warn"
-            if missing
-            else "pass"
-        )
+        status = "warn" if missing else "pass"
         verdict = _compat_verdict(governance.verdict, status, validation_broker_outcome)
         stage_route_residual = (
             ["stage route evidence missing for non-trivial engineering task"]

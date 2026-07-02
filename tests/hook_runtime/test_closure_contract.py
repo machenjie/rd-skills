@@ -30,7 +30,7 @@ class ClosureContractTests(unittest.TestCase):
         self.assertIn("validation", contract.missing_items)
         self.assertIn("risk", contract.missing_items)
 
-    def test_block_mode_uses_adapter_blocking_capability(self) -> None:
+    def test_block_mode_stays_advisory_for_closure_evidence(self) -> None:
         contract = ClosureContract.from_state(
             {"turn_stage": "coding", "changed_paths": ["src/app.py"]},
             route_manifest_complete=False,
@@ -42,7 +42,8 @@ class ClosureContractTests(unittest.TestCase):
             block_mode=True,
         )
         self.assertTrue(contract.adapter_supports_blocking)
-        self.assertEqual(contract.closure_status, "block")
+        self.assertEqual(contract.closure_status, "warn")
+        self.assertIn("route_manifest", contract.missing_items)
 
     def test_read_review_profile_does_not_require_engineering_route(self) -> None:
         contract = ClosureContract.from_state(

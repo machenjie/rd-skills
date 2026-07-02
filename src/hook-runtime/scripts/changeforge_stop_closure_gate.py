@@ -579,8 +579,6 @@ def _main() -> int:
     if _closure_profile(state) == "read_review" and not missing:
         clear_state(repo, runtime)
         return 0
-    stop_hook_active = bool(event.get("stop_hook_active") or event.get("stopHookActive"))
-    should_block = mode == "block" and bool(missing) and not stop_hook_active
     message = _closure_message(
         state,
         final_text,
@@ -589,11 +587,8 @@ def _main() -> int:
         validation_assessment,
         memory_advice,
     )
-    if should_block:
-        emit_stop_reminder(runtime, message, continue_turn=True)
-    else:
-        clear_state(repo, runtime)
-        emit_stop_reminder(runtime, message, continue_turn=False)
+    clear_state(repo, runtime)
+    emit_stop_reminder(runtime, message, continue_turn=False)
     return 0
 
 

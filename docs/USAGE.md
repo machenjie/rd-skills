@@ -55,8 +55,8 @@ The build also refreshes Codex, Claude, and Copilot hook artifacts, plus the
 advisory route-preflight bootstrap fragment. For supported project/user
 installs, executable hooks are installed by default unless `--without-hooks` or
 `--activation-level none` is requested. Hooks inject professional context and
-block SDD material choices, pre-edit structure gaps, and Stop closure gaps by
-default where the runtime supports those events:
+block SDD material choices and pre-edit structure gaps by default where the
+runtime supports those events; Stop closure gaps remain advisory:
 
 ```text
 dist/codex/project/.codex

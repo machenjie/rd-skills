@@ -1027,14 +1027,9 @@ def _validate_copilot_template(
             errors.append(
                 f"{relpath(ROOT, path)}:{context}: Copilot hook command should use /usr/bin/env python3"
             )
-        if ".Stop" in context:
-            if "CHANGEFORGE_HOOK_MODE=block" not in command:
-                errors.append(
-                    f"{relpath(ROOT, path)}:{context}: Copilot Stop must set CHANGEFORGE_HOOK_MODE=block"
-                )
-        elif "CHANGEFORGE_HOOK_MODE=block" in command:
+        if "CHANGEFORGE_HOOK_MODE=block" in command:
             errors.append(
-                f"{relpath(ROOT, path)}:{context}: only Copilot Stop may set CHANGEFORGE_HOOK_MODE=block"
+                f"{relpath(ROOT, path)}:{context}: Copilot hooks must not force CHANGEFORGE_HOOK_MODE=block"
             )
 
     for entry, context in _command_entries(hooks):

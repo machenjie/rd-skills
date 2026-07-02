@@ -453,7 +453,7 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertEqual(result.stdout, "")
         self.assertEqual(state["comment_findings"], [])
 
-    def test_block_mode_outputs_block_decision(self) -> None:
+    def test_block_mode_outputs_advisory_system_message(self) -> None:
         event = {
             "hook_event_name": "Stop",
             "runtime": "codex",
@@ -466,9 +466,11 @@ class StopClosureGateTests(unittest.TestCase):
             result = run_stop(event, cwd, cache, mode="block", agent="codex")
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
-        self.assertEqual(payload["decision"], "block")
+        self.assertNotIn("decision", payload)
+        self.assertIn("systemMessage", payload)
+        self.assertIn("ChangeForge Closure Gate reminder", payload["systemMessage"])
 
-    def test_claude_block_mode_outputs_block_decision(self) -> None:
+    def test_claude_block_mode_outputs_advisory_system_message(self) -> None:
         event = {
             "hook_event_name": "Stop",
             "runtime": "claude",
@@ -481,8 +483,8 @@ class StopClosureGateTests(unittest.TestCase):
             result = run_stop(event, cwd, cache, mode="block", agent="claude")
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
-        self.assertEqual(payload["decision"], "block")
-        self.assertIn("comment", payload["reason"])
+        self.assertNotIn("decision", payload)
+        self.assertIn("comment", payload["systemMessage"])
 
     def test_state_cleared_after_stop(self) -> None:
         event = {"hook_event_name": "Stop", "runtime": "claude", "response": "done"}
@@ -684,10 +686,10 @@ class StopClosureGateTests(unittest.TestCase):
             result = run_stop(event, cwd, cache, mode="block", agent="codex")
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
-        self.assertEqual(payload["decision"], "block")
-        self.assertIn("repository_context", payload["reason"])
+        self.assertNotIn("decision", payload)
+        self.assertIn("repository_context", payload["systemMessage"])
 
-    def test_block_mode_blocks_when_route_manifest_missing_despite_keywords(self) -> None:
+    def test_block_mode_warns_when_route_manifest_missing_despite_keywords(self) -> None:
         event = {
             "hook_event_name": "Stop",
             "runtime": "codex",
@@ -704,12 +706,10 @@ class StopClosureGateTests(unittest.TestCase):
             result = run_stop(event, cwd, cache, mode="block", agent="codex")
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
-        self.assertEqual(payload["decision"], "block")
-        self.assertIn("route_manifest", payload["reason"])
+        self.assertNotIn("decision", payload)
+        self.assertIn("route_manifest", payload["systemMessage"])
 
-    def test_block_mode_preserves_state_when_blocking(self) -> None:
-        # When block mode fires (evidence missing), state must NOT be cleared so
-        # the agent can satisfy requirements on the next stop event.
+    def test_block_mode_clears_state_after_advisory(self) -> None:
         event = {
             "hook_event_name": "Stop",
             "runtime": "codex",
@@ -721,7 +721,7 @@ class StopClosureGateTests(unittest.TestCase):
             seed_state(cwd, cache, runtime="codex", comment_findings=["a.go: uncommented"])
             run_stop(event, cwd, cache, mode="block", agent="codex")
             state = load_state(cwd, cache)
-        self.assertNotEqual(state["comment_findings"], [])
+        self.assertEqual(state["comment_findings"], [])
 
     def test_route_and_stage_manifest_recorded_in_telemetry(self) -> None:
         manifest_text = (
@@ -858,7 +858,7 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertIn("review_artifact", result.stdout)
         self.assertIn("review_findings", result.stdout)
 
-    def test_stop_blocks_unresolved_material_choice_review_finding(self) -> None:
+    def test_stop_warns_unresolved_material_choice_review_finding(self) -> None:
         event = {
             "hook_event_name": "Stop",
             "runtime": "codex",
@@ -885,9 +885,9 @@ class StopClosureGateTests(unittest.TestCase):
             result = run_stop(event, cwd, cache, agent="codex")
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
-        self.assertEqual(payload["decision"], "block")
-        self.assertIn("material_choice_resolution", payload["reason"])
-        self.assertIn("unresolved material SDD choice", payload["reason"])
+        self.assertNotIn("decision", payload)
+        self.assertIn("material_choice_resolution", payload["systemMessage"])
+        self.assertIn("unresolved material SDD choice", payload["systemMessage"])
 
     def test_stop_read_no_change_profile_is_silent_when_evidence_complete(self) -> None:
         # Regression: read-only turns should not require edit-style route or changed-file closure.

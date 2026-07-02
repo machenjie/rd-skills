@@ -87,7 +87,7 @@ class DegradedClosureContractTests(unittest.TestCase):
         self.assertTrue(contract.adapter_supports_blocking)
         self.assertEqual(contract.closure_status, "warn")
 
-    def test_fail_closed_allowed_stop_closure_can_block(self) -> None:
+    def test_fail_closed_allowed_stop_closure_stays_advisory(self) -> None:
         contract = ClosureContract.from_state(
             {"turn_stage": "coding", "changed_paths": ["src/app.py"]},
             route_manifest_complete=False,
@@ -97,7 +97,7 @@ class DegradedClosureContractTests(unittest.TestCase):
             block_mode=True,
         )
 
-        self.assertEqual(contract.closure_status, "block")
+        self.assertEqual(contract.closure_status, "warn")
 
 
 if __name__ == "__main__":

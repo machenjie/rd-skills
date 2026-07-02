@@ -254,7 +254,7 @@ class HookTemplateTests(unittest.TestCase):
         commands = json.dumps(hooks)
         self.assertIn("CHANGEFORGE_AGENT=copilot", commands)
         self.assertIn("/.github/hooks/changeforge/", commands)
-        self.assertIn("CHANGEFORGE_HOOK_MODE=block", json.dumps(hooks["Stop"]))
+        self.assertNotIn("CHANGEFORGE_HOOK_MODE=block", json.dumps(hooks["Stop"]))
         for event in ("SessionStart", "PostToolUse", "SubagentStart"):
             self.assertNotIn("CHANGEFORGE_HOOK_MODE=block", json.dumps(hooks[event]))
 
@@ -269,7 +269,7 @@ class HookTemplateTests(unittest.TestCase):
         self.assertNotIn("SubagentStop", data["hooks"])
         self.assertIn("${HOME}/.copilot/hooks/changeforge/", commands)
         self.assertIn("CHANGEFORGE_AGENT=copilot", commands)
-        self.assertIn("CHANGEFORGE_HOOK_MODE=block", json.dumps(data["hooks"]["Stop"]))
+        self.assertNotIn("CHANGEFORGE_HOOK_MODE=block", json.dumps(data["hooks"]["Stop"]))
         self.assertNotIn("git rev-parse", commands)
 
     def test_claude_post_tool_batch_invokes_read_context_gate(self) -> None:

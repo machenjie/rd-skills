@@ -58,7 +58,7 @@ residual risk instead of pretending to pass. Blocking is reserved for conditions
 where the runtime can make a high-confidence decision:
 
 - user-owned SDD material choice before mutation or handoff;
-- missing closure evidence at Stop where Stop blocking is supported;
+- SDD material choice checks at Stop when user-owned decisions are unresolved;
 - explicit stricter local policy selected by a maintainer.
 
 Unsupported adapter events, missing visibility, stale validation, failed
@@ -270,11 +270,11 @@ The first-stage runtime provides these reminder gates:
   `SubagentStart` so a spawned subagent inherits the route preflight and skill
   summary.
 
-Codex and Claude default to strongest supported behavior: SDD material choice,
-pre-edit structure, and Stop closure block by default, while most other context
-remains advisory. Copilot defaults to strict Stop closure where supported and
-keeps SessionStart, SubagentStart, and PostToolUse context advisory. A hook
-failure still fails open unless a maintainer explicitly configures fail-closed.
+Codex and Claude default to strongest supported behavior: SDD material choice
+and pre-edit structure block by default, while Stop closure and most other
+context remain advisory. Copilot keeps SessionStart, SubagentStart, PostToolUse,
+and Stop closure advisory. A hook failure still fails open unless a maintainer
+explicitly configures fail-closed.
 
 ## Hook Policy
 
@@ -308,11 +308,13 @@ Default enforcement modes are:
 ```text
 sdd_material_choice: block
 pre_edit_structure: block
-stop_closure: block
+stop_closure: warn
 ```
 
 Precedence is gate-specific mode, then `CHANGEFORGE_HOOK_MODE`, then these
-default gate modes, then `warn`.
+default gate modes, then `warn`. For `stop_closure`, `block` is accepted for
+compatibility but resolves to `warn`; missing close-report evidence never forces
+continuation.
 Failure mode defaults to `fail_open`. The policy model also carries timeout,
 retry, retry delay, max concurrency, and queue-limit fields for richer lifecycle
 policy expression, while the shipped scripts remain synchronous and bounded.
@@ -598,12 +600,11 @@ exit code or explicit outcome, the result is `pass` or `fail`; otherwise it is
 change, or config change after validation marks that validation stale. Stop
 closure carries this freshness through the ledger and closure contract.
 
-Stop closure remains warning/fail-open by default. In block mode, the gate may
-block high-confidence validation failures such as stale validation, failed
-validation, or command-without-outcome. Broker telemetry records only bounded
-fields such as outcome, freshness, command kind, and covered path/risk patterns;
-it never records raw stdout, prompts, secrets, environment variables, or full
-command output.
+Stop closure remains warning/fail-open. Missing, stale, failed, or unknown
+validation evidence is reported as closure risk rather than forced continuation.
+Broker telemetry records only bounded fields such as outcome, freshness, command
+kind, and covered path/risk patterns; it never records raw stdout, prompts,
+secrets, environment variables, or full command output.
 
 Trajectory inspection consumes these bounded broker fields alongside hook
 telemetry and optional memory facts. It reconstructs an ordered evidence view
@@ -691,9 +692,9 @@ events whose advisory output Copilot actually consumes:
   risk-surface gates after edits and commands. Claude also wires the
   tool-output-boundary gate for `PostToolUseFailure` and `PostToolBatch`; Copilot
   uses only its supported `PostToolUse` event.
-- `Stop` runs the closure gate. Copilot Stop is strict by default and emits
-  top-level `decision`/`reason` only when evidence is missing. `SubagentStop`
-  emits an advisory reminder only where supported by Codex and Claude.
+- `Stop` runs the closure gate. Closure evidence gaps are advisory and do not
+  emit top-level `decision`/`reason`. `SubagentStop` emits an advisory reminder
+  only where supported by Codex and Claude.
 
 The shared hook scripts recognize both Codex/Claude tool names
 (`edit`, `write`, `apply_patch`, `bash`) and VS Code Copilot tool names
@@ -703,19 +704,18 @@ VS Code Copilot uses the flat (matcher-less) hook config format with
 `version: 1` and `timeoutSec`. It uses PascalCase event names so payloads carry
 VS Code-compatible snake_case fields. ChangeForge emits top-level
 `additionalContext` only for Copilot context-capable events such as
-`SessionStart`, `SubagentStart`, and `PostToolUse`; Copilot Stop uses top-level
-`decision`/`reason` in strict mode. Codex and Claude use
+`SessionStart`, `SubagentStart`, and `PostToolUse`; Copilot Stop closure is
+advisory-only and has no non-blocking display channel. Codex and Claude use
 `hookSpecificOutput.additionalContext` for context hooks and `systemMessage` for
-warning-only Stop/SubagentStop output; Stop block output uses top-level
-`decision`/`reason` for both.
+warning-only Stop/SubagentStop output.
 
 These remain execution-time guardrails. They detect edited paths, patch signals,
 risk surfaces, and missing closure evidence, and they remind the agent to route;
 they never select a complete route and never replace `change-forge-router` or
-`implementation-structure-design`. Codex and Claude block SDD material choice,
-pre-edit structure, and Stop closure gaps by default. Copilot's blocking is
-limited by its supported events; it cannot enforce Codex/Claude-style
-PreToolUse gates.
+`implementation-structure-design`. Codex and Claude block SDD material choice
+and pre-edit structure gaps by default; Stop closure gaps remain advisory.
+Copilot's blocking is limited by its supported events; it cannot enforce
+Codex/Claude-style PreToolUse gates.
 
 ## Hook Capability Boundary
 
@@ -857,8 +857,8 @@ events; Claude commands explicitly set `CHANGEFORGE_AGENT=claude` because Claude
 Code hook input also uses snake_case fields. Claude `timeout` values are seconds
 and stay within the 10-second budget. The Copilot layout wires only
 `SessionStart`, `SubagentStart`, `PostToolUse`, and `Stop`; it emits top-level
-`additionalContext` for session/subagent start and post-tool gates, and the Stop
-command sets `CHANGEFORGE_HOOK_MODE=block` for missing closure evidence. VS Code Copilot loads every
+`additionalContext` for session/subagent start and post-tool gates, and Stop
+closure remains advisory. VS Code Copilot loads every
 `*.json` in the hook folder, so its managed config is the dedicated
 `changeforge-hooks.json` and the scripts plus manifest live in a `changeforge/`
 subfolder VS Code does not scan for config. Do not install `src/hook-runtime`
@@ -951,8 +951,9 @@ automatically.
 Codex `PostToolUse` ignores plain text stdout. ChangeForge hooks therefore emit
 JSON with `hookSpecificOutput.additionalContext`.
 
-Codex `Stop` requires JSON stdout. Closure Gate uses JSON output and only uses
-continuation behavior when `CHANGEFORGE_HOOK_MODE=block`.
+Codex `Stop` requires JSON stdout. Closure Gate uses JSON `systemMessage`
+output for advisory reminders and does not use continuation behavior for missing
+close-report evidence.
 
 ## Validate Hooks
 
