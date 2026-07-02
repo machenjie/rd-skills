@@ -108,9 +108,11 @@ emit `hookSpecificOutput.additionalContext` for context-bearing events, and use
 Each layout includes `.changeforge-hook-manifest.json` so installation
 validation can prove which hook scripts and scope were emitted.
 
-The installer can place these hooks for Codex, Claude, and Copilot project or
-user scope with `installers/install.py --with-hooks`; existing hook
-configuration is always preserved and hooks are never trusted automatically.
+Supported Codex, Claude, and Copilot project/user installs include hooks and
+professional injection by default. Use `--without-hooks` to opt out.
+`--with-hooks` remains accepted as a backward-compatible explicit enable.
+Existing hook configuration is always preserved and hooks are never trusted
+automatically.
 
 ## Action-Aware Professional Injection
 

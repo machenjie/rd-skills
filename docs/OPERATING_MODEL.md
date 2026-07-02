@@ -71,11 +71,11 @@ The `agent-execution-discipline` foundation capability (id 102, group `engineeri
 
 It is a foundation capability, not a top-level professional skill. The router selects it through `change-forge-router` and compiles its reference into the professional skills that consume it. The capability itself does not introduce runtime hooks, persistent state files, entertainment rhetoric, or PUA-style narration.
 
-## Optional Hook Runtime
+## Hook Runtime Support
 
-The optional ChangeForge Hook Runtime is a project-level support artifact, not a skill and not a replacement for `change-forge-router`. Codex and Claude hooks may emit warning-only reminders after tool use or before handoff. Copilot local hooks use advisory context where Copilot consumes it and a strict Stop closure gate for missing evidence. The runtime must not select a complete route, read every compiled reference, ingest personal content, or install raw `src/hook-runtime`.
+ChangeForge Hook Runtime is a bounded support artifact, not a skill and not a replacement for `change-forge-router`. Codex and Claude hooks may emit warning-only reminders after tool use or before handoff. Copilot local hooks use advisory context where Copilot consumes it and a strict Stop closure gate for missing evidence. The runtime must not select a complete route, read every compiled reference, ingest personal content, or install raw `src/hook-runtime`.
 
-Hook runtime state is operational cache stored outside the project source tree under the user's cache directory. It is not a PUA state file, not runtime skill content, and not a user-specific corpus mapping. Hooks are built into `dist/` and may be placed into Codex, Claude, or Copilot project/user scopes with `installers/install.py --with-hooks`, which preserves existing hook configuration and never auto-trusts hooks.
+Hook runtime state is operational cache stored outside the project source tree under the user's cache directory. It is not a PUA state file, not runtime skill content, and not a user-specific corpus mapping. Hooks are built into `dist/` and supported Codex, Claude, and Copilot project/user quickstart and install paths enable the strongest supported hook/professional-injection mode by default. Use `--without-hooks` or `--activation-level none` to opt out. `--with-hooks` remains accepted as a backward-compatible legacy flag, and `--activation-level bootstrap` installs only the non-executable route-preflight fragment. Existing hook configuration is preserved and hooks are never trusted automatically.
 
 ## System Governance Coupling
 

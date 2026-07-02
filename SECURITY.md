@@ -40,4 +40,4 @@ Security fixes must preserve repository boundaries:
 
 ## Security Validation
 
-Security-sensitive changes should run the full validation suite from [CONTRIBUTING.md](CONTRIBUTING.md), plus any targeted reproducer or regression test needed for the report.
+Security-sensitive changes should run the relevant validation tier from [docs/VALIDATION.md](docs/VALIDATION.md), plus any targeted reproducer or regression test needed for the report.

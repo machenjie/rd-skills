@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import re
 import sys
 from pathlib import Path
@@ -45,6 +46,7 @@ REQUIRED_FILES = (
     "scripts/generate-marketplace-catalog.py",
     "scripts/render-scorecard-dashboard.py",
     "scripts/quickstart.py",
+    "scripts/validate-docs-consistency.py",
     "scripts/validate-open-source-readiness.py",
     "scripts/export-marketplace-index.py",
     "scripts/validate-marketplace-index.py",
@@ -114,7 +116,24 @@ def validate_productization_assets(root: Path) -> list[str]:
         errors.append("forbidden path exists: src/toolbox")
     if (root / "registry" / "toolbox.yaml").exists():
         errors.append("forbidden path exists: registry/toolbox.yaml")
+    errors.extend(_docs_consistency_errors(root))
     return errors
+
+
+def _docs_consistency_errors(root: Path) -> list[str]:
+    script = root / "scripts" / "validate-docs-consistency.py"
+    if not script.exists():
+        return ["missing docs consistency validator: scripts/validate-docs-consistency.py"]
+    spec = importlib.util.spec_from_file_location("validate_docs_consistency_for_productization", script)
+    if spec is None or spec.loader is None:
+        return ["unable to load docs consistency validator"]
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return [
+        f"docs consistency: {error}"
+        for error in module.validate_docs_consistency(root)
+    ]
 
 
 def main(argv: list[str] | None = None) -> int:

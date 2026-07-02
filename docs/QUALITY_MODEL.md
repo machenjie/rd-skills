@@ -53,15 +53,6 @@ Required gates:
   for source invariants, hooks, Validation Broker, Project Memory, repository
   graph/context-pack freshness, skill-efficacy fixtures, and unittest scopes.
 
-```bash
-python3 scripts/validate-src-invariants.py
-python3 scripts/validate-skills.py
-python3 scripts/validate-validation-broker.py
-python3 scripts/validate-hooks.py
-python3 scripts/validate-project-memory.py
-python3 scripts/validate-skill-efficacy-benchmarks.py
-```
-
 - Run extended routing fixture comparison when updating or verifying captured actual router outputs:
   `python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs`
 - Rebuild affected profiles and run relevant package, install, upgrade, uninstall, or doctor flows.

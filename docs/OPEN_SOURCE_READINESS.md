@@ -1,6 +1,6 @@
 # Open Source Readiness
 
-This audit tracks the repository work needed to meet common open-source project expectations. The repository is structurally close to open-source-ready after the governance, CI, quickstart, scorecard, examples, and discovery-index additions, but it is not publishable as an open-source project until maintainers complete the owner license, contribution licensing, and security-contact decisions.
+This audit tracks the repository work needed to meet common open-source project expectations. The repository is structurally close to the expected public-project shape after the governance, CI, quickstart, scorecard, examples, and discovery-index additions, but it is not publishable as an open-source project until maintainers complete the owner license, contribution licensing, and security-contact decisions.
 
 ## Current Status
 
@@ -72,42 +72,9 @@ be `partial`, not `pass`.
 
 ## Publication Gate
 
-A release should not be described as open source until these checks pass:
-
-```bash
-python3 scripts/validate-skills.py
-python3 scripts/validate-capabilities.py
-python3 scripts/validate-domain-extensions.py
-python3 scripts/validate-registry.py
-python3 scripts/validate-skill-body-links.py
-python3 scripts/validate-skill-content-size.py
-python3 scripts/validate-examples.py
-python3 scripts/validate-productization-assets.py
-python3 scripts/audit-skill-content.py
-python3 scripts/eval-routing.py
-python3 scripts/eval-agent-behavior.py
-python3 scripts/eval-skill-professionalism.py
-python3 scripts/eval-skill-professionalism.py --coverage-matrix
-python3 scripts/eval-professional-benchmarks.py
-python3 scripts/validate-professionalism-regression.py
-python3 scripts/validate-professional-routing-coverage.py
-python3 scripts/validate-stage-routing-architecture.py
-python3 scripts/validate-hooks.py
-python3 scripts/eval-pressure-behavior.py
-python3 -m unittest discover -s tests
-python3 scripts/validate-codegen-benchmarks.py
-python3 scripts/run-codegen-benchmarks.py --limit 3
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
-python3 scripts/validate-runtime-reference-links.py
-python3 scripts/validate-installation.py
-python3 scripts/validate-marketplace-index.py --profile recommended
-python3 scripts/validate-marketplace-index.py --profile full
-python3 scripts/validate-marketplace-index.py --profile dev
-python3 scripts/validate-open-source-readiness.py
-python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
-python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json
-```
+A release should not be described as open source until **Release Gate** from
+[VALIDATION.md](VALIDATION.md) passes, `python3 scripts/validate-open-source-readiness.py`
+passes with owner decisions complete, and the generated scorecard/open-source
+readiness evidence has been refreshed.
 
 The release handoff should include validation output, profile counts, installer smoke evidence, license decision, security contact status, and unresolved assumptions.

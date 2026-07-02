@@ -285,35 +285,12 @@ python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex
 
 ## Recommended Evidence Refresh
 
-Before publishing a scorecard, refresh the relevant evidence:
-
-```bash
-python3 scripts/eval-routing.py
-python3 scripts/eval-skill-professionalism.py
-python3 scripts/eval-skill-professionalism.py --coverage-matrix
-python3 scripts/eval-professional-benchmarks.py
-python3 scripts/validate-skill-efficacy-benchmarks.py
-python3 scripts/eval-context-control-plane.py
-python3 scripts/eval-executor-adapters.py
-python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks
-python3 scripts/run-codex-live-benchmarks.py --list
-python3 scripts/run-codex-live-benchmarks.py --benchmark-mode ablation --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-ablation-dry-run
-python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-ablation-dry-run
-python3 scripts/validate-professionalism-regression.py --strict
-python3 scripts/validate-professional-routing-coverage.py
-python3 scripts/eval-professional-agent-samples.py --promoted-only --strict
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
-python3 scripts/validate-runtime-reference-links.py
-python3 scripts/validate-installation.py
-python3 scripts/validate-marketplace-index.py --profile recommended
-python3 scripts/validate-marketplace-index.py --profile full
-python3 scripts/validate-marketplace-index.py --profile dev
-python3 scripts/generate-professional-scorecard.py --out reports/professional-scorecard.md --json-out reports/professional-scorecard.json
-python3 scripts/render-scorecard-dashboard.py --scorecard reports/professional-scorecard.json --out docs/SCORECARD_DASHBOARD.md --readme README.md
-python3 scripts/generate-public-benchmark-summary.py --out reports/public-benchmark-summary.md --json-out reports/public-benchmark-summary.json
-```
+Before publishing a scorecard, run **Release Gate** from
+[VALIDATION.md](VALIDATION.md), then regenerate the scorecard, dashboard, README
+summary block, and public benchmark summary through their generator scripts.
+`docs/VALIDATION.md` is the canonical command source; this page describes the
+evidence model and publication boundaries rather than duplicating the full
+suite.
 
 Longer comparisons such as `python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs` should be run when maintaining captured router outputs, not as a default PR blocker.
 

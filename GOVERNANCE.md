@@ -12,6 +12,12 @@ Contributors propose issues, pull requests, documentation, tests, examples, and 
 
 Routine fixes may be accepted after maintainer review and passing validation.
 
+Docs-only typo fixes can be treated as docs-only. Documentation that changes
+hook behavior, validation command sets, quality levels, stage routing,
+operating-model semantics, benchmark interpretation, eval fixtures, routing
+rules, or release evidence changes execution or evidence semantics and must run
+the corresponding validation gate.
+
 Changes require explicit maintainer agreement when they affect:
 
 - Runtime profile semantics.

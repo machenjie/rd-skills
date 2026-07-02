@@ -8,6 +8,93 @@ inject professional context, block user-owned SDD material choices before
 mutation/handoff, and close the matching ChangeForge gate where the runtime
 supports blocking.
 
+## What Hook Runtime Does
+
+The hook runtime is bounded runtime support for ChangeForge workflows. It:
+
+- injects concise professional context for supported lifecycle events;
+- reminds the agent to route engineering work through `change-forge-router`;
+- records bounded read/edit/test/review/repair evidence for closure checks;
+- blocks high-confidence user-owned SDD material choices before mutation or
+  handoff when the adapter supports blocking;
+- blocks Stop only when required closure evidence is missing and the runtime
+  supports a blocking Stop decision.
+
+The hook runtime is not a skill, not a router, not a replacement for direct
+source inspection, and not a reader for every compiled skill reference.
+
+## Defaults and Opt-out
+
+Supported Codex, Claude Code, and GitHub Copilot project/user quickstart and
+install paths enable the strongest supported hook/professional-injection mode by
+default.
+
+Use `--without-hooks` or `--activation-level none` to opt out of executable hooks
+and professional injection. Use `--activation-level bootstrap` when you only
+want the non-executable `.changeforge/changeforge-route-preflight.md` fragment.
+`--with-hooks` remains accepted for backward compatibility, but users no longer
+need to specify it for supported project/user installs.
+
+Hook runtime files are built into `dist/` first. Do not install
+`src/hook-runtime` directly.
+
+## Supported Runtimes
+
+Executable hook templates are emitted for:
+
+- Codex project and user scopes;
+- Claude Code project and user scopes;
+- GitHub Copilot project and user scopes.
+
+OpenAI API hosted skill zips do not install executable hooks. Cline, Roo,
+OpenHands, Gemini CLI, and Goose entries in the adapter matrix are staged or
+placeholder capability records unless their row explicitly says an executable
+hook lifecycle is supported.
+
+## Blocking vs Advisory Gates
+
+Most hook output is advisory professional context. Unsupported checks degrade to
+residual risk instead of pretending to pass. Blocking is reserved for conditions
+where the runtime can make a high-confidence decision:
+
+- user-owned SDD material choice before mutation or handoff;
+- missing closure evidence at Stop where Stop blocking is supported;
+- explicit stricter local policy selected by a maintainer.
+
+Unsupported adapter events, missing visibility, stale validation, failed
+validation, and unknown evidence must be reported as degraded or residual risk.
+They should not be rewritten as `pass` by hand.
+
+## SDD Material Choice Gate
+
+The SDD material choice gate protects choices the user must own, such as adding
+new structure, changing public contracts, introducing new runtime state,
+choosing irreversible migration strategy, or changing release/security policy.
+The hook can block before mutation or handoff when it sees a high-confidence
+material choice without documented rationale.
+
+## Pre-edit Structure Gate
+
+Before structure-changing edits, the hook expects source-backed placement
+rationale: what was inspected, where the change belongs, rejected locations,
+reuse or new-code justification, same-pattern scan, validation plan, and rollback
+or recovery note. This is evidence for review; it is not a replacement for
+reading the target code.
+
+## Stop Closure Gate
+
+Stop closure checks whether the final handoff has fresh validation evidence,
+route/stage evidence for non-trivial engineering work, residual risk, and a
+rollback note when relevant. Free-form completion claims are weaker than bounded
+Validation Broker facts.
+
+## Telemetry / Privacy Boundaries
+
+Hook state stores bounded operational facts such as stage, selected skill names,
+capability names, gate names, paths, command kind/risk class, validation outcome,
+and closure status. It must not store raw prompts, secrets, environment
+variables, full command output, personal archives, or toolbox mappings.
+
 ## Runtime Protocol Boundaries
 
 The hook runtime and adapter core provide an execution protocol, not an LLM, a
@@ -106,7 +193,7 @@ memory, and validation facts. It checks stage order, repair/re-review,
 validation freshness, and residual-risk closure without recording prompts,
 secrets, environment variables, raw command output, or full command arguments.
 
-## What ChangeForge Hook Runtime Does
+## Runtime Gate Details
 
 The first-stage runtime provides these reminder gates:
 
@@ -231,7 +318,7 @@ retry, retry delay, max concurrency, and queue-limit fields for richer lifecycle
 policy expression, while the shipped scripts remain synchronous and bounded.
 Only configured enforcement gates block; ordinary hook errors fail open.
 
-## SDD Material Choice Gate
+## SDD Material Choice Gate Reference
 
 The material choice gate blocks by default when the wrong design answer could
 change contract, architecture, data/security behavior, acceptance behavior, or
@@ -679,7 +766,7 @@ Hooks cannot:
 4. Keep fail-open behavior for hook runtime errors unless a maintainer
    explicitly enables fail-closed for a narrow gate.
 
-## Supported Runtimes
+## Supported Runtime Layouts
 
 Build output supports Codex, Claude, and Copilot project and user scope:
 

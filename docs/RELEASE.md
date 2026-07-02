@@ -42,49 +42,9 @@ Each zip must contain exactly one top-level skill folder and exactly one root `S
 
 ## Validation
 
-Run the core validation suite before handoff:
-
-```bash
-python3 scripts/validate-skills.py
-python3 scripts/validate-capabilities.py
-python3 scripts/validate-domain-extensions.py
-python3 scripts/validate-registry.py
-python3 scripts/validate-skill-body-links.py
-python3 scripts/validate-skill-content-size.py
-python3 scripts/validate-examples.py
-python3 scripts/validate-productization-assets.py
-python3 scripts/audit-skill-content.py
-python3 scripts/eval-routing.py
-python3 scripts/eval-agent-behavior.py
-python3 scripts/eval-skill-professionalism.py
-python3 scripts/eval-skill-professionalism.py --coverage-matrix
-python3 scripts/eval-professional-benchmarks.py
-python3 scripts/validate-professionalism-regression.py
-python3 scripts/validate-professional-routing-coverage.py
-python3 scripts/validate-stage-routing-architecture.py
-python3 scripts/validate-hooks.py
-python3 scripts/eval-pressure-behavior.py
-python3 -m unittest discover -s tests
-python3 scripts/validate-codegen-benchmarks.py
-python3 scripts/run-codegen-benchmarks.py --limit 3
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
-python3 scripts/validate-runtime-reference-links.py
-python3 scripts/validate-installation.py
-python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json
-python3 scripts/export-marketplace-index.py --profile full --out /tmp/full-marketplace-index.json
-python3 scripts/export-marketplace-index.py --profile dev --out /tmp/dev-marketplace-index.json
-python3 scripts/validate-marketplace-index.py --profile recommended
-python3 scripts/validate-marketplace-index.py --profile full
-python3 scripts/validate-marketplace-index.py --profile dev
-python3 scripts/validate-open-source-readiness.py
-python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
-python3 scripts/render-scorecard-dashboard.py --scorecard /tmp/professional-scorecard.json --out /tmp/scorecard-dashboard.md
-python3 scripts/generate-public-benchmark-summary.py --scorecard /tmp/professional-scorecard.json --out /tmp/public-benchmark-summary.md --json-out /tmp/public-benchmark-summary.json
-python3 scripts/generate-examples-showcase.py --check --out docs/SHOWCASE.md
-python3 scripts/generate-marketplace-catalog.py --profile recommended --check --out docs/MARKETPLACE_CATALOG.md
-```
+Run **Release Gate** from [VALIDATION.md](VALIDATION.md). `docs/VALIDATION.md`
+is the canonical developer command set; do not copy the full suite into this
+runbook.
 
 Run extended routing fixture comparison when updating or verifying captured
 actual router outputs:
@@ -93,21 +53,11 @@ actual router outputs:
 python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
 ```
 
-Run installer dry runs for supported targets:
-
-```bash
-python3 scripts/quickstart.py --agent codex --scope user --dry-run
-python3 scripts/quickstart.py --agent claude --scope project --target /tmp/changeforge-quickstart-claude --dry-run
-python3 scripts/quickstart.py --agent copilot --scope project --target /tmp/changeforge-quickstart-copilot --dry-run
-python3 scripts/quickstart.py --agent openai-api --dry-run
-python3 installers/install.py --agent codex --scope user --profile recommended --dry-run
-python3 installers/install.py --agent codex --scope project --target /tmp/changeforge-codex-full --profile full --dry-run
-python3 installers/install.py --agent claude --scope user --profile recommended --dry-run
-python3 installers/install.py --agent claude --scope project --target /tmp/changeforge-claude-full --profile full --dry-run
-python3 installers/install.py --agent copilot --scope user --profile recommended --dry-run
-python3 installers/install.py --agent copilot --scope project --target /tmp/changeforge-copilot-full --profile full --dry-run
-python3 installers/install.py --agent openai-api --profile recommended --dry-run
-```
+Run installer dry runs and final smoke checks from
+[INSTALLATION.md#final-smoke-checks](INSTALLATION.md#final-smoke-checks). The
+expected top-level counts are 21 for `recommended`, 28 for `full`, and 164 for
+`dev`; smoke reports should cite the manifest-backed counts rather than
+hand-authored alternatives.
 
 Regenerate committed public evidence snapshots before a publication decision:
 
@@ -119,25 +69,11 @@ python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md
 python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md
 ```
 
-Run final smoke checks against disposable targets:
-
-```bash
-python3 installers/install.py --agent codex --scope user --target /tmp/changeforge-recommended-user-smoke --profile recommended
-python3 installers/install.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --profile full
-python3 installers/uninstall.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --dry-run
-python3 installers/doctor.py --agent codex --scope user --target /tmp/changeforge-recommended-user-smoke --profile recommended
-python3 installers/doctor.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --profile full
-python3 installers/install.py --agent claude --scope project --target /tmp/changeforge-claude-full-smoke --profile full
-python3 installers/doctor.py --agent claude --scope project --target /tmp/changeforge-claude-full-smoke --profile full
-python3 installers/uninstall.py --agent claude --scope project --target /tmp/changeforge-claude-full-smoke --dry-run
-python3 installers/install.py --agent copilot --scope project --target /tmp/changeforge-copilot-full-smoke --profile full
-python3 installers/doctor.py --agent copilot --scope project --target /tmp/changeforge-copilot-full-smoke --profile full
-python3 installers/uninstall.py --agent copilot --scope project --target /tmp/changeforge-copilot-full-smoke --dry-run
-python3 installers/install.py --agent openai-api --profile recommended --dry-run
-python3 scripts/validate-installation.py
-```
-
-The Codex recommended user smoke must install 19 top-level skills. The Codex, Claude Code, and GitHub Copilot full project smoke installs must each install 26 top-level skills. The Codex, Claude Code, and GitHub Copilot uninstall dry-runs must list only manifest-managed names. Doctor must pass for every installed smoke target. OpenAI API zip validation must pass profile count and archive shape checks.
+The Codex recommended user smoke must install 21 top-level skills. Codex,
+Claude Code, and GitHub Copilot full project smoke installs must each install
+28 top-level skills. Uninstall dry-runs must list only manifest-managed names.
+Doctor must pass for every installed smoke target. OpenAI API zip validation
+must pass profile count and archive shape checks.
 
 ## Release Checklist
 
@@ -152,7 +88,7 @@ The Codex recommended user smoke must install 19 top-level skills. The Codex, Cl
 - All runtime skills contain root `SKILL.md`.
 - Foundation capabilities are compiled into professional skill references for `recommended` and `full`.
 - Professional skills load only selected references according to the L1/L2/L3/L4/L5 `Reference Loading Policy`; `references/` is not treated as automatic context.
-- Installer dry runs show 19 skills for recommended and 26 for full project installs.
+- Installer dry runs show 21 skills for recommended and 28 skills for full project installs.
 - Final smoke commands cover Codex user recommended install, Codex project full install, Codex project uninstall dry-run, Codex user/project doctor, Claude Code project full install/doctor/uninstall dry-run, GitHub Copilot project full install/doctor/uninstall dry-run, OpenAI API recommended zip dry-run, and installation artifact validation.
 - OpenAI API zips pass profile count and archive shape validation.
 - Professional scorecard is regenerated from current local evidence or explicitly marked as a sample snapshot.
