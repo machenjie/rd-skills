@@ -65,8 +65,8 @@ GENERIC_VALIDATION_COMMAND_RE = re.compile(
     r"((?:python3?\s+-m\s+unittest[^\n,;.]*)|"
     r"(?:python3?\s+scripts/(?:validate|eval|build)[^\n,;.]*)|"
     r"(?:pytest[^\n,;.]*)|"
-    r"(?:go\s+test[^\n,;.]*)|"
-    r"(?:cargo\s+test[^\n,;.]*)|"
+    r"(?:go\s+test[^\n,;]*)|"
+    r"(?:cargo\s+test[^\n,;]*)|"
     r"(?:(?:npm|yarn|pnpm)\s+test[^\n,;.]*))",
     re.IGNORECASE,
 )
@@ -122,7 +122,30 @@ def _find_command(text: str) -> str:
         if spec.command.casefold() in text.casefold():
             return spec.command
     match = GENERIC_VALIDATION_COMMAND_RE.search(text)
-    return " ".join(match.group(1).split()) if match else ""
+    if not match:
+        return ""
+    return _clean_detected_command(match.group(1))
+
+
+def _clean_detected_command(command: str) -> str:
+    cleaned = command.strip().strip("'\"`")
+    for marker in (
+        ". It ",
+        ". it ",
+        ". Passed",
+        ". passed",
+        ". Failed",
+        ". failed",
+        " passed",
+        " failed",
+        " succeeded",
+    ):
+        if marker in cleaned:
+            cleaned = cleaned.split(marker, 1)[0]
+    cleaned = cleaned.strip()
+    if cleaned.endswith(".") and not cleaned.endswith("...") and not cleaned.endswith(" ."):
+        cleaned = cleaned[:-1]
+    return " ".join(cleaned.split())
 
 
 def _parse_exit_code(text: str) -> int | None:

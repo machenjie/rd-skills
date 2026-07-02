@@ -187,6 +187,48 @@ class ProcessPhaseEndToEndTests(unittest.TestCase):
                 payload = json.loads(stop.stdout)
                 self.assertNotEqual(payload.get("decision"), "block")
 
+
+    def test_stop_accepts_bounded_phase_handoff_manifest(self) -> None:
+        response = (
+            "```yaml\n"
+            "process_phase_ledger:\n"
+            "  pdd: reviewed\n"
+            "  ddd: reviewed\n"
+            "  sdd: reviewed\n"
+            "  tdd: reviewed\n"
+            "  validation_signal_present: true\n"
+            "phase_reviews:\n"
+            "  count: 4\n"
+            "  verdict: pass\n"
+            "phase_repair:\n"
+            "  repair_event: final handoff phase repair evidence\n"
+            "  rereview: pass\n"
+            "validation:\n"
+            "  - cmd: python3 -m unittest discover -s tests/hook_runtime\n"
+            "    outcome: exit 0\n"
+            "```\n"
+        )
+        state = phase_state(
+            process_phase_ledgers=[],
+            process_phase_ledger_seen=False,
+            phase_review_findings=[
+                {
+                    "finding_id": "process-phase-1",
+                    "phase": "sdd",
+                    "severity": "high",
+                    "evidence": "missing phase handoff",
+                    "required_fix": "repair",
+                    "blocks_next_stage": True,
+                }
+            ],
+        )
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            cwd, cache_path = Path(tmp), Path(cache)
+            seed_state(cwd, cache_path, **state)
+            result = run_script(PROCESS_GATE, {"hook_event_name": "Stop", "response": response}, cwd, cache_path)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout.strip(), "")
+
     def test_pdd_pass_but_ddd_missing_blocks_pretool(self) -> None:
         with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
             ledger = {

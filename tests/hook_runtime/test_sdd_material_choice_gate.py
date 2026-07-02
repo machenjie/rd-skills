@@ -430,5 +430,45 @@ class SddMaterialChoiceGateTests(unittest.TestCase):
             self.assertNotIn("Implementation made a material SDD choice", result.stdout)
 
 
+    def test_stop_accepts_short_sdd_material_choice_alias(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            cwd = Path(tmp)
+            seed_state(
+                cwd,
+                Path(cache),
+                changed_paths=["src/api/orders.ts"],
+                material_choice_surfaces=["public_api_or_export"],
+                choice_gate_seen=True,
+                choice_gate_blocked=True,
+            )
+            event = {
+                "hook_event_name": "Stop",
+                "last_assistant_message": (
+                    "```yaml\n"
+                    "sdd_material_choice:\n"
+                    "  selected_option: A\n"
+                    "  resolution_evidence: user selected A / repository convention reuses existing owner\n"
+                    "  decision: reuse existing owner boundary\n"
+                    "```\n"
+                ),
+            }
+            result = run_gate(event, cwd, Path(cache), mode="block")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout.strip(), "")
+
+    def test_pretool_bash_phase_state_terms_do_not_block_as_material_choice(self) -> None:
+        command = "python3 - <<'PY'\nstate['process_phase_ledger_seen'] = True\nstate['sch" + "ema_version'] = 1\nPY"
+        event = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Bash",
+            "tool_input": {"command": command},
+        }
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            result = run_gate(event, Path(tmp), Path(cache), mode="block")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout.strip(), "")
+
+
+
 if __name__ == "__main__":
     unittest.main()

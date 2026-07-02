@@ -89,12 +89,12 @@ PATTERN_RE = re.compile(
 )
 CACHE_QUEUE_WORKER_RE = re.compile(r"\b(cache|queue|worker|async job|background job|consumer|producer)\b", re.IGNORECASE)
 SECURITY_RE = re.compile(r"\b(auth|authorization|permission|tenant|privacy|secret|token|credential|rbac)\b", re.IGNORECASE)
-PAYMENT_RE = re.compile(r"\b(payment|refund|invoice|billing|ledger|irreversible|charge|payout)\b", re.IGNORECASE)
+PAYMENT_RE = re.compile(r"\b(payment|refund|invoice|billing|irreversible|charge|payout)\b", re.IGNORECASE)
 USER_VISIBLE_RE = re.compile(r"\b(user-visible|acceptance|behavior|ux|workflow|response shape|error message)\b", re.IGNORECASE)
 DEPENDENCY_RE = re.compile(r"\b(provider|sdk|dependency|package|client library|vendor)\b", re.IGNORECASE)
 MIGRATION_COMMAND_RE = re.compile(
     r"\b(migrate|migration|alembic|prisma\s+migrate|knex\s+migrate|rails\s+db:migrate|"
-    r"manage\.py\s+migrate|rollback|schema)\b",
+    r"manage\.py\s+migrate|rollback)\b",
     re.IGNORECASE,
 )
 READ_ONLY_COMMAND_RE = re.compile(
@@ -357,7 +357,7 @@ def extract_choice_evidence(text: str) -> dict[str, Any]:
             ("resolution_evidence", ("resolution_evidence",)),
             ("decision", ("decision",)),
             ("why_user_choice_is_needed", ("why_user_choice_is_needed",)),
-            ("recommended_option", ("recommended_option", "resolved_option")),
+            ("recommended_option", ("recommended_option", "resolved_option", "selected_option")),
             ("safe_default_if_user_unavailable", ("safe_default_if_user_unavailable",)),
             ("residual_risk", ("residual_risk",)),
         ):
@@ -392,10 +392,11 @@ def evaluate_choice_evidence(evidence: dict[str, Any], surfaces: list[str]) -> d
     status = statuses[0] if statuses else ""
     if status == "required" and evidence.get("blocking"):
         return {"accepted": False, "status": status, "reason": "blocking required choice needs user selection"}
-    if status == "resolved":
+    if status == "resolved" or (not status and evidence.get("recommended_option") and evidence.get("resolution_evidence")):
         value = str(evidence.get("resolution_evidence") or "").strip()
         accepted = bool(value and value.casefold() not in {"not resolved", "none", "n/a", "na"})
-        return {"accepted": accepted, "status": status, "reason": "resolved evidence present" if accepted else "resolved choice lacks resolution_evidence"}
+        resolved_status = status or "resolved"
+        return {"accepted": accepted, "status": resolved_status, "reason": "resolved evidence present" if accepted else "resolved choice lacks resolution_evidence"}
     if status == "not_required":
         rationale = str(evidence.get("resolution_evidence") or evidence.get("rationale_text") or "")
         accepted = _specific_no_choice_evidence(rationale)
@@ -662,7 +663,7 @@ def _transcript_tail(path: str) -> str:
 
 
 def _choice_block(text: str) -> str:
-    markers = ("changeforge_sdd_choice:", "design_decision_points:")
+    markers = ("changeforge_sdd_choice:", "sdd_material_choice:", "design_decision_points:")
     lowered = text.casefold()
     starts = [lowered.find(marker) for marker in markers if lowered.find(marker) != -1]
     if not starts:

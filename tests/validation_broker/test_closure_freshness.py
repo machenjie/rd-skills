@@ -114,6 +114,24 @@ class ClosureFreshnessTests(unittest.TestCase):
         self.assertIn("unsupported_adapter:PreToolUse", result["residual_risk"])
         self.assertEqual(result["closure_outcome"], "degraded_ready")
 
+
+    def test_generic_go_package_command_keeps_package_path(self) -> None:
+        assessment = assess_validation_closure(
+            "Ran cd repo && go test -count=1 ./exchange, passed, exit 0. Residual risk: targeted package validation only.",
+            {},
+        )
+        result = assessment["validation_result"]
+        self.assertEqual(result["command"], "go test -count=1 ./exchange")
+        self.assertEqual(result["outcome"], "pass")
+
+    def test_generic_go_and_cargo_commands_stop_at_result_sentence(self) -> None:
+        go_assessment = assess_validation_closure("Ran go test -count=1 ./exchange. It passed.", {})
+        cargo_assessment = assess_validation_closure("Ran cargo test -p foo.bar. It passed.", {})
+        wildcard_assessment = assess_validation_closure("Ran go test ./..., passed, exit 0.", {})
+        self.assertEqual(go_assessment["validation_result"]["command"], "go test -count=1 ./exchange")
+        self.assertEqual(cargo_assessment["validation_result"]["command"], "cargo test -p foo.bar")
+        self.assertEqual(wildcard_assessment["validation_result"]["command"], "go test ./...")
+
     def test_read_only_turn_does_not_report_missing_validation(self) -> None:
         assessment = assess_validation_closure(
             "Reviewed the files. No code changed.",

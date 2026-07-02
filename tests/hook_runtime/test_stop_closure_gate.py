@@ -1187,6 +1187,66 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertNotIn("completion language but shows no validation", result.stdout)
 
+
+    def test_targeted_validation_with_disclosed_soft_coverage_gap_is_evidence(self) -> None:
+        text = """Done. Changed files were inspected. Skills and next gate recorded. Workflow state current stage closure. Plan-execution consistency checked. Validation freshness: fresh after latest material edit. Residual risk: targeted package validation only.
+
+```yaml
+changeforge_route:
+  selected_skills:
+    - change-forge-router
+  selected_capabilities:
+    - validation-broker
+  required_references:
+    - references/routing-rules.md
+  required_quality_gates:
+    - test gate
+changeforge_stage_route:
+  current_stage: closure
+repository_context:
+  source_of_truth:
+    - current source
+  reuse_candidates:
+    - existing owner
+  test_candidates:
+    - affected Go package tests plus diff check
+  graph_freshness: current
+  residual_risk:
+    - targeted package validation only
+changeforge_implementation_preflight:
+  read_evidence:
+    target_files:
+      - crypto-common/exchange/market_tape.go
+  placement_decision:
+    target_file: crypto-common/exchange/market_tape.go
+    reason: existing owner
+  reuse_decision:
+    direct_reuse:
+      - existing owner
+  test_plan:
+    validation_commands:
+      - go test -count=1 ./exchange
+  risk:
+    rollback_or_revert_path: revert patch
+senior_programming_judgment:
+  skip_reason: trivial-local-edit
+validation:
+  - cmd: cd repo && go test -count=1 ./exchange
+    outcome: exit 0; ok crypto-common/exchange 0.730s
+completion_evidence:
+  residual_risks:
+    - targeted package validation only
+```
+"""
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": text}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, changed_paths=["crypto-common/exchange/market_tape.go"])
+            result = run_stop(event, cwd, cache, mode="warn")
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("completion language but shows no validation", result.stdout)
+        self.assertNotIn("validation_broker_needs_validation", result.stdout)
+
     def test_completion_language_with_negative_validation_is_flagged(self) -> None:
         text = (
             "Done. Validation not run.\n\n"

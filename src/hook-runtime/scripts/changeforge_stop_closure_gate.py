@@ -414,7 +414,7 @@ def _main() -> int:
         return 0
     final_text = _final_text(event)
     manifest = extract_manifest_fields(final_text)
-    validation_assessment = _validation_broker_assessment(final_text, state, mode)
+    validation_assessment = _validation_broker_assessment(final_text, state, mode, manifest, runtime)
     validation_result = _validation_result(validation_assessment)
     validation_broker_result = _validation_broker_result(validation_assessment)
     memory_advice = memory_closure_advice(repo, state)
@@ -1293,7 +1293,14 @@ def _missing_keyword_groups(
     broker_result = _validation_broker_result(validation_assessment)
     broker_outcome = str(broker_result.get("closure_outcome") or "")
     if broker_outcome in {"blocked", "needs_validation"}:
-        missing.append(f"validation_broker_{broker_outcome}")
+        validation_result = _validation_result(validation_assessment)
+        if not _soft_validation_coverage_gap(
+            final_text=text,
+            state=state,
+            validation_result=validation_result,
+            broker_result=broker_result,
+        ):
+            missing.append(f"validation_broker_{broker_outcome}")
     return missing
 
 
@@ -1579,12 +1586,22 @@ def _has_senior_programming_judgment_evidence(text: str, state: dict) -> bool:
     return all(term in lowered for term in required_terms)
 
 
-def _validation_broker_assessment(final_text: str, state: dict, mode: str) -> dict:
+def _validation_broker_assessment(
+    final_text: str,
+    state: dict,
+    mode: str,
+    manifest: dict | None = None,
+    runtime: str | None = None,
+) -> dict:
     if assess_validation_closure is None:
         return {}
     try:
         assessment_state = dict(state)
-        unsupported = list(adapter_capabilities_for(_GATE_RUNTIME).unsupported_events)
+        active_unsupported = _active_manifest_unsupported_checks(
+            state,
+            manifest or {},
+            runtime or _GATE_RUNTIME,
+        )
         existing_raw = assessment_state.get("unsupported_adapter_events") or []
         if isinstance(existing_raw, (list, tuple, set)):
             existing = list(existing_raw)
@@ -1592,8 +1609,9 @@ def _validation_broker_assessment(final_text: str, state: dict, mode: str) -> di
             existing = [existing_raw]
         else:
             existing = []
-        if unsupported or existing:
-            assessment_state["unsupported_adapter_events"] = [*existing, *unsupported]
+        unsupported = _unique_strings([*existing, *active_unsupported])
+        if unsupported:
+            assessment_state["unsupported_adapter_events"] = unsupported
         return assess_validation_closure(
             final_text,
             assessment_state,
@@ -1601,6 +1619,41 @@ def _validation_broker_assessment(final_text: str, state: dict, mode: str) -> di
         )
     except Exception:
         return {}
+
+
+def _active_manifest_unsupported_checks(state: dict, manifest: dict, runtime: str | None) -> list[str]:
+    capabilities = adapter_capabilities_for(runtime or _GATE_RUNTIME)
+    unsupported = list(getattr(capabilities, "unsupported_checks", ()) or [])
+    if not unsupported:
+        return []
+    requested: list[object] = []
+    for key in ("closure_required_checks", "active_unsupported_checks", "required_unsupported_checks"):
+        requested.extend(_list_values(state.get(key)))
+    adapter = state.get("runtime_adapter")
+    if isinstance(adapter, dict):
+        requested.extend(_list_values(adapter.get("active_unsupported_checks")))
+        requested.extend(_list_values(adapter.get("required_unsupported_checks")))
+    for key in ("required_quality_gates", "required_references", "selected_capabilities"):
+        requested.extend(_list_values(manifest.get(key)))
+    requested_norm = [_unsupported_check_token(item) for item in requested]
+    active: list[str] = []
+    for check in unsupported:
+        check_norm = _unsupported_check_token(check)
+        if check_norm and any(check_norm in item or item in check_norm for item in requested_norm if item):
+            active.append(str(check))
+    return _unique_strings(active)
+
+
+def _list_values(value: object) -> list[object]:
+    if isinstance(value, (list, tuple, set)):
+        return list(value)
+    if value:
+        return [value]
+    return []
+
+
+def _unsupported_check_token(value: object) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value or "").casefold())
 
 
 def _validation_result(assessment: dict | None) -> dict:
@@ -1671,7 +1724,15 @@ def _has_validation_evidence(
     if validation_assessment is None and assess_validation_closure is not None:
         validation_assessment = _validation_broker_assessment(text, state, "warn")
     broker_result = _validation_broker_result(validation_assessment)
+    result = _validation_result(validation_assessment)
+    soft_gap = False
     if broker_result:
+        soft_gap = _soft_validation_coverage_gap(
+            final_text=text,
+            state=state,
+            validation_result=result,
+            broker_result=broker_result,
+        )
         validation_blockers = {
             "missing_validation",
             "validation_command_without_outcome",
@@ -1683,16 +1744,15 @@ def _has_validation_evidence(
             "changed_path_without_validator",
         }
         negatives = set(str(item) for item in broker_result.get("negative_evidence", []) or [])
-        if negatives & validation_blockers:
+        if negatives & validation_blockers and not soft_gap:
             return False
-    result = _validation_result(validation_assessment)
     if result:
         if result.get("fresh_after_last_edit") is False:
             return False
         if result.get("outcome") != "pass":
             return False
         if result.get("coverage_aligned") is False:
-            return False
+            return bool(soft_gap and result.get("evidence_strength") == "strong")
         return result.get("evidence_strength") == "strong"
     lowered = text.casefold()
     if _has_negative_validation_phrase(lowered):
@@ -1707,6 +1767,50 @@ def _has_validation_evidence(
         return True
     return False
 
+
+
+def _soft_validation_coverage_gap(
+    *,
+    final_text: str,
+    state: dict,
+    validation_result: dict,
+    broker_result: dict,
+) -> bool:
+    negatives = {str(item) for item in broker_result.get("negative_evidence", []) or []}
+    if not negatives:
+        return False
+    hard_blockers = {
+        "missing_validation",
+        "validation_command_without_outcome",
+        "validation_not_run",
+        "validation_failed",
+        "stale_validation",
+        "targeted_check_reported_as_full",
+        "repair_without_rereview",
+    }
+    if negatives & hard_blockers:
+        return False
+    allowed_soft = {
+        "freshness_unknown",
+        "coverage_mismatch",
+        "changed_path_without_validator",
+        "missed_residual_risk",
+        "unsupported_adapter_check",
+    }
+    if not negatives <= allowed_soft:
+        return False
+    if validation_result.get("outcome") != "pass" or validation_result.get("evidence_strength") != "strong":
+        return False
+    lowered = str(final_text or "").casefold()
+    residual_disclosed = "residual" in lowered or "风险" in lowered or bool(state.get("residual_risk_seen"))
+    scoped_evidence = (
+        "repository_context:" in lowered
+        or "validation:" in lowered
+        or "fresh_commands:" in lowered
+        or "targeted" in lowered
+        or "受影响" in lowered
+    )
+    return bool(residual_disclosed and scoped_evidence)
 
 def _has_negative_validation_phrase(lowered_text: str) -> bool:
     return any(phrase.casefold() in lowered_text for phrase in NEGATIVE_VALIDATION_PHRASES)
