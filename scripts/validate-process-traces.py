@@ -13,6 +13,14 @@ from typing import Any
 
 from codex_live_benchmark_lib import read_json
 
+SRC_ROOT = Path(__file__).resolve().parents[1] / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
+
+from process_governance.process_trace_validator import (  # noqa: E402
+    validate_process_trace_facts as validate_runtime_process_trace_facts,
+)
+
 
 PHASES = ("pdd", "ddd", "sdd", "tdd", "implementation", "validation", "review")
 CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
@@ -199,6 +207,11 @@ def _trace_errors(path: Path, run_dir: Path, trace: dict[str, Any], *, require_p
     if isinstance(pdd, dict) and isinstance(ddd, dict) and isinstance(sdd, dict) and isinstance(tdd, dict):
         errors.extend(_mapping_errors(label, trace, pdd, ddd, sdd, tdd))
         errors.extend(_generic_trace_errors(label, trace))
+        errors.extend(
+            f"{label}: {error}"
+            for error in validate_runtime_process_trace_facts(facts)
+            if error not in {"generic template-only process trace lacks case-specific mappings"}
+        )
 
     traceability = trace.get("traceability")
     if not isinstance(traceability, dict):

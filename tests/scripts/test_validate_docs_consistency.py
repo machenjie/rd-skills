@@ -32,8 +32,8 @@ def _write(path: Path, text: str) -> None:
 def _write_minimal_repo(root: Path) -> None:
     hook_policy_text = "\n".join(
         [
-            "Codex and Claude block SDD material choice and pre-edit structure by default where supported.",
-            "Stop closure is advisory by default: it records missing route/stage/validation/review evidence as closure risk and telemetry facts, but it does not force continuation or block final handoff unless a maintainer explicitly overrides the policy.",
+            "Codex and Claude block SDD material choice, pre-edit structure, process phase, and Stop closure by default where supported.",
+            "Unsupported adapters record degraded closure instead of claiming enforcement.",
             "Hook runtime failures still fail open unless explicitly configured fail-closed.",
             "Unspecified gates fallback to warn.",
         ]
@@ -44,7 +44,7 @@ def _write_minimal_repo(root: Path) -> None:
             [
                 "# Project",
                 "",
-                "Stable profile counts are `recommended=21`, `full=28`, and `dev=164`; generated manifests are authoritative.",
+                "Stable profile counts are `recommended=22`, `full=29`, and `dev=165`; generated manifests are authoritative.",
                 "The marketplace index is a local/source-derived discovery asset only. Official Codex/Claude marketplace publishing is intentionally not implemented.",
             ]
         ),
@@ -88,6 +88,8 @@ def _write_minimal_repo(root: Path) -> None:
                 "DEFAULT_GATE_MODES = {",
                 '    "sdd_material_choice": "block",',
                 '    "pre_edit_structure": "block",',
+                '    "process_phase": "block",',
+                '    "stop_closure": "block",',
                 "}",
                 "",
                 "def gate_mode(gate_key):",
@@ -131,8 +133,8 @@ class ValidateDocsConsistencyTests(unittest.TestCase):
                 "\n".join(
                     [
                         "`--with-hooks` remains accepted for backward compatibility but is no longer required.",
-                        "Codex and Claude block SDD material choice and pre-edit structure by default where supported.",
-                        "Stop closure is advisory by default and records missing evidence as closure risk, but it does not force continuation or block final handoff unless explicitly overridden.",
+                        "Codex and Claude block SDD material choice, pre-edit structure, process phase, and Stop closure by default where supported.",
+                        "Unsupported adapters record degraded closure instead of claiming enforcement.",
                         "Unspecified gates fallback to warn.",
                         "Hook runtime failures still fail open unless explicitly configured fail-closed.",
                     ]
@@ -174,55 +176,36 @@ class ValidateDocsConsistencyTests(unittest.TestCase):
     def test_minimal_repo_is_consistent(self) -> None:
         self.assertEqual(self._errors_for(), [])
 
-    def test_stop_closure_policy_defaults_to_block_fails(self) -> None:
+    def test_stop_closure_advisory_default_phrase_fails(self) -> None:
         errors = self._errors_for(
-            lambda root: _write(root / "docs" / "HOOKS.md", "Stop closure policy defaults to block.\n")
+            lambda root: _write(root / "docs" / "HOOKS.md", "Stop closure is advisory by default.\n")
         )
-        self.assertTrue(any("Stop closure block-default" in error for error in errors), errors)
+        self.assertTrue(any("Stop closure advisory-default" in error for error in errors), errors)
 
-    def test_stop_closure_block_config_phrase_fails(self) -> None:
-        errors = self._errors_for(lambda root: _write(root / "docs" / "HOOKS.md", "stop_closure: block\n"))
-        self.assertTrue(any("stop_closure: block" in error for error in errors), errors)
-
-    def test_stop_closure_blocks_required_evidence_phrase_fails(self) -> None:
+    def test_stop_closure_does_not_block_phrase_fails(self) -> None:
         errors = self._errors_for(
             lambda root: _write(
                 root / "docs" / "HOOKS.md",
-                "blocks Stop only when required closure evidence is missing and the runtime supports a blocking Stop decision.\n",
+                "Stop closure records missing evidence as closure risk, but it does not force continuation or block final handoff.\n",
             )
         )
-        self.assertTrue(any("blocks Stop only when required closure evidence is missing" in error for error in errors), errors)
+        self.assertTrue(any("does not force continuation" in error for error in errors), errors)
 
-    def test_stop_closure_only_blocks_without_override_phrase_fails(self) -> None:
-        errors = self._errors_for(
-            lambda root: _write(root / "docs" / "HOOKS.md", "Stop closure only blocks Stop when evidence is missing.\n")
-        )
-        self.assertTrue(any("blocks Stop only when" in error for error in errors), errors)
-
-    def test_stop_closure_explicit_block_override_phrase_does_not_fail(self) -> None:
+    def test_stop_closure_block_degraded_phrase_does_not_fail(self) -> None:
         errors = self._errors_for(
             lambda root: _write(
                 root / "docs" / "USAGE.md",
                 "\n".join(
                     [
-                        "Stop closure records gaps as closure risk and telemetry facts by default; it only blocks Stop when a maintainer explicitly sets",
-                        "`CHANGEFORGE_STOP_MODE=block` or `CHANGEFORGE_HOOK_MODE=block` and the runtime supports a blocking Stop decision.",
+                        "Stop closure defaults to block for non-trivial engineering where the adapter supports hard Stop decisions.",
+                        "Unsupported adapters record degraded closure instead of claiming enforcement.",
                     ]
                 ),
             )
         )
         self.assertEqual(errors, [])
 
-    def test_stop_closure_advisory_phrase_does_not_fail(self) -> None:
-        errors = self._errors_for(
-            lambda root: _write(
-                root / "docs" / "USAGE.md",
-                "Stop closure is advisory by default and records missing evidence as closure risk.\n",
-            )
-        )
-        self.assertEqual(errors, [])
-
-    def test_hook_policy_stop_closure_block_default_fails(self) -> None:
+    def test_hook_policy_missing_stop_closure_block_default_fails(self) -> None:
         errors = self._errors_for(
             lambda root: _write(
                 root / "src" / "hook-runtime" / "scripts" / "changeforge_hook_policy.py",
@@ -231,7 +214,7 @@ class ValidateDocsConsistencyTests(unittest.TestCase):
                         "DEFAULT_GATE_MODES = {",
                         '    "sdd_material_choice": "block",',
                         '    "pre_edit_structure": "block",',
-                        '    "stop_closure": "block",',
+                        '    "process_phase": "block",',
                         "}",
                         "",
                         "def gate_mode(gate_key):",
@@ -243,7 +226,7 @@ class ValidateDocsConsistencyTests(unittest.TestCase):
                 ),
             )
         )
-        self.assertTrue(any("DEFAULT_GATE_MODES must not set stop_closure" in error for error in errors), errors)
+        self.assertTrue(any('"stop_closure": "block"' in error for error in errors), errors)
 
     def test_missing_license_fails(self) -> None:
         errors = self._errors_for(lambda root: (root / "LICENSE").unlink())

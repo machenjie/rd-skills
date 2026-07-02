@@ -85,6 +85,12 @@ STATE_LIST_FIELDS = (
     "repair_findings",
     "repair_events",
     "rereview_events",
+    "process_phase_ledgers",
+    "phase_review_results",
+    "phase_review_findings",
+    "phase_repair_events",
+    "phase_rereview_events",
+    "review_capsules",
     "validation_results",
     "risk_surfaces",
     "changed_path_risk_surfaces",
@@ -124,6 +130,8 @@ STATE_SCALAR_STRING_FIELDS = (
     "turn_stage",
     "owner_skill",
     "reviewer_skill",
+    "process_current_phase",
+    "process_phase_blocked_reason",
     "professional_injection_digest",
     "last_professional_injection_event",
 )
@@ -140,6 +148,16 @@ STATE_BOOL_FIELDS = (
     "review_intent_seen",
     "review_artifact_seen",
     "review_evidence_seen",
+    "pdd_reviewed",
+    "ddd_reviewed",
+    "sdd_reviewed",
+    "tdd_reviewed",
+    "process_phase_blocked",
+    "process_phase_ledger_seen",
+    "phase_review_seen",
+    "phase_repair_required",
+    "phase_rereview_required",
+    "phase_rereview_passed",
     "repair_evidence_seen",
     "permission_gate_seen",
     "professional_contract_seen",
@@ -533,6 +551,15 @@ def save_state(repo: Path, state: dict) -> None:
             next_state[key] = _capped_branch_route_repair_summaries(next_state.get(key, []))
         elif key == "route_repair_forbidden_retries":
             next_state[key] = _capped_state_items(next_state.get(key, []))[:10]
+        elif key in {
+            "process_phase_ledgers",
+            "phase_review_results",
+            "phase_review_findings",
+            "phase_repair_events",
+            "phase_rereview_events",
+            "review_capsules",
+        }:
+            next_state[key] = _capped_structured_state_records(next_state.get(key, []))
         else:
             next_state[key] = _capped_state_items(next_state.get(key, []))
     for key in ("active_skill_context", "runtime_adapter"):
@@ -780,6 +807,12 @@ def merge_state(
     repair_findings: Iterable[str] = (),
     repair_events: Iterable[str] = (),
     rereview_events: Iterable[str] = (),
+    process_phase_ledgers: Iterable[object] = (),
+    phase_review_results: Iterable[object] = (),
+    phase_review_findings: Iterable[object] = (),
+    phase_repair_events: Iterable[object] = (),
+    phase_rereview_events: Iterable[object] = (),
+    review_capsules: Iterable[object] = (),
     validation_results: Iterable[str] = (),
     risk_surfaces: Iterable[str] = (),
     changed_path_risk_surfaces: Iterable[str] = (),
@@ -819,6 +852,8 @@ def merge_state(
     validation_command_seen: bool | None = None,
     validation_seen: bool | None = None,
     turn_stage: str | None = None,
+    process_current_phase: str | None = None,
+    process_phase_blocked_reason: str | None = None,
     active_skill_context: dict | None = None,
     owner_skill: str | None = None,
     reviewer_skill: str | None = None,
@@ -829,6 +864,16 @@ def merge_state(
     review_intent_seen: bool | None = None,
     review_artifact_seen: bool | None = None,
     review_evidence_seen: bool | None = None,
+    pdd_reviewed: bool | None = None,
+    ddd_reviewed: bool | None = None,
+    sdd_reviewed: bool | None = None,
+    tdd_reviewed: bool | None = None,
+    process_phase_blocked: bool | None = None,
+    process_phase_ledger_seen: bool | None = None,
+    phase_review_seen: bool | None = None,
+    phase_repair_required: bool | None = None,
+    phase_rereview_required: bool | None = None,
+    phase_rereview_passed: bool | None = None,
     repair_evidence_seen: bool | None = None,
     permission_gate_seen: bool | None = None,
     professional_contract_seen: bool | None = None,
@@ -893,6 +938,12 @@ def merge_state(
         "repair_findings": repair_findings,
         "repair_events": repair_events,
         "rereview_events": rereview_events,
+        "process_phase_ledgers": process_phase_ledgers,
+        "phase_review_results": phase_review_results,
+        "phase_review_findings": phase_review_findings,
+        "phase_repair_events": phase_repair_events,
+        "phase_rereview_events": phase_rereview_events,
+        "review_capsules": review_capsules,
         "validation_results": validation_result_values,
         "risk_surfaces": risk_surfaces,
         "changed_path_risk_surfaces": changed_path_risk_surfaces,
@@ -931,6 +982,8 @@ def merge_state(
         "bounded_paths": bounded_paths,
         "active_skill_context": active_skill_context,
         "turn_stage": turn_stage,
+        "process_current_phase": process_current_phase,
+        "process_phase_blocked_reason": process_phase_blocked_reason,
         "owner_skill": owner_skill,
         "reviewer_skill": reviewer_skill,
         "stage_route_present": stage_route_present,
@@ -940,6 +993,16 @@ def merge_state(
         "review_intent_seen": review_intent_seen,
         "review_artifact_seen": review_artifact_seen,
         "review_evidence_seen": review_evidence_seen,
+        "pdd_reviewed": pdd_reviewed,
+        "ddd_reviewed": ddd_reviewed,
+        "sdd_reviewed": sdd_reviewed,
+        "tdd_reviewed": tdd_reviewed,
+        "process_phase_blocked": process_phase_blocked,
+        "process_phase_ledger_seen": process_phase_ledger_seen,
+        "phase_review_seen": phase_review_seen,
+        "phase_repair_required": phase_repair_required,
+        "phase_rereview_required": phase_rereview_required,
+        "phase_rereview_passed": phase_rereview_passed,
         "repair_evidence_seen": repair_evidence_seen,
         "permission_gate_seen": permission_gate_seen,
         "professional_contract_seen": professional_contract_seen,
@@ -1136,6 +1199,24 @@ def write_telemetry_event(
     reviewer_skill: str = "",
     read_evidence_seen: bool = False,
     review_evidence_seen: bool = False,
+    process_phase_ledgers: Iterable[object] = (),
+    phase_review_results: Iterable[object] = (),
+    phase_review_findings: Iterable[object] = (),
+    phase_repair_events: Iterable[object] = (),
+    phase_rereview_events: Iterable[object] = (),
+    review_capsules: Iterable[object] = (),
+    pdd_reviewed: bool = False,
+    ddd_reviewed: bool = False,
+    sdd_reviewed: bool = False,
+    tdd_reviewed: bool = False,
+    process_phase_blocked: bool = False,
+    process_phase_ledger_seen: bool = False,
+    phase_review_seen: bool = False,
+    phase_repair_required: bool = False,
+    phase_rereview_required: bool = False,
+    phase_rereview_passed: bool = False,
+    process_current_phase: str = "",
+    process_phase_blocked_reason: str = "",
     repair_evidence_seen: bool = False,
     permission_gate_seen: bool = False,
     professional_contract_seen: bool = False,
@@ -1279,6 +1360,42 @@ def write_telemetry_event(
             "reviewer_skill": str(reviewer_skill).strip()[:MAX_TELEMETRY_VALUE_LEN],
             "read_evidence_seen": bool(read_evidence_seen),
             "review_evidence_seen": bool(review_evidence_seen),
+            "process_phase_ledgers": _capped_items(
+                json.dumps(record, sort_keys=True)
+                for record in _capped_structured_state_records(process_phase_ledgers)
+            ),
+            "phase_review_results": _capped_items(
+                json.dumps(record, sort_keys=True)
+                for record in _capped_structured_state_records(phase_review_results)
+            ),
+            "phase_review_findings": _capped_items(
+                json.dumps(record, sort_keys=True)
+                for record in _capped_structured_state_records(phase_review_findings)
+            ),
+            "phase_repair_events": _capped_items(
+                json.dumps(record, sort_keys=True)
+                for record in _capped_structured_state_records(phase_repair_events)
+            ),
+            "phase_rereview_events": _capped_items(
+                json.dumps(record, sort_keys=True)
+                for record in _capped_structured_state_records(phase_rereview_events)
+            ),
+            "review_capsules": _capped_items(
+                json.dumps(record, sort_keys=True)
+                for record in _capped_structured_state_records(review_capsules)
+            ),
+            "pdd_reviewed": bool(pdd_reviewed),
+            "ddd_reviewed": bool(ddd_reviewed),
+            "sdd_reviewed": bool(sdd_reviewed),
+            "tdd_reviewed": bool(tdd_reviewed),
+            "process_phase_blocked": bool(process_phase_blocked),
+            "process_phase_ledger_seen": bool(process_phase_ledger_seen),
+            "phase_review_seen": bool(phase_review_seen),
+            "phase_repair_required": bool(phase_repair_required),
+            "phase_rereview_required": bool(phase_rereview_required),
+            "phase_rereview_passed": bool(phase_rereview_passed),
+            "process_current_phase": str(process_current_phase).strip()[:MAX_TELEMETRY_VALUE_LEN],
+            "process_phase_blocked_reason": str(process_phase_blocked_reason).strip()[:MAX_TELEMETRY_VALUE_LEN],
             "repair_evidence_seen": bool(repair_evidence_seen),
             "permission_gate_seen": bool(permission_gate_seen),
             "professional_contract_seen": bool(professional_contract_seen),
@@ -2921,6 +3038,12 @@ def _empty_state() -> dict:
         "repair_findings": [],
         "repair_events": [],
         "rereview_events": [],
+        "process_phase_ledgers": [],
+        "phase_review_results": [],
+        "phase_review_findings": [],
+        "phase_repair_events": [],
+        "phase_rereview_events": [],
+        "review_capsules": [],
         "validation_results": [],
         "risk_surfaces": [],
         "changed_path_risk_surfaces": [],
@@ -2961,6 +3084,8 @@ def _empty_state() -> dict:
         "turn_stage": "",
         "owner_skill": "",
         "reviewer_skill": "",
+        "process_current_phase": "",
+        "process_phase_blocked_reason": "",
         "stage_route_present": False,
         "read_intent_seen": False,
         "read_evidence_seen": False,
@@ -2968,6 +3093,16 @@ def _empty_state() -> dict:
         "review_intent_seen": False,
         "review_artifact_seen": False,
         "review_evidence_seen": False,
+        "pdd_reviewed": False,
+        "ddd_reviewed": False,
+        "sdd_reviewed": False,
+        "tdd_reviewed": False,
+        "process_phase_blocked": False,
+        "process_phase_ledger_seen": False,
+        "phase_review_seen": False,
+        "phase_repair_required": False,
+        "phase_rereview_required": False,
+        "phase_rereview_passed": False,
         "repair_evidence_seen": False,
         "permission_gate_seen": False,
         "professional_contract_seen": False,
@@ -3085,6 +3220,68 @@ def _capped_state_items(values: Iterable[str]) -> list[str]:
 def _capped_compaction_snapshots(values: Iterable[object]) -> list[dict[str, Any]]:
     """Preserve the latest bounded compaction checkpoints without string truncation."""
     return preserve_required_snapshots(list(values), (), limit=5)
+
+
+def _capped_structured_state_records(values: Iterable[object]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    forbidden = {
+        "prompt",
+        "raw_prompt",
+        "raw_output",
+        "command_output",
+        "stdout",
+        "stderr",
+        "environment",
+        "env",
+        "secret",
+        "secrets",
+        "credential",
+        "credentials",
+        "password",
+        "api_key",
+        "apikey",
+        "token",
+    }
+    for raw in values:
+        if not isinstance(raw, dict):
+            continue
+        cleaned = _clean_structured_state_value(raw, forbidden)
+        if isinstance(cleaned, dict) and cleaned:
+            out.append(cleaned)
+        if len(out) >= MAX_STATE_ITEMS:
+            break
+    return out
+
+
+def _clean_structured_state_value(value: object, forbidden: set[str]) -> object:
+    if isinstance(value, dict):
+        cleaned: dict[str, Any] = {}
+        for key, raw in value.items():
+            name = str(key).strip()[:80]
+            if not name or _forbidden_state_key(name, forbidden):
+                continue
+            child = _clean_structured_state_value(raw, forbidden)
+            if child not in ({}, [], ""):
+                cleaned[name] = child
+        return cleaned
+    if isinstance(value, (list, tuple)):
+        items: list[object] = []
+        for item in list(value)[:MAX_STATE_ITEMS]:
+            child = _clean_structured_state_value(item, forbidden)
+            if child not in ({}, [], ""):
+                items.append(child)
+        return items
+    if isinstance(value, bool) or isinstance(value, int):
+        return value
+    text = str(value or "").strip()
+    if not text or any(token in text.casefold() for token in ("secret=", "token=", "password=")):
+        return ""
+    return text[:MAX_STATE_VALUE_LEN]
+
+
+def _forbidden_state_key(key: str, forbidden: set[str]) -> bool:
+    lowered = key.casefold()
+    return lowered in forbidden or any(token in lowered for token in forbidden)
 
 
 def _capped_context_control_records(values: Iterable[object]) -> list[dict[str, Any]]:

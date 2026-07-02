@@ -70,9 +70,19 @@
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_subagent_skill_contract.py\"",
         "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_subagent_review_gate.py\"",
+        "timeoutSec": 10
       }
     ],
     "Stop": [
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_process_phase_gate.py\"",
+        "timeoutSec": 10
+      },
       {
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_stop_closure_gate.py\"",

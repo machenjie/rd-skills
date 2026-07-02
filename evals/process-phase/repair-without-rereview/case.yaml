@@ -1,0 +1,22 @@
+---
+id: repair-without-rereview
+scenario: Blocking review finding has a repair event but no matching passing re-review.
+adapter: claude
+event: Stop
+phase_review_result:
+  phase: implementation
+  verdict: fail
+  finding_id: impl-017
+  blocks_next_stage: true
+phase_repair_event:
+  finding_id: impl-017
+  repaired: true
+expected_result:
+  decision: block
+  closure_verdict: needs_review
+  required_missing:
+    - phase_rereview
+forbidden_claims:
+  - Repair event alone closes a blocking review finding.
+  - Re-review without matching finding ID closes the finding.
+privacy_boundary: Store finding IDs and repair/re-review verdict facts only.

@@ -243,6 +243,15 @@ The first-stage runtime provides these reminder gates:
   on post-edit review. Default mode is block for supported hooks; set
   `CHANGEFORGE_PRE_EDIT_MODE=warn` to downgrade. Copilot templates do not wire unsupported `PreToolUse`
   advisory and instead rely on PostToolUse and Stop compensation.
+- Process Phase Gate (`UserPromptSubmit`, `PreToolUse`, and `Stop`, Codex and
+  Claude): initializes a bounded `process_phase_ledger` for non-trivial
+  engineering prompts, blocks mutation until PDD, DDD, SDD, and TDD each have a
+  passing independent `phase_review_result`, and rechecks phase, repair,
+  re-review, and validation freshness evidence before handoff. It stores only
+  digests, IDs, status facts, and bounded findings, never raw artifacts or raw
+  prompt text. Copilot cannot enforce `PreToolUse`; it records degraded
+  enforcement and relies on parent-context review evidence, PostToolUse facts,
+  and Stop closure.
 
 - Post-Edit Structure Gate: runs after edit tools and warns when changed paths
   look like structural code, shared utilities, public interfaces, SDK/client
@@ -257,32 +266,34 @@ The first-stage runtime provides these reminder gates:
 - Risk Surface Gate: runs after edit tools and shell commands and warns when
   paths or commands touch auth, data contracts, cache, queue, Kubernetes, Helm,
   or big-data surfaces.
-- Stop Closure Gate: runs before final handoff and reminds the agent to include
+- Stop Closure Gate: runs before final handoff and requires the agent to include
   skill path, `changeforge_stage_route` when engineering work was non-trivial,
   changed files, validation evidence, residual risk, next steps, and the
   implementation preflight summary plus structure-evidence records (file
   naming, reuse ladder, extension safety, advanced refactor, comment quality)
-  for any structure sub-gate that fired.
-- Subagent Closure Reminder (`SubagentStop`, Codex and Claude): reminds a stopping subagent
-  to hand the parent the route manifest, validation evidence, and residual risk.
-  It emits an advisory `systemMessage`, never forces the subagent to continue,
-  and never touches the parent turn's closure state. Copilot templates do not
-  wire this event because Copilot `subagentStop` supports block/allow decision
-  control, not advisory `systemMessage`. The Session Bootstrap runs at
-  `SubagentStart` so a spawned subagent inherits the route preflight and skill
-  summary.
+  for any structure sub-gate that fired. For non-trivial engineering work, the
+  closure contract also requires phase ledger, phase reviews, repair/re-review
+  closure for blocking findings, and validation fresh after the final edit.
+- Subagent Review Gate (`SubagentStart` and `SubagentStop`, Codex and Claude):
+  emits bounded review capsule requirements when review is requested and accepts
+  only a structured `phase_review_result` back into parent state. Missing review
+  results are recorded as `insufficient_evidence`; raw subagent transcript,
+  raw prompt text, secrets, and implementer self-approval are not merged.
+  Copilot receives `SubagentStart` capsule context but does not wire unsupported
+  `SubagentStop`, so it records degraded enforcement and requires parent-context
+  review evidence or CI validation.
 
-Codex and Claude block SDD material choice and pre-edit structure by default
-where supported. Stop closure is advisory by default: it records missing
-route/stage/validation/review evidence as closure risk and telemetry facts, but
-it does not force continuation or block final handoff unless a maintainer
-explicitly overrides the policy. Hook runtime failures still fail open unless
-explicitly configured fail-closed.
+Codex and Claude block SDD material choice, pre-edit structure, process phase,
+and Stop closure gaps by default where supported. Stop closure no longer treats
+advisory reminders as proof: it blocks or requests continuation when the adapter
+has a hard Stop channel, and records `blocked_but_unenforceable` when an adapter
+cannot enforce the missing evidence. Hook runtime failures still fail open
+unless explicitly configured fail-closed.
 
 Copilot receives SessionStart/SubagentStart/PostToolUse context and Stop closure
-compensation where supported. Stop closure remains advisory by default and
-records missing evidence as closure risk; Copilot cannot enforce
-Codex/Claude-style PreToolUse gates.
+compensation where supported. Copilot cannot enforce Codex/Claude-style
+`PreToolUse` or `SubagentStop` gates, so missing phase evidence is disclosed as
+degraded enforcement rather than claimed as fully blocked.
 
 ## Hook Policy
 
@@ -306,8 +317,10 @@ It also accepts per-gate overrides:
 ```text
 CHANGEFORGE_PRE_EDIT_MODE=off|monitor|warn|block
 CHANGEFORGE_SDD_CHOICE_MODE=off|monitor|warn|block
+CHANGEFORGE_PROCESS_PHASE_MODE=off|monitor|warn|block
 CHANGEFORGE_PERMISSION_MODE=off|monitor|warn|block
 CHANGEFORGE_STOP_MODE=off|monitor|warn|block
+CHANGEFORGE_SUBAGENT_REVIEW_MODE=off|monitor|warn|block
 CHANGEFORGE_HOOK_FAILURE_MODE=fail_open|fail_closed
 ```
 
@@ -316,14 +329,16 @@ Default enforcement modes are:
 ```text
 sdd_material_choice: block
 pre_edit_structure: block
+process_phase: block
+stop_closure: block
 ```
 
 Precedence is gate-specific mode, then `CHANGEFORGE_HOOK_MODE`, then these
 default gate modes, then `warn`; unspecified gates fallback to `warn`, and
-ordinary advisory gates default to `warn`. Stop closure is not in the default
-block map; it follows the unspecified gate fallback to `warn` unless
-`CHANGEFORGE_STOP_MODE=block` or `CHANGEFORGE_HOOK_MODE=block` explicitly
-overrides it.
+ordinary advisory gates default to `warn`. Stop closure follows
+`CHANGEFORGE_STOP_MODE` and defaults to `block` for non-trivial engineering
+where the adapter supports hard Stop decisions; unsupported adapters must emit
+degraded closure status instead of claiming full enforcement.
 Failure mode defaults to `fail_open`. The policy model also carries timeout,
 retry, retry delay, max concurrency, and queue-limit fields for richer lifecycle
 policy expression, while the shipped scripts remain synchronous and bounded.
@@ -386,11 +401,18 @@ Hook state is merged through explicit reducers:
   `generated_paths`, `external_file_changes`, and `config_changes`;
 - closure evidence lists include `validation_results`, `review_findings`,
   `repair_events`, `rereview_events`, `permission_decisions`, `command_risks`,
-  `rollback_points`, and `post_edit_structure_findings`;
+  `rollback_points`, `post_edit_structure_findings`, `process_phase_ledgers`,
+  `phase_review_results`, `phase_review_findings`, `phase_repair_events`,
+  `phase_rereview_events`, and `review_capsules`;
 - SDD choice lists include `choice_ids`, `choice_triggers`, `choice_status`,
   `material_choice_surfaces`, `blocked_tool_category`, and `bounded_paths`;
 - SDD choice booleans include `choice_gate_seen`, `choice_gate_blocked`, and
   `choice_resolution_evidence_seen`;
+- process phase booleans include `pdd_reviewed`, `ddd_reviewed`,
+  `sdd_reviewed`, `tdd_reviewed`, `process_phase_blocked`,
+  `process_phase_ledger_seen`, `phase_review_seen`,
+  `phase_repair_required`, `phase_rereview_required`, and
+  `phase_rereview_passed`;
 - booleans such as `read_evidence_seen`, `review_evidence_seen`, and
   `implementation_preflight_required` use OR semantics, so `False` cannot erase
   a prior `True`;
@@ -482,7 +504,8 @@ archives; full logs must be explicitly redirected or sliced by the user/agent an
 then cited as artifacts.
 The Stop Closure Gate records closure-completeness facts only: whether a complete
 parseable `changeforge_route` manifest, changed files, validation evidence,
-residual risk, and required references were present. A prose mention of
+residual risk, required references, phase ledger, phase reviews, phase repair,
+phase re-review, and validation freshness were present. A prose mention of
 `changeforge_route`, or a YAML block missing `selected_skills`,
 `selected_capabilities`, `required_references`, or `required_quality_gates`, is
 not counted as route-manifest evidence.
@@ -494,9 +517,9 @@ object with adapter, verdict, supported/unsupported checks, present/missing/
 negative evidence, validation outcome/freshness/scope, review repair and
 re-review state, changed/deleted/generated path sets, residual risk, and next
 owner. Closure verdicts may be `ready`, `needs_validation`, `needs_review`,
-`needs_repair`, `degraded_ready`, or `blocked`; a broker-degraded validation
-result can populate validation metadata without being counted as present
-closure evidence.
+`needs_repair`, `degraded_ready`, `blocked`, or `blocked_but_unenforceable`;
+a broker-degraded validation result can populate validation metadata without
+being counted as present closure evidence.
 
 Telemetry is enabled by default and can be disabled with `CHANGEFORGE_TELEMETRY=off`.
 See [TELEMETRY.md](TELEMETRY.md) for the data model, the offline review tool, and
@@ -609,14 +632,14 @@ exit code or explicit outcome, the result is `pass` or `fail`; otherwise it is
 change, or config change after validation marks that validation stale. Stop
 closure carries this freshness through the ledger and closure contract.
 
-Stop closure is advisory by default, while hook runtime errors still default to
+Stop closure defaults to block for non-trivial engineering where the adapter
+supports a hard Stop decision, while hook runtime errors still default to
 `fail_open`. Missing, stale, failed, or unknown validation evidence is reported
-as closure risk in the compatibility contract and telemetry facts, but it does
-not force continuation or block final handoff unless a maintainer explicitly
-overrides the policy. Broker telemetry records only bounded fields such as
-outcome, freshness, command kind, and covered path/risk patterns; it never
-records raw stdout, prompts, secrets, environment variables, or full command
-output.
+as closure risk in the compatibility contract and telemetry facts; unsupported
+adapters must record degraded closure instead of claiming enforcement. Broker
+telemetry records only bounded fields such as outcome, freshness, command kind,
+and covered path/risk patterns; it never records raw stdout, prompts, secrets,
+environment variables, or full command output.
 
 Trajectory inspection consumes these bounded broker fields alongside hook
 telemetry and optional memory facts. It reconstructs an ordered evidence view
@@ -696,18 +719,20 @@ events whose advisory output Copilot actually consumes:
   Copilot templates omit the event because Copilot does not process its
   advisory output.
 - `PreToolUse` previews risk surfaces before an edit or command runs for Codex
-  and Claude, runs the Pre-Edit Implementation Structure Gate before edit tools,
-  and runs the Permission Policy Gate for Bash warnings. Copilot templates omit
-  the event because Copilot `preToolUse` does not consume advisory
-  `additionalContext`; PostToolUse and Stop report any preflight gap.
+  and Claude, runs the Pre-Edit Implementation Structure Gate and Process Phase
+  Gate before edit tools, and runs the Permission Policy Gate for Bash warnings.
+  Copilot templates omit the event because Copilot `preToolUse` does not consume
+  advisory `additionalContext`; PostToolUse and Stop report any preflight or
+  phase gap as degraded enforcement.
 - `PostToolUse` runs the read-context, tool-output-boundary, structure, and
   risk-surface gates after edits and commands. Claude also wires the
   tool-output-boundary gate for `PostToolUseFailure` and `PostToolBatch`; Copilot
   uses only its supported `PostToolUse` event.
-- `Stop` runs the closure gate. Closure evidence gaps follow the Stop closure
-  policy mode and are also recorded as warning/risk status in the closure
-  contract. `SubagentStop` emits an advisory reminder only where supported by
-  Codex and Claude.
+- `Stop` runs the Process Phase Gate and closure gate. Closure evidence gaps
+  follow the Stop closure policy mode and are recorded in the closure contract;
+  missing phase/review/repair/re-review evidence blocks where the adapter can
+  enforce and degrades explicitly where it cannot. `SubagentStop` runs the
+  Subagent Review Gate where supported by Codex and Claude.
 
 The shared hook scripts recognize both Codex/Claude tool names
 (`edit`, `write`, `apply_patch`, `bash`) and VS Code Copilot tool names
@@ -720,17 +745,19 @@ VS Code-compatible snake_case fields. ChangeForge emits top-level
 `SessionStart`, `SubagentStart`, and `PostToolUse`; Copilot Stop closure uses
 the supported Stop decision channel when policy requires it and otherwise has no
 non-blocking display channel. Codex and Claude use
-`hookSpecificOutput.additionalContext` for context hooks and `systemMessage` for
-warning-only Stop/SubagentStop output.
+`hookSpecificOutput.additionalContext` for context hooks, hard block decisions
+where supported, and bounded `phase_review_result` state for subagent review.
 
 These remain execution-time guardrails. They detect edited paths, patch signals,
-risk surfaces, and missing closure evidence, and they remind the agent to route;
-they never select a complete route and never replace `change-forge-router` or
-`implementation-structure-design`. Codex and Claude block SDD material choice
-and pre-edit structure gaps by default; Stop closure policy also defaults to
-`block`, while the compatibility closure contract records gaps as warning/risk
-status. Copilot's blocking is limited by its supported events; it cannot enforce
-Codex/Claude-style PreToolUse gates.
+risk surfaces, process phase state, review findings, and missing closure
+evidence, and they require the agent to route when engineering work is
+non-trivial; they never select a complete route and never replace
+`change-forge-router` or `implementation-structure-design`. Codex and Claude
+block SDD material choice, process phase, and pre-edit structure gaps by
+default; Stop closure policy also defaults to `block`, while the compatibility
+closure contract records degraded gaps when enforcement is unsupported.
+Copilot's blocking is limited by its supported events; it cannot enforce
+Codex/Claude-style `PreToolUse` or `SubagentStop` gates.
 
 ## Hook Capability Boundary
 
@@ -745,6 +772,8 @@ Hooks can:
   `PreToolUse`; Copilot cannot consume advisory preview context);
 - require or remind on implementation preflight evidence before structural edits
   (Codex and Claude `PreToolUse`; Copilot compensates after edit and at Stop);
+- require PDD, DDD, SDD, and TDD phase reviews before non-trivial engineering
+  mutation when `PreToolUse` blocking is supported;
 - block material SDD choices before mutation and recheck unresolved choices at
   Stop when the runtime supports those events;
 - remind on new file naming pattern mismatches;
@@ -754,9 +783,10 @@ Hooks can:
 - remind on extension reuse safety;
 - remind on advanced refactor evidence;
 - remind on comment quality evidence;
-- remind on Stop-stage closure evidence;
-- remind a stopping subagent to carry closure evidence (`SubagentStop`, Codex
-  and Claude; Copilot does not wire this unsupported advisory path).
+- require Stop-stage phase, review, repair, re-review, validation freshness, and
+  closure evidence where hard Stop is supported;
+- provide bounded review capsules at subagent start and accept only structured
+  `phase_review_result` records at subagent stop where supported.
 
 Hooks cannot:
 - replace `change-forge-router`;
@@ -832,8 +862,10 @@ dist/codex/project/.codex/hooks/changeforge_common.py
 dist/codex/project/.codex/hooks/changeforge_session_bootstrap.py
 dist/codex/project/.codex/hooks/changeforge_user_prompt_route_reminder.py
 dist/codex/project/.codex/hooks/changeforge_pre_tool_risk_preview.py
+dist/codex/project/.codex/hooks/changeforge_process_phase_gate.py
 dist/codex/project/.codex/hooks/changeforge_post_edit_structure_gate.py
 dist/codex/project/.codex/hooks/changeforge_risk_surface_gate.py
+dist/codex/project/.codex/hooks/changeforge_subagent_review_gate.py
 dist/codex/project/.codex/hooks/changeforge_subagent_stop_reminder.py
 dist/codex/project/.codex/hooks/changeforge_stop_closure_gate.py
 
@@ -846,8 +878,10 @@ dist/claude/project/.claude/hooks/changeforge_common.py
 dist/claude/project/.claude/hooks/changeforge_session_bootstrap.py
 dist/claude/project/.claude/hooks/changeforge_user_prompt_route_reminder.py
 dist/claude/project/.claude/hooks/changeforge_pre_tool_risk_preview.py
+dist/claude/project/.claude/hooks/changeforge_process_phase_gate.py
 dist/claude/project/.claude/hooks/changeforge_post_edit_structure_gate.py
 dist/claude/project/.claude/hooks/changeforge_risk_surface_gate.py
+dist/claude/project/.claude/hooks/changeforge_subagent_review_gate.py
 dist/claude/project/.claude/hooks/changeforge_subagent_stop_reminder.py
 dist/claude/project/.claude/hooks/changeforge_stop_closure_gate.py
 
@@ -1047,6 +1081,7 @@ original reminder gates.
 | --- | --- | --- |
 | Executor adapter core | `changeforge_adapter_capabilities.py`, `changeforge_normalized_event.py`, `changeforge_lifecycle_state.py`, `changeforge_evidence_ledger.py`, `changeforge_gate_result.py`, `changeforge_closure_contract.py`, `changeforge_executor_adapter_core.py` | Normalize runtime events, expose runtime capabilities, wrap reducer state, collect closure evidence, and share gate/closure result objects without changing hook entrypoints. |
 | Action classification | `changeforge_action_classifier.py`, `changeforge_runtime_route_resolver.py`, `changeforge_skill_index.py` | Classify action, resolve canonical stage/surfaces, and select minimum owner/reviewer skill context without static backend defaults. |
+| Process phase governance | `changeforge_process_phase_gate.py`, `changeforge_subagent_review_gate.py` | Enforce bounded PDD/DDD/SDD/TDD phase ledgers, independent review results, subagent review capsules, repair/re-review, validation freshness, and honest adapter degradation. |
 | Runtime output | `changeforge_runtime_adapters.py` | Keep Codex/Claude hook-specific context, Copilot top-level context, and generic text output separate through explicit adapter capabilities. |
 | Professional context | `changeforge_professional_injector.py` | Emit compact active skill context for engineering stages only and record selected gates/references without marking a route manifest present. |
 | Read/review evidence | `changeforge_read_context_gate.py`, `changeforge_review_gate.py` | Preserve read/search, MCP/GitHub/Fetch/PR diff evidence, and separate review intent from artifact evidence. |

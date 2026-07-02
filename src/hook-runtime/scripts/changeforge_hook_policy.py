@@ -24,11 +24,15 @@ GATE_MODE_ENV = {
     "sdd_material_choice": "CHANGEFORGE_SDD_CHOICE_MODE",
     "pre_edit_structure": "CHANGEFORGE_PRE_EDIT_MODE",
     "permission_policy": "CHANGEFORGE_PERMISSION_MODE",
+    "process_phase": "CHANGEFORGE_PROCESS_PHASE_MODE",
+    "subagent_review": "CHANGEFORGE_SUBAGENT_REVIEW_MODE",
     "stop_closure": "CHANGEFORGE_STOP_MODE",
 }
 DEFAULT_GATE_MODES = {
     "sdd_material_choice": "block",
     "pre_edit_structure": "block",
+    "process_phase": "block",
+    "stop_closure": "block",
 }
 
 

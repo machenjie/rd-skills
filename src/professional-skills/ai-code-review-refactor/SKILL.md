@@ -33,6 +33,11 @@ Own cross-stage review for PDD/DDD/SDD/TDD traces: verify that problem definitio
 - **Independent review starts from the spec and plan**: a review cannot approve generated code until it has inspected the requirement, acceptance criteria, non-goals, accepted plan, changed files, tests, validation output, and repository context. Code quality is reviewed only after spec compliance passes.
 - **Approval scope is explicit**: every approval names the exact files, behavior, tests, and validation it covers and what it does not cover. Implementer self-approval is not independent review.
 - **Repair requires targeted re-review**: any fix after a review finding must identify the finding, repair owner, changed files, validation evidence, and the specific review stage that was re-run.
+- **Phase review is structured evidence**: PDD, DDD, SDD, TDD, and
+  implementation reviews must return bounded review results with verdict,
+  score, reviewed artifact digest, blocker findings, approved scope, and
+  residual risk. Advisory reminders, final prose, and implementer self-approval
+  do not mark a phase reviewed.
 - Verify every import and API call exists in the declared version — AI models hallucinate method names and parameter signatures with high confidence.
 - Challenge every hidden assumption: if a function assumes a non-null argument, a sorted collection, or a singleton pattern, require explicit documentation or enforcement.
 - Prefer existing local patterns over novel AI-invented abstractions — pattern novelty is a risk signal, not a quality signal.

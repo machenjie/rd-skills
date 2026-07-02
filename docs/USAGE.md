@@ -55,15 +55,13 @@ The build also refreshes Codex, Claude, and Copilot hook artifacts, plus the
 advisory route-preflight bootstrap fragment. For supported project/user
 installs, executable hooks are installed by default unless `--without-hooks` or
 `--activation-level none` is requested. Hooks inject professional context and
-block SDD material choices and pre-edit structure gaps by default where the
-runtime supports those events; Stop closure gaps remain advisory:
+block SDD material choices, pre-edit structure gaps, process phase gaps, and
+Stop closure gaps by default where the runtime supports those events:
 
-Codex and Claude block SDD material choice and pre-edit structure by default
-where supported. Stop closure is advisory by default: it records missing
-route/stage/validation/review evidence as closure risk and telemetry facts, but
-it does not force continuation or block final handoff unless a maintainer
-explicitly overrides the policy. Hook runtime failures still fail open unless
-explicitly configured fail-closed.
+Codex and Claude block SDD material choice, pre-edit structure, process phase,
+and Stop closure by default where supported. Unsupported adapters record
+degraded closure instead of claiming enforcement. Hook runtime failures still
+fail open unless explicitly configured fail-closed.
 
 ```text
 dist/codex/project/.codex

@@ -47,7 +47,7 @@
     },
     {
       "command": "python3 scripts/build.py --profile recommended && python3 scripts/build.py --profile full && python3 scripts/build.py --profile dev",
-      "detail": "{\"dev\": {\"detail\": \"dev top-level count is 164\", \"manifest\": \"dist/universal/skills/dev/.changeforge-build-manifest.json\", \"status\": \"pass\"}, \"full\": {\"detail\": \"full top-level count is 28\", \"manifest\": \"dist/universal/skills/full/.changeforge-build-manifest.json\", \"status\": \"pass\"}, \"recommended\": {\"detail\": \"recommended top-level count is 21\", \"manifest\": \"dist/universal/skills/recommended/.changeforge-build-manifest.json\", \"status\": \"pass\"}}",
+      "detail": "{\"dev\": {\"detail\": \"dev top-level count is 165\", \"manifest\": \"dist/universal/skills/dev/.changeforge-build-manifest.json\", \"status\": \"pass\"}, \"full\": {\"detail\": \"full top-level count is 29\", \"manifest\": \"dist/universal/skills/full/.changeforge-build-manifest.json\", \"status\": \"pass\"}, \"recommended\": {\"detail\": \"recommended top-level count is 22\", \"manifest\": \"dist/universal/skills/recommended/.changeforge-build-manifest.json\", \"status\": \"pass\"}}",
       "detail_data": null,
       "evidence_level": "structural fixture",
       "name": "Profile build reproducibility",

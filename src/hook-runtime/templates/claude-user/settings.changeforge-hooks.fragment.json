@@ -41,6 +41,11 @@
           },
           {
             "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_process_phase_gate.py\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_sdd_material_choice_gate.py\"",
             "timeout": 10
           },
@@ -70,6 +75,11 @@
           {
             "type": "command",
             "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_professional_injector.py\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_process_phase_gate.py\"",
             "timeout": 10
           },
           {
@@ -197,6 +207,11 @@
             "type": "command",
             "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_subagent_skill_contract.py\"",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_subagent_review_gate.py\"",
+            "timeout": 10
           }
         ]
       }
@@ -208,6 +223,11 @@
             "type": "command",
             "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_subagent_stop_reminder.py\"",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_subagent_review_gate.py\"",
+            "timeout": 10
           }
         ]
       }
@@ -218,6 +238,11 @@
           {
             "type": "command",
             "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_sdd_material_choice_gate.py\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_process_phase_gate.py\"",
             "timeout": 10
           },
           {

@@ -21,12 +21,12 @@ python3 scripts/build.py --profile dev
 Expected top-level runtime counts:
 
 - `recommended`: 21 professional skills.
-- `full`: 21 professional skills plus 7 domain extensions.
-- `dev`: 21 professional skills plus 136 foundation capabilities plus 7 domain extensions.
+- `full`: 22 professional skills plus 7 domain extensions.
+- `dev`: 22 professional skills plus 136 foundation capabilities plus 7 domain extensions.
 
 Foundation capability count is 136 in every profile: compiled into professional references for `recommended` and `full`, and also top-level in `dev`.
 
-The profile top-level counts are 21 for `recommended`, 28 for `full`, and 164 for `dev`.
+The profile top-level counts are 22 for `recommended`, 29 for `full`, and 165 for `dev`.
 
 ## Package
 

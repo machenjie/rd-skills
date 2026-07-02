@@ -4,11 +4,11 @@ ChangeForge installs only built runtime artifacts from `dist/`. Source folders u
 
 ## Profiles
 
-- `recommended`: 21 professional skills as top-level runtime skills. 136 foundation capabilities are compiled into professional skill references.
-- `full`: 21 professional skills plus 7 domain extensions as top-level runtime skills. 136 foundation capabilities remain compiled references.
-- `dev`: 21 professional skills plus 136 foundation capabilities plus 7 domain extensions as top-level skills. Use only for ChangeForge authoring/debugging.
+- `recommended`: 22 professional skills as top-level runtime skills. 136 foundation capabilities are compiled into professional skill references.
+- `full`: 22 professional skills plus 7 domain extensions as top-level runtime skills. 136 foundation capabilities remain compiled references.
+- `dev`: 22 professional skills plus 136 foundation capabilities plus 7 domain extensions as top-level skills. Use only for ChangeForge authoring/debugging.
 
-Top-level runtime counts are `recommended` = 21, `full` = 28, and `dev` = 164.
+Top-level runtime counts are `recommended` = 22, `full` = 29, and `dev` = 165.
 
 `SKILL.md` is loaded when a skill is selected. Compiled `references/` are not fully loaded automatically; the router selects capabilities and professional skills read only selected references according to L1/L2/L3/L4/L5 policy.
 
@@ -57,22 +57,20 @@ professional injection runtime. `--with-hooks` remains accepted for backward
 compatibility, but it is no longer required.
 
 Codex and Claude wire a per-prompt route reminder (`UserPromptSubmit`),
-professional injection, SDD material choice gate, pre-edit risk preview
-(`PreToolUse`), structure/risk gates after edits (`PostToolUse`), subagent
-preflight (`SubagentStart`), subagent closure reminder (`SubagentStop`), and
-Stop gates. Codex and Claude block SDD material choice and pre-edit structure
-by default where supported. Stop closure is advisory by default: it records
-missing route/stage/validation/review evidence as closure risk and telemetry
-facts, but it does not force continuation or block final handoff unless a
-maintainer explicitly overrides the policy. Hook runtime failures still fail
-open unless explicitly configured fail-closed.
+professional injection, SDD material choice gate, process phase gate,
+pre-edit risk preview (`PreToolUse`), structure/risk gates after edits
+(`PostToolUse`), subagent preflight (`SubagentStart`), subagent review gate
+(`SubagentStop`), and Stop gates. Codex and Claude block SDD material choice,
+pre-edit structure, process phase, and Stop closure by default where supported.
+Unsupported adapters record degraded closure instead of claiming enforcement.
+Hook runtime failures still fail open unless explicitly configured fail-closed.
 Claude commands explicitly set `CHANGEFORGE_AGENT=claude` and use 10-second
 `timeout` values because Claude Code measures timeout in seconds. Copilot local
 hooks wire only `SessionStart`, `SubagentStart`, `PostToolUse`, and `Stop`, so
 Copilot receives SessionStart/SubagentStart/PostToolUse context and Stop
-closure compensation where supported. Stop closure remains advisory by default
-and records missing evidence as closure risk; Copilot cannot enforce
-Codex/Claude-style PreToolUse gates. The shared scripts recognize Codex,
+closure compensation where supported. Copilot cannot enforce Codex/Claude-style
+`PreToolUse` or `SubagentStop` gates, so missing phase evidence is disclosed as
+degraded enforcement. The shared scripts recognize Codex,
 Claude, and VS Code Copilot tool names.
 
 Cline, Roo, and OpenHands support is staged adapter support, not executable

@@ -1,0 +1,21 @@
+---
+id: missing-sdd-choice-resolution
+scenario: SDD draft changes a public API without resolved material design choice evidence.
+adapter: claude
+event: PreToolUse
+tool: Edit
+expected_gate: changeforge_process_phase_gate
+material_choice:
+  surface: public_api
+  unresolved_blocking_choices: 1
+expected_result:
+  decision: block
+  phase: sdd
+  finding_id: sdd-material-choice
+  required_next_action:
+    - ask_user
+    - repair
+forbidden_claims:
+  - SDD reviewed while unresolved material choices remain.
+  - Security, data, migration, payment, or irreversible choices are safe-assumed.
+privacy_boundary: Store trigger surface, choice status, bounded paths, and finding ID only.

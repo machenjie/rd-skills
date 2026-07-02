@@ -10,6 +10,15 @@ Return a compact process orchestration result with:
 - **Boundaries inspected**: final.md, process-trace.json, hook telemetry, run.log, case metadata, prompt wrapper, validator output, reports, registry coverage, and skipped artifacts with reasons.
 - **Evidence source map**: each PDD, DDD, SDD, and TDD field mapped to final trace, telemetry, explicit artifact, grading evidence, inferred fallback, or unavailable source.
 - **Phase status**: `present`, `inferred`, `degraded`, `missing`, or `not_applicable` for PDD, DDD, SDD, and TDD.
+- **Runtime phase ledger**: `process_phase_ledger` status, required phases,
+  current phase, artifact digests, review IDs, unresolved material choices,
+  validation signal, and adapter degradation. Store digests and bounded facts,
+  not raw artifacts.
+- **Phase review results**: one independent `phase_review_result` per required
+  phase, with verdict, score, matching artifact digest, findings, approved
+  scope, unreviewed areas, residual risk, and required next action.
+- **Repair/re-review closure**: blocking phase findings mapped by `finding_id`
+  to repair events and passing re-review events before closure.
 - **PDD facts**: problem, impact, observable acceptance, constraints, non-goals, risk surfaces, validation signal, and behaviors preserved.
 - **DDD facts**: domain terms, entities/value objects/services/adapters when relevant, ownership decision, invariants, side-effect boundaries, and existing code owner.
 - **SDD facts**: modules/files, public API, data flow, error contract, failure modes, logging decision, design decision points, no-choice rationale when empty, assumption policy, metrics/traces/alerts, compatibility, rollback, recovery, and placement rationale.
@@ -26,18 +35,21 @@ Return a compact process orchestration result with:
 ## Quality Gate
 
 1. PDD, DDD, SDD, and TDD are populated with case-specific facts or marked unavailable.
-2. `present` is used only for evidence-backed trace content, telemetry, explicit artifacts, or grading evidence.
-3. Inferred metadata fallback is visible and cannot count as completed professional process evidence.
-4. PDD acceptance maps to TDD tests or validation commands.
-5. DDD invariants map to tests or code constraints.
-6. SDD public API maps to tests or importable/public behavior evidence.
-7. SDD failure modes map to failure tests or accepted residual risk.
-8. SDD design decision points are resolved, blocked before implementation, not required with concrete rationale, or safe-assumed only when local, reversible, conventional, and acceptance-neutral.
-9. Logging decisions map to log/security tests or explicit no-log rationale.
-10. Generic process facts, booleans, and placeholder mappings are rejected.
-11. Registered, dry-run, promoted, and actual live-run coverage are separated.
-12. Validation evidence is fresh against the final trace and report artifacts.
-13. Residual risk names owner and next gate.
+2. Non-trivial engineering implementation is blocked unless PDD, DDD, SDD, and
+   TDD are reviewed through independent passing phase review results or
+   explicitly not applicable with reasons.
+3. `present` is used only for evidence-backed trace content, telemetry, explicit artifacts, or grading evidence.
+4. Inferred metadata fallback is visible and cannot count as completed professional process evidence.
+5. PDD acceptance maps to TDD tests or validation commands.
+6. DDD invariants map to tests or code constraints.
+7. SDD public API maps to tests or importable/public behavior evidence.
+8. SDD failure modes map to failure tests or accepted residual risk.
+9. SDD design decision points are resolved, blocked before implementation, not required with concrete rationale, or safe-assumed only when local, reversible, conventional, and acceptance-neutral.
+10. Logging decisions map to log/security tests or explicit no-log rationale.
+11. Generic process facts, booleans, and placeholder mappings are rejected.
+12. Registered, dry-run, promoted, and actual live-run coverage are separated.
+13. Validation evidence is fresh against the final trace and report artifacts.
+14. Residual risk names owner and next gate.
 
 ## Handoff
 

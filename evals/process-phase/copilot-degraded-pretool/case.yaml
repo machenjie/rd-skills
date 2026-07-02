@@ -1,0 +1,16 @@
+---
+id: copilot-degraded-pretool
+scenario: Copilot lacks PreToolUse enforcement for phase gating and must degrade honestly.
+adapter: copilot
+event: PreToolUse
+tool: editFiles
+expected_gate: changeforge_process_phase_gate
+expected_result:
+  decision: degraded
+  closure_status: blocked_but_unenforceable
+  degraded_capabilities:
+    - process_phase_pretool_block
+forbidden_claims:
+  - Copilot fully blocked missing phase evidence through PreToolUse.
+  - Unsupported PreToolUse evidence is counted as reviewed phase proof.
+privacy_boundary: Store adapter capability names and degraded status only.

@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.local/schemas/process-phase-ledger.v1.schema.json",
+  "title": "ChangeForge Process Phase Ledger v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "route_id",
+    "current_phase",
+    "required_phases",
+    "phase_status",
+    "phase_scores",
+    "artifact_digests",
+    "review_ids",
+    "blockers",
+    "unresolved_blocking_choices",
+    "validation_signal_present",
+    "updated_by_hook"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "route_id": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "current_phase": {
+      "enum": [
+        "pdd",
+        "ddd",
+        "sdd",
+        "tdd",
+        "implementation",
+        "validation",
+        "review",
+        "repair",
+        "rereview",
+        "closure"
+      ]
+    },
+    "required_phases": {
+      "type": "array",
+      "items": { "enum": ["pdd", "ddd", "sdd", "tdd"] },
+      "minItems": 1,
+      "maxItems": 4,
+      "uniqueItems": true
+    },
+    "phase_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pdd": { "$ref": "#/$defs/phaseStatus" },
+        "ddd": { "$ref": "#/$defs/phaseStatus" },
+        "sdd": { "$ref": "#/$defs/phaseStatus" },
+        "tdd": { "$ref": "#/$defs/phaseStatus" }
+      }
+    },
+    "phase_scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pdd": { "$ref": "#/$defs/score" },
+        "ddd": { "$ref": "#/$defs/score" },
+        "sdd": { "$ref": "#/$defs/score" },
+        "tdd": { "$ref": "#/$defs/score" }
+      }
+    },
+    "artifact_digests": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pdd": { "$ref": "#/$defs/digest" },
+        "ddd": { "$ref": "#/$defs/digest" },
+        "sdd": { "$ref": "#/$defs/digest" },
+        "tdd": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "review_ids": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pdd": { "$ref": "#/$defs/id" },
+        "ddd": { "$ref": "#/$defs/id" },
+        "sdd": { "$ref": "#/$defs/id" },
+        "tdd": { "$ref": "#/$defs/id" }
+      }
+    },
+    "not_applicable_reasons": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pdd": { "$ref": "#/$defs/boundedText" },
+        "ddd": { "$ref": "#/$defs/boundedText" },
+        "sdd": { "$ref": "#/$defs/boundedText" },
+        "tdd": { "$ref": "#/$defs/boundedText" }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["phase", "reason"],
+        "properties": {
+          "phase": {
+            "enum": [
+              "pdd",
+              "ddd",
+              "sdd",
+              "tdd",
+              "implementation",
+              "validation",
+              "review",
+              "repair",
+              "rereview",
+              "closure"
+            ]
+          },
+          "reason": { "$ref": "#/$defs/boundedText" },
+          "finding_id": { "$ref": "#/$defs/id" }
+        }
+      }
+    },
+    "unresolved_blocking_choices": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "validation_signal_present": { "type": "boolean" },
+    "updated_by_hook": { "const": "changeforge_process_phase_gate" }
+  },
+  "$defs": {
+    "phaseStatus": {
+      "enum": [
+        "pending",
+        "draft",
+        "review_pending",
+        "reviewed",
+        "failed",
+        "waived",
+        "not_applicable"
+      ]
+    },
+    "score": { "type": "integer", "minimum": 0, "maximum": 5 },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.:-]{1,120}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[A-Fa-f0-9]{12,64}$"
+    },
+    "boundedText": { "type": "string", "minLength": 1, "maxLength": 300 }
+  }
+}

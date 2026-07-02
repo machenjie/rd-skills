@@ -23,6 +23,11 @@ Do not use the router to invoke every skill, invent a product program around a l
 
 ## Non-Negotiable Rules
 - **Direct use still runs the runtime prompt flow.** When `change-forge-router` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
+- **Runtime process phases are gated evidence.** For non-trivial engineering
+  work, route PDD, DDD, SDD, and TDD as ordered runtime phases with bounded
+  ledger evidence and independent phase review results; final prose,
+  implementer self-approval, advisory reminders, or unsupported adapter claims
+  do not satisfy implementation readiness.
 - Classify the request before prescribing work.
 - Choose the minimum sufficient professional path; add skills only when the classification, impact, risk, or missing information requires them.
 - Treat bug fixes, refactors, API changes, data changes, migrations, review, tests, docs, reliability, security, and deployment as first-class changes.

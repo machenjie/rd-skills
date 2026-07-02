@@ -50,12 +50,12 @@ python3 scripts/quickstart.py --agent cline --scope project --target /path/to/pr
 Hook-capable Codex, Claude, and Copilot project/user quickstart installs default
 to `professional-injection`: executable hooks are installed, professional
 context is injected, and supported blocking gates run by default. Codex and
-Claude block SDD material choice and pre-edit structure directly; Stop closure
-is advisory and does not force a final close report. Copilot receives
+Claude block SDD material choice, pre-edit structure, process phase, and Stop
+closure directly where supported. Copilot receives
 SessionStart/SubagentStart/PostToolUse context and Stop closure compensation
-where supported. Stop closure remains advisory by default and records missing
-evidence as closure risk; Copilot cannot enforce Codex/Claude-style PreToolUse
-gates. Use `--without-hooks` or
+where supported. Copilot cannot enforce Codex/Claude-style `PreToolUse` or
+`SubagentStop` gates, so missing phase evidence is disclosed as degraded
+enforcement. Use `--without-hooks` or
 `--activation-level none` to opt out. Use `--activation-level bootstrap` when
 you want only the non-executable
 `.changeforge/changeforge-route-preflight.md` fragment:

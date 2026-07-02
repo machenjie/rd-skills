@@ -46,7 +46,7 @@
       "blocking": true,
       "evidence_source": "config/skill-content-exceptions.yaml and reports/skill-content-audit.json",
       "item": "content bloat exceptions",
-      "notes": "- classifications: {'KEEP_AS_IS': 160, 'MOVE_SECTIONS_TO_REFERENCES': 1, 'TIGHTEN_BODY': 3}; - domain_extensions: 7; - foundation_capabilities: 136; - heavy_domain: 0; - heavy_foundation: 0; - heavy_professional: 0; - low_professionalism: 0; - move_to_reference: 1; - professional_skills: 21; - split_candidates: 0",
+      "notes": "- classifications: {'KEEP_AS_IS': 161, 'MOVE_SECTIONS_TO_REFERENCES': 1, 'TIGHTEN_BODY': 3}; - domain_extensions: 7; - foundation_capabilities: 136; - heavy_domain: 0; - heavy_foundation: 0; - heavy_professional: 0; - low_professionalism: 0; - move_to_reference: 1; - professional_skills: 22; - split_candidates: 0",
       "status": "pass"
     },
     {
@@ -72,7 +72,7 @@
     "split_candidates": 0
   },
   "default_regression_status": "pass",
-  "generated_at": "2026-07-02T06:15:11.915141+00:00",
+  "generated_at": "2026-07-02T07:39:24.685009+00:00",
   "key_foundation_capability_coverage_summary": {
     "count": 42,
     "statuses": {
@@ -82,13 +82,13 @@
   "known_accepted_warnings": [],
   "latest_results_available": {
     "benchmark_errors": 0,
-    "coverage_rows_checked": 63,
+    "coverage_rows_checked": 64,
     "professional_agent_sample_warnings": 0,
     "professional_agent_samples_checked": 5,
     "promoted_agent_sample_strict_warnings": 0,
     "promoted_agent_samples_strict_checked": 5,
     "release_blocking_professionalism_warnings": 0,
-    "skill_professionalism_average_score": 58.34,
+    "skill_professionalism_average_score": 58.32,
     "skill_professionalism_warnings": 0
   },
   "non_blocking_followups": [],
@@ -101,9 +101,9 @@
     "warnings": []
   },
   "professional_skill_coverage_summary": {
-    "count": 21,
+    "count": 22,
     "statuses": {
-      "sample-grade": 21
+      "sample-grade": 22
     }
   },
   "promoted_agent_samples_strict_status": "pass",

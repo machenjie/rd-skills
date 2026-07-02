@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import unittest
+import importlib.util
 from pathlib import Path
 
 
@@ -11,6 +12,23 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from runtime_governance import ClosureContract, ClosureVerdict, EvidenceLedger, Freshness  # noqa: E402
+
+
+SCRIPT_DIR = ROOT / "src" / "hook-runtime" / "scripts"
+
+
+def load_hook_closure_contract():
+    if str(SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPT_DIR))
+    spec = importlib.util.spec_from_file_location(
+        "changeforge_closure_contract_for_phase_tests",
+        SCRIPT_DIR / "changeforge_closure_contract.py",
+    )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 class ClosureContractTests(unittest.TestCase):
@@ -258,6 +276,92 @@ class ClosureContractTests(unittest.TestCase):
             verdict=ClosureVerdict.NEEDS_VALIDATION.value,
         )
         self.assertEqual(ClosureContract.from_json(contract.to_json()), contract)
+
+
+class HookClosurePhaseContractTests(unittest.TestCase):
+    def _contract(self, state: dict) -> object:
+        module = load_hook_closure_contract()
+        return module.ClosureContract.from_state(
+            state,
+            route_manifest_complete=True,
+            stage_route_present=True,
+            repository_context_present=True,
+            implementation_preflight_complete=True,
+            validation_evidence_present=True,
+            review_evidence_present=True,
+            residual_risk_present=True,
+            runtime="codex",
+        )
+
+    def _state(self, **overrides: object) -> dict:
+        state: dict[str, object] = {
+            "runtime": "codex",
+            "turn_stage": "repair",
+            "changed_paths": ["src/runtime_governance/process_phase.py"],
+            "validation_freshness_seen": True,
+            "phase_review_findings": [
+                {
+                    "finding_id": "sdd-001",
+                    "phase": "sdd",
+                    "severity": "high",
+                    "evidence": "material choice missing",
+                    "required_fix": "add choice evidence",
+                    "blocks_next_stage": True,
+                }
+            ],
+        }
+        state.update(overrides)
+        return state
+
+    def test_phase_review_finding_without_repair_blocks_closure(self) -> None:
+        contract = self._contract(self._state())
+        self.assertEqual(contract.verdict, "needs_repair")
+        self.assertIn("phase_repair", contract.missing_items)
+
+    def test_phase_repair_without_rereview_blocks_closure(self) -> None:
+        contract = self._contract(
+            self._state(phase_repair_events=[{"finding_id": "sdd-001", "repair_summary": "fixed"}])
+        )
+        self.assertEqual(contract.verdict, "needs_review")
+        self.assertIn("phase_rereview", contract.missing_items)
+
+    def test_phase_rereview_fail_blocks_closure(self) -> None:
+        contract = self._contract(
+            self._state(
+                phase_repair_events=[{"finding_id": "sdd-001", "repair_summary": "fixed"}],
+                phase_rereview_events=[{"finding_id": "sdd-001", "verdict": "fail"}],
+            )
+        )
+        self.assertEqual(contract.verdict, "needs_review")
+        self.assertIn("phase_rereview", contract.missing_items)
+
+    def test_phase_rereview_pass_allows_closure(self) -> None:
+        contract = self._contract(
+            self._state(
+                phase_repair_events=[{"finding_id": "sdd-001", "repair_summary": "fixed"}],
+                phase_rereview_events=[{"finding_id": "sdd-001", "verdict": "pass"}],
+            )
+        )
+        self.assertNotIn("phase_repair", contract.missing_items)
+        self.assertNotIn("phase_rereview", contract.missing_items)
+
+    def test_unrelated_phase_repair_does_not_close_finding(self) -> None:
+        contract = self._contract(
+            self._state(phase_repair_events=[{"finding_id": "ddd-002", "repair_summary": "unrelated"}])
+        )
+        self.assertEqual(contract.verdict, "needs_repair")
+        self.assertIn("phase_repair", contract.missing_items)
+
+    def test_stale_validation_after_phase_repair_blocks_closure(self) -> None:
+        contract = self._contract(
+            self._state(
+                validation_freshness_seen=False,
+                phase_repair_events=[{"finding_id": "sdd-001", "repair_summary": "fixed"}],
+                phase_rereview_events=[{"finding_id": "sdd-001", "verdict": "pass"}],
+            )
+        )
+        self.assertEqual(contract.verdict, "needs_validation")
+        self.assertIn("validation_fresh_after_final_edit", contract.missing_items)
 
 
 if __name__ == "__main__":

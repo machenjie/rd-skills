@@ -242,6 +242,7 @@
       "src/professional-skills/domain-impact-modeler/SKILL.md",
       "src/professional-skills/experience-impact-modeler/SKILL.md",
       "src/professional-skills/logging-design-gate/SKILL.md",
+      "src/professional-skills/phase-review-capsule/SKILL.md",
       "src/professional-skills/task-dag-planner/SKILL.md"
     ]
   },
@@ -286,7 +287,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 22,
-      "bullet_count": 149,
+      "bullet_count": 150,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 73,
@@ -294,7 +295,7 @@
       "description_findings": [],
       "description_length": 240,
       "findings": [
-        "body 271 lines exceeds review threshold 250"
+        "body 276 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 24,
@@ -302,7 +303,7 @@
       "largest_section_lines": 49,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 271,
+      "line_count": 276,
       "name": "ai-code-review-refactor",
       "optimality_section_length": 5,
       "output_contract_length": 12,
@@ -319,7 +320,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 4843
+      "word_count": 4887
     },
     {
       "anti_example_section_length": 10,
@@ -432,7 +433,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 3,
-      "bullet_count": 123,
+      "bullet_count": 124,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 96,
@@ -446,7 +447,7 @@
       "largest_section_lines": 55,
       "largest_section_title": "Technical Selection Criteria",
       "largest_table_rows": 9,
-      "line_count": 237,
+      "line_count": 242,
       "name": "change-forge-router",
       "optimality_section_length": 0,
       "output_contract_length": 25,
@@ -463,7 +464,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 1,
       "used_by_count": 0,
-      "word_count": 5321
+      "word_count": 5366
     },
     {
       "anti_example_section_length": 10,
@@ -648,7 +649,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 7,
-      "bullet_count": 140,
+      "bullet_count": 143,
       "classification": "MOVE_SECTIONS_TO_REFERENCES",
       "code_block_count": 2,
       "context_efficiency_score": 75,
@@ -656,7 +657,7 @@
       "description_findings": [],
       "description_length": 205,
       "findings": [
-        "body 299 lines exceeds review threshold 250",
+        "body 309 lines exceeds review threshold 250",
         "section 'SDD - System / Software / Structure Design Discipline' is 93 lines (> 80) \u2014 reference candidate"
       ],
       "has_shared_optimality": false,
@@ -665,7 +666,7 @@
       "largest_section_lines": 93,
       "largest_section_title": "SDD - System / Software / Structure Design Discipline",
       "largest_table_rows": 5,
-      "line_count": 299,
+      "line_count": 309,
       "name": "development-process-orchestrator",
       "optimality_section_length": 0,
       "output_contract_length": 18,
@@ -687,7 +688,7 @@
       "suggested_action": "Move oversized sections/tables into references/*.md; keep a concise body summary.",
       "table_count": 1,
       "used_by_count": 0,
-      "word_count": 3352
+      "word_count": 3450
     },
     {
       "anti_example_section_length": 10,
@@ -870,9 +871,45 @@
       "word_count": 2545
     },
     {
+      "anti_example_section_length": 0,
+      "benchmark_section_length": 6,
+      "bullet_count": 68,
+      "classification": "KEEP_AS_IS",
+      "code_block_count": 2,
+      "context_efficiency_score": 98,
+      "critical_details_length": 6,
+      "description_findings": [],
+      "description_length": 280,
+      "findings": [],
+      "has_shared_optimality": false,
+      "heading_count": 18,
+      "kind": "professional-skill",
+      "largest_section_lines": 66,
+      "largest_section_title": "Output Contract",
+      "largest_table_rows": 5,
+      "line_count": 211,
+      "name": "phase-review-capsule",
+      "optimality_section_length": 0,
+      "output_contract_length": 66,
+      "oversized_sections": [],
+      "oversized_tables": [],
+      "path": "src/professional-skills/phase-review-capsule/SKILL.md",
+      "professionalism_score": 100,
+      "recommended_phase": "-",
+      "reference_link_count": 0,
+      "repeated_phrase_count": 1,
+      "risk_of_change": "low",
+      "routing_clarity_score": 100,
+      "split_candidate_score": 0,
+      "suggested_action": "Within size and professionalism budget; no action required.",
+      "table_count": 1,
+      "used_by_count": 0,
+      "word_count": 1844
+    },
+    {
       "anti_example_section_length": 10,
       "benchmark_section_length": 22,
-      "bullet_count": 155,
+      "bullet_count": 156,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 0,
       "context_efficiency_score": 69,
@@ -880,15 +917,15 @@
       "description_findings": [],
       "description_length": 202,
       "findings": [
-        "body 264 lines exceeds review threshold 250"
+        "body 268 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 25,
       "kind": "professional-skill",
       "largest_section_lines": 28,
-      "largest_section_title": "Proactive Professional Triggers",
+      "largest_section_title": "Non-Negotiable Rules",
       "largest_table_rows": 9,
-      "line_count": 264,
+      "line_count": 268,
       "name": "quality-test-gate",
       "optimality_section_length": 0,
       "output_contract_length": 12,
@@ -905,7 +942,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 5230
+      "word_count": 5272
     },
     {
       "anti_example_section_length": 10,
@@ -6168,7 +6205,7 @@
   ],
   "summary": {
     "classifications": {
-      "KEEP_AS_IS": 160,
+      "KEEP_AS_IS": 161,
       "MOVE_SECTIONS_TO_REFERENCES": 1,
       "TIGHTEN_BODY": 3
     },
@@ -6179,7 +6216,7 @@
     "heavy_professional": 0,
     "low_professionalism": 0,
     "move_to_reference": 1,
-    "professional_skills": 21,
+    "professional_skills": 22,
     "split_candidates": 0
   },
   "thresholds": {

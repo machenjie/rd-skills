@@ -5,9 +5,11 @@ It does not replace change-forge-router.
 It adds execution-time reminders across the agent lifecycle: at session and
 subagent start, per user prompt, before and after tools run, and before the
 agent or a subagent stops.
-Supported default blocking is reserved for high-confidence SDD material choice
-and pre-edit structure gates. Stop closure is advisory by default and ordinary
-advisory context remains warning only.
+Supported default blocking covers high-confidence SDD material choice,
+pre-edit structure, process phase, and Stop closure gates where the adapter has
+the required hard-decision event. Unsupported adapters degrade explicitly
+instead of claiming full enforcement, and ordinary advisory context remains
+warning only.
 
 The hook runtime is a small project-level reminder layer for agent execution. It
 does not route work, does not read all skill references, and does not become a
@@ -43,20 +45,31 @@ The runtime provides these reminder hooks:
   supported hooks. Set `CHANGEFORGE_PRE_EDIT_MODE=warn` to downgrade locally.
   Copilot templates do not wire unsupported `PreToolUse` advisory, so PostToolUse
   and Stop report preflight gaps for Copilot.
+- Process Phase Gate: at Codex and Claude `UserPromptSubmit`, `PreToolUse`, and
+  `Stop`, initialize a bounded process phase ledger for non-trivial engineering
+  prompts, require independent PDD/DDD/SDD/TDD phase reviews before mutation,
+  and recheck phase, review, repair, re-review, and validation freshness before
+  handoff. It stores digests, IDs, status facts, and bounded findings only.
+  Copilot cannot enforce `PreToolUse`, so it records degraded phase enforcement
+  and relies on parent-context review evidence, PostToolUse facts, and Stop.
 - Post-Edit Structure Gate: after edit tools run, detect structural code changes
   that should preserve reuse, placement, ownership, dependency direction, public
   API decisions, same-pattern scans, and nearby tests.
 - Risk Surface Gate: after edit tools or shell commands run, detect high-risk
   surfaces such as auth, data contracts, cache, queue, Kubernetes, Helm, and big
   data work so the agent remembers the matching gate.
-- Stop Closure Gate: before final handoff, remind the agent to include the
+- Stop Closure Gate: before final handoff, require the agent to include the
   ChangeForge path used, implementation preflight evidence, changed files,
-  validation evidence, residual risk, and next actions.
-- Subagent Closure Reminder: at Codex and Claude `SubagentStop`, remind the
-  subagent to carry closure evidence back to the parent. Advisory only; never
-  forces continuation and never touches the parent turn's closure state. Copilot
-  templates do not wire `SubagentStop` because Copilot only consumes block/allow
-  decision output for that event.
+  validation evidence, residual risk, next actions, phase reviews, repair and
+  re-review evidence for blocking findings, and validation freshness after the
+  final edit.
+- Subagent Review Gate: at Codex and Claude `SubagentStart` and `SubagentStop`,
+  provide bounded review capsule requirements and merge only structured
+  `phase_review_result` records back into parent state. Raw subagent transcript,
+  raw prompts, secrets, and implementer self-approval are not merged. Copilot
+  receives `SubagentStart` capsule context but does not wire unsupported
+  `SubagentStop`, so it records degraded enforcement and requires parent-context
+  review evidence or CI validation.
 
 ## Non-Goals
 
@@ -103,9 +116,10 @@ and loads every `*.json` in its hook folder, so its config is the dedicated
 `changeforge-hooks.json` and the scripts, manifest, and bootstrap fragment live
 in a `changeforge/` subfolder. Copilot context output is top-level
 `additionalContext` for supported events. Copilot cannot run Codex/Claude
-`PreToolUse` blocking gates, so it relies on PostToolUse and Stop closure
-compensation where those facts are available. Stop closure remains advisory by
-default and records missing evidence as closure risk. Claude commands set
+`PreToolUse` blocking gates or `SubagentStop` review collection, so it relies on
+PostToolUse, parent-context review evidence, and Stop closure compensation where
+those facts are available. Missing hard-enforcement support is recorded as
+degraded evidence rather than a pass. Claude commands set
 `CHANGEFORGE_AGENT=claude` explicitly, emit `hookSpecificOutput.additionalContext`
 for context-bearing events, and use 10-second `timeout` values because Claude
 Code measures timeout in seconds.
@@ -159,18 +173,21 @@ Gate-specific modes override it:
 
 ```bash
 CHANGEFORGE_PRE_EDIT_MODE=off|monitor|warn|block
+CHANGEFORGE_SDD_CHOICE_MODE=off|monitor|warn|block
+CHANGEFORGE_PROCESS_PHASE_MODE=off|monitor|warn|block
 CHANGEFORGE_PERMISSION_MODE=off|monitor|warn|block
 CHANGEFORGE_STOP_MODE=off|monitor|warn|block
+CHANGEFORGE_SUBAGENT_REVIEW_MODE=off|monitor|warn|block
 CHANGEFORGE_HOOK_FAILURE_MODE=fail_open|fail_closed
 ```
 
-Default gate modes are `sdd_material_choice=block` and
-`pre_edit_structure=block`. Stop closure is advisory by default: it records
-missing route/stage/validation/review evidence as closure risk and telemetry
-facts, but it does not force continuation or block final handoff unless a
-maintainer explicitly overrides the policy. Unspecified gates fallback to
-`warn`, and ordinary advisory gates default to `warn`. Hook runtime failures
-still fail open unless explicitly configured fail-closed.
+Default gate modes are `sdd_material_choice=block`,
+`pre_edit_structure=block`, `process_phase=block`, and
+`stop_closure=block`. Stop closure blocks non-trivial engineering handoff where
+the adapter supports hard Stop decisions; unsupported adapters record degraded
+closure instead of claiming enforcement. Unspecified gates fallback to `warn`,
+and ordinary advisory gates default to `warn`. Hook runtime failures still fail
+open unless explicitly configured fail-closed.
 `changeforge_hook_policy.py` also exposes timeout, retry,
 retry-delay, max-concurrency, and queue-limit policy fields for future lifecycle
 adapters, without changing the synchronous script behavior.

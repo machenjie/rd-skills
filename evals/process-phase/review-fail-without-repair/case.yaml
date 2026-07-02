@@ -1,0 +1,19 @@
+---
+id: review-fail-without-repair
+scenario: Blocking phase review finding exists with no matching repair event.
+adapter: codex
+event: Stop
+phase_review_result:
+  phase: sdd
+  verdict: fail
+  finding_id: sdd-001
+  blocks_next_stage: true
+expected_result:
+  decision: block
+  closure_verdict: needs_repair
+  required_missing:
+    - phase_repair
+forbidden_claims:
+  - Failed review can proceed to closure without repair.
+  - Unrelated repair event closes the finding.
+privacy_boundary: Store finding ID, phase, verdict, and repair presence only.

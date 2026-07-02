@@ -28,8 +28,8 @@ class GenerateMarketplaceCatalogTests(unittest.TestCase):
     def test_catalog_is_derived_from_exported_indexes(self) -> None:
         module = _load_module()
         payload = module.generate_catalog(ROOT, "recommended")
-        self.assertEqual(len(payload["indexes"]["recommended"]["items"]), 164)
-        self.assertEqual(len(payload["items"]), 164)
+        self.assertEqual(len(payload["indexes"]["recommended"]["items"]), 165)
+        self.assertEqual(len(payload["items"]), 165)
         self.assertIn("change-forge-router", payload["items"])
         self.assertIn("implementation-structure-design", payload["items"])
 

@@ -1,7 +1,7 @@
 {
-  "average_score": 58.34,
+  "average_score": 58.32,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-07-02T06:15:10.363022+00:00",
+  "generated_at": "2026-07-02T07:39:22.961560+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -29,7 +29,7 @@
       "warnings": []
     },
     {
-      "body_lines": 271,
+      "body_lines": 276,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -129,7 +129,7 @@
       "warnings": []
     },
     {
-      "body_lines": 237,
+      "body_lines": 242,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -279,7 +279,7 @@
       "warnings": []
     },
     {
-      "body_lines": 299,
+      "body_lines": 309,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -429,7 +429,32 @@
       "warnings": []
     },
     {
-      "body_lines": 264,
+      "body_lines": 211,
+      "dimensions": {
+        "anti_bloat_control": 5,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 4,
+        "mode_coverage": 4,
+        "output_actionability": 4,
+        "proactive_trigger_quality": 5,
+        "professional_depth": 5,
+        "reference_precision": 4,
+        "stage_fit": 4,
+        "trigger_accuracy": 5,
+        "validation_obligation": 5
+      },
+      "kind": "professional-skill",
+      "likely_missing_sections": [],
+      "name": "phase-review-capsule",
+      "path": "src/professional-skills/phase-review-capsule/SKILL.md",
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 55,
+      "warnings": []
+    },
+    {
+      "body_lines": 268,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -3929,6 +3954,6 @@
       "warnings": []
     }
   ],
-  "skills_checked": 157,
+  "skills_checked": 158,
   "warning_count": 0
 }

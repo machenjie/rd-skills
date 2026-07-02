@@ -88,51 +88,28 @@ STALE_HOOK_PHRASES = (
     "only changeforge_pre_edit_mode=block enables",
     "the default is warn and fail_open",
 )
-STOP_CLOSURE_BLOCK_PATTERNS = (
+STOP_CLOSURE_ADVISORY_PATTERNS = (
     (
-        "Stop closure policy defaults to block",
-        r"stop\s+closure\s+policy\s+(?:also\s+)?defaults?\s+to\s+[`\"']?block",
+        "Stop closure is advisory by default",
+        r"stop\s+closure\s+(?:is\s+)?advisory\s+by\s+default",
     ),
     (
-        "stop_closure: block",
-        r"[`\"']?stop_closure[`\"']?\s*[:=]\s*[`\"']?block[`\"']?",
+        "Stop closure remains advisory by default",
+        r"stop\s+closure\s+remains\s+advisory\s+by\s+default",
     ),
     (
-        '"stop_closure": "block"',
-        r"[\"']stop_closure[\"']\s*:\s*[\"']block[\"']",
+        "Stop closure gaps remain advisory",
+        r"stop\s+closure\s+gaps\s+remain\s+advisory",
     ),
     (
-        "Stop closure block by default",
-        r"stop\s+closure\s+block(?:s|ing)?\s+by\s+default",
+        "does not force continuation or block final handoff",
+        r"does\s+not\s+force\s+continuation\s+or\s+block\s+final\s+handoff",
     ),
     (
-        "Stop closure blocks by default",
-        r"stop\s+closure\s+blocks\s+by\s+default",
-    ),
-    (
-        "Stop closure defaults to block",
-        r"stop\s+closure\s+defaults?\s+to\s+[`\"']?block",
-    ),
-    (
-        "strict/blocking Stop policy",
-        r"strict/blocking\s+stop\s+policy",
-    ),
-    (
-        "blocks Stop when required closure evidence is missing",
-        r"blocks\s+stop\s+when\s+required\s+closure\s+evidence\s+is\s+missing",
-    ),
-    (
-        "blocks Stop only when required closure evidence is missing",
-        r"blocks\s+stop\s+only\s+when\s+required\s+closure\s+evidence\s+is\s+missing",
-    ),
-    (
-        "blocks Stop only when",
-        r"(?:blocks\s+stop\s+only\s+when(?!\s+required\s+closure\s+evidence\s+is\s+missing)|only\s+blocks\s+stop\s+when)",
+        "records missing evidence as closure risk but does not block",
+        r"records\s+missing\s+evidence\s+as\s+closure\s+risk.*does\s+not\s+.*block",
     ),
 )
-STOP_CLOSURE_OVERRIDE_PATTERNS = {
-    "blocks Stop only when",
-}
 LICENSE_STALE_MARKERS = (
     "proprietary",
     "owner decision required before open-source publication",
@@ -254,27 +231,6 @@ def _hook_default_errors(root: Path, markdown_files: list[Path]) -> list[str]:
     return errors
 
 
-def _has_explicit_stop_block_override(lines: list[str], number: int) -> bool:
-    context = " ".join(lines[max(0, number - 2) : min(len(lines), number + 3)])
-    normalized = re.sub(r"[`\s]+", " ", context.casefold()).strip()
-    has_block_override = (
-        "changeforge_stop_mode=block" in normalized
-        or "changeforge_hook_mode=block" in normalized
-    )
-    has_explicit_override_language = any(
-        phrase in normalized
-        for phrase in (
-            "explicit",
-            "configured",
-            "maintainer",
-            "override",
-            "sets changeforge_stop_mode=block",
-            "sets changeforge_hook_mode=block",
-        )
-    )
-    return has_block_override and has_explicit_override_language
-
-
 def _stop_closure_default_errors(root: Path, markdown_files: list[Path]) -> list[str]:
     errors: list[str] = []
     for path in markdown_files:
@@ -282,23 +238,18 @@ def _stop_closure_default_errors(root: Path, markdown_files: list[Path]) -> list
         lines = _read(path).splitlines()
         for number, line in enumerate(lines, start=1):
             normalized = re.sub(r"[`\s]+", " ", line.casefold()).strip()
-            for label, pattern in STOP_CLOSURE_BLOCK_PATTERNS:
+            for label, pattern in STOP_CLOSURE_ADVISORY_PATTERNS:
                 if re.search(pattern, normalized):
-                    if label in STOP_CLOSURE_OVERRIDE_PATTERNS and _has_explicit_stop_block_override(
-                        lines,
-                        number,
-                    ):
-                        continue
-                    errors.append(f"{rel}:{number}: stale Stop closure block-default phrase: {label}")
+                    errors.append(f"{rel}:{number}: stale Stop closure advisory-default phrase: {label}")
             if "stop closure follows the stop closure policy on supported events" in normalized:
                 context = " ".join(lines[max(0, number - 3) : min(len(lines), number + 2)]).casefold()
                 if not (
-                    "advisory" in context
-                    or "warn by default" in context
-                    or "warning by default" in context
+                    "block" in context
+                    or "degraded" in context
+                    or "unsupported" in context
                 ):
                     errors.append(
-                        f"{rel}:{number}: Stop closure policy sentence must state advisory/warn default"
+                        f"{rel}:{number}: Stop closure policy sentence must state block/degraded default"
                     )
     return errors
 
@@ -367,6 +318,8 @@ def _hook_policy_consistency_errors(root: Path) -> list[str]:
         ("DEFAULT_GATE_MODES", r"\bDEFAULT_GATE_MODES\b"),
         ('"sdd_material_choice": "block"', r"['\"]sdd_material_choice['\"]\s*:\s*['\"]block['\"]"),
         ('"pre_edit_structure": "block"', r"['\"]pre_edit_structure['\"]\s*:\s*['\"]block['\"]"),
+        ('"process_phase": "block"', r"['\"]process_phase['\"]\s*:\s*['\"]block['\"]"),
+        ('"stop_closure": "block"', r"['\"]stop_closure['\"]\s*:\s*['\"]block['\"]"),
         (
             'DEFAULT_GATE_MODES.get(gate_key, "warn")',
             r"DEFAULT_GATE_MODES\.get\(\s*gate_key\s*,\s*['\"]warn['\"]\s*\)",
@@ -376,11 +329,6 @@ def _hook_policy_consistency_errors(root: Path) -> list[str]:
     for label, pattern in policy_checks:
         if not re.search(pattern, policy):
             errors.append(f"{policy_path.relative_to(root)}: missing hook policy fact: {label}")
-    if re.search(r"['\"]stop_closure['\"]\s*:\s*['\"]block['\"]", policy):
-        errors.append(
-            "src/hook-runtime/scripts/changeforge_hook_policy.py: DEFAULT_GATE_MODES must not set stop_closure to block"
-        )
-
     doc_checks = (
         (
             "SDD material choice defaults to block",
@@ -403,12 +351,24 @@ def _hook_policy_consistency_errors(root: Path) -> list[str]:
             ),
         ),
         (
-            "Stop closure is advisory/warn by default",
+            "process phase defaults to block",
+            lambda text: (
+                (
+                    "process phase" in text
+                    or "process_phase=block" in text
+                    or "process_phase: block" in text
+                )
+                and "default" in text
+                and "block" in text
+            ),
+        ),
+        (
+            "Stop closure blocks where supported and degrades when unsupported",
             lambda text: (
                 "stop closure" in text
                 and "default" in text
-                and ("advisory" in text or "warn" in text or "warning" in text)
-                and ("does not force continuation" in text or "does not block final handoff" in text or "not force" in text)
+                and "block" in text
+                and ("degraded" in text or "unsupported" in text or "cannot enforce" in text)
             ),
         ),
         (

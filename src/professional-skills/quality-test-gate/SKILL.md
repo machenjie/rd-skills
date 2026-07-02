@@ -46,6 +46,10 @@ Own the TDD slice for ChangeForge process traces: PDD acceptance-to-test mapping
 - **Agent-provided test evidence must be concrete**: accept command output, exit codes, logs, fixtures, screenshots, or recorded validator results; reject "tests should pass", undocumented local runs, and partial runs reported as full (a lint or type-check pass is not a test pass; one green test is not full-suite success).
 - **Changed code maps to tests**: every material changed branch, public contract, migration, fixture, generated artifact, or integration seam must map to a specific test, validation command, or explicitly accepted residual risk.
 - **Validation freshness is mandatory**: if source, fixtures, configs, generated inputs, lockfiles, migrations, or test data change after a validation run, the affected validation is stale and must be re-run or reported as not verified.
+- **TDD phase review must be evidence-backed**: TDD is not reviewed unless it
+  maps PDD acceptance, DDD invariants, SDD public API, failure modes, and
+  logging/security decisions to concrete tests, validation commands, code
+  constraints, or accepted residual risk with a current validation signal.
 - **Validation Broker results are closure inputs**: when a broker plan or result is available, use it to map changed paths and risk surfaces to narrow/module/full commands, inspect outcome and freshness, and treat stale, failed, not-run, no-outcome, or coverage-mismatch results as incomplete validation. Broker recommendations do not execute commands automatically and do not replace professional judgment.
 - **Broker owns freshness classification**: use `validation-broker` as the source for changed-path-to-validation mapping, validator depth, parsed outcomes, freshness, negative validation evidence, and stop-closure validation status.
 - **Flaky tests need classification**: a flaky, retried, quarantined, or skipped test must be classified by signature, owner, affected risk, quarantine/remediation path, and why its missing signal does or does not block the change.

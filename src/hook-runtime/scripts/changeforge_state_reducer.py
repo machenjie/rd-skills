@@ -7,6 +7,23 @@ import json
 from typing import Any
 
 try:
+    from runtime_governance.process_phase import (
+        sanitize_phase_ledger,
+        sanitize_phase_review_result,
+    )
+except ModuleNotFoundError:  # Source tree layout: hook scripts live under src/hook-runtime.
+    import sys
+    from pathlib import Path
+
+    _src_root = Path(__file__).resolve().parents[2]
+    if str(_src_root) not in sys.path:
+        sys.path.insert(0, str(_src_root))
+    from runtime_governance.process_phase import (
+        sanitize_phase_ledger,
+        sanitize_phase_review_result,
+    )
+
+try:
     from changeforge_compaction_contract import (
         latest_snapshot,
         merge_active_context,
@@ -74,6 +91,12 @@ STATE_REDUCERS = {
     "repair_findings": "additive_unique",
     "repair_events": "latest_by_finding",
     "rereview_events": "latest_by_finding",
+    "process_phase_ledgers": "latest_phase_ledgers",
+    "phase_review_results": "latest_phase_review_results",
+    "phase_review_findings": "phase_findings_unresolved_first",
+    "phase_repair_events": "latest_phase_events_by_finding",
+    "phase_rereview_events": "latest_phase_events_by_finding",
+    "review_capsules": "latest_review_capsules",
     "validation_results": "latest_by_command_or_path_preserve_stale_state",
     "risk_surfaces": "additive_unique",
     "changed_path_risk_surfaces": "additive_unique",
@@ -115,6 +138,16 @@ STATE_REDUCERS = {
     "review_intent_seen": "bool_or",
     "review_artifact_seen": "bool_or",
     "review_evidence_seen": "bool_or",
+    "pdd_reviewed": "bool_or",
+    "ddd_reviewed": "bool_or",
+    "sdd_reviewed": "bool_or",
+    "tdd_reviewed": "bool_or",
+    "process_phase_blocked": "bool_or",
+    "process_phase_ledger_seen": "bool_or",
+    "phase_review_seen": "bool_or",
+    "phase_repair_required": "bool_or",
+    "phase_rereview_required": "bool_or",
+    "phase_rereview_passed": "bool_or",
     "repair_evidence_seen": "bool_or",
     "permission_gate_seen": "bool_or",
     "professional_contract_seen": "bool_or",
@@ -148,6 +181,8 @@ STATE_REDUCERS = {
     "turn_stage": "last_non_empty",
     "owner_skill": "last_non_empty",
     "reviewer_skill": "last_non_empty",
+    "process_current_phase": "last_non_empty",
+    "process_phase_blocked_reason": "last_non_empty",
     "professional_injection_digest": "last_non_empty",
     "last_professional_injection_event": "last_non_empty",
     "active_skill_context": "merge_preserve_required_fields",
@@ -198,6 +233,16 @@ def reduce_state_update(state: dict, update: dict) -> dict:
             next_state[field] = _unresolved_findings_first(next_state.get(field, []), value)
         elif reducer == "latest_by_finding":
             next_state[field] = _latest_by_key(next_state.get(field, []), value)
+        elif reducer == "latest_phase_ledgers":
+            next_state[field] = _latest_phase_ledgers(next_state.get(field, []), value)
+        elif reducer == "latest_phase_review_results":
+            next_state[field] = _latest_phase_review_results(next_state.get(field, []), value)
+        elif reducer == "phase_findings_unresolved_first":
+            next_state[field] = _phase_findings_unresolved_first(next_state.get(field, []), value)
+        elif reducer == "latest_phase_events_by_finding":
+            next_state[field] = _latest_phase_events_by_finding(next_state.get(field, []), value)
+        elif reducer == "latest_review_capsules":
+            next_state[field] = _latest_review_capsules(next_state.get(field, []), value)
         elif reducer == "risk_priority_then_recent":
             next_state[field] = _risk_priority_then_recent(next_state.get(field, []), value)
         elif reducer == "latest_context_control_records":
@@ -334,6 +379,203 @@ def _route_repair_forbidden_retries(existing: Any, incoming: Any) -> list[str]:
     values = _additive_unique(existing, incoming)
     values.sort(key=_forbidden_retry_priority)
     return values[:10]
+
+
+def _latest_phase_ledgers(existing: Any, incoming: Any) -> list[dict]:
+    records: dict[str, dict] = {}
+    order: list[str] = []
+    for raw in [*_as_iterable(existing), *_as_iterable(incoming)]:
+        if not isinstance(raw, dict):
+            continue
+        record = sanitize_phase_ledger(raw)
+        route_id = str(record.get("route_id") or "active-runtime-route")
+        if route_id not in records:
+            order.append(route_id)
+        records[route_id] = record
+    return [records[key] for key in order[-10:] if key in records]
+
+
+def _latest_phase_review_results(existing: Any, incoming: Any) -> list[dict]:
+    records: dict[tuple[str, str], dict] = {}
+    order: list[tuple[str, str]] = []
+    for raw in [*_as_iterable(existing), *_as_iterable(incoming)]:
+        if not isinstance(raw, dict):
+            continue
+        record = sanitize_phase_review_result(raw)
+        phase = str(record.get("phase") or "")
+        review_id = str(record.get("review_id") or "")
+        if not phase or not review_id:
+            continue
+        key = (phase, review_id)
+        if key not in records:
+            order.append(key)
+        records[key] = record
+    return [records[key] for key in order[-MAX_STATE_ITEMS:] if key in records]
+
+
+def _phase_findings_unresolved_first(existing: Any, incoming: Any) -> list[dict]:
+    findings: dict[str, dict] = {}
+    order: list[str] = []
+    for raw in [*_as_iterable(existing), *_as_iterable(incoming)]:
+        record = _clean_phase_finding(raw)
+        finding_id = str(record.get("finding_id") or "")
+        if not finding_id:
+            continue
+        if finding_id not in findings:
+            order.append(finding_id)
+        findings[finding_id] = record
+    ordered = [findings[key] for key in order if key in findings]
+    ordered.sort(key=_phase_finding_priority)
+    return ordered[:MAX_STATE_ITEMS]
+
+
+def _latest_phase_events_by_finding(existing: Any, incoming: Any) -> list[dict]:
+    records: dict[str, dict] = {}
+    order: list[str] = []
+    for raw in [*_as_iterable(existing), *_as_iterable(incoming)]:
+        record = _clean_phase_event(raw)
+        finding_id = str(record.get("finding_id") or "")
+        if not finding_id:
+            continue
+        if finding_id not in records:
+            order.append(finding_id)
+        records[finding_id] = record
+    return [records[key] for key in order[-MAX_STATE_ITEMS:] if key in records]
+
+
+def _latest_review_capsules(existing: Any, incoming: Any) -> list[dict]:
+    records: dict[str, dict] = {}
+    order: list[str] = []
+    for raw in [*_as_iterable(existing), *_as_iterable(incoming)]:
+        record = _clean_review_capsule(raw)
+        capsule_id = str(record.get("capsule_id") or "")
+        if not capsule_id:
+            continue
+        if capsule_id not in records:
+            order.append(capsule_id)
+        records[capsule_id] = record
+    return [records[key] for key in order[-10:] if key in records]
+
+
+def _clean_phase_finding(raw: Any) -> dict:
+    if isinstance(raw, str):
+        text = raw.strip()[:MAX_STATE_VALUE_LEN]
+        return {
+            "finding_id": _record_key(text),
+            "phase": "",
+            "severity": "medium",
+            "evidence": text,
+            "required_fix": "",
+            "blocks_next_stage": True,
+            "resolved": _is_resolved_text(text),
+        }
+    if not isinstance(raw, dict):
+        return {}
+    allowed = {
+        "finding_id",
+        "phase",
+        "severity",
+        "evidence",
+        "required_fix",
+        "blocks_next_stage",
+        "resolved",
+        "review_id",
+    }
+    cleaned: dict[str, Any] = {}
+    for key, value in raw.items():
+        name = str(key).strip()[:80]
+        if name not in allowed or _forbidden_key_name(name, _PHASE_FORBIDDEN_KEYS):
+            continue
+        if name in {"blocks_next_stage", "resolved"}:
+            cleaned[name] = bool(value)
+        else:
+            cleaned[name] = str(value).strip()[:MAX_STATE_VALUE_LEN]
+    if cleaned and "resolved" not in cleaned:
+        cleaned["resolved"] = _is_resolved_text(json.dumps(cleaned, sort_keys=True))
+    return cleaned
+
+
+def _clean_phase_event(raw: Any) -> dict:
+    if not isinstance(raw, dict):
+        return {}
+    allowed = {
+        "event_id",
+        "finding_id",
+        "phase",
+        "review_id",
+        "verdict",
+        "repair_summary",
+        "rereview_summary",
+        "validation_result",
+        "artifact_digest",
+        "changed_paths",
+    }
+    cleaned: dict[str, Any] = {}
+    for key, value in raw.items():
+        name = str(key).strip()[:80]
+        if name not in allowed or _forbidden_key_name(name, _PHASE_FORBIDDEN_KEYS):
+            continue
+        if name == "changed_paths":
+            cleaned[name] = _additive_unique([], value)
+        else:
+            cleaned[name] = str(value).strip()[:MAX_STATE_VALUE_LEN]
+    return cleaned
+
+
+def _clean_review_capsule(raw: Any) -> dict:
+    if not isinstance(raw, dict):
+        return {}
+    allowed = {
+        "schema_version",
+        "capsule_id",
+        "review_type",
+        "user_request_summary",
+        "accepted_constraints",
+        "source_evidence",
+        "artifact_under_review",
+        "allowed_context",
+        "forbidden_inputs",
+    }
+    cleaned: dict[str, Any] = {}
+    for key, value in raw.items():
+        name = str(key).strip()[:80]
+        if name not in allowed or _forbidden_key_name(name, _PHASE_FORBIDDEN_KEYS):
+            continue
+        if name == "schema_version":
+            try:
+                cleaned[name] = int(value)
+            except (TypeError, ValueError):
+                cleaned[name] = 1
+        elif isinstance(value, dict):
+            cleaned[name] = _clean_mapping(value)
+        elif isinstance(value, (list, tuple)):
+            cleaned[name] = _additive_unique([], value)
+        else:
+            cleaned[name] = str(value).strip()[:MAX_STATE_VALUE_LEN]
+    forbidden_text = json.dumps(raw, sort_keys=True).casefold()
+    if any(token in forbidden_text for token in ("raw prompt", "raw_prompt", "secret", "full command output")):
+        cleaned["privacy_status"] = "rejected_for_forbidden_input"
+    return cleaned
+
+
+_PHASE_FORBIDDEN_KEYS = {
+    "prompt",
+    "raw_prompt",
+    "raw_output",
+    "command_output",
+    "stdout",
+    "stderr",
+    "environment",
+    "env",
+    "secret",
+    "secrets",
+    "credential",
+    "credentials",
+    "password",
+    "api_key",
+    "apikey",
+    "token",
+}
 
 
 def _clean_context_control_record(raw: dict) -> dict:
@@ -514,6 +756,22 @@ def _forbidden_retry_priority(value: str) -> tuple[int, str]:
     lowered = value.casefold()
     severe = any(term in lowered for term in ("p0", "critical", "security", "data loss", "same-path"))
     return (0 if severe else 1, lowered)
+
+
+def _phase_finding_priority(record: dict) -> tuple[int, int, str]:
+    text = json.dumps(record, sort_keys=True).casefold()
+    unresolved = not _is_resolved_text(text) and not bool(record.get("resolved"))
+    severity = str(record.get("severity") or "").casefold()
+    severe = severity in {"critical", "high"} or any(
+        term in text for term in ("critical", "p0", "security", "data loss")
+    )
+    blocks = bool(record.get("blocks_next_stage"))
+    return (0 if unresolved or blocks else 1, 0 if severe else 1, str(record.get("finding_id") or ""))
+
+
+def _is_resolved_text(value: str) -> bool:
+    lowered = value.casefold()
+    return any(term in lowered for term in ("resolved", "closed", "fixed", "rereview passed"))
 
 
 def _merge_runtime_adapter_facts(existing: Any, incoming: dict) -> dict:

@@ -73,14 +73,12 @@ It is a foundation capability, not a top-level professional skill. The router se
 
 ## Hook Runtime Support
 
-ChangeForge Hook Runtime is a bounded support artifact, not a skill and not a replacement for `change-forge-router`. Codex and Claude hooks may emit warning-only reminders after tool use or before handoff. Copilot local hooks use advisory context where Copilot consumes it, and Stop closure is advisory rather than a forced close-report gate. The runtime must not select a complete route, read every compiled reference, ingest personal content, or install raw `src/hook-runtime`.
+ChangeForge Hook Runtime is a bounded support artifact, not a skill and not a replacement for `change-forge-router`. Codex and Claude hooks may block high-confidence phase, structure, SDD choice, and closure gaps where the adapter supports hard decisions. Copilot local hooks use advisory context where Copilot consumes it and record degraded enforcement where events such as `PreToolUse` or `SubagentStop` are unsupported. The runtime must not select a complete route, read every compiled reference, ingest personal content, or install raw `src/hook-runtime`.
 
-Codex and Claude block SDD material choice and pre-edit structure by default
-where supported. Stop closure is advisory by default: it records missing
-route/stage/validation/review evidence as closure risk and telemetry facts, but
-it does not force continuation or block final handoff unless a maintainer
-explicitly overrides the policy. Hook runtime failures still fail open unless
-explicitly configured fail-closed.
+Codex and Claude block SDD material choice, pre-edit structure, process phase,
+and Stop closure by default where supported. Unsupported adapters record
+degraded closure instead of claiming enforcement. Hook runtime failures still
+fail open unless explicitly configured fail-closed.
 
 Hook runtime state is operational cache stored outside the project source tree under the user's cache directory. It is not a PUA state file, not runtime skill content, and not a user-specific corpus mapping. Hooks are built into `dist/` and supported Codex, Claude, and Copilot project/user quickstart and install paths enable the strongest supported hook/professional-injection mode by default. Use `--without-hooks` or `--activation-level none` to opt out. `--with-hooks` remains accepted as a backward-compatible legacy flag, and `--activation-level bootstrap` installs only the non-executable route-preflight fragment. Existing hook configuration is preserved and hooks are never trusted automatically.
 

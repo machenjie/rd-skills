@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.local/schemas/phase-review-result.v1.schema.json",
+  "title": "ChangeForge Phase Review Result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "review_id",
+    "phase",
+    "reviewer_skill",
+    "owner_skill",
+    "reviewed_artifact_digest",
+    "verdict",
+    "score",
+    "findings",
+    "approved_scope",
+    "not_reviewed",
+    "required_next_action",
+    "residual_risk"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "review_id": { "$ref": "#/$defs/id" },
+    "phase": {
+      "enum": ["pdd", "ddd", "sdd", "tdd", "implementation", "closure"]
+    },
+    "reviewer_skill": { "$ref": "#/$defs/skillName" },
+    "owner_skill": { "$ref": "#/$defs/skillName" },
+    "reviewed_artifact_digest": { "$ref": "#/$defs/digest" },
+    "verdict": {
+      "enum": ["pass", "fail", "needs_user_choice", "insufficient_evidence"]
+    },
+    "score": { "type": "integer", "minimum": 0, "maximum": 5 },
+    "findings": {
+      "type": "array",
+      "maxItems": 30,
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "approved_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "files": { "$ref": "#/$defs/boundedTextList" },
+        "behaviors": { "$ref": "#/$defs/boundedTextList" },
+        "facts": { "$ref": "#/$defs/boundedTextList" }
+      }
+    },
+    "not_reviewed": { "$ref": "#/$defs/boundedTextList" },
+    "required_next_action": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "items": {
+        "enum": ["proceed", "repair", "ask_user", "run_validation"]
+      },
+      "uniqueItems": true
+    },
+    "residual_risk": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["risk", "owner", "next_gate"],
+        "properties": {
+          "risk": { "$ref": "#/$defs/boundedText" },
+          "owner": { "$ref": "#/$defs/boundedText" },
+          "next_gate": { "$ref": "#/$defs/boundedText" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,120}$" },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[A-Fa-f0-9]{12,64}$"
+    },
+    "skillName": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.:-]{1,120}$"
+    },
+    "boundedText": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "boundedTextList": {
+      "type": "array",
+      "maxItems": 30,
+      "items": { "$ref": "#/$defs/boundedText" }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finding_id",
+        "severity",
+        "evidence",
+        "required_fix",
+        "blocks_next_stage"
+      ],
+      "properties": {
+        "finding_id": { "$ref": "#/$defs/id" },
+        "severity": { "enum": ["critical", "high", "medium", "low"] },
+        "evidence": { "$ref": "#/$defs/boundedText" },
+        "required_fix": { "$ref": "#/$defs/boundedText" },
+        "blocks_next_stage": { "type": "boolean" }
+      }
+    }
+  }
+}

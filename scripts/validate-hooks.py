@@ -64,11 +64,13 @@ RICH_EVENT_SCRIPTS = {
     "UserPromptSubmit": (
         "changeforge_user_prompt_route_reminder",
         "changeforge_professional_injector",
+        "changeforge_process_phase_gate",
         "changeforge_sdd_material_choice_gate",
         "changeforge_review_gate",
     ),
     "PreToolUse": (
         "changeforge_professional_injector",
+        "changeforge_process_phase_gate",
         "changeforge_sdd_material_choice_gate",
         "changeforge_pre_edit_structure_gate",
         "changeforge_pre_tool_risk_preview",
@@ -87,9 +89,17 @@ RICH_EVENT_SCRIPTS = {
         "changeforge_session_bootstrap",
         "changeforge_professional_injector",
         "changeforge_subagent_skill_contract",
+        "changeforge_subagent_review_gate",
     ),
-    "SubagentStop": ("changeforge_subagent_stop_reminder",),
-    "Stop": ("changeforge_sdd_material_choice_gate", "changeforge_stop_closure_gate"),
+    "SubagentStop": (
+        "changeforge_subagent_stop_reminder",
+        "changeforge_subagent_review_gate",
+    ),
+    "Stop": (
+        "changeforge_sdd_material_choice_gate",
+        "changeforge_process_phase_gate",
+        "changeforge_stop_closure_gate",
+    ),
 }
 # Copilot event -> the hook script(s) each event must invoke.
 COPILOT_EVENT_SCRIPTS = {
@@ -111,8 +121,9 @@ COPILOT_EVENT_SCRIPTS = {
         "changeforge_session_bootstrap",
         "changeforge_professional_injector",
         "changeforge_subagent_skill_contract",
+        "changeforge_subagent_review_gate",
     ),
-    "Stop": ("changeforge_stop_closure_gate",),
+    "Stop": ("changeforge_process_phase_gate", "changeforge_stop_closure_gate"),
 }
 BOOTSTRAP_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"
@@ -146,6 +157,7 @@ REQUIRED_HOOK_SCRIPTS = (
     "changeforge_skill_index.py",
     "changeforge_session_bootstrap.py",
     "changeforge_user_prompt_route_reminder.py",
+    "changeforge_process_phase_gate.py",
     "changeforge_sdd_material_choice_gate.py",
     "changeforge_pre_edit_structure_gate.py",
     "changeforge_pre_tool_risk_preview.py",
@@ -157,6 +169,7 @@ REQUIRED_HOOK_SCRIPTS = (
     "changeforge_compaction_snapshot.py",
     "changeforge_compaction_reinject.py",
     "changeforge_subagent_skill_contract.py",
+    "changeforge_subagent_review_gate.py",
     "changeforge_post_edit_structure_gate.py",
     "changeforge_risk_surface_gate.py",
     "changeforge_subagent_stop_reminder.py",

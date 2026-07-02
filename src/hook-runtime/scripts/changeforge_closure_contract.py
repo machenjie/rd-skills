@@ -481,6 +481,54 @@ def _extra_closure_findings(
     if route_repair_summary_required(state) and not _list(state.get("branch_route_repair_summaries")):
         missing.append("branch_route_repair_summary")
         residual.append("route repair happened without a bounded branch/route-repair summary")
+    phase_missing, phase_residual = _phase_closure_findings(state)
+    missing.extend(phase_missing)
+    residual.extend(phase_residual)
+    return _unique(missing), _unique(residual)
+
+
+def _phase_closure_findings(state: dict) -> tuple[list[str], list[str]]:
+    findings = [
+        item
+        for item in state.get("phase_review_findings") or []
+        if isinstance(item, dict)
+        and item.get("blocks_next_stage")
+        and not item.get("resolved")
+    ]
+    if not findings:
+        return [], []
+    repairs = {
+        str(item.get("finding_id")): item
+        for item in state.get("phase_repair_events") or []
+        if isinstance(item, dict) and item.get("finding_id")
+    }
+    rereviews = {
+        str(item.get("finding_id")): item
+        for item in state.get("phase_rereview_events") or []
+        if isinstance(item, dict) and item.get("finding_id")
+    }
+    missing: list[str] = []
+    residual: list[str] = []
+    repair_or_rereview_seen = False
+    for finding in findings:
+        finding_id = str(finding.get("finding_id") or "unknown")
+        if finding_id not in repairs:
+            missing.append("phase_repair")
+            residual.append(f"blocking phase finding {finding_id} requires matching repair_event")
+            continue
+        repair_or_rereview_seen = True
+        rereview = rereviews.get(finding_id)
+        if not rereview:
+            missing.append("phase_rereview")
+            residual.append(f"blocking phase finding {finding_id} requires matching rereview_event")
+            continue
+        repair_or_rereview_seen = True
+        if str(rereview.get("verdict") or "").strip().casefold() != "pass":
+            missing.append("phase_rereview")
+            residual.append(f"blocking phase finding {finding_id} rereview verdict must be pass")
+    if repair_or_rereview_seen and not state.get("validation_freshness_seen"):
+        missing.append("validation_fresh_after_final_edit")
+        residual.append("phase repair or re-review requires fresh validation evidence")
     return _unique(missing), _unique(residual)
 
 
@@ -530,6 +578,12 @@ def _compaction_happened(state: dict) -> bool:
 def _closure_verdict_with_extra_findings(verdict: str, missing: list[str]) -> str:
     if "branch_route_repair_summary" in missing:
         return "needs_repair"
+    if "phase_repair" in missing:
+        return "needs_repair"
+    if "phase_rereview" in missing:
+        return "needs_review"
+    if "validation_fresh_after_final_edit" in missing:
+        return "needs_validation"
     if any(item.startswith("compaction_snapshot") for item in missing):
         return "needs_validation"
     return verdict

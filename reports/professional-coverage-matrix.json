@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-02T06:15:11.629945+00:00",
+  "generated_at": "2026-07-02T07:39:24.239662+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -1124,6 +1124,25 @@
     },
     {
       "anti_bloat_status": "ok",
+      "benchmark_coverage": "no",
+      "evidence_contract": "yes",
+      "failure_modes": "yes",
+      "kind": "professional-skill",
+      "mode_matrix": "yes",
+      "name": "phase-review-capsule",
+      "output_contract": "yes",
+      "path": "src/professional-skills/phase-review-capsule/SKILL.md",
+      "proactive_triggers": "yes",
+      "quality_gate": "yes",
+      "reference_loading_hint": "yes",
+      "routing_coverage": "no",
+      "score": 55,
+      "senior_programming_judgment_coverage": "n/a",
+      "status": "sample-grade",
+      "warnings": []
+    },
+    {
+      "anti_bloat_status": "ok",
       "benchmark_coverage": "yes (76)",
       "evidence_contract": "yes",
       "failure_modes": "yes",
@@ -1199,5 +1218,5 @@
       "warnings": []
     }
   ],
-  "rows_checked": 63
+  "rows_checked": 64
 }

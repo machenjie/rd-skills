@@ -48,6 +48,12 @@
           },
           {
             "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"${CODEX_HOME:-$HOME/.codex}/hooks/changeforge_process_phase_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Initializing ChangeForge process phase ledger"
+          },
+          {
+            "type": "command",
             "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"${CODEX_HOME:-$HOME/.codex}/hooks/changeforge_sdd_material_choice_gate.py\"",
             "timeout": 10,
             "statusMessage": "Checking ChangeForge SDD material choice"
@@ -70,6 +76,12 @@
             "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"${CODEX_HOME:-$HOME/.codex}/hooks/changeforge_professional_injector.py\"",
             "timeout": 10,
             "statusMessage": "Injecting ChangeForge action context"
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"${CODEX_HOME:-$HOME/.codex}/hooks/changeforge_process_phase_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking ChangeForge process phases"
           },
           {
             "type": "command",
@@ -173,6 +185,12 @@
             "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"${CODEX_HOME:-$HOME/.codex}/hooks/changeforge_subagent_skill_contract.py\"",
             "timeout": 10,
             "statusMessage": "Injecting ChangeForge subagent contract"
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"${CODEX_HOME:-$HOME/.codex}/hooks/changeforge_subagent_review_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Preparing ChangeForge review capsule"
           }
         ]
       }
@@ -185,6 +203,12 @@
             "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"${CODEX_HOME:-$HOME/.codex}/hooks/changeforge_subagent_stop_reminder.py\"",
             "timeout": 10,
             "statusMessage": "Checking ChangeForge subagent closure"
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"${CODEX_HOME:-$HOME/.codex}/hooks/changeforge_subagent_review_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Recording ChangeForge subagent review result"
           }
         ]
       }
@@ -197,6 +221,12 @@
             "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"${CODEX_HOME:-$HOME/.codex}/hooks/changeforge_sdd_material_choice_gate.py\"",
             "timeout": 10,
             "statusMessage": "Checking ChangeForge SDD material choice"
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"${CODEX_HOME:-$HOME/.codex}/hooks/changeforge_process_phase_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking ChangeForge process phase closure"
           },
           {
             "type": "command",

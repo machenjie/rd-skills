@@ -217,6 +217,121 @@ class StateReducerTests(unittest.TestCase):
         self.assertEqual(record["artifact_path"], "<local-artifact-path-redacted>")
         self.assertEqual(result["artifact_references"], ["<local-artifact-path-redacted>"])
 
+    def test_process_phase_ledgers_keep_latest_by_route(self) -> None:
+        result = self.reducer.reduce_state_update(
+            {
+                "process_phase_ledgers": [
+                    {
+                        "route_id": "route-a",
+                        "current_phase": "pdd",
+                        "phase_status": {"pdd": "draft"},
+                    }
+                ]
+            },
+            {
+                "process_phase_ledgers": [
+                    {
+                        "route_id": "route-a",
+                        "current_phase": "implementation",
+                        "phase_status": {"pdd": "reviewed"},
+                        "artifact_digests": {"pdd": "sha256:abcdef1234567890"},
+                        "review_ids": {"pdd": "pdd-review-1"},
+                    }
+                ],
+                "process_phase_ledger_seen": True,
+                "pdd_reviewed": True,
+            },
+        )
+
+        ledgers = result["process_phase_ledgers"]
+        self.assertEqual(len(ledgers), 1)
+        self.assertEqual(ledgers[0]["current_phase"], "implementation")
+        self.assertEqual(ledgers[0]["phase_status"]["pdd"], "reviewed")
+        self.assertTrue(result["process_phase_ledger_seen"])
+        self.assertTrue(result["pdd_reviewed"])
+
+    def test_phase_review_results_keep_latest_by_phase_and_review_id(self) -> None:
+        first = {
+            "review_id": "sdd-review-1",
+            "phase": "sdd",
+            "reviewer_skill": "ai-code-review-refactor",
+            "owner_skill": "architecture-impact-reviewer",
+            "reviewed_artifact_digest": "sha256:abcdef1234567890",
+            "verdict": "fail",
+            "score": 2,
+        }
+        second = {**first, "verdict": "pass", "score": 5}
+
+        result = self.reducer.reduce_state_update(
+            {"phase_review_results": [first]},
+            {"phase_review_results": [second], "phase_review_seen": True, "sdd_reviewed": True},
+        )
+
+        self.assertEqual(len(result["phase_review_results"]), 1)
+        self.assertEqual(result["phase_review_results"][0]["verdict"], "pass")
+        self.assertEqual(result["phase_review_results"][0]["score"], 5)
+        self.assertTrue(result["phase_review_seen"])
+        self.assertTrue(result["sdd_reviewed"])
+
+    def test_phase_findings_prioritize_unresolved(self) -> None:
+        result = self.reducer.reduce_state_update(
+            {},
+            {
+                "phase_review_findings": [
+                    {"finding_id": "sdd-002", "phase": "sdd", "evidence": "fixed", "resolved": True},
+                    {
+                        "finding_id": "sdd-001",
+                        "phase": "sdd",
+                        "severity": "high",
+                        "evidence": "missing material choice",
+                        "required_fix": "add resolution evidence",
+                        "blocks_next_stage": True,
+                    },
+                ]
+            },
+        )
+
+        self.assertEqual(result["phase_review_findings"][0]["finding_id"], "sdd-001")
+
+    def test_phase_repair_and_rereview_are_latest_by_finding_id(self) -> None:
+        result = self.reducer.reduce_state_update(
+            {
+                "phase_repair_events": [{"finding_id": "sdd-001", "repair_summary": "old"}],
+                "phase_rereview_events": [{"finding_id": "sdd-001", "verdict": "fail"}],
+            },
+            {
+                "phase_repair_events": [{"finding_id": "sdd-001", "repair_summary": "new"}],
+                "phase_rereview_events": [{"finding_id": "sdd-001", "verdict": "pass"}],
+                "phase_rereview_passed": True,
+            },
+        )
+
+        self.assertEqual(result["phase_repair_events"], [{"finding_id": "sdd-001", "repair_summary": "new"}])
+        self.assertEqual(result["phase_rereview_events"], [{"finding_id": "sdd-001", "verdict": "pass"}])
+        self.assertTrue(result["phase_rereview_passed"])
+
+    def test_review_capsules_drop_raw_prompt_like_and_secret_keys(self) -> None:
+        result = self.reducer.reduce_state_update(
+            {},
+            {
+                "review_capsules": [
+                    {
+                        "capsule_id": "sdd-capsule-1",
+                        "review_type": "sdd",
+                        "user_request_summary": "bounded summary",
+                        "raw_prompt": "must not persist",
+                        "secret_token": "must not persist",
+                        "source_evidence": {"read_files": ["src/runtime_governance/process_phase.py"]},
+                    }
+                ]
+            },
+        )
+
+        capsule = result["review_capsules"][0]
+        self.assertEqual(capsule["capsule_id"], "sdd-capsule-1")
+        self.assertNotIn("raw_prompt", capsule)
+        self.assertNotIn("secret_token", capsule)
+
     def test_context_control_policy_strips_raw_field_variants_without_losing_overhead_metrics(self) -> None:
         policy = load_module("changeforge_context_control_policy")
         cleaned = policy._sanitize_record(

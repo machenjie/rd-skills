@@ -1,7 +1,7 @@
 # Professional Coverage Matrix
 
-- Generated: 2026-07-02T06:15:11.629945+00:00
-- Rows checked: 63
+- Generated: 2026-07-02T07:39:24.239662+00:00
+- Rows checked: 64
 
 | Item | Kind | Mode Matrix | Proactive Triggers | Evidence Contract | Output Contract | Failure Modes | Quality Gate | Reference Loading Hint | Senior Programming Judgment Coverage | Routing Coverage | Benchmark Coverage | Anti-bloat Status | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -64,6 +64,7 @@
 | `frontend-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (17) | yes (9) | ok | sample-grade |
 | `integration-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (16) | yes (9) | ok | sample-grade |
 | `logging-design-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | no | no | ok | sample-grade |
+| `phase-review-capsule` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | no | no | ok | sample-grade |
 | `quality-test-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (148) | yes (76) | ok | sample-grade |
 | `reliability-observability-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (43) | yes (24) | ok | sample-grade |
 | `security-privacy-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (38) | yes (12) | ok | sample-grade |

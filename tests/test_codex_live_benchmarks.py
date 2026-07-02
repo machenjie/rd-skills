@@ -4425,8 +4425,8 @@ Residual Risk:
                             {"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}
                         ],
                         "profile_counts": {
-                            "recommended": {"detail": "recommended top-level count is 21"},
-                            "full": {"detail": "full top-level count is 28"},
+                            "recommended": {"detail": "recommended top-level count is 22"},
+                            "full": {"detail": "full top-level count is 29"},
                             "dev": {"detail": "dev top-level count is 163"},
                         },
                     }

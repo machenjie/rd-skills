@@ -1,0 +1,17 @@
+---
+id: missing-pdd-before-edit
+scenario: Non-trivial engineering edit is requested before any process phase ledger exists.
+adapter: codex
+event: PreToolUse
+tool: apply_patch
+expected_gate: changeforge_process_phase_gate
+expected_result:
+  decision: block
+  process_phase_blocked: true
+  required_missing:
+    - process_phase_ledger
+    - pdd_reviewed
+forbidden_claims:
+  - Advisory route reminder is treated as PDD review evidence.
+  - Final prose is accepted as runtime phase evidence.
+privacy_boundary: Store only route ID, phase status, missing evidence labels, and bounded blocker reason.

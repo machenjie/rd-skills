@@ -1,6 +1,6 @@
 # Professionalism Release Readiness
 
-- Generated: 2026-07-02T06:15:11.915141+00:00
+- Generated: 2026-07-02T07:39:24.685009+00:00
 - Status: strict-release-ready
 - Authoring ready: ready
 - Release ready: ready
@@ -16,7 +16,7 @@
 
 ## Professional Skill Coverage Summary
 
-- Count: 21; Statuses: sample-grade: 21
+- Count: 22; Statuses: sample-grade: 22
 
 ## Key Foundation Capability Coverage Summary
 
@@ -31,7 +31,7 @@
 | professional benchmarks | pass | `reports/professional-benchmarks-report.json` | true | errors=0; quality_failures=0; empty_baseline_cases=0 |
 | routing coverage | pass | `reports/professional-routing-coverage.json` | true | needs_manual_review=0 |
 | promoted agent samples strict | pass | `reports/professional-agent-samples-report.json from python3 scripts/eval-professional-agent-samples.py --promoted-only --strict` | true | returncode=0; failures=0 |
-| content bloat exceptions | pass | `config/skill-content-exceptions.yaml and reports/skill-content-audit.json` | true | - classifications: {'KEEP_AS_IS': 160, 'MOVE_SECTIONS_TO_REFERENCES': 1, 'TIGHTEN_BODY': 3}; - domain_extensions: 7; - foundation_capabilities: 136; - heavy_domain: 0; - heavy_foundation: 0; - heavy_professional: 0; - low_professionalism: 0; - move_to_reference: 1; - professional_skills: 21; - split_candidates: 0 |
+| content bloat exceptions | pass | `config/skill-content-exceptions.yaml and reports/skill-content-audit.json` | true | - classifications: {'KEEP_AS_IS': 161, 'MOVE_SECTIONS_TO_REFERENCES': 1, 'TIGHTEN_BODY': 3}; - domain_extensions: 7; - foundation_capabilities: 136; - heavy_domain: 0; - heavy_foundation: 0; - heavy_professional: 0; - low_professionalism: 0; - move_to_reference: 1; - professional_skills: 22; - split_candidates: 0 |
 | known warnings budget | pass | `config/professionalism-baseline.yaml global_thresholds.max_known_warnings` | true | budget_blockers=0 |
 | baseline update drift | pass | `reports/professionalism-regression-report.json baseline_changes` | false | baseline_changes=0 |
 
@@ -110,13 +110,13 @@
 ## Latest Results Available
 
 - benchmark_errors: 0
-- coverage_rows_checked: 63
+- coverage_rows_checked: 64
 - professional_agent_sample_warnings: 0
 - professional_agent_samples_checked: 5
 - promoted_agent_sample_strict_warnings: 0
 - promoted_agent_samples_strict_checked: 5
 - release_blocking_professionalism_warnings: 0
-- skill_professionalism_average_score: 58.34
+- skill_professionalism_average_score: 58.32
 - skill_professionalism_warnings: 0
 
 ## Release Blockers

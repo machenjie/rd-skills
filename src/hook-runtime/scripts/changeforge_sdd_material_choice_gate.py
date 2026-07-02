@@ -482,6 +482,7 @@ def _record_result(event: dict, runtime: str, repo: Path, state: dict, mode: str
     evidence = result.get("evidence", {})
     evidence_result = result.get("evidence_result", {})
     status = evidence_result.get("status") or "missing"
+    phase_findings = _phase_review_findings_for_result(result)
     merge_state(
         repo,
         runtime,
@@ -493,6 +494,8 @@ def _record_result(event: dict, runtime: str, repo: Path, state: dict, mode: str
         choice_ids=evidence.get("choice_ids") or ["sdd-material-choice"],
         choice_triggers=evidence.get("triggers") or result.get("surfaces", []),
         choice_status=[status],
+        phase_review_findings=phase_findings,
+        phase_repair_required=bool(phase_findings),
         material_choice_surfaces=result.get("surfaces", []),
         blocked_tool_category=[result.get("tool_category", "unknown")],
         bounded_paths=paths,
@@ -522,12 +525,32 @@ def _record_result(event: dict, runtime: str, repo: Path, state: dict, mode: str
         choice_ids=evidence.get("choice_ids") or ["sdd-material-choice"],
         choice_triggers=evidence.get("triggers") or result.get("surfaces", []),
         choice_status=[status],
+        phase_review_findings=phase_findings,
+        phase_repair_required=bool(phase_findings),
         material_choice_surfaces=result.get("surfaces", []),
         blocked_tool_category=[result.get("tool_category", "unknown")],
         bounded_paths=paths,
         suggested_capabilities=["implementation-structure-design", "agent-execution-discipline"],
         suggested_gates=["sdd-material-choice-gate"],
     )
+
+
+def _phase_review_findings_for_result(result: dict) -> list[dict[str, Any]]:
+    if not result.get("blocks"):
+        return []
+    surfaces = result.get("surfaces") or []
+    reason = str((result.get("evidence_result") or {}).get("reason") or "missing SDD material choice resolution")
+    return [
+        {
+            "finding_id": "sdd-material-choice",
+            "phase": "sdd",
+            "severity": "high",
+            "evidence": f"{reason}: {', '.join(str(item) for item in surfaces[:6])}",
+            "required_fix": "add design_decision_points or changeforge_sdd_choice with concrete resolution evidence",
+            "blocks_next_stage": True,
+            "resolved": False,
+        }
+    ]
 
 
 def _is_material_bash_mutation(command: str) -> bool:

@@ -87,6 +87,19 @@ def seed_state(cwd: Path, cache: Path, **kwargs: object) -> None:
             os.environ["XDG_CACHE_HOME"] = previous_cache
 
 
+def load_state(cwd: Path, cache: Path) -> dict:
+    common = load_common()
+    previous_cache = os.environ.get("XDG_CACHE_HOME")
+    os.environ["XDG_CACHE_HOME"] = str(cache)
+    try:
+        return common.load_state(cwd)
+    finally:
+        if previous_cache is None:
+            os.environ.pop("XDG_CACHE_HOME", None)
+        else:
+            os.environ["XDG_CACHE_HOME"] = previous_cache
+
+
 def parsed_stdout(result: subprocess.CompletedProcess[str]) -> dict:
     text = result.stdout.strip()
     return json.loads(text) if text else {}
@@ -208,9 +221,13 @@ class SddMaterialChoiceGateTests(unittest.TestCase):
 
     def test_pretool_edit_new_public_api_without_choice_blocks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
-            reason = assert_blocked(self, run_gate(public_api_event(), Path(tmp), Path(cache)))
+            cwd = Path(tmp)
+            reason = assert_blocked(self, run_gate(public_api_event(), cwd, Path(cache)))
             self.assertIn("public_api_or_export", reason)
             self.assertIn("What to ask the user", reason)
+            state = load_state(cwd, Path(cache))
+            self.assertEqual(state["phase_review_findings"][0]["finding_id"], "sdd-material-choice")
+            self.assertTrue(state["phase_repair_required"])
 
     def test_pretool_apply_patch_new_shared_utility_without_choice_blocks(self) -> None:
         patch = (

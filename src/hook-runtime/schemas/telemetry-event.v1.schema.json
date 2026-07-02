@@ -99,7 +99,8 @@
             "needs_review",
             "needs_repair",
             "degraded_ready",
-            "blocked"
+            "blocked",
+            "blocked_but_unenforceable"
           ]
         },
         "supported_checks": { "$ref": "#/$defs/stringList" },
@@ -187,6 +188,7 @@
         "session_bootstrap",
         "user_prompt_route_reminder",
         "sdd_material_choice_gate",
+        "process_phase_gate",
         "pre_tool_risk_preview",
         "pre_edit_structure_gate",
         "professional_injector",
@@ -197,6 +199,7 @@
         "compaction_snapshot",
         "compaction_reinject",
         "subagent_skill_contract",
+        "subagent_review_gate",
         "post_edit_structure_gate",
         "risk_surface_gate",
         "subagent_stop_reminder",
@@ -358,10 +361,11 @@
         "needs_validation",
         "needs_review",
         "needs_repair",
-        "degraded_ready",
-        "blocked"
-      ]
-    },
+            "degraded_ready",
+            "blocked",
+            "blocked_but_unenforceable"
+          ]
+        },
     "closure_contract_residual_risk": { "$ref": "#/$defs/stringList" },
     "changeforge_closure": { "$ref": "#/$defs/changeforgeClosure" },
     "project_memory_available": {
@@ -398,6 +402,33 @@
     "reviewer_skill": { "type": "string", "maxLength": 300 },
     "read_evidence_seen": { "type": "boolean" },
     "review_evidence_seen": { "type": "boolean" },
+    "process_phase_ledgers": {
+      "description": "JSON strings for bounded process phase ledgers. Raw artifacts, prompts, and command output are excluded.",
+      "$ref": "#/$defs/stringList"
+    },
+    "phase_review_results": {
+      "description": "JSON strings for bounded phase review results. Raw reviewer reasoning is excluded.",
+      "$ref": "#/$defs/stringList"
+    },
+    "phase_review_findings": { "$ref": "#/$defs/stringList" },
+    "phase_repair_events": { "$ref": "#/$defs/stringList" },
+    "phase_rereview_events": { "$ref": "#/$defs/stringList" },
+    "review_capsules": {
+      "description": "JSON strings for bounded review capsules. Raw prompt, secrets, transcripts, and full output are excluded.",
+      "$ref": "#/$defs/stringList"
+    },
+    "pdd_reviewed": { "type": "boolean" },
+    "ddd_reviewed": { "type": "boolean" },
+    "sdd_reviewed": { "type": "boolean" },
+    "tdd_reviewed": { "type": "boolean" },
+    "process_phase_blocked": { "type": "boolean" },
+    "process_phase_ledger_seen": { "type": "boolean" },
+    "phase_review_seen": { "type": "boolean" },
+    "phase_repair_required": { "type": "boolean" },
+    "phase_rereview_required": { "type": "boolean" },
+    "phase_rereview_passed": { "type": "boolean" },
+    "process_current_phase": { "type": "string", "maxLength": 300 },
+    "process_phase_blocked_reason": { "type": "string", "maxLength": 300 },
     "repair_evidence_seen": { "type": "boolean" },
     "permission_gate_seen": { "type": "boolean" },
     "professional_contract_seen": { "type": "boolean" },

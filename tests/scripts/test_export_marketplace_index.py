@@ -56,7 +56,7 @@ class ExportMarketplaceIndexTests(unittest.TestCase):
         payload = module.export_index(ROOT, "recommended")
         self.assertEqual(payload["schema_version"], 1)
         self.assertEqual(payload["profile"], "recommended")
-        self.assertEqual(len(payload["items"]), 164)
+        self.assertEqual(len(payload["items"]), 165)
         for item in payload["items"]:
             self.assertEqual(set(item), REQUIRED_ITEM_FIELDS)
 

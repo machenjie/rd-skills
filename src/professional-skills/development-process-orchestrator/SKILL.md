@@ -23,11 +23,21 @@ Keep code changes traceable from problem definition to domain ownership, system 
 - The target project already contains an accepted and current process trace that maps acceptance, invariants, public API, failure modes, logging, and tests for the exact change.
 
 ## Non-Negotiable Rules
+- **Runtime phase evidence is required**: for non-trivial engineering work,
+  PDD, DDD, SDD, and TDD are ordered runtime phases in a bounded
+  `process_phase_ledger`; final prose does not substitute for phase evidence.
+- **Independent review gates each phase**: a phase is reviewed only when the
+  latest independent `phase_review_result` passes with score >= 4, no
+  critical/high blocker, and a reviewed artifact digest matching the current
+  phase artifact. Implementer self-approval does not count.
 - **PDD before implementation**: identify the problem, affected users or systems, acceptance criteria, constraints, non-goals, risk surfaces, and validation signal before coding.
 - **DDD before placement**: identify domain terms, entity or value-object ownership, invariants, side-effect boundaries, and existing code owner before moving behavior.
 - **SDD before edits**: name modules, files, public API, data flow, error contract, logging decision, design decision points, metrics/traces/alerts, performance, security, compatibility, migration, and rollback implications.
 - **Design Choice Gate before implementation**: when a wrong answer could change architecture, public API, data, security, migration, rollback, acceptance, or user-visible behavior, stop and present user-facing options instead of silently choosing. Low-risk, local, reversible choices may proceed only as a documented safe assumption.
 - **TDD closes the loop**: map PDD acceptance to tests, DDD invariants to tests or code constraints, SDD public API to tests, failure modes to tests, and logging/security decisions to tests or validation commands.
+- **Repair requires re-review**: a failed phase or implementation review blocks
+  the next stage until a repair event and passing re-review are tied to the
+  original finding ID.
 - **Evidence cannot be synthesized as complete**: case metadata may infer expected phases, but `present` requires parsed final trace, hook telemetry, explicit trace artifact, or grading evidence with specific content.
 - **Generic process facts are insufficient**: template-only PDD/DDD/SDD/TDD language must fail unless it maps to case-specific tests, code constraints, or an explicit no-log rationale.
 - **Do not over-document**: produce a compact trace that names concrete evidence, not a large planning document.

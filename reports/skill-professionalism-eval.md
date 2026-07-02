@@ -1,14 +1,15 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-07-02T06:15:10.363022+00:00
-- Skills/capabilities checked: 157
+- Generated: 2026-07-02T07:39:22.961560+00:00
+- Skills/capabilities checked: 158
 - Warning count: 0
-- Average score: 58.34/60
+- Average score: 58.32/60
 
 ## Scores
 
 | Item | Kind | Score | Status | Missing Sections | Warnings |
 | --- | --- | ---: | --- | ---: | ---: |
+| `src/professional-skills/phase-review-capsule/SKILL.md` | professional-skill | 55/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/backup-recovery/SKILL.md` | foundation-capability | 57/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/code-review/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/dto-schema-design/SKILL.md` | foundation-capability | 57/60 | acceptable | 0 | 0 |

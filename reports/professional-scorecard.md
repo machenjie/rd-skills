@@ -96,9 +96,9 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 
 ## Profile Counts
 
-- `recommended`: `pass` - recommended top-level count is 21
-- `full`: `pass` - full top-level count is 28
-- `dev`: `pass` - dev top-level count is 164
+- `recommended`: `pass` - recommended top-level count is 22
+- `full`: `pass` - full top-level count is 29
+- `dev`: `pass` - dev top-level count is 165
 
 ## Repair Hints
 

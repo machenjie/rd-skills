@@ -1,0 +1,22 @@
+---
+id: missing-tdd-before-code
+scenario: PDD, DDD, and SDD are reviewed, but TDD review or validation signal is missing before code mutation.
+adapter: codex
+event: PreToolUse
+tool: apply_patch
+ledger:
+  phase_status:
+    pdd: reviewed
+    ddd: reviewed
+    sdd: reviewed
+    tdd: pending
+  validation_signal_present: false
+expected_result:
+  decision: block
+  required_missing:
+    - tdd_reviewed
+    - validation_signal_present
+forbidden_claims:
+  - Boolean-only TDD traceability counts as reviewed.
+  - Validation signal is inferred from intent.
+privacy_boundary: Store validation-signal presence and phase status only.

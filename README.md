@@ -38,7 +38,7 @@ Supported Codex, Claude Code, and GitHub Copilot project/user quickstart and ins
 | `full` | Project install with domain extensions exposed. | 28 |
 | `dev` | ChangeForge authoring and debugging only. | 164 |
 
-Stable profile counts are `recommended=21`, `full=28`, and `dev=164`; these generated manifests are the authoritative runtime profile count source. Local install starts with `python3 scripts/quickstart.py --agent codex --scope user`; official Codex/Claude marketplace publishing is intentionally not implemented.
+Stable profile counts are `recommended=22`, `full=29`, and `dev=165`; these generated manifests are the authoritative runtime profile count source. Local install starts with `python3 scripts/quickstart.py --agent codex --scope user`; official Codex/Claude marketplace publishing is intentionally not implemented.
 
 The profile composition is: `recommended` has 21 professional skills, `full` has 21 professional skills plus 7 domain extensions, and `dev` has 21 professional skills plus 136 foundation capabilities plus 7 domain extensions. Foundation capabilities are compiled into professional references for `recommended` and `full`.
 
