@@ -49,8 +49,10 @@ python3 scripts/quickstart.py --agent cline --scope project --target /path/to/pr
 
 Hook-capable Codex, Claude, and Copilot project/user quickstart installs default
 to `professional-injection`: executable hooks are installed, professional
-context is injected, and SDD material choice, pre-edit structure, and Stop
-closure gates are blocking by default. Use `--without-hooks` or
+context is injected, and supported blocking gates run by default. Codex and
+Claude block SDD material choice, pre-edit structure, and Stop closure directly;
+Copilot receives strict Stop closure and `PostToolUse`/review compensation
+where those facts are available. Use `--without-hooks` or
 `--activation-level none` to opt out. Use `--activation-level bootstrap` when
 you want only the non-executable
 `.changeforge/changeforge-route-preflight.md` fragment:

@@ -72,8 +72,6 @@ class QuickstartTests(unittest.TestCase):
                     "user",
                     "--profile",
                     "recommended",
-                    "--with-hooks",
-                    "--professional-injection",
                 ],
                 [
                     "python3",
@@ -105,8 +103,8 @@ class QuickstartTests(unittest.TestCase):
         self.assertEqual(plan.expected_skill_count, 28)
         self.assertEqual(plan.activation_level, "professional-injection")
         self.assertIn("--target", plan.commands[1])
-        self.assertIn("--with-hooks", plan.commands[1])
-        self.assertIn("--professional-injection", plan.commands[1])
+        self.assertNotIn("--with-hooks", plan.commands[1])
+        self.assertNotIn("--professional-injection", plan.commands[1])
         self.assertIn("--check-hooks", plan.commands[2])
         self.assertNotIn("--with-bootstrap", plan.commands[1])
 
@@ -137,8 +135,8 @@ class QuickstartTests(unittest.TestCase):
         plan = module.build_plan(_args(agent="claude", scope="user"))
         self.assertEqual(plan.selected_profile, "recommended")
         self.assertEqual(plan.activation_level, "professional-injection")
-        self.assertIn("--with-hooks", plan.commands[1])
-        self.assertIn("--professional-injection", plan.commands[1])
+        self.assertNotIn("--with-hooks", plan.commands[1])
+        self.assertNotIn("--professional-injection", plan.commands[1])
         self.assertIn("--check-hooks", plan.commands[2])
 
     def test_dev_profile_must_be_explicit(self) -> None:
@@ -155,8 +153,16 @@ class QuickstartTests(unittest.TestCase):
         )
         self.assertEqual(plan.activation_level, "hooks")
         self.assertIn("--with-hooks", plan.commands[1])
+        self.assertNotIn("--professional-injection", plan.commands[1])
         self.assertIn("--check-hooks", plan.commands[2])
         self.assertNotIn("--with-bootstrap", plan.commands[1])
+
+    def test_legacy_with_hooks_preserves_hook_flag(self) -> None:
+        module = _load_module()
+        plan = module.build_plan(_args(agent="codex", scope="user", with_hooks=True))
+        self.assertEqual(plan.activation_level, "hooks")
+        self.assertIn("--with-hooks", plan.commands[1])
+        self.assertNotIn("--professional-injection", plan.commands[1])
 
     def test_activation_level_bootstrap_opts_out_of_hooks(self) -> None:
         module = _load_module()
@@ -207,8 +213,8 @@ class QuickstartTests(unittest.TestCase):
             _args(agent="claude", scope="user", activation_level="professional-injection")
         )
         self.assertEqual(plan.activation_level, "professional-injection")
-        self.assertIn("--with-hooks", plan.commands[1])
         self.assertIn("--professional-injection", plan.commands[1])
+        self.assertNotIn("--with-hooks", plan.commands[1])
         self.assertIn("--check-hooks", plan.commands[2])
 
     def test_hooks_activation_rejects_unsupported_runtime(self) -> None:

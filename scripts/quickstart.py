@@ -184,9 +184,11 @@ def build_plan(args: argparse.Namespace) -> CommandPlan:
         install_command.extend(["--scope", str(args.scope), "--profile", selected_profile])
         if args.target is not None:
             install_command.extend(["--target", str(args.target)])
-        if activation.install_hooks:
+        explicit_hooks_requested = bool(args.with_hooks or args.activation_level == "hooks")
+        explicit_professional_injection = args.activation_level == "professional-injection"
+        if explicit_hooks_requested:
             install_command.append("--with-hooks")
-        if activation.professional_injection:
+        if explicit_professional_injection:
             install_command.append("--professional-injection")
         if activation.skip_hooks:
             install_command.append("--without-hooks")

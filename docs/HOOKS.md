@@ -143,9 +143,9 @@ The first-stage runtime provides these reminder gates:
   blocks when a material choice is detected and no qualified
   `changeforge_sdd_choice` or `design_decision_points` evidence exists. It also
   rechecks at Stop so an implementation that silently made the choice cannot be
-  handed off as complete. Copilot cannot wire unsupported `PreToolUse`, so its
-  material-choice enforcement is limited to available events and Stop-stage
-  compensation.
+  handed off as complete. Copilot does not run the SDD Material Choice Gate
+  directly. It relies on `PostToolUse`/review findings and Stop closure
+  compensation where those facts are available.
 - Pre-Edit Implementation Structure Gate (`PreToolUse`, Codex and Claude):
   before `apply_patch`, `Edit`, `Write`, or `MultiEdit`, it checks for read
   evidence and a `changeforge_implementation_preflight` summary covering
@@ -669,8 +669,9 @@ Hooks cannot:
 
 ## Recommended Hook Rollout
 
-1. Keep the supported default: hooks plus professional injection, with SDD
-   material choice, pre-edit structure, and Stop closure in block mode.
+1. Keep the supported default: hooks plus professional injection, with each
+   runtime's supported SDD material choice, pre-edit structure, and Stop closure
+   gates in block mode.
 2. Use `CHANGEFORGE_SDD_CHOICE_MODE=warn` or `off` only when collecting
    false positives or running a controlled migration.
 3. Keep most non-material advisory gates in warn mode until fixture-backed
