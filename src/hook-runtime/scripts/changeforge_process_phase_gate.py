@@ -58,6 +58,31 @@ ENGINEERING_PROMPT_RE = re.compile(
     r"migrate|schema|api|hook|runtime|validator|test|repair|review|code|module|service)\b",
     re.IGNORECASE,
 )
+CHINESE_ENGINEERING_TRIGGERS = (
+    "实现",
+    "修复",
+    "修改",
+    "优化",
+    "重构",
+    "新增",
+    "删除",
+    "迁移",
+    "调整",
+    "接入",
+    "改造",
+    "审查",
+    "检查",
+    "验证",
+    "测试",
+    "提交",
+    "代码",
+    "模块",
+    "接口",
+    "运行时",
+    "钩子",
+    "流程",
+    "状态机",
+)
 READ_ONLY_COMMAND_RE = re.compile(
     r"^\s*(?:[A-Z_][A-Z0-9_]*=\S+\s+)*(?:rg|grep|cat|sed|awk|ls|find|pwd|"
     r"git\s+(?:diff|status|show|log)|python3?\s+-m\s+(?:unittest|json\.tool|py_compile)|"
@@ -179,6 +204,8 @@ def prompt_requires_process(text: str) -> bool:
     stripped = str(text or "").strip()
     if len(stripped) < 16:
         return False
+    if any(trigger in stripped for trigger in CHINESE_ENGINEERING_TRIGGERS):
+        return True
     return bool(ENGINEERING_PROMPT_RE.search(stripped))
 
 

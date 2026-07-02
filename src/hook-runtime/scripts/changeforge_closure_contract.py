@@ -488,6 +488,15 @@ def _extra_closure_findings(
 
 
 def _phase_closure_findings(state: dict) -> tuple[list[str], list[str]]:
+    missing: list[str] = []
+    residual: list[str] = []
+    if _phase_evidence_required(state):
+        if not (state.get("process_phase_ledger_seen") is True or _phase_ledgers(state)):
+            missing.append("phase_ledger")
+            residual.append("engineering closure requires process_phase_ledger evidence")
+        if not _phase_reviews_complete(state):
+            missing.append("phase_reviews")
+            residual.append("engineering closure requires reviewed PDD, DDD, SDD, and TDD phase evidence")
     findings = [
         item
         for item in state.get("phase_review_findings") or []
@@ -495,8 +504,6 @@ def _phase_closure_findings(state: dict) -> tuple[list[str], list[str]]:
         and item.get("blocks_next_stage")
         and not item.get("resolved")
     ]
-    if not findings:
-        return [], []
     repairs = {
         str(item.get("finding_id")): item
         for item in state.get("phase_repair_events") or []
@@ -507,9 +514,7 @@ def _phase_closure_findings(state: dict) -> tuple[list[str], list[str]]:
         for item in state.get("phase_rereview_events") or []
         if isinstance(item, dict) and item.get("finding_id")
     }
-    missing: list[str] = []
-    residual: list[str] = []
-    repair_or_rereview_seen = False
+    repair_or_rereview_seen = bool(repairs or rereviews)
     for finding in findings:
         finding_id = str(finding.get("finding_id") or "unknown")
         if finding_id not in repairs:
@@ -530,6 +535,51 @@ def _phase_closure_findings(state: dict) -> tuple[list[str], list[str]]:
         missing.append("validation_fresh_after_final_edit")
         residual.append("phase repair or re-review requires fresh validation evidence")
     return _unique(missing), _unique(residual)
+
+
+def _phase_evidence_required(state: dict) -> bool:
+    if _profile(state) != "engineering":
+        return False
+    stage = str(state.get("turn_stage") or "").strip()
+    return bool(
+        state.get("changed_paths")
+        or state.get("deleted_paths")
+        or state.get("generated_paths")
+        or state.get("config_changes")
+        or _phase_ledgers(state)
+        or state.get("process_phase_blocked")
+        or stage in {"coding", "implementation", "repair", "review", "validation", "closure"}
+    )
+
+
+def _phase_reviews_complete(state: dict) -> bool:
+    phase_flags = ("pdd_reviewed", "ddd_reviewed", "sdd_reviewed", "tdd_reviewed")
+    if all(state.get(flag) is True for flag in phase_flags):
+        return True
+    ledger = _latest_phase_ledger(state)
+    if not ledger:
+        return False
+    statuses = ledger.get("phase_status") if isinstance(ledger.get("phase_status"), dict) else {}
+    digests = ledger.get("artifact_digests") if isinstance(ledger.get("artifact_digests"), dict) else {}
+    review_ids = ledger.get("review_ids") if isinstance(ledger.get("review_ids"), dict) else {}
+    reasons = ledger.get("not_applicable_reasons") if isinstance(ledger.get("not_applicable_reasons"), dict) else {}
+    for phase in ("pdd", "ddd", "sdd", "tdd"):
+        status = statuses.get(phase)
+        if status == "reviewed" and digests.get(phase) and review_ids.get(phase):
+            continue
+        if status == "not_applicable" and reasons.get(phase):
+            continue
+        return False
+    return True
+
+
+def _latest_phase_ledger(state: dict) -> dict:
+    ledgers = _phase_ledgers(state)
+    return ledgers[-1] if ledgers else {}
+
+
+def _phase_ledgers(state: dict) -> list[dict]:
+    return [item for item in state.get("process_phase_ledgers") or [] if isinstance(item, dict)]
 
 
 def _compaction_closure_findings(
@@ -576,6 +626,8 @@ def _compaction_happened(state: dict) -> bool:
 
 
 def _closure_verdict_with_extra_findings(verdict: str, missing: list[str]) -> str:
+    if "phase_ledger" in missing or "phase_reviews" in missing:
+        return "needs_review"
     if "branch_route_repair_summary" in missing:
         return "needs_repair"
     if "phase_repair" in missing:

@@ -345,11 +345,14 @@ def _apply_phase_reviews(
         if phase in CORE_PHASES:
             latest_by_phase[phase] = clean
     for phase, review in latest_by_phase.items():
-        digest = str(digests.get(phase) or "")
-        if phase_review_passes(review, artifact_digest=digest or None):
+        existing_digest = str(digests.get(phase) or "")
+        reviewed_digest = str(review.get("reviewed_artifact_digest") or "")
+        expected_digest = existing_digest or reviewed_digest
+        if phase_review_passes(review, artifact_digest=expected_digest or None):
             status[phase] = "reviewed"
             scores[phase] = int(review.get("score") or 0)
             review_ids[phase] = review.get("review_id")
+            digests[phase] = reviewed_digest
         else:
             status[phase] = "failed"
             scores[phase] = int(review.get("score") or 0)
@@ -362,6 +365,7 @@ def _apply_phase_reviews(
     result["phase_status"] = status
     result["phase_scores"] = scores
     result["review_ids"] = review_ids
+    result["artifact_digests"] = digests
     result["blockers"] = _unique_blockers(blockers)
     return result
 

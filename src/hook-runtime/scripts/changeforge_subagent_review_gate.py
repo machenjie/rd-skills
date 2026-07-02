@@ -49,6 +49,7 @@ except ModuleNotFoundError:
 GATE_NAME = "subagent_review"
 PHASES = {"pdd", "ddd", "sdd", "tdd", "implementation", "closure"}
 JSON_OBJECT_RE = re.compile(r"\{.*\}", re.DOTALL)
+DIGEST_RE = re.compile(r"^sha256:[A-Fa-f0-9]{12,64}$")
 
 
 def main() -> int:
@@ -116,8 +117,11 @@ def _handle_subagent_stop(event: dict, runtime: str, repo: Path, state: dict, mo
     if not result:
         result = insufficient_evidence_result(_review_type(event, state))
     result = sanitize_phase_review_result(result)
+    expected_digest = expected_review_digest(event, state, result)
     findings = review_findings_blocking([result])
-    reviewed = phase_review_passes(result, artifact_digest=result.get("reviewed_artifact_digest") or None)
+    digest_findings = _digest_evidence_findings(result, expected_digest)
+    findings = _unique_findings([*findings, *digest_findings])
+    reviewed = bool(expected_digest) and phase_review_passes(result, artifact_digest=expected_digest)
     phase = str(result.get("phase") or "")
     reviewed_flags = {
         "pdd_reviewed": reviewed if phase == "pdd" else None,
@@ -161,6 +165,111 @@ def _handle_subagent_stop(event: dict, runtime: str, repo: Path, state: dict, mo
         hook_findings={"findings": findings, "degraded": degraded},
     )
     return 0
+
+
+def expected_review_digest(event: dict, state: dict, result: dict) -> str:
+    """Resolve the digest the phase review was expected to cover."""
+    phase = str(result.get("phase") or "").strip().casefold()
+    capsule_id = _safe_event_token(event.get("capsule_id") or event.get("review_capsule_id"))
+    capsules = [item for item in state.get("review_capsules") or [] if isinstance(item, dict)]
+    if capsule_id:
+        for capsule in reversed(capsules):
+            if str(capsule.get("capsule_id") or "") == capsule_id:
+                digest = _capsule_artifact_digest(capsule)
+                if digest:
+                    return digest
+    for capsule in reversed(capsules):
+        review_type = str(capsule.get("review_type") or "").strip().casefold()
+        artifact = capsule.get("artifact_under_review")
+        artifact_phase = ""
+        if isinstance(artifact, dict):
+            artifact_phase = str(artifact.get("phase") or "").strip().casefold()
+        if phase and phase in {review_type, artifact_phase}:
+            digest = _capsule_artifact_digest(capsule)
+            if digest:
+                return digest
+    for ledger in reversed([item for item in state.get("process_phase_ledgers") or [] if isinstance(item, dict)]):
+        digests = ledger.get("artifact_digests")
+        if isinstance(digests, dict):
+            digest = _bounded_digest(digests.get(phase))
+            if digest:
+                return digest
+    return _bounded_digest(event.get("artifact_digest"))
+
+
+def _digest_evidence_findings(result: dict, expected_digest: str) -> list[dict[str, Any]]:
+    phase = str(result.get("phase") or "implementation").strip().casefold()
+    reviewed_digest = _bounded_digest(result.get("reviewed_artifact_digest"))
+    if not expected_digest:
+        result["verdict"] = "insufficient_evidence"
+        result["score"] = 0
+        result["required_next_action"] = ["repair", "run_validation"]
+        result["residual_risk"] = [
+            *[item for item in result.get("residual_risk") or [] if isinstance(item, dict)],
+            {
+                "risk": "phase review lacks expected artifact digest from capsule or ledger",
+                "owner": "development-process-orchestrator",
+                "next_gate": "subagent_review_gate",
+            },
+        ]
+        return [
+            {
+                "finding_id": f"{phase}-review-missing-expected-digest",
+                "phase": phase,
+                "severity": "high",
+                "evidence": "phase review has no expected artifact digest from capsule or ledger",
+                "required_fix": "rerun review with a review capsule or current process phase ledger digest",
+                "blocks_next_stage": True,
+                "resolved": False,
+            }
+        ]
+    if reviewed_digest != expected_digest:
+        return [
+            {
+                "finding_id": f"{phase}-review-stale-digest",
+                "phase": phase,
+                "severity": "high",
+                "evidence": "phase review reviewed_artifact_digest is stale",
+                "required_fix": "rerun independent review against the current capsule or ledger artifact digest",
+                "blocks_next_stage": True,
+                "resolved": False,
+            }
+        ]
+    return []
+
+
+def _capsule_artifact_digest(capsule: dict[str, Any]) -> str:
+    artifact = capsule.get("artifact_under_review")
+    if not isinstance(artifact, dict):
+        return ""
+    return _bounded_digest(artifact.get("artifact_digest"))
+
+
+def _bounded_digest(value: object) -> str:
+    text = str(value or "").strip()
+    if "\n" in text or "\r" in text or "\x00" in text or len(text) > 120:
+        return ""
+    return text if DIGEST_RE.match(text) else ""
+
+
+def _safe_event_token(value: object) -> str:
+    text = str(value or "").strip()
+    if "\n" in text or "\r" in text or "\x00" in text or len(text) > 120:
+        return ""
+    return text if re.match(r"^[A-Za-z0-9_.:-]{1,120}$", text) else ""
+
+
+def _unique_findings(findings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    result: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for finding in findings:
+        finding_id = str(finding.get("finding_id") or "").strip()
+        key = finding_id or json.dumps(finding, sort_keys=True, default=str)
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(finding)
+    return result
 
 
 def build_review_capsule(event: dict, state: dict, *, review_type: str) -> dict[str, Any]:

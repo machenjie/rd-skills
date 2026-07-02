@@ -247,6 +247,16 @@ SENIOR_JUDGMENT_MANIFEST = (
 )
 
 
+def complete_phase_state() -> dict[str, bool]:
+    return {
+        "process_phase_ledger_seen": True,
+        "pdd_reviewed": True,
+        "ddd_reviewed": True,
+        "sdd_reviewed": True,
+        "tdd_reviewed": True,
+    }
+
+
 class StopClosureGateTests(unittest.TestCase):
     def test_skill_efficacy_required_uses_behavior_classifier(self) -> None:
         module = load_stop_gate()
@@ -453,7 +463,7 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertEqual(result.stdout, "")
         self.assertEqual(state["comment_findings"], [])
 
-    def test_block_mode_outputs_advisory_system_message(self) -> None:
+    def test_stop_closure_block_mode_blocks_missing_route_manifest_on_codex(self) -> None:
         event = {
             "hook_event_name": "Stop",
             "runtime": "codex",
@@ -462,29 +472,78 @@ class StopClosureGateTests(unittest.TestCase):
         }
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
             cwd, cache = Path(cwd_s), Path(cache_s)
-            seed_state(cwd, cache, runtime="codex", comment_findings=["a.go: uncommented"])
+            seed_state(cwd, cache, runtime="codex", changed_paths=["a.go"], **complete_phase_state())
             result = run_stop(event, cwd, cache, mode="block", agent="codex")
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
-        self.assertNotIn("decision", payload)
-        self.assertIn("systemMessage", payload)
-        self.assertIn("ChangeForge Closure Gate reminder", payload["systemMessage"])
+        self.assertEqual(payload.get("decision"), "block")
+        self.assertIn("route_manifest", payload["reason"])
 
-    def test_claude_block_mode_outputs_advisory_system_message(self) -> None:
+    def test_stop_closure_block_mode_blocks_missing_validation_on_claude(self) -> None:
         event = {
             "hook_event_name": "Stop",
             "runtime": "claude",
+            "stop_hook_active": False,
+            "last_assistant_message": (
+                "I used the ChangeForge skill path. Changed files are listed. "
+                "Residual risk is none. Repository context: owning surface and caller/callee flow inspected. "
+                "Workflow state: current stage testing, allowed transition review, owner/reviewer split recorded. "
+                "Plan-execution consistency: accepted plan vs actual changed files reconciled. "
+                "Skill efficacy benchmark: not required for this test. "
+                "Validation freshness: no validation evidence yet. Next steps: run tests.\n\n"
+                f"{REPOSITORY_CONTEXT_MANIFEST}\n"
+                f"{PREFLIGHT_MANIFEST}\n"
+                f"{SENIOR_JUDGMENT_MANIFEST}\n"
+                f"{STAGE_ROUTE_MANIFEST}\n"
+                "```yaml\n"
+                "changeforge_route:\n"
+                "  selected_skills:\n"
+                "    - backend-change-builder\n"
+                "  selected_capabilities:\n"
+                "    - implementation-structure-design\n"
+                "  required_references:\n"
+                "    - references/routing-rules.md\n"
+                "  required_quality_gates:\n"
+                "    - quality-test-gate\n"
+                "```\n"
+            ),
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(
+                cwd,
+                cache,
+                runtime="claude",
+                changed_paths=["a.py"],
+                implementation_preflight_required=True,
+                implementation_preflight_seen=True,
+                implementation_preflight_complete=True,
+                senior_programming_judgment_required=True,
+                senior_programming_judgment_seen=True,
+                senior_programming_judgment_complete=True,
+                **complete_phase_state(),
+            )
+            result = run_stop(event, cwd, cache, mode="block", agent="claude")
+        self.assertEqual(result.returncode, 0)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload.get("decision"), "block")
+        self.assertIn("validation", payload["reason"])
+
+    def test_stop_closure_warn_mode_remains_advisory(self) -> None:
+        event = {
+            "hook_event_name": "Stop",
+            "runtime": "codex",
             "stop_hook_active": False,
             "last_assistant_message": "done",
         }
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
             cwd, cache = Path(cwd_s), Path(cache_s)
-            seed_state(cwd, cache, runtime="claude", comment_findings=["a.py: uncommented"])
-            result = run_stop(event, cwd, cache, mode="block", agent="claude")
+            seed_state(cwd, cache, runtime="codex", changed_paths=["a.go"], **complete_phase_state())
+            result = run_stop(event, cwd, cache, mode="warn", agent="codex")
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
         self.assertNotIn("decision", payload)
-        self.assertIn("comment", payload["systemMessage"])
+        self.assertIn("systemMessage", payload)
 
     def test_state_cleared_after_stop(self) -> None:
         event = {"hook_event_name": "Stop", "runtime": "claude", "response": "done"}
@@ -536,6 +595,7 @@ class StopClosureGateTests(unittest.TestCase):
                 cache,
                 runtime="codex",
                 changed_paths=["src/hook-runtime/scripts/changeforge_common.py"],
+                **complete_phase_state(),
             )
             result = run_stop(event, cwd, cache, mode="block", agent="codex")
         self.assertEqual(result.returncode, 0)
@@ -587,6 +647,7 @@ class StopClosureGateTests(unittest.TestCase):
                 senior_programming_judgment_required=True,
                 senior_programming_judgment_seen=True,
                 senior_programming_judgment_complete=True,
+                **complete_phase_state(),
             )
             result = run_stop(event, cwd, cache, mode="block", agent="codex")
         self.assertEqual(result.returncode, 0)
@@ -639,6 +700,7 @@ class StopClosureGateTests(unittest.TestCase):
                 senior_programming_judgment_required=True,
                 senior_programming_judgment_seen=True,
                 senior_programming_judgment_complete=True,
+                **complete_phase_state(),
             )
             result = run_stop(event, cwd, cache, mode="block", agent="codex")
         self.assertEqual(result.returncode, 0)
@@ -682,12 +744,13 @@ class StopClosureGateTests(unittest.TestCase):
                 implementation_preflight_required=True,
                 implementation_preflight_seen=True,
                 implementation_preflight_complete=True,
+                **complete_phase_state(),
             )
             result = run_stop(event, cwd, cache, mode="block", agent="codex")
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
-        self.assertNotIn("decision", payload)
-        self.assertIn("repository_context", payload["systemMessage"])
+        self.assertEqual(payload.get("decision"), "block")
+        self.assertIn("repository_context", payload["reason"])
 
     def test_block_mode_warns_when_route_manifest_missing_despite_keywords(self) -> None:
         event = {
@@ -702,12 +765,12 @@ class StopClosureGateTests(unittest.TestCase):
         }
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
             cwd, cache = Path(cwd_s), Path(cache_s)
-            seed_state(cwd, cache, runtime="codex", changed_paths=["a.go"])
+            seed_state(cwd, cache, runtime="codex", changed_paths=["a.go"], **complete_phase_state())
             result = run_stop(event, cwd, cache, mode="block", agent="codex")
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
-        self.assertNotIn("decision", payload)
-        self.assertIn("route_manifest", payload["systemMessage"])
+        self.assertEqual(payload.get("decision"), "block")
+        self.assertIn("route_manifest", payload["reason"])
 
     def test_block_mode_clears_state_after_advisory(self) -> None:
         event = {
@@ -885,9 +948,9 @@ class StopClosureGateTests(unittest.TestCase):
             result = run_stop(event, cwd, cache, agent="codex")
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
-        self.assertNotIn("decision", payload)
-        self.assertIn("material_choice_resolution", payload["systemMessage"])
-        self.assertIn("unresolved material SDD choice", payload["systemMessage"])
+        self.assertEqual(payload.get("decision"), "block")
+        self.assertIn("material_choice_resolution", payload["reason"])
+        self.assertIn("unresolved material SDD choice", payload["reason"])
 
     def test_stop_read_no_change_profile_is_silent_when_evidence_complete(self) -> None:
         # Regression: read-only turns should not require edit-style route or changed-file closure.
@@ -1045,6 +1108,7 @@ class StopClosureGateTests(unittest.TestCase):
                 validation_command_seen=True,
                 validation_seen=True,
                 validation_freshness_seen=True,
+                **complete_phase_state(),
             )
             result = run_stop(event, cwd, cache, agent="copilot")
             records = read_telemetry(cache)
@@ -1141,6 +1205,24 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertNotIn("completion language but shows no validation", result.stdout)
         self.assertNotIn("completion_evidence", result.stdout)
+
+    def test_stop_closure_unsupported_adapter_reports_blocked_but_unenforceable(self) -> None:
+        event = {"hook_event_name": "Stop", "runtime": "generic", "response": "done"}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, runtime="generic", changed_paths=["a.py"])
+            result = run_stop(event, cwd, cache, mode="block", agent="generic")
+            records = read_telemetry(cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+        self.assertIn(
+            "blocked_but_unenforceable",
+            " ".join(records[0]["closure_contract_residual_risk"]),
+        )
+        self.assertIn(
+            "blocked_but_unenforceable",
+            " ".join(records[0]["changeforge_closure"]["residual_risk"]),
+        )
 
     def test_fail_closed_blocks_on_unhandled_exception(self) -> None:
         gate = load_stop_gate()

@@ -111,6 +111,24 @@ def reviewed_ledger(*reviewed: str, validation: bool = True, unresolved_choices:
     }
 
 
+def phase_review_result(phase: str, digest: str) -> dict:
+    return {
+        "schema_version": 1,
+        "review_id": f"{phase}-review-1",
+        "phase": phase,
+        "reviewer_skill": "ai-code-review-refactor",
+        "owner_skill": "development-process-orchestrator",
+        "reviewed_artifact_digest": digest,
+        "verdict": "pass",
+        "score": 5,
+        "findings": [],
+        "approved_scope": {"files": ["src/runtime_governance/example.py"], "behaviors": [], "facts": []},
+        "not_reviewed": [],
+        "required_next_action": ["proceed"],
+        "residual_risk": [],
+    }
+
+
 def assert_blocked(test_case: unittest.TestCase, result: subprocess.CompletedProcess[str]) -> str:
     test_case.assertEqual(result.returncode, 0, result.stderr)
     payload = json.loads(result.stdout)
@@ -182,6 +200,51 @@ class ProcessPhaseGateTests(unittest.TestCase):
             state = load_state(Path(tmp), Path(cache))
             self.assertTrue(state["process_phase_blocked"])
             self.assertIn("copilot lacks PreToolUse hard blocking", state["process_phase_blocked_reason"])
+
+    def test_passing_reviews_populate_missing_digests_and_allow_edit(self) -> None:
+        digests = {phase: "sha256:" + str(index) * 64 for index, phase in enumerate(("pdd", "ddd", "sdd", "tdd"), start=1)}
+        ledger = reviewed_ledger(validation=True)
+        ledger["artifact_digests"] = {}
+        ledger["review_ids"] = {}
+        ledger["phase_status"] = {phase: "pending" for phase in ("pdd", "ddd", "sdd", "tdd")}
+        ledger["phase_scores"] = {phase: 0 for phase in ("pdd", "ddd", "sdd", "tdd")}
+        reviews = [phase_review_result(phase, digest) for phase, digest in digests.items()]
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            seed_state(Path(tmp), Path(cache), process_phase_ledgers=[ledger], phase_review_results=reviews)
+            result = run_gate(edit_event(), Path(tmp), Path(cache))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout.strip(), "")
+            state = load_state(Path(tmp), Path(cache))
+            self.assertTrue(state["pdd_reviewed"])
+            self.assertTrue(state["ddd_reviewed"])
+            self.assertTrue(state["sdd_reviewed"])
+            self.assertTrue(state["tdd_reviewed"])
+            latest = state["process_phase_ledgers"][0]
+            self.assertEqual(latest["artifact_digests"], digests)
+
+    def test_chinese_engineering_prompt_initializes_phase_ledger(self) -> None:
+        event = {
+            "hook_event_name": "UserPromptSubmit",
+            "prompt": "请修复运行时状态机闭环问题，并补充验证测试覆盖。",
+        }
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            result = run_gate(event, Path(tmp), Path(cache))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            state = load_state(Path(tmp), Path(cache))
+            self.assertTrue(state["process_phase_ledger_seen"])
+            self.assertEqual(state["process_phase_ledgers"][0]["current_phase"], "pdd")
+
+    def test_chinese_non_engineering_question_does_not_initialize_phase_ledger(self) -> None:
+        event = {
+            "hook_event_name": "UserPromptSubmit",
+            "prompt": "请说明一下产品需求文档的含义和适用场景？",
+        }
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            result = run_gate(event, Path(tmp), Path(cache))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            state = load_state(Path(tmp), Path(cache))
+            self.assertFalse(state["process_phase_ledger_seen"])
+            self.assertEqual(state["process_phase_ledgers"], [])
 
 
 if __name__ == "__main__":

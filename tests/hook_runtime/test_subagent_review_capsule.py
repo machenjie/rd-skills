@@ -70,14 +70,14 @@ def load_state(cwd: Path, cache: Path) -> dict:
             os.environ["XDG_CACHE_HOME"] = previous_cache
 
 
-def review_result(verdict: str = "pass", score: int = 5) -> dict:
+def review_result(verdict: str = "pass", score: int = 5, *, digest: str | None = None) -> dict:
     return {
         "schema_version": 1,
         "review_id": "sdd-review-1",
         "phase": "sdd",
         "reviewer_skill": "ai-code-review-refactor",
         "owner_skill": "development-process-orchestrator",
-        "reviewed_artifact_digest": "sha256:" + ("b" * 64),
+        "reviewed_artifact_digest": digest or "sha256:" + ("b" * 64),
         "verdict": verdict,
         "score": score,
         "findings": []
@@ -98,9 +98,32 @@ def review_result(verdict: str = "pass", score: int = 5) -> dict:
     }
 
 
+def review_capsule(*, digest: str = "sha256:" + ("b" * 64), capsule_id: str = "sdd-capsule-1") -> dict:
+    return {
+        "capsule_id": capsule_id,
+        "review_type": "sdd",
+        "artifact_under_review": {
+            "phase": "sdd",
+            "artifact_digest": digest,
+            "artifact_summary": "bounded SDD artifact summary",
+        },
+    }
+
+
+def phase_ledger(*, digest: str = "sha256:" + ("b" * 64)) -> dict:
+    return {
+        "route_id": "active-runtime-route",
+        "current_phase": "sdd",
+        "phase_status": {"sdd": "review_pending"},
+        "artifact_digests": {"sdd": digest},
+        "review_ids": {},
+    }
+
+
 class SubagentReviewCapsuleTests(unittest.TestCase):
     def test_valid_subagent_review_result_updates_phase_review_state(self) -> None:
         with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            seed_state(Path(tmp), Path(cache), review_capsules=[review_capsule()])
             result = run_gate(
                 {"hook_event_name": "SubagentStop", "phase_review_result": review_result()},
                 Path(tmp),
@@ -114,6 +137,7 @@ class SubagentReviewCapsuleTests(unittest.TestCase):
 
     def test_fail_review_blocks_next_phase(self) -> None:
         with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            seed_state(Path(tmp), Path(cache), review_capsules=[review_capsule()])
             result = run_gate(
                 {"hook_event_name": "SubagentStop", "phase_review_result": review_result("fail", 2)},
                 Path(tmp),
@@ -127,6 +151,7 @@ class SubagentReviewCapsuleTests(unittest.TestCase):
 
     def test_needs_user_choice_blocks_implementation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            seed_state(Path(tmp), Path(cache), review_capsules=[review_capsule()])
             result = run_gate(
                 {"hook_event_name": "SubagentStop", "phase_review_result": review_result("needs_user_choice", 3)},
                 Path(tmp),
@@ -158,6 +183,7 @@ class SubagentReviewCapsuleTests(unittest.TestCase):
 
     def test_copilot_unsupported_subagent_stop_records_degraded_capability(self) -> None:
         with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            seed_state(Path(tmp), Path(cache), review_capsules=[review_capsule()])
             result = run_gate(
                 {"hook_event_name": "SubagentStop", "phase_review_result": review_result()},
                 Path(tmp),
@@ -168,6 +194,67 @@ class SubagentReviewCapsuleTests(unittest.TestCase):
             state = load_state(Path(tmp), Path(cache))
             self.assertTrue(state["process_phase_blocked"])
             self.assertIn("copilot lacks SubagentStop support", state["process_phase_blocked_reason"])
+
+    def test_subagent_review_digest_must_match_capsule_digest(self) -> None:
+        digest = "sha256:" + ("c" * 64)
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            seed_state(Path(tmp), Path(cache), review_capsules=[review_capsule(digest=digest)])
+            result = run_gate(
+                {
+                    "hook_event_name": "SubagentStop",
+                    "capsule_id": "sdd-capsule-1",
+                    "phase_review_result": review_result(digest=digest),
+                },
+                Path(tmp),
+                Path(cache),
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            state = load_state(Path(tmp), Path(cache))
+            self.assertTrue(state["sdd_reviewed"])
+            self.assertFalse(state["process_phase_blocked"])
+
+    def test_subagent_review_stale_digest_blocks_phase(self) -> None:
+        current_digest = "sha256:" + ("c" * 64)
+        stale_digest = "sha256:" + ("d" * 64)
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            seed_state(Path(tmp), Path(cache), review_capsules=[review_capsule(digest=current_digest)])
+            result = run_gate(
+                {"hook_event_name": "SubagentStop", "phase_review_result": review_result(digest=stale_digest)},
+                Path(tmp),
+                Path(cache),
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            state = load_state(Path(tmp), Path(cache))
+            self.assertFalse(state["sdd_reviewed"])
+            self.assertTrue(state["process_phase_blocked"])
+            self.assertTrue(state["phase_repair_required"])
+            self.assertEqual(state["phase_review_findings"][0]["finding_id"], "sdd-review-stale-digest")
+
+    def test_subagent_review_without_expected_digest_is_insufficient_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            result = run_gate(
+                {"hook_event_name": "SubagentStop", "phase_review_result": review_result()},
+                Path(tmp),
+                Path(cache),
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            state = load_state(Path(tmp), Path(cache))
+            self.assertFalse(state["sdd_reviewed"])
+            self.assertEqual(state["phase_review_results"][0]["verdict"], "insufficient_evidence")
+            self.assertIn("no expected artifact digest", state["process_phase_blocked_reason"])
+
+    def test_subagent_review_matching_existing_ledger_digest_passes(self) -> None:
+        digest = "sha256:" + ("e" * 64)
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as cache:
+            seed_state(Path(tmp), Path(cache), process_phase_ledgers=[phase_ledger(digest=digest)])
+            result = run_gate(
+                {"hook_event_name": "SubagentStop", "phase_review_result": review_result(digest=digest)},
+                Path(tmp),
+                Path(cache),
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            state = load_state(Path(tmp), Path(cache))
+            self.assertTrue(state["sdd_reviewed"])
 
 
 if __name__ == "__main__":

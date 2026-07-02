@@ -16,10 +16,12 @@ For non-trivial engineering work, PDD, DDD, SDD, and TDD are runtime phases, not
 final prose only. A bounded `process_phase_ledger` records phase status,
 artifact digests, review IDs, material-choice blockers, validation signal, and
 adapter degradation. Implementation is not governed as ready until each required
-phase has an independent passing `phase_review_result`; implementer
-self-approval, generic template content, unresolved SDD material choices, or TDD
-without validation signal block the next stage. Blocking review findings require
-a repair event tied to the finding ID and a passing re-review before closure.
+phase has an independent passing `phase_review_result` with a digest matching
+the current capsule or ledger artifact. Reviewed phase status requires both an
+artifact digest and review ID; implementer self-approval, generic template
+content, unresolved SDD material choices, or TDD without validation signal block
+the next stage. Blocking review findings require a repair event tied to the
+finding ID and a passing re-review before closure.
 Adapters that cannot enforce a phase gate must disclose degraded evidence rather
 than reporting full enforcement.
 

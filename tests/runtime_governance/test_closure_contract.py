@@ -299,6 +299,11 @@ class HookClosurePhaseContractTests(unittest.TestCase):
             "turn_stage": "repair",
             "changed_paths": ["src/runtime_governance/process_phase.py"],
             "validation_freshness_seen": True,
+            "process_phase_ledger_seen": True,
+            "pdd_reviewed": True,
+            "ddd_reviewed": True,
+            "sdd_reviewed": True,
+            "tdd_reviewed": True,
             "phase_review_findings": [
                 {
                     "finding_id": "sdd-001",
@@ -362,6 +367,60 @@ class HookClosurePhaseContractTests(unittest.TestCase):
         )
         self.assertEqual(contract.verdict, "needs_validation")
         self.assertIn("validation_fresh_after_final_edit", contract.missing_items)
+
+    def test_engineering_closure_without_phase_ledger_needs_phase_ledger(self) -> None:
+        contract = self._contract(
+            {
+                "runtime": "codex",
+                "turn_stage": "coding",
+                "changed_paths": ["src/runtime_governance/process_phase.py"],
+                "pdd_reviewed": True,
+                "ddd_reviewed": True,
+                "sdd_reviewed": True,
+                "tdd_reviewed": True,
+            }
+        )
+        self.assertIn("phase_ledger", contract.missing_items)
+
+    def test_engineering_closure_without_all_phase_reviews_needs_phase_reviews(self) -> None:
+        contract = self._contract(
+            {
+                "runtime": "codex",
+                "turn_stage": "coding",
+                "changed_paths": ["src/runtime_governance/process_phase.py"],
+                "process_phase_ledger_seen": True,
+                "pdd_reviewed": True,
+                "ddd_reviewed": True,
+                "sdd_reviewed": True,
+            }
+        )
+        self.assertIn("phase_reviews", contract.missing_items)
+
+    def test_engineering_closure_with_all_phase_reviews_does_not_report_phase_reviews_missing(self) -> None:
+        contract = self._contract(
+            {
+                "runtime": "codex",
+                "turn_stage": "coding",
+                "changed_paths": ["src/runtime_governance/process_phase.py"],
+                "process_phase_ledger_seen": True,
+                "pdd_reviewed": True,
+                "ddd_reviewed": True,
+                "sdd_reviewed": True,
+                "tdd_reviewed": True,
+            }
+        )
+        self.assertNotIn("phase_reviews", contract.missing_items)
+
+    def test_read_only_review_does_not_require_all_phase_reviews(self) -> None:
+        contract = self._contract(
+            {
+                "runtime": "codex",
+                "turn_stage": "review",
+                "review_targets": ["src/runtime_governance/process_phase.py"],
+            }
+        )
+        self.assertNotIn("phase_ledger", contract.missing_items)
+        self.assertNotIn("phase_reviews", contract.missing_items)
 
 
 if __name__ == "__main__":

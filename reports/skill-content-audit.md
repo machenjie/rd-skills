@@ -39,7 +39,7 @@ Suggested-action distribution:
 | `quality-test-gate` | professional-skill | 268 | 69 | body 268 lines exceeds review threshold 250 |
 | `ai-code-review-refactor` | professional-skill | 276 | 73 | body 276 lines exceeds review threshold 250 |
 | `task-dag-planner` | professional-skill | 254 | 73 | body 254 lines exceeds review threshold 250 |
-| `development-process-orchestrator` | professional-skill | 309 | 75 | body 309 lines exceeds review threshold 250 |
+| `development-process-orchestrator` | professional-skill | 310 | 75 | body 310 lines exceeds review threshold 250 |
 | `frontend-change-builder` | professional-skill | 249 | 82 | - |
 | `backend-change-builder` | professional-skill | 237 | 82 | - |
 | `integration-change-builder` | professional-skill | 237 | 82 | - |
@@ -81,7 +81,7 @@ Suggested-action distribution:
 
 | Skill | Kind | Lines | Split score | Oversized sections |
 | --- | --- | --- | --- | --- |
-| `development-process-orchestrator` | professional-skill | 309 | 32 | SDD - System / Software / Structure Design Discipline (93) |
+| `development-process-orchestrator` | professional-skill | 310 | 32 | SDD - System / Software / Structure Design Discipline (93) |
 | `ai-code-review-refactor` | professional-skill | 276 | 18 | - |
 | `quality-test-gate` | professional-skill | 268 | 18 | - |
 | `task-dag-planner` | professional-skill | 254 | 18 | - |
@@ -117,10 +117,10 @@ No frontmatter description risks detected.
 | `domain-impact-modeler` | 222 | 3662 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `acceptance-criteria-builder` | 217 | 3037 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-impact-analyzer` | 215 | 3386 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `phase-review-capsule` | 211 | 1844 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `phase-review-capsule` | 213 | 1859 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-intake-compiler` | 203 | 3337 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `logging-design-gate` | 183 | 2545 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `development-process-orchestrator` | 309 | 3450 | 100 | 75 | 100 | 32 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
+| `development-process-orchestrator` | 310 | 3460 | 100 | 75 | 100 | 32 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
 | `ai-code-review-refactor` | 276 | 4887 | 100 | 73 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `quality-test-gate` | 268 | 5272 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `task-dag-planner` | 254 | 4290 | 100 | 73 | 100 | 18 | TIGHTEN_BODY | P2 | low |
@@ -130,7 +130,7 @@ No frontmatter description risks detected.
 - **`development-process-orchestrator`** (MOVE_SECTIONS_TO_REFERENCES, P2, risk: low)
   - Path: `src/professional-skills/development-process-orchestrator/SKILL.md`
   - Suggested action: Move oversized sections/tables into references/*.md; keep a concise body summary.
-  - Finding: body 309 lines exceeds review threshold 250
+  - Finding: body 310 lines exceeds review threshold 250
   - Finding: section 'SDD - System / Software / Structure Design Discipline' is 93 lines (> 80) — reference candidate
 - **`ai-code-review-refactor`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/ai-code-review-refactor/SKILL.md`
@@ -316,17 +316,17 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | --- | --- |
 | 18 | do not load every reference by default. treat references as targeted support selected by t |
 | 18 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
+| 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
-| 17 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 14 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 14 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 14 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 14 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 14 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 12 | these triggers are hidden-risk escalators, not ordinary checklist items. |
 | 7 | **block/pass decision** with required conditions for approval. |
 | 6 | non-trivial direct use still requires `repository-context-map` before planning when affect |
-| 5 | references are just-in-time support, not default-loaded encyclopedia content. |
 | 5 | the `skill.md` body carries l1/l2 routing, risk, and output-contract rules. |
+| 5 | references are just-in-time support, not default-loaded encyclopedia content. |
 | 5 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 4 | **route to:** `validation-broker`, `quality-test-gate`. |
 | 4 | **route to:** `repository-context-map`, `repository-graph-analysis`, `project-memory-gover |

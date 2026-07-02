@@ -16,6 +16,8 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from runtime_governance.process_phase import (  # noqa: E402
+    merge_process_phase_ledger,
+    phase_ready_for_implementation,
     phase_review_passes,
     validate_phase_review_result,
     validate_process_phase_ledger,
@@ -86,6 +88,32 @@ def _self_test() -> list[str]:
     errors.extend(validate_phase_review_result(failed_review))
     if phase_review_passes(failed_review, artifact_digest=failed_review["reviewed_artifact_digest"]):
         errors.append("self-test expected failed review to block phase pass")
+    missing_digest_ledger = {
+        "route_id": "self-test-route",
+        "current_phase": "pdd",
+        "phase_status": {"pdd": "review_pending"},
+        "artifact_digests": {},
+        "review_ids": {},
+        "validation_signal_present": True,
+    }
+    merged = merge_process_phase_ledger(
+        missing_digest_ledger,
+        {},
+        phase_review_results=[{**_valid_review(), "phase": "pdd", "review_id": "pdd-review-1"}],
+    )
+    if "pdd" not in merged.get("artifact_digests", {}):
+        errors.append("self-test expected merge to populate missing phase digest")
+    stale = merge_process_phase_ledger(
+        {**missing_digest_ledger, "artifact_digests": {"pdd": "sha256:" + ("b" * 64)}},
+        {},
+        phase_review_results=[{**_valid_review(), "phase": "pdd", "review_id": "pdd-review-1"}],
+    )
+    if stale.get("phase_status", {}).get("pdd") != "failed":
+        errors.append("self-test expected stale phase review digest to fail")
+    no_reviews = _valid_ledger()
+    no_reviews["phase_status"] = {"pdd": "reviewed", "ddd": "pending", "sdd": "pending", "tdd": "pending"}
+    if phase_ready_for_implementation(no_reviews):
+        errors.append("self-test expected ledger without all phase reviews to block implementation")
     return errors
 
 

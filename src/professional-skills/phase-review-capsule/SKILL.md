@@ -89,14 +89,16 @@ These triggers are hidden-risk escalators, not ordinary checklist items.
 - Escalate to `ai-code-review-refactor` when the implementation or review text was AI-generated.
 
 ## Critical Details
-- `reviewed_artifact_digest` must match the artifact digest in the capsule.
+- `reviewed_artifact_digest` must match the artifact digest in the capsule or
+  the current phase ledger.
 - Score must be 4 or 5 for a passing phase review.
 - Critical, high, or blocking findings prevent phase completion.
 - The capsule must not contain raw prompt text, raw secrets, full command output, implementer self-approval, or unverified completion claims.
 
 ## Failure Modes
 - Missing `phase_review_result` returns `insufficient_evidence`.
-- Stale artifact digest blocks review acceptance.
+- Missing expected artifact digest from capsule or ledger records
+  `insufficient_evidence`; stale artifact digest blocks review acceptance.
 - Generic approval without files, behaviors, facts, and residual risk is not evidence.
 - Copilot or unsupported runtimes must record degraded enforcement rather than claim SubagentStop enforcement.
 - Raw prompt text, raw command output, secrets, environment variables, or full

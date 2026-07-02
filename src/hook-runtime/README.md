@@ -47,9 +47,11 @@ The runtime provides these reminder hooks:
   and Stop report preflight gaps for Copilot.
 - Process Phase Gate: at Codex and Claude `UserPromptSubmit`, `PreToolUse`, and
   `Stop`, initialize a bounded process phase ledger for non-trivial engineering
-  prompts, require independent PDD/DDD/SDD/TDD phase reviews before mutation,
-  and recheck phase, review, repair, re-review, and validation freshness before
-  handoff. It stores digests, IDs, status facts, and bounded findings only.
+  prompts, block `PreToolUse` mutation where the adapter supports pre-tool
+  blocking until independent PDD/DDD/SDD/TDD phase reviews pass, and recheck
+  phase, review, repair, re-review, and validation freshness before handoff. It
+  stores digests, review IDs, status facts, and bounded findings only; reviewed
+  phase status requires both an artifact digest and review ID.
   Copilot cannot enforce `PreToolUse`, so it records degraded phase enforcement
   and relies on parent-context review evidence, PostToolUse facts, and Stop.
 - Post-Edit Structure Gate: after edit tools run, detect structural code changes
@@ -62,11 +64,15 @@ The runtime provides these reminder hooks:
   ChangeForge path used, implementation preflight evidence, changed files,
   validation evidence, residual risk, next actions, phase reviews, repair and
   re-review evidence for blocking findings, and validation freshness after the
-  final edit.
+  final edit. In block mode it blocks `Stop` where the adapter supports a hard
+  Stop decision; unsupported adapters record degraded enforcement instead of a
+  pass.
 - Subagent Review Gate: at Codex and Claude `SubagentStart` and `SubagentStop`,
   provide bounded review capsule requirements and merge only structured
-  `phase_review_result` records back into parent state. Raw subagent transcript,
-  raw prompts, secrets, and implementer self-approval are not merged. Copilot
+  `phase_review_result` records back into parent state. A passing phase review
+  must match the current artifact digest from the review capsule or phase
+  ledger. Raw subagent transcript, raw prompts, secrets, and implementer
+  self-approval are not merged. Copilot
   receives `SubagentStart` capsule context but does not wire unsupported
   `SubagentStop`, so it records degraded enforcement and requires parent-context
   review evidence or CI validation.

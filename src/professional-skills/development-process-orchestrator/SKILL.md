@@ -29,7 +29,8 @@ Keep code changes traceable from problem definition to domain ownership, system 
 - **Independent review gates each phase**: a phase is reviewed only when the
   latest independent `phase_review_result` passes with score >= 4, no
   critical/high blocker, and a reviewed artifact digest matching the current
-  phase artifact. Implementer self-approval does not count.
+  capsule or phase-ledger artifact. Reviewed phase status also requires a review
+  ID. Implementer self-approval does not count.
 - **PDD before implementation**: identify the problem, affected users or systems, acceptance criteria, constraints, non-goals, risk surfaces, and validation signal before coding.
 - **DDD before placement**: identify domain terms, entity or value-object ownership, invariants, side-effect boundaries, and existing code owner before moving behavior.
 - **SDD before edits**: name modules, files, public API, data flow, error contract, logging decision, design decision points, metrics/traces/alerts, performance, security, compatibility, migration, and rollback implications.

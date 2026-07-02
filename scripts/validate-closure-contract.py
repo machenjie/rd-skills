@@ -28,7 +28,7 @@ def _load_hook_closure_contract():
     return module
 
 
-def _contract(state: dict[str, Any]):
+def _contract(state: dict[str, Any], *, runtime: str = "codex"):
     module = _load_hook_closure_contract()
     return module.ClosureContract.from_state(
         state,
@@ -39,7 +39,7 @@ def _contract(state: dict[str, Any]):
         validation_evidence_present=True,
         review_evidence_present=True,
         residual_risk_present=True,
-        runtime="codex",
+        runtime=runtime,
     )
 
 
@@ -49,6 +49,11 @@ def _phase_state(**overrides: object) -> dict[str, object]:
         "turn_stage": "repair",
         "changed_paths": ["src/runtime_governance/process_phase.py"],
         "validation_freshness_seen": True,
+        "process_phase_ledger_seen": True,
+        "pdd_reviewed": True,
+        "ddd_reviewed": True,
+        "sdd_reviewed": True,
+        "tdd_reviewed": True,
         "phase_review_findings": [
             {
                 "finding_id": "sdd-001",
@@ -91,6 +96,40 @@ def _self_test() -> list[str]:
     )
     if stale.verdict != "needs_validation":
         errors.append("expected phase repair closure without fresh validation to need validation")
+    missing_ledger = _contract(
+        {
+            "runtime": "codex",
+            "turn_stage": "coding",
+            "changed_paths": ["src/runtime_governance/process_phase.py"],
+            "pdd_reviewed": True,
+            "ddd_reviewed": True,
+            "sdd_reviewed": True,
+            "tdd_reviewed": True,
+        }
+    )
+    if "phase_ledger" not in missing_ledger.missing_items:
+        errors.append("expected engineering closure without phase ledger to fail")
+    missing_reviews = _contract(
+        {
+            "runtime": "codex",
+            "turn_stage": "coding",
+            "changed_paths": ["src/runtime_governance/process_phase.py"],
+            "process_phase_ledger_seen": True,
+            "pdd_reviewed": True,
+        }
+    )
+    if "phase_reviews" not in missing_reviews.missing_items:
+        errors.append("expected engineering closure without phase reviews to fail")
+    unsupported = _contract(
+        {
+            "runtime": "generic",
+            "turn_stage": "coding",
+            "changed_paths": ["src/runtime_governance/process_phase.py"],
+        },
+        runtime="generic",
+    )
+    if unsupported.adapter_supports_blocking or not unsupported.missing_items:
+        errors.append("expected unsupported adapter closure to be degraded and not pass")
     return errors
 
 

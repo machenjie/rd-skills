@@ -146,6 +146,48 @@ class ProcessPhaseLedgerTests(unittest.TestCase):
         self.assertEqual(merged["phase_status"]["pdd"], "reviewed")
         self.assertEqual(merged["review_ids"]["pdd"], "pdd-review-1")
 
+    def test_passing_review_populates_missing_artifact_digest(self) -> None:
+        digest = _digest("pdd")
+        ledger = normalize_process_phase_ledger({"phase_status": {"pdd": "review_pending"}})
+
+        merged = merge_process_phase_ledger(ledger, {}, phase_review_results=[_review("pdd", digest=digest)])
+
+        self.assertEqual(merged["phase_status"]["pdd"], "reviewed")
+        self.assertEqual(merged["artifact_digests"]["pdd"], digest)
+        self.assertEqual(merged["review_ids"]["pdd"], "pdd-review-1")
+
+    def test_passing_review_with_matching_existing_digest_keeps_reviewed(self) -> None:
+        digest = _digest("pdd")
+        ledger = normalize_process_phase_ledger(
+            {"artifact_digests": {"pdd": digest}, "phase_status": {"pdd": "review_pending"}}
+        )
+
+        merged = merge_process_phase_ledger(ledger, {}, phase_review_results=[_review("pdd", digest=digest)])
+
+        self.assertEqual(merged["phase_status"]["pdd"], "reviewed")
+        self.assertEqual(merged["artifact_digests"]["pdd"], digest)
+
+    def test_passing_review_with_stale_digest_marks_phase_failed(self) -> None:
+        digest = _digest("pdd")
+        stale_digest = _digest("ddd")
+        ledger = normalize_process_phase_ledger(
+            {"artifact_digests": {"pdd": digest}, "phase_status": {"pdd": "review_pending"}}
+        )
+
+        merged = merge_process_phase_ledger(ledger, {}, phase_review_results=[_review("pdd", digest=stale_digest)])
+
+        self.assertEqual(merged["phase_status"]["pdd"], "failed")
+        self.assertEqual(merged["artifact_digests"]["pdd"], digest)
+        self.assertTrue(any("did not pass" in item["reason"] for item in merged["blockers"]))
+
+    def test_reviewed_phase_without_digest_is_invalid(self) -> None:
+        ledger = _full_ledger()
+        ledger["artifact_digests"].pop("pdd")
+
+        errors = validate_process_phase_ledger(ledger)
+
+        self.assertIn("pdd reviewed status requires artifact digest", errors)
+
 
 if __name__ == "__main__":
     unittest.main()

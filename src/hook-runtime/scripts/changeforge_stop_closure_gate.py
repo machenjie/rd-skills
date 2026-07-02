@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 from changeforge_common import (
@@ -427,6 +428,14 @@ def _main() -> int:
         signals,
         validation_assessment=validation_assessment,
     )
+    missing = _missing_keyword_groups(
+        final_text,
+        state,
+        manifest,
+        contract,
+        validation_assessment,
+    )
+    contract = _contract_with_unenforceable_stop_status(contract, mode, missing)
     snapshot = snapshot_from_event_state(
         event,
         state,
@@ -569,13 +578,6 @@ def _main() -> int:
     if mode == "monitor":
         clear_state(repo, runtime)
         return 0
-    missing = _missing_keyword_groups(
-        final_text,
-        state,
-        manifest,
-        contract,
-        validation_assessment,
-    )
     if _closure_profile(state) == "read_review" and not missing:
         clear_state(repo, runtime)
         return 0
@@ -588,10 +590,68 @@ def _main() -> int:
         memory_advice,
     )
     clear_state(repo, runtime)
-    emit_stop_reminder(runtime, message, continue_turn=False)
+    emit_stop_reminder(runtime, message, continue_turn=_should_block_stop(mode, contract, missing))
     return 0
 
 
+
+
+def _should_block_stop(mode: str, contract: ClosureContract, missing: list[str]) -> bool:
+    if mode != "block":
+        return False
+    if not contract.adapter_supports_blocking:
+        return False
+    if missing:
+        return True
+    if contract.missing_items:
+        return True
+    return contract.verdict in {"blocked", "needs_validation", "needs_review", "needs_repair"}
+
+
+def _contract_with_unenforceable_stop_status(
+    contract: ClosureContract,
+    mode: str,
+    missing: list[str],
+) -> ClosureContract:
+    if mode != "block" or contract.adapter_supports_blocking:
+        return contract
+    if not (missing or contract.missing_items or contract.verdict in {"blocked", "needs_validation", "needs_review", "needs_repair"}):
+        return contract
+    residual = _unique_strings(
+        [
+            *contract.residual_risk,
+            "blocked_but_unenforceable: adapter does not support hard Stop decisions",
+        ]
+    )
+    closure_payload = dict(contract.changeforge_closure)
+    closure_payload["verdict"] = "blocked_but_unenforceable"
+    closure_payload["residual_risk"] = residual
+    closure_payload["missing_evidence"] = _unique_strings(
+        [
+            *[str(item) for item in closure_payload.get("missing_evidence", []) if str(item).strip()],
+            *contract.missing_items,
+            *missing,
+        ]
+    )
+    return replace(
+        contract,
+        verdict="blocked_but_unenforceable",
+        residual_risk=residual,
+        closure_status="warn",
+        changeforge_closure=closure_payload,
+    )
+
+
+def _unique_strings(values: list[object]) -> list[str]:
+    result: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        text = str(value or "").strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        result.append(text)
+    return result
 
 
 def _has_closure_surface(state: dict) -> bool:

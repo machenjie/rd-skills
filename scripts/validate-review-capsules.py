@@ -12,9 +12,16 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
+SCRIPT_DIR = ROOT / "src" / "hook-runtime" / "scripts"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 
+from changeforge_subagent_review_gate import (  # noqa: E402
+    _digest_evidence_findings,
+    expected_review_digest,
+)
 from runtime_governance.review_capsule import validate_review_capsule  # noqa: E402
 
 
@@ -62,12 +69,40 @@ def _load_json(path: Path) -> Any:
         return json.load(handle)
 
 
+def _valid_review_result() -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "review_id": "sdd-review-1",
+        "phase": "sdd",
+        "reviewer_skill": "ai-code-review-refactor",
+        "owner_skill": "development-process-orchestrator",
+        "reviewed_artifact_digest": "sha256:" + ("a" * 64),
+        "verdict": "pass",
+        "score": 5,
+        "findings": [],
+        "approved_scope": {"files": ["src/runtime_governance/process_phase.py"]},
+        "not_reviewed": [],
+        "required_next_action": ["proceed"],
+        "residual_risk": [],
+    }
+
+
 def _self_test() -> list[str]:
     errors = validate_review_capsule(_valid_capsule())
-    bad = {**_valid_capsule(), "raw_prompt": "must not persist"}
+    bad = {
+        **_valid_capsule(),
+        "raw_prompt": "must not persist",
+        "secret_token": "must not persist",
+        "command_output": "must not persist",
+    }
     bad_errors = validate_review_capsule(bad)
     if not any("forbidden" in error.lower() for error in bad_errors):
-        errors.append("self-test expected raw prompt key to fail")
+        errors.append("self-test expected forbidden raw prompt/secret/command output keys to fail")
+    review = _valid_review_result()
+    expected_digest = expected_review_digest({}, {}, review)
+    digest_findings = _digest_evidence_findings(review, expected_digest)
+    if expected_digest or not digest_findings or review.get("verdict") != "insufficient_evidence":
+        errors.append("self-test expected phase pass to require expected digest from capsule or ledger")
     return errors
 
 

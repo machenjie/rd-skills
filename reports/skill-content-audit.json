@@ -657,7 +657,7 @@
       "description_findings": [],
       "description_length": 205,
       "findings": [
-        "body 309 lines exceeds review threshold 250",
+        "body 310 lines exceeds review threshold 250",
         "section 'SDD - System / Software / Structure Design Discipline' is 93 lines (> 80) \u2014 reference candidate"
       ],
       "has_shared_optimality": false,
@@ -666,7 +666,7 @@
       "largest_section_lines": 93,
       "largest_section_title": "SDD - System / Software / Structure Design Discipline",
       "largest_table_rows": 5,
-      "line_count": 309,
+      "line_count": 310,
       "name": "development-process-orchestrator",
       "optimality_section_length": 0,
       "output_contract_length": 18,
@@ -688,7 +688,7 @@
       "suggested_action": "Move oversized sections/tables into references/*.md; keep a concise body summary.",
       "table_count": 1,
       "used_by_count": 0,
-      "word_count": 3450
+      "word_count": 3460
     },
     {
       "anti_example_section_length": 10,
@@ -877,7 +877,7 @@
       "classification": "KEEP_AS_IS",
       "code_block_count": 2,
       "context_efficiency_score": 98,
-      "critical_details_length": 6,
+      "critical_details_length": 7,
       "description_findings": [],
       "description_length": 280,
       "findings": [],
@@ -887,7 +887,7 @@
       "largest_section_lines": 66,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 5,
-      "line_count": 211,
+      "line_count": 213,
       "name": "phase-review-capsule",
       "optimality_section_length": 0,
       "output_contract_length": 66,
@@ -904,7 +904,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 1,
       "used_by_count": 0,
-      "word_count": 1844
+      "word_count": 1859
     },
     {
       "anti_example_section_length": 10,

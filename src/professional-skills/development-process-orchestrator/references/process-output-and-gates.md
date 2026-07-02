@@ -15,8 +15,9 @@ Return a compact process orchestration result with:
   validation signal, and adapter degradation. Store digests and bounded facts,
   not raw artifacts.
 - **Phase review results**: one independent `phase_review_result` per required
-  phase, with verdict, score, matching artifact digest, findings, approved
-  scope, unreviewed areas, residual risk, and required next action.
+  phase, with verdict, score, artifact digest matching the current capsule or
+  phase ledger, findings, approved scope, unreviewed areas, residual risk, and
+  required next action.
 - **Repair/re-review closure**: blocking phase findings mapped by `finding_id`
   to repair events and passing re-review events before closure.
 - **PDD facts**: problem, impact, observable acceptance, constraints, non-goals, risk surfaces, validation signal, and behaviors preserved.

@@ -245,11 +245,13 @@ The first-stage runtime provides these reminder gates:
   advisory and instead rely on PostToolUse and Stop compensation.
 - Process Phase Gate (`UserPromptSubmit`, `PreToolUse`, and `Stop`, Codex and
   Claude): initializes a bounded `process_phase_ledger` for non-trivial
-  engineering prompts, blocks mutation until PDD, DDD, SDD, and TDD each have a
-  passing independent `phase_review_result`, and rechecks phase, repair,
+  engineering prompts, blocks `PreToolUse` mutation where the adapter supports
+  pre-tool blocking until PDD, DDD, SDD, and TDD each have a passing independent
+  `phase_review_result`, and rechecks phase, repair,
   re-review, and validation freshness evidence before handoff. It stores only
-  digests, IDs, status facts, and bounded findings, never raw artifacts or raw
-  prompt text. Copilot cannot enforce `PreToolUse`; it records degraded
+  digests, review IDs, status facts, and bounded findings, never raw artifacts
+  or raw prompt text. Reviewed phase status requires both an artifact digest and
+  review ID. Copilot cannot enforce `PreToolUse`; it records degraded
   enforcement and relies on parent-context review evidence, PostToolUse facts,
   and Stop closure.
 
@@ -276,9 +278,11 @@ The first-stage runtime provides these reminder gates:
   closure for blocking findings, and validation fresh after the final edit.
 - Subagent Review Gate (`SubagentStart` and `SubagentStop`, Codex and Claude):
   emits bounded review capsule requirements when review is requested and accepts
-  only a structured `phase_review_result` back into parent state. Missing review
-  results are recorded as `insufficient_evidence`; raw subagent transcript,
-  raw prompt text, secrets, and implementer self-approval are not merged.
+  only a structured `phase_review_result` back into parent state. Passing phase
+  review requires the returned digest to match the current artifact digest from
+  the review capsule or phase ledger. Missing review results are recorded as
+  `insufficient_evidence`; raw subagent transcript, raw prompt text, secrets,
+  and implementer self-approval are not merged.
   Copilot receives `SubagentStart` capsule context but does not wire unsupported
   `SubagentStop`, so it records degraded enforcement and requires parent-context
   review evidence or CI validation.
