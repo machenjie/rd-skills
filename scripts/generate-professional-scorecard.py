@@ -1165,7 +1165,7 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
             open_source_status,
             "config/open-source-release.yaml, docs/LICENSE_DECISION.md, docs/OPEN_SOURCE_READINESS.md, pyproject.toml, CONTRIBUTING.md, SECURITY.md, LICENSE",
             "python3 scripts/validate-open-source-readiness.py",
-            "Owner must select an OSI license, update package metadata, confirm contribution licensing, and configure private vulnerability reporting before open-source publication.",
+            "Keep MIT license text, package metadata, contribution licensing, and private vulnerability reporting or private security contact evidence ready before open-source publication.",
             open_source_detail,
         )
     )

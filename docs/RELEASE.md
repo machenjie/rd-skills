@@ -80,8 +80,8 @@ must pass profile count and archive shape checks.
 - Source structure matches the registry counts.
 - README, quickstart, examples, benchmark docs, scorecard docs, and marketplace docs pass productization validation.
 - Open-source publication status has been checked with `python3 scripts/validate-open-source-readiness.py` and against [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md) when publishing publicly.
-- License metadata, root `LICENSE`, contribution licensing, and security contact path are resolved before describing a release as open source.
-- If no owner license is selected, `config/open-source-release.yaml:selected_license` remains `null`, no root `LICENSE` is added, and the release handoff says owner decision is still required.
+- License metadata, root `LICENSE`, contribution licensing, and security contact path remain MIT-ready before describing a release as open source.
+- `config/open-source-release.yaml:selected_license` remains `MIT`, contribution and security readiness remain confirmed, and the release handoff includes current validation evidence.
 - Routing and code generation benchmark validators pass.
 - No banned `src/toolbox` or `registry/toolbox.yaml` path exists.
 - No personal asset mapping, raw `src/`, or raw registry content is installed.

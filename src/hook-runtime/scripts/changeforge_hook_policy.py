@@ -29,7 +29,6 @@ GATE_MODE_ENV = {
 DEFAULT_GATE_MODES = {
     "sdd_material_choice": "block",
     "pre_edit_structure": "block",
-    "stop_closure": "block",
 }
 
 
@@ -64,16 +63,11 @@ def gate_mode(gate_name: str) -> str:
     if specific:
         mode = _mode_from_env(specific)
         if mode:
-            return _effective_gate_mode(gate_key, mode)
+            return mode
     global_mode = _mode_from_env("CHANGEFORGE_HOOK_MODE")
     if global_mode:
-        return _effective_gate_mode(gate_key, global_mode)
-    return _effective_gate_mode(gate_key, DEFAULT_GATE_MODES.get(gate_key, "warn"))
-
-
-def _effective_gate_mode(gate_key: str, mode: str) -> str:
-    _ = gate_key
-    return mode
+        return global_mode
+    return DEFAULT_GATE_MODES.get(gate_key, "warn")
 
 
 def failure_mode(gate_name: str) -> str:

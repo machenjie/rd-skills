@@ -11,6 +11,11 @@ from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "generate-professional-scorecard.py"
+MIT_TEXT = (
+    "MIT License\n\n"
+    "Permission is hereby granted, free of charge\n\n"
+    "THE SOFTWARE IS PROVIDED \"AS IS\"\n"
+)
 
 
 def _write_release_config(
@@ -418,33 +423,33 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         self.assertEqual(levels["token overhead"]["status"], "not_collected")
         self.assertEqual(levels["turn overhead"]["status"], "not_collected")
 
-    def test_open_source_readiness_no_license_is_partial(self) -> None:
+    def test_open_source_readiness_no_license_fails(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _write_release_config(root)
-            (root / "pyproject.toml").write_text('license = { text = "Proprietary" }\n', encoding="utf-8")
+            (root / "pyproject.toml").write_text('license = { text = "MIT" }\n', encoding="utf-8")
             status, detail = module.open_source_readiness_status(root)
-        self.assertEqual(status, "partial")
+        self.assertEqual(status, "fail")
         self.assertIn("license_file=False", detail)
 
-    def test_open_source_readiness_license_only_with_proprietary_metadata_fails(self) -> None:
+    def test_open_source_readiness_license_only_with_non_mit_metadata_fails(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            _write_release_config(root)
-            (root / "LICENSE").write_text("MIT\n", encoding="utf-8")
+            _write_release_config(root, selected_license="MIT", contribution=True, security=True)
+            (root / "LICENSE").write_text(MIT_TEXT, encoding="utf-8")
             (root / "pyproject.toml").write_text('license = { text = "Proprietary" }\n', encoding="utf-8")
             status, detail = module.open_source_readiness_status(root)
         self.assertEqual(status, "fail")
-        self.assertIn("pyproject_license_not_proprietary=False", detail)
+        self.assertIn("pyproject_license_mit=False", detail)
 
-    def test_open_source_readiness_license_and_metadata_without_security_is_partial(self) -> None:
+    def test_open_source_readiness_license_and_metadata_without_security_fails(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            _write_release_config(root)
-            (root / "LICENSE").write_text("MIT\n", encoding="utf-8")
+            _write_release_config(root, selected_license="MIT", contribution=True, security=False)
+            (root / "LICENSE").write_text(MIT_TEXT, encoding="utf-8")
             (root / "pyproject.toml").write_text('license = { text = "MIT" }\n', encoding="utf-8")
             (root / "CONTRIBUTING.md").write_text(
                 "## Contribution Licensing\nContributions are accepted under the repository license.\n",
@@ -455,7 +460,7 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
                 encoding="utf-8",
             )
             status, detail = module.open_source_readiness_status(root)
-        self.assertEqual(status, "partial")
+        self.assertEqual(status, "fail")
         self.assertIn("security_contact_confirmed=False", detail)
 
     def test_open_source_readiness_license_pyproject_and_security_pass(self) -> None:
@@ -463,7 +468,7 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _write_release_config(root, selected_license="MIT", contribution=True, security=True)
-            (root / "LICENSE").write_text("MIT\n", encoding="utf-8")
+            (root / "LICENSE").write_text(MIT_TEXT, encoding="utf-8")
             (root / "pyproject.toml").write_text('license = { text = "MIT" }\n', encoding="utf-8")
             (root / "CONTRIBUTING.md").write_text(
                 "## Contribution Licensing\nContributions are accepted under the repository license.\n",

@@ -39,4 +39,4 @@ A maintainer should recuse themselves from final decisions when they have a dire
 
 ## License Decision
 
-The current repository metadata records a proprietary license. Before public open-source launch, maintainers must choose an OSI-approved license, add the matching `LICENSE` file, update `pyproject.toml`, and record the decision in [docs/OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md) or a future decision record.
+The repository is licensed under the MIT License. Maintainers may change project license metadata only through an explicit governance decision, documentation update, and release-readiness validation.

@@ -1,8 +1,8 @@
 schema_version: 1
 kind: changeforge.open_source_release
-selected_license: null
-contribution_licensing_confirmed: false
-security_contact_confirmed: false
+selected_license: MIT
+contribution_licensing_confirmed: true
+security_contact_confirmed: true
 dist_release_policy: release-artifact-only
 notes: |
-  Owner decision required before open-source publication.
+  MIT license selected. Contribution licensing and security contact readiness are confirmed for public open-source publication.

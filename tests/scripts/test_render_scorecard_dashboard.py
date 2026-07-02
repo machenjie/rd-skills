@@ -68,10 +68,10 @@ def _payload() -> dict[str, object]:
             },
             {
                 "name": "Open-source readiness",
-                "status": "partial",
-                "detail": "owner license decision required",
+                "status": "pass",
+                "detail": "MIT readiness confirmed",
                 "source": "docs/OPEN_SOURCE_READINESS.md",
-                "fix_hint": "Owner must choose a license.",
+                "fix_hint": "Keep MIT readiness evidence current.",
             },
             {
                 "name": "Example coverage",
@@ -160,10 +160,10 @@ class RenderScorecardDashboardTests(unittest.TestCase):
         self.assertIn("| Runtime telemetry fixture sample | `pass` | sanitized sample generated |", rendered)
         self.assertIn("| Live runtime telemetry sample | `not_collected` | not collected |", rendered)
 
-    def test_open_source_partial_is_visible(self) -> None:
+    def test_open_source_status_is_visible(self) -> None:
         module = _load_module()
         rendered = module.render_dashboard(_payload())
-        self.assertIn("| Open-source readiness | `partial` | owner license decision required |", rendered)
+        self.assertIn("| Open-source readiness | `pass` | MIT readiness confirmed |", rendered)
 
     def test_dashboard_generation_is_deterministic_for_fixed_payload(self) -> None:
         module = _load_module()

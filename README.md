@@ -71,7 +71,7 @@ These signals are generated or validator-backed local evidence. They are not ext
 | Codex CLI live pass-rate benchmark | `pass` | [reports/codex-live-benchmark-summary.json](reports/codex-live-benchmark-summary.json) |
 | Codex CLI live capability coverage | `partial` | [reports/codex-live-benchmark-summary.json](reports/codex-live-benchmark-summary.json) |
 | Marketplace index validation | `pass` | [scripts/validate-marketplace-index.py](scripts/validate-marketplace-index.py) |
-| Open-source readiness | `partial` | [docs/OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md) |
+| Open-source readiness | `pass` | [docs/OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md) |
 <!-- changeforge-scorecard-summary:end -->
 
 The marketplace index and catalog are local/source-derived discovery assets only. Official Codex/Claude marketplace publishing is intentionally not implemented.
@@ -83,10 +83,11 @@ The marketplace index and catalog are local/source-derived discovery assets only
 - [SECURITY.md](SECURITY.md): vulnerability reporting and security handling policy.
 - [SUPPORT.md](SUPPORT.md): support channels and scope.
 - [CHANGELOG.md](CHANGELOG.md): human-readable release history.
-- [docs/OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md): publication readiness audit and owner decision gates.
+- [docs/OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md): publication readiness audit and release validation gates.
 
-## License Semantics
+## License
 
-The repository currently records proprietary license metadata. Before publishing it as open source, maintainers must choose an OSI-approved license, add the matching root `LICENSE`, update `pyproject.toml` license metadata, confirm contribution licensing, and confirm private vulnerability reporting or a private security contact path.
+This repository is licensed under the MIT License; see [LICENSE](LICENSE).
+Contributions are accepted under MIT unless maintainers document otherwise.
 
 Repository/tooling license metadata and per-skill runtime frontmatter are separate contracts. Build and install tooling preserves each generated skill's runtime frontmatter instead of inheriting repository metadata.

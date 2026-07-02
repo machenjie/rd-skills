@@ -62,7 +62,8 @@ FOUNDATION_MODES = {
 
 # Project and user hook runtime. Supported Codex, Claude, and Copilot scopes are
 # installed by default unless the installer receives --without-hooks. Material
-# SDD choices, pre-edit structure, and Stop closure are blocking by default;
+# SDD choices and pre-edit structure are blocking by default. Stop closure is
+# advisory by default unless a maintainer explicitly overrides policy;
 # lower-risk advisory context remains warning-oriented. Existing hook
 # configuration is always preserved.
 HOOK_SOURCE_ROOTS = {
@@ -736,7 +737,7 @@ def _hook_activation_notes(agent: str, scope: str) -> list[str]:
     if agent == "codex":
         notes.insert(
             0,
-            "strongest supported mode is default: SDD material choice, pre-edit structure, and Stop closure block",
+            "default policy: SDD material choice and pre-edit structure block; Stop closure is advisory",
         )
         notes.append(f"run /hooks in Codex and trust the {hook_label} after reviewing the command")
         if scope == "user":
@@ -744,7 +745,7 @@ def _hook_activation_notes(agent: str, scope: str) -> list[str]:
     elif agent == "copilot":
         notes.insert(
             0,
-            "Copilot Stop gate is strict by default; context hooks stay advisory",
+            "Copilot receives context and Stop closure compensation; Stop closure remains advisory",
         )
         notes.append("VS Code loads .json hook files automatically; review them before enabling")
         notes.append("use /hooks or 'Chat: Configure Hooks' in VS Code to inspect loaded hooks")
@@ -755,7 +756,7 @@ def _hook_activation_notes(agent: str, scope: str) -> list[str]:
     else:
         notes.insert(
             0,
-            "strongest supported mode is default: SDD material choice, pre-edit structure, and Stop closure block",
+            "default policy: SDD material choice and pre-edit structure block; Stop closure is advisory",
         )
         notes.append("merge settings.changeforge-hooks.fragment.json into settings.json")
         if scope == "user":

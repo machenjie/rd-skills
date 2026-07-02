@@ -50,14 +50,14 @@ python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out
 | Executor adapter turn overhead | Measured additional turn cost, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
 | Codex CLI live pass-rate benchmark | Published `reports/codex-live-benchmark-summary.json` pass-rate evidence from an explicit opt-in strict Codex CLI run using `auth-policy=borrow-current` or `isolated-api-key`. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` | Keep `not_collected` until a real validated strict run is published; dry-run, skipped, telemetry-only, contaminated-baseline, user-skill/config/rule-visible, missing assertion, missing ablation-delta, current-home smoke, clean-paired smoke, `evidence_scope_ready=false`, and `effect_status=inconclusive` reports cannot satisfy this dimension as `pass`. |
 | Codex CLI live capability coverage | Published `reports/codex-live-benchmark-summary.json` capability matrix evidence showing core ChangeForge capabilities have linked assertion-backed live cases and explicit bounded evidence. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` | Keep `partial` or `not_collected` until every core capability in `evals/codex-live/capability-matrix.yaml` has linked live cases, required variants, assertion pass, and process/repo/memory/validation/review/injection evidence where required. |
-| Open-source readiness | `config/open-source-release.yaml`, [LICENSE_DECISION.md](LICENSE_DECISION.md), [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md), `pyproject.toml`, `CONTRIBUTING.md`, `SECURITY.md`, and root `LICENSE`. | `python3 scripts/validate-open-source-readiness.py` | Owner chooses license, adds exact license text, updates package metadata, confirms contribution licensing, and confirms private vulnerability reporting or private security contact before open-source publication. |
+| Open-source readiness | `config/open-source-release.yaml`, [LICENSE_DECISION.md](LICENSE_DECISION.md), [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md), `pyproject.toml`, `CONTRIBUTING.md`, `SECURITY.md`, and root `LICENSE`. | `python3 scripts/validate-open-source-readiness.py` | Keep MIT license text, package metadata, contribution licensing, and private vulnerability reporting or private security contact evidence ready before open-source publication. |
 | Example coverage | `examples/` scenario structure. | `python3 scripts/validate-examples.py` | Add prompt, route, and evidence files for each scenario. |
 | Productization assets | Productization docs, schema, and generation/validation scripts. | `python3 scripts/validate-productization-assets.py` | Restore required productization assets. |
 
 ## Status Rules
 
 - `pass`: machine-readable evidence exists and the check passed.
-- `partial`: evidence exists but has warnings, needs-review items, or owner decisions.
+- `partial`: evidence exists but has warnings or needs-review items.
 - `fail`: evidence shows a broken invariant.
 - `unknown`: the expected evidence artifact is absent or incomplete.
 - `not_collected`: the command is known, but no machine-readable result is available for the scorecard to consume.
@@ -131,7 +131,7 @@ inconclusive effect. Only `multi_case_ablation_3_run` evidence with
 `baseline_clean`, `skills_only_clean`, and `skills_with_hooks_clean` can pass
 as broad local Codex live benchmark evidence.
 
-Open-source readiness is conservative: a root `LICENSE` alone is not enough. Proprietary `pyproject.toml` license metadata fails the dimension once a license file exists. `config/open-source-release.yaml:selected_license` must be non-null, contribution licensing must be owner-confirmed, and GitHub private vulnerability reporting or a private security contact must be owner-confirmed before the dimension can be `pass`.
+Open-source readiness is conservative: a root `LICENSE` alone is not enough. `pyproject.toml` must declare MIT, `config/open-source-release.yaml:selected_license` must be `MIT`, contribution licensing must be confirmed, and GitHub private vulnerability reporting or a private security contact path must be confirmed before the dimension can be `pass`.
 
 ## README Summary
 

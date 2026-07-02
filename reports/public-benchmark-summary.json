@@ -56,7 +56,7 @@
     },
     {
       "command": "python3 scripts/validate-professional-routing-coverage.py",
-      "detail": "{\"cases_checked\": 165, \"cases_without_forbidden\": 0, \"hidden_risks_checked\": 91, \"hidden_risks_needing_manual_review\": 0, \"hidden_risks_strongly_covered\": 87, \"l1_anti_over_routing_count\": 12}",
+      "detail": "{\"cases_checked\": 169, \"cases_without_forbidden\": 0, \"hidden_risks_checked\": 106, \"hidden_risks_needing_manual_review\": 0, \"hidden_risks_strongly_covered\": 102, \"l1_anti_over_routing_count\": 12}",
       "detail_data": null,
       "evidence_level": "structural fixture",
       "name": "Routing coverage",
@@ -83,7 +83,7 @@
     },
     {
       "command": "python3 scripts/eval-professional-benchmarks.py",
-      "detail": "{\"cases_checked\": 31, \"comparison_cases_checked\": 31, \"empty_baseline_cases\": 0, \"quality_failures\": 0}",
+      "detail": "{\"cases_checked\": 35, \"comparison_cases_checked\": 35, \"empty_baseline_cases\": 0, \"quality_failures\": 0}",
       "detail_data": null,
       "evidence_level": "structural fixture",
       "name": "Professional benchmarks",
@@ -1466,12 +1466,12 @@
     },
     {
       "command": "python3 scripts/validate-open-source-readiness.py",
-      "detail": "config_present=True, selected_license_non_null=False, selected_license_allowed=True, license_file=False, pyproject_license_not_proprietary=False, contribution_licensing_confirmed=False, contribution_licensing_evidence=False, security_contact_confirmed=False, security_contact_evidence=False, dist_release_policy_explicit=True, dist_release_policy_valid=True",
+      "detail": "config_present=True, selected_license_non_null=True, selected_license_allowed=True, selected_license_mit=True, license_file=True, license_file_mit=True, pyproject_license_mit=True, contribution_licensing_confirmed=True, contribution_licensing_evidence=True, security_contact_confirmed=True, security_contact_evidence=True, dist_release_policy_explicit=True, dist_release_policy_valid=True",
       "detail_data": null,
       "evidence_level": "structural fixture",
       "name": "Open-source readiness",
       "source": "config/open-source-release.yaml, docs/LICENSE_DECISION.md, docs/OPEN_SOURCE_READINESS.md, pyproject.toml, CONTRIBUTING.md, SECURITY.md, LICENSE",
-      "status": "partial"
+      "status": "pass"
     },
     {
       "command": "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
@@ -1533,8 +1533,8 @@
   "status_counts": {
     "fail": 0,
     "not_collected": 4,
-    "partial": 5,
-    "pass": 17,
+    "partial": 4,
+    "pass": 18,
     "unknown": 0
   }
 }

@@ -8,8 +8,8 @@ Context-control overhead evidence separates structural fixture pass, live pass-r
 
 ## Status Summary
 
-- `pass`: 17
-- `partial`: 5
+- `pass`: 18
+- `partial`: 4
 - `fail`: 0
 - `unknown`: 0
 - `not_collected`: 4
@@ -32,7 +32,7 @@ Context-control overhead evidence separates structural fixture pass, live pass-r
 | Evidence | Status | Detail |
 | --- | --- | --- |
 | Profile build reproducibility | `pass` | {"dev": {"detail": "dev top-level count is 164", "manifest": "dist/universal/skills/dev/.changeforge-build-manifest.json", "status": "pass"}, "full": {"detail": "full top-level count is 28", "manifest": "dist/universal/skills/full/.changeforge-build-manifest.json", "status": "pass"}, "recommended": {"detail": "recommended top-level count is 21", "manifest": "dist/universal/skills/recommended/.changeforge-build-manifest.json", "status": "pass"}} |
-| Open-source readiness | `partial` | config_present=True, selected_license_non_null=False, selected_license_allowed=True, license_file=False, pyproject_license_not_proprietary=False, contribution_licensing_confirmed=False, contribution_licensing_evidence=False, security_contact_confirmed=False, security_contact_evidence=False, dist_release_policy_explicit=True, dist_release_policy_valid=True |
+| Open-source readiness | `pass` | config_present=True, selected_license_non_null=True, selected_license_allowed=True, selected_license_mit=True, license_file=True, license_file_mit=True, pyproject_license_mit=True, contribution_licensing_confirmed=True, contribution_licensing_evidence=True, security_contact_confirmed=True, security_contact_evidence=True, dist_release_policy_explicit=True, dist_release_policy_valid=True |
 | Example coverage | `pass` | showcase examples validate |
 | Executor adapter structural fixtures | `pass` | {"case_count": 20, "coverage_targets": ["closure_verdict", "command_risk", "degradation", "event_recognition", "path_normalization", "permission_decision", "privacy_redaction", "tool_category", "validation_freshness_after_edits", "validation_outcome"], "evidence_boundary": "deterministic local fixtures only; no live runtime pass-rate or overhead measurement", "failed": 0, "live_pass_rate": "not_collected", "passed": 20, "pressure_cases": ["absolute_user_path", "claude_post_tool_failure", "codex_destructive_permission_request", "copilot_unsupported_pre_tool", "edit_after_validation", "failed_validation", "full_command_output_field", "large_path_list_cap", "ready_after_rereview", "ready_closure", "repair_without_rereview", "required_unsupported_check_degraded_ready", "review_finding_without_repair", "secret_like_payload_field", "targeted_test_reported_as_full", "unknown_event", "unsupported_runtime_event", "validation_pass_then_file_changed"], "token_overhead": "not_collected", "turn_overhead": "not_collected"} |
 | Activation precision benchmark | `pass` | {"error_count": 0, "generated_by": "scripts/eval-activation-precision.py", "summary": {"capability_precision": 1.0, "capability_recall": 1.0, "case_count": 29, "failed": 0, "language_fn_rate": 0.0, "language_fp_rate": 0.0, "metric_definitions": {"language_fn_rate": "Share of cases with at least one missing expected language surface.", "language_fp_rate": "Share of cases with at least one unexpected language surface.", "overroute_rate": "Share of cases with any unexpected exact-set value or any forbidden *_not_contains value.", "precision_recall": "Set precision/recall aggregate true positives, false positives, and false negatives across exact-set cases.", "risk_surface_fn_rate": "Share of cases with at least one missing expected risk surface.", "risk_surface_fp_rate": "Share of cases with at least one unexpected risk surface."}, "overroute_rate": 0.0, "passed": 29, "reference_precision": 1.0, "reference_recall": 1.0, "risk_surface_fn_rate": 0.0, "risk_surface_fp_rate": 0.0, "skill_precision": 1.0, "skill_recall": 1.0, "stage_accuracy": 1.0}} |
@@ -68,7 +68,6 @@ Context-control overhead evidence separates structural fixture pass, live pass-r
 - `partial` Foundation capability coverage: Improve selected capability evidence contracts and references.
 - `partial` context_control_overhead: Repair context-control fixtures or collect lower-overhead live evidence before claiming context-control quality improvement.
 - `partial` Codex CLI live capability coverage: skills_only_clean: strict process trace validation failed; skills_with_hooks_clean: strict process trace validation failed; register every core capability linked case; run linked cases in baseline_clean, skills_only_clean, and skills_with_hooks_clean; keep linked cases assertion-backed and publishable_for_strict=true; collect explicit process-trace evidence instead of inferred/fallback fields; rerun reports after capability cases pass
-- `partial` Open-source readiness: Owner must select an OSI license, update package metadata, confirm contribution licensing, and configure private vulnerability reporting before open-source publication.
 
 ### Low
 

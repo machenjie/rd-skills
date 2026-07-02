@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+import tomllib
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -86,6 +87,54 @@ STALE_HOOK_PHRASES = (
     "default mode is warn",
     "only changeforge_pre_edit_mode=block enables",
     "the default is warn and fail_open",
+)
+STOP_CLOSURE_BLOCK_PATTERNS = (
+    (
+        "Stop closure policy defaults to block",
+        r"stop\s+closure\s+policy\s+(?:also\s+)?defaults?\s+to\s+[`\"']?block",
+    ),
+    (
+        "stop_closure: block",
+        r"[`\"']?stop_closure[`\"']?\s*[:=]\s*[`\"']?block[`\"']?",
+    ),
+    (
+        '"stop_closure": "block"',
+        r"[\"']stop_closure[\"']\s*:\s*[\"']block[\"']",
+    ),
+    (
+        "Stop closure block by default",
+        r"stop\s+closure\s+block(?:s|ing)?\s+by\s+default",
+    ),
+    (
+        "Stop closure blocks by default",
+        r"stop\s+closure\s+blocks\s+by\s+default",
+    ),
+    (
+        "Stop closure defaults to block",
+        r"stop\s+closure\s+defaults?\s+to\s+[`\"']?block",
+    ),
+    (
+        "strict/blocking Stop policy",
+        r"strict/blocking\s+stop\s+policy",
+    ),
+)
+LICENSE_STALE_MARKERS = (
+    "proprietary",
+    "owner decision required before open-source publication",
+    "selected_license remains null",
+    "no root license is added",
+    "must choose an osi-approved license before publishing",
+    "license decision pending",
+    "pending owner decision",
+    "owner license decision",
+    "owner decisions are not complete",
+    "not publishable as an open-source project until",
+    "not publishable as open source until",
+)
+MIT_LICENSE_MARKERS = (
+    "MIT License",
+    "Permission is hereby granted, free of charge",
+    'THE SOFTWARE IS PROVIDED "AS IS"',
 )
 VALIDATION_COMMAND_RE = re.compile(
     r"^\s*python3\s+(?:-m\s+unittest|scripts/(?:validate-|eval-|build\.py|run-codegen|generate-))"
@@ -190,6 +239,29 @@ def _hook_default_errors(root: Path, markdown_files: list[Path]) -> list[str]:
     return errors
 
 
+def _stop_closure_default_errors(root: Path, markdown_files: list[Path]) -> list[str]:
+    errors: list[str] = []
+    for path in markdown_files:
+        rel = _rel(root, path)
+        lines = _read(path).splitlines()
+        for number, line in enumerate(lines, start=1):
+            normalized = re.sub(r"[`\s]+", " ", line.casefold()).strip()
+            for label, pattern in STOP_CLOSURE_BLOCK_PATTERNS:
+                if re.search(pattern, normalized):
+                    errors.append(f"{rel}:{number}: stale Stop closure block-default phrase: {label}")
+            if "stop closure follows the stop closure policy on supported events" in normalized:
+                context = " ".join(lines[max(0, number - 3) : min(len(lines), number + 2)]).casefold()
+                if not (
+                    "advisory" in context
+                    or "warn by default" in context
+                    or "warning by default" in context
+                ):
+                    errors.append(
+                        f"{rel}:{number}: Stop closure policy sentence must state advisory/warn default"
+                    )
+    return errors
+
+
 def _validation_command_count(text: str) -> int:
     return len(VALIDATION_COMMAND_BLOCK_RE.findall(text))
 
@@ -254,7 +326,6 @@ def _hook_policy_consistency_errors(root: Path) -> list[str]:
         ("DEFAULT_GATE_MODES", r"\bDEFAULT_GATE_MODES\b"),
         ('"sdd_material_choice": "block"', r"['\"]sdd_material_choice['\"]\s*:\s*['\"]block['\"]"),
         ('"pre_edit_structure": "block"', r"['\"]pre_edit_structure['\"]\s*:\s*['\"]block['\"]"),
-        ('"stop_closure": "block"', r"['\"]stop_closure['\"]\s*:\s*['\"]block['\"]"),
         (
             'DEFAULT_GATE_MODES.get(gate_key, "warn")',
             r"DEFAULT_GATE_MODES\.get\(\s*gate_key\s*,\s*['\"]warn['\"]\s*\)",
@@ -264,6 +335,10 @@ def _hook_policy_consistency_errors(root: Path) -> list[str]:
     for label, pattern in policy_checks:
         if not re.search(pattern, policy):
             errors.append(f"{policy_path.relative_to(root)}: missing hook policy fact: {label}")
+    if re.search(r"['\"]stop_closure['\"]\s*:\s*['\"]block['\"]", policy):
+        errors.append(
+            "src/hook-runtime/scripts/changeforge_hook_policy.py: DEFAULT_GATE_MODES must not set stop_closure to block"
+        )
 
     doc_checks = (
         (
@@ -287,11 +362,12 @@ def _hook_policy_consistency_errors(root: Path) -> list[str]:
             ),
         ),
         (
-            "Stop closure defaults to block",
+            "Stop closure is advisory/warn by default",
             lambda text: (
-                ("stop closure" in text or "stop_closure=block" in text)
+                "stop closure" in text
                 and "default" in text
-                and "block" in text
+                and ("advisory" in text or "warn" in text or "warning" in text)
+                and ("does not force continuation" in text or "does not block final handoff" in text or "not force" in text)
             ),
         ),
         (
@@ -300,6 +376,7 @@ def _hook_policy_consistency_errors(root: Path) -> list[str]:
                 "unspecified gates fallback to warn" in text
                 or "ordinary advisory gates default to warn" in text
                 or "ordinary advisory context defaults to warn" in text
+                or "unspecified gates fallback warn" in text
             ),
         ),
         (
@@ -308,6 +385,7 @@ def _hook_policy_consistency_errors(root: Path) -> list[str]:
                 "failure mode defaults to fail_open" in text
                 or "failures default to fail_open" in text
                 or "hook failures default to fail_open" in text
+                or "hook runtime failures still fail open" in text
             ),
         ),
     )
@@ -320,6 +398,65 @@ def _hook_policy_consistency_errors(root: Path) -> list[str]:
         for label, predicate in doc_checks:
             if not predicate(text):
                 errors.append(f"{rel}: missing hook policy fact: {label}")
+    return errors
+
+
+def _pyproject_license_text(root: Path) -> str:
+    path = root / "pyproject.toml"
+    if not path.exists():
+        return ""
+    try:
+        parsed = tomllib.loads(path.read_text(encoding="utf-8"))
+    except tomllib.TOMLDecodeError:
+        return ""
+    project = parsed.get("project", parsed)
+    license_value = project.get("license") if isinstance(project, dict) else None
+    if isinstance(license_value, dict):
+        return str(license_value.get("text") or license_value.get("file") or "").strip()
+    if isinstance(license_value, str):
+        return license_value.strip()
+    return ""
+
+
+def _license_consistency_errors(root: Path, markdown_files: list[Path]) -> list[str]:
+    errors: list[str] = []
+    license_path = root / "LICENSE"
+    if not license_path.exists():
+        errors.append("LICENSE: missing root MIT license file")
+    else:
+        license_text = _read(license_path)
+        for marker in MIT_LICENSE_MARKERS:
+            if marker not in license_text:
+                errors.append(f"LICENSE: missing MIT license marker: {marker}")
+
+    pyproject_path = root / "pyproject.toml"
+    pyproject_text = _read(pyproject_path) if pyproject_path.exists() else ""
+    pyproject_license = _pyproject_license_text(root)
+    if "proprietary" in pyproject_text.casefold():
+        errors.append("pyproject.toml: must not contain Proprietary license metadata")
+    if pyproject_license != "MIT":
+        errors.append("pyproject.toml: project license must be MIT")
+
+    config_path = root / "config" / "open-source-release.yaml"
+    config = load_yaml_file(config_path) if config_path.exists() else {}
+    if not config_path.exists():
+        errors.append("config/open-source-release.yaml: missing open-source release config")
+    if config.get("selected_license") != "MIT":
+        errors.append("config/open-source-release.yaml: selected_license must be MIT")
+    if config.get("contribution_licensing_confirmed") is not True:
+        errors.append(
+            "config/open-source-release.yaml: contribution_licensing_confirmed must be true"
+        )
+    if config.get("security_contact_confirmed") is not True:
+        errors.append("config/open-source-release.yaml: security_contact_confirmed must be true")
+
+    for path in markdown_files:
+        rel = _rel(root, path)
+        for number, line in enumerate(_read(path).splitlines(), start=1):
+            lowered = line.casefold()
+            for marker in LICENSE_STALE_MARKERS:
+                if marker in lowered:
+                    errors.append(f"{rel}:{number}: stale license/open-source readiness phrase: {marker}")
     return errors
 
 
@@ -459,7 +596,9 @@ def validate_docs_consistency(root: Path) -> list[str]:
     errors: list[str] = []
     errors.extend(_profile_count_errors(root, markdown_files))
     errors.extend(_hook_default_errors(root, markdown_files))
+    errors.extend(_stop_closure_default_errors(root, markdown_files))
     errors.extend(_hook_policy_consistency_errors(root))
+    errors.extend(_license_consistency_errors(root, markdown_files))
     errors.extend(_release_gate_anchor_errors(root, markdown_files))
     errors.extend(_validation_command_duplication_errors(root, markdown_files))
     errors.extend(_generated_banner_errors(root))

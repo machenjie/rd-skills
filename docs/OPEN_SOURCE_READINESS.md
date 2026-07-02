@@ -1,61 +1,34 @@
 # Open Source Readiness
 
-This audit tracks the repository work needed to meet common open-source project expectations. The repository is structurally close to the expected public-project shape after the governance, CI, quickstart, scorecard, examples, and discovery-index additions, but it is not publishable as an open-source project until maintainers complete the owner license, contribution licensing, and security-contact decisions.
+This audit tracks the repository work needed to meet common open-source project expectations. The repository is MIT licensed and ready for public open-source publication when the release validation gates pass.
 
 ## Current Status
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| README | Ready | Describes project purpose, usage, runtime profiles, validation, guardrails, and governance links. |
+| README | Ready | Describes project purpose, usage, runtime profiles, validation, guardrails, governance links, and MIT license. |
 | Quickstart / usage docs | Ready | [docs/QUICKSTART.md](QUICKSTART.md) covers first-run usage; [docs/USAGE.md](USAGE.md) covers build, install, agent usage, OpenAI API zips, upgrade, uninstall, and troubleshooting. |
 | Benchmarks / scorecard | Ready | [docs/BENCHMARKS.md](BENCHMARKS.md) and [docs/SCORECARD.md](SCORECARD.md) explain generated evidence without hardcoded claims. |
 | Examples / comparison / index | Ready | [../examples/README.md](../examples/README.md), [MARKETPLACE.md](MARKETPLACE.md), and [COMPARISON.md](COMPARISON.md) make capabilities discoverable and explain positioning. |
 | Install/release docs | Ready | Existing installation, packaging, operating model, runtime profile, quality, and release docs are present. |
-| Contribution guide | Ready | [CONTRIBUTING.md](../CONTRIBUTING.md) defines workflow, boundaries, validation, and PR expectations. |
+| Contribution guide | Ready | [CONTRIBUTING.md](../CONTRIBUTING.md) confirms contributions are accepted under the repository license unless maintainers document otherwise. |
 | Code of conduct | Ready | [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) defines project participation standards. |
-| Security policy | Needs owner setup | [SECURITY.md](../SECURITY.md) exists, but maintainers should enable GitHub private vulnerability reporting or publish a private contact channel. |
+| Security policy | Ready | [SECURITY.md](../SECURITY.md) documents private vulnerability reporting when enabled and a private maintainer channel fallback. |
 | Support policy | Ready | [SUPPORT.md](../SUPPORT.md) defines support scope and expected issue details. |
-| Governance | Ready | [GOVERNANCE.md](../GOVERNANCE.md) defines maintainer responsibilities and decision authority. |
-| Changelog | Ready | [CHANGELOG.md](../CHANGELOG.md) now tracks contributor-facing and release-facing changes. |
+| Governance | Ready | [GOVERNANCE.md](../GOVERNANCE.md) defines maintainer responsibilities, decision authority, and license-change governance. |
+| Changelog | Ready | [CHANGELOG.md](../CHANGELOG.md) tracks contributor-facing and release-facing changes. |
 | GitHub templates | Ready | Issue and pull request templates capture repro details, boundaries, validation, and risk. |
 | CI | Ready | `.github/workflows/ci.yml` runs core validation, profile builds for `recommended`, `full`, and `dev`, runtime reference validation, installation validation, marketplace export/validation, strict profile-build scorecard smoke, and unit tests. Heavy evals and benchmark comparisons remain release gates. |
-| Package metadata | Partial | `pyproject.toml` has project URLs, keywords, and classifiers. License metadata remains proprietary pending owner decision. |
-| License | Blocked | No open-source license file exists. Maintainers must choose the license. |
-| Owner release config | Partial | [../config/open-source-release.yaml](../config/open-source-release.yaml) records that owner decisions are not complete. |
+| Package metadata | Ready | `pyproject.toml` declares MIT license metadata, project URLs, keywords, and classifiers. |
+| License | Ready | The root [../LICENSE](../LICENSE) file contains the MIT License text. |
+| Owner release config | Ready | [../config/open-source-release.yaml](../config/open-source-release.yaml) records `selected_license: MIT`, contribution licensing confirmation, security contact confirmation, and `release-artifact-only` dist policy. |
 
 ## Required Before Public Open-Source Release
 
-1. Choose an OSI-approved license, such as MIT, Apache-2.0, BSD-3-Clause, MPL-2.0, GPL-3.0-only, or AGPL-3.0-only.
-2. Add the matching root `LICENSE` file.
-3. Update `pyproject.toml` from proprietary license metadata to the selected license metadata.
-4. Update [LICENSE_DECISION.md](LICENSE_DECISION.md) notes if the owner decision requires project-specific context.
-5. Update [../config/open-source-release.yaml](../config/open-source-release.yaml) with the selected license and confirmed owner decisions.
-6. Confirm contribution licensing in [CONTRIBUTING.md](../CONTRIBUTING.md).
-7. Enable GitHub private vulnerability reporting or publish a private security contact path in [SECURITY.md](../SECURITY.md).
-8. Confirm whether generated `dist/` artifacts should remain ignored or be attached only to releases.
-9. Run the full validation suite and confirm CI passes on a pull request.
-
-## Owner Decision Required
-
-The maintainer has not supplied a selected OSI license for this change. Until that decision is made:
-
-- Do not add a root `LICENSE` file.
-- Do not change `pyproject.toml` from proprietary license metadata.
-- Do not describe the repository as open-source-ready.
-- Treat outside contribution acceptance as blocked or maintainer-reviewed under the existing proprietary metadata.
-- Keep `config/open-source-release.yaml:selected_license` set to `null`.
-
-Security contact also requires an owner-controlled private path. [SECURITY.md](../SECURITY.md) describes GitHub private vulnerability reporting when enabled, but the maintainer must either enable that feature or provide a private security contact channel before public release.
-
-Mechanical status is checked with:
-
-```bash
-python3 scripts/validate-open-source-readiness.py
-```
-
-Use `--require-pass` only when intentionally verifying that all owner
-publication decisions are complete. The default repository state is expected to
-be `partial`, not `pass`.
+1. Run the Release Gate from [VALIDATION.md#release-gate](VALIDATION.md#release-gate) or explicitly document any unrun command and residual risk.
+2. Run `python3 scripts/validate-open-source-readiness.py` and confirm it passes.
+3. Regenerate or validate the professional scorecard, scorecard dashboard, public benchmark summary, marketplace catalog, and showcase snapshots when their sources change.
+4. Confirm the release handoff includes validation output, profile counts, installer smoke evidence, MIT license status, security contact status, and unresolved assumptions.
 
 ## Recommended Repository Standards
 
@@ -64,18 +37,12 @@ be `partial`, not `pass`.
 | Clear purpose | README explains this is a ChangeForge skill-authoring, build, package, and install repository. |
 | Reproducible build | Runtime outputs are generated deterministically through `scripts/build.py`. |
 | Safe install model | Installers consume `dist/` only and write manifests for managed install/uninstall. |
-| Validation gate | Contributors run the full validation suite before release handoff. CI runs core validators, productization smoke, all profile builds, runtime reference validation, installation validation, marketplace validation, strict profile-build scorecard smoke, and unit tests; heavy evals and codegen benchmarks remain release-gate commands. |
+| Validation gate | Contributors run the appropriate validation suite before release handoff. CI runs core validators, productization smoke, all profile builds, runtime reference validation, installation validation, marketplace validation, strict profile-build scorecard smoke, and unit tests; heavy evals and codegen benchmarks remain release-gate commands. |
 | Security posture | Vulnerabilities are handled privately, with targeted regression coverage before release. |
 | Contribution path | Issues and pull requests ask for scope, evidence, validation output, and boundary checks. |
 | Release hygiene | Release runbook defines versioning, packaging, validation, smoke checks, and handoff requirements. |
-| Legal clarity | License must be explicit before accepting outside contributions or publishing as open source. |
+| Legal clarity | Repository/tooling is MIT licensed; per-skill runtime frontmatter remains a separate generated skill contract. |
 
 ## Publication Gate
 
-A release should not be described as open source until **Release Gate** from
-[VALIDATION.md#release-gate](VALIDATION.md#release-gate) passes,
-`python3 scripts/validate-open-source-readiness.py` passes with owner decisions
-complete, and the generated scorecard/open-source readiness evidence has been
-refreshed.
-
-The release handoff should include validation output, profile counts, installer smoke evidence, license decision, security contact status, and unresolved assumptions.
+A release may be described as open source only when [VALIDATION.md#release-gate](VALIDATION.md#release-gate) and `python3 scripts/validate-open-source-readiness.py` pass, or when any skipped release-gate command is explicitly disclosed with owner, reason, and residual risk.

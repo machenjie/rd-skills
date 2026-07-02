@@ -30,6 +30,14 @@ def _write(path: Path, text: str) -> None:
 
 
 def _write_minimal_repo(root: Path) -> None:
+    hook_policy_text = "\n".join(
+        [
+            "Codex and Claude block SDD material choice and pre-edit structure by default where supported.",
+            "Stop closure is advisory by default: it records missing route/stage/validation/review evidence as closure risk and telemetry facts, but it does not force continuation or block final handoff unless a maintainer explicitly overrides the policy.",
+            "Hook runtime failures still fail open unless explicitly configured fail-closed.",
+            "Unspecified gates fallback to warn.",
+        ]
+    )
     _write(
         root / "README.md",
         "\n".join(
@@ -43,15 +51,7 @@ def _write_minimal_repo(root: Path) -> None:
     )
     _write(
         root / "docs" / "HOOKS.md",
-        "\n".join(
-            [
-                "# Hooks",
-                "",
-                "Default gate modes are `sdd_material_choice=block`, `pre_edit_structure=block`, and `stop_closure=block`.",
-                "Unspecified gates fallback to `warn`; ordinary advisory gates default to `warn`.",
-                "Failure mode defaults to `fail_open`.",
-            ]
-        ),
+        "# Hooks\n\n" + hook_policy_text + "\n",
     )
     _write(
         root / "docs" / "MARKETPLACE.md",
@@ -66,27 +66,20 @@ def _write_minimal_repo(root: Path) -> None:
     _write(root / "docs" / "VALIDATION.md", "# Validation\n\nCanonical commands.\n")
     _write(
         root / "docs" / "OPEN_SOURCE_READINESS.md",
-        "# Open Source Readiness\n\nNot publishable as open source until owner license and security decisions are complete.\n",
+        "# Open Source Readiness\n\nMIT licensed and ready for public open-source publication when validation passes.\n",
     )
     _write(root / "reports" / "public-benchmark-summary.md", "# Public\n\nGenerated release snapshot.\n")
     _write(root / "reports" / "professional-scorecard.md", "# Scorecard\n\nGenerated release snapshot.\n")
     _write(root / "reports" / "codex-live-benchmark-summary.md", "# Codex\n\nGenerated release snapshot.\n")
-    _write(root / "pyproject.toml", '[project]\nlicense = { text = "Proprietary" }\n')
+    _write(root / "LICENSE", "MIT License\n\nPermission is hereby granted, free of charge\nTHE SOFTWARE IS PROVIDED \"AS IS\"\n")
+    _write(root / "pyproject.toml", '[project]\nlicense = { text = "MIT" }\n')
     _write(
         root / "config" / "open-source-release.yaml",
-        "selected_license: null\ncontribution_licensing_confirmed: false\nsecurity_contact_confirmed: false\n",
+        "selected_license: MIT\ncontribution_licensing_confirmed: true\nsecurity_contact_confirmed: true\n",
     )
     _write(
         root / "src" / "hook-runtime" / "README.md",
-        "\n".join(
-            [
-                "# Hook Runtime",
-                "",
-                "Default gate modes are `sdd_material_choice=block`, `pre_edit_structure=block`, and `stop_closure=block`.",
-                "Unspecified gates fallback to `warn`; ordinary advisory gates default to `warn`.",
-                "Failure mode defaults to `fail_open`.",
-            ]
-        ),
+        "# Hook Runtime\n\n" + hook_policy_text + "\n",
     )
     _write(
         root / "src" / "hook-runtime" / "scripts" / "changeforge_hook_policy.py",
@@ -95,7 +88,6 @@ def _write_minimal_repo(root: Path) -> None:
                 "DEFAULT_GATE_MODES = {",
                 '    "sdd_material_choice": "block",',
                 '    "pre_edit_structure": "block",',
-                '    "stop_closure": "block",',
                 "}",
                 "",
                 "def gate_mode(gate_key):",
@@ -139,9 +131,10 @@ class ValidateDocsConsistencyTests(unittest.TestCase):
                 "\n".join(
                     [
                         "`--with-hooks` remains accepted for backward compatibility but is no longer required.",
-                        "Default gate modes are `sdd_material_choice=block`, `pre_edit_structure=block`, and `stop_closure=block`.",
-                        "Unspecified gates fallback to `warn`; ordinary advisory gates default to `warn`.",
-                        "Failure mode defaults to `fail_open`.",
+                        "Codex and Claude block SDD material choice and pre-edit structure by default where supported.",
+                        "Stop closure is advisory by default and records missing evidence as closure risk, but it does not force continuation or block final handoff unless explicitly overridden.",
+                        "Unspecified gates fallback to warn.",
+                        "Hook runtime failures still fail open unless explicitly configured fail-closed.",
                     ]
                 ),
             )
@@ -177,6 +170,74 @@ class ValidateDocsConsistencyTests(unittest.TestCase):
             )
         )
         self.assertEqual(errors, [])
+
+    def test_minimal_repo_is_consistent(self) -> None:
+        self.assertEqual(self._errors_for(), [])
+
+    def test_stop_closure_policy_defaults_to_block_fails(self) -> None:
+        errors = self._errors_for(
+            lambda root: _write(root / "docs" / "HOOKS.md", "Stop closure policy defaults to block.\n")
+        )
+        self.assertTrue(any("Stop closure block-default" in error for error in errors), errors)
+
+    def test_stop_closure_block_config_phrase_fails(self) -> None:
+        errors = self._errors_for(lambda root: _write(root / "docs" / "HOOKS.md", "stop_closure: block\n"))
+        self.assertTrue(any("stop_closure: block" in error for error in errors), errors)
+
+    def test_stop_closure_advisory_phrase_does_not_fail(self) -> None:
+        errors = self._errors_for(
+            lambda root: _write(
+                root / "docs" / "USAGE.md",
+                "Stop closure is advisory by default and records missing evidence as closure risk.\n",
+            )
+        )
+        self.assertEqual(errors, [])
+
+    def test_hook_policy_stop_closure_block_default_fails(self) -> None:
+        errors = self._errors_for(
+            lambda root: _write(
+                root / "src" / "hook-runtime" / "scripts" / "changeforge_hook_policy.py",
+                "\n".join(
+                    [
+                        "DEFAULT_GATE_MODES = {",
+                        '    "sdd_material_choice": "block",',
+                        '    "pre_edit_structure": "block",',
+                        '    "stop_closure": "block",',
+                        "}",
+                        "",
+                        "def gate_mode(gate_key):",
+                        '    return DEFAULT_GATE_MODES.get(gate_key, "warn")',
+                        "",
+                        "def failure_mode(global_failure=None):",
+                        '    return global_failure or "fail_open"',
+                    ]
+                ),
+            )
+        )
+        self.assertTrue(any("DEFAULT_GATE_MODES must not set stop_closure" in error for error in errors), errors)
+
+    def test_missing_license_fails(self) -> None:
+        errors = self._errors_for(lambda root: (root / "LICENSE").unlink())
+        self.assertTrue(any("missing root MIT license" in error for error in errors), errors)
+
+    def test_pyproject_proprietary_fails(self) -> None:
+        errors = self._errors_for(lambda root: _write(root / "pyproject.toml", '[project]\nlicense = { text = "Proprietary" }\n'))
+        self.assertTrue(any("pyproject.toml" in error and "Proprietary" in error for error in errors), errors)
+
+    def test_selected_license_null_fails(self) -> None:
+        errors = self._errors_for(
+            lambda root: _write(
+                root / "config" / "open-source-release.yaml",
+                "selected_license: null\ncontribution_licensing_confirmed: true\nsecurity_contact_confirmed: true\n",
+            )
+        )
+        self.assertTrue(any("selected_license must be MIT" in error for error in errors), errors)
+
+    def test_owner_license_decision_pending_doc_fails(self) -> None:
+        errors = self._errors_for(
+            lambda root: _write(root / "docs" / "OPEN_SOURCE_READINESS.md", "Owner license decision pending.\n")
+        )
+        self.assertTrue(any("owner license decision" in error for error in errors), errors)
 
     def test_generated_doc_missing_banner_fails(self) -> None:
         errors = self._errors_for(lambda root: _write(root / "docs" / "SHOWCASE.md", "# Showcase\n\nManual text.\n"))

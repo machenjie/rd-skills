@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate conservative open-source publication readiness."""
+"""Validate MIT open-source publication readiness."""
 
 from __future__ import annotations
 
@@ -24,6 +24,11 @@ ALLOWED_LICENSES = {
     "GPL-3.0-only",
     "AGPL-3.0-only",
 }
+MIT_LICENSE_MARKERS = (
+    "MIT License",
+    "Permission is hereby granted, free of charge",
+    'THE SOFTWARE IS PROVIDED "AS IS"',
+)
 DIST_RELEASE_POLICIES = {
     "ignored-generated-output",
     "release-artifact-only",
@@ -92,13 +97,22 @@ def _security_contact_evidence_found(root: Path) -> bool:
     text = path.read_text(encoding="utf-8").casefold()
     return (
         "private vulnerability reporting is enabled" in text
+        or "private vulnerability reporting when it is enabled" in text
         or "mailto:" in text
         or "security@" in text
     )
 
 
+def _license_file_is_mit(root: Path) -> bool:
+    path = root / "LICENSE"
+    if not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8")
+    return all(marker in text for marker in MIT_LICENSE_MARKERS)
+
+
 def evaluate_open_source_readiness(root: Path) -> OpenSourceReadiness:
-    """Evaluate readiness without inferring owner decisions from prose alone."""
+    """Evaluate MIT readiness without inferring release decisions from prose alone."""
     config = _load_config(root)
     selected_license_raw = config.get("selected_license")
     selected_license = (
@@ -112,18 +126,21 @@ def evaluate_open_source_readiness(root: Path) -> OpenSourceReadiness:
     dist_release_policy = config.get("dist_release_policy")
     license_text = _pyproject_license_text(root)
     license_file_exists = (root / "LICENSE").is_file()
-    pyproject_non_proprietary = bool(license_text) and "proprietary" not in license_text.casefold()
+    license_file_mit = _license_file_is_mit(root)
+    pyproject_license_mit = license_text == "MIT"
     contribution_evidence = _contribution_evidence_found(root)
     security_evidence = _security_contact_evidence_found(root)
     dist_policy_valid = dist_release_policy in DIST_RELEASE_POLICIES
-    selected_license_valid = selected_license is None or selected_license in ALLOWED_LICENSES
+    selected_license_valid = selected_license == "MIT"
 
     checks = {
         "config_present": (root / CONFIG_PATH).is_file(),
         "selected_license_non_null": selected_license is not None,
         "selected_license_allowed": selected_license_valid,
+        "selected_license_mit": selected_license == "MIT",
         "license_file": license_file_exists,
-        "pyproject_license_not_proprietary": pyproject_non_proprietary,
+        "license_file_mit": license_file_mit,
+        "pyproject_license_mit": pyproject_license_mit,
         "contribution_licensing_confirmed": contribution_confirmed,
         "contribution_licensing_evidence": contribution_evidence,
         "security_contact_confirmed": security_confirmed,
@@ -137,37 +154,30 @@ def evaluate_open_source_readiness(root: Path) -> OpenSourceReadiness:
     if not checks["config_present"]:
         errors.append(f"missing {CONFIG_PATH}")
     if not selected_license_valid:
-        errors.append(f"selected_license must be one of {sorted(ALLOWED_LICENSES)} or null")
+        errors.append("selected_license must be MIT")
     if not dist_policy_valid:
         errors.append(
             f"dist_release_policy must be one of {sorted(DIST_RELEASE_POLICIES)}"
         )
-    if license_file_exists and not pyproject_non_proprietary:
-        errors.append("root LICENSE exists but pyproject.toml license metadata is proprietary")
-    if selected_license is not None and not license_file_exists:
-        errors.append("selected_license is set but root LICENSE is missing")
-    if selected_license is not None and not pyproject_non_proprietary:
-        errors.append("selected_license is set but pyproject.toml license metadata is proprietary")
-    # Config booleans are owner decisions. The matching docs must still carry
-    # enough evidence that the confirmation is reviewable in the repository.
+    if not license_file_exists:
+        errors.append("root LICENSE is missing")
+    elif not license_file_mit:
+        errors.append("root LICENSE must contain standard MIT License text")
+    if not pyproject_license_mit:
+        errors.append("pyproject.toml license metadata must be MIT")
+    if not contribution_confirmed:
+        errors.append("contribution_licensing_confirmed must be true")
+    if not security_confirmed:
+        errors.append("security_contact_confirmed must be true")
     if contribution_confirmed and not contribution_evidence:
         errors.append("contribution_licensing_confirmed is true but CONTRIBUTING.md does not confirm it")
     if security_confirmed and not security_evidence:
         errors.append("security_contact_confirmed is true but SECURITY.md lacks private reporting/contact evidence")
 
-    if not license_file_exists:
-        warnings.append("root LICENSE is missing; open-source readiness is partial")
-    if selected_license is None:
-        warnings.append("owner license decision is still required")
-    if not contribution_confirmed:
-        warnings.append("contribution licensing is not owner-confirmed")
-    if not security_confirmed:
-        warnings.append("security contact/private vulnerability reporting is not owner-confirmed")
-
     pass_checks = (
-        license_file_exists
-        and pyproject_non_proprietary
-        and selected_license is not None
+        license_file_mit
+        and pyproject_license_mit
+        and selected_license == "MIT"
         and contribution_confirmed
         and contribution_evidence
         and security_confirmed

@@ -52,8 +52,10 @@ to `professional-injection`: executable hooks are installed, professional
 context is injected, and supported blocking gates run by default. Codex and
 Claude block SDD material choice and pre-edit structure directly; Stop closure
 is advisory and does not force a final close report. Copilot receives
-`PostToolUse`/review compensation where those facts are available. Use
-`--without-hooks` or
+SessionStart/SubagentStart/PostToolUse context and Stop closure compensation
+where supported. Stop closure remains advisory by default and records missing
+evidence as closure risk; Copilot cannot enforce Codex/Claude-style PreToolUse
+gates. Use `--without-hooks` or
 `--activation-level none` to opt out. Use `--activation-level bootstrap` when
 you want only the non-executable
 `.changeforge/changeforge-route-preflight.md` fragment:

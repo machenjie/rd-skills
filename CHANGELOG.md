@@ -35,6 +35,6 @@ This project uses a simple release history format with an `Unreleased` section u
 - Added project metadata links for homepage, documentation, issues, and source repository.
 - Clarified README positioning so ChangeForge is presented as a professional change engineering skill mesh rather than a prompt/rules collection.
 
-### Pending Maintainer Decision
+### License
 
-- Select an OSI-approved license, add `LICENSE`, and update `pyproject.toml` license metadata before public open-source publication.
+- Selected MIT as the repository license, added root `LICENSE`, updated package metadata, and confirmed contribution/security readiness for public open-source publication.

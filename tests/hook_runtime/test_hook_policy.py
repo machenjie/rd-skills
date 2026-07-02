@@ -59,11 +59,12 @@ class HookPolicyTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             self.assertEqual(self.policy.gate_mode("sdd_material_choice"), "block")
             self.assertEqual(self.policy.gate_mode("pre_edit_structure"), "block")
-            self.assertEqual(self.policy.gate_mode("stop_closure"), "block")
+            self.assertEqual(self.policy.gate_mode("stop_closure"), "warn")
             self.assertEqual(self.policy.gate_mode("permission_policy"), "warn")
             self.assertTrue(self.policy.should_emit_context("pre_edit_structure"))
+            self.assertFalse(self.policy.should_block("stop_closure", confidence="high"))
 
-    def test_global_block_mode_preserves_stop_closure_block_policy(self) -> None:
+    def test_global_block_mode_explicitly_blocks_stop_closure(self) -> None:
         with patch.dict(os.environ, {"CHANGEFORGE_HOOK_MODE": "block"}, clear=True):
             self.assertEqual(self.policy.gate_mode("sdd_material_choice"), "block")
             self.assertEqual(self.policy.gate_mode("stop_closure"), "block")
@@ -156,6 +157,7 @@ class HookPolicyTests(unittest.TestCase):
     def test_invalid_mode_falls_back_to_warn(self) -> None:
         with patch.dict(os.environ, {"CHANGEFORGE_HOOK_MODE": "explode"}, clear=True):
             self.assertEqual(self.policy.gate_mode("pre_edit_structure"), "block")
+            self.assertEqual(self.policy.gate_mode("stop_closure"), "warn")
             self.assertEqual(self.policy.gate_mode("permission_policy"), "warn")
 
     def test_permission_gate_fail_closed_blocks_on_unhandled_exception(self) -> None:

@@ -60,16 +60,20 @@ Codex and Claude wire a per-prompt route reminder (`UserPromptSubmit`),
 professional injection, SDD material choice gate, pre-edit risk preview
 (`PreToolUse`), structure/risk gates after edits (`PostToolUse`), subagent
 preflight (`SubagentStart`), subagent closure reminder (`SubagentStop`), and
-Stop gates. In default strongest mode, SDD material choice and pre-edit
-structure are blocking by default, and Stop closure policy also defaults to
-`block`. The Stop closure contract still records missing evidence as
-warning/risk status for compatibility.
+Stop gates. Codex and Claude block SDD material choice and pre-edit structure
+by default where supported. Stop closure is advisory by default: it records
+missing route/stage/validation/review evidence as closure risk and telemetry
+facts, but it does not force continuation or block final handoff unless a
+maintainer explicitly overrides the policy. Hook runtime failures still fail
+open unless explicitly configured fail-closed.
 Claude commands explicitly set `CHANGEFORGE_AGENT=claude` and use 10-second
 `timeout` values because Claude Code measures timeout in seconds. Copilot local
 hooks wire only `SessionStart`, `SubagentStart`, `PostToolUse`, and `Stop`, so
-Copilot cannot enforce PreToolUse material-choice blocking; its Stop closure
-path relies on PostToolUse and Stop compensation where supported. The shared
-scripts recognize Codex, Claude, and VS Code Copilot tool names.
+Copilot receives SessionStart/SubagentStart/PostToolUse context and Stop
+closure compensation where supported. Stop closure remains advisory by default
+and records missing evidence as closure risk; Copilot cannot enforce
+Codex/Claude-style PreToolUse gates. The shared scripts recognize Codex,
+Claude, and VS Code Copilot tool names.
 
 Cline, Roo, and OpenHands support is staged adapter support, not executable
 hook support. Cline can install skills into `.cline/skills`; Roo mode-policy

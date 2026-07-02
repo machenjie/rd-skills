@@ -5,9 +5,9 @@ It does not replace change-forge-router.
 It adds execution-time reminders across the agent lifecycle: at session and
 subagent start, per user prompt, before and after tools run, and before the
 agent or a subagent stops.
-Supported blocking is reserved for high-confidence gates: SDD material choice,
-pre-edit structure, and Stop closure. Ordinary advisory context remains warning
-only.
+Supported default blocking is reserved for high-confidence SDD material choice
+and pre-edit structure gates. Stop closure is advisory by default and ordinary
+advisory context remains warning only.
 
 The hook runtime is a small project-level reminder layer for agent execution. It
 does not route work, does not read all skill references, and does not become a
@@ -104,10 +104,8 @@ and loads every `*.json` in its hook folder, so its config is the dedicated
 in a `changeforge/` subfolder. Copilot context output is top-level
 `additionalContext` for supported events. Copilot cannot run Codex/Claude
 `PreToolUse` blocking gates, so it relies on PostToolUse and Stop closure
-compensation where those facts are available. Copilot Stop closure where
-supported follows the strict/blocking Stop policy decision channel; the
-compatibility closure contract still records missing evidence as warning/risk
-status. Claude commands set
+compensation where those facts are available. Stop closure remains advisory by
+default and records missing evidence as closure risk. Claude commands set
 `CHANGEFORGE_AGENT=claude` explicitly, emit `hookSpecificOutput.additionalContext`
 for context-bearing events, and use 10-second `timeout` values because Claude
 Code measures timeout in seconds.
@@ -166,10 +164,14 @@ CHANGEFORGE_STOP_MODE=off|monitor|warn|block
 CHANGEFORGE_HOOK_FAILURE_MODE=fail_open|fail_closed
 ```
 
-Default gate modes are `sdd_material_choice=block`,
-`pre_edit_structure=block`, and `stop_closure=block`. Unspecified gates fallback
-to `warn`, and ordinary advisory gates default to `warn`. Failure mode defaults
-to `fail_open`. `changeforge_hook_policy.py` also exposes timeout, retry,
+Default gate modes are `sdd_material_choice=block` and
+`pre_edit_structure=block`. Stop closure is advisory by default: it records
+missing route/stage/validation/review evidence as closure risk and telemetry
+facts, but it does not force continuation or block final handoff unless a
+maintainer explicitly overrides the policy. Unspecified gates fallback to
+`warn`, and ordinary advisory gates default to `warn`. Hook runtime failures
+still fail open unless explicitly configured fail-closed.
+`changeforge_hook_policy.py` also exposes timeout, retry,
 retry-delay, max-concurrency, and queue-limit policy fields for future lifecycle
 adapters, without changing the synchronous script behavior.
 

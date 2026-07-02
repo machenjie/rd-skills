@@ -67,4 +67,4 @@ Documentation updates are required when a change affects CLI flags, install targ
 
 ## Contribution Licensing
 
-This repository currently records proprietary license metadata. Maintainers must choose and publish an OSI-approved repository license before accepting external contributions intended for public open-source distribution. After that decision, contribution licensing should follow the repository license and any additional maintainer policy documented here.
+This repository is licensed under the MIT License. Contributions are accepted under the repository license unless maintainers document a different policy for a specific contribution path.

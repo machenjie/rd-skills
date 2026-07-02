@@ -58,6 +58,13 @@ installs, executable hooks are installed by default unless `--without-hooks` or
 block SDD material choices and pre-edit structure gaps by default where the
 runtime supports those events; Stop closure gaps remain advisory:
 
+Codex and Claude block SDD material choice and pre-edit structure by default
+where supported. Stop closure is advisory by default: it records missing
+route/stage/validation/review evidence as closure risk and telemetry facts, but
+it does not force continuation or block final handoff unless a maintainer
+explicitly overrides the policy. Hook runtime failures still fail open unless
+explicitly configured fail-closed.
+
 ```text
 dist/codex/project/.codex
 dist/claude/project/.claude

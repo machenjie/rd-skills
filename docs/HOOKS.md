@@ -270,13 +270,17 @@ The first-stage runtime provides these reminder gates:
   `SubagentStart` so a spawned subagent inherits the route preflight and skill
   summary.
 
-Codex and Claude default to strongest supported behavior: SDD material choice,
-pre-edit structure, and Stop closure policy modes are `block` by default, while
-ordinary advisory context remains `warn`. Copilot keeps SessionStart,
-SubagentStart, PostToolUse, and Stop closure compensation on supported events.
-The closure contract still records missing evidence as a warning/risk status for
-compatibility. A hook failure still fails open unless a maintainer explicitly
-configures fail-closed.
+Codex and Claude block SDD material choice and pre-edit structure by default
+where supported. Stop closure is advisory by default: it records missing
+route/stage/validation/review evidence as closure risk and telemetry facts, but
+it does not force continuation or block final handoff unless a maintainer
+explicitly overrides the policy. Hook runtime failures still fail open unless
+explicitly configured fail-closed.
+
+Copilot receives SessionStart/SubagentStart/PostToolUse context and Stop closure
+compensation where supported. Stop closure remains advisory by default and
+records missing evidence as closure risk; Copilot cannot enforce
+Codex/Claude-style PreToolUse gates.
 
 ## Hook Policy
 
@@ -310,12 +314,14 @@ Default enforcement modes are:
 ```text
 sdd_material_choice: block
 pre_edit_structure: block
-stop_closure: block
 ```
 
 Precedence is gate-specific mode, then `CHANGEFORGE_HOOK_MODE`, then these
 default gate modes, then `warn`; unspecified gates fallback to `warn`, and
-ordinary advisory gates default to `warn`.
+ordinary advisory gates default to `warn`. Stop closure is not in the default
+block map; it follows the unspecified gate fallback to `warn` unless
+`CHANGEFORGE_STOP_MODE=block` or `CHANGEFORGE_HOOK_MODE=block` explicitly
+overrides it.
 Failure mode defaults to `fail_open`. The policy model also carries timeout,
 retry, retry delay, max concurrency, and queue-limit fields for richer lifecycle
 policy expression, while the shipped scripts remain synchronous and bounded.
@@ -601,12 +607,14 @@ exit code or explicit outcome, the result is `pass` or `fail`; otherwise it is
 change, or config change after validation marks that validation stale. Stop
 closure carries this freshness through the ledger and closure contract.
 
-Stop closure policy defaults to `block`, while hook runtime errors still default
-to `fail_open`. Missing, stale, failed, or unknown validation evidence is
-reported as closure risk in the compatibility contract. Broker telemetry records
-only bounded fields such as outcome, freshness, command kind, and covered
-path/risk patterns; it never records raw stdout, prompts, secrets, environment
-variables, or full command output.
+Stop closure is advisory by default, while hook runtime errors still default to
+`fail_open`. Missing, stale, failed, or unknown validation evidence is reported
+as closure risk in the compatibility contract and telemetry facts, but it does
+not force continuation or block final handoff unless a maintainer explicitly
+overrides the policy. Broker telemetry records only bounded fields such as
+outcome, freshness, command kind, and covered path/risk patterns; it never
+records raw stdout, prompts, secrets, environment variables, or full command
+output.
 
 Trajectory inspection consumes these bounded broker fields alongside hook
 telemetry and optional memory facts. It reconstructs an ordered evidence view
