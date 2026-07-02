@@ -503,30 +503,30 @@ def _context_control_overhead(
         {
             "input_token_overhead_pct": input_overhead,
             "output_token_overhead_pct": output_overhead,
-            "command_delta": command_delta if isinstance(command_delta, int | float) else None,
-            "pass_rate_delta": pass_rate_delta if isinstance(pass_rate_delta, int | float) else None,
+            "command_delta": command_delta if isinstance(command_delta, (int, float)) else None,
+            "pass_rate_delta": pass_rate_delta if isinstance(pass_rate_delta, (int, float)) else None,
             "live_pass_rate": {
-                "status": "collected" if isinstance(pass_rate_delta, int | float) else "not_collected",
-                "pass_rate_delta": pass_rate_delta if isinstance(pass_rate_delta, int | float) else None,
+                "status": "collected" if isinstance(pass_rate_delta, (int, float)) else "not_collected",
+                "pass_rate_delta": pass_rate_delta if isinstance(pass_rate_delta, (int, float)) else None,
             },
             "token_overhead": {
                 "status": "collected"
-                if any(isinstance(value, int | float) for value in (input_overhead, output_overhead))
+                if any(isinstance(value, (int, float)) for value in (input_overhead, output_overhead))
                 else "not_collected",
                 "input_pct": input_overhead,
                 "output_pct": output_overhead,
             },
             "turn_overhead_detail": {
-                "status": "collected" if isinstance(base.get("turn_overhead"), int | float) else "not_collected",
+                "status": "collected" if isinstance(base.get("turn_overhead"), (int, float)) else "not_collected",
                 "turn_overhead": base.get("turn_overhead"),
             },
             "runtime_telemetry": {
                 "status": "existing_report"
-                if any(isinstance(value, int | float) for value in (command_delta, pass_rate_delta, input_overhead, output_overhead))
+                if any(isinstance(value, (int, float)) for value in (command_delta, pass_rate_delta, input_overhead, output_overhead))
                 else "not_collected",
                 "source": "reports/codex-live-benchmark-summary.json",
                 "live_codex_executed": False,
-                "command_delta": command_delta if isinstance(command_delta, int | float) else None,
+                "command_delta": command_delta if isinstance(command_delta, (int, float)) else None,
             },
         }
     )
@@ -535,8 +535,8 @@ def _context_control_overhead(
     improvement_claim = improvement_claim or str(live_summary.get("effect_status") or "").casefold() == "improved"
     improvement_claim = improvement_claim or str(live_summary.get("effect_verdict") or "").casefold() == "positive"
     high_token_overhead = _high_token_overhead(input_overhead, output_overhead)
-    neutral_or_worse = not isinstance(pass_rate_delta, int | float) or pass_rate_delta <= 0
-    collected = any(isinstance(value, int | float) for value in (input_overhead, output_overhead, command_delta, pass_rate_delta))
+    neutral_or_worse = not isinstance(pass_rate_delta, (int, float)) or pass_rate_delta <= 0
+    collected = any(isinstance(value, (int, float)) for value in (input_overhead, output_overhead, command_delta, pass_rate_delta))
     if improvement_claim and neutral_or_worse and high_token_overhead:
         base["status"] = "fail"
         base["overhead_status"] = "fail"
@@ -565,16 +565,16 @@ def _context_control_overhead(
 
 def _high_token_overhead(input_overhead: Any, output_overhead: Any) -> bool:
     return (
-        isinstance(input_overhead, int | float)
+        isinstance(input_overhead, (int, float))
         and float(input_overhead) > HIGH_INPUT_TOKEN_OVERHEAD_PCT
     ) or (
-        isinstance(output_overhead, int | float)
+        isinstance(output_overhead, (int, float))
         and float(output_overhead) > HIGH_OUTPUT_TOKEN_OVERHEAD_PCT
     )
 
 
 def _ratio_to_percent(value: Any) -> float | None:
-    if not isinstance(value, int | float):
+    if not isinstance(value, (int, float)):
         return None
     return round(float(value) * 100, 2)
 

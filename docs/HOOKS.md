@@ -251,8 +251,10 @@ The first-stage runtime provides these reminder gates:
   re-review, and validation freshness evidence before handoff. It stores only
   digests, review IDs, status facts, and bounded findings, never raw artifacts
   or raw prompt text. Reviewed phase status requires both an artifact digest and
-  review ID. Copilot cannot enforce `PreToolUse`; it records degraded
-  enforcement and relies on parent-context review evidence, PostToolUse facts,
+  review ID. `process_phase_ledger_seen` and the phase-reviewed booleans are
+  telemetry shortcuts only; final closure proof requires the latest ledger
+  record. Copilot cannot enforce `PreToolUse`; it records degraded enforcement
+  and relies on parent-context review evidence, PostToolUse facts,
   and Stop closure.
 
 - Post-Edit Structure Gate: runs after edit tools and warns when changed paths
@@ -417,9 +419,9 @@ Hook state is merged through explicit reducers:
   `process_phase_ledger_seen`, `phase_review_seen`,
   `phase_repair_required`, `phase_rereview_required`, and
   `phase_rereview_passed`;
-- `pdd_reviewed`, `ddd_reviewed`, `sdd_reviewed`, and `tdd_reviewed` are
-  telemetry shortcuts only. Closure proof requires the latest
-  `process_phase_ledger` to show each required phase as `reviewed` with an
+- `process_phase_ledger_seen`, `pdd_reviewed`, `ddd_reviewed`, `sdd_reviewed`,
+  and `tdd_reviewed` are telemetry shortcuts only. Closure proof requires the
+  latest `process_phase_ledger` to show each required phase as `reviewed` with an
   artifact digest and review ID, or `not_applicable` with a concrete reason;
 - booleans such as `read_evidence_seen`, `review_evidence_seen`, and
   `implementation_preflight_required` use OR semantics, so `False` cannot erase

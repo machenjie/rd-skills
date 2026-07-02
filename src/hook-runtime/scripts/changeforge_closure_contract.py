@@ -491,9 +491,9 @@ def _phase_closure_findings(state: dict) -> tuple[list[str], list[str]]:
     missing: list[str] = []
     residual: list[str] = []
     if _phase_evidence_required(state):
-        if not (state.get("process_phase_ledger_seen") is True or _phase_ledgers(state)):
+        if not _phase_ledgers(state):
             missing.append("phase_ledger")
-            residual.append("engineering closure requires process_phase_ledger evidence")
+            residual.append("engineering closure requires latest process_phase_ledger evidence")
         if not _phase_reviews_complete(state):
             missing.append("phase_reviews")
             residual.append("engineering closure requires reviewed PDD, DDD, SDD, and TDD phase evidence")

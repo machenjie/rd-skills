@@ -133,6 +133,22 @@ def _self_test() -> list[str]:
     )
     if "phase_reviews" not in missing_reviews.missing_items:
         errors.append("expected engineering closure without phase reviews to fail")
+    ledger_seen_only = _contract(
+        {
+            "runtime": "codex",
+            "turn_stage": "coding",
+            "changed_paths": ["src/runtime_governance/process_phase.py"],
+            "process_phase_ledger_seen": True,
+            "pdd_reviewed": True,
+            "ddd_reviewed": True,
+            "sdd_reviewed": True,
+            "tdd_reviewed": True,
+        }
+    )
+    if "phase_ledger" not in ledger_seen_only.missing_items:
+        errors.append("expected process_phase_ledger_seen without process_phase_ledgers to fail phase_ledger")
+    if "phase_reviews" not in ledger_seen_only.missing_items:
+        errors.append("expected ledger-seen bool-only state to fail phase_reviews")
     unsupported = _contract(
         {
             "runtime": "generic",

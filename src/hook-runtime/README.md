@@ -52,9 +52,10 @@ The runtime provides these reminder hooks:
   phase, review, repair, re-review, and validation freshness before handoff. It
   stores digests, review IDs, status facts, and bounded findings only; reviewed
   phase status requires both an artifact digest and review ID. The
-  `pdd_reviewed`, `ddd_reviewed`, `sdd_reviewed`, and `tdd_reviewed` booleans
-  are telemetry shortcuts only; final closure proof comes from the latest
-  ledger-backed status plus digest/review ID, or `not_applicable` with a reason.
+  `process_phase_ledger_seen`, `pdd_reviewed`, `ddd_reviewed`, `sdd_reviewed`,
+  and `tdd_reviewed` booleans are telemetry shortcuts only; final closure proof
+  comes from the latest ledger record plus digest/review ID, or
+  `not_applicable` with a reason.
   Copilot cannot enforce `PreToolUse`, so it records degraded phase enforcement
   and relies on parent-context review evidence, PostToolUse facts, and Stop.
 - Post-Edit Structure Gate: after edit tools run, detect structural code changes
