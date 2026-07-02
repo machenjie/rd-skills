@@ -23,9 +23,18 @@ HOOK_SCOPES = ("project", "user")
 BOOTSTRAP_AGENTS = ("codex", "claude", "copilot", "cline")
 EXPECTED_SKILL_COUNTS = dict(EXPECTED_PROFILE_TOP_LEVEL_COUNTS)
 NEXT_PROMPTS = {
-    "codex": "Use change-forge-router to classify this request before implementation.",
-    "claude": "Use change-forge-router to classify this request before implementation.",
-    "copilot": "Use change-forge-router to classify this request before implementation.",
+    "codex": (
+        "Hooks default to route/preflight/material-choice checks; still state business "
+        "constraints and design preferences in the prompt."
+    ),
+    "claude": (
+        "Hooks default to route/preflight/material-choice checks; still state business "
+        "constraints and design preferences in the prompt."
+    ),
+    "copilot": (
+        "Hooks default to route/preflight/material-choice checks where supported; still "
+        "state business constraints and design preferences in the prompt."
+    ),
     "cline": "Use change-forge-router to classify this request before implementation.",
     "openai-api": "Upload the desired skill zip, then ask the model to use change-forge-router.",
 }
@@ -74,19 +83,27 @@ class ActivationPlan:
 
     level: str
     install_hooks: bool
+    skip_hooks: bool
     install_bootstrap: bool
     professional_injection: bool
     status: str
 
 
 def resolve_activation(args: argparse.Namespace) -> ActivationPlan:
-    """Resolve activation flags while keeping executable hooks opt-in."""
+    """Resolve activation flags with strongest supported hooks as the default."""
+    if args.without_hooks and (args.with_hooks or args.with_bootstrap):
+        raise ValueError("--without-hooks cannot be combined with --with-hooks or --with-bootstrap")
+    if args.without_hooks and args.activation_level not in {None, "none"}:
+        raise ValueError("--without-hooks cannot be combined with a hook/bootstrap activation level")
     if args.activation_level is not None and (args.with_hooks or args.with_bootstrap):
         raise ValueError(
             "--activation-level cannot be combined with --with-hooks or --with-bootstrap"
         )
 
-    if args.activation_level is not None:
+    if args.without_hooks:
+        level = "none"
+        legacy_bootstrap = False
+    elif args.activation_level is not None:
         level = args.activation_level
         legacy_bootstrap = False
     elif args.with_hooks:
@@ -94,6 +111,9 @@ def resolve_activation(args: argparse.Namespace) -> ActivationPlan:
         legacy_bootstrap = bool(args.with_bootstrap)
     elif args.with_bootstrap:
         level = "bootstrap"
+        legacy_bootstrap = False
+    elif args.agent in HOOK_AGENTS and args.scope in HOOK_SCOPES:
+        level = "professional-injection"
         legacy_bootstrap = False
     elif args.scope == "project" and args.agent in BOOTSTRAP_AGENTS:
         level = "bootstrap"
@@ -106,6 +126,7 @@ def resolve_activation(args: argparse.Namespace) -> ActivationPlan:
         raise ValueError("--activation-level is not supported for openai-api zip output")
 
     install_hooks = level in {"hooks", "professional-injection"}
+    skip_hooks = level in {"none", "bootstrap"} or bool(args.without_hooks)
     professional_injection = level == "professional-injection"
     install_bootstrap = level == "bootstrap" or legacy_bootstrap
 
@@ -123,6 +144,7 @@ def resolve_activation(args: argparse.Namespace) -> ActivationPlan:
     return ActivationPlan(
         level=level,
         install_hooks=install_hooks,
+        skip_hooks=skip_hooks,
         install_bootstrap=install_bootstrap,
         professional_injection=professional_injection,
         status=status,
@@ -136,9 +158,9 @@ def _activation_status(
     professional_injection: bool,
 ) -> str:
     if level == "none":
-        return "none (skills only; no bootstrap or hooks requested)"
+        return "none (skills only; hooks explicitly skipped)"
     if professional_injection:
-        return "professional-injection (executable hooks requested; runtime trust must be confirmed)"
+        return "professional-injection (default strongest mode for supported hooks)"
     if install_hooks and install_bootstrap:
         return "hooks + bootstrap (executable hooks and advisory bootstrap requested)"
     if install_hooks:
@@ -166,6 +188,8 @@ def build_plan(args: argparse.Namespace) -> CommandPlan:
             install_command.append("--with-hooks")
         if activation.professional_injection:
             install_command.append("--professional-injection")
+        if activation.skip_hooks:
+            install_command.append("--without-hooks")
         if activation.install_bootstrap:
             install_command.append("--with-bootstrap")
         if args.dry_run:
@@ -293,10 +317,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         choices=ACTIVATION_LEVELS,
         help=(
             "Activation behavior: none, bootstrap, hooks, or professional-injection. "
-            "Defaults to bootstrap for project scope and none elsewhere."
+            "Defaults to professional-injection for supported hook project/user scopes."
         ),
     )
     parser.add_argument("--with-hooks", action="store_true")
+    parser.add_argument(
+        "--without-hooks",
+        action="store_true",
+        help="Explicit opt-out; equivalent to --activation-level none.",
+    )
     parser.add_argument("--with-bootstrap", action="store_true")
     parser.add_argument("--no-doctor", action="store_true")
     parser.add_argument(

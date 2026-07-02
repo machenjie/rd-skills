@@ -69,6 +69,12 @@ class TelemetryWriterTests(unittest.TestCase):
                 changed_paths=["src/services/order_service.py"],
                 hook_findings={"reuse_findings": ["x"]},
                 suggested_skills=["backend-change-builder"],
+                choice_gate_seen=True,
+                choice_gate_blocked=True,
+                choice_ids=["api-boundary"],
+                material_choice_surfaces=["public_api_or_export"],
+                blocked_tool_category=["edit"],
+                bounded_paths=["src/services/order_service.py"],
             )
             records = read_records(Path(cache))
         self.assertEqual(len(records), 1)
@@ -98,10 +104,21 @@ class TelemetryWriterTests(unittest.TestCase):
             "skill_efficacy_benchmark_seen",
             "plan_execution_consistency_seen",
             "validation_freshness_seen",
+            "choice_gate_seen",
+            "choice_gate_blocked",
+            "choice_resolution_evidence_seen",
+            "choice_ids",
+            "material_choice_surfaces",
+            "blocked_tool_category",
+            "bounded_paths",
         ):
             self.assertIn(field, record)
         self.assertRegex(record["session_id"], r"^sess-1:[0-9a-f]{12}$")
         self.assertEqual(record["changed_paths"], ["src/services/order_service.py"])
+        self.assertEqual(record["choice_ids"], ["api-boundary"])
+        self.assertEqual(record["material_choice_surfaces"], ["public_api_or_export"])
+        self.assertTrue(record["choice_gate_seen"])
+        self.assertTrue(record["choice_gate_blocked"])
 
     def test_no_absolute_paths_recorded(self) -> None:
         common = load_common()

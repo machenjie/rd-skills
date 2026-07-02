@@ -111,6 +111,7 @@ class HookTemplateTests(unittest.TestCase):
     def test_codex_and_claude_pretooluse_order_includes_pre_edit_gate(self) -> None:
         expected = [
             "changeforge_professional_injector",
+            "changeforge_sdd_material_choice_gate",
             "changeforge_pre_edit_structure_gate",
             "changeforge_pre_tool_risk_preview",
             "changeforge_permission_policy_gate",
@@ -125,6 +126,24 @@ class HookTemplateTests(unittest.TestCase):
             names = self.command_script_names(data["hooks"]["PreToolUse"])
             positions = [names.index(name) for name in expected]
             self.assertEqual(positions, sorted(positions), template.name)
+
+    def test_codex_and_claude_user_prompt_and_stop_include_sdd_choice_gate(self) -> None:
+        for template in (
+            HOOK_ROOT / "templates" / "codex" / "hooks.json",
+            HOOK_ROOT / "templates" / "codex-user" / "hooks.json",
+            HOOK_ROOT / "templates" / "claude" / "settings.changeforge-hooks.fragment.json",
+            HOOK_ROOT / "templates" / "claude-user" / "settings.changeforge-hooks.fragment.json",
+        ):
+            data = json.loads(template.read_text())
+            user_prompt_names = self.command_script_names(data["hooks"]["UserPromptSubmit"])
+            stop_names = self.command_script_names(data["hooks"]["Stop"])
+            self.assertIn("changeforge_sdd_material_choice_gate", user_prompt_names)
+            self.assertIn("changeforge_sdd_material_choice_gate", stop_names)
+            self.assertLess(
+                stop_names.index("changeforge_sdd_material_choice_gate"),
+                stop_names.index("changeforge_stop_closure_gate"),
+                template.name,
+            )
 
     def test_codex_user_template_resolves_from_codex_home(self) -> None:
         # The user template mirrors the project events but resolves its command

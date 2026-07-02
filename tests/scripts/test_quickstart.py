@@ -4,6 +4,8 @@ import importlib.util
 import subprocess
 import sys
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -34,6 +36,7 @@ def _args(**overrides):
         "dry_run": False,
         "activation_level": None,
         "with_hooks": False,
+        "without_hooks": False,
         "with_bootstrap": False,
         "no_doctor": False,
         "yes": False,
@@ -69,6 +72,8 @@ class QuickstartTests(unittest.TestCase):
                     "user",
                     "--profile",
                     "recommended",
+                    "--with-hooks",
+                    "--professional-injection",
                 ],
                 [
                     "python3",
@@ -79,9 +84,12 @@ class QuickstartTests(unittest.TestCase):
                     "user",
                     "--profile",
                     "recommended",
+                    "--check-hooks",
                 ],
             ],
         )
+        self.assertEqual(plan.activation_level, "professional-injection")
+        self.assertIn("default strongest mode", plan.activation_status)
 
     def test_claude_project_requires_target(self) -> None:
         module = _load_module()
@@ -95,10 +103,12 @@ class QuickstartTests(unittest.TestCase):
         )
         self.assertEqual(plan.selected_profile, "full")
         self.assertEqual(plan.expected_skill_count, 28)
-        self.assertEqual(plan.activation_level, "bootstrap")
+        self.assertEqual(plan.activation_level, "professional-injection")
         self.assertIn("--target", plan.commands[1])
-        self.assertIn("--with-bootstrap", plan.commands[1])
-        self.assertIn("--check-bootstrap", plan.commands[2])
+        self.assertIn("--with-hooks", plan.commands[1])
+        self.assertIn("--professional-injection", plan.commands[1])
+        self.assertIn("--check-hooks", plan.commands[2])
+        self.assertNotIn("--with-bootstrap", plan.commands[1])
 
     def test_cline_project_command_plan(self) -> None:
         module = _load_module()
@@ -117,6 +127,8 @@ class QuickstartTests(unittest.TestCase):
         ])
         self.assertIn(str(target), plan.commands[1])
         self.assertIn("--with-bootstrap", plan.commands[1])
+        self.assertNotIn("--with-hooks", plan.commands[1])
+        self.assertIn("--without-hooks", plan.commands[1])
         self.assertEqual(plan.commands[2][2:6], ["--agent", "cline", "--scope", "project"])
         self.assertIn("--check-bootstrap", plan.commands[2])
 
@@ -124,6 +136,10 @@ class QuickstartTests(unittest.TestCase):
         module = _load_module()
         plan = module.build_plan(_args(agent="claude", scope="user"))
         self.assertEqual(plan.selected_profile, "recommended")
+        self.assertEqual(plan.activation_level, "professional-injection")
+        self.assertIn("--with-hooks", plan.commands[1])
+        self.assertIn("--professional-injection", plan.commands[1])
+        self.assertIn("--check-hooks", plan.commands[2])
 
     def test_dev_profile_must_be_explicit(self) -> None:
         module = _load_module()
@@ -141,6 +157,49 @@ class QuickstartTests(unittest.TestCase):
         self.assertIn("--with-hooks", plan.commands[1])
         self.assertIn("--check-hooks", plan.commands[2])
         self.assertNotIn("--with-bootstrap", plan.commands[1])
+
+    def test_activation_level_bootstrap_opts_out_of_hooks(self) -> None:
+        module = _load_module()
+        plan = module.build_plan(
+            _args(
+                agent="codex",
+                scope="project",
+                target=Path("/tmp/changeforge-project"),
+                activation_level="bootstrap",
+            )
+        )
+        self.assertEqual(plan.activation_level, "bootstrap")
+        self.assertIn("--with-bootstrap", plan.commands[1])
+        self.assertIn("--without-hooks", plan.commands[1])
+        self.assertNotIn("--with-hooks", plan.commands[1])
+        self.assertIn("--check-bootstrap", plan.commands[2])
+        self.assertNotIn("--check-hooks", plan.commands[2])
+
+    def test_activation_level_none_opts_out_of_hooks(self) -> None:
+        module = _load_module()
+        plan = module.build_plan(_args(agent="codex", scope="user", activation_level="none"))
+        self.assertEqual(plan.activation_level, "none")
+        self.assertIn("--without-hooks", plan.commands[1])
+        self.assertNotIn("--with-hooks", plan.commands[1])
+        self.assertNotIn("--check-hooks", plan.commands[2])
+
+    def test_without_hooks_opts_out_of_hooks(self) -> None:
+        module = _load_module()
+        plan = module.build_plan(_args(agent="codex", scope="user", without_hooks=True))
+        self.assertEqual(plan.activation_level, "none")
+        self.assertIn("--without-hooks", plan.commands[1])
+        self.assertNotIn("--with-hooks", plan.commands[1])
+        self.assertNotIn("--check-hooks", plan.commands[2])
+        self.assertIn("hooks explicitly skipped", plan.activation_status)
+
+    def test_summary_prints_default_strongest_mode(self) -> None:
+        module = _load_module()
+        plan = module.build_plan(_args(agent="codex", scope="user"))
+        output = StringIO()
+        with redirect_stdout(output):
+            module.print_summary(plan, "not run (dry-run)")
+        self.assertIn("default strongest mode", output.getvalue())
+        self.assertIn("route/preflight/material-choice checks", output.getvalue())
 
     def test_activation_level_professional_injection_installs_hooks(self) -> None:
         module = _load_module()

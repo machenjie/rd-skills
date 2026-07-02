@@ -55,9 +55,12 @@ class HookPolicyTests(unittest.TestCase):
     def setUp(self) -> None:
         self.policy = load_policy()
 
-    def test_default_warn(self) -> None:
+    def test_default_enforcement_modes(self) -> None:
         with patch.dict(os.environ, {}, clear=True):
-            self.assertEqual(self.policy.gate_mode("pre_edit_structure"), "warn")
+            self.assertEqual(self.policy.gate_mode("sdd_material_choice"), "block")
+            self.assertEqual(self.policy.gate_mode("pre_edit_structure"), "block")
+            self.assertEqual(self.policy.gate_mode("stop_closure"), "block")
+            self.assertEqual(self.policy.gate_mode("permission_policy"), "warn")
             self.assertTrue(self.policy.should_emit_context("pre_edit_structure"))
 
     def test_global_block_mode(self) -> None:
@@ -66,13 +69,13 @@ class HookPolicyTests(unittest.TestCase):
             self.assertTrue(self.policy.should_block("stop_closure", confidence="high"))
             self.assertFalse(self.policy.should_block("stop_closure", confidence="medium"))
 
-    def test_pre_edit_mode_overrides_default(self) -> None:
+    def test_gate_specific_mode_overrides_default(self) -> None:
         with patch.dict(
             os.environ,
-            {"CHANGEFORGE_HOOK_MODE": "warn", "CHANGEFORGE_PRE_EDIT_MODE": "block"},
+            {"CHANGEFORGE_HOOK_MODE": "warn", "CHANGEFORGE_PRE_EDIT_MODE": "monitor"},
             clear=True,
         ):
-            self.assertEqual(self.policy.gate_mode("pre_edit_structure"), "block")
+            self.assertEqual(self.policy.gate_mode("pre_edit_structure"), "monitor")
             self.assertEqual(self.policy.gate_mode("permission_policy"), "warn")
 
     def test_failure_mode_default_fail_open(self) -> None:
@@ -130,7 +133,8 @@ class HookPolicyTests(unittest.TestCase):
 
     def test_invalid_mode_falls_back_to_warn(self) -> None:
         with patch.dict(os.environ, {"CHANGEFORGE_HOOK_MODE": "explode"}, clear=True):
-            self.assertEqual(self.policy.gate_mode("pre_edit_structure"), "warn")
+            self.assertEqual(self.policy.gate_mode("pre_edit_structure"), "block")
+            self.assertEqual(self.policy.gate_mode("permission_policy"), "warn")
 
     def test_permission_gate_fail_closed_blocks_on_unhandled_exception(self) -> None:
         gate = load_permission_gate()

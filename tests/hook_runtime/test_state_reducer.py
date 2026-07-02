@@ -102,11 +102,24 @@ class StateReducerTests(unittest.TestCase):
                 "command_risks": ["safe:pytest"],
                 "rollback_points": ["checkpoint:abc"],
                 "post_edit_structure_findings": ["file_naming:count=0"],
+                "choice_ids": ["api-boundary"],
+                "choice_triggers": ["public_api_or_export"],
+                "choice_status": ["missing"],
+                "material_choice_surfaces": ["public_api_or_export"],
+                "blocked_tool_category": ["edit"],
+                "bounded_paths": ["src/api/orders.ts"],
+                "choice_gate_seen": True,
+                "choice_gate_blocked": True,
+                "choice_resolution_evidence_seen": False,
             },
         )
         self.assertEqual(result["deleted_paths"], ["old.py"])
         self.assertEqual(result["validation_results"], ["pass:current:pytest"])
         self.assertEqual(result["post_edit_structure_findings"], ["file_naming:count=0"])
+        self.assertEqual(result["choice_ids"], ["api-boundary"])
+        self.assertEqual(result["material_choice_surfaces"], ["public_api_or_export"])
+        self.assertTrue(result["choice_gate_seen"])
+        self.assertTrue(result["choice_gate_blocked"])
 
     def test_professional_injection_digest_fields_are_bounded_and_redacted(self) -> None:
         result = self.reducer.reduce_state_update(

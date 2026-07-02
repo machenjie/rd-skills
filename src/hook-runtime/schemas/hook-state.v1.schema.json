@@ -284,6 +284,30 @@
       "$ref": "#/$defs/stringList"
     },
     "pre_edit_structure_findings": { "$ref": "#/$defs/stringList" },
+    "choice_ids": {
+      "description": "Bounded SDD material choice identifiers only.",
+      "$ref": "#/$defs/stringList"
+    },
+    "choice_triggers": {
+      "description": "Bounded material choice trigger labels only.",
+      "$ref": "#/$defs/stringList"
+    },
+    "choice_status": {
+      "description": "Bounded status labels: required/resolved/not_required/assumed_with_rationale/missing.",
+      "$ref": "#/$defs/stringList"
+    },
+    "material_choice_surfaces": {
+      "description": "Bounded material SDD choice surfaces; never raw prompts or diffs.",
+      "$ref": "#/$defs/stringList"
+    },
+    "blocked_tool_category": {
+      "description": "Tool category that was blocked or reviewed, not full tool input.",
+      "$ref": "#/$defs/stringList"
+    },
+    "bounded_paths": {
+      "description": "Repo-relative paths associated with a material choice gate event.",
+      "$ref": "#/$defs/stringList"
+    },
     "active_skill_context": {
       "type": "object",
       "additionalProperties": true,
@@ -372,6 +396,9 @@
     },
     "senior_programming_judgment_required": { "type": "boolean" },
     "senior_programming_judgment_blocked": { "type": "boolean" },
+    "choice_gate_seen": { "type": "boolean" },
+    "choice_gate_blocked": { "type": "boolean" },
+    "choice_resolution_evidence_seen": { "type": "boolean" },
     "pre_edit_missing_read_evidence": { "type": "boolean" },
     "pre_edit_missing_reuse_decision": { "type": "boolean" },
     "pre_edit_missing_placement_decision": { "type": "boolean" },

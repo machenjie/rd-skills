@@ -48,6 +48,12 @@
           },
           {
             "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_sdd_material_choice_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking ChangeForge SDD material choice"
+          },
+          {
+            "type": "command",
             "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_review_gate.py\"",
             "timeout": 10,
             "statusMessage": "Checking ChangeForge review intent"
@@ -64,6 +70,12 @@
             "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_professional_injector.py\"",
             "timeout": 10,
             "statusMessage": "Injecting ChangeForge action context"
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_sdd_material_choice_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking ChangeForge SDD material choice"
           },
           {
             "type": "command",
@@ -180,6 +192,12 @@
     "Stop": [
       {
         "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_sdd_material_choice_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking ChangeForge SDD material choice"
+          },
           {
             "type": "command",
             "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_stop_closure_gate.py\"",

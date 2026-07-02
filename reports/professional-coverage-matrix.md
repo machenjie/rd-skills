@@ -1,6 +1,6 @@
 # Professional Coverage Matrix
 
-- Generated: 2026-07-01T13:56:57.005630+00:00
+- Generated: 2026-07-02T01:02:46.583593+00:00
 - Rows checked: 63
 
 | Item | Kind | Mode Matrix | Proactive Triggers | Evidence Contract | Output Contract | Failure Modes | Quality Gate | Reference Loading Hint | Senior Programming Judgment Coverage | Routing Coverage | Benchmark Coverage | Anti-bloat Status | Status |

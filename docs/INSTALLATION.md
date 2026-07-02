@@ -37,10 +37,10 @@ python3 scripts/build.py --profile dev
 
 For project installs, `--target` is the project root. For user and admin installs, omitting `--target` uses the default skills directory; supplying `--target` treats it as an explicit skills directory override.
 
-## Optional Hook Runtime
+## Hook Runtime Defaults
 
-Builds also emit optional hook artifacts for Codex, Claude, and Copilot, project
-and user scope:
+Builds also emit hook artifacts for Codex, Claude, and Copilot, project and
+user scope:
 
 - Codex project hook runtime: `dist/codex/project/.codex`
 - Codex user hook runtime: `dist/codex/user/.codex`
@@ -49,24 +49,25 @@ and user scope:
 - Copilot project hook config and scripts: `dist/copilot/project/.github`
 - Copilot user hook config and scripts: `dist/copilot/user/.copilot`
 
-The hook runtime is not a skill and does not replace `change-forge-router`. It
-adds a `SessionStart` route-preflight reminder (Codex, Claude, and Copilot).
-Codex and Claude default to warning-only reminders across the agent lifecycle.
-They wire a
-per-prompt route reminder (`UserPromptSubmit`), a pre-edit risk preview
-(`PreToolUse`), the structure and risk gates after edits (`PostToolUse`), a
-subagent preflight (`SubagentStart`), a subagent closure reminder
-(`SubagentStop`), and the closure gate (`Stop`). Claude commands explicitly set
-`CHANGEFORGE_AGENT=claude` and use 10-second `timeout` values because Claude
-Code measures timeout in seconds. Copilot local hooks wire only `SessionStart`,
-`SubagentStart`, `PostToolUse`, and `Stop`: top-level `additionalContext` for
-the context-capable events, including the static ChangeForge skill summary at
-start, and a strict Stop closure gate that emits top-level `decision`/`reason`
-only when required closure evidence is missing. The shared scripts recognize
-both Codex/Claude and VS Code Copilot tool names. Hooks are never installed by
-default; pass `--with-hooks` to `installers/install.py` for Codex, Claude, or
-Copilot project or user scope, and existing hook configuration is always
-preserved.
+The hook runtime is not a skill and does not replace `change-forge-router`.
+For supported Codex, Claude, and Copilot project/user installs, hooks now
+install by default in the strongest supported mode. Existing hook configuration
+is always preserved. Pass `--without-hooks` to opt out of executable hooks and
+professional injection runtime. `--with-hooks` remains accepted for backward
+compatibility, but it is no longer required.
+
+Codex and Claude wire a per-prompt route reminder (`UserPromptSubmit`),
+professional injection, SDD material choice gate, pre-edit risk preview
+(`PreToolUse`), structure/risk gates after edits (`PostToolUse`), subagent
+preflight (`SubagentStart`), subagent closure reminder (`SubagentStop`), and
+Stop gates. In default strongest mode, SDD material choice, pre-edit structure,
+and Stop closure are blocking by default; most other context remains advisory.
+Claude commands explicitly set `CHANGEFORGE_AGENT=claude` and use 10-second
+`timeout` values because Claude Code measures timeout in seconds. Copilot local
+hooks wire only `SessionStart`, `SubagentStart`, `PostToolUse`, and `Stop`, so
+Copilot cannot enforce PreToolUse material-choice blocking; it still receives
+strict Stop closure where supported. The shared scripts recognize Codex,
+Claude, and VS Code Copilot tool names.
 
 Cline, Roo, and OpenHands support is staged adapter support, not executable
 hook support. Cline can install skills into `.cline/skills`; Roo mode-policy
@@ -84,13 +85,15 @@ dedicated `changeforge-hooks.json` and the scripts live in a `changeforge/`
 subfolder.
 
 ```bash
-# Codex user hooks (apply to every Codex project):
-python3 installers/install.py --agent codex --scope user --profile full --with-hooks
+# Codex user hooks apply to every Codex project by default:
+python3 installers/install.py --agent codex --scope user --profile full
 # Claude user hooks:
-python3 installers/install.py --agent claude --scope user --profile full --with-hooks
+python3 installers/install.py --agent claude --scope user --profile full
 # Copilot project hooks (.github/hooks) and user hooks (~/.copilot/hooks):
-python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full --with-hooks
-python3 installers/install.py --agent copilot --scope user --profile full --with-hooks
+python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full
+python3 installers/install.py --agent copilot --scope user --profile full
+# Explicit opt-out:
+python3 installers/install.py --agent codex --scope user --profile full --without-hooks
 ```
 
 The route-preflight guidance also ships as an advisory fragment for users who
@@ -99,10 +102,21 @@ project with `installers/install.py --with-bootstrap`, and inspect it with
 `installers/doctor.py --check-bootstrap`.
 
 `scripts/quickstart.py` exposes this choice through
-`--activation-level none|bootstrap|hooks|professional-injection`. Project-scope
-quickstart defaults to `bootstrap`, which installs only the non-executable
-route-preflight fragment. `hooks` and `professional-injection` request
-executable hook installation and make doctor inspect hook status explicitly.
+`--activation-level none|bootstrap|hooks|professional-injection` and
+`--without-hooks`. Hook-capable project/user scopes default to
+`professional-injection`. `--activation-level none` and `--without-hooks` opt
+out. `--activation-level bootstrap` installs only the non-executable
+route-preflight fragment and skips hooks.
+
+To downgrade runtime enforcement without uninstalling hooks:
+
+```text
+CHANGEFORGE_SDD_CHOICE_MODE=warn
+CHANGEFORGE_SDD_CHOICE_MODE=off
+CHANGEFORGE_PRE_EDIT_MODE=warn
+CHANGEFORGE_STOP_MODE=warn
+CHANGEFORGE_HOOK_MODE=warn
+```
 
 See [HOOKS.md](HOOKS.md) for hook modes, the session bootstrap, validation,
 enablement, and troubleshooting.

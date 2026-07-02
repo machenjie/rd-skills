@@ -24,7 +24,7 @@ DIST_COPILOT_HOOK_SUPPORT = (
     / "changeforge"
     / "changeforge_copilot_skill_summary.md"
 )
-EXPECTED_HOOK_SCRIPT_COUNT = 34
+EXPECTED_HOOK_SCRIPT_COUNT = 35
 RUNTIME_ROUTE_RESOLVER_NAME = "changeforge_runtime_route_resolver.py"
 RUNTIME_ROUTE_INDEX_NAME = "changeforge_runtime_route_index.json"
 EXPECTED_COMMON_SUPPORT_FILES = [
@@ -131,6 +131,8 @@ class InstallHooksTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         if not (DIST_CODEX_HOOKS / "hooks.json").is_file() or not (
             DIST_CODEX_HOOKS / "hooks" / RUNTIME_ROUTE_INDEX_NAME
+        ).is_file() or not (
+            DIST_CODEX_HOOKS / "hooks" / "changeforge_sdd_material_choice_gate.py"
         ).is_file() or not _built_manifest_has_support_packages(
             DIST_CODEX_HOOKS / ".changeforge-hook-manifest.json"
         ) or not _built_repository_intelligence_subset_complete(
@@ -144,8 +146,21 @@ class InstallHooksTests(unittest.TestCase):
             result = _run_install(project, "--with-hooks", "--hooks-dry-run")
             codex_dir = project / ".codex"
             self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("hooks: decision install", result.stdout)
             self.assertIn("hooks: dry run", result.stdout)
             self.assertFalse((codex_dir / "hooks").exists())
+
+    def test_codex_project_install_defaults_to_hooks(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            result = _run_install(project)
+            codex_dir = project / ".codex"
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("hooks: decision install (default; professional-injection)", result.stdout)
+            self.assertTrue(
+                (codex_dir / "hooks" / "changeforge_sdd_material_choice_gate.py").is_file()
+            )
+            self.assertTrue((codex_dir / "hooks.json").is_file())
 
     def test_with_hooks_installs_scripts_and_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -164,6 +179,9 @@ class InstallHooksTests(unittest.TestCase):
             )
             self.assertTrue(
                 (codex_dir / "hooks" / "changeforge_pre_tool_risk_preview.py").is_file()
+            )
+            self.assertTrue(
+                (codex_dir / "hooks" / "changeforge_sdd_material_choice_gate.py").is_file()
             )
             self.assertTrue((codex_dir / "hooks" / "changeforge_compaction_contract.py").is_file())
             self.assertTrue((codex_dir / "hooks" / RUNTIME_ROUTE_RESOLVER_NAME).is_file())
@@ -205,9 +223,9 @@ class InstallHooksTests(unittest.TestCase):
             self.assertIn("echo user-hook", commands)
             self.assertIn("changeforge_post_edit_structure_gate", commands)
 
-    def test_with_hooks_user_scope_installs_to_home(self) -> None:
+    def test_codex_user_scope_installs_hooks_by_default(self) -> None:
         # User-scope hooks install under the agent home (~/.codex), sandboxed
-        # here by pointing HOME at a temp dir. --target is not required.
+        # here by pointing HOME at a temp dir. --target and --with-hooks are not required.
         with tempfile.TemporaryDirectory() as home:
             env = os.environ.copy()
             env["HOME"] = home
@@ -222,7 +240,6 @@ class InstallHooksTests(unittest.TestCase):
                     "user",
                     "--profile",
                     "recommended",
-                    "--with-hooks",
                 ],
                 text=True,
                 capture_output=True,
@@ -231,9 +248,13 @@ class InstallHooksTests(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("hooks: decision install (default; professional-injection)", result.stdout)
             codex_dir = Path(home) / ".codex"
             scripts = sorted((codex_dir / "hooks").glob("changeforge_*.py"))
             self.assertEqual(len(scripts), EXPECTED_HOOK_SCRIPT_COUNT)
+            self.assertTrue(
+                (codex_dir / "hooks" / "changeforge_sdd_material_choice_gate.py").is_file()
+            )
             self.assertTrue((codex_dir / "hooks" / RUNTIME_ROUTE_RESOLVER_NAME).is_file())
             self.assertTrue((codex_dir / "hooks.json").is_file())
             manifest = json.loads(
@@ -251,6 +272,79 @@ class InstallHooksTests(unittest.TestCase):
                 (codex_dir / "hooks" / "project_memory" / "hook_safe" / "adapter.py").is_file()
             )
             _assert_hook_support_import_smoke(self, codex_dir / "hooks")
+
+    def test_without_hooks_skips_hook_install(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            result = _run_install(project, "--without-hooks")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("hooks: decision skip (skipped because --without-hooks was requested)", result.stdout)
+            self.assertFalse((project / ".codex" / "hooks").exists())
+
+    def test_with_hooks_and_without_hooks_conflict(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            result = _run_install(Path(tmp), "--with-hooks", "--without-hooks")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("cannot be combined", result.stderr)
+
+    def test_professional_injection_and_without_hooks_conflict(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            result = _run_install(Path(tmp), "--professional-injection", "--without-hooks")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("cannot be combined", result.stderr)
+
+    def test_unsupported_agent_default_skips_hooks_without_error(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(INSTALL_SCRIPT),
+                    "--agent",
+                    "cline",
+                    "--scope",
+                    "project",
+                    "--target",
+                    str(project),
+                    "--profile",
+                    "recommended",
+                    "--dry-run",
+                ],
+                text=True,
+                capture_output=True,
+                cwd=str(ROOT),
+                env=os.environ.copy(),
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("hooks unsupported for cline project", result.stdout)
+
+    def test_unsupported_agent_explicit_hooks_errors(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(INSTALL_SCRIPT),
+                    "--agent",
+                    "cline",
+                    "--scope",
+                    "project",
+                    "--target",
+                    str(project),
+                    "--profile",
+                    "recommended",
+                    "--with-hooks",
+                    "--dry-run",
+                ],
+                text=True,
+                capture_output=True,
+                cwd=str(ROOT),
+                env=os.environ.copy(),
+                check=False,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("only supported for codex, claude, and copilot", result.stderr)
 
     def test_hook_support_package_manifest_rejects_path_like_names(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -280,6 +374,7 @@ class InstallCopilotHooksTests(unittest.TestCase):
             not (DIST_CODEX_HOOKS / "hooks.json").is_file()
             or not DIST_COPILOT_HOOK_SUPPORT.is_file()
             or not copilot_index.is_file()
+            or not (DIST_COPILOT_HOOK_SUPPORT.parent / "changeforge_sdd_material_choice_gate.py").is_file()
             or not _built_manifest_has_support_packages(
                 DIST_COPILOT_HOOK_SUPPORT.parent / ".changeforge-hook-manifest.json"
             )
@@ -456,6 +551,8 @@ class InstallClaudeHooksTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         claude_hooks = ROOT / "dist" / "claude" / "project" / ".claude" / "hooks"
         if not (claude_hooks / RUNTIME_ROUTE_INDEX_NAME).is_file() or not (
+            claude_hooks / "changeforge_sdd_material_choice_gate.py"
+        ).is_file() or not (
             ROOT / "dist" / "claude" / "project" / ".claude" / ".changeforge-hook-manifest.json"
         ).is_file() or not _built_repository_intelligence_subset_complete(claude_hooks):
             _build_recommended()
@@ -515,13 +612,15 @@ class InstallClaudeHooksTests(unittest.TestCase):
 class InstallBootstrapTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        if not (DIST_CODEX_HOOKS / "hooks.json").is_file():
+        if not (DIST_CODEX_HOOKS / "hooks.json").is_file() or not (
+            DIST_CODEX_HOOKS / "hooks" / "changeforge_sdd_material_choice_gate.py"
+        ).is_file():
             _build_recommended()
 
     def test_bootstrap_dry_run_writes_nothing(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp)
-            result = _run_install(project, "--with-bootstrap", "--bootstrap-dry-run")
+            result = _run_install(project, "--with-bootstrap", "--without-hooks", "--bootstrap-dry-run")
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("bootstrap: dry run", result.stdout)
             self.assertFalse((project / ".changeforge").exists())
@@ -538,7 +637,7 @@ class InstallBootstrapTests(unittest.TestCase):
     def test_with_bootstrap_does_not_install_hook_scripts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp)
-            result = _run_install(project, "--with-bootstrap")
+            result = _run_install(project, "--with-bootstrap", "--without-hooks")
             self.assertEqual(result.returncode, 0, result.stderr)
             # The advisory fragment must never pull in executable hook scripts.
             self.assertFalse((project / ".codex" / "hooks").exists())

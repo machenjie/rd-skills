@@ -281,7 +281,7 @@ class StopClosureGateTests(unittest.TestCase):
                 turn_stage="question",
                 professional_injections=["UserPromptSubmit:question"],
             )
-            result = run_stop(event, cwd, cache)
+            result = run_stop(event, cwd, cache, mode="warn")
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout, "")
 
@@ -296,7 +296,7 @@ class StopClosureGateTests(unittest.TestCase):
                 changed_paths=["src/services/order_service.py"],
                 structure_findings=["src/services/order_service.py: new file"],
             )
-            result = run_stop(event, cwd, cache)
+            result = run_stop(event, cwd, cache, mode="warn")
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
         self.assertIn("ChangeForge Closure Gate reminder", payload["systemMessage"])
@@ -489,7 +489,7 @@ class StopClosureGateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
             cwd, cache = Path(cwd_s), Path(cache_s)
             seed_state(cwd, cache, changed_paths=["a.py"], comment_findings=["a.py: uncommented"])
-            run_stop(event, cwd, cache)
+            run_stop(event, cwd, cache, mode="warn")
             state = load_state(cwd, cache)
         self.assertEqual(state["changed_paths"], [])
         self.assertEqual(state["comment_findings"], [])

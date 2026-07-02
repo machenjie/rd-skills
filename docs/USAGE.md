@@ -51,10 +51,12 @@ python3 scripts/build.py --profile dev
 
 The build writes deterministic runtime outputs under `dist/`, including agent-specific layouts for Codex, Claude Code, GitHub Copilot, and OpenAI API zip bundles.
 
-The build also refreshes optional Codex, Claude, and Copilot hook artifacts,
-plus the advisory route-preflight bootstrap fragment. Hooks are execution
-reminders; the Claude `SessionStart` bootstrap adds a route preflight at session
-start, and Codex can use either executable hooks or the advisory fragment:
+The build also refreshes Codex, Claude, and Copilot hook artifacts, plus the
+advisory route-preflight bootstrap fragment. For supported project/user
+installs, executable hooks are installed by default unless `--without-hooks` or
+`--activation-level none` is requested. Hooks inject professional context and
+block SDD material choices, pre-edit structure gaps, and Stop closure gaps by
+default where the runtime supports those events:
 
 ```text
 dist/codex/project/.codex
@@ -63,10 +65,10 @@ dist/copilot/project/.github
 dist/universal/bootstrap/changeforge-route-preflight.md
 ```
 
-For project-scope quickstart, the advisory bootstrap fragment is the default
-activation level. Executable hooks remain opt-in with `--activation-level hooks`
-or `--activation-level professional-injection`. See [HOOKS.md](HOOKS.md) before
-enabling hooks manually.
+Hook-capable quickstart scopes default to `--activation-level
+professional-injection`. Use `--without-hooks` to install skills only, or
+`--activation-level bootstrap` to install only the non-executable route
+preflight fragment.
 
 ## Install For GitHub Copilot
 
@@ -327,8 +329,9 @@ Then use `installers/upgrade.py` for an existing managed install, or `installers
 
 ## Telemetry Review Workflow
 
-When the optional hook runtime is enabled, hooks record a runtime fact log in the
-user cache. You can review it offline and promote findings into golden cases.
+When the default hook runtime is installed for a supported scope, hooks record a
+runtime fact log in the user cache. You can review it offline and promote
+findings into golden cases.
 Telemetry never edits skill rules; promotion is always a human decision.
 
 ```bash

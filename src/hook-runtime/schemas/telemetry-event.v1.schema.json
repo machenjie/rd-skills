@@ -186,6 +186,7 @@
       "enum": [
         "session_bootstrap",
         "user_prompt_route_reminder",
+        "sdd_material_choice_gate",
         "pre_tool_risk_preview",
         "pre_edit_structure_gate",
         "professional_injector",
@@ -431,6 +432,33 @@
       "type": "boolean"
     },
     "implementation_preflight_blocked": { "type": "boolean" },
+    "choice_gate_seen": { "type": "boolean" },
+    "choice_gate_blocked": { "type": "boolean" },
+    "choice_resolution_evidence_seen": { "type": "boolean" },
+    "choice_ids": {
+      "description": "Bounded SDD material choice identifiers only.",
+      "$ref": "#/$defs/stringList"
+    },
+    "choice_triggers": {
+      "description": "Bounded material choice trigger labels only.",
+      "$ref": "#/$defs/stringList"
+    },
+    "choice_status": {
+      "description": "Bounded choice status labels only.",
+      "$ref": "#/$defs/stringList"
+    },
+    "material_choice_surfaces": {
+      "description": "Bounded material SDD choice surface labels only.",
+      "$ref": "#/$defs/stringList"
+    },
+    "blocked_tool_category": {
+      "description": "Tool category only; never full tool input.",
+      "$ref": "#/$defs/stringList"
+    },
+    "bounded_paths": {
+      "description": "Repo-relative paths associated with the choice gate event.",
+      "$ref": "#/$defs/stringList"
+    },
     "edit_without_preflight_seen": { "type": "boolean" },
     "post_edit_confirmed_preflight_gap": { "type": "boolean" }
   }

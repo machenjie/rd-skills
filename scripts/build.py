@@ -821,6 +821,7 @@ def _write_hook_manifest(
         "changeforge_executor_adapter_core",
         "changeforge_session_bootstrap",
         "changeforge_user_prompt_route_reminder",
+        "changeforge_sdd_material_choice_gate",
         "changeforge_pre_edit_structure_gate",
         "changeforge_pre_tool_risk_preview",
         "changeforge_professional_injector",

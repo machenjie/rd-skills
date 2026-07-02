@@ -1,10 +1,12 @@
 # ChangeForge Hook Runtime
 
-ChangeForge Hook Runtime is an optional project-level reminder layer. It is not
-a skill, does not replace `change-forge-router`, and does not read all compiled
-skill references. Its job is to notice signals at session start, after tools
-run, or before an agent stops, then remind the agent to run a route preflight or
-close the matching ChangeForge gate.
+ChangeForge Hook Runtime is installed by default for supported Codex, Claude,
+and Copilot project/user scopes unless `--without-hooks` is requested. It is
+not a skill, does not replace `change-forge-router`, and does not read all
+compiled skill references. Its job is to notice bounded runtime signals,
+inject professional context, block user-owned SDD material choices before
+mutation/handoff, and close the matching ChangeForge gate where the runtime
+supports blocking.
 
 ## Runtime Protocol Boundaries
 
@@ -136,14 +138,21 @@ The first-stage runtime provides these reminder gates:
   release-sensitive, migration, and dependency mutation commands. Copilot
   templates do not wire this event because Copilot `preToolUse` supports
   permission decisions and argument modification, not advisory `additionalContext`.
+- SDD Material Choice Gate (`PreToolUse` and `Stop`, Codex and Claude): before
+  `apply_patch`, `Edit`, `Write`, `MultiEdit`, or material Bash mutation, it
+  blocks when a material choice is detected and no qualified
+  `changeforge_sdd_choice` or `design_decision_points` evidence exists. It also
+  rechecks at Stop so an implementation that silently made the choice cannot be
+  handed off as complete. Copilot cannot wire unsupported `PreToolUse`, so its
+  material-choice enforcement is limited to available events and Stop-stage
+  compensation.
 - Pre-Edit Implementation Structure Gate (`PreToolUse`, Codex and Claude):
   before `apply_patch`, `Edit`, `Write`, or `MultiEdit`, it checks for read
   evidence and a `changeforge_implementation_preflight` summary covering
   placement, reuse, object/module boundary, test plan, risk, and rollback. This
   moves the critical structure decision before the edit instead of relying only
-  on post-edit review. Default mode is warn; `CHANGEFORGE_PRE_EDIT_MODE=block`
-  can block high-confidence structural edits with no read evidence and no
-  preflight manifest. Copilot templates do not wire unsupported `PreToolUse`
+  on post-edit review. Default mode is block for supported hooks; set
+  `CHANGEFORGE_PRE_EDIT_MODE=warn` to downgrade. Copilot templates do not wire unsupported `PreToolUse`
   advisory and instead rely on PostToolUse and Stop compensation.
 
 - Post-Edit Structure Gate: runs after edit tools and warns when changed paths
@@ -174,10 +183,11 @@ The first-stage runtime provides these reminder gates:
   `SubagentStart` so a spawned subagent inherits the route preflight and skill
   summary.
 
-Codex and Claude default to warning-only behavior. Copilot defaults to a strict
-Stop closure gate but keeps SessionStart, SubagentStart, and PostToolUse context
-hooks advisory. A hook failure must fail open and must not interrupt normal
-agent execution.
+Codex and Claude default to strongest supported behavior: SDD material choice,
+pre-edit structure, and Stop closure block by default, while most other context
+remains advisory. Copilot defaults to strict Stop closure where supported and
+keeps SessionStart, SubagentStart, and PostToolUse context advisory. A hook
+failure still fails open unless a maintainer explicitly configures fail-closed.
 
 ## Hook Policy
 
@@ -200,16 +210,69 @@ It also accepts per-gate overrides:
 
 ```text
 CHANGEFORGE_PRE_EDIT_MODE=off|monitor|warn|block
+CHANGEFORGE_SDD_CHOICE_MODE=off|monitor|warn|block
 CHANGEFORGE_PERMISSION_MODE=off|monitor|warn|block
 CHANGEFORGE_STOP_MODE=off|monitor|warn|block
 CHANGEFORGE_HOOK_FAILURE_MODE=fail_open|fail_closed
 ```
 
-Precedence is gate-specific mode, then `CHANGEFORGE_HOOK_MODE`, then `warn`.
+Default enforcement modes are:
+
+```text
+sdd_material_choice: block
+pre_edit_structure: block
+stop_closure: block
+```
+
+Precedence is gate-specific mode, then `CHANGEFORGE_HOOK_MODE`, then these
+default gate modes, then `warn`.
 Failure mode defaults to `fail_open`. The policy model also carries timeout,
 retry, retry delay, max concurrency, and queue-limit fields for richer lifecycle
 policy expression, while the shipped scripts remain synchronous and bounded.
 Only configured enforcement gates block; ordinary hook errors fail open.
+
+## SDD Material Choice Gate
+
+The material choice gate blocks by default when the wrong design answer could
+change contract, architecture, data/security behavior, acceptance behavior, or
+user-visible behavior. Blocking means the agent must stop and ask the user to
+choose before editing or handing off.
+
+Choice evidence can be recorded as either `changeforge_sdd_choice` or existing
+SDD `design_decision_points`. A blocking `required` choice must wait for user
+resolution. `resolved` must include concrete `resolution_evidence`.
+`not_required` must cite a prompt, fixture, explicit user instruction,
+repository convention, existing pattern, owner evidence, or reuse evidence.
+`assumed_with_rationale` is accepted only for local, reversible, conventional,
+acceptance-neutral choices, and never for security, data, API, migration,
+rollback, auth, payment, privacy, irreversible, or user-visible changes.
+
+Requires user choice by default:
+
+- New public API, public export, interface, or protocol.
+- New module, directory, service, shared package, common helper, utility, plugin, or registry.
+- Reuse existing owner versus new boundary.
+- Function versus class/object hierarchy, inheritance versus composition, adapter, wrapper, factory, or strategy.
+- Cache, queue, worker, async job, external dependency, provider, SDK, schema, data model, migration, or rollback.
+- Security, auth, permission, tenant, privacy, payment, irreversible operation, or user-visible acceptance behavior.
+- Broad "optimize", "enhance", "refactor", "professionalize", or architecture-adjustment requests where cost/benefit depends on user preference.
+
+Does not require user choice by default:
+
+- Typo, formatting, or docs-only edits.
+- Read-only, test-only, and review-only turns with no requested mutation.
+- Local reversible same-file fixes that follow repository convention and do not change acceptance.
+- Prompts, fixtures, explicit instructions, or existing owner conventions that already decide the only valid design.
+
+Downgrade only when intentionally collecting false positives:
+
+```text
+CHANGEFORGE_SDD_CHOICE_MODE=warn
+CHANGEFORGE_SDD_CHOICE_MODE=off
+CHANGEFORGE_PRE_EDIT_MODE=warn
+CHANGEFORGE_STOP_MODE=warn
+CHANGEFORGE_HOOK_MODE=warn
+```
 
 ## State Reducer
 
@@ -226,6 +289,10 @@ Hook state is merged through explicit reducers:
 - closure evidence lists include `validation_results`, `review_findings`,
   `repair_events`, `rereview_events`, `permission_decisions`, `command_risks`,
   `rollback_points`, and `post_edit_structure_findings`;
+- SDD choice lists include `choice_ids`, `choice_triggers`, `choice_status`,
+  `material_choice_surfaces`, `blocked_tool_category`, and `bounded_paths`;
+- SDD choice booleans include `choice_gate_seen`, `choice_gate_blocked`, and
+  `choice_resolution_evidence_seen`;
 - booleans such as `read_evidence_seen`, `review_evidence_seen`, and
   `implementation_preflight_required` use OR semantics, so `False` cannot erase
   a prior `True`;
@@ -350,7 +417,8 @@ Hook integration is intentionally narrow:
 - Stop closure telemetry can append a memory event after a turn closes.
 - Pre-edit implementation structure checks can query cache-side memory for
   fragile-file and repeat-failure warnings.
-- The default behavior is warning-only and fail-open.
+- Memory hints are warning-only and fail-open; they do not downgrade the default
+  blocking modes for SDD material choice, pre-edit structure, or Stop closure.
 - Memory never changes skills, routing rules, capabilities, registry files, or
   `dist/`.
 
@@ -557,9 +625,10 @@ warning-only Stop/SubagentStop output; Stop block output uses top-level
 These remain execution-time guardrails. They detect edited paths, patch signals,
 risk surfaces, and missing closure evidence, and they remind the agent to route;
 they never select a complete route and never replace `change-forge-router` or
-`implementation-structure-design`. Codex and Claude do not block by default;
-Copilot's default block behavior is limited to Stop-stage missing closure
-evidence.
+`implementation-structure-design`. Codex and Claude block SDD material choice,
+pre-edit structure, and Stop closure gaps by default. Copilot's blocking is
+limited by its supported events; it cannot enforce Codex/Claude-style
+PreToolUse gates.
 
 ## Hook Capability Boundary
 
@@ -574,6 +643,8 @@ Hooks can:
   `PreToolUse`; Copilot cannot consume advisory preview context);
 - require or remind on implementation preflight evidence before structural edits
   (Codex and Claude `PreToolUse`; Copilot compensates after edit and at Stop);
+- block material SDD choices before mutation and recheck unresolved choices at
+  Stop when the runtime supports those events;
 - remind on new file naming pattern mismatches;
 - remind on structural path changes;
 - remind on helper/common/utils/shared pollution risk;
@@ -598,18 +669,14 @@ Hooks cannot:
 
 ## Recommended Hook Rollout
 
-1. Start Codex and Claude with `CHANGEFORGE_HOOK_MODE=warn`.
-2. Use Copilot's default strict Stop gate only for closure evidence; keep
-   `SessionStart`, `SubagentStart`, and `PostToolUse` advisory.
-3. Collect false positives with fixture-backed tests.
-4. Only enable broad `block` behavior for high-confidence violations:
-   - configured pre-edit enforcement with no read evidence and no preflight;
-   - new common/utils/helper file without reuse evidence;
-   - dependency file changes without dependency review;
-   - Stop without validation evidence;
-   - Stop without residual risk.
-5. Keep fail-open behavior for hook runtime errors.
-6. Do not enable broad block mode until warning behavior is stable.
+1. Keep the supported default: hooks plus professional injection, with SDD
+   material choice, pre-edit structure, and Stop closure in block mode.
+2. Use `CHANGEFORGE_SDD_CHOICE_MODE=warn` or `off` only when collecting
+   false positives or running a controlled migration.
+3. Keep most non-material advisory gates in warn mode until fixture-backed
+   evidence proves they are high confidence.
+4. Keep fail-open behavior for hook runtime errors unless a maintainer
+   explicitly enables fail-closed for a narrow gate.
 
 ## Supported Runtimes
 
@@ -637,10 +704,9 @@ Set `CHANGEFORGE_HOOK_MODE` to control runtime behavior:
 
 - `off`: do nothing.
 - `monitor`: update per-turn state without emitting reminders.
-- `warn`: emit reminders and continue. This is the Codex and Claude default.
-- `block`: emit a block decision. This mode is reserved for controlled rollout
-  after warning behavior is stable, except that Copilot Stop uses block by
-  default for missing closure evidence.
+- `warn`: emit reminders and continue.
+- `block`: emit a block decision. This is the default for SDD material choice,
+  pre-edit structure, and Stop closure on supported hook runtimes.
 
 ## Build Hooks
 
@@ -730,15 +796,19 @@ hooks first.
 ## Installer-Assisted Hook Enablement
 
 The installer can place hooks for Codex, Claude, and Copilot in **project** or
-**user** scope. Hooks are never installed by default; they require `--with-hooks`
-and are written only when neither `--dry-run` nor `--hooks-dry-run` is set.
-Existing hook configuration is always preserved.
+**user** scope. Hooks install by default for supported project/user scopes and
+are written only when neither `--dry-run` nor `--hooks-dry-run` is set.
+Existing hook configuration is always preserved. Use `--without-hooks` to
+install skills without executable hooks or professional injection runtime.
+`--with-hooks` remains accepted for backward compatibility but is no longer
+required.
 
 The quickstart wrapper has an activation selector:
-`--activation-level none|bootstrap|hooks|professional-injection`. For project
-scope it defaults to `bootstrap`, which installs only the non-executable
-`.changeforge/changeforge-route-preflight.md` fragment. Executable hooks remain
-opt-in through `hooks` or `professional-injection`.
+`--activation-level none|bootstrap|hooks|professional-injection`, plus
+`--without-hooks`. Hook-capable project/user scopes default to
+`professional-injection`. `none` and `--without-hooks` opt out; `bootstrap`
+installs only the non-executable `.changeforge/changeforge-route-preflight.md`
+fragment.
 
 Project hooks install under the project root's `.codex`/`.claude`/`.github`; user
 hooks install under the agent home (`~/.codex`, `~/.claude`, `~/.copilot`) and
@@ -749,14 +819,16 @@ scratch directory.
 ```bash
 python3 scripts/build.py --profile full
 # Project scope: show the merge plan, then write and merge config:
-python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full --with-hooks --hooks-dry-run
-python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full --with-hooks
+python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full --hooks-dry-run
+python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full
 # User scope: hooks install under ~/.codex and apply to every Codex project:
-python3 installers/install.py --agent codex --scope user --profile full --with-hooks
-python3 installers/install.py --agent claude --scope user --profile full --with-hooks
+python3 installers/install.py --agent codex --scope user --profile full
+python3 installers/install.py --agent claude --scope user --profile full
 # Copilot (VS Code): project hooks in .github/hooks, user hooks in ~/.copilot/hooks:
-python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full --with-hooks
-python3 installers/install.py --agent copilot --scope user --profile full --with-hooks
+python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full
+python3 installers/install.py --agent copilot --scope user --profile full
+# Skills only / no hooks:
+python3 installers/install.py --agent codex --scope user --profile full --without-hooks
 # Inspect installed project hooks:
 python3 installers/doctor.py --check-hooks --target /path/to/project
 # Install only the advisory route-preflight fragment (any project install, incl. Codex):

@@ -55,10 +55,12 @@ RICH_EVENT_SCRIPTS = {
     "UserPromptSubmit": (
         "changeforge_user_prompt_route_reminder",
         "changeforge_professional_injector",
+        "changeforge_sdd_material_choice_gate",
         "changeforge_review_gate",
     ),
     "PreToolUse": (
         "changeforge_professional_injector",
+        "changeforge_sdd_material_choice_gate",
         "changeforge_pre_edit_structure_gate",
         "changeforge_pre_tool_risk_preview",
         "changeforge_permission_policy_gate",
@@ -78,7 +80,7 @@ RICH_EVENT_SCRIPTS = {
         "changeforge_subagent_skill_contract",
     ),
     "SubagentStop": ("changeforge_subagent_stop_reminder",),
-    "Stop": ("changeforge_stop_closure_gate",),
+    "Stop": ("changeforge_sdd_material_choice_gate", "changeforge_stop_closure_gate"),
 }
 # Copilot event -> the hook script(s) each event must invoke.
 COPILOT_EVENT_SCRIPTS = {
@@ -135,6 +137,7 @@ REQUIRED_HOOK_SCRIPTS = (
     "changeforge_skill_index.py",
     "changeforge_session_bootstrap.py",
     "changeforge_user_prompt_route_reminder.py",
+    "changeforge_sdd_material_choice_gate.py",
     "changeforge_pre_edit_structure_gate.py",
     "changeforge_pre_tool_risk_preview.py",
     "changeforge_professional_injector.py",
@@ -173,6 +176,7 @@ STATE_FINDING_FIELDS = (
 )
 ADAPTER_SNAPSHOT_SCRIPTS = (
     "changeforge_pre_edit_structure_gate.py",
+    "changeforge_sdd_material_choice_gate.py",
     "changeforge_post_edit_structure_gate.py",
     "changeforge_permission_policy_gate.py",
     "changeforge_tool_output_boundary_gate.py",
@@ -1303,6 +1307,15 @@ def _validate_hook_behavior(errors: list[str]) -> None:
         "context_control_records",
         "context_budget_findings",
         "skipped_references",
+        "choice_ids",
+        "choice_triggers",
+        "choice_status",
+        "material_choice_surfaces",
+        "blocked_tool_category",
+        "bounded_paths",
+        "choice_gate_seen",
+        "choice_gate_blocked",
+        "choice_resolution_evidence_seen",
     ):
         if f'"{field}"' not in state_schema:
             errors.append(f"hook state schema must include {field}")
@@ -1327,6 +1340,15 @@ def _validate_hook_behavior(errors: list[str]) -> None:
         "context_control_records",
         "context_budget_findings",
         "skipped_references",
+        "choice_ids",
+        "choice_triggers",
+        "choice_status",
+        "material_choice_surfaces",
+        "blocked_tool_category",
+        "bounded_paths",
+        "choice_gate_seen",
+        "choice_gate_blocked",
+        "choice_resolution_evidence_seen",
     ):
         if f'"{field}"' not in telemetry_schema:
             errors.append(f"telemetry schema must include {field}")
@@ -1334,6 +1356,8 @@ def _validate_hook_behavior(errors: list[str]) -> None:
             errors.append(f"telemetry writer must include {field}")
     if '"pre_edit_structure_gate"' not in telemetry_schema:
         errors.append("telemetry schema must include pre_edit_structure_gate hook name")
+    if '"sdd_material_choice_gate"' not in telemetry_schema:
+        errors.append("telemetry schema must include sdd_material_choice_gate hook name")
 
 
 def _validate_runtime_route_resolver(errors: list[str]) -> None:

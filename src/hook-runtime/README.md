@@ -206,12 +206,16 @@ changeforge_implementation_preflight:
 Additional install flags:
 
 ```bash
-python3 installers/install.py --agent codex --scope project --target <repo> --with-hooks --professional-injection
+python3 installers/install.py --agent codex --scope project --target <repo>
 python3 installers/install.py --agent codex --scope project --target <repo> --with-universal-bootstrap
-python3 installers/install.py --agent copilot --scope project --target <repo> --with-hooks --with-copilot-instructions
+python3 installers/install.py --agent codex --scope project --target <repo> --without-hooks
+python3 installers/install.py --agent copilot --scope project --target <repo> --with-copilot-instructions
 ```
 
-`--professional-injection` implies hook installation. `--with-universal-bootstrap`
-installs both the route preflight and professional bootstrap fragments under
-`.changeforge/`. `--with-copilot-instructions` creates
+Supported project/user installs include hooks and professional injection by
+default. `--without-hooks` installs skills without executable hooks.
+`--with-hooks` and `--professional-injection` remain backward-compatible
+explicit enables. `--with-universal-bootstrap` installs both the route preflight
+and professional bootstrap fragments under `.changeforge/`.
+`--with-copilot-instructions` creates
 `.github/copilot-instructions.md` only when that file does not already exist.

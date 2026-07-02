@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 from changeforge_install import (
@@ -33,6 +34,62 @@ from changeforge_install import (
 )
 
 
+@dataclass(frozen=True)
+class HookInstallDecision:
+    """Resolved hook install intent after applying defaults and opt-outs."""
+
+    requested: bool
+    explicit: bool
+    professional_injection: bool
+    skip_reason: str = ""
+    unsupported: bool = False
+
+
+def should_install_hooks_by_default(agent: str, scope: str) -> bool:
+    """Default to hooks wherever the target runtime supports them."""
+    return hooks_supported(agent, scope)
+
+
+def resolve_hook_install_request(args: argparse.Namespace, scope: str) -> HookInstallDecision:
+    """Resolve default, explicit, unsupported, and opt-out hook behavior."""
+    if args.with_hooks and args.without_hooks:
+        raise InstallError("--with-hooks cannot be combined with --without-hooks")
+    if args.professional_injection and args.without_hooks:
+        raise InstallError("--professional-injection cannot be combined with --without-hooks")
+
+    explicit = bool(args.with_hooks or args.professional_injection)
+    supported = hooks_supported(args.agent, scope)
+    if args.without_hooks:
+        return HookInstallDecision(
+            requested=False,
+            explicit=True,
+            professional_injection=False,
+            skip_reason="skipped because --without-hooks was requested",
+            unsupported=False,
+        )
+    if supported:
+        return HookInstallDecision(
+            requested=bool(explicit or should_install_hooks_by_default(args.agent, scope)),
+            explicit=explicit,
+            professional_injection=True,
+        )
+    if explicit:
+        raise InstallError(
+            "--with-hooks and --professional-injection are only supported for "
+            "codex, claude, and copilot project or user installs"
+        )
+    return HookInstallDecision(
+        requested=False,
+        explicit=False,
+        professional_injection=False,
+        skip_reason=(
+            f"hooks unsupported for {args.agent} {scope}; skipped because hooks were not "
+            "explicitly requested"
+        ),
+        unsupported=True,
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Install built ChangeForge skills from dist/.")
     parser.add_argument("--agent", choices=AGENTS, required=True)
@@ -49,12 +106,23 @@ def main() -> int:
     parser.add_argument(
         "--with-hooks",
         action="store_true",
-        help="Also install optional hooks (codex/claude/copilot project or user).",
+        help=(
+            "Backward-compatible explicit hook enable. Hooks are now installed by "
+            "default for supported codex/claude/copilot project or user scopes."
+        ),
+    )
+    parser.add_argument(
+        "--without-hooks",
+        action="store_true",
+        help="Explicitly skip hooks and professional injection runtime.",
     )
     parser.add_argument(
         "--professional-injection",
         action="store_true",
-        help="Install the action-aware professional injection hook runtime.",
+        help=(
+            "Explicitly request strongest hook mode with action-aware professional "
+            "injection. This is already the supported default."
+        ),
     )
     parser.add_argument(
         "--hooks-dry-run",
@@ -82,8 +150,6 @@ def main() -> int:
         help="Create .github/copilot-instructions.md when absent.",
     )
     args = parser.parse_args()
-    if args.professional_injection:
-        args.with_hooks = True
     if args.with_universal_bootstrap:
         args.with_bootstrap = True
 
@@ -93,14 +159,17 @@ def main() -> int:
             raise InstallError("--scope is required for runtime skill installs")
 
         if args.agent == "openai-api":
+            hook_decision = resolve_hook_install_request(args, scope)
             source_dir = resolve_source_profile_dir(args.agent, scope, args.profile)
             zip_count = len(sorted(source_dir.glob("*.zip"))) if source_dir.exists() else 0
             print(
                 "install: openai-api is zip-only; "
                 f"{zip_count} {args.profile} zip(s) are available in {source_dir}."
             )
+            _report_hook_decision(hook_decision)
             return 0
 
+        hook_decision = resolve_hook_install_request(args, scope)
         source_dir = resolve_source_profile_dir(args.agent, scope, args.profile)
         target_dir = resolve_target_dir(args.agent, scope, args.target)
         source_skill_dirs = list_skill_dirs(source_dir)
@@ -137,7 +206,8 @@ def main() -> int:
             print(f"install: would install {len(source_skill_dirs)} skill directorie(s)")
             if backup_path is not None:
                 print(f"install: would create backup at {backup_path}")
-            if args.with_hooks:
+            _report_hook_decision(hook_decision)
+            if hook_decision.requested:
                 _install_hooks(args, scope)
             if args.with_bootstrap:
                 _install_bootstrap(args, scope)
@@ -153,7 +223,8 @@ def main() -> int:
         )
         if backup_path is not None:
             print(f"install: backup written to {backup_path}")
-        if args.with_hooks:
+        _report_hook_decision(hook_decision)
+        if hook_decision.requested:
             _install_hooks(args, scope)
         if args.with_bootstrap:
             _install_bootstrap(args, scope)
@@ -165,14 +236,24 @@ def main() -> int:
         return 1
 
 
-def _install_hooks(args: argparse.Namespace, scope: str) -> None:
-    """Install optional hooks, preserving existing hook config.
+def _report_hook_decision(decision: HookInstallDecision) -> None:
+    if decision.requested:
+        origin = "explicit" if decision.explicit else "default"
+        mode = "professional-injection" if decision.professional_injection else "hooks"
+        print(f"install: hooks: decision install ({origin}; {mode})")
+        return
+    reason = decision.skip_reason or "skipped"
+    print(f"install: hooks: decision skip ({reason})")
 
-    Hooks are never installed unless --with-hooks is passed, and they are only
-    supported for Codex, Claude, and Copilot project and user scopes. Project
-    hooks install under the project root (--target); user hooks install under the
-    agent home directory (~/.codex, ~/.claude, ~/.copilot) regardless of --target.
-    Files are written only when neither --dry-run nor --hooks-dry-run is set.
+
+def _install_hooks(args: argparse.Namespace, scope: str) -> None:
+    """Install hooks, preserving existing hook config.
+
+    Hooks install by default for Codex, Claude, and Copilot project and user
+    scopes unless --without-hooks is passed. Project hooks install under the
+    project root (--target); user hooks install under the agent home directory
+    (~/.codex, ~/.claude, ~/.copilot) regardless of --target. Files are written
+    only when neither --dry-run nor --hooks-dry-run is set.
     """
     if not hooks_supported(args.agent, scope):
         raise InstallError(

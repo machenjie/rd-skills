@@ -21,9 +21,15 @@ DEFAULT_MAX_CONCURRENCY = 1
 DEFAULT_QUEUE_LIMIT = 10
 
 GATE_MODE_ENV = {
+    "sdd_material_choice": "CHANGEFORGE_SDD_CHOICE_MODE",
     "pre_edit_structure": "CHANGEFORGE_PRE_EDIT_MODE",
     "permission_policy": "CHANGEFORGE_PERMISSION_MODE",
     "stop_closure": "CHANGEFORGE_STOP_MODE",
+}
+DEFAULT_GATE_MODES = {
+    "sdd_material_choice": "block",
+    "pre_edit_structure": "block",
+    "stop_closure": "block",
 }
 
 
@@ -53,13 +59,16 @@ def policy_for(gate_name: str, event: dict | None = None) -> dict:
 
 def gate_mode(gate_name: str) -> str:
     """Return off / monitor / warn / block for the gate."""
-    specific = GATE_MODE_ENV.get(_normalize_gate(gate_name), "")
+    gate_key = _normalize_gate(gate_name)
+    specific = GATE_MODE_ENV.get(gate_key, "")
     if specific:
         mode = _mode_from_env(specific)
         if mode:
             return mode
     global_mode = _mode_from_env("CHANGEFORGE_HOOK_MODE")
-    return global_mode or "warn"
+    if global_mode:
+        return global_mode
+    return DEFAULT_GATE_MODES.get(gate_key, "warn")
 
 
 def failure_mode(gate_name: str) -> str:

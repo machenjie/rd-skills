@@ -43,6 +43,7 @@ surface:
 ```bash
 python3 -m unittest discover -s tests/runtime_governance
 python3 -m unittest discover -s tests/hook_runtime
+python3 -m unittest tests.hook_runtime.test_sdd_material_choice_gate
 python3 -m unittest discover -s tests/project_memory
 python3 -m unittest discover -s tests/repository_intelligence
 python3 -m unittest discover -s tests/validation_broker

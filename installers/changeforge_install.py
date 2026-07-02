@@ -60,10 +60,11 @@ FOUNDATION_MODES = {
     "dev": "top-level-and-compiled-references",
 }
 
-# Optional project and user hook runtime. Hooks are never installed by default.
-# Codex and Claude default to warning-only reminders. Copilot installs advisory
-# context hooks plus a strict Stop closure gate. Existing hook configuration is
-# always preserved.
+# Project and user hook runtime. Supported Codex, Claude, and Copilot scopes are
+# installed by default unless the installer receives --without-hooks. Material
+# SDD choices, pre-edit structure, and Stop closure are blocking by default;
+# lower-risk advisory context remains warning-oriented. Existing hook
+# configuration is always preserved.
 HOOK_SOURCE_ROOTS = {
     ("codex", "project"): ROOT / "dist" / "codex" / "project" / ".codex",
     ("codex", "user"): ROOT / "dist" / "codex" / "user" / ".codex",
@@ -123,6 +124,7 @@ HOOK_SCRIPT_NAMES = (
     "changeforge_skill_index.py",
     "changeforge_session_bootstrap.py",
     "changeforge_user_prompt_route_reminder.py",
+    "changeforge_sdd_material_choice_gate.py",
     "changeforge_pre_edit_structure_gate.py",
     "changeforge_pre_tool_risk_preview.py",
     "changeforge_professional_injector.py",
@@ -732,7 +734,10 @@ def _hook_activation_notes(agent: str, scope: str) -> list[str]:
     notes = ["hooks are not auto-trusted"]
     hook_label = "user hook" if scope == "user" else "project hook"
     if agent == "codex":
-        notes.insert(0, "hooks are warning-only; default mode is CHANGEFORGE_HOOK_MODE=warn")
+        notes.insert(
+            0,
+            "strongest supported mode is default: SDD material choice, pre-edit structure, and Stop closure block",
+        )
         notes.append(f"run /hooks in Codex and trust the {hook_label} after reviewing the command")
         if scope == "user":
             notes.append("user hooks were written to ~/.codex; they apply to every Codex project")
@@ -748,7 +753,10 @@ def _hook_activation_notes(agent: str, scope: str) -> list[str]:
         else:
             notes.append("user hooks live in ~/.copilot/hooks; they apply to every workspace")
     else:
-        notes.insert(0, "hooks are warning-only; default mode is CHANGEFORGE_HOOK_MODE=warn")
+        notes.insert(
+            0,
+            "strongest supported mode is default: SDD material choice, pre-edit structure, and Stop closure block",
+        )
         notes.append("merge settings.changeforge-hooks.fragment.json into settings.json")
         if scope == "user":
             notes.append(

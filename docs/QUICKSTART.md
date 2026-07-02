@@ -12,7 +12,8 @@ It is not a prompt dump. The system combines:
 - Professional skills for action ownership.
 - Foundation capability references loaded precisely by route.
 - Quality gates for security, reliability, delivery, tests, docs, and review.
-- Optional advisory hooks that remind agents about closure evidence without replacing the router.
+- Default hooks for supported agents that inject professional context and block
+  material SDD choices before mutation or handoff.
 
 ## Pick A Profile
 
@@ -46,13 +47,17 @@ python3 scripts/quickstart.py --agent copilot --scope project --target /path/to/
 python3 scripts/quickstart.py --agent cline --scope project --target /path/to/project
 ```
 
-Project-scope quickstart also installs the non-executable
-`.changeforge/changeforge-route-preflight.md` bootstrap fragment by default.
-Use `--activation-level none` to skip it. Executable hooks are still opt-in:
+Hook-capable Codex, Claude, and Copilot project/user quickstart installs default
+to `professional-injection`: executable hooks are installed, professional
+context is injected, and SDD material choice, pre-edit structure, and Stop
+closure gates are blocking by default. Use `--without-hooks` or
+`--activation-level none` to opt out. Use `--activation-level bootstrap` when
+you want only the non-executable
+`.changeforge/changeforge-route-preflight.md` fragment:
 
 ```bash
-python3 scripts/quickstart.py --agent codex --scope project --target /path/to/project --activation-level hooks
-python3 scripts/quickstart.py --agent codex --scope project --target /path/to/project --activation-level professional-injection
+python3 scripts/quickstart.py --agent codex --scope project --target /path/to/project --without-hooks
+python3 scripts/quickstart.py --agent codex --scope project --target /path/to/project --activation-level bootstrap
 ```
 
 OpenAI API zip output:
@@ -64,6 +69,9 @@ python3 scripts/quickstart.py --agent openai-api
 `scripts/quickstart.py` orchestrates the existing build, installer, and doctor
 commands. Its final summary prints the selected activation status as well as
 the next prompt. It does not implement official marketplace installation.
+The next prompt reminds you that hooks perform route, preflight, and material
+choice checks by default, but you should still state business constraints and
+design preferences clearly.
 
 ## Manual Path
 
@@ -153,8 +161,21 @@ Use delivery-release-gate and reliability-observability-gate to review this depl
 | Runtime cannot see installed skills | Runtime was already open. | Restart or reload the target runtime. |
 | Too many top-level skills in a user/global install | Installed `dev` or raw source content. | Use `recommended` and install from `dist/` only. |
 | Foundation capabilities appear as top-level global skills | Wrong profile or wrong install source. | Rebuild/install `recommended` or `full`; do not install `src/`. |
-| Hooks warn but routing is absent | Hooks are advisory reminders, not the router. | Start the agent prompt with `change-forge-router` when the route is unclear. |
+| Hooks block for a design choice | Material SDD choice has no resolved user evidence. | Choose A/B or provide constraints, then record `resolution_evidence`. |
 | Handoff claims completion without proof | Missing validation evidence. | Run the relevant validator/test/build/doctor command and include result plus residual risk. |
+
+Material choice examples that require user resolution by default:
+
+- New public API, export, interface, or protocol.
+- New shared utility versus reusing an existing owner object.
+- Inheritance versus composition, adapter, wrapper, factory, strategy, plugin, or registry.
+- Schema, migration, rollback, security, auth, permission, tenant, privacy, payment, or irreversible operation.
+
+Examples that should not require a choice:
+
+- Typo, formatting, or docs-only edits.
+- Local reversible same-file fixes that follow repository convention.
+- Prompts, fixtures, or existing owner conventions that already specify the only valid design.
 
 ## Next
 

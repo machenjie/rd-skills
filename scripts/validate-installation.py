@@ -68,6 +68,7 @@ HOOK_SCRIPT_FILENAMES = (
     "changeforge_skill_index.py",
     "changeforge_session_bootstrap.py",
     "changeforge_user_prompt_route_reminder.py",
+    "changeforge_sdd_material_choice_gate.py",
     "changeforge_pre_edit_structure_gate.py",
     "changeforge_pre_tool_risk_preview.py",
     "changeforge_professional_injector.py",
