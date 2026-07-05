@@ -1,0 +1,39 @@
+id: backend-event-before-commit
+category: code-elements
+complexity: L3
+focus:
+  - statement ordering
+  - event after commit
+  - transaction and cache consistency
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - data-side-effect-flow-tracing
+    - transaction-consistency
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+expected_outcomes:
+  - Commit succeeds before event publication and cache mutation.
+  - Commit failure does not publish events or update cache.
+  - Idempotency and rollback behavior are preserved or explicitly routed.
+required_qualities:
+  - States source-of-truth ordering clearly.
+  - Tests both successful ordering and commit failure.
+  - Avoids generic helper placement without owner proof.
+forbidden_shortcuts:
+  - Publishing events before commit.
+  - Updating cache from uncommitted state.
+  - Reporting completion without commit-failure ordering tests.
+evidence:
+  - Code Element Professionalism Review naming the statement order.
+  - Side-effect flow map for database, event, and cache.
+  - Regression test output for commit failure.
+

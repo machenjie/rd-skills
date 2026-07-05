@@ -1,0 +1,13 @@
+{
+  "runtime": "codex",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Bash",
+  "cwd": "/repo",
+  "tool_input": {
+    "command": "TOKEN=abc123 pytest tests/runtime_governance/test_codex_adapter.py",
+    "exit_code": 0
+  },
+  "result": {
+    "status": "success"
+  }
+}

@@ -1,0 +1,69 @@
+id: backend-idor-raw-output
+description: Raw Codex-style output for a backend IDOR fix with route manifest and evidence.
+prompt: |
+  Fix an invoice IDOR bug. Do not claim release readiness without evidence.
+expected:
+  selected_skills:
+    - change-impact-analyzer
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+  selected_capabilities:
+    - permission-boundary-modeling
+    - authentication-authorization
+    - agent-execution-discipline
+    - regression-testing
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/16-permission-boundary-modeling.md
+  required_quality_gates:
+    - impact gate
+    - security gate
+    - test gate
+  required_professional_obligations:
+    - same-pattern scan for invoice queries
+    - denied-case regression test
+    - "boundaries inspected: controller, service, repository, permission policy"
+    - "residual risk: historic access logs not audited"
+  forbidden_behaviors:
+    - patch only visible query
+    - completion claim without evidence
+actual:
+  raw_output: |
+    I found the issue in the invoice read path. I am not claiming release readiness from this local patch alone.
+
+    ```yaml
+    changeforge_route:
+      selected_skills:
+        - change-impact-analyzer
+        - backend-change-builder
+        - security-privacy-gate
+        - quality-test-gate
+      selected_capabilities:
+        - permission-boundary-modeling
+        - authentication-authorization
+        - agent-execution-discipline
+        - regression-testing
+      required_references:
+        - references/routing-rules.md
+        - references/skill-registry.md
+        - references/capability-index.md
+        - references/domain-extension-index.md
+        - references/capabilities/16-permission-boundary-modeling.md
+      required_quality_gates:
+        - impact gate
+        - security gate
+        - test gate
+    ```
+
+    Boundaries inspected: controller, service, repository, permission policy.
+    Validation evidence: same-pattern scan for invoice queries; denied-case regression test output.
+    Residual risk: historic access logs not audited.
+    Next gate: security gate reviews audit and disclosure need.
+review:
+  human_review_required: true
+  promotion_status: promoted
+  notes: Promoted raw-output sample with mild narrative text around the manifest.

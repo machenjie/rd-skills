@@ -1,0 +1,52 @@
+---
+id: l1-frontend-local-state
+description: |
+  Local component state fix with no API, persistence, or auth impact.
+prompt: |
+  The notifications drawer stays open after a user clicks Cancel. Set the
+  local isOpen state to false on Cancel in the drawer component only.
+expected:
+  complexity: L1
+  risk_level: low
+  risk_triggers: []
+  skills:
+    - frontend-change-builder
+    - quality-test-gate
+  capabilities:
+    - state-management-design
+    - frontend-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - task-dag-planner
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - delivery-release-gate
+  capabilities:
+    - api-contract-design
+    - data-migration-design
+    - threat-modeling
+    - release-rollback
+  domain_extensions:
+    - mobile-product-extension
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - architecture gate
+    - API/data gate
+    - security gate
+    - reliability gate
+    - delivery gate
+notes: |
+  Local UI state deserves a focused regression test, not product-wide routing.
+

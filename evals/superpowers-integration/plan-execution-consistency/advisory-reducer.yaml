@@ -1,0 +1,33 @@
+id: plan-execution-consistency-advisory-reducer
+phase: P7/P8 execution evidence reducer and context control
+required_contracts:
+  - path: src/runtime_governance/execution_evidence_reducer.py
+    must_contain:
+      - "engineering_quality_report"
+      - "User-requested verification gate lacks AC -> PROVEN BY evidence"
+  - path: src/foundation/capabilities/agent-execution-discipline/SKILL.md
+    must_contain:
+      - "Task Completion Evidence"
+      - "Execute one task at a time"
+  - path: src/foundation/capabilities/project-memory-governance/SKILL.md
+    must_contain:
+      - "Task-scoped handoff context"
+evidence_reducer_cases:
+  - name: reports-task-execution-gaps
+    observation:
+      current_task: "Task 2"
+      planned_files:
+        - src/a.py
+      changed_files:
+        - src/a.py
+        - src/b.py
+      validation_commands: []
+      review_text: ""
+      user_gate_text: "first on one sample, then all samples before proceeding"
+      final_handoff: "Done."
+    expected_status: advisory_risk
+    observed_gaps_contain:
+      - "outside the accepted plan"
+      - "no validation command"
+      - "Review evidence is missing"
+      - "AC -> PROVEN BY"

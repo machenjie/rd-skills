@@ -1,0 +1,28 @@
+expected_stage: debugging-diagnosis
+expected_professional_skill: backend-change-builder
+expected_capabilities:
+  - senior-programming-judgment-core
+  - failure-diagnosis
+  - failure-contract-design
+  - idempotency-retry-design
+  - observability
+  - validation-broker
+  - agent-execution-discipline
+expected_hidden_risks:
+  - timeout label is not a verified violated invariant
+  - duplicate charge is a side effect
+  - patch-first diagnosis may miss retry and failure-contract boundaries
+expected_evidence:
+  - reproduction and eliminated hypotheses
+  - idempotency invariant and retry/failure contract
+  - side-effect ordering
+  - validation proof limits
+forbidden_behaviors:
+  - propose a patch before mapping the violated invariant
+  - treat timeout as root cause without proof
+  - omit side-effect and failure-contract evidence
+expected_output_obligations:
+  - symptom/root-cause-to-invariant map
+  - failure contract and side-effect evidence map
+  - validation evidence with proof limits
+  - residual risk owner and next gate

@@ -1,0 +1,56 @@
+---
+id: senior-judgment-debug-failure-contract
+description: |
+  Debugging must map symptoms and verified causes to violated facts,
+  invariants, boundaries, state transitions, side effects, or failure contracts.
+prompt: |
+  Diagnose an intermittent payment retry bug. The notes reproduce duplicate
+  charges and identify a timeout, but they do not map the symptom or root cause
+  to a violated idempotency invariant, retry boundary, side effect, or failure
+  contract. The next step proposes a patch anyway.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: debugging-diagnosis
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - senior programming judgment missing
+    - failure contract unclear
+    - retryability unclear
+  skills:
+    - backend-change-builder
+    - quality-test-gate
+    - reliability-observability-gate
+  capabilities:
+    - senior-programming-judgment-core
+    - failure-diagnosis
+    - failure-contract-design
+    - idempotency-retry-design
+    - implementation-structure-design
+    - logging-error-handling
+    - observability
+    - validation-broker
+    - agent-execution-discipline
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Diagnosis is not complete when it names a timeout but misses the violated
+  invariant, side effect, and failure contract.
+  Hidden risks covered: timeout label is not a verified violated invariant;
+  duplicate charge is a side effect; patch-first diagnosis may miss retry and
+  failure-contract boundaries.

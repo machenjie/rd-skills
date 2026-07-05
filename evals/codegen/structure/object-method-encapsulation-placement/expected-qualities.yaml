@@ -1,0 +1,46 @@
+id: object-method-encapsulation-placement
+category: structure
+complexity: L3
+focus:
+  - object-method encapsulation
+  - method placement
+  - value object boundary
+  - module-local helper privacy
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - refactoring
+    - unit-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - test gate
+expected_outcomes:
+  - Object candidates are classified before moving helpers or creating classes.
+  - Only methods that protect state, invariants, lifecycle, or collaborator boundaries move onto domain/value objects.
+  - Orchestration remains in the service and adapter side effects remain in adapters.
+  - Module-local helpers stay private and are tested through public behavior.
+required_qualities:
+  - Produces an Object-Method Encapsulation Decision.
+  - Rejects helper-bag class and anemic object alternatives.
+  - Records methods owned by objects and methods rejected from object placement.
+  - Prevents infrastructure dependency from moving into domain/value objects.
+  - Tests public behavior rather than exporting private helpers.
+forbidden_shortcuts:
+  - Creating a helper-bag class to group scattered functions.
+  - Creating an anemic object with getters and setters only.
+  - Moving a method to an object without state, invariant, lifecycle, or collaborator evidence.
+  - Exporting private helpers only for tests.
+  - Hiding infrastructure dependency in a domain object.
+evidence:
+  - Object-Method Encapsulation Decision with object candidates and rejected alternatives.
+  - Method placement rationale for invariant, lifecycle, orchestration, mapping, validation, and adapter behavior.
+  - Public behavior tests for accepted and rejected order cancellation paths.
+  - Review evidence that private helpers are not exported and adapters keep side effects.

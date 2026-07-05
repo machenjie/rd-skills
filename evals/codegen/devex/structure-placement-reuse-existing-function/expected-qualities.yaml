@@ -1,0 +1,43 @@
+id: structure-placement-reuse-existing-function
+category: devex
+complexity: L3
+focus:
+  - existing function reuse
+  - helper placement rationale
+  - shared utility pollution prevention
+  - implementation structure plan
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - code-review
+    - unit-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - AI review gate
+    - implementation gate
+    - test gate
+expected_outcomes:
+  - Existing normalization and tenant access helpers are reused.
+  - Duplicate local helper logic is not introduced.
+  - Tests prove normalized invite lookup and tenant denial behavior.
+  - The implementation structure note records searched files and rejected alternatives.
+required_qualities:
+  - Reuse candidates are named explicitly before new code is added.
+  - New code stays in the invitation module or existing owner modules.
+  - Shared utilities contain no tenant or invitation business rules.
+  - Tests exercise public invitation behavior rather than private helpers.
+forbidden_shortcuts:
+  - Reimplementing normalizeEmail locally.
+  - Adding tenant validation to shared utils.
+  - Exporting a helper only used by the invitation module.
+  - Omitting tests for tenant access denial.
+evidence:
+  - Test for mixed case email invitation lookup.
+  - Test for denied tenant access.
+  - Implementation Structure Plan naming reuse candidates.
+  - Diff contains no new business helper under shared or common utils.

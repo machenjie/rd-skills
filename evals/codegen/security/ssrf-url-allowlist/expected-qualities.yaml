@@ -1,0 +1,46 @@
+id: ssrf-url-allowlist
+category: security
+complexity: L4
+focus:
+  - SSRF prevention
+  - URL canonicalization
+  - network allowlist
+  - safe denial responses
+route_hints:
+  skills:
+    - change-intake-compiler
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - threat-modeling
+    - input-validation
+    - web-security
+    - integration-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - implementation gate
+    - security gate
+    - test gate
+expected_outcomes:
+  - Allowed HTTPS hosts can be fetched with bounded timeout and response size.
+  - Loopback, link local, private ranges, and metadata service addresses are rejected.
+  - Redirect chains are revalidated before any outbound request continues.
+  - Denied requests return client safe errors without leaking internal network details.
+required_qualities:
+  - Validation canonicalizes scheme, host, port, and resolved addresses before fetch.
+  - Network policy is centralized and covered by unit and integration tests.
+  - Error handling fails closed for parse, DNS, redirect, and timeout failures.
+  - Logs capture reason codes without storing sensitive URL query values.
+forbidden_shortcuts:
+  - String prefix allowlists that accept attacker controlled hostnames.
+  - Checking only the original URL before following redirects.
+  - Allowing localhost or cloud metadata addresses for convenience.
+  - Logging complete fetched URLs including credentials or tokens.
+evidence:
+  - Unit tests for canonicalization and allowlist matching.
+  - Integration tests for private address and redirect rejection.
+  - Security note covering SSRF threat model and fail closed behavior.
+  - Regression evidence for existing allowed preview hosts.

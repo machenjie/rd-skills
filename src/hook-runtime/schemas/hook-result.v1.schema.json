@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/hook-result.v1.schema.json",
+  "title": "ChangeForge Hook Result",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "decision": {
+      "type": "string",
+      "enum": ["warn", "block"]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    }
+  }
+}

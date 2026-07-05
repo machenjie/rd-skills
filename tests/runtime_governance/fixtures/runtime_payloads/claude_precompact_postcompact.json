@@ -1,0 +1,13 @@
+{
+  "runtime": "claude",
+  "events": [
+    {
+      "hookEventName": "PreCompact",
+      "source": "manual compact"
+    },
+    {
+      "hookEventName": "PostCompact",
+      "source": "manual compact"
+    }
+  ]
+}

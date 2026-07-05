@@ -1,0 +1,47 @@
+---
+id: oversized-directory-module-split
+description: |
+  An orders directory contains several object families and public surfaces.
+prompt: |
+  The orders directory now has cancellation, refund, shipping, invoice,
+  notification, reporting, adapters, jobs, shared fixtures, and three public
+  API barrels. A small order-rule change causes edits in most of the folder.
+  Decide whether to split the module and name the split relationship.
+expected:
+  complexity: L3
+  risk_level: medium
+  expected_stage: architecture-design
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - change locality violation
+  skills:
+    - architecture-impact-reviewer
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - module-boundary-design
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - refactoring
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - integration-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - ai-product-extension
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  The route should require directory density, relationship type, and change locality review.

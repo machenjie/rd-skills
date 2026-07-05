@@ -1,0 +1,51 @@
+---
+id: language-testing-strategy-runtime-boundary
+description: |
+  Python async runtime boundary risk requires language-specific test strategy,
+  not a generic unit-only answer.
+prompt: |
+  A Python async API handler calls a blocking SDK inside the event loop and has
+  no timeout or cancellation test. The proposed coverage is a normal unit test
+  that mocks the SDK response. Decide the language/runtime test strategy.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: testing
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - missing test evidence
+  hidden_risk_phrases:
+    - language runtime risk tested at wrong layer
+    - Python async blocking call lacks async harness
+    - runtime boundary not covered by language-specific validation
+  skills:
+    - quality-test-gate
+    - backend-change-builder
+  capabilities:
+    - implementation-structure-design
+    - agent-execution-discipline
+    - language-testing-strategy
+    - integration-testing
+  domain_extensions: []
+  quality_gates:
+    - test gate
+    - implementation gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+    - data-api-contract-changer
+  capabilities:
+    - e2e-testing
+    - release-rollback
+    - cache-design
+  domain_extensions:
+    - ai-product-extension
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+    - API/data gate
+notes: |
+  The prompt must include concrete runtime risk so ordinary unit tests do not
+  route to language-testing-strategy by default.

@@ -1,0 +1,41 @@
+---
+id: kafka-offset-side-effect
+description: |
+  Kafka early offset commit before durable side effects routing.
+prompt: |
+  A Kafka consumer commits offsets before writing the idempotency record and
+  durable side effect. On crash, messages are skipped. Fix manual commit,
+  retry, DLQ, replay, and lag evidence.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - event published before commit
+  skills:
+    - data-middleware-change-builder
+    - integration-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - message-queue-design
+    - idempotency-retry-design
+    - data-side-effect-flow-tracing
+    - transaction-consistency
+    - observability
+  domain_extensions: []
+  quality_gates:
+    - API/data gate
+    - implementation gate
+    - reliability gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - cache-design
+    - network-protocol-gateway-usage
+notes: |
+  Queue delivery and offset semantics are primary.

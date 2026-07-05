@@ -1,0 +1,241 @@
+---
+name: change-impact-analyzer
+description: "Use this skill when implementing, reviewing, planning, or validating product or code changes that need blast-radius analysis across product behavior, UX, domain model, API, data, frontend, backend, integrations, security, testing, deployment, observability, compatibility, and docs."
+license: MIT
+changeforge_kind: professional-skill
+changeforge_version: 0.1.0
+metadata:
+  changeforge.profile: recommended
+  changeforge.skill_type: professional
+---
+
+# Change Impact Analyzer
+
+## Mission
+Expose the complete blast radius of a proposed change before design or implementation begins — mapping every affected surface, distinguishing direct from downstream impacts, identifying compatibility and rollback implications, and surfacing unknown ownerships — so that the implementation path, specialist routing, gates, and rollback plan are calibrated to actual risk rather than first-impression scope.
+
+## Stage Ownership
+
+`change-impact-analyzer` owns or reviews only the stage slices where its declared surface changes the next engineering decision. It hands off adjacent API, security/privacy, data middleware, reliability, release, documentation, or domain-extension work to the selected owner or gate instead of acting as a catch-all.
+
+Use during intake, planning, coding, bug-fix repair, debugging, code-review, refactoring, testing, release, and handoff when the next decision depends on changed-surface inventory, same-pattern scope, downstream consumers, rollback feasibility, or stale validation evidence.
+
+## When To Use
+- Before implementation begins on any change that may touch multiple system layers, contracts, or ownership boundaries.
+- Before design decisions are locked when cross-cutting concerns (auth, data model, API, events) are involved.
+- Before a release or migration when downstream impact on consumers, integrations, or dependent services is unclear.
+- When a change request arrives with narrow stated scope but hints at wider behavioral, data, or contract implications.
+- When a rollback plan cannot be defined without understanding the full write path and state mutations involved.
+- When an agent proposes a local fix and has not scanned for the same defect pattern across the affected codebase.
+
+## Do Not Use When
+- The change is a narrowly scoped mechanical edit with fully understood ownership, no behavioral change, and no contract, migration, or release risk.
+- The change is a typo fix, comment update, or test data cleanup with zero behavioral surface area.
+
+## Adjacent Skill Conflict Resolution
+
+For `change-impact-analyzer`, keep this skill primary only when blast radius across product behavior, UX, domain model, API, data, frontend, backend, integration, security, test, release, or docs decides the next action. Hand API/schema compatibility to `data-api-contract-changer`, storage/query/migration concerns to `data-middleware-change-builder`, security/privacy decisions to `security-privacy-gate`, reliability/observability decisions to `reliability-observability-gate`, release/rollback readiness to `delivery-release-gate`, and documentation contract updates to `change-documentation-gate`. Domain extensions add risk-specific addenda after the primary owner is selected; record skipped plausible owners when the routing choice affects handoff or validation.
+
+## Required Context / Missing Information Policy
+
+Before `change-impact-analyzer` plans or closes work, collect current behavior, desired behavior, non-goals, affected surface, owner module, validation signal, existing conventions, and material data/API/security/release boundaries. Ask or block only when the missing fact can change public contract, data model, authorization, tenant behavior, migration/rollback, irreversible operation, or domain semantics; otherwise proceed with explicit reversible assumptions.
+
+## Critical Gotchas
+
+- `change-impact-analyzer` must inspect the owning source, tests, configs, docs, and generated-artifact boundaries before planning material engineering work.
+- `change-impact-analyzer` must select only risk-changing references, capabilities, gates, or domain extensions; do not load nearby material because it exists.
+- `change-impact-analyzer` must close with fresh validation evidence, evidence limits, residual risk, and next owner or gate when work remains.
+
+## Non-Negotiable Rules
+- **Direct use still runs the runtime prompt flow.** When `change-impact-analyzer` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
+- Inspect every potentially affected surface — do not stop at the first impacted component and assume the rest is safe.
+- Distinguish impact types: Direct (code must change), Indirect (behavior or contract changes), Downstream (consumers must adapt), Latent (no immediate change but risk is created).
+- Never mark a surface as "not impacted" without explicit reasoning — unknown is not the same as unimpacted.
+- Identify compatibility implications: backward compatibility for API consumers, schema migration readiness for data consumers, version skew tolerance for distributed systems.
+- Rollback implications must be analyzed for every stateful change — "just redeploy the old version" is not a rollback plan when data has been migrated.
+- Make unknown ownership explicit — do not assume a surface is safe because its owner is not on the current thread.
+- Surface all open questions as actionable placeholders with proposed owners, not hidden assumptions.
+- Local fixes require same-pattern scan evidence: name the pattern searched, scope scanned, related occurrences, and why the fix is local or broader.
+
+## Industry Benchmarks
+- **Architecture Review Board (ARB) Impact Analysis**: Structured surface-by-surface review before implementation approval — mandatory for tier-1 systems in regulated industries.
+- **RFC 2119 (Must/Should/May)**: Distinguish mandatory compatibility requirements from recommended guidance when communicating impact to stakeholders.
+- **SemVer (Semantic Versioning)**: Any API or library change that is not backward-compatible is a major version change — consumers must be notified before release.
+- **TOGAF Business Impact Analysis**: Maps technical changes to business capability impact — required for enterprise change management.
+- **OWASP Threat Modeling (STRIDE)**: Changes that introduce new attack surfaces require a threat model update alongside the blast radius analysis.
+- **ISO/IEC 25010 (Software Quality Model)**: Impact dimensions include Functionality, Reliability, Performance Efficiency, Security, Maintainability, and Portability — all may be affected.
+- **Change Management (ITIL CAB)**: Changes to production systems require documented impact, risk, rollback, and communication plan before approval.
+
+### Impact Classification Matrix
+
+| Surface | Direct Impact | Indirect Impact | Downstream Impact | Rollback Risk |
+|---|---|---|---|---|
+| Product behavior (UI/UX flows) | Behavior change | Flow dependency change | Consumer UX expectation | State loss on rollback |
+| Domain model (entities, rules) | Rule/state change | Derived state change | Downstream event handlers | Schema migration required |
+| API contract (endpoints, shapes) | Endpoint change | Error code change | API consumers must adapt | Breaking if rolled back |
+| Database schema | Column/table change | Index/query impact | ORM model change | Migration required |
+| Frontend (components, state) | Component change | State model change | A/B test / analytics | UI regression risk |
+| External integration | Webhook / protocol | Error handling | Provider dependency | No provider rollback |
+| Security (authz, permissions) | Permission change | Access pattern change | Audit trail change | Permission rollback risk |
+| Observability (alerts, SLOs) | Alert threshold | Dashboard | On-call procedure | Alert gap during rollback |
+
+## Technical Selection Criteria
+Systematically assess each surface below — declare impact level (Direct / Indirect / Downstream / None-with-rationale / Unknown):
+- **Product behavior**: Does the visible user experience, workflow, or user-observable state change?
+- **UX / interaction model**: Do screen flows, navigation, or interaction states change?
+- **Domain model**: Do entities, aggregates, invariants, state transitions, or domain events change?
+- **API contract**: Do endpoint paths, request schemas, response shapes, status codes, error codes, or pagination change?
+- **Data model / schema**: Do tables, columns, indexes, constraints, or normalization change?
+- **Frontend**: Do components, routes, client state, data fetching, or rendering logic change?
+- **Backend**: Do service methods, command handlers, authorization rules, or transaction boundaries change?
+- **External integrations**: Do third-party API calls, webhooks, credentials, or provider contracts change?
+- **Security posture**: Do permission rules, authentication flows, data access patterns, or audit trails change?
+- **Testing**: Do acceptance criteria, test fixtures, contract tests, or test data change?
+- **Deployment / infrastructure**: Do environment variables, container config, Kubernetes manifests, or migration scripts change?
+- **Observability**: Do log schemas, metric names, alert thresholds, SLO targets, or on-call runbooks change?
+- **Compatibility**: Are there backward compatibility obligations to existing consumers, mobile clients, or versioned APIs?
+- **Documentation**: Do user guides, API docs, runbooks, ADRs, or changelogs need updating?
+
+## Mode Selection
+Select the impact-analysis mode before declaring blast radius.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| Local fix impact | Bug fix claims one file, one endpoint, or one component is enough. | Verify same-pattern scope, upstream callers, downstream users, and regression surface. | Pattern searched, directories scanned, related occurrences, local-only or broad-fix rationale. | `agent-execution-discipline`, `failure-diagnosis`, `regression-testing` | Full architecture review unless the scan finds boundary drift. |
+| Contract/data impact | API field, DTO, schema, migration, event, cache key, or consumer behavior changes. | Enumerate consumers, migration/rollback impact, version skew, and test fixtures. | Contract diff, consumer list, migration path, rollback limits, fixture/test impact. | `data-api-contract-changer`, `contract-testing`, `release-rollback` | UX modeling unless user-visible behavior changes. |
+| Cross-module impact | Multiple packages, services, jobs, topics, configs, docs, or ownership areas are plausible. | Classify direct, indirect, downstream, none-with-rationale, and unknown surfaces. | File/module/API/data/security/release/docs inventory with owner or unknown-owner flag. | `architecture-impact-reviewer`, `task-dag-planner` | Implementation detail design until affected boundaries are known. |
+| Security/release impact | Permission, tenant, PII, external system, deployment, rollback, or production state is plausible. | Escalate hidden coupling before code; ensure rollback and evidence gates are named. | Auth/data flow, release surface, observability, rollback feasibility, residual risk owner. | `security-privacy-gate`, `delivery-release-gate`, `reliability-observability-gate` | Cosmetic docs unless behavior/operation changes. |
+| Documentation/test impact | Behavior changed but docs, tests, fixtures, or runbooks are assumed unaffected. | Treat docs/tests as first-class surfaces; identify stale evidence risk. | Affected tests, fixtures, docs, runbooks, changelog, API docs, and validation commands. | `quality-test-gate`, `change-documentation-gate` | New code task DAG until proof obligations are mapped. |
+
+## Proactive Professional Triggers
+These triggers are hidden-risk escalators, not ordinary checklist items.
+
+- **Signal:** A local fix changes one permission, tenant, status, cache, query, or validation rule. **Hidden risk:** missing same-pattern scan leaves sibling defect paths unverified. **Required professional action:** run same-pattern scan before calling the fix local. **Route to:** `agent-execution-discipline`, `regression-testing`. **Evidence required:** pattern signature, searched paths, scan output with related occurrences, and broad/local decision.
+- **Signal:** A response field, enum, error code, event payload, migration, or fixture changes without named consumers. **Hidden risk:** downstream caller or test fixture breaks outside the touched module. **Required professional action:** enumerate upstream/downstream consumers and compatibility window. **Route to:** `data-api-contract-changer`, `contract-testing`. **Evidence required:** consumer list, compatibility status, fixture/test impact, migration note.
+- **Signal:** A stateful change says rollback is "revert deploy" while data, cache, queue, or external side effect changes. **Hidden risk:** rollback is asymmetric and old code cannot read new state. **Required professional action:** analyze rollback and migration impact before implementation. **Route to:** `delivery-release-gate`, `release-rollback`. **Evidence required:** state mutation inventory, rollback command/procedure, unrolled-back data risk.
+- **Signal:** A shared module, generated client, common util, or config changes with no module graph or owner check. **Hidden risk:** hidden coupling changes callers not visible in the diff. **Required professional action:** trace imports, dependents, generated outputs, and owners. **Route to:** `architecture-impact-reviewer`, `implementation-structure-design`. **Evidence required:** dependency/caller scan, owner map, affected tests.
+- **Signal:** Security, observability, docs, or tests are marked "not impacted" without rationale. **Hidden risk:** quiet surfaces become release or incident gaps. **Required professional action:** require none-with-rationale or unknown-with-owner for each surface. **Route to:** `security-privacy-gate`, `reliability-observability-gate`, `change-documentation-gate`. **Evidence required:** per-surface rationale, validation command or not-verified disclosure, residual risk.
+
+### Decision Tree: How Deep to Analyze?
+
+```
+Is the change modifying a shared contract (API, event schema, data model)?
+├── Yes → Full downstream consumer analysis required
+│   └── Unknown consumers → Escalate before proceeding
+Is the change modifying authorization or permission logic?
+├── Yes → Security surface and audit trail analysis required
+Is the change modifying data that must be migrated?
+├── Yes → Schema migration, rollback, and data consistency analysis required
+Is the change affecting an SLO-critical path?
+├── Yes → Observability, alerting, and reliability impact analysis required
+Change touches only internal module with no interface change?
+└── Minimal analysis sufficient, confirm no latent impact
+```
+
+## Solution Optimality Self-Check
+Apply during blast-radius analysis to expose performance-surface impacts invisible from functional analysis. For every change, answer four questions ("N/A" needs a one-line rationale): does it add CPU to a hot path, increase memory at scale, add network calls (N+1 fan-out), or alter disk I/O patterns? Add a performance-impact classification (Direct / Indirect / None with evidence) to the blast radius before declaring "no performance impact".
+
+Load [references/solution-optimality.md](references/solution-optimality.md) for the performance-impact classification matrix and the latent-risk checklist (schema rewrites, N+1 multipliers, job overlap, cache-invalidation scope, new synchronous dependencies) when the change touches a performance-sensitive path. Method compiled from `solution-optimality-evaluation`.
+
+## Risk Escalation
+- Escalate when a public API contract change affects external consumers who have not been notified.
+- Escalate when a schema migration is required but no tested rollback migration exists.
+- Escalate when permission or authorization logic changes could inadvertently broaden access to sensitive data.
+- Escalate when the blast radius cannot be fully determined because ownership of a dependent surface is unknown.
+- Escalate when an irreversible write (financial transaction, destructive migration, audit record) is on the change path.
+- Escalate when concurrent changes from other teams affect overlapping surfaces — coordination risk is high.
+- Escalate when the change requires feature flags that are not yet in place and the release window is fixed.
+- Escalate when the observability gap during rollout would prevent early detection of a regression.
+- Escalate to `agent-execution-discipline` when an agent attempts to hand off impact analysis without evidence inventory, boundary, residual risk, and validation result.
+
+## Critical Details
+- The quietest surfaces are the most dangerous: documentation, alert thresholds, test fixtures, client SDKs, and feature flag configurations are frequently overlooked in blast radius analysis.
+- "It's a small change" is the most common precursor to a high-severity incident — size of code change is uncorrelated with blast radius.
+- Downstream impact requires consumer enumeration — not just "API consumers in general" but specific named consumers with their version and migration readiness.
+- Rollback is not symmetric: deploying the old version is only a valid rollback plan if no state mutations have occurred that would be incompatible with the old version.
+- Unknown ownership is a blocking risk — changes that touch surfaces with unknown owners must identify the owner before the change can proceed safely.
+- Version skew tolerance analysis: in distributed systems, the old version of service A may coexist with the new version of service B for minutes to hours during a rolling deployment — the behavior during that window must be analyzed.
+- Feature flag cutover: when a change is behind a flag, the full blast radius still exists once the flag is enabled — document the pre-flag and post-flag impact separately.
+
+### Anti-Examples
+
+| Analysis Pattern | Problem | Corrected Approach |
+|---|---|---|
+| "Only the login endpoint changes" | Misses auth token format change affecting all authenticated calls | Trace all callers of auth tokens, not just the login surface |
+| "Docs will be updated later" | Documentation is a release blocker, not a follow-up | Include documentation impact in the same analysis |
+| "Unknown consumers can just re-read the API" | Breaking change without migration guide harms known and unknown consumers | Enumerate consumers; provide migration guide before release |
+| "Rollback is just reverting the deploy" | Data migration already ran; old code cannot read new schema | Require rollback migration before approving forward migration |
+| "Security isn't affected, it's just a data field" | New field exposed in API may contain PII or sensitive data | Assess every new API field for data classification and access control |
+
+## Failure Modes
+- **Local-only analysis misses dependent clients**: An API field is renamed; 3 downstream microservices crash at deployment because the blast radius analysis only covered the originating service.
+- **No compatibility review breaks consumers**: A response field changes from a string to an integer; clients that parse it as a string fail at runtime with no compile-time warning.
+- **No observability review makes release impact invisible**: A performance-critical query changes and no metric baseline or alert exists — degradation accumulates for 2 hours before manual detection.
+- **Hidden migration makes rollback impossible**: A column is renamed and data is migrated; the rollback plan says "revert the service" but the old service expects the old column name — rollback fails.
+- **Unknown owner delays incident response**: A component affected by the change has no declared owner — during the post-release incident, the on-call team has no one to escalate to.
+- **Concurrent team changes collide**: Two teams are modifying the same shared schema simultaneously; neither impact analysis accounts for the other — the combined change is incompatible.
+- **Feature flag analysis skipped**: A change is marked "safe because it's behind a flag" — but the flag is enabled 2 weeks later without re-analyzing the full blast radius in the new system state.
+- **Test fixture drift**: A change to the domain model is not reflected in test fixtures — all tests pass with the old fixture data and a regression is discovered only in production.
+
+## Reference Loading Policy
+Do not load every reference by default. For L1 `change-impact-analyzer` work, use this body unless selected risk requires more detail.
+For L2, L3, L4, and L5 `change-impact-analyzer` work, read `references/capabilities/index.md` only to locate selected capability references; load selected files at `references/capabilities/<capability-id>-<capability-name>.md`, then add [references/checklist.md](references/checklist.md), [references/solution-optimality.md](references/solution-optimality.md), [references/evidence-patterns.md](references/evidence-patterns.md), or domain references only when route risk requires them. Load `references/checklist.md` for concrete surface review, `references/solution-optimality.md` for performance/resource blast radius, and `references/evidence-patterns.md` when closure depends on changed-surface-to-validation mapping, same-pattern scan proof, consumer evidence, rollback limits, or stale graph/report claims.
+
+## Execution Procedure
+
+For `change-impact-analyzer`: confirm activation and role; classify missing context; inspect relevant source/test/config/doc evidence; select mode, complexity, risk, and minimal references; execute or review only the owned surface; validate with concrete commands, diffs, tests, evals, or not-run limits; route repair through the owner; hand off with residual risk and next gate.
+
+## Output Contract
+Return a structured impact analysis with:
+- **Mode selected**: Impact mode and trigger signal that selected it.
+- **Surface inventory**: Every assessed surface with impact level (Direct / Indirect / Downstream / None + rationale / Unknown + proposed owner).
+- **Compatibility assessment**: Backward compatibility status for API and data model changes; consumer list and migration readiness.
+- **Rollback analysis**: Whether rollback is safe without data intervention; required rollback migration scripts if schema has changed.
+- **Specialist routing**: Which professional skills must be engaged based on identified impacts.
+- **Release concerns**: Feature flag dependencies, deployment sequencing, staged rollout requirements.
+- **Open questions**: Unknown surfaces, undetermined owners, or impact dimensions requiring further investigation — each with proposed owner and urgency.
+- **Same-pattern scan record**: Pattern signature, directories or globs searched, other occurrences found, and local-only or broad-fix rationale when a bug fix is proposed.
+- **Boundaries inspected**: Files, modules, APIs, data stores, configs, tests, security boundaries, release artifacts, docs, and upstream/downstream callers inspected or explicitly skipped.
+- **Professional judgment**: Why each surface is Direct / Indirect / Downstream / None / Unknown and which hidden coupling was ruled out.
+- **Reuse and placement rationale**: Existing owner, module, API, fixture, or documentation location reused; new ownership or placement questions routed.
+- **Behavior preservation statement**: Existing user, API, data, permission, and release behavior preserved or intentionally changed.
+- **Validation evidence**: Greps, dependency graph, schema lookup, consumer lookup, tests, or not-verified disclosure with outcome.
+- **Impact validation map**: each changed surface mapped to scan, command, validator, owner review, compatibility proof, rollback evidence, or residual risk.
+- **Evidence limits**: What the scan proves and does not prove about runtime traffic, unknown consumers, production data, and rollback.
+- **Next gate / handoff**: Required specialist skill or explicit no-next-gate rationale.
+- **Risk summary**: Overall blast radius classification (Low / Medium / High / Critical) with key risk factors listed.
+
+## Evidence Contract
+Close an impact analysis only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the change under analysis and the surfaces it plausibly reaches, stated before scanning so nothing is assumed safe by omission.
+- **Files and boundaries inspected**: the hard blast-radius scan actually run — call chain and callers, configuration and environment variables, database tables and migrations, message topics, cache keys, API consumers, test directories, documentation, CI/CD pipelines, and deployment resources — with what each surface revealed or "none found".
+- **Placement rationale**: why each surface is classified Direct, Indirect, Downstream, or None, and why each specialist routing is required.
+- **Validation commands**: the greps, call-graph queries, schema or consumer lookups run to confirm each impact, each with its outcome.
+- **Impact judgment and evidence limits**: mode selected, hidden coupling ruled out, behavior preserved or intentionally changed, what evidence proves, what it does not prove, residual risk, and next gate.
+- **Residual risk**: the Unknown surface or unverified downstream effect that remains, with its proposed owner and urgency.
+
+## Quality Gate
+1. Every relevant surface is marked as: Direct / Indirect / Downstream / None (with explicit rationale) / Unknown (with proposed investigation owner).
+2. All public or internal API contract impacts are identified with named consumer list and compatibility assessment.
+3. Schema migration rollback safety is explicitly analyzed — not assumed.
+4. Permission and security surface impacts are identified and routed to the appropriate gate.
+5. Observability and alerting gaps during rollout are identified and addressed.
+6. Concurrent change risks from other teams are acknowledged.
+7. Unknown ownership surfaces are escalated, not left as silent assumptions.
+8. Open questions are listed with proposed owners and not silently resolved.
+9. Specialist skills required are named and routed.
+10. A rollback plan exists that accounts for all stateful changes.
+11. Agent-assisted local fixes include same-pattern scan evidence and closure boundary.
+
+## Handoff
+- **domain-impact-modeler** — when business rules, invariants, state machines, or domain events are affected.
+- **experience-impact-modeler** — when user-facing flows, interaction states, or accessibility is affected.
+- **data-api-contract-changer** — when API contracts, schemas, or data migrations are affected.
+- **backend-change-builder** — when backend service logic, authorization, or data mutations are affected.
+- **security-privacy-gate** — when permission rules, auth flows, data access, or audit trails are affected.
+- **reliability-observability-gate** — when SLO paths, alert thresholds, or performance-critical paths are affected.
+- **task-dag-planner** — when the impact analysis reveals a multi-phase implementation requiring dependency sequencing.
+- **agent-execution-discipline** — when analysis lacks evidence, same-pattern scan, residual risk, or handoff package.
+
+## Completion Criteria
+The implementation plan can be scoped and executed with clear risk boundaries, verified specialist routing, explicit compatibility and rollback analysis, identified ownership for every impacted surface, and no silently assumed safe-by-default surfaces.

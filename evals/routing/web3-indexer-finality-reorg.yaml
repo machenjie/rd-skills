@@ -1,0 +1,46 @@
+---
+id: web3-indexer-finality-reorg
+description: |
+  Web3 indexer lag, finality, and reorg issue requires Web3 evidence.
+prompt: |
+  Fix an indexer lag issue where a chain reorg invalidates a deposit event
+  after product state is granted. Require a Finality and Reorg Handling Plan,
+  Indexer Consistency Record, Chain / Network Safety Matrix, and Transaction
+  Simulation Evidence.
+expected:
+  complexity: L4
+  risk_level: critical
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - Web3 asset
+    - external integration
+  skills:
+    - security-privacy-gate
+    - integration-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - authentication-security
+    - threat-modeling
+    - observability
+    - contract-testing
+  domain_extensions:
+    - web3-product-extension
+  quality_gates:
+    - security gate
+    - reliability gate
+    - test gate
+    - implementation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+  capabilities:
+    - cache-design
+    - message-queue-design
+  domain_extensions:
+    - payment-trading-extension
+notes: |
+  Indexer lag and reorg/finality are Web3 domain evidence requirements before
+  off-chain product state can trust derived chain data.

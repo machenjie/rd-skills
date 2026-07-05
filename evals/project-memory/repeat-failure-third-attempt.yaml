@@ -1,0 +1,14 @@
+---
+id: repeat-failure-third-attempt
+scenario: A third same-path repair attempt must trigger repeat failure governance.
+expected_capabilities:
+  - project-memory-governance
+  - agent-execution-discipline
+expected_evidence:
+  - Append-only memory events identify two prior same-path failures.
+  - Memory projection is deterministic and bounded.
+  - Repeat failure gate requires route repair or blocked handoff.
+forbidden_claims:
+  - The same patch shape is attempted a third time without new evidence.
+  - Memory is promoted into source policy automatically.
+privacy_boundary: Store failure category and bounded path only; no raw command output.

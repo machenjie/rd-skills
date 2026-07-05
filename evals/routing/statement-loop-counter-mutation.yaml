@@ -1,0 +1,39 @@
+---
+id: statement-loop-counter-mutation
+description: |
+  A loop counter is mutated inside the loop body and update clause.
+prompt: |
+  A pagination loop increments `page` in both the `for` update clause and inside
+  a retry branch. Route this as loop-counter mutation and local algorithm risk.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - statement loop counter mutation
+  skills:
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - algorithm-data-structure-selection
+    - implementation-structure-design
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+  domain_extensions:
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Counter mutation should not trigger broad performance work unless scale evidence appears.
+

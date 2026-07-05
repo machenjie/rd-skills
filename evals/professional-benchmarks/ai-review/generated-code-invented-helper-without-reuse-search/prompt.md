@@ -1,0 +1,1 @@
+Review AI-generated code that adds `src/shared/helpers/dateMagic.ts` for formatting invoice due dates. The repository already has date and money formatting utilities in feature modules, but the generated patch did not search for reuse, did not run tests, and added comments claiming the helper is universal.

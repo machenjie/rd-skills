@@ -1,0 +1,22 @@
+expected_stage: implementation-planning
+expected_professional_skill: data-middleware-change-builder
+expected_capabilities:
+  - relational-database
+  - indexing-query-optimization
+expected_hidden_risks:
+  - relational query without index or explain
+  - missing index or query plan evidence on large table
+  - production cardinality not represented by dev data
+expected_evidence:
+  - query shape and expected cardinality
+  - index strategy and EXPLAIN/ANALYZE evidence
+  - residual production cardinality risk
+forbidden_behaviors:
+  - approve query without EXPLAIN evidence
+  - assume dev fixture represents production cardinality
+  - omit index write-cost analysis
+expected_output_obligations:
+  - query and index evidence
+  - validation evidence for query plan
+  - what evidence proves and does not prove
+  - residual data risk owner

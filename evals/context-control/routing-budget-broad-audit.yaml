@@ -1,0 +1,71 @@
+---
+id: routing-budget-broad-audit
+input:
+  scenario: A broad hook-runtime context-bloat audit must select context-control and stay in staged-plan mode with skipped-reference rationale.
+  context_risk: true
+  routing_fixture_path: evals/routing/context-control-hook-runtime-bloat.yaml
+  routing_actual_path: evals/routing-outputs/context-control-hook-runtime-bloat.actual.yaml
+  runtime_resolver:
+    stage: skill-authoring
+    risk_surfaces:
+      - validation
+      - security
+    product_surfaces:
+      - skill-authoring
+    classification:
+      stage: skill-authoring
+      prompt_signals:
+        - broad system audit
+        - context budget
+        - reference bloat
+expected:
+  context_control_selected: true
+  selected_skills:
+    - change-forge-router
+    - quality-test-gate
+    - ai-code-review-refactor
+    - change-documentation-gate
+  selected_capabilities:
+    - repository-context-map
+    - skill-authoring-expert
+    - engineering-stage-professionalism
+    - skill-efficacy-benchmark
+    - plan-execution-consistency
+    - context-control-plane
+    - validation-broker
+  budget_mode: staged-plan
+  selected_reference_count: 7
+  selected_reference_count_max: 12
+  skipped_reference_count: 2
+  skipped_references:
+    - reference: references/capabilities/123-executor-adapter-protocol.md
+      reason: No adapter event contract is changed.
+    - reference: references/capabilities/75-release-rollback.md
+      reason: No release or deployment artifact is changed.
+  safety_result: pass
+  closure_result: partial
+  forbidden_raw_fields:
+    - raw_prompt
+    - prompt
+    - stdout
+    - stderr
+    - command_output
+    - raw_output
+    - full_output
+    - full_diff
+    - file_contents
+    - environment
+    - env
+    - secret
+    - credentials
+context_budget:
+  budget_mode: staged-plan
+  budget_profile: authoring
+  budget_rationale: Multi-gate skill-authoring audit needs staged references but must skip unrelated adapter and release surfaces.
+  context_budget_tokens: 1400
+  selected_capability_count: 7
+  selected_reference_count: 7
+  skipped_reference_count: 2
+  over_budget: false
+  residual_context_risk:
+    - Live token and turn overhead are not collected by structural fixtures.

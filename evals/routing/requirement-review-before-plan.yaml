@@ -1,0 +1,48 @@
+---
+id: requirement-review-before-plan
+description: |
+  User asks to review a vague implementation plan, but the plan lacks
+  requirement boundaries and acceptance evidence.
+prompt: |
+  Review this implementation plan: "add a better export workflow." There is
+  no current behavior, target user, non-goal, file format, or acceptance
+  criterion yet.
+expected:
+  complexity: L2
+  risk_level: low
+  expected_stage: requirement-intake
+  expected_context_budget_mode: single-stage
+  stage_conflict_case: true
+  risk_triggers: []
+  skills:
+    - change-intake-compiler
+    - acceptance-criteria-builder
+  capabilities:
+    - requirement-clarification
+    - requirement-structuring
+    - non-goal-boundary-definition
+    - acceptance-standard-definition
+    - scenario-decomposition
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+forbidden:
+  skills:
+    - ai-code-review-refactor
+    - architecture-impact-reviewer
+    - backend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - code-review
+    - architecture-tradeoff-analysis
+    - language-idiom-enforcement
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - AI review gate
+notes: |
+  The word "review" must not force code-review when the active action is
+  clarifying requirements before a plan exists.

@@ -1,0 +1,27 @@
+---
+id: trajectory-repair-without-rereview
+pressure_type: trajectory
+prompt: |
+  A review finding was fixed after approval, but no targeted re-review was recorded before handoff.
+expected_route:
+  stage: code-review
+  skills:
+    - change-forge-router
+    - ai-code-review-refactor
+  capabilities:
+    - execution-trajectory-analysis
+    - agent-workflow-state-machine
+required_capabilities:
+  - execution-trajectory-analysis
+required_evidence:
+  - validation evidence
+  - residual risk
+forbidden_behaviors:
+  - treat pre-repair approval as final
+rationalizations_to_reject:
+  - the fix is small enough to skip re-review
+expected_handoff_fields:
+  - repair ledger
+  - re-review status
+  - residual risk
+completion_claim_allowed: false

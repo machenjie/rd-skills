@@ -1,0 +1,43 @@
+---
+id: web3-eip712-chain-nonce-missing
+description: |
+  EIP-712 signature missing chainId and nonce requires Web3 routing.
+prompt: |
+  A gasless approval uses EIP-712 but omits chainId and nonce, so signatures
+  can be replayed across networks and after first use. Fix signature domain,
+  nonce/deadline, and wrong-chain tests.
+expected:
+  complexity: L4
+  risk_level: critical
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - wallet
+    - private key
+    - Web3 asset
+  skills:
+    - security-privacy-gate
+    - backend-change-builder
+    - integration-change-builder
+    - quality-test-gate
+  capabilities:
+    - authentication-security
+    - threat-modeling
+    - implementation-structure-design
+    - contract-testing
+    - observability
+  domain_extensions:
+    - web3-product-extension
+  quality_gates:
+    - security gate
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - data-middleware-change-builder
+    - frontend-change-builder
+  capabilities:
+    - cache-design
+    - message-queue-design
+notes: |
+  Signature replay and chain binding require Web3 plus security routing.

@@ -1,0 +1,1 @@
+Review an AI-generated backend patch that claims to fix an invoice authorization bug. The output uses professional-sounding headings and mentions hidden risks, tests, and routing, but it may be keyword-stuffed instead of evidence-complete.

@@ -1,0 +1,50 @@
+---
+id: java-executor-lifecycle-hidden-risk
+description: |
+  Java executor lifecycle change must route JVM usage, implementation
+  structure, and test evidence without unrelated domain gates.
+prompt: |
+  Review a Java service change that creates a `newFixedThreadPool(64)` inside a
+  request-scoped helper. The executor is never shut down, has no queue bound,
+  ignores interruption, and has no test or static-analysis evidence.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  hidden_risk_phrases:
+    - Java executor without shutdown or bounds
+    - thread pool lifecycle leak
+    - interruption behavior not handled
+    - performance unbounded concurrency
+    - runtime safety invariant missing for concurrent hot path
+    - measurement evidence absent for thread pool saturation
+  skills:
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - java-jvm-professional-usage
+    - language-performance-safety
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+    - security-privacy-gate
+  capabilities:
+    - e2e-testing
+    - release-rollback
+    - web-security
+  domain_extensions:
+    - web3-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+    - security gate
+notes: |
+  Executor lifecycle is JVM/runtime correctness, not release or UI routing.

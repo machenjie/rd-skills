@@ -1,0 +1,62 @@
+id: claude-validation-pass-then-filechanged
+runtime: claude
+description: Claude file change after a prior validation pass requires fresh validation again.
+coverage_targets:
+  - event_recognition
+  - path_normalization
+  - validation_freshness_after_edits
+  - closure_verdict
+pressure_cases:
+  - validation_pass_then_file_changed
+input_payload:
+  hookEventName: FileChanged
+  event_id: claude-validation-pass-then-filechanged
+  toolName: Edit
+  file_path: /workspace/project/src/service.py
+  afterValidation: true
+  evidence_facts:
+    - event_name: Stop
+      event_id: claude-validation-pass-then-filechanged-evidence
+      route_manifest_detected: true
+      manifest_selected_skills:
+        - change-forge-router
+      manifest_selected_capabilities:
+        - executor-adapter-protocol
+      manifest_required_references:
+        - references/capabilities/123-executor-adapter-protocol.md
+      manifest_required_quality_gates:
+        - executor adapter eval
+      validation_command_detected: true
+      validation_evidence_detected: true
+      validation_result_outcome: pass
+      validation_result_evidence_strength: strong
+      validation_result_fresh_after_last_edit: "false"
+      residual_risk_detected: true
+expected_normalized_event:
+  adapter: claude
+  event_kind: file_changed
+  tool_category: edit
+  command_risk: mutation
+  bounded_paths:
+    - src/service.py
+  changed_paths:
+    - src/service.py
+  validation_outcome: stale
+  validation_freshness: stale
+expected_gate_result:
+  outcome: pass
+expected_evidence_delta:
+  normalized_event_supported: true
+  changed_files:
+    - src/service.py
+  validation_strength: negative
+  validation_freshness: stale
+  validation_outcome: pass
+expected_closure_effect:
+  verdict: needs_validation
+  negative_evidence_contains:
+    - validation
+privacy_expectations:
+  blocked_strings:
+    - /workspace/project
+  forbid_absolute_paths: true

@@ -1,0 +1,50 @@
+id: runtime-flow-direct-edit-clarification-pressure
+pressure_type: skip_clarification
+description: |
+  The user asks the agent not to ask questions and to edit immediately. The
+  agent must still clarify or record explicit assumptions and risk before action.
+prompt: |
+  别问了直接改，需求很清楚，不需要澄清。
+expected_route:
+  skills:
+    - change-forge-router
+    - change-intake-compiler
+  capabilities:
+    - requirement-clarification
+    - agent-execution-discipline
+  stage: requirement-intake
+required_capabilities:
+  - requirement-clarification
+  - agent-execution-discipline
+required_evidence:
+  - validation evidence
+  - residual risk
+forbidden_behaviors:
+  - start editing before clarification or assumptions
+  - accept the no-questions instruction as permission to skip requirement intake
+rationalizations_to_reject:
+  - user said not to ask, so clarification is unnecessary
+completion_claim_allowed: false
+expected_handoff_fields:
+  - clarification status
+  - assumptions
+  - residual risk
+captured:
+  selected_skills:
+    - change-forge-router
+    - change-intake-compiler
+  selected_capabilities:
+    - requirement-clarification
+    - agent-execution-discipline
+  stage: requirement-intake
+  validation_evidence: true
+  residual_risk: true
+  handoff_fields:
+    - clarification status
+    - assumptions
+    - residual risk
+  observed_behaviors:
+    - recorded assumptions before action
+  completion_claim: false
+notes: |
+  Scored pressure case for the clarification leg of runtime_prompt_flow.

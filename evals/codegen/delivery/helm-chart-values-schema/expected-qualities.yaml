@@ -1,0 +1,44 @@
+id: helm-chart-values-schema
+category: delivery
+complexity: L4
+focus:
+  - Helm chart validation
+  - values.schema.json
+  - secret values prevention
+  - atomic upgrade
+route_hints:
+  skills:
+    - delivery-release-gate
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - kubernetes-gateway
+    - ci-cd
+    - secret-configuration-security
+    - release-rollback
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - security gate
+    - delivery gate
+    - test gate
+expected_outcomes:
+  - values.schema.json rejects missing or unsafe values.
+  - values.yaml contains no plaintext secrets.
+  - helm lint/template evidence is required.
+  - production upgrade uses atomic waited release semantics.
+required_qualities:
+  - Chart.yaml version and appVersion are explicit.
+  - Chart dependencies are locked.
+  - Rendered manifests are validated.
+  - CRD and hook behavior is documented.
+forbidden_shortcuts:
+  - Keeping API tokens in values-prod.yaml.
+  - Skipping helm template validation.
+  - Using helm upgrade without atomic/wait/timeout.
+  - Treating Helm rollback as full system rollback.
+evidence:
+  - Helm chart release plan.
+  - Secret sourcing note.
+  - Values schema.
+  - Rendered manifest validation command.

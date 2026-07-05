@@ -1,0 +1,49 @@
+---
+id: l1-css-spacing-fix
+description: |
+  Isolated CSS spacing tweak for one reusable badge.
+prompt: |
+  Reduce the left padding on the StatusBadge component from 12px to 8px so
+  the icon and label align with the design token.
+expected:
+  complexity: L1
+  risk_level: low
+  risk_triggers: []
+  skills:
+    - frontend-change-builder
+  capabilities:
+    - design-system-rules
+    - frontend-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+forbidden:
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - task-dag-planner
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - authentication-authorization
+    - observability
+    - release-rollback
+  domain_extensions:
+    - bigdata-product-extension
+    - ai-product-extension
+    - low-level-systems-extension
+  quality_gates:
+    - architecture gate
+    - API/data gate
+    - security gate
+    - reliability gate
+    - delivery gate
+notes: |
+  Design-token alignment should stay inside frontend implementation.
+

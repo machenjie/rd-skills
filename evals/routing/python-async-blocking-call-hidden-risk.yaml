@@ -1,0 +1,46 @@
+---
+id: python-async-blocking-call-hidden-risk
+description: |
+  Python async handler with blocking IO requires Python runtime and test
+  strategy evidence.
+prompt: |
+  A Python FastAPI async handler calls a blocking SDK directly, lacks timeout
+  and cancellation behavior, and only has a mocked happy-path unit test.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  hidden_risk_phrases:
+    - Python async blocking call without timeout
+    - blocking IO inside event loop
+    - cancellation behavior untested
+  skills:
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - python-professional-usage
+    - language-testing-strategy
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+    - data-api-contract-changer
+  capabilities:
+    - e2e-testing
+    - release-rollback
+    - cache-design
+  domain_extensions:
+    - ai-product-extension
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+    - API/data gate
+notes: |
+  Python async runtime risk should not be satisfied by a normal mocked unit test.

@@ -1,0 +1,21 @@
+expected_stage: code-review
+expected_professional_skill: backend-change-builder
+expected_capabilities:
+  - python-professional-usage
+expected_hidden_risks:
+  - Python async blocking call without timeout
+  - blocking IO inside event loop
+  - cancellation behavior untested
+expected_evidence:
+  - async/sync boundary evidence
+  - timeout and cancellation validation
+  - pytest async behavior evidence
+forbidden_behaviors:
+  - call blocking SDK directly in async handler
+  - rely on mocked success response as runtime evidence
+  - omit timeout or cancellation behavior
+expected_output_obligations:
+  - Python async boundary evidence
+  - validation evidence for timeout and cancellation
+  - what evidence proves and does not prove
+  - residual runtime risk owner

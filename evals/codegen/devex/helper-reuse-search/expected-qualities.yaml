@@ -1,0 +1,45 @@
+id: helper-reuse-search
+category: devex
+complexity: L3
+focus:
+  - helper reuse search
+  - implementation placement rationale
+  - shared utility pollution prevention
+  - execution evidence for agent-assisted changes
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - agent-execution-discipline
+    - implementation-structure-design
+    - code-review
+    - unit-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+    - execution discipline gate
+expected_outcomes:
+  - Existing order and customer formatter helpers are searched before new code is accepted.
+  - New display-name behavior is placed in the order owner module or explicitly justified.
+  - Shared/common/utils contain no order business rules.
+  - Evidence inventory records search, validation command, and residual risks.
+required_qualities:
+  - Reuse candidates and rejected alternatives are named explicitly.
+  - Tests exercise public order behavior, not private helper internals.
+  - The implementation remains cohesive with existing order ownership.
+  - Completion is supported by command output or equivalent validation evidence.
+forbidden_shortcuts:
+  - Adding formatOrderDisplayName to shared utils without reuse search.
+  - Reimplementing existing order or customer formatting logic locally.
+  - Exporting a helper only used by one order module.
+  - Claiming completion without test or validator output.
+evidence:
+  - Search record naming inspected formatter files.
+  - Unit test for normal order display name.
+  - Regression test for archived or missing-customer display behavior.
+  - Execution Discipline Report with validation result and closure boundary.

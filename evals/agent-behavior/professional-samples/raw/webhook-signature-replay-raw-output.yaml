@@ -1,0 +1,77 @@
+id: webhook-signature-replay-raw-output
+description: Raw Codex-style output for webhook signature and replay protection review.
+prompt: |
+  Review a billing webhook handler. It reads provider events, verifies HMAC,
+  rejects replay, and must not claim release readiness without evidence.
+expected:
+  selected_skills:
+    - integration-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+  selected_capabilities:
+    - idempotency-retry-design
+    - input-validation
+    - web-security
+    - logging-error-handling
+    - agent-execution-discipline
+    - regression-testing
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/42-idempotency-retry-design.md
+    - references/capabilities/54-web-security.md
+  required_quality_gates:
+    - integration gate
+    - security gate
+    - test gate
+  required_professional_obligations:
+    - raw body preservation for HMAC
+    - timestamp and nonce replay window
+    - duplicate event idempotency test
+    - "residual risk: provider sandbox signature drift"
+  forbidden_behaviors:
+    - parse JSON before HMAC verification
+    - accept unsigned event
+    - no replay protection
+actual:
+  raw_output: |
+    Short version: the dangerous part is the byte boundary, not the controller name.
+
+    ```yaml
+    changeforge_route:
+      selected_skills:
+        - integration-change-builder
+        - backend-change-builder
+        - security-privacy-gate
+        - quality-test-gate
+      selected_capabilities:
+        - idempotency-retry-design
+        - input-validation
+        - web-security
+        - logging-error-handling
+        - agent-execution-discipline
+        - regression-testing
+      required_references:
+        - references/routing-rules.md
+        - references/skill-registry.md
+        - references/capability-index.md
+        - references/domain-extension-index.md
+        - references/capabilities/42-idempotency-retry-design.md
+        - references/capabilities/54-web-security.md
+      required_quality_gates:
+        - integration gate
+        - security gate
+        - test gate
+    ```
+
+    Boundaries inspected: HTTP raw body middleware, verifier, event store, subscription mutation, retry logging.
+    Validation evidence: raw body preservation for HMAC via raw-byte fixture; timestamp and nonce replay window checked with stale timestamp and repeated nonce cases; duplicate event idempotency test covered the event-store write boundary.
+    Residual risk: provider sandbox signature drift; owner: integration maintainer until sandbox fixture is refreshed.
+    Next gate: integration gate verifies provider sandbox fixture, then security gate reviews timestamp tolerance.
+review:
+  human_review_required: true
+  promotion_status: promoted
+  notes: Promoted raw-output webhook sample with prose around the manifest and concrete evidence.

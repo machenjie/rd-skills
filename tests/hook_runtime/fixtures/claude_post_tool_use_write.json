@@ -1,0 +1,10 @@
+{
+  "runtime": "claude",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Write",
+  "cwd": "/tmp/changeforge-hook-test",
+  "tool_input": {
+    "file_path": "src/utils/auth_helper.py",
+    "content": "def check_token(token):\n    return bool(token)\n"
+  }
+}

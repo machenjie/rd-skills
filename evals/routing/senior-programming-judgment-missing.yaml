@@ -1,0 +1,68 @@
+---
+id: senior-programming-judgment-missing
+description: |
+  Non-trivial ChangeForge hook, routing, and eval changes must route to the
+  senior programming judgment capability when the handoff omits judgment
+  evidence.
+prompt: |
+  Update the hook runtime, route manifest schema, routing rules, and eval
+  fixtures for a new engineering behavior. The agent has read the files and
+  plans to edit them, but its plan only says "looks straightforward" and does
+  not include purpose, facts, objects, states, behaviors, rules, invariants,
+  boundaries, failure contract, side effects, reuse and placement, minimality,
+  validation map, observability map, or residual risk.
+expected:
+  complexity: L4
+  risk_level: high
+  expected_stage: skill-authoring
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - senior programming judgment missing
+    - non-trivial engineering without senior judgment
+    - new structure without reuse and placement rationale
+  hidden_risk_phrases:
+    - hook warning or block behavior changes without judgment evidence
+    - router selects a generic persona or business semantic control plane instead of an evidence gate
+    - eval coverage claims senior judgment without checking required fields
+  skills:
+    - change-forge-router
+    - architecture-impact-reviewer
+    - security-privacy-gate
+    - quality-test-gate
+    - ai-code-review-refactor
+  capabilities:
+    - repository-context-map
+    - engineering-stage-professionalism
+    - skill-authoring-expert
+    - senior-programming-judgment-core
+    - implementation-structure-design
+    - validation-broker
+    - agent-tool-permission-sandbox
+    - agent-execution-discipline
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - security gate
+    - test gate
+    - AI review gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - backend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - business-semantic-control-plane
+    - controller-api-implementation
+    - release-rollback
+  domain_extensions:
+    - ai-product-extension
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Senior programming judgment is an evidence gate paired with specialist
+  capabilities. It must not become a persona, a product-code route, or a
+  business semantic control plane replacement.

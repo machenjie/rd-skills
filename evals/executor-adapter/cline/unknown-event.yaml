@@ -1,0 +1,30 @@
+id: cline-unknown-event
+runtime: cline
+description: Cline unknown event degrades to an unsupported event without crashing closure.
+coverage_targets:
+  - degradation
+pressure_cases:
+  - unknown_event
+input_payload:
+  event_name: mystery_signal
+  event_id: cline-unknown-event
+  mode: plan
+  stage: plan
+expected_normalized_event:
+  adapter: cline
+  event_kind: unknown
+  stage_signal: implementation-planning
+  capability_degradation_contains:
+    - cline_unknown_event
+    - "unsupported_event:Unknown"
+expected_gate_result:
+  outcome: degraded
+expected_evidence_delta:
+  normalized_event_supported: false
+  adapter_degradation_strength: partial
+expected_closure_effect:
+  verdict: needs_validation
+  unsupported_checks_contains:
+    - runtime_adapter_degradation
+privacy_expectations:
+  forbid_absolute_paths: true

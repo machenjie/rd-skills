@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "changeforge.repository-context-pack.v1",
+  "title": "ChangeForge TaskContextPack v1",
+  "type": "object",
+  "required": ["task_context_pack"],
+  "properties": {
+    "task_context_pack": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "task_goal",
+        "source_of_truth",
+        "relevant_files",
+        "relevant_symbols",
+        "validation_candidates",
+        "freshness_markers",
+        "evidence_limits"
+      ],
+      "properties": {
+        "schema_version": {"const": 1},
+        "task_goal": {"type": "string"},
+        "changed_paths": {"type": "array", "items": {"type": "string"}},
+        "source_of_truth": {"type": "array"},
+        "relevant_files": {"type": "array"},
+        "relevant_symbols": {"type": "array"},
+        "local_conventions": {"type": "array"},
+        "affected_tests": {"type": "array"},
+        "validation_candidates": {"type": "array"},
+        "non_goals": {"type": "array"},
+        "excluded_context": {"type": "array"},
+        "freshness_markers": {"type": "object"},
+        "drift_triggers": {"type": "array"},
+        "evidence_limits": {"type": "array"}
+      }
+    }
+  }
+}

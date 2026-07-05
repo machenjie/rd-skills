@@ -1,0 +1,44 @@
+id: spark-skew-partitioning
+category: bigdata
+complexity: L3
+focus:
+  - Spark skew handling
+  - shuffle partitioning
+  - AQE and broadcast join
+  - data quality and cost guardrails
+route_hints:
+  skills:
+    - data-middleware-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - performance-budgeting
+    - profiling
+    - observability
+    - regression-testing
+  domain_extensions:
+    - bigdata-product-extension
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - Skewed key behavior is identified and mitigated.
+  - Partition count and file size are justified.
+  - Data quality checks gate promotion.
+  - Cost and freshness metrics are defined.
+required_qualities:
+  - Shuffle strategy names AQE, salting, broadcast, or partitioning tradeoffs.
+  - Output compaction avoids tiny files and single-partition bottlenecks.
+  - Profiling evidence identifies bottlenecks before tuning.
+  - Freshness, duration, scan volume, and cost signals are observable.
+forbidden_shortcuts:
+  - repartition(1) for production output.
+  - Blind cache() without reuse evidence.
+  - Full table scan with no partition filter or cost approval.
+  - No data freshness or job duration metric.
+evidence:
+  - Spark performance plan with skew mitigation.
+  - Profiling notes for shuffle and partition behavior.
+  - Data quality gate definition.
+  - Cost and freshness metric plan.

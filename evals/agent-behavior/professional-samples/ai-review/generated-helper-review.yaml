@@ -1,0 +1,67 @@
+id: generated-helper-review
+description: AI-generated helper review checks reuse, placement, API reality, and evidence limits.
+prompt: |
+  Review AI-generated code that adds a shared helper under common/utils for
+  tenant invoice formatting and calls a library method that may not exist.
+expected:
+  selected_skills:
+    - ai-code-review-refactor
+    - architecture-impact-reviewer
+    - quality-test-gate
+  selected_capabilities:
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - code-review
+    - refactoring
+    - agent-execution-discipline
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/101-implementation-structure-design.md
+    - references/capabilities/105-code-clarity-maintainability.md
+  required_quality_gates:
+    - review gate
+    - implementation gate
+    - test gate
+  required_professional_obligations:
+    - reuse search for existing helper
+    - placement rationale for helper ownership
+    - hallucinated API check
+    - residual risk: performance not profiled
+  forbidden_behaviors:
+    - invented shared helper
+    - move business rule into utils
+    - approve without typecheck
+actual:
+  route_manifest:
+    selected_skills:
+      - ai-code-review-refactor
+      - architecture-impact-reviewer
+      - quality-test-gate
+    selected_capabilities:
+      - implementation-structure-design
+      - code-clarity-maintainability
+      - code-review
+      - refactoring
+      - agent-execution-discipline
+    required_references:
+      - references/routing-rules.md
+      - references/skill-registry.md
+      - references/capability-index.md
+      - references/domain-extension-index.md
+      - references/capabilities/101-implementation-structure-design.md
+      - references/capabilities/105-code-clarity-maintainability.md
+    required_quality_gates:
+      - review gate
+      - implementation gate
+      - test gate
+  validation_evidence: "reuse search for existing helper; hallucinated API check; typecheck command not verified disclosure"
+  inspected_boundaries: "placement rationale for helper ownership; common/utils, invoice domain, tenant formatting caller"
+  residual_risk: "residual risk: performance not profiled"
+  next_gate: "next gate: test gate runs typecheck and focused regression"
+review:
+  human_review_required: true
+  promotion_status: candidate
+  notes: Candidate until compared against real AI-assisted helper review output.

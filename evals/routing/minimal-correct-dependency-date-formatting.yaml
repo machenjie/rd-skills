@@ -1,0 +1,44 @@
+---
+id: minimal-correct-dependency-date-formatting
+description: |
+  Avoid a new dependency for small date formatting behavior.
+prompt: |
+  Add a package for formatting a UTC date string in one backend response. If
+  the standard library or an existing dependency can do it, do not add a new
+  dependency.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  skills:
+    - ai-code-review-refactor
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - minimal-correct-implementation
+    - package-dependency-management
+    - dependency-vulnerability-scanning
+    - code-review
+  domain_extensions: []
+  quality_gates:
+    - AI review gate
+    - security gate
+    - test gate
+forbidden:
+  skills:
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Convenience dependency requests should route through dependency hygiene and
+  minimal-correctness before accepting the package.

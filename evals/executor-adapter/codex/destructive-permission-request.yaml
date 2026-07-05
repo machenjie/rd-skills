@@ -1,0 +1,46 @@
+id: codex-destructive-permission-request
+runtime: codex
+description: Codex permission request denies a destructive git command without storing raw command arguments.
+coverage_targets:
+  - event_recognition
+  - command_risk
+  - permission_decision
+  - closure_verdict
+  - privacy_redaction
+pressure_cases:
+  - codex_destructive_permission_request
+input_payload:
+  hook_event_name: PermissionRequest
+  event_id: codex-destructive-permission-request
+  tool_name: bash
+  tool_input:
+    command: git reset --hard HEAD
+  permission_decision: deny
+  permission_reason: destructive git command denied
+expected_normalized_event:
+  adapter: codex
+  event_kind: permission_request
+  tool_category: bash
+  command_kind: git
+  command_risk: destructive
+  permission_decision: deny
+expected_gate_result:
+  outcome: pass
+expected_evidence_delta:
+  normalized_event_supported: true
+  permission_strength: negative
+  permission_outcome: deny
+  command_risk_outcome: destructive
+  privacy_redaction_count: 1
+expected_closure_effect:
+  verdict: blocked
+  negative_evidence_contains:
+    - permission
+  residual_risk_contains:
+    - permission denied for dangerous command class
+privacy_expectations:
+  redactions_include:
+    - "command:kind_only"
+  blocked_strings:
+    - git reset --hard HEAD
+  forbid_absolute_paths: true

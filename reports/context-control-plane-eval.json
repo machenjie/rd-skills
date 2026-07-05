@@ -1,0 +1,150 @@
+{
+  "cases": [
+    {
+      "budget_mode": "minimal",
+      "closure_result": "pass",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/routing-budget-minimal.yaml",
+      "id": "routing-budget-minimal",
+      "safety_result": "pass",
+      "selected_reference_count": 2,
+      "skipped_reference_count": 1,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "staged-plan",
+      "closure_result": "partial",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/routing-budget-broad-audit.yaml",
+      "id": "routing-budget-broad-audit",
+      "safety_result": "pass",
+      "selected_reference_count": 7,
+      "skipped_reference_count": 2,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "staged-plan",
+      "closure_result": "partial",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/reference-signal-density.yaml",
+      "id": "reference-signal-density",
+      "safety_result": "pass",
+      "selected_reference_count": 5,
+      "skipped_reference_count": 3,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "staged-plan",
+      "closure_result": "pass",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/jit-context-pack-runtime-budget.yaml",
+      "id": "jit-context-pack-runtime-budget",
+      "safety_result": "pass",
+      "selected_reference_count": 4,
+      "skipped_reference_count": 2,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "single-stage",
+      "closure_result": "partial",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/tool-output-boundary-large-output.yaml",
+      "id": "tool-output-boundary-large-output",
+      "safety_result": "pass",
+      "selected_reference_count": 4,
+      "skipped_reference_count": 2,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "single-stage",
+      "closure_result": "pass",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/compaction-snapshot-v2.yaml",
+      "id": "compaction-snapshot-v2",
+      "safety_result": "pass",
+      "selected_reference_count": 6,
+      "skipped_reference_count": 2,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "staged-plan",
+      "closure_result": "partial",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/branch-route-repair-summary.yaml",
+      "id": "branch-route-repair-summary",
+      "safety_result": "pass",
+      "selected_reference_count": 4,
+      "skipped_reference_count": 1,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "minimal",
+      "closure_result": "pass",
+      "context_control_selected": false,
+      "errors": [],
+      "fixture": "evals/context-control/negative-small-typo-no-context-control.yaml",
+      "id": "negative-small-typo-no-context-control",
+      "safety_result": "pass",
+      "selected_reference_count": 1,
+      "skipped_reference_count": 0,
+      "status": "pass"
+    }
+  ],
+  "context_control_overhead": {
+    "command_delta": 19.91,
+    "evidence_boundary": "Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead. High overhead without pass-rate improvement is not success.",
+    "input_token_overhead_pct": 228.79,
+    "live_pass_rate": {
+      "pass_rate_delta": 0.0417,
+      "status": "collected"
+    },
+    "output_token_overhead_pct": 35.56,
+    "overhead_policy_verdict": "partial: structural fixtures pass and live overhead is collected, but high token overhead remains an ungoverned P2 risk; do not claim Context Control Plane quality or cost improvement",
+    "overhead_status": "partial",
+    "pass_rate_delta": 0.0417,
+    "quality_improvement_claim_allowed": false,
+    "runtime_telemetry": {
+      "command_delta": 19.91,
+      "live_codex_executed": false,
+      "source": "reports/codex-live-benchmark-summary.json",
+      "status": "existing_report"
+    },
+    "status": "partial",
+    "structural_fixture_status": "pass",
+    "token_overhead": {
+      "input_pct": 228.79,
+      "output_pct": 35.56,
+      "status": "collected"
+    },
+    "turn_overhead": null,
+    "turn_overhead_detail": {
+      "status": "not_collected",
+      "turn_overhead": null
+    }
+  },
+  "fixture_status": "pass",
+  "generated_by": "scripts/eval-context-control-plane.py",
+  "global_errors": [],
+  "overhead_status": "partial",
+  "release_status": "partial",
+  "schema_version": 1,
+  "status": "partial",
+  "summary": {
+    "capability": "context-control-plane",
+    "capability_id": "128",
+    "case_count": 8,
+    "failed": 0,
+    "fixture_directory": "evals/context-control",
+    "global_error_count": 0,
+    "live_codex_executed": false,
+    "passed": 8,
+    "raw_leak_count": 0
+  }
+}

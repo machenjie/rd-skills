@@ -1,0 +1,234 @@
+schema_version: 1
+cases:
+  - id: l1-isolated-backend-bug-fix
+    prompt: Fix an isolated null check in one backend helper with no API, security, release, or architecture signal.
+    expected:
+      selected_skills_include:
+        - backend-change-builder
+        - quality-test-gate
+      selected_skills_exclude:
+        - architecture-impact-reviewer
+        - security-privacy-gate
+        - reliability-observability-gate
+        - delivery-release-gate
+      selected_capabilities_include:
+        - test-strategy
+      capability_skill_map:
+        test-strategy:
+          - quality-test-gate
+      required_references:
+        - src/foundation/capabilities/test-strategy/SKILL.md
+      required_references_max: 3
+      skipped_references:
+        - reference: src/foundation/capabilities/threat-modeling/SKILL.md
+          reason: no auth, data exposure, or security-sensitive input is present.
+      required_quality_gates:
+        - gate: test gate
+          reason: changed backend behavior requires a targeted regression test or stated no-test rationale.
+      skipped_quality_gates:
+        - gate: architecture gate
+          reason: isolated helper fix has no boundary or design signal.
+      context_budget:
+        mode: minimal
+        selected_reference_count_max: 3
+  - id: logging-change-routes-logging-design
+    prompt: Add structured diagnostic logging around a retry failure path.
+    expected:
+      selected_skills_include:
+        - backend-change-builder
+        - logging-design-gate
+      selected_skills_exclude:
+        - delivery-release-gate
+      selected_capabilities_include:
+        - logging-error-handling
+      capability_skill_map:
+        logging-error-handling:
+          - logging-design-gate
+      required_references:
+        - src/foundation/capabilities/logging-error-handling/SKILL.md
+      required_references_max: 4
+      skipped_references:
+        - reference: src/foundation/capabilities/release-rollback/SKILL.md
+          reason: no deploy, rollback, or release packaging surface is present.
+      required_quality_gates:
+        - gate: implementation gate
+          reason: logging behavior changes runtime diagnostics and must be placed deliberately.
+      skipped_quality_gates:
+        - gate: delivery gate
+          reason: no release execution change is requested.
+      context_budget:
+        mode: single-stage
+        selected_reference_count_max: 4
+  - id: registry-capability-edit-routes-efficacy
+    prompt: Update a capability and registry route rule for a ChangeForge skill behavior change.
+    expected:
+      selected_skills_include:
+        - change-forge-router
+        - quality-test-gate
+      selected_skills_exclude:
+        - delivery-release-gate
+      selected_capabilities_include:
+        - skill-authoring-expert
+        - skill-efficacy-benchmark
+      capability_skill_map:
+        skill-authoring-expert:
+          - change-forge-router
+        skill-efficacy-benchmark:
+          - change-forge-router
+      required_references:
+        - src/foundation/capabilities/skill-authoring-expert/SKILL.md
+        - src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md
+      required_references_max: 5
+      skipped_references:
+        - reference: src/foundation/capabilities/release-rollback/SKILL.md
+          reason: source authoring validation is required, but release execution is not in scope.
+      required_quality_gates:
+        - gate: skill efficacy benchmark gate
+          reason: registry and capability edits change routing behavior.
+      skipped_quality_gates:
+        - gate: delivery gate
+          reason: no packaging or install artifact is changed directly by the fixture.
+      context_budget:
+        mode: staged-plan
+        selected_reference_count_max: 5
+  - id: memory-stale-context-routes-governance
+    prompt: Fix a stale project memory fact that is being reused after source files changed.
+    expected:
+      selected_skills_include:
+        - change-forge-router
+        - quality-test-gate
+      selected_skills_exclude:
+        - security-privacy-gate
+      selected_capabilities_include:
+        - project-memory-governance
+      capability_skill_map:
+        project-memory-governance:
+          - change-forge-router
+      required_references:
+        - src/foundation/capabilities/project-memory-governance/SKILL.md
+      required_references_max: 4
+      skipped_references:
+        - reference: src/foundation/capabilities/threat-modeling/SKILL.md
+          reason: stale-source governance is the trigger; no sensitive data exposure signal is present.
+      required_quality_gates:
+        - gate: validation gate
+          reason: stale memory cannot be closure evidence until source freshness is verified.
+      skipped_quality_gates:
+        - gate: security gate
+          reason: no secret, auth, or privacy payload change is requested.
+      context_budget:
+        mode: single-stage
+        selected_reference_count_max: 4
+  - id: graph-source-truth-routes-repository-graph
+    prompt: A repo graph says a generated artifact is the edit target, but source of truth is unknown.
+    expected:
+      selected_skills_include:
+        - change-forge-router
+        - quality-test-gate
+      selected_skills_exclude:
+        - delivery-release-gate
+      selected_capabilities_include:
+        - repository-graph-analysis
+      capability_skill_map:
+        repository-graph-analysis:
+          - change-forge-router
+      required_references:
+        - src/foundation/capabilities/repository-graph-analysis/SKILL.md
+      required_references_max: 4
+      skipped_references:
+        - reference: src/foundation/capabilities/release-rollback/SKILL.md
+          reason: source-of-truth inspection is required before any release concern.
+      required_quality_gates:
+        - gate: repository graph gate
+          reason: generated artifact edits must resolve source-of-truth policy first.
+      skipped_quality_gates:
+        - gate: delivery gate
+          reason: no deployment operation is in scope.
+      context_budget:
+        mode: single-stage
+        selected_reference_count_max: 4
+  - id: validation-stale-routes-broker
+    prompt: A previous validation pass is stale because files were edited after the test run.
+    expected:
+      selected_skills_include:
+        - change-forge-router
+        - quality-test-gate
+      selected_skills_exclude:
+        - delivery-release-gate
+      selected_capabilities_include:
+        - validation-broker
+      capability_skill_map:
+        validation-broker:
+          - quality-test-gate
+      required_references:
+        - src/foundation/capabilities/validation-broker/SKILL.md
+      required_references_max: 4
+      skipped_references:
+        - reference: src/foundation/capabilities/release-rollback/SKILL.md
+          reason: stale validation closure does not imply release execution risk.
+      required_quality_gates:
+        - gate: validation gate
+          reason: stale validation cannot be counted as closure evidence.
+      skipped_quality_gates:
+        - gate: delivery gate
+          reason: no build or release handoff is requested.
+      context_budget:
+        mode: minimal
+        selected_reference_count_max: 4
+  - id: adapter-unsupported-event-routes-protocol
+    prompt: An executor adapter receives an unsupported lifecycle event and must degrade closure evidence.
+    expected:
+      selected_skills_include:
+        - change-forge-router
+        - quality-test-gate
+      selected_skills_exclude:
+        - delivery-release-gate
+      selected_capabilities_include:
+        - executor-adapter-protocol
+      capability_skill_map:
+        executor-adapter-protocol:
+          - change-forge-router
+      required_references:
+        - src/foundation/capabilities/executor-adapter-protocol/SKILL.md
+      required_references_max: 4
+      skipped_references:
+        - reference: src/foundation/capabilities/release-rollback/SKILL.md
+          reason: adapter degradation is a closure semantics issue, not a release operation.
+      required_quality_gates:
+        - gate: adapter protocol gate
+          reason: unsupported events must not be counted as ready closure evidence.
+      skipped_quality_gates:
+        - gate: delivery gate
+          reason: no install or deploy behavior is changed.
+      context_budget:
+        mode: single-stage
+        selected_reference_count_max: 4
+  - id: simple-docs-typo-no-over-routing
+    prompt: Fix a typo in a public README sentence with no behavior or command change.
+    expected:
+      selected_skills_include:
+        - change-documentation-gate
+      selected_skills_exclude:
+        - backend-change-builder
+        - security-privacy-gate
+        - reliability-observability-gate
+      selected_capabilities_include:
+        - documentation-generation
+      capability_skill_map:
+        documentation-generation:
+          - change-documentation-gate
+      required_references:
+        - src/foundation/capabilities/documentation-generation/SKILL.md
+      required_references_max: 2
+      skipped_references:
+        - reference: src/foundation/capabilities/implementation-structure-design/SKILL.md
+          reason: typo-only documentation change has no implementation structure surface.
+      required_quality_gates:
+        - gate: documentation gate
+          reason: documentation changed and should be checked for wording/link regressions.
+      skipped_quality_gates:
+        - gate: security gate
+          reason: no product, code, permission, or data surface is changed.
+      context_budget:
+        mode: minimal
+        selected_reference_count_max: 2

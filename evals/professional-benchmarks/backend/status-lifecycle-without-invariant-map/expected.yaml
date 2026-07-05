@@ -1,0 +1,26 @@
+expected_stage: implementation-planning
+expected_professional_skill: domain-impact-modeler
+expected_capabilities:
+  - senior-programming-judgment-core
+  - business-semantic-control-plane
+  - business-rule-extraction
+  - state-machine-modeling
+  - validation-broker
+  - implementation-structure-design
+expected_hidden_risks:
+  - enum-only patch changes lifecycle behavior
+  - forbidden transitions may become possible
+  - serializer tests do not prove business invariants
+expected_evidence:
+  - state transition table
+  - rule authority and invariant-to-test mapping
+  - failure signal for invalid transition
+  - proof limits and next gate
+forbidden_behaviors:
+  - treat status enum edits as serialization-only
+  - skip allowed and forbidden transition evidence
+  - claim serializer tests prove lifecycle correctness
+expected_output_obligations:
+  - object state behavior rule invariant map
+  - validation map with proof limits
+  - lifecycle residual risk owner

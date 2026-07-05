@@ -1,0 +1,39 @@
+id: ts-nested-ternary-truthiness
+category: code-elements
+complexity: L2
+focus:
+  - nested ternary readability
+  - truthiness/nullish semantics
+  - frontend behavior tests
+route_hints:
+  skills:
+    - frontend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - language-idiom-enforcement
+    - code-review
+    - frontend-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+expected_outcomes:
+  - UI state branches are readable and explicit.
+  - Empty label and zero count remain valid values.
+  - Tests cover missing and falsey UI states.
+required_qualities:
+  - Avoids nested ternary logic when it hides branch semantics.
+  - Uses nullish or explicit checks for missing values.
+  - Tests user-visible output, not private helper shape.
+forbidden_shortcuts:
+  - Keeping nested ternary truthiness behavior.
+  - Moving local label behavior into a shared helper without consumers.
+  - Reporting completion without falsey UI tests.
+evidence:
+  - Code Element Professionalism Review naming the expression branches.
+  - Frontend behavior test output.
+  - TypeScript or lint evidence when available.
+

@@ -1,0 +1,48 @@
+id: inheritance-vs-composition-decision
+category: structure
+complexity: L3
+focus:
+  - inheritance vs composition
+  - substitutability evidence
+  - delegation
+  - contract tests
+route_hints:
+  skills:
+    - backend-change-builder
+    - architecture-impact-reviewer
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - refactoring
+    - unit-testing
+    - contract-testing
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - AI review gate
+    - test gate
+expected_outcomes:
+  - Inheritance is rejected when two payment processors share code but are not a substitutable taxonomy.
+  - Shared behavior uses composition, delegation, or a private technical helper instead of an abstract base class for reuse only.
+  - Strategy is used only if current variants share a stable contract and contract tests exist.
+  - Caller code does not branch on concrete subtype.
+required_qualities:
+  - Produces an Inheritance vs Composition Decision.
+  - Names taxonomy and substitutability evidence or rejects inheritance.
+  - Defines base contract and subtype contract tests if inheritance or strategy is accepted.
+  - Preserves initialization safety and lifecycle compatibility.
+  - Records rejected inheritance or rejected composition/delegation rationale.
+forbidden_shortcuts:
+  - Abstract base class only for code reuse.
+  - Subtype requires caller branching.
+  - No base contract tests.
+  - Initialization safety is not addressed.
+  - Strategy with one implementation and no current variant contract.
+evidence:
+  - Inheritance vs Composition Decision with taxonomy and substitutability assessment.
+  - Contract tests for any accepted interface, strategy, or hierarchy.
+  - Public payment processing tests for success, decline, retryable failure, and provider-specific behavior.
+  - Review evidence that code reuse is handled through composition, delegation, or private helper when taxonomy is absent.

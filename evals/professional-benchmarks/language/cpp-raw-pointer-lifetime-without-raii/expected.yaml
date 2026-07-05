@@ -1,0 +1,21 @@
+expected_stage: code-review
+expected_professional_skill: ai-code-review-refactor
+expected_capabilities:
+  - cpp-professional-usage
+expected_hidden_risks:
+  - C++ raw pointer lifetime without RAII
+  - dangling pointer ownership unclear
+  - sanitizer evidence missing
+expected_evidence:
+  - ownership and lifetime model
+  - RAII or smart pointer decision
+  - sanitizer or static analysis evidence
+forbidden_behaviors:
+  - accept raw owning pointer without RAII
+  - leave dangling pointer lifetime undocumented
+  - omit sanitizer evidence
+expected_output_obligations:
+  - ownership model evidence
+  - validation evidence for lifetime safety
+  - what evidence proves and does not prove
+  - residual native safety risk owner

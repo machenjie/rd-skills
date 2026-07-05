@@ -1,0 +1,43 @@
+id: dependency-stdlib-native-ladder
+category: devex
+complexity: L2
+focus:
+  - dependency avoidance
+  - standard library first
+  - deterministic UTC formatting
+  - supply-chain evidence
+route_hints:
+  skills:
+    - ai-code-review-refactor
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - minimal-correct-implementation
+    - package-dependency-management
+    - dependency-vulnerability-scanning
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - security gate
+expected_outcomes:
+  - The dependency ladder is answered before any package addition.
+  - Standard library or native runtime support is selected when sufficient.
+  - New package additions are rejected unless security and maintenance evidence supports them.
+  - Tests prove deterministic UTC formatting.
+required_qualities:
+  - Dependency Decision Record includes stdlib, native, existing utility, installed dependency, local code, and new dependency decisions.
+  - Lockfile changes are absent unless a justified dependency remains.
+  - Timezone-sensitive behavior is tested with a fixed timestamp.
+  - Handoff states what the test proves and does not prove.
+forbidden_shortcuts:
+  - Adding a date formatting dependency without checking the standard library.
+  - Updating lockfiles without transitive license and vulnerability review.
+  - Formatting dates with local timezone assumptions.
+  - Claiming convenience as dependency justification.
+evidence:
+  - Dependency ladder record.
+  - Unit test output for fixed UTC timestamp.
+  - Security or no-new-dependency review note.
+  - Lockfile impact statement.

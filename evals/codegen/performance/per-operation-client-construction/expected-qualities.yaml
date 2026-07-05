@@ -1,0 +1,45 @@
+id: per-operation-client-construction
+category: performance
+complexity: L4
+focus:
+  - client and pool lifecycle
+  - repository and adapter hidden IO
+  - response body cleanup
+  - timeout and retry behavior
+route_hints:
+  skills:
+    - backend-change-builder
+    - integration-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - language-performance-safety
+    - design-pattern-selection
+    - implementation-structure-design
+    - profiling
+    - idempotency-retry-design
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - Repository or adapter uses a lifecycle-managed reusable HTTP/DB/SDK client or pool.
+  - Pool sizing, keep-alive, timeout, retry, shutdown, and observability are declared.
+  - Response bodies, streams, and cursors are closed on success, error, and cancellation paths.
+  - Hidden network or storage IO is visible in the pattern and structure decision.
+required_qualities:
+  - Produces a Performance-Aware Structure Decision and Design Pattern Decision Record when adapter/repository/proxy is used.
+  - Defines client/pool construction scope and shutdown cleanup.
+  - Adds tests or review checks for response body and stream cleanup.
+  - Records timeout, retry, and pool sizing evidence.
+forbidden_shortcuts:
+  - Per-operation client construction.
+  - Response body leak.
+  - No pool sizing.
+  - Hidden network IO behind repository or adapter.
+evidence:
+  - Runtime performance safety assessment with client/pool lifecycle.
+  - Design Pattern Decision Record for repository, adapter, or proxy IO boundary.
+  - Tests or static checks for response body, stream, or cursor cleanup.
+  - Pool sizing and timeout/retry design note.

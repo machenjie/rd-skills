@@ -1,0 +1,1066 @@
+---
+schema_version: 1
+kind: changeforge.professionalism_axes
+score_model_path: docs/skill_professionalism_standard/SKILL_PROFESSIONALISM_DIMENSION_RUBRIC.md
+description: Item-specific professional judgment axes for the 100-point depth evaluator.
+default_axes:
+  professional-skill:
+    - owned decision boundary
+    - evidence requirement
+    - failure prevented
+    - escalation and handoff
+    - validation proof limit
+    - residual risk owner
+  foundation-capability:
+    - owner returned fragment
+    - focused decision boundary
+    - evidence requirement
+    - return to owner gate
+  domain-extension:
+    - strong domain signal
+    - domain invariant
+    - domain failure mode
+    - domain evidence
+    - owner handoff
+items:
+  change-forge-router:
+    axes:
+      - route classification and complexity
+      - owner reviewer skill selection
+      - foundation capability selection
+      - runtime profile boundary
+      - hidden risk escalation
+      - validation and handoff evidence
+  change-intake-compiler:
+    axes:
+      - current and desired behavior
+      - scope and non goal boundary
+      - blocking missing information
+      - acceptance signal
+      - stakeholder evidence source
+      - downstream owner handoff
+  change-impact-analyzer:
+    axes:
+      - affected surface inventory
+      - blast radius boundary
+      - same pattern scan
+      - product behavior preservation
+      - hidden dependency risk
+      - validation coverage map
+  acceptance-criteria-builder:
+    axes:
+      - observable acceptance behavior
+      - positive and negative cases
+      - edge and failure cases
+      - testable evidence signal
+      - non goal exclusion
+      - release blocking criterion
+  task-dag-planner:
+    axes:
+      - dependency ordering
+      - parallel and serial boundary
+      - critical path risk
+      - rollback and stop condition
+      - validation checkpoint
+      - owner handoff
+  development-process-orchestrator:
+    axes:
+      - PDD requirement trace
+      - DDD invariant trace
+      - SDD design decision trace
+      - TDD validation trace
+      - phase review evidence
+      - repair and re review loop
+  phase-review-capsule:
+    axes:
+      - reviewed artifact scope
+      - phase verdict
+      - blocker finding evidence
+      - approved scope limit
+      - repair requirement
+      - residual risk owner
+  experience-impact-modeler:
+    axes:
+      - user journey boundary
+      - navigation and state impact
+      - accessibility and interaction risk
+      - funnel or workflow regression
+      - experience validation evidence
+      - handoff to implementation owner
+  domain-impact-modeler:
+    axes:
+      - domain object ownership
+      - business rule authority
+      - state transition invariant
+      - permission and policy boundary
+      - golden case evidence
+      - domain residual risk
+  architecture-impact-reviewer:
+    axes:
+      - module and dependency boundary
+      - layering and ownership
+      - public facade impact
+      - reversibility and migration path
+      - architecture enforcement evidence
+      - rejected simpler alternative
+  data-api-contract-changer:
+    axes:
+      - schema and DTO compatibility
+      - API consumer impact
+      - version skew and migration
+      - error and pagination contract
+      - generated artifact policy
+      - contract validation evidence
+  frontend-change-builder:
+    axes:
+      - component and route ownership
+      - state and data flow
+      - API error behavior
+      - accessibility and keyboard path
+      - responsive interaction regression
+      - user behavior validation
+  backend-change-builder:
+    axes:
+      - input validation and trust boundary
+      - server side authorization and tenant isolation
+      - transaction and consistency control
+      - idempotency retry and async safety
+      - error contract and observability
+      - service repository and adapter placement
+  data-middleware-change-builder:
+    axes:
+      - persistence source of truth
+      - query and index behavior
+      - cache invalidation and TTL
+      - queue ordering and replay
+      - migration and backfill safety
+      - data integrity validation
+  integration-change-builder:
+    axes:
+      - external contract compatibility
+      - timeout retry and idempotency
+      - webhook signature and replay
+      - credential and sandbox boundary
+      - reconciliation and partial failure
+      - provider validation evidence
+  quality-test-gate:
+    axes:
+      - risk based test depth
+      - fixture and mock boundary
+      - negative path coverage
+      - regression and freshness evidence
+      - flaky or partial validation
+      - what evidence proves and does not prove
+  security-privacy-gate:
+    axes:
+      - trust boundary and threat model
+      - authentication authorization and IDOR
+      - secret PII and data minimization
+      - injection and unsafe input
+      - audit and compliance evidence
+      - security residual risk owner
+  reliability-observability-gate:
+    axes:
+      - SLI SLO and error budget
+      - concurrency capacity and saturation
+      - fallback circuit breaker and retry
+      - logs metrics traces and alerts
+      - incident recovery and runbook
+      - post release watch signal
+  logging-design-gate:
+    axes:
+      - log purpose and level
+      - structured fields and correlation
+      - redaction PII and secret safety
+      - cardinality and volume control
+      - audit versus diagnostic boundary
+      - alert and investigation evidence
+  delivery-release-gate:
+    axes:
+      - rollout strategy
+      - rollback boundary
+      - configuration and secret validation
+      - migration compatibility
+      - artifact and pipeline evidence
+      - post release monitoring owner
+  ai-code-review-refactor:
+    axes:
+      - hallucinated API detection
+      - hidden assumption inventory
+      - reuse and placement audit
+      - behavior preservation
+      - generated test quality
+      - repair and re review evidence
+  change-documentation-gate:
+    axes:
+      - affected documentation inventory
+      - user and operator contract
+      - migration and release note evidence
+      - doc source freshness
+      - stale or overclaim risk
+      - documentation handoff owner
+  agent-execution-discipline:
+    axes:
+      - evidence based completion
+      - verified cause diagnosis
+      - same pattern scan
+      - reuse placement rationale
+  code-clarity-maintainability:
+    axes:
+      - main flow clarity
+      - split merge readability
+      - test clarity review
+      - change navigation deletion path
+  engineering-stage-professionalism:
+    axes:
+      - current engineering stage
+      - selected skipped capability
+      - context budget decision
+      - stage transition evidence
+  implementation-structure-design:
+    axes:
+      - reuse ladder decision
+      - object method encapsulation
+      - file granularity decision
+      - dependency direction test boundary
+  skill-authoring-expert:
+    axes:
+      - body reference decision
+      - trigger precision
+      - registry routing impact
+      - generated artifact validation
+  algorithm-data-structure-selection:
+    axes:
+      - input scale and complexity bound
+      - data structure ownership
+      - memory and latency tradeoff
+      - worst case validation evidence
+  architecture-enforcement-tooling:
+    axes:
+      - enforceable architecture rule
+      - dependency and import boundary
+      - generated code exception policy
+      - CI failure evidence
+  async-job-design:
+    axes:
+      - job trigger and ownership
+      - retry and idempotency behavior
+      - queue DLQ and backpressure
+      - terminal failure observability
+  cache-design:
+    axes:
+      - source of truth boundary
+      - cache key scope and isolation
+      - TTL invalidation and stampede control
+      - cache loss fallback evidence
+  cleanup-deletion-governance:
+    axes:
+      - caller and runtime reference search
+      - removal condition and owner
+      - compatibility and rollback path
+      - stale branch telemetry evidence
+  code-element-professionalism:
+    axes:
+      - local expression semantics
+      - default null and truthiness edge
+      - control flow and cleanup ordering
+      - mutation resistant proof
+  code-review:
+    axes:
+      - hallucinated API verification
+      - spec compliance review
+      - structure placement review
+      - element semantics review
+  configuration-runtime-policy:
+    axes:
+      - typed config scope and default
+      - validation and fail fast behavior
+      - owner expiry and cleanup
+      - rollout rollback and audit evidence
+  consumer-impact-analysis:
+    axes:
+      - consumer inventory and ownership
+      - compatibility and version skew
+      - generated client or SDK impact
+      - telemetry and migration evidence
+  contract-testing:
+    axes:
+      - provider consumer contract boundary
+      - backward compatibility cases
+      - negative and error semantics
+      - generated artifact validation
+  cpp-professional-usage:
+    axes:
+      - ownership lifetime and RAII
+      - memory safety and undefined behavior
+      - ABI and build boundary
+      - sanitizer and concurrency evidence
+  data-side-effect-flow-tracing:
+    axes:
+      - visible side effect boundary
+      - transaction and publish ordering
+      - idempotency and compensation
+      - observable side effect evidence
+  dependency-wiring-lifecycle:
+    axes:
+      - construction and ownership scope
+      - startup validation boundary
+      - pooling and shutdown behavior
+      - test seam and lifecycle evidence
+  e2e-testing:
+    axes:
+      - auth permission journey
+      - side effect assertion
+      - semantic selectors
+      - trace screenshot artifact
+  failure-contract-design:
+    axes:
+      - error taxonomy boundary
+      - retryable and terminal distinction
+      - safe public error mapping
+      - negative path evidence
+  failure-diagnosis:
+    axes:
+      - symptom and cause separation
+      - hypothesis elimination
+      - reproduction and evidence chain
+      - repair validation and residual risk
+  go-professional-usage:
+    axes:
+      - context cancellation propagation
+      - error wrapping and ownership
+      - goroutine and channel lifecycle
+      - race and benchmark evidence
+  idempotency-retry-design:
+    axes:
+      - payload hash mismatch
+      - unknown outcome reconciliation
+      - DLQ replay terminal state
+      - retry budget circuit
+  integration-testing:
+    axes:
+      - real boundary or contract seam
+      - provider sandbox fidelity
+      - failure and timeout simulation
+      - fixture isolation evidence
+  java-jvm-professional-usage:
+    axes:
+      - transaction and resource lifecycle
+      - nullability and exception boundary
+      - concurrency and thread pool behavior
+      - JVM profiling and test evidence
+  language-idiom-enforcement:
+    axes:
+      - language visibility and naming
+      - standard library idiom fit
+      - public API convention
+      - maintainability and review evidence
+  language-performance-safety:
+    axes:
+      - runtime resource model
+      - memory concurrency and IO hazards
+      - hot path budget
+      - profile benchmark evidence
+  language-testing-strategy:
+    axes:
+      - test level by language boundary
+      - deterministic runtime seams
+      - fixture and mock idiom
+      - failure signal quality
+  logging-error-handling:
+    axes:
+      - correlationId traceparent propagation
+      - sensitive data exclusion
+      - RFC 7807 client response
+      - audit security event
+  message-queue-design:
+    axes:
+      - topic queue ownership
+      - ordering and partition key
+      - retry DLQ and poison handling
+      - lag replay and idempotency evidence
+  minimal-correct-implementation:
+    axes:
+      - existence challenge
+      - simplicity ladder choice
+      - native reuse before new surface
+      - shortcut ceiling and proof
+  model-boundary-mapping:
+    axes:
+      - DTO domain persistence boundary
+      - null default optional semantics
+      - mapper ownership and validation
+      - compatibility test evidence
+  observability:
+    axes:
+      - signal and symptom ownership
+      - metric label cardinality
+      - trace log metric correlation
+      - dashboard alert and runbook evidence
+  python-professional-usage:
+    axes:
+      - type and boundary validation
+      - context manager resource lifecycle
+      - exception and async behavior
+      - pytest fixture and typing evidence
+  refactoring:
+    axes:
+      - observable behavior boundary
+      - characterization tests
+      - public contract compatibility
+      - split merge preservation
+  regression-testing:
+    axes:
+      - historical failure reproduction
+      - same pattern coverage
+      - negative path assertion
+      - failing before passing after evidence
+  relational-database:
+    axes:
+      - schema and constraint ownership
+      - transaction isolation and locks
+      - query plan and index behavior
+      - migration rollback evidence
+  release-rollback:
+    axes:
+      - rollout phase boundary
+      - rollback trigger and command
+      - compatibility window
+      - post release watch evidence
+  repository-persistence:
+    axes:
+      - repository contract boundary
+      - query predicate and tenant scope
+      - transaction and mapping behavior
+      - integration test and migration evidence
+  requirement-clarification:
+    axes:
+      - missing fact classification
+      - blocking question ownership
+      - assumption and non goal boundary
+      - acceptance readiness evidence
+  rust-professional-usage:
+    axes:
+      - ownership borrow and lifetime
+      - Result error boundary
+      - concurrency Send Sync safety
+      - cargo test clippy evidence
+  senior-programming-judgment-core:
+    axes:
+      - purpose and source backed facts
+      - objects states and invariants
+      - boundaries side effects and failure contract
+      - validation map and residual risk
+  shell-cli-professional-usage:
+    axes:
+      - secret argv tracing
+      - quoted variable expansions
+      - dry run target validation
+      - stdout stderr contract
+  sql-professional-usage:
+    axes:
+      - set based query semantics
+      - null ordering and aggregate behavior
+      - transaction and lock impact
+      - query plan validation
+  test-strategy:
+    axes:
+      - risk to test depth
+      - public behavior boundary
+      - fixture and mock ownership
+      - validation freshness limits
+  testability-seam-design:
+    axes:
+      - public behavior seam
+      - deterministic dependency boundary
+      - fake stub mock choice
+      - private helper non export
+  transaction-consistency:
+    axes:
+      - unit of work boundary
+      - isolation and lock behavior
+      - side effect after commit
+      - rollback and compensation evidence
+  typescript-professional-usage:
+    axes:
+      - type boundary and narrowing
+      - Promise error behavior
+      - module and package contract
+      - compile and test evidence
+  unit-testing:
+    axes:
+      - pure behavior boundary
+      - edge and negative cases
+      - assertion mutation resistance
+      - fast deterministic execution
+  acceptance-standard-definition:
+    axes:
+      - acceptance criterion observability
+      - done state negative cases
+      - release blocking evidence
+      - owner handoff readiness
+  agent-tool-permission-sandbox:
+    axes:
+      - tool action risk boundary
+      - sandbox approval evidence
+      - side effect and secret exposure
+      - rollback and closure freshness
+  agent-workflow-state-machine:
+    axes:
+      - legal stage transition
+      - owner reviewer split
+      - validation freshness state
+      - repair loop closure
+  api-contract-design:
+    axes:
+      - endpoint contract boundary
+      - request response compatibility
+      - error pagination versioning
+      - consumer validation evidence
+  architecture-style-selection:
+    axes:
+      - style fit decision
+      - coupling and deployment boundary
+      - scalability tradeoff evidence
+      - architecture handoff trigger
+  architecture-tradeoff-analysis:
+    axes:
+      - architecture decision evidence
+      - boundary ownership risk
+      - rollback compatibility handoff
+      - trade-off validation state
+  authentication-authorization:
+    axes:
+      - identity authentication boundary
+      - authorization policy ownership
+      - denied path evidence
+      - privilege escalation handoff
+  authentication-security:
+    axes:
+      - credential handling boundary
+      - session and token lifecycle
+      - attack vector evidence
+      - security gate escalation
+  backup-recovery:
+    axes:
+      - recovery point objective
+      - restore procedure evidence
+      - data loss failure mode
+      - disaster handoff owner
+  build-tool-professional-usage:
+    axes:
+      - build graph evidence
+      - cache failure validation
+      - release artifact handoff
+      - sandbox permission boundary
+  business-rule-extraction:
+    axes:
+      - rule authority source
+      - enforcement layer boundary
+      - positive negative golden cases
+      - hidden rule handoff
+  business-semantic-control-plane:
+    axes:
+      - business claim evidence class
+      - graph memory selector boundary
+      - rule workflow golden mapping
+      - semantic review handoff
+  ci-cd:
+    axes:
+      - pipeline trigger boundary
+      - artifact and environment promotion
+      - failed gate evidence
+      - rollback release handoff
+  cli-daemon-interface-design:
+    axes:
+      - command daemon contract
+      - stdout stderr exit semantics
+      - lifecycle signal handling
+      - operator validation evidence
+  concurrency-control:
+    axes:
+      - shared state boundary
+      - lock transaction ordering
+      - race deadlock evidence
+      - concurrency test handoff
+  containerization:
+    axes:
+      - image runtime boundary
+      - dependency and filesystem layer
+      - health security resource evidence
+      - deployment handoff readiness
+  context-control-plane:
+    axes:
+      - selected reference budget
+      - skipped reference rationale
+      - tool output boundary
+      - compaction residual risk
+  context-packaging:
+    axes:
+      - handoff context scope
+      - evidence compression boundary
+      - stale context risk
+      - next owner readiness
+  controller-api-implementation:
+    axes:
+      - controller responsibility boundary
+      - validation auth translation
+      - error response contract
+      - service handoff evidence
+  data-format-contract-usage:
+    axes:
+      - format schema compatibility
+      - parser serializer boundary
+      - null default encoding evidence
+      - consumer handoff risk
+  data-migration-design:
+    axes:
+      - forward migration boundary
+      - rollback and compatibility window
+      - data integrity proof
+      - release gate handoff
+  data-model-design:
+    axes:
+      - entity relationship ownership
+      - invariant and constraint placement
+      - lifecycle state evidence
+      - persistence handoff boundary
+  degradation-circuit-breaking:
+    axes:
+      - degradation trigger boundary
+      - circuit breaker threshold
+      - fallback user impact evidence
+      - reliability handoff owner
+  dependency-vulnerability-scanning:
+    axes:
+      - dependency inventory scope
+      - vulnerability severity decision
+      - license and transitive evidence
+      - security remediation handoff
+  design-pattern-selection:
+    axes:
+      - pattern fit decision
+      - variation and lifecycle boundary
+      - simpler alternative evidence
+      - refactor handoff trigger
+  design-system-rules:
+    axes:
+      - component token authority
+      - accessibility and responsive boundary
+      - visual consistency evidence
+      - frontend handoff readiness
+  documentation-generation:
+    axes:
+      - documentation source boundary
+      - generated claim freshness
+      - stale doc failure mode
+      - docs gate handoff
+  domain-event-modeling:
+    axes:
+      - event semantic boundary
+      - producer consumer ownership
+      - ordering replay evidence
+      - integration handoff risk
+  domain-logic-implementation:
+    axes:
+      - business invariant placement
+      - domain object behavior boundary
+      - side effect separation evidence
+      - domain review handoff
+  domain-object-identification:
+    axes:
+      - object identity ownership
+      - aggregate relationship boundary
+      - vocabulary evidence source
+      - domain model handoff
+  dto-schema-design:
+    axes:
+      - DTO schema boundary
+      - domain persistence mapping
+      - optional default compatibility
+      - generated artifact validation
+  error-code-design:
+    axes:
+      - error contract evidence
+      - retry state validation
+      - client compatibility risk
+      - authorization risk
+  event-driven-architecture:
+    axes:
+      - event contract evidence
+      - idempotency retry risk
+      - ordering consistency validation
+      - replay failure handoff
+  execution-trajectory-analysis:
+    axes:
+      - action order evidence
+      - repeated failure diagnosis
+      - stale validation detection
+      - repair route handoff
+  executor-adapter-protocol:
+    axes:
+      - adapter capability boundary
+      - command outcome visibility
+      - unsupported evidence downgrade
+      - runtime handoff contract
+  extensibility-design:
+    axes:
+      - extension point ownership
+      - current variation evidence
+      - speculative abstraction risk
+      - cleanup handoff boundary
+  file-storage-processing:
+    axes:
+      - file lifecycle boundary
+      - storage permission and retention
+      - upload processing failure evidence
+      - security data handoff
+  form-validation-design:
+    axes:
+      - client server validation split
+      - field error semantics
+      - accessibility evidence
+      - API handoff boundary
+  frontend-api-integration:
+    axes:
+      - API state contract
+      - loading error empty behavior
+      - retry and stale data evidence
+      - frontend backend handoff
+  frontend-testing:
+    axes:
+      - accessible behavior boundary
+      - interaction state coverage
+      - fixture and mock ownership
+      - browser validation evidence
+  git-professional-usage:
+    axes:
+      - branch diff boundary
+      - staging commit intent
+      - conflict and history risk
+      - review handoff evidence
+  i18n-timezone-money-safety:
+    axes:
+      - locale timezone boundary
+      - currency precision ownership
+      - formatting parsing evidence
+      - domain risk escalation
+  indexing-query-optimization:
+    axes:
+      - query predicate ownership
+      - index selectivity tradeoff
+      - plan regression evidence
+      - database handoff trigger
+  information-architecture:
+    axes:
+      - navigation object hierarchy
+      - findability and labeling boundary
+      - user task evidence
+      - experience handoff readiness
+  input-validation:
+    axes:
+      - trust boundary validation
+      - normalization and rejection semantics
+      - malicious input evidence
+      - security handoff trigger
+  interaction-state-modeling:
+    axes:
+      - UI state lifecycle
+      - disabled loading error boundary
+      - race and recovery evidence
+      - frontend test handoff
+  kubernetes-gateway:
+    axes:
+      - cluster namespace boundary
+      - ingress service routing
+      - rollout health evidence
+      - operations handoff risk
+  language-runtime-selection:
+    axes:
+      - runtime fit decision
+      - ecosystem and deployment boundary
+      - performance safety tradeoff
+      - language capability handoff
+  layered-architecture-design:
+    axes:
+      - layer boundary ownership
+      - dependency contract validation
+      - architecture drift evidence
+      - handoff consistency risk
+  linux-systems-professional-usage:
+    axes:
+      - process filesystem boundary
+      - descriptor and permission handling
+      - signal cleanup evidence
+      - systems risk handoff
+  microservice-splitting:
+    axes:
+      - service ownership boundary
+      - data consistency tradeoff
+      - network failure evidence
+      - migration release handoff
+  module-boundary-design:
+    axes:
+      - public private module surface
+      - dependency direction rule
+      - shared utility leakage evidence
+      - architecture enforcement handoff
+  network-protocol-gateway-usage:
+    axes:
+      - protocol boundary contract
+      - timeout retry connection lifecycle
+      - backpressure failure evidence
+      - integration reliability handoff
+  non-goal-boundary-definition:
+    axes:
+      - explicit out of scope behavior
+      - assumption and constraint evidence
+      - scope creep failure mode
+      - intake handoff readiness
+  nosql-database:
+    axes:
+      - document key ownership
+      - consistency and query pattern
+      - index hot partition evidence
+      - data gate handoff
+  package-dependency-management:
+    axes:
+      - dependency necessity decision
+      - version license vulnerability evidence
+      - transitive footprint risk
+      - security release handoff
+  page-component-decomposition:
+    axes:
+      - page component responsibility
+      - state prop ownership boundary
+      - reuse versus local evidence
+      - frontend structure handoff
+  performance-budgeting:
+    axes:
+      - latency throughput budget
+      - hot path resource boundary
+      - profile benchmark evidence
+      - reliability handoff trigger
+  permission-boundary-modeling:
+    axes:
+      - actor resource permission boundary
+      - allow deny rule authority
+      - IDOR negative evidence
+      - security domain handoff
+  plan-execution-consistency:
+    axes:
+      - planned versus changed files
+      - skipped work rationale
+      - validation freshness comparison
+      - residual risk closure
+  profiling:
+    axes:
+      - measurement target boundary
+      - baseline and sample validity
+      - bottleneck evidence
+      - optimization handoff decision
+  project-initialization:
+    axes:
+      - scaffold scope boundary
+      - dependency and config defaults
+      - generated artifact evidence
+      - ownership handoff readiness
+  project-memory-governance:
+    axes:
+      - memory retention boundary
+      - stale claim classification
+      - privacy and evidence limits
+      - context handoff risk
+  prototype-description:
+    axes:
+      - prototype fidelity boundary
+      - assumption and non goal evidence
+      - throwaway versus production risk
+      - implementation handoff
+  repository-context-map:
+    axes:
+      - owning surface inventory
+      - caller callee boundary
+      - convention and rejected placement
+      - plan evidence readiness
+  repository-graph-analysis:
+    axes:
+      - graph edge evidence
+      - impacted path boundary
+      - selector not proof limit
+      - validation handoff trigger
+  requirement-structuring:
+    axes:
+      - requirement decomposition boundary
+      - ambiguity and assumption evidence
+      - acceptance trace readiness
+      - intake handoff owner
+  routing-navigation-design:
+    axes:
+      - route hierarchy ownership
+      - navigation state boundary
+      - deep link and guard evidence
+      - experience frontend handoff
+  scenario-decomposition:
+    axes:
+      - scenario actor goal boundary
+      - positive negative path inventory
+      - edge case evidence
+      - acceptance handoff readiness
+  sdk-library-contract-design:
+    axes:
+      - SDK public surface boundary
+      - version compatibility promise
+      - generated client evidence
+      - consumer handoff risk
+  search-analytics-design:
+    axes:
+      - search query intent boundary
+      - ranking filtering metric ownership
+      - relevance analytics evidence
+      - data experience handoff
+  secret-configuration-security:
+    axes:
+      - secret storage boundary
+      - configuration exposure risk
+      - rotation and redaction evidence
+      - security release handoff
+  service-business-logic:
+    axes:
+      - business decision evidence
+      - transaction side effect risk
+      - service boundary ownership
+      - domain validation handoff
+  skill-efficacy-benchmark:
+    axes:
+      - benchmark claim boundary
+      - fixture and expected behavior
+      - regression evidence quality
+      - release readiness handoff
+  solution-optimality-evaluation:
+    axes:
+      - simpler sufficient alternative
+      - complexity and resource tradeoff
+      - benchmark profile evidence
+      - retained complexity risk
+  state-machine-modeling:
+    axes:
+      - state transition authority
+      - forbidden path coverage
+      - guard actor evidence
+      - regression handoff readiness
+  state-management-design:
+    axes:
+      - state ownership boundary
+      - synchronization and cache semantics
+      - race stale state evidence
+      - frontend data handoff
+  task-dag-decomposition:
+    axes:
+      - dependency graph boundary
+      - critical path and stop condition
+      - validation checkpoint evidence
+      - owner sequence handoff
+  technology-stack-selection:
+    axes:
+      - stack fit decision
+      - team operations compatibility
+      - migration lock in evidence
+      - architecture release handoff
+  test-data-management:
+    axes:
+      - fixture data ownership
+      - PII and sensitivity boundary
+      - realism and isolation evidence
+      - quality gate handoff
+  threat-modeling:
+    axes:
+      - asset trust boundary
+      - attacker capability and entry point
+      - mitigation validation evidence
+      - security owner handoff
+  use-case-modeling:
+    axes:
+      - actor goal boundary
+      - primary alternate flow
+      - precondition postcondition evidence
+      - acceptance handoff readiness
+  user-flow-modeling:
+    axes:
+      - user journey boundary
+      - entry exit error path
+      - accessibility task evidence
+      - experience validation handoff
+  user-role-identification:
+    axes:
+      - role authority boundary
+      - permission and responsibility map
+      - misuse case evidence
+      - security domain handoff
+  validation-broker:
+    axes:
+      - changed path validation map
+      - validator depth selection
+      - freshness and negative evidence
+      - stop closure handoff
+  version-compatibility:
+    axes:
+      - old new version contract
+      - deprecation migration window
+      - consumer compatibility evidence
+      - release handoff risk
+  web-security:
+    axes:
+      - web trust boundary
+      - injection and browser security
+      - session CSRF XSS evidence
+      - security gate handoff
+  web3-product-extension:
+    axes:
+      - wallet and signature authority
+      - on chain off chain state consistency
+      - custody private key and replay risk
+      - smart contract and gas failure
+      - chain reorg and finality evidence
+  ai-product-extension:
+    axes:
+      - model prompt and provider contract
+      - retrieval permission and prompt injection
+      - tool call sandbox and confirmation
+      - eval dataset and hallucination metric
+      - model version drift and rollback
+  mobile-product-extension:
+    axes:
+      - platform lifecycle and permissions
+      - offline sync and conflict handling
+      - push deep link and background behavior
+      - device capability and store release
+      - mobile regression evidence
+  bigdata-product-extension:
+    axes:
+      - batch and stream lineage
+      - freshness and backfill safety
+      - partition schema and replay
+      - metric definition and SRM
+      - warehouse validation evidence
+  iot-embedded-extension:
+    axes:
+      - device state and firmware lifecycle
+      - sensor actuator and physical safety
+      - edge connectivity and retry
+      - OTA rollback and field recovery
+      - protocol validation evidence
+  payment-trading-extension:
+    axes:
+      - ledger balance and reconciliation
+      - authorization capture refund and chargeback
+      - settlement tax and entitlement
+      - idempotency and double spend prevention
+      - irreversible financial audit evidence
+  low-level-systems-extension:
+    axes:
+      - memory ownership and ABI contract
+      - syscall descriptor and resource cleanup
+      - concurrency atomics and ordering
+      - platform kernel driver boundary
+      - sanitizer benchmark and rollback evidence

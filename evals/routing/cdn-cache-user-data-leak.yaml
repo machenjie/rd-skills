@@ -1,0 +1,40 @@
+---
+id: cdn-cache-user-data-leak
+description: |
+  CDN cache key and user-specific response risk require network gateway and security routing.
+prompt: |
+  Fix a CDN cache key issue where a per-user account response can be cached at
+  the edge. Review `Cache-Control`, `Vary`, cookies, Authorization, TTL,
+  invalidation/purge, stale behavior, WAF bypass risk, health checks, and
+  origin shielding.
+expected:
+  complexity: L4
+  risk_level: critical
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - user data
+    - public exposure
+  skills:
+    - reliability-observability-gate
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - network-protocol-gateway-usage
+    - threat-modeling
+    - observability
+  domain_extensions: []
+  quality_gates:
+    - reliability gate
+    - security gate
+    - test gate
+    - implementation gate
+forbidden:
+  skills:
+    - data-api-contract-changer
+    - data-middleware-change-builder
+  capabilities:
+    - data-format-contract-usage
+    - message-queue-design
+notes: |
+  Edge caching of user-specific data is a gateway/security issue.

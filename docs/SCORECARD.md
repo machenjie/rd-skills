@@ -1,0 +1,140 @@
+# Scorecard
+
+The professional scorecard is a conservative health view of ChangeForge. It should help users understand what is verified, what is partial, and what still requires maintainer action.
+
+Generate it with:
+
+```bash
+python3 scripts/generate-professional-scorecard.py --out reports/professional-scorecard.md --json-out reports/professional-scorecard.json
+```
+
+Render the dashboard and generated README summary with:
+
+```bash
+python3 scripts/render-scorecard-dashboard.py --scorecard reports/professional-scorecard.json --out docs/SCORECARD_DASHBOARD.md --readme README.md
+```
+
+`reports/professional-scorecard.*`, `docs/SCORECARD_DASHBOARD.md`, and
+the README scorecard summary block are release snapshots. They should be
+regenerated together before release decisions, but ordinary CI does not treat
+them as per-PR freshness gates.
+
+CI smoke checks use the stricter profile-build mode after all profiles are built:
+
+```bash
+python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
+```
+
+## Dimensions
+
+| Dimension | Status Source | Verification Command | Repair Path |
+| --- | --- | --- | --- |
+| Routing coverage | `reports/professionalism-release-readiness.json` routing summary. | `python3 scripts/validate-professional-routing-coverage.py` | Add or repair routing fixtures for uncovered risks. |
+| Professional skill coverage | Professional skill coverage summary. | `python3 scripts/eval-skill-professionalism.py` | Improve skill contracts without keyword stuffing. |
+| Foundation capability coverage | Coverage matrix summary. | `python3 scripts/eval-skill-professionalism.py --coverage-matrix` | Improve selected capability references and evidence contracts. |
+| Reference loading discipline | Build manifests and runtime link validation. | `python3 scripts/validate-runtime-reference-links.py` | Keep references selected and linked; do not top-level all capabilities in recommended/full. |
+| Hook safety | Hook validator. | `python3 scripts/validate-hooks.py` | Preserve advisory/fail-open behavior unless a stricter mode is explicitly enabled. |
+| Runtime governance validators | Repository intelligence, context pack, Project Memory, Validation Broker, and trajectory validators. | `python3 scripts/index-repository.py --target . --out /tmp/changeforge-repo-graph.json && python3 scripts/validate-repository-graph.py --graph /tmp/changeforge-repo-graph.json && python3 scripts/build-context-pack.py --task "release validation" --target . --graph /tmp/changeforge-repo-graph.json --out /tmp/changeforge-context-pack.json && python3 scripts/validate-context-pack.py --context-pack /tmp/changeforge-context-pack.json && python3 scripts/validate-project-memory.py && python3 scripts/validate-validation-broker.py && python3 scripts/validate-trajectory.py` | Rebuild graph/context-pack artifacts, repair privacy or validation parser regressions, and rerun the affected unit suites. |
+| Validation suite coverage | Validation command list in scorecard JSON. | Full suite in [RELEASE.md](RELEASE.md) | Run missing commands and include results in release handoff. |
+| Installation reproducibility | Build manifests and installer validation. | `python3 scripts/validate-installation.py` | Rebuild profiles, repair manifest/install mismatches, rerun doctor. |
+| Marketplace index validation | Source-derived marketplace exporter and profile validator. | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` | Rebuild profiles and repair schema, visibility, or runtime path mismatches. |
+| Runtime governance structural fixtures | Local structural fixtures for executor adapters, repository intelligence, project memory, validation broker, and trajectory. | `python3 scripts/validate-professional-routing-coverage.py` | Add or repair fixture YAML under `evals/executor-adapters`, `evals/repository-intelligence`, `evals/project-memory`, `evals/validation-broker`, and `evals/trajectory`; do not treat structural fixtures as live empirical pass-rate evidence. |
+| Business semantic structural fixtures | Business Semantic Pack schemas, valid/invalid schema samples, deterministic expected-vs-actual routing outputs, and deterministic expected-vs-actual review outputs. | `python3 scripts/validate-business-semantic-pack.py && python3 scripts/eval-business-semantic-routing.py && python3 scripts/eval-business-semantic-review.py` | Repair `src/business_intelligence/schemas`, `evals/business-semantic`, `evals/business-semantic-outputs`, or BSP route/review policy until source-backed facts, structured selected/skipped reference rationale, selector-only memory/graph use, and overroute/underroute expectations pass. |
+| context_control_overhead | Deterministic context-control fixtures plus bounded overhead-policy verdict from the existing live benchmark summary when present. | `python3 scripts/eval-context-control-plane.py` | Repair context-control fixtures or collect lower-overhead live evidence before claiming Context Control Plane quality improvement. |
+| Executor adapter structural fixtures | Deterministic fixture report for runtime adapter normalization, degradation, privacy, validation freshness, and closure behavior. | `python3 scripts/eval-executor-adapters.py` | Repair fixture expectations or adapter normalization until deterministic cases pass; do not treat structural fixtures as live runtime pass-rate evidence. |
+| Activation precision benchmark | Deterministic route activation precision/recall report for stage, skill, capability, reference, language, risk, and overroute metrics against the built hook runtime. | `python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks` | Repair fixture expectations or built resolver precision until all activation metrics pass. |
+| Runtime telemetry fixture sample | Sanitized bounded sample generated from executor adapter fixture facts. | `python3 scripts/eval-executor-adapters.py` | Regenerate the sample and keep it clearly labeled as fixture-derived evidence. |
+| Live runtime telemetry sample | Sanitized bounded facts from an actual hook runtime execution, when available. | Manual live runtime collection. | Keep `not_collected` until a real hook-runtime sample exists; do not use executor adapter fixtures for this dimension. |
+| Executor adapter live pass-rate | Measured real-task executor adapter success rate, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
+| Executor adapter token overhead | Measured additional token cost, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
+| Executor adapter turn overhead | Measured additional turn cost, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
+| Codex CLI live pass-rate benchmark | Published `reports/codex-live-benchmark-summary.json` pass-rate evidence from an explicit opt-in strict Codex CLI run using `auth-policy=borrow-current` or `isolated-api-key`. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` | Keep `not_collected` until a real validated strict run is published; dry-run, skipped, telemetry-only, contaminated-baseline, user-skill/config/rule-visible, missing assertion, missing ablation-delta, current-home smoke, clean-paired smoke, `evidence_scope_ready=false`, and `effect_status=inconclusive` reports cannot satisfy this dimension as `pass`. |
+| Codex CLI live capability coverage | Published `reports/codex-live-benchmark-summary.json` capability matrix evidence showing core ChangeForge capabilities have linked assertion-backed live cases and explicit bounded evidence. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` | Keep `partial` or `not_collected` until every core capability in `evals/codex-live/capability-matrix.yaml` has linked live cases, required variants, assertion pass, and process/repo/memory/validation/review/injection evidence where required. |
+| Open-source readiness | `config/open-source-release.yaml`, [LICENSE_DECISION.md](LICENSE_DECISION.md), [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md), `pyproject.toml`, `CONTRIBUTING.md`, `SECURITY.md`, and root `LICENSE`. | `python3 scripts/validate-open-source-readiness.py` | Keep MIT license text, package metadata, contribution licensing, and private vulnerability reporting or private security contact evidence ready before open-source publication. |
+| Example coverage | `examples/` scenario structure. | `python3 scripts/validate-examples.py` | Add prompt, route, and evidence files for each scenario. |
+| Productization assets | Productization docs, schema, and generation/validation scripts. | `python3 scripts/validate-productization-assets.py` | Restore required productization assets. |
+
+## Status Rules
+
+- `pass`: machine-readable evidence exists and the check passed.
+- `partial`: evidence exists but has warnings or needs-review items.
+- `fail`: evidence shows a broken invariant.
+- `unknown`: the expected evidence artifact is absent or incomplete.
+- `not_collected`: the command is known, but no machine-readable result is available for the scorecard to consume.
+
+Do not replace `unknown` or `not_collected` with `pass` by hand. Run the verification command and update the scorecard generator only when the underlying tool emits reliable machine-readable evidence.
+
+## Evidence Levels
+
+| Evidence | Meaning |
+| --- | --- |
+| structural fixture | Local deterministic structure sample passed; this is not live task success evidence. |
+| runtime telemetry fixture sample | Deterministic executor-adapter fixture-derived bounded facts; this is not live runtime telemetry. |
+| live runtime telemetry sample | Sanitized bounded facts from an actual hook runtime execution; it may still require human review before promotion. |
+| promoted golden case | Human-reviewed case admitted to regression coverage. |
+| live pass-rate | Measured real-task success rate. |
+| token overhead | Measured additional token cost. |
+| turn overhead | Measured additional turn cost. |
+| local_codex_cli_live_benchmark | Explicit opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
+
+Generated telemetry candidates with `generated_from_telemetry: true` and
+`requires_human_review: true` are candidate evidence only. They must not count as
+measured evidence, promoted golden cases, live pass-rate, token overhead, or turn
+overhead until a maintainer reviews and promotes them.
+
+Executor adapter fixture telemetry can make `runtime telemetry fixture sample`
+pass when the generated sample is bounded, sanitized, and explicitly labeled as
+fixture-derived. It does not make `live runtime telemetry sample`,
+`live pass-rate`, `token overhead`, or `turn overhead` pass; those dimensions
+remain `not_collected` until separately measured or collected.
+
+Codex CLI live benchmark evidence is separate from executor adapter telemetry.
+The scorecard and public summary split this evidence into pass-rate and core
+capability coverage dimensions. A pass-rate `pass` is not broad capability
+coverage unless the capability coverage dimension is also `pass`. The scorecard
+and public summary only read the strict
+`reports/codex-live-benchmark-summary.json`; they never run Codex and they do
+not read `reports/codex-current-home-smoke-summary.json` or
+`reports/codex-live-smoke-summary.json` as pass evidence. A strict summary may
+borrow Codex authentication, but it must use temp `HOME`, hide user
+skills/hooks/config/rules, pass `--ignore-user-config` and `--ignore-rules`,
+use `clean-paired` or `ablation` mode, contain no current-home-full results,
+contain no contaminated baseline artifacts, and include assertion-backed
+eligible results for every comparable variant before it can change the
+dimension from `not_collected`. Ablation summaries must include
+`skills_only_clean_vs_baseline_clean`,
+`skills_with_hooks_clean_vs_skills_only_clean`, and
+`skills_with_hooks_clean_vs_baseline_clean` deltas. The summary also carries
+failure-category buckets, mean/median/min/max usage and metric counts, and
+per-case/per-variant pass rates so the public scorecard does not flatten the
+evidence into a single headline pass rate.
+
+Cost telemetry is reported for later optimization only. Token usage, command
+executions, and file changes do not gate the quality result in this phase, and
+the scorecard must not claim cost reduction or efficiency improvement from the
+current quality-first benchmark.
+
+Context Control Plane overhead is a separate scorecard row. The row separates
+structural fixture pass, live pass-rate, live runtime telemetry, token overhead,
+and turn overhead. A structural fixture pass is not proof of live quality
+improvement. High overhead without pass-rate improvement is not success, and
+the generated reports must keep that case `partial` or `fail` rather than
+`pass`. Live Codex benchmark commands are opt-in and are not default scorecard
+validation.
+
+For this dimension, artifact validity and evidence readiness are separate.
+`clean-paired` smoke can be a valid diagnostic artifact, but it remains
+`partial` when it lacks `skills_only_clean`, has fewer than 5
+assertion-backed cases, has fewer than 3 runs per required variant, reports
+`evidence_scope=smoke`, reports `evidence_scope_ready=false`, or has an
+inconclusive effect. Only `multi_case_ablation_3_run` evidence with
+`baseline_clean`, `skills_only_clean`, and `skills_with_hooks_clean` can pass
+as broad local Codex live benchmark evidence.
+
+Open-source readiness is conservative: a root `LICENSE` alone is not enough. `pyproject.toml` must declare MIT, `config/open-source-release.yaml:selected_license` must be `MIT`, contribution licensing must be confirmed, and GitHub private vulnerability reporting or a private security contact path must be confirmed before the dimension can be `pass`.
+
+## README Summary
+
+The README should stay short. Link here for details instead of copying the full table into the front page.
+
+See [SCORECARD_DASHBOARD.md](SCORECARD_DASHBOARD.md) for the generated dashboard and [BENCHMARKS.md](BENCHMARKS.md) for the benchmark system behind the scorecard.

@@ -1,0 +1,185 @@
+---
+id: compaction-snapshot-v2
+input:
+  scenario: Compaction snapshot v2 must preserve route, stage, validation, review, context-control, omitted-context, and branch-repair fields.
+  context_risk: true
+  routing_fixture_path: evals/routing/context-control-compaction-snapshot.yaml
+  routing_actual_path: evals/routing-outputs/context-control-compaction-snapshot.actual.yaml
+  runtime_resolver:
+    stage: documentation-handoff
+    risk_surfaces: []
+    product_surfaces: []
+    classification:
+      stage: documentation-handoff
+      prompt_signals:
+        - compaction snapshot
+expected:
+  context_control_selected: true
+  selected_skills:
+    - change-documentation-gate
+    - quality-test-gate
+    - ai-code-review-refactor
+  selected_capabilities:
+    - context-control-plane
+    - agent-workflow-state-machine
+    - execution-trajectory-analysis
+    - project-memory-governance
+    - repository-graph-analysis
+    - context-packaging
+    - validation-broker
+    - plan-execution-consistency
+    - documentation-generation
+    - agent-execution-discipline
+  budget_mode: single-stage
+  selected_reference_count: 6
+  selected_reference_count_max: 14
+  skipped_reference_count: 2
+  skipped_references:
+    - reference: references/capabilities/120-agent-tool-permission-sandbox.md
+      reason: No new tool permission decision is in scope.
+    - reference: references/capabilities/75-release-rollback.md
+      reason: No deployment rollback state is being handed off.
+  safety_result: pass
+  closure_result: pass
+  forbidden_raw_fields:
+    - raw_prompt
+    - prompt
+    - stdout
+    - stderr
+    - command_output
+    - raw_output
+    - full_output
+    - full_diff
+    - file_contents
+    - environment
+    - env
+    - secret
+    - credentials
+context_budget:
+  budget_mode: single-stage
+  budget_profile: runtime
+  budget_rationale: Compaction handoff needs selected continuity records without replaying raw prompts or logs.
+  context_budget_tokens: 850
+  selected_capability_count: 10
+  selected_reference_count: 6
+  skipped_reference_count: 2
+  over_budget: false
+  residual_context_risk:
+    - Prior summary claims remain assumptions until matched to current source and validation evidence.
+compaction_snapshot_v2:
+  required: true
+  required_fields:
+    - route_id
+    - selected_skills
+    - selected_capabilities
+    - required_quality_gates
+    - current_stage
+    - pdd_summary
+    - ddd_invariants
+    - sdd_decisions
+    - tdd_validation_plan
+    - changed_paths
+    - read_paths
+    - validation_results
+    - validation_freshness
+    - review_findings
+    - repair_events
+    - rereview_events
+    - residual_risk
+    - memory_references
+    - repo_graph_references
+    - active_skill_context
+    - last_material_edit_index
+    - last_validation_command_index
+    - selected_reference_policy
+    - omitted_context
+    - tool_output_boundaries
+    - artifact_references
+    - branch_route_repair_summaries
+    - snapshot_source
+  record:
+    schema_version: 2
+    snapshot_id: snapshot-context-control-fixture
+    snapshot_kind: pre_compact
+    event_name: PreCompact
+    route_id: context-control-phase-6
+    selected_skills:
+      - change-forge-router
+      - quality-test-gate
+    selected_capabilities:
+      - context-control-plane
+      - validation-broker
+    required_quality_gates:
+      - test gate
+      - execution discipline gate
+    current_stage: documentation-handoff
+    pdd_summary:
+      - make context-control measurable
+    ddd_invariants:
+      - no raw prompts or full output in state
+    sdd_decisions:
+      - add deterministic evaluator
+    tdd_validation_plan:
+      - python3 scripts/eval-context-control-plane.py
+    changed_paths:
+      - scripts/eval-context-control-plane.py
+    read_paths:
+      - src/foundation/capabilities/context-control-plane/SKILL.md
+    validation_results:
+      - pass:python3 scripts/eval-context-control-plane.py
+    validation_freshness: fresh_after_last_material_edit
+    review_findings:
+      - none
+    repair_events:
+      - none
+    rereview_events:
+      - none
+    residual_risk:
+      - live overhead remains opt-in evidence only
+    memory_references:
+      - references/capabilities/128-context-control-plane.md
+    repo_graph_references:
+      - graph-selected-context-control-files
+    context_control:
+      budget_mode: single-stage
+      selected_reference_count: 6
+      skipped_reference_count: 2
+      jit_retrieval_required: true
+      tool_output_boundary_required: true
+    selected_reference_policy:
+      selected_reference_count: 6
+      skipped_reference_count: 2
+      policy: selected references are task and gate specific
+    tool_output_boundaries:
+      - schema_version: 1
+        tool_name: Bash
+        event_name: PostToolUse
+        output_size_class: large
+        artifact_path: artifacts/validation/context-control.log
+        artifact_path_source: explicit_tool_result
+        llm_context_policy: artifact_reference_only
+        privacy_status: pass
+    artifact_references:
+      - artifacts/validation/context-control.log
+    omitted_context:
+      - kind: tool_output
+        reason: full validation output excluded from active context
+    branch_route_repair_summaries:
+      - schema_version: 1
+        summary_id: route-repair-fixture
+        trigger: route_repair
+        privacy_status: pass
+    active_skill_context:
+      route_id: context-control-phase-6
+      current_stage: documentation-handoff
+    last_material_edit_index: 5
+    last_validation_command_index: 6
+    missing_required_fields: []
+    privacy_redaction_status: pass
+    context_usable_status: pass
+    context_retention_status: pass
+    tokens_before: null
+    first_kept_entry_id: null
+    snapshot_source: pre_compact
+    warnings:
+      - runtime_tokens_before_not_exposed

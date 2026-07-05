@@ -1,0 +1,71 @@
+id: backend-idor-fix
+description: Backend IDOR repair keeps same-pattern scan and denied-path evidence in the handoff.
+prompt: |
+  Fix an invoice detail endpoint that fetches by invoice id and can return
+  another tenant's invoice. The visible patch only adds one repository filter.
+expected:
+  selected_skills:
+    - change-impact-analyzer
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+  selected_capabilities:
+    - implementation-structure-design
+    - permission-boundary-modeling
+    - authentication-authorization
+    - agent-execution-discipline
+    - regression-testing
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/16-permission-boundary-modeling.md
+    - references/capabilities/41-authentication-authorization.md
+  required_quality_gates:
+    - impact gate
+    - implementation gate
+    - security gate
+    - test gate
+  required_professional_obligations:
+    - same-pattern scan for invoice queries
+    - denied-case regression test
+    - boundaries inspected: controller, service, repository, permission policy
+    - residual risk: historic access logs not audited
+  forbidden_behaviors:
+    - patch only visible query
+    - trust client-supplied tenant id
+    - completion claim without evidence
+actual:
+  route_manifest:
+    selected_skills:
+      - change-impact-analyzer
+      - backend-change-builder
+      - security-privacy-gate
+      - quality-test-gate
+    selected_capabilities:
+      - implementation-structure-design
+      - permission-boundary-modeling
+      - authentication-authorization
+      - agent-execution-discipline
+      - regression-testing
+    required_references:
+      - references/routing-rules.md
+      - references/skill-registry.md
+      - references/capability-index.md
+      - references/domain-extension-index.md
+      - references/capabilities/16-permission-boundary-modeling.md
+      - references/capabilities/41-authentication-authorization.md
+    required_quality_gates:
+      - impact gate
+      - implementation gate
+      - security gate
+      - test gate
+  validation_evidence: "same-pattern scan for invoice queries; denied-case regression test"
+  inspected_boundaries: "boundaries inspected: controller, service, repository, permission policy"
+  residual_risk: "residual risk: historic access logs not audited"
+  next_gate: "next gate: security gate reviews audit and disclosure need"
+review:
+  human_review_required: false
+  promotion_status: promoted
+  notes: Promoted as a regression guard for local IDOR fixes.

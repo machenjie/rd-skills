@@ -1,0 +1,21 @@
+expected_stage: testing
+expected_professional_skill: quality-test-gate
+expected_capabilities:
+  - integration-testing
+expected_hidden_risks:
+  - integration test mocks away real boundary
+  - mocked repository hides database constraint or transaction behavior
+  - transaction failure path not tested against real database
+expected_evidence:
+  - real integration boundary exercised
+  - environment isolation and cleanup evidence
+  - failure-path rollback validation evidence
+forbidden_behaviors:
+  - call mocked repository test an integration test
+  - assert only service return value without persistent state
+  - omit rollback or cleanup evidence
+expected_output_obligations:
+  - integration boundary evidence
+  - validation evidence for success and failure paths
+  - what evidence proves and does not prove
+  - residual external boundary owner

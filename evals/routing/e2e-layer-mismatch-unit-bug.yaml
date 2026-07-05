@@ -1,0 +1,55 @@
+---
+id: e2e-layer-mismatch-unit-bug
+description: |
+  A local formatting bug is proposed as an E2E browser test; route to test
+  layer selection without broad product or release gates.
+prompt: |
+  A currency formatter rounds 1.005 incorrectly inside a pure TypeScript
+  helper. The proposal adds a Playwright checkout E2E test for the whole flow
+  instead of a focused unit-level regression. Decide the right test layer and
+  evidence.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: testing
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - missing test evidence
+  hidden_risk_phrases:
+    - E2E test used for unit-level bug
+    - slow browser test hides cheaper unit coverage
+    - test layer selection inverted for local logic
+  skills:
+    - quality-test-gate
+    - frontend-change-builder
+  capabilities:
+    - implementation-structure-design
+    - agent-execution-discipline
+    - unit-testing
+    - e2e-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - test gate
+    - implementation gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - delivery-release-gate
+    - security-privacy-gate
+  capabilities:
+    - contract-testing
+    - cache-design
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - API/data gate
+    - delivery gate
+    - security gate
+notes: |
+  This case checks layer selection: keep E2E narrow and use unit/regression
+  evidence for local deterministic logic.

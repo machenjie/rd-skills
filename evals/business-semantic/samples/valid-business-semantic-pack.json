@@ -1,0 +1,241 @@
+{
+  "business_semantic_pack": {
+    "schema_version": 1,
+    "pack_id": "bsp_order_cancel",
+    "pack_version": "1",
+    "created_at": "2026-06-30T00:00:00Z",
+    "task_business_intent": {
+      "business_outcome": "Reject cancellation after shipment.",
+      "non_goals": ["No refund behavior change."],
+      "success_signals": ["shipped order cancel is denied"],
+      "failure_signals": ["shipped order is cancelled"],
+      "evidence": [
+        {
+          "evidence_class": "FACT",
+          "source_kind": "current_source",
+          "source_paths": ["src/domain/order.py"],
+          "summary": "Order aggregate owns cancellation.",
+          "freshness": "current",
+          "confidence": "high",
+          "verification_status": "verified"
+        }
+      ]
+    },
+    "business_vocabulary": [
+      {
+        "term": "Order",
+        "meaning": "Customer purchase aggregate.",
+        "owning_context": "commerce",
+        "aliases_or_conflicts": [],
+        "evidence": [
+          {
+            "evidence_class": "FACT",
+            "source_kind": "current_source",
+            "source_paths": ["src/domain/order.py"],
+            "summary": "Order term is defined in the commerce domain source.",
+            "freshness": "current",
+            "confidence": "high",
+            "verification_status": "verified"
+          }
+        ]
+      }
+    ],
+    "business_objects": [
+      {
+        "object_id": "OBJ.ORDER",
+        "name": "Order",
+        "category": "aggregate_root",
+        "owner": "commerce",
+        "identity": "order id",
+        "lifecycle": "draft to shipped",
+        "evidence": [
+          {
+            "evidence_class": "FACT",
+            "source_kind": "current_source",
+            "source_paths": ["src/domain/order.py"],
+            "summary": "Order aggregate owns identity and lifecycle.",
+            "freshness": "current",
+            "confidence": "high",
+            "verification_status": "verified"
+          }
+        ]
+      }
+    ],
+    "business_rules": [
+      {
+        "rule_id": "ORDER.CANCEL.AFTER_SHIP_DENIED",
+        "rule_name": "Deny shipped cancellation",
+        "owner": "Order aggregate",
+        "enforcement_layer": "domain",
+        "authoritative_enforcement_paths": ["src/domain/order.py"],
+        "preview_paths": ["src/api/orders.py"],
+        "defense_paths": ["src/db/order_constraints.sql"],
+        "audit_paths": ["src/audit/order_events.py"],
+        "rule_statement": "A shipped order cannot be cancelled.",
+        "reason_codes": ["ORDER_ALREADY_SHIPPED"],
+        "entry_points": ["Order.cancel"],
+        "effective_dating": {
+          "effective_from": null,
+          "effective_to": null,
+          "timezone_or_calendar": "UTC"
+        },
+        "tests": ["tests/domain/test_order.py::test_shipped_order_cannot_cancel"],
+        "residual_risk": [],
+        "evidence": [
+          {
+            "evidence_class": "FACT",
+            "source_kind": "current_source",
+            "source_paths": ["src/domain/order.py"],
+            "summary": "Order.cancel rejects shipped orders.",
+            "freshness": "current",
+            "confidence": "high",
+            "verification_status": "verified"
+          }
+        ]
+      }
+    ],
+    "workflows": [
+      {
+        "workflow_id": "ORDER_LIFECYCLE",
+        "name": "Order lifecycle",
+        "owner": "Order aggregate",
+        "states": ["PENDING", "CANCELLED", "SHIPPED"],
+        "transitions": [
+          {
+            "from": "PENDING",
+            "to": "CANCELLED",
+            "trigger": "customer_cancel",
+            "actor": "customer",
+            "guard_rule_ids": ["ORDER.CANCEL.AFTER_SHIP_DENIED"],
+            "allowed": true,
+            "reason_code": "",
+            "evidence": [
+              {
+                "evidence_class": "FACT",
+                "source_kind": "current_source",
+                "source_paths": ["src/domain/order.py"],
+                "summary": "Pending order cancellation is allowed.",
+                "freshness": "current",
+                "confidence": "high",
+                "verification_status": "verified"
+              }
+            ]
+          },
+          {
+            "from": "SHIPPED",
+            "to": "CANCELLED",
+            "trigger": "customer_cancel",
+            "actor": "customer",
+            "guard_rule_ids": ["ORDER.CANCEL.AFTER_SHIP_DENIED"],
+            "allowed": false,
+            "reason_code": "ORDER_ALREADY_SHIPPED",
+            "evidence": [
+              {
+                "evidence_class": "FACT",
+                "source_kind": "validation_result",
+                "source_refs": ["tests/domain/test_order.py::test_shipped_order_cannot_cancel"],
+                "summary": "Invalid transition is covered by the golden regression case.",
+                "freshness": "current",
+                "confidence": "high",
+                "verification_status": "verified"
+              }
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_class": "FACT",
+            "source_kind": "current_source",
+            "source_paths": ["src/domain/order.py"],
+            "summary": "Order lifecycle source defines cancel transitions.",
+            "freshness": "current",
+            "confidence": "high",
+            "verification_status": "verified"
+          }
+        ]
+      }
+    ],
+    "data_and_signal_semantics": {
+      "data_sources": ["orders.status"],
+      "events": ["OrderCancellationDenied"],
+      "metrics": ["cancel_denial_count"],
+      "evidence": [
+        {
+          "evidence_class": "FACT",
+          "source_kind": "current_source",
+          "source_paths": ["src/domain/order.py"],
+          "summary": "Cancellation denial uses orders.status.",
+          "freshness": "current",
+          "confidence": "high",
+          "verification_status": "verified"
+        }
+      ]
+    },
+    "code_mapping": {
+      "object_to_files": ["OBJ.ORDER -> src/domain/order.py"],
+      "rule_to_enforcement": ["ORDER.CANCEL.AFTER_SHIP_DENIED -> Order.cancel"],
+      "workflow_to_state_machine": ["ORDER_LIFECYCLE -> Order.cancel"],
+      "forbidden_placements": ["controllers must not own cancellation rule"],
+      "evidence": [
+        {
+          "evidence_class": "FACT",
+          "source_kind": "current_source",
+          "source_paths": ["src/domain/order.py"],
+          "summary": "Domain source is the authoritative implementation path.",
+          "freshness": "current",
+          "confidence": "high",
+          "verification_status": "verified"
+        }
+      ]
+    },
+    "memory_projection": {
+      "accepted": ["mem_current_order_owner"],
+      "rejected": ["mem_controller_only_rule"],
+      "stale": ["mem_prior_cancel_rule"],
+      "not_verified": ["mem_unknown_admin_path"]
+    },
+    "validation_map": [
+      {
+        "claim_id": "ORDER.CANCEL.AFTER_SHIP_DENIED",
+        "claim_type": "rule",
+        "validation_target": "tests/domain/test_order.py::test_shipped_order_cannot_cancel",
+        "status": "mapped",
+        "residual_risk": [],
+        "evidence": [
+          {
+            "evidence_class": "FACT",
+            "source_kind": "validation_result",
+            "source_refs": ["tests/domain/test_order.py::test_shipped_order_cannot_cancel"],
+            "summary": "Golden test maps to the denied cancellation claim.",
+            "freshness": "current",
+            "confidence": "high",
+            "verification_status": "verified"
+          }
+        ]
+      }
+    ],
+    "context_control": {
+      "budget_mode": "single-stage",
+      "selected_references": [
+        {
+          "reference": "135-business-semantic-control-plane",
+          "reason": "Rule authority mapping is required for this task.",
+          "budget_mode": "single-stage",
+          "evidence_limit": "Only current source and mapped validation can prove FACT claims.",
+          "residual_risk": []
+        }
+      ],
+      "skipped_references": [
+        {
+          "reference": "payment-trading-extension",
+          "reason": "No payment, billing, or settlement behavior changes.",
+          "budget_mode": "single-stage",
+          "evidence_limit": "This skip is not evidence about payment correctness.",
+          "residual_risk": ["payment surfaces were not inspected"]
+        }
+      ],
+      "evidence_limits": ["memory and graph are selectors only"],
+      "residual_context_risk": []
+    }
+  }
+}

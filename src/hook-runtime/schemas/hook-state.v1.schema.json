@@ -1,0 +1,439 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/hook-state.v1.schema.json",
+  "title": "ChangeForge Hook State",
+  "description": "Bounded per-turn hook state stored in the user cache. It must not contain prompt text, secrets, environment variables, full command output, or user-specific corpora.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "runtime",
+    "changed_paths",
+    "risk_surfaces",
+    "suggested_skills",
+    "suggested_capabilities",
+    "suggested_domain_extensions",
+    "suggested_gates",
+    "active_skill_context",
+    "turn_stage",
+    "owner_skill",
+    "reviewer_skill",
+    "validation_command_seen",
+    "validation_seen",
+    "event_index",
+    "last_material_edit_index",
+    "last_validation_command_index",
+    "updated_at"
+  ],
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "type": "string", "maxLength": 300 }
+    },
+    "contextControlRecords": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "not": {
+          "anyOf": [
+            { "required": ["prompt"] },
+            { "required": ["prompt_text"] },
+            { "required": ["raw_prompt"] },
+            { "required": ["raw_command_output"] },
+            { "required": ["full_output"] },
+            { "required": ["full_diff"] },
+            { "required": ["full_file"] },
+            { "required": ["file_contents"] },
+            { "required": ["environment"] },
+            { "required": ["secrets"] },
+            { "required": ["credentials"] }
+          ]
+        }
+      }
+    },
+    "toolOutputBoundaryRecords": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": { "type": "integer", "const": 1 },
+          "tool_name": { "type": "string", "maxLength": 300 },
+          "event_name": { "type": "string", "maxLength": 300 },
+          "output_size_class": {
+            "type": "string",
+            "enum": ["none", "small", "large", "unknown", "unsupported"]
+          },
+          "output_bytes": { "type": ["integer", "null"], "minimum": 0 },
+          "output_lines": { "type": ["integer", "null"], "minimum": 0 },
+          "artifact_path": { "type": "string", "maxLength": 300 },
+          "artifact_path_source": {
+            "type": "string",
+            "enum": ["explicit_tool_result", "user_created", "not_available"]
+          },
+          "digest": { "type": ["string", "null"], "maxLength": 300 },
+          "bounded_summary": { "$ref": "#/$defs/stringList" },
+          "truncation_advice": { "type": "string", "maxLength": 300 },
+          "llm_context_policy": {
+            "type": "string",
+            "enum": [
+              "inline_bounded",
+              "artifact_reference_only",
+              "rerun_with_redirect",
+              "unsupported_runtime"
+            ]
+          },
+          "privacy_status": { "type": "string", "enum": ["pass", "fail"] },
+          "unsupported_reason": { "type": ["string", "null"], "maxLength": 300 }
+        },
+        "not": {
+          "anyOf": [
+            { "required": ["stdout"] },
+            { "required": ["stderr"] },
+            { "required": ["command_output"] },
+            { "required": ["full_diff"] },
+            { "required": ["file_contents"] },
+            { "required": ["raw_prompt"] },
+            { "required": ["env"] },
+            { "required": ["secrets"] }
+          ]
+        }
+      }
+    },
+    "branchRouteRepairSummaryRecords": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": { "type": "integer", "const": 1 },
+          "summary_id": { "type": "string", "maxLength": 300 },
+          "trigger": {
+            "type": "string",
+            "enum": [
+              "repeated_same_path_retry",
+              "repair_after_review",
+              "route_repair",
+              "branch_switch",
+              "compaction_recovery"
+            ]
+          },
+          "abandoned_or_repaired_route": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "owner_skill": { "type": "string", "maxLength": 300 },
+              "reviewer_skill": { "type": "string", "maxLength": 300 },
+              "hypothesis": { "type": "string", "maxLength": 300 },
+              "files_touched": { "$ref": "#/$defs/stringList" },
+              "validation_result": { "type": "string", "maxLength": 300 },
+              "failure_reason": { "type": "string", "maxLength": 300 }
+            }
+          },
+          "reusable_findings": { "$ref": "#/$defs/stringList" },
+          "forbidden_retries": { "$ref": "#/$defs/stringList" },
+          "new_route": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "owner_skill": { "type": "string", "maxLength": 300 },
+              "selected_capabilities": { "$ref": "#/$defs/stringList" },
+              "validation_plan": { "$ref": "#/$defs/stringList" }
+            }
+          },
+          "residual_risk": { "$ref": "#/$defs/stringList" },
+          "privacy_status": { "type": "string", "enum": ["pass", "fail"] }
+        },
+        "not": {
+          "anyOf": [
+            { "required": ["prompt"] },
+            { "required": ["raw_prompt"] },
+            { "required": ["stdout"] },
+            { "required": ["stderr"] },
+            { "required": ["command_output"] },
+            { "required": ["full_diff"] },
+            { "required": ["file_contents"] },
+            { "required": ["env"] },
+            { "required": ["secrets"] }
+          ]
+        }
+      }
+    },
+    "runtimeAdapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "type": "string",
+          "enum": ["codex", "claude", "copilot", "generic", "unknown", "cline", "roo", "openhands", "gemini-cli", "goose"]
+        },
+        "supported_checks": { "$ref": "#/$defs/stringList" },
+        "unsupported_checks": { "$ref": "#/$defs/stringList" },
+        "active_unsupported_checks": { "$ref": "#/$defs/stringList" },
+        "required_unsupported_checks": { "$ref": "#/$defs/stringList" },
+        "active_degradation": { "$ref": "#/$defs/stringList" },
+        "degraded_capabilities": { "$ref": "#/$defs/stringList" },
+        "degraded_checks": { "$ref": "#/$defs/stringList" },
+        "fail_open_policy": { "type": "string", "maxLength": 300 },
+        "fail_closed_allowed_checks": { "$ref": "#/$defs/stringList" },
+        "visibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "read_paths": { "type": "string", "enum": ["none", "partial", "full"] },
+            "changed_paths": { "type": "string", "enum": ["none", "partial", "full"] },
+            "command_kind": { "type": "string", "enum": ["none", "partial", "full"] },
+            "command_risk": { "type": "string", "enum": ["none", "partial", "full"] },
+            "validation_outcome": { "type": "string", "enum": ["none", "partial", "full"] },
+            "permission_decision": { "type": "string", "enum": ["none", "partial", "full"] },
+            "rollback_checkpoint": { "type": "string", "enum": ["none", "partial", "full"] }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "runtime": {
+      "type": "string",
+      "enum": ["codex", "claude", "copilot", "generic", "unknown", "cline", "roo", "openhands", "gemini-cli", "goose"]
+    },
+    "runtime_adapter": { "$ref": "#/$defs/runtimeAdapter" },
+    "normalized_events": { "$ref": "#/$defs/stringList" },
+    "changed_paths": { "$ref": "#/$defs/stringList" },
+    "deleted_paths": { "$ref": "#/$defs/stringList" },
+    "generated_paths": { "$ref": "#/$defs/stringList" },
+    "read_paths": { "$ref": "#/$defs/stringList" },
+    "read_tools": { "$ref": "#/$defs/stringList" },
+    "searched_patterns": { "$ref": "#/$defs/stringList" },
+    "external_file_changes": { "$ref": "#/$defs/stringList" },
+    "config_changes": { "$ref": "#/$defs/stringList" },
+    "structure_findings": { "$ref": "#/$defs/stringList" },
+    "file_naming_findings": { "$ref": "#/$defs/stringList" },
+    "reuse_findings": { "$ref": "#/$defs/stringList" },
+    "extension_reuse_findings": { "$ref": "#/$defs/stringList" },
+    "advanced_refactor_findings": { "$ref": "#/$defs/stringList" },
+    "comment_findings": { "$ref": "#/$defs/stringList" },
+    "structure_quality_findings": { "$ref": "#/$defs/stringList" },
+    "post_edit_structure_findings": { "$ref": "#/$defs/stringList" },
+    "review_targets": { "$ref": "#/$defs/stringList" },
+    "review_findings": { "$ref": "#/$defs/stringList" },
+    "repair_findings": { "$ref": "#/$defs/stringList" },
+    "repair_events": { "$ref": "#/$defs/stringList" },
+    "rereview_events": { "$ref": "#/$defs/stringList" },
+    "validation_results": { "$ref": "#/$defs/stringList" },
+    "risk_surfaces": { "$ref": "#/$defs/stringList" },
+    "changed_path_risk_surfaces": {
+      "description": "Risk surfaces matched from changed file paths only.",
+      "$ref": "#/$defs/stringList"
+    },
+    "command_risk_surfaces": {
+      "description": "Risk surfaces matched from a command string only. The full command is never stored.",
+      "$ref": "#/$defs/stringList"
+    },
+    "command_risks": { "$ref": "#/$defs/stringList" },
+    "closure_risk_surfaces": {
+      "description": "Risk surfaces counted as closure-relevant engineering work. Read-only command matches are intentionally excluded.",
+      "$ref": "#/$defs/stringList"
+    },
+    "professional_injections": { "$ref": "#/$defs/stringList" },
+    "permission_decisions": { "$ref": "#/$defs/stringList" },
+    "rollback_points": { "$ref": "#/$defs/stringList" },
+    "reference_loads": { "$ref": "#/$defs/stringList" },
+    "subagent_contracts": { "$ref": "#/$defs/stringList" },
+    "compaction_snapshots": { "$ref": "#/$defs/stringList" },
+    "prompt_signals": {
+      "description": "Compact signal names only; never raw prompt text.",
+      "$ref": "#/$defs/stringList"
+    },
+    "suggested_skills": { "$ref": "#/$defs/stringList" },
+    "suggested_capabilities": { "$ref": "#/$defs/stringList" },
+    "suggested_domain_extensions": { "$ref": "#/$defs/stringList" },
+    "suggested_gates": { "$ref": "#/$defs/stringList" },
+    "context_control_records": {
+      "description": "Bounded context budget records; never raw prompts, full outputs, full diffs, full files, environment, or secrets.",
+      "$ref": "#/$defs/contextControlRecords"
+    },
+    "tool_output_boundaries": {
+      "description": "Bounded tool-output records; never raw stdout, stderr, prompts, environment, full diffs, full files, or secrets.",
+      "$ref": "#/$defs/toolOutputBoundaryRecords"
+    },
+    "artifact_references": {
+      "description": "Repo-relative or cache-scoped artifact references created explicitly by a tool or user.",
+      "$ref": "#/$defs/stringList"
+    },
+    "branch_route_repair_summaries": {
+      "description": "Bounded branch/route-repair summaries; never raw prompts, full outputs, full diffs, full files, environment, or secrets.",
+      "$ref": "#/$defs/branchRouteRepairSummaryRecords"
+    },
+    "route_repair_forbidden_retries": {
+      "description": "Bounded retry warnings that prevent repeating failed same-path repair attempts.",
+      "$ref": "#/$defs/stringList"
+    },
+    "context_budget_findings": { "$ref": "#/$defs/stringList" },
+    "skipped_references": { "$ref": "#/$defs/stringList" },
+    "implementation_preflights": {
+      "description": "Bounded summaries of implementation preflight manifests seen this turn; never raw assistant messages.",
+      "$ref": "#/$defs/stringList"
+    },
+    "senior_programming_judgments": {
+      "description": "Bounded summaries of senior programming judgment manifests seen this turn; never raw assistant messages.",
+      "$ref": "#/$defs/stringList"
+    },
+    "pre_edit_structure_findings": { "$ref": "#/$defs/stringList" },
+    "choice_ids": {
+      "description": "Bounded SDD material choice identifiers only.",
+      "$ref": "#/$defs/stringList"
+    },
+    "choice_triggers": {
+      "description": "Bounded material choice trigger labels only.",
+      "$ref": "#/$defs/stringList"
+    },
+    "choice_status": {
+      "description": "Bounded status labels: required/resolved/not_required/assumed_with_rationale/missing.",
+      "$ref": "#/$defs/stringList"
+    },
+    "material_choice_surfaces": {
+      "description": "Bounded material SDD choice surfaces; never raw prompts or diffs.",
+      "$ref": "#/$defs/stringList"
+    },
+    "blocked_tool_category": {
+      "description": "Tool category that was blocked or reviewed, not full tool input.",
+      "$ref": "#/$defs/stringList"
+    },
+    "bounded_paths": {
+      "description": "Repo-relative paths associated with a material choice gate event.",
+      "$ref": "#/$defs/stringList"
+    },
+    "active_skill_context": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Bounded active skill context: stage, owner/reviewer, selected capabilities, gates, and reference paths."
+    },
+    "turn_stage": {
+      "type": "string",
+      "enum": [
+        "",
+        "question",
+        "read",
+        "plan",
+        "edit",
+        "test",
+        "review",
+        "repair",
+        "refactor",
+        "release",
+        "skill_authoring",
+        "hook_runtime",
+        "permission",
+        "subagent",
+        "compaction",
+        "requirement-intake",
+        "architecture-design",
+        "implementation-planning",
+        "coding",
+        "debugging-diagnosis",
+        "bug-fix",
+        "code-review",
+        "refactoring",
+        "release-delivery",
+        "documentation-handoff",
+        "skill-authoring",
+        "unknown",
+        "no_engineering_action"
+      ]
+    },
+    "owner_skill": { "type": "string", "maxLength": 300 },
+    "reviewer_skill": { "type": "string", "maxLength": 300 },
+    "stage_route_present": { "type": "boolean" },
+    "read_intent_seen": { "type": "boolean" },
+    "read_evidence_seen": { "type": "boolean" },
+    "reviewed_diff_evidence_seen": { "type": "boolean" },
+    "review_intent_seen": { "type": "boolean" },
+    "review_artifact_seen": { "type": "boolean" },
+    "review_evidence_seen": { "type": "boolean" },
+    "repair_evidence_seen": { "type": "boolean" },
+    "permission_gate_seen": { "type": "boolean" },
+    "professional_contract_seen": { "type": "boolean" },
+    "repository_context_seen": {
+      "description": "Presence-only signal that repository context evidence was seen this turn.",
+      "type": "boolean"
+    },
+    "workflow_state_seen": {
+      "description": "Presence-only signal that workflow state evidence was seen this turn.",
+      "type": "boolean"
+    },
+    "tool_permission_sandbox_seen": {
+      "description": "Presence-only signal that tool permission/sandbox evidence was seen this turn.",
+      "type": "boolean"
+    },
+    "skill_efficacy_benchmark_seen": {
+      "description": "Presence-only signal that skill-efficacy benchmark evidence was seen this turn.",
+      "type": "boolean"
+    },
+    "plan_execution_consistency_seen": {
+      "description": "Presence-only signal that plan-execution consistency evidence was seen this turn.",
+      "type": "boolean"
+    },
+    "validation_freshness_seen": {
+      "description": "Presence-only signal that validation freshness evidence was seen this turn.",
+      "type": "boolean"
+    },
+    "implementation_preflight_seen": { "type": "boolean" },
+    "implementation_preflight_complete": {
+      "description": "Whether a required implementation preflight manifest was present and satisfied the fields required for the observed edit. implementation_preflight_seen only means the manifest was present.",
+      "type": "boolean"
+    },
+    "implementation_preflight_required": { "type": "boolean" },
+    "implementation_preflight_blocked": { "type": "boolean" },
+    "senior_programming_judgment_seen": { "type": "boolean" },
+    "senior_programming_judgment_complete": {
+      "description": "Whether a required senior programming judgment manifest or allowed skip reason was present and satisfied bounded closure fields.",
+      "type": "boolean"
+    },
+    "senior_programming_judgment_required": { "type": "boolean" },
+    "senior_programming_judgment_blocked": { "type": "boolean" },
+    "choice_gate_seen": { "type": "boolean" },
+    "choice_gate_blocked": { "type": "boolean" },
+    "choice_resolution_evidence_seen": { "type": "boolean" },
+    "pre_edit_missing_read_evidence": { "type": "boolean" },
+    "pre_edit_missing_reuse_decision": { "type": "boolean" },
+    "pre_edit_missing_placement_decision": { "type": "boolean" },
+    "pre_edit_missing_test_plan": { "type": "boolean" },
+    "pre_edit_missing_senior_programming_judgment": { "type": "boolean" },
+    "edit_without_preflight_seen": { "type": "boolean" },
+    "post_edit_confirmed_preflight_gap": { "type": "boolean" },
+    "validation_seen": {
+      "description": "Backward-compatible alias for validation_command_seen.",
+      "type": "boolean"
+    },
+    "validation_command_seen": {
+      "description": "Whether a validation-looking command was observed this turn. This is not completion evidence without an outcome in the stop closure.",
+      "type": "boolean"
+    },
+    "route_preflight_emitted": {
+      "description": "Whether the route-preflight reminder was already emitted this turn.",
+      "type": "boolean"
+    },
+    "event_index": {
+      "description": "Cache-only monotonic event counter for this turn. It stores order, not prompts or output.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "last_material_edit_index": {
+      "description": "Latest event index that changed source, tests, docs, config, registry, schemas, templates, build, or install behavior.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "last_validation_command_index": {
+      "description": "Latest event index where a validation-looking command was observed. Outcome is still required in Stop closure.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "turn_id": { "type": "string" },
+    "updated_at": { "type": "string" }
+  }
+}

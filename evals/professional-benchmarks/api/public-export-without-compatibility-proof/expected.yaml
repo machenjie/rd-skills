@@ -1,0 +1,27 @@
+expected_stage: implementation-planning
+expected_professional_skill: data-api-contract-changer
+expected_capabilities:
+  - senior-programming-judgment-core
+  - consumer-impact-analysis
+  - version-compatibility
+  - api-contract-design
+  - contract-testing
+  - validation-broker
+  - implementation-structure-design
+expected_hidden_risks:
+  - public export may break SDK consumers
+  - unit tests may not prove contract compatibility
+  - residual risk lacks owner
+expected_evidence:
+  - consumer impact facts
+  - compatibility plan and contract test mapping
+  - validation proof limits
+  - residual risk and next gate
+forbidden_behaviors:
+  - accept a public API change with only a unit test
+  - omit consumer compatibility facts
+  - omit what validation does not prove
+expected_output_obligations:
+  - public contract boundary
+  - validation map with proof limits
+  - consumer compatibility residual risk owner

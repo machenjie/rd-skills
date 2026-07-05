@@ -1,0 +1,21 @@
+expected_stage: code-review
+expected_professional_skill: ai-code-review-refactor
+expected_capabilities:
+  - rust-professional-usage
+expected_hidden_risks:
+  - Rust unsafe boundary without invariants
+  - unsafe block lacks safety contract
+  - FFI ownership can cause use-after-free
+expected_evidence:
+  - unsafe invariant documentation
+  - FFI ownership and lifetime validation
+  - Miri or unsafe-boundary test evidence
+forbidden_behaviors:
+  - approve unsafe without SAFETY invariant
+  - ignore FFI ownership boundary
+  - omit Miri or equivalent validation evidence
+expected_output_obligations:
+  - unsafe boundary evidence
+  - validation evidence for FFI ownership
+  - what evidence proves and does not prove
+  - residual memory safety risk owner

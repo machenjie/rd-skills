@@ -1,0 +1,45 @@
+---
+id: ordinary-naming-only-no-code-element
+description: |
+  A low-risk local rename should not select code-element-professionalism when
+  there is no initialization, defaulting, expression, statement, or side-effect hazard.
+prompt: |
+  Rename a local variable in a small test from `item` to `product` so the assertion
+  reads more clearly. The value is initialized inline, never reassigned, not captured,
+  and no behavior, branch, default, resource, transaction, or API contract changes.
+expected:
+  complexity: L1
+  risk_level: low
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  skills:
+    - quality-test-gate
+  capabilities: []
+  domain_extensions: []
+  quality_gates:
+    - test gate
+forbidden:
+  skills:
+    - backend-change-builder
+    - frontend-change-builder
+    - security-privacy-gate
+    - architecture-impact-reviewer
+    - delivery-release-gate
+  capabilities:
+    - code-element-professionalism
+    - implementation-structure-design
+    - data-side-effect-flow-tracing
+    - transaction-consistency
+    - language-idiom-enforcement
+  domain_extensions:
+    - ai-product-extension
+    - web3-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - architecture gate
+    - security gate
+    - delivery gate
+notes: |
+  Naming-only work stays below the code-element route unless a concrete variable,
+  expression, statement, resource, side-effect, or language-semantic hazard appears.

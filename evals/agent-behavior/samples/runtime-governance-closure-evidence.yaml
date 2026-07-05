@@ -1,0 +1,69 @@
+---
+id: runtime-governance-closure-evidence
+description: Runtime governance route preserves adapter, repository, memory, validation, and trajectory evidence limits.
+expected:
+  selected_skills:
+    - change-forge-router
+    - quality-test-gate
+    - ai-code-review-refactor
+    - security-privacy-gate
+  selected_capabilities:
+    - executor-adapter-protocol
+    - repository-graph-analysis
+    - project-memory-governance
+    - validation-broker
+    - execution-trajectory-analysis
+    - agent-workflow-state-machine
+    - plan-execution-consistency
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+  required_quality_gates:
+    - security gate
+    - test gate
+    - AI review gate
+    - execution discipline gate
+  expected_stage: documentation-handoff
+  expected_stage_capabilities:
+    - agent-workflow-state-machine
+    - plan-execution-consistency
+    - documentation-generation
+    - agent-execution-discipline
+validation_evidence: true
+residual_risk: true
+manifest:
+  selected_skills:
+    - change-forge-router
+    - quality-test-gate
+    - ai-code-review-refactor
+    - security-privacy-gate
+  selected_capabilities:
+    - executor-adapter-protocol
+    - repository-graph-analysis
+    - project-memory-governance
+    - validation-broker
+    - execution-trajectory-analysis
+    - agent-workflow-state-machine
+    - plan-execution-consistency
+  selected_domain_extensions: []
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+  required_quality_gates:
+    - security gate
+    - test gate
+    - AI review gate
+    - execution discipline gate
+stage_manifest:
+  current_stage: documentation-handoff
+  selected_capabilities:
+    - agent-workflow-state-machine
+    - plan-execution-consistency
+    - documentation-generation
+    - agent-execution-discipline
+  skipped_capabilities: []
+  context_budget_mode: staged-plan

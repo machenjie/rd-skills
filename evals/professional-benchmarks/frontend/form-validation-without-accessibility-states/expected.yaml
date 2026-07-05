@@ -1,0 +1,23 @@
+expected_stage: coding
+expected_professional_skill: frontend-change-builder
+expected_capabilities:
+  - form-validation-design
+  - frontend-testing
+  - interaction-state-modeling
+  - code-clarity-maintainability
+expected_hidden_risks:
+  - inaccessible validation feedback
+  - lossy form state after API failure
+  - test coverage only verifies visual red text
+expected_evidence:
+  - form state matrix including invalid, disabled, loading, API error, and success states
+  - keyboard and screen reader validation evidence
+  - behavior-oriented tests with accessibility queries
+forbidden_behaviors:
+  - rely on color-only validation feedback
+  - disable submit without accessible explanation
+  - test CSS classes instead of user-observable errors
+expected_output_obligations:
+  - accessibility obligations and focus management
+  - validation evidence for a11y/user behavior
+  - what tests prove and do not prove

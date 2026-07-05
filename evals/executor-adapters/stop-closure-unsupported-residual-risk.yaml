@@ -1,0 +1,14 @@
+---
+id: stop-closure-unsupported-residual-risk
+scenario: Stop closure must disclose residual risk when the adapter cannot observe validation status.
+expected_capabilities:
+  - executor-adapter-protocol
+  - validation-broker
+expected_evidence:
+  - ClosureContract names unsupported validation observation.
+  - GateResult distinguishes not-verified from passed.
+  - Residual risk names the next validation owner.
+forbidden_claims:
+  - Stop event is treated as proof that validation passed.
+  - Unsupported closure evidence is omitted from handoff.
+privacy_boundary: Bounded closure status only; no full command output or raw stop payload.

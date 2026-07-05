@@ -1,0 +1,1 @@
+Prepare a production release that drops a deprecated column and deploys code that no longer reads it. The release notes say rollback is just redeploying the previous image. There is no rollback migration, no old/new version compatibility matrix, and no consumer readiness evidence.

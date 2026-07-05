@@ -1,0 +1,116 @@
+"""Shared runtime governance facts for ChangeForge tooling."""
+
+from .closure import ClosureContract, ClosureVerdict
+from .closure_evidence_summary import (
+    UserRequestedGate,
+    ac_proven_by_lines,
+    classify_user_requested_gate,
+    find_internal_unawareness_violations,
+    validate_repair_rereview_text,
+    validate_task_review_text,
+)
+from .events import EventKind, NormalizedEvent
+from .evidence import EvidenceEntry, EvidenceLedger, EvidenceStrength, Freshness
+from .execution_evidence_reducer import EngineeringQualityReport, reduce_execution_evidence
+from .gates import GateOutcome, GateResult
+from .plan_execution_observer import PlanExecutionObservation, observation_from_mapping
+from .privacy import (
+    cap_list,
+    normalize_relative_path,
+    redact_sensitive_value,
+    sanitize_command_kind,
+    validate_bounded_fact,
+)
+from .process_phase import (
+    artifact_digest,
+    merge_process_phase_ledger,
+    normalize_process_phase_ledger,
+    phase_blockers,
+    phase_ready_for_implementation,
+    phase_review_passes,
+    phase_transition_allowed,
+    sanitize_phase_ledger,
+    sanitize_phase_review_result,
+    validate_phase_review_result,
+    validate_process_phase_ledger,
+)
+from .review_capsule import sanitize_review_capsule, validate_review_capsule
+from .visible_plan_parser import parse_visible_plan
+from .visible_plan_validator import validate_visible_plan
+from .adapters import (
+    AdapterCapabilities,
+    AdapterEventResult,
+    BaseRuntimeAdapter,
+    ClaudeAdapter,
+    ClineAdapter,
+    CodexAdapter,
+    CopilotAdapter,
+    OpenHandsAdapter,
+    RooAdapter,
+    adapter_capabilities_for,
+    coverage_matrix,
+    docs_capability_matrix_from_text,
+    format_docs_capability_matrix,
+    format_coverage_matrix,
+    runtime_adapter_for,
+    strict_adapter_capabilities_for,
+)
+
+__all__ = [
+    "ClosureContract",
+    "ClosureVerdict",
+    "EngineeringQualityReport",
+    "PlanExecutionObservation",
+    "UserRequestedGate",
+    "AdapterCapabilities",
+    "AdapterEventResult",
+    "BaseRuntimeAdapter",
+    "ClaudeAdapter",
+    "ClineAdapter",
+    "CodexAdapter",
+    "CopilotAdapter",
+    "OpenHandsAdapter",
+    "RooAdapter",
+    "EventKind",
+    "EvidenceEntry",
+    "EvidenceLedger",
+    "EvidenceStrength",
+    "Freshness",
+    "GateOutcome",
+    "GateResult",
+    "NormalizedEvent",
+    "cap_list",
+    "normalize_relative_path",
+    "redact_sensitive_value",
+    "sanitize_command_kind",
+    "validate_bounded_fact",
+    "ac_proven_by_lines",
+    "artifact_digest",
+    "classify_user_requested_gate",
+    "find_internal_unawareness_violations",
+    "merge_process_phase_ledger",
+    "normalize_process_phase_ledger",
+    "observation_from_mapping",
+    "phase_blockers",
+    "phase_ready_for_implementation",
+    "phase_review_passes",
+    "phase_transition_allowed",
+    "sanitize_phase_ledger",
+    "sanitize_phase_review_result",
+    "sanitize_review_capsule",
+    "parse_visible_plan",
+    "reduce_execution_evidence",
+    "validate_repair_rereview_text",
+    "validate_task_review_text",
+    "validate_visible_plan",
+    "validate_phase_review_result",
+    "validate_process_phase_ledger",
+    "validate_review_capsule",
+    "adapter_capabilities_for",
+    "coverage_matrix",
+    "docs_capability_matrix_from_text",
+    "format_docs_capability_matrix",
+    "format_coverage_matrix",
+    "runtime_adapter_for",
+    "strict_adapter_capabilities_for",
+]

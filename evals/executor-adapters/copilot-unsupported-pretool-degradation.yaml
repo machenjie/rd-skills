@@ -1,0 +1,13 @@
+---
+id: copilot-unsupported-pretool-degradation
+scenario: Degrade cleanly when a Copilot adapter lacks a pre-tool event.
+expected_capabilities:
+  - executor-adapter-protocol
+expected_evidence:
+  - AdapterCapabilities marks pre-tool inspection unsupported.
+  - GateResult records degraded capability and fail-open advisory policy.
+  - ClosureContract carries residual risk for unsupported pre-tool evidence.
+forbidden_claims:
+  - Unsupported pre-tool evidence is reported as fully verified.
+  - Missing adapter support blocks without a configured fail-closed policy.
+privacy_boundary: Store only adapter capability names and degradation status.

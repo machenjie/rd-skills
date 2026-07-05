@@ -1,0 +1,6 @@
+{
+  "runtime": "claude",
+  "hookEventName": "FileChanged",
+  "filePath": "/repo/src/api/schema.py",
+  "afterValidation": true
+}

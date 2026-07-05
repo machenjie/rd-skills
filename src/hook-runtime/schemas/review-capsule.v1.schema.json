@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.local/schemas/review-capsule.v1.schema.json",
+  "title": "ChangeForge Review Capsule v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "capsule_id",
+    "review_type",
+    "user_request_summary",
+    "accepted_constraints",
+    "source_evidence",
+    "artifact_under_review",
+    "allowed_context",
+    "forbidden_inputs"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "capsule_id": { "$ref": "#/$defs/id" },
+    "review_type": {
+      "enum": ["pdd", "ddd", "sdd", "tdd", "implementation", "closure"]
+    },
+    "user_request_summary": { "$ref": "#/$defs/boundedText" },
+    "accepted_constraints": { "$ref": "#/$defs/boundedTextList" },
+    "source_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "read_files": {
+          "type": "array",
+          "maxItems": 40,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "digest", "excerpt_summary"],
+            "properties": {
+              "path": { "$ref": "#/$defs/path" },
+              "digest": { "$ref": "#/$defs/digest" },
+              "excerpt_summary": { "$ref": "#/$defs/boundedText" }
+            }
+          }
+        },
+        "searched_patterns": { "$ref": "#/$defs/boundedTextList" }
+      }
+    },
+    "artifact_under_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "artifact_digest", "artifact_summary"],
+      "properties": {
+        "phase": {
+          "enum": ["pdd", "ddd", "sdd", "tdd", "implementation", "closure"]
+        },
+        "artifact_digest": { "$ref": "#/$defs/digest" },
+        "artifact_summary": { "$ref": "#/$defs/boundedText" }
+      }
+    },
+    "allowed_context": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "user_request_summary",
+          "accepted_constraints",
+          "source_evidence",
+          "artifact_under_review"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 4,
+      "uniqueItems": true
+    },
+    "forbidden_inputs": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "raw prompt",
+          "raw secrets",
+          "full command output",
+          "implementer self-approval",
+          "unverified completion claims"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 5,
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,120}$" },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[A-Fa-f0-9]{12,64}$"
+    },
+    "path": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "boundedText": { "type": "string", "minLength": 1, "maxLength": 600 },
+    "boundedTextList": {
+      "type": "array",
+      "maxItems": 30,
+      "items": { "$ref": "#/$defs/boundedText" }
+    }
+  }
+}

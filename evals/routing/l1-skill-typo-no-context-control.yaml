@@ -1,0 +1,22 @@
+---
+id: l1-skill-typo-no-context-control
+description: A tiny skill documentation typo must not select the context control plane.
+prompt: |
+  Fix a typo in one skill README heading from "Contex" to "Context"; no routing behavior changes.
+expected:
+  complexity: L1
+  risk_level: low
+  stage_route_required: false
+  stage_route_skip_reason: trivial documentation typo with no route, registry, or context-budget behavior change
+  risk_triggers: []
+  skills: [change-documentation-gate]
+  capabilities: [documentation-generation]
+  domain_extensions: []
+  quality_gates: [documentation gate]
+forbidden:
+  skills: [backend-change-builder, frontend-change-builder, change-impact-analyzer, task-dag-planner]
+  capabilities: [context-control-plane, skill-efficacy-benchmark, repository-graph-analysis, implementation-structure-design]
+  domain_extensions: [ai-product-extension, web3-product-extension, payment-trading-extension]
+  quality_gates: [impact gate, security gate, delivery gate]
+notes: |
+  Context-control signals must be explicit, not inferred from any mention of context in copy.

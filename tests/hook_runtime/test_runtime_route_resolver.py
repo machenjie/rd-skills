@@ -1,0 +1,712 @@
+from __future__ import annotations
+
+import os
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT_DIR = ROOT / "src" / "hook-runtime" / "scripts"
+sys.path.insert(0, str(SCRIPT_DIR))
+
+from changeforge_action_classifier import classify_event  # noqa: E402
+from changeforge_common import load_state, merge_state, reset_state_for_new_prompt  # noqa: E402
+from changeforge_runtime_route_resolver import (  # noqa: E402
+    CAPABILITY_IDS,
+    _merge_nonempty_tuple_mapping,
+    build_active_skill_context,
+    context_lines,
+    detect_conditional_capabilities,
+)
+
+
+def _context_for(event: dict, state: dict | None = None) -> dict:
+    classification = classify_event(event)
+    return build_active_skill_context(
+        runtime="codex",
+        stage=classification.get("stage", ""),
+        surfaces=classification.get("surfaces", []),
+        event_name=event.get("hook_event_name") or event.get("hookEventName") or "PreToolUse",
+        state=state or {},
+        classification=classification,
+    )
+
+
+def _edit_event(path: str, text: str = "") -> dict:
+    patch = f"*** Begin Patch\n*** Update File: {path}\n+{text}\n*** End Patch\n"
+    return {
+        "hook_event_name": "PreToolUse",
+        "tool_name": "apply_patch",
+        "tool_input": {"patch": patch},
+    }
+
+
+class RuntimeRouteResolverTests(unittest.TestCase):
+    def test_frontend_tsx_edit_routes_frontend_not_backend(self) -> None:
+        context = _context_for(_edit_event("src/components/ProfileCard.tsx"))
+        self.assertEqual(context["entry_skill"], "change-forge-router")
+        self.assertEqual(context["owner_skill"], "frontend-change-builder")
+        self.assertIn("frontend-product", context["product_surfaces"])
+        self.assertIn("typescript", context["language_surfaces"])
+        self.assertNotIn("backend-change-builder", context["selected_skills"])
+        self.assertIn("context_control", context)
+        self.assertIn(context["context_budget_mode"], {"minimal", "single-stage"})
+
+    def test_backend_service_edit_routes_backend(self) -> None:
+        context = _context_for(_edit_event("src/services/order_service.py"))
+        self.assertEqual(context["owner_skill"], "backend-change-builder")
+        self.assertIn("backend-product", context["product_surfaces"])
+
+    def test_cpp_edit_selects_cpp_not_go(self) -> None:
+        context = _context_for(_edit_event("src/native/socket_pool.cpp", "RAII sanitizer fix"))
+        self.assertIn("cpp", context["language_surfaces"])
+        self.assertIn("cpp-professional-usage", context["selected_capabilities"])
+        self.assertNotIn("go-professional-usage", context["selected_capabilities"])
+
+    def test_go_edit_selects_go_not_cpp(self) -> None:
+        context = _context_for(_edit_event("internal/worker/channel_fanout.go", "go channel fix"))
+        self.assertIn("go", context["language_surfaces"])
+        self.assertIn("go-professional-usage", context["selected_capabilities"])
+        self.assertNotIn("cpp-professional-usage", context["selected_capabilities"])
+
+    def test_docs_only_change_has_docs_owner_no_structure_default(self) -> None:
+        context = _context_for(_edit_event("docs/runbooks/cache-warmup.md"))
+        self.assertEqual(context["owner_skill"], "change-documentation-gate")
+        self.assertIn("documentation-only", context["product_surfaces"])
+        self.assertNotIn("implementation-structure-design", context["selected_capabilities"])
+        self.assertNotIn("backend-change-builder", context["selected_skills"])
+        self.assertNotIn("quality-test-gate", context["selected_skills"])
+        self.assertNotIn("test gate", context["required_quality_gates"])
+
+    def test_chart_values_route_delivery_not_backend(self) -> None:
+        context = _context_for(_edit_event("deploy/chart/values.yaml", "helm Chart.yaml rollout"))
+        self.assertEqual(context["owner_skill"], "delivery-release-gate")
+        self.assertIn("kubernetes-helm", context["product_surfaces"])
+        self.assertNotIn("backend-change-builder", context["selected_skills"])
+
+    def test_permission_action_selects_tool_permission_sandbox(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="permission",
+            surfaces=[],
+            event_name="PermissionRequest",
+            state={},
+            classification={"stage": "permission", "product_surfaces": [], "risk_surfaces": []},
+        )
+        self.assertIn("agent-tool-permission-sandbox", context["selected_capabilities"])
+        self.assertIn(
+            "references/capabilities/120-agent-tool-permission-sandbox.md",
+            context["required_references"],
+        )
+
+    def test_risky_command_state_selects_tool_permission_sandbox(self) -> None:
+        state = {
+            **_coding_ready_state(),
+            "command_risk_surfaces": ["tool-permission-sandbox"],
+        }
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state=state,
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+            },
+        )
+        self.assertIn("agent-tool-permission-sandbox", context["selected_capabilities"])
+        self.assertIn(
+            "references/capabilities/120-agent-tool-permission-sandbox.md",
+            context["required_references"],
+        )
+
+    def test_classification_permission_state_selects_tool_permission_sandbox(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state=_coding_ready_state(),
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+                "tool_permission_sandbox_seen": True,
+            },
+        )
+        self.assertIn("agent-tool-permission-sandbox", context["selected_capabilities"])
+        self.assertIn(
+            "references/capabilities/120-agent-tool-permission-sandbox.md",
+            context["required_references"],
+        )
+
+    def test_release_delivery_deploy_migration_selects_tool_permission_sandbox(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="release",
+            surfaces=["database-migration"],
+            event_name="PreToolUse",
+            state={},
+            classification={
+                "stage": "release",
+                "product_surfaces": ["database-migration"],
+                "risk_surfaces": ["delivery"],
+            },
+        )
+        self.assertEqual(context["current_stage"], "release-delivery")
+        self.assertIn("agent-tool-permission-sandbox", context["selected_capabilities"])
+        self.assertIn(
+            "references/capabilities/120-agent-tool-permission-sandbox.md",
+            context["required_references"],
+        )
+
+    def test_git_workflow_low_risk_signals_do_not_default_tool_permission_sandbox(self) -> None:
+        for prompt in (
+            "Plan branch naming and commit message for this change",
+            "Review staged diff and unstaged diff before splitting the commit",
+        ):
+            with self.subTest(prompt=prompt):
+                event = {"hook_event_name": "UserPromptSubmit", "prompt": prompt}
+                classification = classify_event(event)
+                context = _context_for(event)
+                self.assertIn("git-workflow", classification["product_surfaces"])
+                self.assertIn("git-professional-usage", context["selected_capabilities"])
+                self.assertNotIn("agent-tool-permission-sandbox", context["selected_capabilities"])
+                self.assertNotIn(
+                    "references/capabilities/120-agent-tool-permission-sandbox.md",
+                    context["required_references"],
+                )
+
+    def test_git_workflow_high_risk_state_selects_tool_permission_sandbox(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["git-workflow"],
+            event_name="UserPromptSubmit",
+            state={"command_risk_surfaces": ["tool-permission-sandbox"]},
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["git-workflow"],
+                "risk_surfaces": [],
+            },
+        )
+        self.assertIn("git-professional-usage", context["selected_capabilities"])
+        self.assertIn("agent-tool-permission-sandbox", context["selected_capabilities"])
+        self.assertIn(
+            "references/capabilities/120-agent-tool-permission-sandbox.md",
+            context["required_references"],
+        )
+
+    def test_redis_routes_cache_not_kafka_bigdata(self) -> None:
+        context = _context_for(_edit_event("src/cache/redis_store.py", "Redis TTL invalidation"))
+        self.assertIn("cache", context["product_surfaces"])
+        self.assertEqual(context["owner_skill"], "data-middleware-change-builder")
+        self.assertIn("cache-design", context["selected_capabilities"])
+        self.assertNotIn("message-queue", context["product_surfaces"])
+        self.assertNotIn("bigdata-product-extension", context["selected_domain_extensions"])
+
+    def test_kafka_routes_queue_not_cache(self) -> None:
+        context = _context_for(_edit_event("src/queue/kafka_consumer.go", "Kafka DLQ offset replay"))
+        self.assertIn("message-queue", context["product_surfaces"])
+        self.assertIn("message-queue-design", context["selected_capabilities"])
+        self.assertNotIn("cache", context["product_surfaces"])
+
+    def test_ai_rag_selects_ai_not_web3_payment(self) -> None:
+        context = _context_for(
+            {"hook_event_name": "UserPromptSubmit", "prompt": "Fix RAG permission-aware retrieval for tenant documents"}
+        )
+        self.assertIn("ai-product-extension", context["selected_domain_extensions"])
+        self.assertNotIn("web3-product-extension", context["selected_domain_extensions"])
+        self.assertNotIn("payment-trading-extension", context["selected_domain_extensions"])
+
+    def test_web3_signature_selects_web3_not_payment(self) -> None:
+        context = _context_for(
+            {"hook_event_name": "UserPromptSubmit", "prompt": "Fix Web3 wallet EIP-712 signature nonce replay"}
+        )
+        self.assertIn("web3-product-extension", context["selected_domain_extensions"])
+        self.assertNotIn("payment-trading-extension", context["selected_domain_extensions"])
+
+    def test_web3_sdk_coding_uses_product_owner_not_domain_gate(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["web3", "sdk-library"],
+            event_name="PreToolUse",
+            state=_coding_ready_state(),
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["web3", "sdk-library"],
+                "language_surfaces": ["typescript"],
+                "risk_surfaces": ["security"],
+                "domain_extensions": ["web3-product-extension"],
+            },
+        )
+        self.assertEqual(context["current_stage"], "coding")
+        self.assertEqual(context["owner_skill"], "data-api-contract-changer")
+        self.assertIn("web3-product-extension", context["selected_domain_extensions"])
+
+    def test_payment_ledger_selects_payment_not_web3(self) -> None:
+        context = _context_for(
+            {"hook_event_name": "UserPromptSubmit", "prompt": "Fix payment ledger settlement reconciliation"}
+        )
+        self.assertIn("payment-trading-extension", context["selected_domain_extensions"])
+        self.assertNotIn("web3-product-extension", context["selected_domain_extensions"])
+
+    def test_skill_registry_edit_routes_skill_authoring(self) -> None:
+        context = _context_for(_edit_event("src/registry/routing-rules.yaml"))
+        self.assertEqual(context["owner_skill"], "change-forge-router")
+        self.assertIn("skill-authoring", context["product_surfaces"])
+        self.assertIn("repository-context-map", context["selected_capabilities"])
+        self.assertIn("skill-authoring-expert", context["selected_capabilities"])
+        self.assertIn("skill-efficacy-benchmark", context["selected_capabilities"])
+        self.assertIn("plan-execution-consistency", context["selected_capabilities"])
+        self.assertNotIn("backend-change-builder", context["selected_skills"])
+
+    def test_prompt_only_skill_authoring_update_routes_skill_authoring(self) -> None:
+        event = {
+            "hook_event_name": "UserPromptSubmit",
+            "prompt": "Update src/registry/routing-rules.yaml and SKILL.md trigger",
+        }
+        classification = classify_event(event)
+        context = _context_for(event)
+        self.assertEqual(classification["stage"], "skill_authoring")
+        self.assertEqual(context["current_stage"], "skill-authoring")
+        self.assertEqual(context["product_surfaces"], ["skill-authoring"])
+        self.assertIn("skill-authoring-expert", context["selected_capabilities"])
+        self.assertIn("engineering-stage-professionalism", context["selected_capabilities"])
+        self.assertNotIn("implementation-structure-design", context["selected_capabilities"])
+
+    def test_context_budget_prompt_selects_context_control_plane(self) -> None:
+        event = {
+            "hook_event_name": "UserPromptSubmit",
+            "prompt": "Update rd-skills hook runtime context budget, reference bloat, and skipped references.",
+        }
+        context = _context_for(event)
+        self.assertEqual(context["current_stage"], "skill-authoring")
+        self.assertIn("context-control-plane", context["selected_capabilities"])
+        self.assertIn(
+            "references/capabilities/128-context-control-plane.md",
+            context["required_references"],
+        )
+        self.assertEqual(context["context_control"]["budget_mode"], "staged-plan")
+
+    def test_reference_budget_keeps_router_refs_and_skips_overflow(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product", "api-contract", "validation-broker", "repository-intelligence"],
+            event_name="UserPromptSubmit",
+            classification={
+                "stage": "edit",
+                "product_surfaces": [
+                    "backend-product",
+                    "api-contract",
+                    "validation-broker",
+                    "repository-intelligence",
+                ],
+                "language_surfaces": ["python"],
+                "risk_surfaces": ["data-api"],
+                "conditional_capabilities": [
+                    "repository-graph-analysis",
+                    "plan-execution-consistency",
+                ],
+            },
+        )
+        control = context["context_control"]
+        self.assertEqual(control["budget_mode"], "staged-plan")
+        self.assertLessEqual(len(context["required_references"]), control["max_required_references"])
+        for reference in (
+            "references/routing-rules.md",
+            "references/skill-registry.md",
+            "references/capability-index.md",
+            "references/domain-extension-index.md",
+        ):
+            self.assertIn(reference, context["required_references"])
+        self.assertGreater(control["skipped_reference_count"], 0)
+        self.assertEqual(control["skipped_reference_count"], len(context["skipped_references"]))
+
+    def test_context_lines_are_summarized_and_bounded(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product", "api-contract", "validation-broker", "repository-intelligence"],
+            event_name="UserPromptSubmit",
+            classification={
+                "stage": "edit",
+                "product_surfaces": [
+                    "backend-product",
+                    "api-contract",
+                    "validation-broker",
+                    "repository-intelligence",
+                ],
+                "language_surfaces": ["python"],
+                "risk_surfaces": ["data-api"],
+            },
+        )
+        rendered = "\n".join(context_lines(context))
+        self.assertLess(len(rendered), 6000)
+        self.assertIn("entry_skill: change-forge-router", rendered)
+        self.assertIn("context_budget_mode: staged-plan", rendered)
+        self.assertIn("context_control: engineering_focus_areas=", rendered)
+        self.assertIn("source_test_context=", rendered)
+        self.assertNotIn("selected_skills:", rendered)
+        self.assertNotIn("selected_capabilities:", rendered)
+        self.assertNotIn("required_references:", rendered)
+        self.assertNotIn("required_quality_gates:", rendered)
+        self.assertNotIn("raw_prompt", rendered)
+
+    def test_compaction_stage_keeps_minimal_context_control(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="compaction",
+            surfaces=[],
+            event_name="Compact",
+            classification={"stage": "compaction", "product_surfaces": [], "risk_surfaces": []},
+        )
+        self.assertEqual(context["context_control"]["budget_mode"], "minimal")
+        self.assertTrue(context["context_control"]["compaction_snapshot_required"])
+        self.assertLessEqual(
+            len(context["required_references"]),
+            context["context_control"]["max_required_references"],
+        )
+
+    def test_bare_business_registry_prompt_does_not_route_skill_authoring(self) -> None:
+        prompts = (
+            ("Update service registry behavior", "edit"),
+            ("Modify package registry cache", "edit"),
+            ("Fix user registry table", "repair"),
+        )
+        for prompt, expected_stage in prompts:
+            with self.subTest(prompt=prompt):
+                event = {"hook_event_name": "UserPromptSubmit", "prompt": prompt}
+                classification = classify_event(event)
+                context = _context_for(event)
+                self.assertEqual(classification["stage"], expected_stage)
+                self.assertNotIn("skill-authoring", context["product_surfaces"])
+                self.assertNotEqual(context["current_stage"], "skill-authoring")
+                self.assertNotIn("skill-authoring-expert", context["selected_capabilities"])
+
+    def test_skill_md_under_professional_skill_has_skill_authoring_primary_surface(self) -> None:
+        context = _context_for(_edit_event("src/professional-skills/change-forge-router/SKILL.md"))
+        self.assertEqual(context["current_stage"], "skill-authoring")
+        self.assertEqual(context["primary_product_surface"], "skill-authoring")
+        self.assertNotIn("documentation-only", context["product_surfaces"])
+
+    def test_unknown_pure_question_has_no_injection(self) -> None:
+        classification = classify_event({"hook_event_name": "UserPromptSubmit", "prompt": "what is this concept?"})
+        self.assertFalse(classification["should_inject"])
+        self.assertEqual(classification["product_surfaces"], [])
+
+    def test_completed_preflight_test_plan_enters_coding_without_validation_run(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state=_coding_ready_state(),
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+            },
+        )
+        self.assertEqual(context["current_stage"], "coding")
+        self.assertFalse(_coding_ready_state()["validation_command_seen"])
+
+    def test_multi_surface_route_preserves_secondary_surface_capabilities(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product", "api-contract"],
+            event_name="PreToolUse",
+            state=_coding_ready_state(),
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product", "api-contract"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": ["data-api"],
+            },
+        )
+        self.assertEqual(context["product_surfaces"], ["backend-product", "api-contract"])
+        self.assertEqual(context["product_surface"], "backend-product")
+        self.assertEqual(context["primary_product_surface"], "backend-product")
+        self.assertIn("api-contract-design", context["selected_capabilities"])
+
+    def test_ordinary_api_dto_does_not_default_data_format_contract(self) -> None:
+        context = _context_for(
+            {
+                "hook_event_name": "UserPromptSubmit",
+                "prompt": (
+                    "Add an optional displayName string to a REST response DTO "
+                    "and OpenAPI schema while preserving existing encoding behavior."
+                ),
+            }
+        )
+        self.assertIn("api-contract", context["product_surfaces"])
+        self.assertIn("api-contract-design", context["selected_capabilities"])
+        self.assertIn("dto-schema-design", context["selected_capabilities"])
+        self.assertNotIn("data-format-contract-usage", context["selected_capabilities"])
+
+    def test_toml_parser_risk_selects_data_format_contract(self) -> None:
+        context = _context_for(
+            {
+                "hook_event_name": "UserPromptSubmit",
+                "prompt": "Fix TOML config parser type strictness and parser compatibility for generated config.",
+            }
+        )
+        self.assertIn("api-contract", context["product_surfaces"])
+        self.assertIn("data-format-contract-usage", context["selected_capabilities"])
+
+    def test_protobuf_field_number_reuse_selects_data_format_contract(self) -> None:
+        context = _context_for(
+            {
+                "hook_event_name": "UserPromptSubmit",
+                "prompt": "Fix Protobuf field number reuse in a generated model and preserve unknown field compatibility.",
+            }
+        )
+        self.assertIn("api-contract", context["product_surfaces"])
+        self.assertIn("data-format-contract-usage", context["selected_capabilities"])
+
+    def test_json_literal_unit_test_does_not_select_data_format_contract(self) -> None:
+        self.assertNotIn(
+            "data-format-contract-usage",
+            detect_conditional_capabilities(
+                [],
+                text="Update a unit test assertion with an ordinary JSON literal only.",
+            ),
+        )
+
+    def test_skipped_capabilities_are_only_foundation_capabilities(self) -> None:
+        context = _context_for(_edit_event("src/components/ProfileCard.tsx"))
+        skipped = [
+            item["capability"]
+            for item in context["skipped_capabilities"]
+            if isinstance(item, dict) and "capability" in item
+        ]
+        self.assertTrue(set(skipped).issubset(set(CAPABILITY_IDS)))
+        self.assertNotIn("backend-change-builder", skipped)
+        self.assertNotIn("frontend-change-builder", skipped)
+        self.assertNotIn("product-coding-owner", skipped)
+        skipped_skills = [
+            item["skill"]
+            for item in context["skipped_skills"]
+            if isinstance(item, dict) and "skill" in item
+        ]
+        self.assertIn("backend-change-builder", skipped_skills)
+
+    def test_stage_model_surface_signal_routes_validation_broker(self) -> None:
+        # Protects stage-model product signals from being swallowed by skill-authoring.
+        context = _context_for(
+            {
+                "hook_event_name": "UserPromptSubmit",
+                "prompt": "Fix validation broker stale validation without outcome handling",
+            }
+        )
+        self.assertIn("validation-broker", context["product_surfaces"])
+        self.assertIn("validation-broker", context["selected_capabilities"])
+        self.assertEqual(context["owner_skill"], "quality-test-gate")
+
+    def test_stage_conditional_capabilities_are_selected_from_classifier_signals(self) -> None:
+        # Protects conditional capability activation from becoming generated index data only.
+        context = _context_for(
+            {
+                "hook_event_name": "UserPromptSubmit",
+                "prompt": (
+                    "Update src/services/order_service.py after repository graph analysis, "
+                    "dependency wiring lifecycle checks, and testability seam planning"
+                ),
+            }
+        )
+        self.assertEqual(context["current_stage"], "implementation-planning")
+        self.assertIn("repository-graph-analysis", context["selected_capabilities"])
+        self.assertIn("dependency-wiring-lifecycle", context["selected_capabilities"])
+        self.assertIn("testability-seam-design", context["selected_capabilities"])
+
+    def test_stage_conditional_capabilities_are_filtered_by_current_stage(self) -> None:
+        # Protects against loading conditionals from a different engineering stage.
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state={},
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+                "conditional_capabilities": [
+                    "repository-graph-analysis",
+                    "validation-broker",
+                ],
+            },
+        )
+        self.assertEqual(context["current_stage"], "implementation-planning")
+        self.assertIn("repository-graph-analysis", context["selected_capabilities"])
+        self.assertNotIn("validation-broker", context["selected_capabilities"])
+
+    def test_code_element_trigger_vocabulary_matches_routing_rules(self) -> None:
+        prompts = (
+            "variable uninitialized on error branch",
+            "sentinel null and none default handling",
+            "assignment expression with chained assignment",
+            "mixed operator precedence in complex conditional",
+            "side-effect expression with side effect getter",
+            "empty branch and no-op catch",
+            "try scope too wide with missing resource cleanup",
+            "cache before commit and external io before commit",
+            "ignored return and loop counter mutation",
+        )
+        for prompt in prompts:
+            with self.subTest(prompt=prompt):
+                self.assertIn(
+                    "code-element-professionalism",
+                    detect_conditional_capabilities([], text=prompt),
+                )
+
+    def test_bug_fix_stage_can_conditionally_select_code_element_professionalism(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="repair",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state={"repair_evidence_seen": True},
+            classification={
+                "stage": "repair",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+                "conditional_capabilities": ["code-element-professionalism"],
+            },
+        )
+
+        self.assertEqual(context["current_stage"], "bug-fix")
+        self.assertIn("code-element-professionalism", context["selected_capabilities"])
+
+    def test_ordinary_naming_only_does_not_select_code_element_professionalism(self) -> None:
+        self.assertNotIn(
+            "code-element-professionalism",
+            detect_conditional_capabilities([], text="Rename a local variable for clearer naming only."),
+        )
+
+    def test_structure_only_placement_does_not_select_code_element_professionalism(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state={},
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+            },
+        )
+
+        self.assertEqual(context["current_stage"], "implementation-planning")
+        self.assertIn("implementation-structure-design", context["selected_capabilities"])
+        self.assertNotIn("code-element-professionalism", context["selected_capabilities"])
+
+    def test_code_element_focus_line_is_injected_only_when_selected(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state={},
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+                "conditional_capabilities": ["code-element-professionalism"],
+            },
+        )
+        rendered = "\n".join(context_lines(context))
+        self.assertIn("- code_element_focus: verify variable initialization/default semantics", rendered)
+
+        ordinary = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state={},
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+            },
+        )
+        self.assertNotIn("code_element_focus", "\n".join(context_lines(ordinary)))
+
+    def test_empty_generated_capability_triggers_preserve_fallback_triggers(self) -> None:
+        fallback = {"validation-broker": ("stale validation",)}
+        merged = _merge_nonempty_tuple_mapping(
+            {
+                "validation-broker": [],
+                "repository-graph-analysis": ["repository graph analysis"],
+            },
+            fallback,
+        )
+
+        self.assertEqual(merged["validation-broker"], ("stale validation",))
+        self.assertEqual(merged["repository-graph-analysis"], ("repository graph analysis",))
+
+    def test_user_prompt_submit_resets_state_unless_follow_up(self) -> None:
+        old_cache = os.environ.get("XDG_CACHE_HOME")
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            os.environ["XDG_CACHE_HOME"] = cache
+            repo = Path(cwd)
+            merge_state(
+                repo,
+                "codex",
+                changed_paths=["src/services/order_service.py"],
+                risk_surfaces=["security"],
+                suggested_skills=["backend-change-builder"],
+            )
+            reset_state_for_new_prompt(
+                repo,
+                "codex",
+                {"hook_event_name": "UserPromptSubmit", "prompt": "Update docs only"},
+            )
+            state = load_state(repo)
+            self.assertEqual(state["changed_paths"], [])
+            self.assertEqual(state["risk_surfaces"], [])
+            self.assertEqual(state["suggested_skills"], [])
+
+            merge_state(repo, "codex", changed_paths=["src/services/order_service.py"])
+            reset_state_for_new_prompt(
+                repo,
+                "codex",
+                {"hook_event_name": "UserPromptSubmit", "prompt": "continue the same PR review"},
+            )
+            self.assertEqual(load_state(repo)["changed_paths"], ["src/services/order_service.py"])
+        if old_cache is None:
+            os.environ.pop("XDG_CACHE_HOME", None)
+        else:
+            os.environ["XDG_CACHE_HOME"] = old_cache
+
+
+def _coding_ready_state() -> dict[str, object]:
+    return {
+        "read_evidence_seen": True,
+        "implementation_preflight_required": True,
+        "implementation_preflight_complete": True,
+        "implementation_preflights": ["paths=src/services/order_service.py; fields=test_plan,risk"],
+        "pre_edit_missing_test_plan": False,
+        "validation_command_seen": False,
+        "validation_seen": False,
+    }
+
+
+if __name__ == "__main__":
+    unittest.main()

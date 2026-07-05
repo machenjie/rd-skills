@@ -1,0 +1,44 @@
+id: design-pattern-overengineering
+category: structure
+complexity: L3
+focus:
+  - pattern overengineering
+  - direct code decision
+  - single implementation strategy rejection
+  - file and object granularity
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - design-pattern-selection
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - refactoring
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - test gate
+expected_outcomes:
+  - A single current rule is implemented directly or as a module-local helper.
+  - Strategy, factory, public interface, and abstract base class are rejected without current variation.
+  - File split and object creation are rejected when they only reduce line count or test private logic.
+  - Public behavior tests cover the rule without coupling to private helper structure.
+required_qualities:
+  - Produces a Design Pattern Decision Record selecting direct code or local helper.
+  - Records rejected strategy, factory, interface, and abstract base candidates.
+  - Names the simpler alternative and deletion path.
+  - Preserves existing object, method, module, and file granularity decisions.
+forbidden_shortcuts:
+  - Strategy with one implementation.
+  - Factory hiding simple constructor.
+  - Abstract base class for reuse.
+  - Public interface with no current consumer.
+evidence:
+  - Design Pattern Decision Record with selected and rejected candidates.
+  - Implementation Structure Plan showing method placement and file granularity.
+  - Public behavior tests for the simple rule.
+  - Review evidence rejecting speculative abstraction.

@@ -1,0 +1,61 @@
+---
+id: over-fragmented-file-structure
+description: |
+  A cohesive service change was split into tiny helper files without a real
+  file boundary.
+prompt: |
+  Review an AI patch that adds a small order cancellation rule by creating
+  order_cancellation_predicate.py, refund_flag_mapper.py, policy_options.py,
+  cancellation_constants.py, and cancellation_adapter.py. Each file contains
+  one tiny private helper or pass-through class used only by OrderCancellationService.
+  Understanding the rule now requires several file jumps, and no owner,
+  lifecycle, public contract, side-effect boundary, or change reason differs
+  from the service file.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - over-fragmented file structure
+    - micro-file sprawl
+    - excessive file split
+    - one-function file without boundary
+    - navigation cost regression
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - module-boundary-design
+    - code-clarity-maintainability
+    - refactoring
+    - unit-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - AI review gate
+    - test gate
+forbidden:
+  skills:
+    - architecture-impact-reviewer
+    - frontend-change-builder
+    - data-api-contract-changer
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - ai-product-extension
+    - web3-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  The route should reject micro-file sprawl with implementation structure and
+  clarity review. The excessive file split trigger also requires a lightweight
+  module-boundary check so the route can distinguish owner-local micro-file
+  sprawl from a real module or directory boundary split.

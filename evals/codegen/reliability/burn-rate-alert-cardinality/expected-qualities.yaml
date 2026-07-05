@@ -1,0 +1,44 @@
+id: burn-rate-alert-cardinality
+category: reliability
+complexity: L4
+focus:
+  - SLO burn rate
+  - metric cardinality
+  - alert noise control
+  - runbook evidence
+route_hints:
+  skills:
+    - reliability-observability-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - observability
+    - performance-budgeting
+    - degradation-circuit-breaking
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+    - documentation gate
+expected_outcomes:
+  - Fast and slow burn alerts use bounded labels and stable SLO windows.
+  - High cardinality user, request, and raw path labels are rejected.
+  - Alerts include actionable severity, owner, dashboard, and runbook metadata.
+  - Regression tests catch accidental label explosion.
+required_qualities:
+  - Alert expressions aggregate by bounded service and outcome dimensions.
+  - Tests lint expressions for unbounded labels and invalid windows.
+  - Runbook text explains customer impact and rollback signal.
+  - Notification policy distinguishes page and ticket severity.
+forbidden_shortcuts:
+  - Using user id or raw URL path as alert labels.
+  - Paging on a single short window without sustained burn evidence.
+  - Alerting on request volume alone instead of error budget burn.
+  - Shipping alerts without dashboard or runbook links.
+evidence:
+  - Alert rule tests for label allowlists and burn windows.
+  - Cardinality lint output for metric labels.
+  - Runbook link and notification policy evidence.
+  - Regression fixture for a route with path parameters.

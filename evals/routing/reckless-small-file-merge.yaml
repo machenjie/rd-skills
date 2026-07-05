@@ -1,0 +1,61 @@
+---
+id: reckless-small-file-merge
+description: |
+  A cleanup patch merged small files with real boundaries into a service only
+  to reduce file count.
+prompt: |
+  Review an AI refactor that merged payment_gateway_client.py,
+  cancellation_window.py, and cancellation_policy.py into
+  OrderCancellationService because they were small. The adapter/client hid
+  external payment side effects, the value object carried an invariant, and the
+  policy had independent public behavior tests. A tiny private helper used only
+  by the service was also present and could have been merged safely.
+expected:
+  complexity: L3
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - reckless file merge
+    - lost small-file boundary
+    - file count reduction without boundary analysis
+    - merge hides side-effect boundary
+    - navigation cost regression
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - module-boundary-design
+    - code-clarity-maintainability
+    - refactoring
+    - unit-testing
+    - regression-testing
+    - contract-testing
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - AI review gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - ai-product-extension
+    - web3-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  The route should select implementation structure, module boundary, clarity,
+  and refactoring because the refactor both has a safe helper merge candidate
+  and destroys small files with real boundaries. It should not escalate to
+  delivery or data migration work because no runtime release path or schema
+  migration is described.

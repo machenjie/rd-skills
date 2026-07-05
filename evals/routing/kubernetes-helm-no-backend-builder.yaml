@@ -1,0 +1,24 @@
+---
+id: kubernetes-helm-no-backend-builder
+description: Helm chart edit must route to delivery/kubernetes, not backend builders.
+prompt: |
+  Update deploy/chart/Chart.yaml and deploy/chart/values.yaml for a safer probe rollout.
+expected:
+  complexity: L2
+  risk_level: high
+  expected_stage: release-delivery
+  expected_context_budget_mode: single-stage
+  expected_product_surface: kubernetes-helm
+  expected_language_surface: none
+  risk_triggers: []
+  skills: [delivery-release-gate, quality-test-gate]
+  capabilities: [kubernetes-gateway, ci-cd, release-rollback]
+  domain_extensions: []
+  quality_gates: [delivery gate, test gate]
+forbidden:
+  skills: [backend-change-builder, frontend-change-builder, data-api-contract-changer]
+  capabilities: [go-professional-usage, cpp-professional-usage]
+  domain_extensions: [ai-product-extension, web3-product-extension, payment-trading-extension]
+  quality_gates: [API/data gate]
+notes: |
+  Chart.yaml and values.yaml are delivery surfaces.

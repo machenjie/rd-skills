@@ -1,0 +1,55 @@
+---
+id: senior-judgment-public-api-compatibility
+description: |
+  Public API compatibility changes need senior judgment with purpose, facts,
+  boundaries, validation proof limits, and residual risk ownership.
+prompt: |
+  Add a public export `getCustomerLifecycleStatus()` and change the response
+  shape used by SDK consumers. The plan lists a unit test but omits source-backed
+  consumer facts, public boundary, compatibility success/failure signal,
+  validation proof limits, and residual risk owner.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - senior programming judgment missing
+    - public contract consumer impact unknown
+    - missing test evidence
+  skills:
+    - data-api-contract-changer
+    - quality-test-gate
+    - change-impact-analyzer
+  capabilities:
+    - senior-programming-judgment-core
+    - consumer-impact-analysis
+    - version-compatibility
+    - api-contract-design
+    - contract-testing
+    - validation-broker
+    - implementation-structure-design
+    - agent-execution-discipline
+  domain_extensions: []
+  quality_gates:
+    - impact gate
+    - API/data gate
+    - implementation gate
+    - test gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - data-middleware-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - cache-design
+  domain_extensions:
+    - ai-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  A public export or SDK-facing response change is not complete from a unit test
+  alone; it needs compatibility facts and proof limits.
+  Hidden risks covered: public export may break SDK consumers; unit tests may
+  not prove contract compatibility; residual risk lacks owner.

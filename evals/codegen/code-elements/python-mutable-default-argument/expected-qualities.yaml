@@ -1,0 +1,39 @@
+id: python-mutable-default-argument
+category: code-elements
+complexity: L2
+focus:
+  - mutable default argument
+  - variable lifetime semantics
+  - Python idiom check
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - language-idiom-enforcement
+    - code-review
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+expected_outcomes:
+  - Each call receives independent default state.
+  - Caller-provided list semantics are explicit and preserved.
+  - Regression tests cover repeated calls.
+required_qualities:
+  - Uses `None` or an equivalent explicit sentinel safely.
+  - Does not introduce broad structure for a local variable default bug.
+  - Documents or tests mutation versus copy semantics.
+forbidden_shortcuts:
+  - Keeping a mutable list or dict as a default argument.
+  - Adding a new class or helper module for the local default fix.
+  - Reporting completion without repeated-call regression evidence.
+evidence:
+  - Code Element Professionalism Review of the default variable lifetime.
+  - Regression test output for repeated calls.
+  - Python idiom or lint evidence when available.
+

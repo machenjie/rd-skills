@@ -1,0 +1,45 @@
+---
+id: l1-text-edit-no-execution-discipline
+description: |
+  A trivial L1 string-literal edit must not over-route into the
+  execution-discipline foundation capability. Anti-over-routing case.
+prompt: |
+  Change the user-facing label from "Sign in" to "Log in" in
+  src/web/components/Header.tsx. No behavior, no API, no data, no test
+  change.
+expected:
+  complexity: L1
+  risk_triggers: []
+  skills:
+    - frontend-change-builder
+  capabilities: []
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+forbidden:
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - task-dag-planner
+    - domain-impact-modeler
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - delivery-release-gate
+    - ai-code-review-refactor
+  capabilities:
+    - agent-execution-discipline
+    - implementation-structure-design
+    - threat-modeling
+    - data-migration-design
+    - release-rollback
+  quality_gates:
+    - execution discipline gate
+    - AI review gate
+notes: |
+  L1 anti-over-routing: a single visible-string change must not pull in
+  agent-execution-discipline. The capability is for non-trivial
+  agent-assisted changes only.

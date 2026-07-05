@@ -1,0 +1,13 @@
+---
+id: negative-validation-evidence-detected
+scenario: Negative validation evidence must remain visible after later unrelated checks pass.
+expected_capabilities:
+  - validation-broker
+expected_evidence:
+  - Validation result parsing records failed command and failing check.
+  - Negative evidence remains in stop closure.
+  - Later unrelated pass does not override the failure.
+forbidden_claims:
+  - Failed command is hidden behind a later passing linter.
+  - Handoff reports all validation passed.
+privacy_boundary: Summarized failure signature only; no full command output.

@@ -1,0 +1,39 @@
+id: cpp-uninitialized-variable
+category: code-elements
+complexity: L2
+focus:
+  - uninitialized variable
+  - branch coverage
+  - C++ initialization idiom
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - language-idiom-enforcement
+    - code-review
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+expected_outcomes:
+  - The variable is initialized on every path before it is read.
+  - Public status behavior is preserved.
+  - Branch tests catch the formerly uninitialized path.
+required_qualities:
+  - Uses local initialization or control-flow restructuring instead of warning suppression.
+  - Keeps enum/API compatibility intact.
+  - Provides compiler, sanitizer, static-analysis, or test evidence.
+forbidden_shortcuts:
+  - Suppressing uninitialized-variable warnings.
+  - Adding global state or a new helper file for a local branch bug.
+  - Reporting completion without branch regression evidence.
+evidence:
+  - Code Element Professionalism Review naming the variable and read paths.
+  - Branch test output or compiler warning evidence.
+  - C++ initialization idiom note.
+

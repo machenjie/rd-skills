@@ -1,0 +1,75 @@
+id: migration-rollback-review
+description: Migration release review requires expand-contract, rollback, compatibility, and lock-risk evidence.
+prompt: |
+  Review a release plan that drops a customer column and updates the API in one
+  deploy. The plan has no rollback command and no old-pod compatibility check.
+expected:
+  selected_skills:
+    - delivery-release-gate
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  selected_capabilities:
+    - data-migration-design
+    - release-rollback
+    - version-compatibility
+    - transaction-consistency
+    - agent-execution-discipline
+    - integration-testing
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/30-data-migration-design.md
+    - references/capabilities/75-release-rollback.md
+  required_quality_gates:
+    - delivery gate
+    - migration gate
+    - reliability gate
+    - test gate
+  required_professional_obligations:
+    - expand-contract rollout phase
+    - forward and rollback migration evidence
+    - old and new pod compatibility boundary
+    - residual risk: production lock duration not measured
+  forbidden_behaviors:
+    - drop column in same release
+    - no rollback command
+    - claim staging passed without output
+actual:
+  route_manifest:
+    selected_skills:
+      - delivery-release-gate
+      - data-api-contract-changer
+      - data-middleware-change-builder
+      - reliability-observability-gate
+      - quality-test-gate
+    selected_capabilities:
+      - data-migration-design
+      - release-rollback
+      - version-compatibility
+      - transaction-consistency
+      - agent-execution-discipline
+      - integration-testing
+    required_references:
+      - references/routing-rules.md
+      - references/skill-registry.md
+      - references/capability-index.md
+      - references/domain-extension-index.md
+      - references/capabilities/30-data-migration-design.md
+      - references/capabilities/75-release-rollback.md
+    required_quality_gates:
+      - delivery gate
+      - migration gate
+      - reliability gate
+      - test gate
+  validation_evidence: "expand-contract rollout phase; forward and rollback migration evidence"
+  inspected_boundaries: "old and new pod compatibility boundary; API reader, writer, migration, deploy order"
+  residual_risk: "residual risk: production lock duration not measured"
+  next_gate: "next gate: delivery gate reviews staged rollout and rollback drill"
+review:
+  human_review_required: true
+  promotion_status: candidate
+  notes: Candidate until checked against a real migration release review.

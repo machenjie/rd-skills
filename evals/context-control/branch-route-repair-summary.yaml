@@ -1,0 +1,88 @@
+---
+id: branch-route-repair-summary
+input:
+  scenario: A repaired route after repeated same-path retry must produce a bounded branch route-repair summary.
+  context_risk: true
+  runtime_resolver:
+    stage: code-review
+    risk_surfaces:
+      - execution-trajectory
+    product_surfaces:
+      - execution-trajectory
+    classification:
+      stage: code-review
+      prompt_signals:
+        - branch route repair summary
+        - route repair
+expected:
+  context_control_selected: true
+  selected_skills:
+    - ai-code-review-refactor
+    - quality-test-gate
+  selected_capabilities:
+    - context-control-plane
+    - agent-execution-discipline
+    - plan-execution-consistency
+    - execution-trajectory-analysis
+  budget_mode: staged-plan
+  selected_reference_count: 4
+  selected_reference_count_max: 16
+  skipped_reference_count: 1
+  skipped_references:
+    - reference: references/capabilities/75-release-rollback.md
+      reason: The route repair is pre-release and does not change deployment state.
+  safety_result: pass
+  closure_result: partial
+  forbidden_raw_fields:
+    - raw_prompt
+    - prompt
+    - stdout
+    - stderr
+    - command_output
+    - raw_output
+    - full_output
+    - full_diff
+    - file_contents
+    - environment
+    - env
+    - secret
+    - credentials
+context_budget:
+  budget_mode: staged-plan
+  budget_profile: runtime
+  budget_rationale: Route repair needs prior and replacement route facts without raw diff or output replay.
+  context_budget_tokens: 1000
+  selected_capability_count: 4
+  selected_reference_count: 4
+  skipped_reference_count: 1
+  over_budget: false
+  residual_context_risk:
+    - Final validation must be rerun after the repaired route changes files.
+branch_route_repair_summary:
+  required: true
+  record:
+    schema_version: 1
+    summary_id: route-repair-context-control-fixture
+    trigger: repeated_same_path_retry
+    abandoned_or_repaired_route:
+      owner_skill: quality-test-gate
+      reviewer_skill: ai-code-review-refactor
+      hypothesis: same-path retry was abandoned
+      files_touched:
+        - scripts/eval-context-control-plane.py
+      validation_result: fail:old route
+      failure_reason: same-path retry
+    reusable_findings:
+      - do not retry same path without new route evidence
+    forbidden_retries:
+      - same-path retry
+    new_route:
+      owner_skill: quality-test-gate
+      selected_capabilities:
+        - context-control-plane
+        - validation-broker
+      validation_plan:
+        - python3 scripts/eval-context-control-plane.py
+    residual_risk:
+      - rerun report consistency after regenerated scorecard
+    privacy_status: pass

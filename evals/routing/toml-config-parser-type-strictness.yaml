@@ -1,0 +1,35 @@
+---
+id: toml-config-parser-type-strictness
+description: |
+  TOML config type strictness and parser behavior require data-format contract routing.
+prompt: |
+  Fix a TOML config parser compatibility issue where `"30"` and `30` are
+  treated differently across parser versions. Preserve type strictness, add
+  parser differential fixtures, and document old/new config behavior.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - data format parser compatibility
+  skills:
+    - data-api-contract-changer
+    - quality-test-gate
+  capabilities:
+    - data-format-contract-usage
+    - contract-testing
+    - version-compatibility
+  domain_extensions: []
+  quality_gates:
+    - API/data gate
+    - test gate
+forbidden:
+  skills:
+    - reliability-observability-gate
+    - frontend-change-builder
+  capabilities:
+    - network-protocol-gateway-usage
+    - linux-systems-professional-usage
+notes: |
+  TOML parser/type behavior is a format contract risk, not an ordinary API DTO change.

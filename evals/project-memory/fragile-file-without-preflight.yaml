@@ -1,0 +1,14 @@
+---
+id: fragile-file-without-preflight
+scenario: A fragile file memory signal requires preflight before editing.
+expected_capabilities:
+  - project-memory-governance
+  - repository-context-map
+expected_evidence:
+  - Memory projection marks the file fragile with bounded prior evidence.
+  - Fragile file gate requires source-of-truth and owner inspection.
+  - Current repository evidence confirms or rejects the memory signal.
+forbidden_claims:
+  - Fragile-file memory is treated as current source fact.
+  - Edit proceeds without preflight inspection.
+privacy_boundary: Bounded path, risk class, and event id only.

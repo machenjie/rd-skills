@@ -1,0 +1,39 @@
+id: python-comprehension-too-complex
+category: code-elements
+complexity: L2
+focus:
+  - complex comprehension
+  - expression readability
+  - behavior-preserving local refactor
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - code-clarity-maintainability
+    - refactoring
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+expected_outcomes:
+  - Filter, mapping, and default rules are readable.
+  - Public returned record shape is preserved.
+  - Regression tests cover edge branches.
+required_qualities:
+  - Keeps the cleanup local unless a real owner boundary exists.
+  - Names intermediate decisions when that improves reviewability.
+  - Provides before/after behavior proof.
+forbidden_shortcuts:
+  - Keeping an unreadable nested comprehension with hidden defaults.
+  - Adding a class or shared helper for one local expression.
+  - Reporting completion without behavior-preservation tests.
+evidence:
+  - Code Element Professionalism Review of the expression branches.
+  - Regression test output for edge fixtures.
+  - Refactoring note stating behavior preservation.
+

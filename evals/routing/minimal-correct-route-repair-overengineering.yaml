@@ -1,0 +1,52 @@
+---
+id: minimal-correct-route-repair-overengineering
+description: |
+  Route repair when an overengineering review was routed through design-pattern
+  or dependency work without the minimal-correct fallback.
+prompt: |
+  Route repair: the previous pass kept debating design patterns and package
+  choices, but the implementation may be overengineered. A simpler existing,
+  standard-library, native, or installed-dependency path may exist. This is a
+  complexity-only review, and the accepted shortcut lacks a ceiling and upgrade
+  trigger.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - overengineering risk
+    - complexity-only review requested
+    - shortcut without upgrade trigger
+  skills:
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - minimal-correct-implementation
+    - code-review
+    - code-clarity-maintainability
+    - implementation-structure-design
+    - cleanup-deletion-governance
+    - agent-execution-discipline
+  domain_extensions: []
+  quality_gates:
+    - AI review gate
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  The fixture mirrors failure_routing minimal-correct fallback conditions so
+  route repair cannot stay on design-pattern or package-dependency paths when
+  the real defect is unnecessary implementation complexity.

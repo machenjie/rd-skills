@@ -1,0 +1,27 @@
+---
+id: json-literal-test-no-data-format-contract
+description: |
+  JSON literal inside unit test should not activate data-format contract usage.
+prompt: |
+  Update a unit test fixture to include a JSON literal used only inside the test
+  assertion. It does not change a parser, schema, serializer, wire format, or
+  compatibility contract.
+expected:
+  complexity: L1
+  risk_triggers: []
+  skills:
+    - quality-test-gate
+  capabilities:
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - test gate
+forbidden:
+  skills:
+    - data-api-contract-changer
+    - data-middleware-change-builder
+  capabilities:
+    - data-format-contract-usage
+    - contract-testing
+notes: |
+  Anti-overrouting: a local test literal is not a data-format contract.

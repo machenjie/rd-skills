@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/validation-command.v1.schema.json",
+  "title": "ChangeForge Validation Command Plan",
+  "description": "Bounded validation command recommendations. Commands are registry entries or conservative unknown-path recommendations; they do not include stdout or private data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "changed_paths",
+    "risk_surfaces",
+    "matched_categories",
+    "recommended_commands",
+    "full_commands",
+    "conservative"
+  ],
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "type": "string", "maxLength": 300 }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "level",
+        "reason",
+        "category",
+        "covered_path_patterns",
+        "covered_risk_surfaces"
+      ],
+      "properties": {
+        "command": { "type": "string", "maxLength": 500 },
+        "level": { "type": "string", "enum": ["narrow", "module", "full", "unknown"] },
+        "reason": { "type": "string", "maxLength": 500 },
+        "category": { "type": "string", "maxLength": 100 },
+        "covered_path_patterns": { "$ref": "#/$defs/stringList" },
+        "covered_risk_surfaces": { "$ref": "#/$defs/stringList" }
+      }
+    }
+  },
+  "properties": {
+    "schema_version": { "const": 1 },
+    "changed_paths": { "$ref": "#/$defs/stringList" },
+    "risk_surfaces": { "$ref": "#/$defs/stringList" },
+    "stage": { "type": "string", "maxLength": 100 },
+    "matched_categories": { "$ref": "#/$defs/stringList" },
+    "recommended_commands": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/command" }
+    },
+    "full_commands": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/command" }
+    },
+    "conservative": { "type": "boolean" },
+    "unknown_paths": { "$ref": "#/$defs/stringList" },
+    "notes": { "$ref": "#/$defs/stringList" }
+  }
+}

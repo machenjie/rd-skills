@@ -1,0 +1,36 @@
+---
+id: network-gateway-timeout-chain
+description: |
+  Nginx/Cloudflare 504 timeout-chain routing.
+prompt: |
+  Users hit intermittent 504s through Cloudflare and Nginx for a long report
+  export. Map the Cloudflare, Nginx, app, and upstream timeout chain and avoid
+  retry amplification.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: debugging-diagnosis
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - network gateway timeout chain
+  skills:
+    - reliability-observability-gate
+    - integration-change-builder
+  capabilities:
+    - network-protocol-gateway-usage
+    - degradation-circuit-breaking
+    - observability
+  domain_extensions: []
+  quality_gates:
+    - reliability gate
+    - implementation gate
+forbidden:
+  skills:
+    - data-api-contract-changer
+    - data-middleware-change-builder
+  capabilities:
+    - data-format-contract-usage
+    - message-queue-design
+notes: |
+  The route should focus on gateway/protocol hop evidence, not ordinary DTO or
+  queue work.

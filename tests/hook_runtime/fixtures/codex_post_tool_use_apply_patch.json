@@ -1,0 +1,9 @@
+{
+  "runtime": "codex",
+  "hookEventName": "PostToolUse",
+  "toolName": "apply_patch",
+  "cwd": "/tmp/changeforge-hook-test",
+  "toolInput": {
+    "patch": "*** Begin Patch\n*** Add File: src/services/order_service.py\n+class OrderService:\n+    pass\n*** End Patch\n"
+  }
+}

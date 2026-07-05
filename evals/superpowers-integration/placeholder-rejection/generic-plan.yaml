@@ -1,0 +1,37 @@
+id: placeholder-rejection-generic-plan
+phase: P3 placeholder rejection
+required_contracts:
+  - path: src/runtime_governance/visible_plan_validator.py
+    must_contain:
+      - "PLACEHOLDER_PATTERNS"
+      - "placeholder_text"
+visible_plan_cases:
+  - name: rejects-generic-plan
+    input: |
+      # Implementation Plan
+
+      ## Task 1: Add proper error handling
+      Goal:
+      Handle edge cases.
+      Files:
+      - Modify: `src/service.py`
+      Acceptance Criteria:
+      - Validate it works.
+      Verify:
+      - Command: `python3 -m unittest`
+      Expected:
+      - Tests pass.
+      Review:
+      - Review it.
+      Stop Conditions:
+      - TBD
+
+      ## Task 2: Write tests
+      Goal:
+      Write tests.
+    expected_status: fail
+    expected_finding_codes:
+      - placeholder_text
+      - missing_files
+      - missing_acceptance_criteria
+      - missing_verify

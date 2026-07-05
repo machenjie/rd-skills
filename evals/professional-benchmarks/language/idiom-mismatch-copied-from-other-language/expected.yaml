@@ -1,0 +1,21 @@
+expected_stage: code-review
+expected_professional_skill: backend-change-builder
+expected_capabilities:
+  - language-idiom-enforcement
+expected_hidden_risks:
+  - idiom mismatch copied from other language
+  - invented abstraction ignores repository convention
+  - framework-incorrect naming or file layout
+expected_evidence:
+  - repository naming and module convention evidence
+  - formatter linter typecheck evidence
+  - existing policy boundary inspected
+forbidden_behaviors:
+  - accept Java-style abstraction in TypeScript without local convention
+  - introduce common helper naming without responsibility boundary
+  - omit formatter linter typecheck evidence
+expected_output_obligations:
+  - language idiom and repository convention evidence
+  - anti-pattern rejected with replacement boundary
+  - what evidence proves and does not prove
+  - residual idiom risk owner

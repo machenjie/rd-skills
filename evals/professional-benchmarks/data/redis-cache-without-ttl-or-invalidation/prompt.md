@@ -1,0 +1,1 @@
+Add Redis caching for account entitlement lookups. The proposed key is `entitlements:{accountId}` and the value is written after the database read, but there is no TTL, no tenant component, no invalidation on entitlement changes, and no memory or hit-rate metric.

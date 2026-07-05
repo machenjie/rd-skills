@@ -1,0 +1,14 @@
+---
+id: codex-edit-event-normalize
+scenario: Normalize a Codex edit event into stable lifecycle and evidence contracts.
+expected_capabilities:
+  - executor-adapter-protocol
+  - agent-tool-permission-sandbox
+expected_evidence:
+  - AdapterCapabilities names edit-event support.
+  - NormalizedEvent preserves bounded path and event kind.
+  - EvidenceLedger excludes raw prompt and full patch body.
+forbidden_claims:
+  - Raw Codex payload is treated as the downstream policy contract.
+  - Full patch text is stored as evidence.
+privacy_boundary: Bounded event facts only; no raw prompt, secret, environment, or full patch output.

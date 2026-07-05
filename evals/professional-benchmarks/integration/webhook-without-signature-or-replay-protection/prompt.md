@@ -1,0 +1,1 @@
+Implement an inbound provider webhook that updates subscription state. The draft parses the JSON body, updates the subscription record, and returns 200. It does not verify the provider signature, store event IDs, reject replays, or test duplicate delivery.

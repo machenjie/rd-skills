@@ -1,0 +1,54 @@
+id: copilot-review-finding-without-repair
+runtime: copilot
+description: Copilot stop closure with an unresolved review finding requires repair evidence.
+coverage_targets:
+  - event_recognition
+  - closure_verdict
+pressure_cases:
+  - review_finding_without_repair
+input_payload:
+  eventName: Stop
+  event_id: copilot-review-finding-without-repair
+  evidence_facts:
+    - event_name: Stop
+      event_id: copilot-review-finding-without-repair-evidence
+      route_manifest_detected: true
+      manifest_selected_skills:
+        - change-forge-router
+      manifest_selected_capabilities:
+        - executor-adapter-protocol
+      manifest_required_references:
+        - references/capabilities/123-executor-adapter-protocol.md
+      manifest_required_quality_gates:
+        - executor adapter eval
+      validation_command_detected: true
+      validation_evidence_detected: true
+      validation_result_outcome: pass
+      validation_result_evidence_strength: strong
+      validation_result_fresh_after_last_edit: true
+      review_findings:
+        - P1 fixture finding requires repair
+      residual_risk_detected: true
+expected_normalized_event:
+  adapter: copilot
+  event_kind: stop
+expected_gate_result:
+  outcome: pass
+expected_evidence_delta:
+  normalized_event_supported: true
+  validation_strength: strong
+  validation_freshness: current
+  validation_outcome: pass
+  review_strength: strong
+  review_outcome: finding
+expected_closure_effect:
+  verdict: needs_repair
+  missing_evidence_contains:
+    - repair
+  review_status:
+    review_outcome: finding
+    repair_present: false
+    rereview_present: false
+privacy_expectations:
+  forbid_absolute_paths: true
+

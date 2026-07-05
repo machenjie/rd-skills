@@ -1,0 +1,77 @@
+from __future__ import annotations
+
+import os
+import re
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(os.environ.get("CHANGEFORGE_CODEGEN_CANDIDATE_DIR", Path.cwd()))
+TEXT_SUFFIXES = {".md", ".py", ".ts", ".tsx", ".js", ".jsx", ".json"}
+DEPENDENCY_SUFFIXES = {".py", ".ts", ".tsx", ".js", ".jsx", ".json", ".sh"}
+NETWORK_DEPENDENCY_PATTERN = re.compile(
+    r"(?i)"
+    r"socket\.create_connection|"
+    r"\bimport\s+requests\b|"
+    r"\bfrom\s+requests\b|"
+    r"requests\.(?:get|post|put|delete|patch|request|Session)|"
+    r"http://|https://"
+)
+
+
+def candidate_texts() -> list[tuple[Path, str]]:
+    items: list[tuple[Path, str]] = []
+    for path in ROOT.rglob("*"):
+        if path.is_file() and path.suffix in TEXT_SUFFIXES:
+            items.append((path.relative_to(ROOT), path.read_text(encoding="utf-8", errors="ignore")))
+    return items
+
+
+class CacheStampedeProtectionAssertions(unittest.TestCase):
+    def test_stampede_protection_and_ttl_jitter_are_implemented(self) -> None:
+        joined = "\n".join(text for _, text in candidate_texts())
+
+        self.assertRegex(joined, r"(?i)single.?flight|lock|mutex|lease")
+        self.assertRegex(joined, r"(?i)jitter")
+        self.assertRegex(joined, r"(?i)timeout|expires|ttl")
+        self.assertRegex(joined, r"(?i)bounded|clamp|min.?ttl|max.?ttl|ttl.*range")
+
+    def test_cache_key_preserves_correctness_dimensions(self) -> None:
+        joined = "\n".join(text for _, text in candidate_texts())
+
+        for dimension in ("tenant", "permission", "variant"):
+            self.assertRegex(joined, rf"(?i){dimension}")
+        self.assertRegex(joined, r"(?i)cache.?key|key shape")
+
+    def test_observability_covers_hot_key_miss_storm_and_fallback(self) -> None:
+        joined = "\n".join(text for _, text in candidate_texts())
+
+        for signal in ("hot", "miss", "fallback", "contention"):
+            self.assertRegex(joined, rf"(?i){signal}")
+        self.assertRegex(joined, r"(?i)metric|counter|histogram|gauge")
+
+    def test_redis_outage_degrades_without_external_network_dependency(self) -> None:
+        joined = "\n".join(text for _, text in candidate_texts())
+        dependency_text = "\n".join(
+            text for rel, text in candidate_texts() if rel.suffix in DEPENDENCY_SUFFIXES
+        )
+        test_text = "\n".join(
+            text for rel, text in candidate_texts() if "test" in rel.name.casefold() or "/tests/" in rel.as_posix()
+        )
+
+        self.assertRegex(joined, r"(?i)redis.*down|redis.*unavailable|outage|degrad")
+        self.assertRegex(test_text, r"(?i)redis.*down|redis.*unavailable|outage|fallback")
+        self.assertNotRegex(dependency_text, NETWORK_DEPENDENCY_PATTERN)
+
+    def test_fake_cache_and_backend_verify_single_flight_behavior(self) -> None:
+        test_text = "\n".join(
+            text for rel, text in candidate_texts() if "test" in rel.name.casefold() or "/tests/" in rel.as_posix()
+        )
+
+        self.assertRegex(test_text, r"(?i)fake.*cache|in.?memory.*cache|stub.*cache")
+        self.assertRegex(test_text, r"(?i)fake.*backend|fake.*database|source.?of.?truth|backend.*calls")
+        self.assertRegex(test_text, r"(?i)single.?flight|lock|concurrent|parallel|only one")
+
+
+if __name__ == "__main__":
+    unittest.main()

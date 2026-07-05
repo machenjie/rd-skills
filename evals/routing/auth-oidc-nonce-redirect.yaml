@@ -1,0 +1,38 @@
+---
+id: auth-oidc-nonce-redirect
+description: |
+  OIDC missing nonce and wildcard redirect routing.
+prompt: |
+  Fix an OIDC login callback that allows wildcard redirect URIs and does not
+  validate nonce on the ID token. Add negative tests for replay and wrong issuer.
+expected:
+  complexity: L4
+  risk_level: critical
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - auth
+  skills:
+    - security-privacy-gate
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - authentication-security
+    - web-security
+    - threat-modeling
+    - input-validation
+    - implementation-structure-design
+  domain_extensions: []
+  quality_gates:
+    - security gate
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - data-middleware-change-builder
+    - delivery-release-gate
+  capabilities:
+    - cache-design
+    - message-queue-design
+notes: |
+  Authentication lifecycle and OIDC callback proof are primary.

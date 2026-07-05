@@ -1,0 +1,47 @@
+id: rollback-migration-compatibility
+category: delivery
+complexity: L5
+focus:
+  - expand contract migration
+  - rollback compatibility
+  - deployment ordering
+  - data integrity
+route_hints:
+  skills:
+    - data-api-contract-changer
+    - delivery-release-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+    - ci-cd
+    - version-compatibility
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - API/data gate
+    - implementation gate
+    - delivery gate
+    - test gate
+    - documentation gate
+expected_outcomes:
+  - Old and new application versions can run during the migration window.
+  - Forward migration, backfill, read cutover, and cleanup are separated.
+  - Rollback returns traffic to the previous version without data loss.
+  - Deployment notes include stop conditions and verification commands.
+required_qualities:
+  - Migration scripts are idempotent and safe to resume.
+  - Compatibility tests cover mixed old and new writer behavior.
+  - Cleanup is gated behind explicit post rollout evidence.
+  - Rollback plan avoids restore from backup for ordinary failure.
+forbidden_shortcuts:
+  - Dropping the legacy field in the first migration release.
+  - Backfilling with an irreversible transform and no audit trail.
+  - Rollback instructions that require restoring production backup.
+  - Deploying app and destructive migration as one inseparable step.
+evidence:
+  - Migration tests for forward and rollback compatibility.
+  - Mixed version contract test fixtures.
+  - Release checklist with stop conditions.
+  - Cleanup gate documentation.

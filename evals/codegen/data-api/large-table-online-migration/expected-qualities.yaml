@@ -1,0 +1,61 @@
+id: large-table-online-migration
+category: data-api
+complexity: L5
+focus:
+  - online schema migration
+  - API compatibility
+  - backfill resumability
+  - rollback safety
+route_hints:
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - backend-change-builder
+    - reliability-observability-gate
+    - delivery-release-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - data-migration-design
+    - relational-database
+    - indexing-query-optimization
+    - transaction-consistency
+    - sql-professional-usage
+    - release-rollback
+    - observability
+    - performance-budgeting
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - impact gate
+    - architecture gate
+    - API/data gate
+    - implementation gate
+    - reliability gate
+    - delivery gate
+    - test gate
+    - documentation gate
+expected_outcomes:
+  - Migration expands schema without blocking full table writes.
+  - API supports old full name clients and new split field clients during transition.
+  - Backfill runs in bounded resumable batches with progress evidence.
+  - Rollback is possible before final cleanup and is documented per phase.
+required_qualities:
+  - Expand and contract phases are separated by deployable boundaries.
+  - Batch backfill has checkpoints and safe retry behavior.
+  - Read and write paths maintain compatibility during mixed client operation.
+  - Observability tracks progress mismatches failures and latency impact.
+  - Tests cover migration restart and old and new API contracts.
+forbidden_shortcuts:
+  - Single transaction update of the full production table.
+  - Dropping or making full name incompatible during the first release.
+  - Irreversible parsing that overwrites source data without audit.
+  - Rollback instructions that require restoring from backup for ordinary failure.
+evidence:
+  - Migration tests or dry run output for expand backfill and compatibility phases.
+  - Contract tests for old and new API clients.
+  - Backfill progress and restart test evidence.
+  - Rollout and rollback documentation with stop conditions.

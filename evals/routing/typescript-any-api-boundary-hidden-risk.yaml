@@ -1,0 +1,47 @@
+---
+id: typescript-any-api-boundary-hidden-risk
+description: |
+  TypeScript `any` at an API boundary requires runtime validation and type
+  boundary evidence.
+prompt: |
+  A TypeScript client parses `/accounts` API JSON as `any`, casts it to
+  `Account`, and then assumes `status` is non-null. There is no runtime schema,
+  no discriminated error state, and no generated-client compatibility check.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  hidden_risk_phrases:
+    - TypeScript any at API boundary
+    - runtime validation missing for external data
+    - nullable state hidden by cast
+  skills:
+    - frontend-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - typescript-professional-usage
+    - frontend-api-integration
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - delivery-release-gate
+    - data-middleware-change-builder
+    - security-privacy-gate
+  capabilities:
+    - release-rollback
+    - cache-design
+    - e2e-testing
+  domain_extensions:
+    - web3-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+    - security gate
+notes: |
+  This is TypeScript boundary correctness, not cache, release, or E2E routing.

@@ -1,0 +1,28 @@
+id: ai-internal-unawareness
+phase: P10/P11 internal-unawareness boundary
+required_contracts:
+  - path: docs/HOOKS.md
+    must_contain:
+      - "Maintainer / CI only. Not part of ordinary agent workflow."
+      - "Hooks default to advisory guidance"
+  - path: docs/USAGE.md
+    must_contain:
+      - "Superpowers-style development flow"
+      - "ordinary agent workflow"
+internal_unawareness_cases:
+  - name: flags-internal-artifacts
+    input: |
+      I updated the rd-skills task ledger.
+      I fixed process_phase_ledgers.
+      I read .changeforge hook state.
+      I edited internal task metadata.
+    expected_violations:
+      - task ledger
+      - process_phase_ledgers
+      - .changeforge hook state
+      - internal task metadata
+  - name: allows-ordinary-progress-ledger
+    input: |
+      I updated the progress ledger for the release.
+    expected_no_violations:
+      - task ledger

@@ -1,0 +1,37 @@
+---
+id: protobuf-field-number-reuse
+description: |
+  Protobuf field-number reuse requires data-format contract routing.
+prompt: |
+  Fix reuse of a removed Protobuf field number in a generated model.
+  Reserve the old field number and name, preserve unknown-field behavior, and
+  add old-reader/new-writer compatibility fixtures.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - protobuf field reuse
+    - data format parser compatibility
+  skills:
+    - data-api-contract-changer
+    - quality-test-gate
+  capabilities:
+    - data-format-contract-usage
+    - version-compatibility
+    - contract-testing
+  domain_extensions: []
+  quality_gates:
+    - API/data gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - reliability-observability-gate
+  capabilities:
+    - network-protocol-gateway-usage
+    - linux-systems-professional-usage
+notes: |
+  Protobuf compatibility is numeric; the route must load data-format contract
+  evidence instead of treating this as a plain DTO rename.

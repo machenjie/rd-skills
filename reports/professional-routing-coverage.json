@@ -1,0 +1,1850 @@
+{
+  "benchmark_cases_checked": 35,
+  "benchmark_risk_coverage": [
+    {
+      "benchmark": "evals/professional-benchmarks/adversarial/keyword-stuffed-with-skill-gaps",
+      "coverage_status": "not-required",
+      "covered": false,
+      "hidden_risk": "route to nonexistent or unrelated capability",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [],
+      "routing_not_required_reason": "Adversarial evaluator negative fixture; it validates benchmark scoring, not route coverage.",
+      "strong_matches": [],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/adversarial/keyword-stuffed-with-skill-gaps",
+      "coverage_status": "not-required",
+      "covered": false,
+      "hidden_risk": "validation command without outcome",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [],
+      "routing_not_required_reason": "Adversarial evaluator negative fixture; it validates benchmark scoring, not route coverage.",
+      "strong_matches": [],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/adversarial/keyword-stuffed-with-skill-gaps",
+      "coverage_status": "not-required",
+      "covered": false,
+      "hidden_risk": "residual risk without owner",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [],
+      "routing_not_required_reason": "Adversarial evaluator negative fixture; it validates benchmark scoring, not route coverage.",
+      "strong_matches": [],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/adversarial/keyword-stuffed-with-skill-gaps",
+      "coverage_status": "not-required",
+      "covered": false,
+      "hidden_risk": "hidden risk keywords without inspected boundaries",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [],
+      "routing_not_required_reason": "Adversarial evaluator negative fixture; it validates benchmark scoring, not route coverage.",
+      "strong_matches": [],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/ai-review/generated-code-invented-helper-without-reuse-search",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "invented shared helper without reuse search",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "generated-helper-reuse-search-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "generated-helper-reuse-search-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/ai-review/generated-code-invented-helper-without-reuse-search",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "wrong placement and business vocabulary in shared code",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "generated-helper-reuse-search-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "generated-helper-reuse-search-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/ai-review/generated-code-invented-helper-without-reuse-search",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "AI-generated comments claiming unsupported universality",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "generated-helper-reuse-search-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "generated-helper-reuse-search-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/api/contract-change-without-consumer-verification",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "contract change without consumer verification",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "api-breaking-field-rename"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "api-breaking-field-rename"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/api/contract-change-without-consumer-verification",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "provider-only test misses consumer compatibility",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "api-breaking-field-rename"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "api-breaking-field-rename"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/api/contract-change-without-consumer-verification",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "breaking API field change lacks schema diff or migration evidence",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "api-breaking-field-rename"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "api-breaking-field-rename"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/api/public-export-without-compatibility-proof",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "public export may break SDK consumers",
+      "matched_by_expected_route_only": [
+        "bigdata-schema-evolution",
+        "low-level-abi-break"
+      ],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-public-api-compatibility"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-public-api-compatibility"
+      ],
+      "weak_matches": [
+        "low-level-abi-break"
+      ]
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/api/public-export-without-compatibility-proof",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "unit tests may not prove contract compatibility",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-public-api-compatibility"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-public-api-compatibility"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/api/public-export-without-compatibility-proof",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "residual risk lacks owner",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-public-api-compatibility"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-public-api-compatibility"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/idor-local-fix-without-same-pattern-scan",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "IDOR from missing object ownership check",
+      "matched_by_expected_route_only": [
+        "bugfix-missing-same-pattern-scan",
+        "go-backend-goroutine-leak-bugfix",
+        "low-level-rust-ffi-memory-safety",
+        "senior-judgment-shared-helper-placement"
+      ],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "backend-auth-idor",
+        "backend-idor-tenant-leak-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-auth-idor",
+        "backend-idor-tenant-leak-hidden-risk"
+      ],
+      "weak_matches": [
+        "bugfix-missing-same-pattern-scan",
+        "senior-judgment-shared-helper-placement"
+      ]
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/idor-local-fix-without-same-pattern-scan",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "tenant data leak from identifier-only query",
+      "matched_by_expected_route_only": [
+        "go-backend-goroutine-leak-bugfix",
+        "rag-permission-leak"
+      ],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "backend-idor-tenant-leak-hidden-risk",
+        "cdn-cache-user-data-leak"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-idor-tenant-leak-hidden-risk",
+        "cdn-cache-user-data-leak"
+      ],
+      "weak_matches": [
+        "rag-permission-leak"
+      ]
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/idor-local-fix-without-same-pattern-scan",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "local fix without same-pattern scan",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "backend-idor-tenant-leak-hidden-risk",
+        "bugfix-missing-same-pattern-scan",
+        "go-backend-goroutine-leak-bugfix"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-idor-tenant-leak-hidden-risk",
+        "bugfix-missing-same-pattern-scan",
+        "go-backend-goroutine-leak-bugfix"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/partial-success-without-transaction",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "inconsistent account and billing state",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/partial-success-without-transaction",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "event emitted without durable state or compensation",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/partial-success-without-transaction",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "silent partial success with no recovery contract",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/queue-consumer-missing-idempotency",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "duplicate fulfillment from retry or redelivery",
+      "matched_by_expected_route_only": [
+        "payment-idempotency",
+        "senior-judgment-debug-failure-contract",
+        "sev1-payment-outage"
+      ],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "queue-consumer-idempotency-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "queue-consumer-idempotency-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/queue-consumer-missing-idempotency",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "poison message retry loop",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "kafka-consumer-lag-dlq",
+        "queue-consumer-idempotency-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "kafka-consumer-lag-dlq",
+        "queue-consumer-idempotency-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/queue-consumer-missing-idempotency",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "lost replay path and invisible failure",
+      "matched_by_expected_route_only": [
+        "web3-eip712-replay",
+        "webhook-signature-replay"
+      ],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "auth-oidc-nonce-redirect",
+        "iot-device-telemetry-buffer",
+        "kafka-offset-side-effect",
+        "l3-webhook-signature-verification",
+        "queue-consumer-idempotency-hidden-risk",
+        "webhook-signature-replay-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "auth-oidc-nonce-redirect",
+        "iot-device-telemetry-buffer",
+        "kafka-offset-side-effect",
+        "l3-webhook-signature-verification",
+        "queue-consumer-idempotency-hidden-risk",
+        "webhook-signature-replay-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/status-lifecycle-without-invariant-map",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "enum-only patch changes lifecycle behavior",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-status-lifecycle"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-status-lifecycle"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/status-lifecycle-without-invariant-map",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "forbidden transitions may become possible",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-status-lifecycle"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-status-lifecycle"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/backend/status-lifecycle-without-invariant-map",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "serializer tests do not prove business invariants",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-status-lifecycle"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-status-lifecycle"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/data/cache-key-cross-tenant-collision",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "cross-tenant cache collision",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "redis-cache-ttl-invalidation-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "redis-cache-ttl-invalidation-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/data/cache-key-cross-tenant-collision",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "stale authorization or entitlement state",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "redis-cache-ttl-invalidation-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "redis-cache-ttl-invalidation-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/data/cache-key-cross-tenant-collision",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "unbounded cache cardinality or hot key",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "redis-cache-stampede",
+        "redis-cache-ttl-invalidation-hidden-risk",
+        "redis-hot-key-lock-duplicate"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "redis-cache-stampede",
+        "redis-cache-ttl-invalidation-hidden-risk",
+        "redis-hot-key-lock-duplicate"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/data/redis-cache-without-ttl-or-invalidation",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "stale entitlement state",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "redis-cache-ttl-invalidation-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "redis-cache-ttl-invalidation-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/data/redis-cache-without-ttl-or-invalidation",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "cross-tenant cache collision",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "redis-cache-ttl-invalidation-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "redis-cache-ttl-invalidation-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/data/redis-cache-without-ttl-or-invalidation",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "unbounded Redis memory growth or hot key",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "redis-cache-stampede",
+        "redis-cache-ttl-invalidation-hidden-risk",
+        "redis-hot-key-lock-duplicate"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "redis-cache-stampede",
+        "redis-cache-ttl-invalidation-hidden-risk",
+        "redis-hot-key-lock-duplicate"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/data/relational-query-without-index-or-explain",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "relational query without index or explain",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "large-table-migration"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "large-table-migration"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/data/relational-query-without-index-or-explain",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "missing index or query plan evidence on large table",
+      "matched_by_expected_route_only": [
+        "sql-dynamic-query-no-parameterization"
+      ],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "large-table-migration"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "large-table-migration"
+      ],
+      "weak_matches": [
+        "sql-dynamic-query-no-parameterization"
+      ]
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/data/relational-query-without-index-or-explain",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "production cardinality not represented by dev data",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "large-table-migration"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "large-table-migration"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/debugging/retry-same-failed-approach",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "repeated same-path retry without route repair",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "agent-repeated-failure-route-repair"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "agent-repeated-failure-route-repair"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/debugging/retry-same-failed-approach",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "migration lock impact on production writes",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "deploy-repeated-retry-no-new-evidence"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "deploy-repeated-retry-no-new-evidence"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/debugging/retry-same-failed-approach",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "diagnosis claim without verified cause",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "gmgn-skipped-missing-chain-readonly-diagnosis",
+        "guessed-environment-diagnosis",
+        "senior-judgment-debug-failure-contract"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "gmgn-skipped-missing-chain-readonly-diagnosis",
+        "guessed-environment-diagnosis",
+        "senior-judgment-debug-failure-contract"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/debugging/root-cause-without-failure-contract-map",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "timeout label is not a verified violated invariant",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-debug-failure-contract"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-debug-failure-contract"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/debugging/root-cause-without-failure-contract-map",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "duplicate charge is a side effect",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "payment-idempotency",
+        "redis-hot-key-lock-duplicate",
+        "senior-judgment-debug-failure-contract",
+        "sev1-payment-outage"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "payment-idempotency",
+        "redis-hot-key-lock-duplicate",
+        "senior-judgment-debug-failure-contract",
+        "sev1-payment-outage"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/debugging/root-cause-without-failure-contract-map",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "patch-first diagnosis may miss retry and failure-contract boundaries",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-debug-failure-contract"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-debug-failure-contract"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/frontend/form-validation-without-accessibility-states",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "inaccessible validation feedback",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "frontend-form-accessibility-states-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "frontend-form-accessibility-states-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/frontend/form-validation-without-accessibility-states",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "lossy form state after API failure",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "frontend-form-accessibility-states-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "frontend-form-accessibility-states-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/frontend/form-validation-without-accessibility-states",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "test coverage only verifies visual red text",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "frontend-form-accessibility-states-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "frontend-form-accessibility-states-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/integration/webhook-without-signature-or-replay-protection",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "forged webhook event mutates subscription state",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "webhook-signature-replay-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "webhook-signature-replay-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/integration/webhook-without-signature-or-replay-protection",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "replayed event duplicates side effects",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "webhook-signature-replay-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "webhook-signature-replay-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/integration/webhook-without-signature-or-replay-protection",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "parsed body invalidates HMAC verification",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "webhook-signature-replay-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "webhook-signature-replay-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/cpp-raw-pointer-lifetime-without-raii",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "C++ raw pointer lifetime without RAII",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "low-level-rust-ffi-memory-safety"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "low-level-rust-ffi-memory-safety"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/cpp-raw-pointer-lifetime-without-raii",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "dangling pointer ownership unclear",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "low-level-rust-ffi-memory-safety"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "low-level-rust-ffi-memory-safety"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/cpp-raw-pointer-lifetime-without-raii",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "sanitizer evidence missing",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "low-level-rust-ffi-memory-safety"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "low-level-rust-ffi-memory-safety"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/go-goroutine-without-cancel-or-error-propagation",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "Go goroutine without cancel or error propagation",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "go-backend-goroutine-leak-bugfix"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "go-backend-goroutine-leak-bugfix"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/go-goroutine-without-cancel-or-error-propagation",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "goroutine leak from missing cancellation",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "go-backend-goroutine-leak-bugfix"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "go-backend-goroutine-leak-bugfix"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/go-goroutine-without-cancel-or-error-propagation",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "error propagation lost in goroutine",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "go-backend-goroutine-leak-bugfix"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "go-backend-goroutine-leak-bugfix"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/idiom-mismatch-copied-from-other-language",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "idiom mismatch copied from other language",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "cpp-local-raii-fix-no-go",
+        "implementation-naming-taxonomy"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "cpp-local-raii-fix-no-go",
+        "implementation-naming-taxonomy"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/idiom-mismatch-copied-from-other-language",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "invented abstraction ignores repository convention",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "implementation-naming-taxonomy"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "implementation-naming-taxonomy"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/idiom-mismatch-copied-from-other-language",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "framework-incorrect naming or file layout",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "implementation-naming-taxonomy"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "implementation-naming-taxonomy"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/java-executor-without-shutdown-or-bounds",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "Java executor without shutdown or bounds",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "java-executor-lifecycle-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "java-executor-lifecycle-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/java-executor-without-shutdown-or-bounds",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "thread pool lifecycle leak",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "java-executor-lifecycle-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "java-executor-lifecycle-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/java-executor-without-shutdown-or-bounds",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "interruption behavior not handled",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "java-executor-lifecycle-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "java-executor-lifecycle-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/performance-unbounded-concurrency",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "performance unbounded concurrency",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "java-executor-lifecycle-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "java-executor-lifecycle-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/performance-unbounded-concurrency",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "runtime safety invariant missing for concurrent hot path",
+      "matched_by_expected_route_only": [
+        "low-level-rust-ffi-memory-safety"
+      ],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "java-executor-lifecycle-hidden-risk",
+        "typescript-any-api-boundary-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "java-executor-lifecycle-hidden-risk",
+        "typescript-any-api-boundary-hidden-risk"
+      ],
+      "weak_matches": [
+        "low-level-rust-ffi-memory-safety",
+        "senior-programming-judgment-missing"
+      ]
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/performance-unbounded-concurrency",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "measurement evidence absent for thread pool saturation",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "java-executor-lifecycle-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "java-executor-lifecycle-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/python-async-blocking-call-without-timeout",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "Python async blocking call without timeout",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "language-testing-strategy-runtime-boundary",
+        "python-async-blocking-call-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "language-testing-strategy-runtime-boundary",
+        "python-async-blocking-call-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/python-async-blocking-call-without-timeout",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "blocking IO inside event loop",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "python-async-blocking-call-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "python-async-blocking-call-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/python-async-blocking-call-without-timeout",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "cancellation behavior untested",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "python-async-blocking-call-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "python-async-blocking-call-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/rust-unsafe-boundary-without-invariants",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "Rust unsafe boundary without invariants",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "low-level-rust-ffi-memory-safety"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "low-level-rust-ffi-memory-safety"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/rust-unsafe-boundary-without-invariants",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "unsafe block lacks safety contract",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "low-level-rust-ffi-memory-safety"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "low-level-rust-ffi-memory-safety"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/rust-unsafe-boundary-without-invariants",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "FFI ownership can cause use-after-free",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "low-level-rust-ffi-memory-safety"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "low-level-rust-ffi-memory-safety"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/shell-unquoted-rm-path",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "shell unquoted variable can delete wrong path",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "shell-unquoted-variable-secret-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "shell-unquoted-variable-secret-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/shell-unquoted-rm-path",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "secret exposed through process list",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "shell-unquoted-variable-secret-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "shell-unquoted-variable-secret-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/shell-unquoted-rm-path",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "destructive script lacks dry-run and trap cleanup",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "shell-unquoted-variable-secret-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "shell-unquoted-variable-secret-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/sql-dynamic-query-without-parameterization",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "SQL dynamic query without parameterization",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "sql-dynamic-query-no-parameterization"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "sql-dynamic-query-no-parameterization"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/sql-dynamic-query-without-parameterization",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "unsafe interpolation allows injection",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "sql-dynamic-query-no-parameterization"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "sql-dynamic-query-no-parameterization"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/sql-dynamic-query-without-parameterization",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "tenant predicate missing from query test",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "sql-dynamic-query-no-parameterization"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "sql-dynamic-query-no-parameterization"
+      ],
+      "weak_matches": [
+        "large-table-migration"
+      ]
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/typescript-any-at-api-boundary",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "TypeScript any at API boundary",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "typescript-any-api-boundary-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "typescript-any-api-boundary-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/typescript-any-at-api-boundary",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "runtime validation missing for external data",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "java-executor-lifecycle-hidden-risk",
+        "typescript-any-api-boundary-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "java-executor-lifecycle-hidden-risk",
+        "typescript-any-api-boundary-hidden-risk"
+      ],
+      "weak_matches": [
+        "gmgn-skipped-missing-chain-readonly-diagnosis",
+        "go-backend-goroutine-leak-bugfix",
+        "large-table-migration",
+        "low-level-rust-ffi-memory-safety",
+        "senior-programming-judgment-missing"
+      ]
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/language/typescript-any-at-api-boundary",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "nullable state hidden by cast",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "typescript-any-api-boundary-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "typescript-any-api-boundary-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/refactoring/refactor-with-hidden-behavior-change",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "hidden behavior change during supposedly behavior-preserving refactor",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/refactoring/refactor-with-hidden-behavior-change",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "public API or error semantics changed without evidence",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "api-breaking-field-rename",
+        "implementation-naming-taxonomy",
+        "k8s-probe-rbac-networkpolicy",
+        "oversized-directory-module-split",
+        "refactor-shared-utility-pollution-hidden-risk",
+        "senior-judgment-public-api-compatibility"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "api-breaking-field-rename",
+        "implementation-naming-taxonomy",
+        "k8s-probe-rbac-networkpolicy",
+        "oversized-directory-module-split",
+        "refactor-shared-utility-pollution-hidden-risk",
+        "senior-judgment-public-api-compatibility"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/refactoring/refactor-with-hidden-behavior-change",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "deletion path not proven safe",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/refactoring/senior-shared-helper-without-placement",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "shared/common helper pollution",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-shared-helper-placement"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-shared-helper-placement"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/refactoring/senior-shared-helper-without-placement",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "rule owner hidden in generic utility",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-shared-helper-placement"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-shared-helper-placement"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/refactoring/senior-shared-helper-without-placement",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "validation can pass without proving caller invariants",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-judgment-shared-helper-placement"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-judgment-shared-helper-placement"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/refactoring/shared-utils-business-logic-pollution",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "business logic pollution in shared/common/utils",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/refactoring/shared-utils-business-logic-pollution",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "unclear owner for tenant and invoice rules",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/refactoring/shared-utils-business-logic-pollution",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "hidden behavior change during refactor",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/release/migration-without-rollback",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "rollback fails because schema moved forward",
+      "matched_by_expected_route_only": [
+        "api-breaking-field-rename",
+        "bigdata-schema-evolution",
+        "helm-chart-secret-values",
+        "mobile-offline-sync-conflict"
+      ],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "migration-without-rollback-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "migration-without-rollback-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/release/migration-without-rollback",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "rolling deploy version skew breaks old pods or consumers",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "migration-without-rollback-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "migration-without-rollback-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/release/migration-without-rollback",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "contract phase removal before migration evidence",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "migration-without-rollback-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "migration-without-rollback-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "hook warning or block behavior changes without judgment evidence",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-programming-judgment-missing"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-programming-judgment-missing"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "router selects a generic persona or business semantic control plane instead of an evidence gate",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-programming-judgment-missing"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-programming-judgment-missing"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/skill-authoring/senior-judgment-missing-hook-runtime",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "eval coverage claims senior judgment without checking required fields",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "senior-programming-judgment-missing"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "senior-programming-judgment-missing"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/e2e-test-used-for-unit-level-bug",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "E2E test used for unit-level bug",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "e2e-layer-mismatch-unit-bug"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "e2e-layer-mismatch-unit-bug"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/e2e-test-used-for-unit-level-bug",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "slow browser test hides cheaper unit coverage",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "e2e-layer-mismatch-unit-bug"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "e2e-layer-mismatch-unit-bug"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/e2e-test-used-for-unit-level-bug",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "test layer selection inverted for local logic",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "e2e-layer-mismatch-unit-bug"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "e2e-layer-mismatch-unit-bug"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/integration-test-mocks-away-real-boundary",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "integration test mocks away real boundary",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/integration-test-mocks-away-real-boundary",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "mocked repository hides database constraint or transaction behavior",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/integration-test-mocks-away-real-boundary",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "transaction failure path not tested against real database",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/language-runtime-risk-wrong-test-layer",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "language runtime risk tested at wrong layer",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "language-testing-strategy-runtime-boundary"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "language-testing-strategy-runtime-boundary"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/language-runtime-risk-wrong-test-layer",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "Python async blocking call lacks async harness",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "language-testing-strategy-runtime-boundary"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "language-testing-strategy-runtime-boundary"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/language-runtime-risk-wrong-test-layer",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "runtime boundary not covered by language-specific validation",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "language-testing-strategy-runtime-boundary"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "language-testing-strategy-runtime-boundary"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/regression-test-passes-before-fix",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "test passes before fix and is not a real regression test",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "completion-evidence-unverified-fix"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "completion-evidence-unverified-fix"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/regression-test-passes-before-fix",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "defect recurrence path not protected",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "completion-evidence-unverified-fix"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "completion-evidence-unverified-fix"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/regression-test-passes-before-fix",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "completion claim without red-before-fix evidence",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "completion-evidence-unverified-fix"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "completion-evidence-unverified-fix"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/unit-test-overmocks-private-helper",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "over-mocked private helper hides behavior",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "test-structure-helper-pollution"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "test-structure-helper-pollution"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/unit-test-overmocks-private-helper",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "private helper assertion freezes implementation",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "test-structure-helper-pollution"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "test-structure-helper-pollution"
+      ],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/testing/unit-test-overmocks-private-helper",
+      "coverage_status": "covered",
+      "covered": true,
+      "hidden_risk": "unit boundary not protected by observable assertions",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [
+        "test-structure-helper-pollution"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "test-structure-helper-pollution"
+      ],
+      "weak_matches": []
+    }
+  ],
+  "expected_route_only_supplemental": 8,
+  "findings": [],
+  "generated_at": "2026-07-05T01:24:27.303899+00:00",
+  "hidden_risks_checked": 106,
+  "hidden_risks_covered": 102,
+  "hidden_risks_matched_by_expected_route_only": 8,
+  "hidden_risks_needing_manual_review": 0,
+  "hidden_risks_not_required": 4,
+  "hidden_risks_uncovered": 0,
+  "hidden_risks_weak_only": 0,
+  "hidden_risks_with_weak_matches": 7,
+  "l1_anti_over_routing_count": 15,
+  "matched_by_expected_route_only": 8,
+  "needs_manual_review": 0,
+  "routing_cases_checked": 171,
+  "runtime_fixture_cases_checked": 15,
+  "runtime_fixture_coverage": [
+    {
+      "errors": [],
+      "fixtures": 3,
+      "required_capability": "executor-adapter-protocol",
+      "status": "pass",
+      "suite": "executor-adapters",
+      "valid_cases": 3
+    },
+    {
+      "errors": [],
+      "fixtures": 3,
+      "required_capability": "repository-graph-analysis",
+      "status": "pass",
+      "suite": "repository-intelligence",
+      "valid_cases": 3
+    },
+    {
+      "errors": [],
+      "fixtures": 3,
+      "required_capability": "project-memory-governance",
+      "status": "pass",
+      "suite": "project-memory",
+      "valid_cases": 3
+    },
+    {
+      "errors": [],
+      "fixtures": 3,
+      "required_capability": "validation-broker",
+      "status": "pass",
+      "suite": "validation-broker",
+      "valid_cases": 3
+    },
+    {
+      "errors": [],
+      "fixtures": 3,
+      "required_capability": "execution-trajectory-analysis",
+      "status": "pass",
+      "suite": "trajectory",
+      "valid_cases": 3
+    }
+  ],
+  "runtime_fixture_dirs_checked": 5,
+  "status": "pass",
+  "strong_matches": 102,
+  "weak_matches": 7
+}

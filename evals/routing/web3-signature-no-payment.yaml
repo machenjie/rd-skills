@@ -1,0 +1,24 @@
+---
+id: web3-signature-no-payment
+description: Wallet signature route must select Web3 and security, not payment/trading.
+prompt: |
+  Verify wallet EIP-712 signatures and nonce replay handling for Web3 login.
+expected:
+  complexity: L3
+  risk_level: critical
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
+  expected_product_surface: web3
+  expected_language_surface: none
+  risk_triggers: [wallet, Web3 asset]
+  skills: [security-privacy-gate, quality-test-gate]
+  capabilities: [implementation-structure-design, authentication-security, threat-modeling]
+  domain_extensions: [web3-product-extension]
+  quality_gates: [implementation gate, security gate, test gate]
+forbidden:
+  skills: [delivery-release-gate, frontend-change-builder]
+  capabilities: [transaction-consistency, release-rollback]
+  domain_extensions: [payment-trading-extension, ai-product-extension]
+  quality_gates: [delivery gate]
+notes: |
+  Wallet and EIP-712 are Web3 auth signals, not payment signals.

@@ -1,0 +1,27 @@
+---
+id: in-memory-map-no-redis-cache
+description: |
+  In-memory map should not activate Redis cache design.
+prompt: |
+  Replace a private in-memory map in a pure unit test helper with a clearer map
+  literal. No Redis, TTL, invalidation, distributed cache, lock, or source-load
+  behavior changes.
+expected:
+  complexity: L1
+  risk_triggers: []
+  skills:
+    - quality-test-gate
+  capabilities:
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - test gate
+forbidden:
+  skills:
+    - data-middleware-change-builder
+    - reliability-observability-gate
+  capabilities:
+    - cache-design
+    - concurrency-control
+notes: |
+  Anti-overrouting: private in-memory map cleanup is not Redis cache design.

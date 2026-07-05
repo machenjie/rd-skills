@@ -1,0 +1,45 @@
+id: pattern-selection-with-real-variation
+category: structure
+complexity: L4
+focus:
+  - real provider variation
+  - strategy or adapter selection
+  - contract tests
+  - client lifecycle and retry mapping
+route_hints:
+  skills:
+    - backend-change-builder
+    - integration-change-builder
+    - quality-test-gate
+  capabilities:
+    - design-pattern-selection
+    - implementation-structure-design
+    - contract-testing
+    - idempotency-retry-design
+    - language-performance-safety
+  domain_extensions:
+    - payment-trading-extension
+  quality_gates:
+    - implementation gate
+    - test gate
+    - reliability gate
+expected_outcomes:
+  - Current payment providers use a stable provider contract through strategy, adapter, or provider pattern.
+  - Provider-specific retry and error mapping stays inside each adapter or strategy implementation.
+  - Callers do not branch on concrete provider classes.
+  - HTTP or SDK clients are lifecycle-managed and not created per request.
+required_qualities:
+  - Produces a Design Pattern Decision Record with selected and rejected candidates.
+  - Defines provider contract tests shared by all current providers.
+  - Declares object relationship, method placement, module/file placement, and public API impact.
+  - Records client pool lifecycle, timeout, retry, and cleanup behavior.
+forbidden_shortcuts:
+  - If/else scattered across service.
+  - Base class only for shared code.
+  - Provider creates client per request.
+  - No contract tests.
+evidence:
+  - Design Pattern Decision Record selecting strategy, adapter, provider, or direct code with rationale.
+  - Provider contract tests for success, decline, retryable error, and terminal error.
+  - Lifecycle-managed reusable client or pool evidence.
+  - Review note that callers do not branch on concrete provider.

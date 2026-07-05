@@ -1,0 +1,43 @@
+---
+id: abstraction-maturity-overengineering
+description: |
+  AI introduces speculative abstractions for one implementation.
+prompt: |
+  An AI patch adds OrderRuleAbstractFactory, StrategyRegistry,
+  BaseOrderRule, and three interfaces even though the system has one current
+  rule implementation. Review whether this abstraction should stay.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  skills:
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - refactoring
+    - extensibility-design
+    - solution-optimality-evaluation
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+    - data-api-contract-changer
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - ai-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  The route should challenge over-abstraction and require collapse or justification.

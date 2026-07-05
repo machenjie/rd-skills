@@ -1,0 +1,858 @@
+---
+schema_version: 1
+kind: changeforge.stage_model
+description: Canonical machine-readable engineering stage model for ChangeForge routing.
+stages:
+  - name: requirement-intake
+    purpose: understand requirement, clarify scope, name non-goals, define acceptance
+    default_capabilities:
+      - requirement-clarification
+      - requirement-structuring
+      - non-goal-boundary-definition
+      - acceptance-standard-definition
+      - scenario-decomposition
+    conditional_capabilities:
+      - business-semantic-control-plane
+      - senior-programming-judgment-core
+    skip_by_default:
+      - coding
+      - language
+      - testing
+      - refactoring
+      - release
+    required_evidence:
+      - PDD acceptance criteria
+      - clarified scope
+      - explicit non-goals
+      - testable acceptance signal
+      - clarification status before action
+      - business semantic intent, vocabulary, and open questions when business terms are present
+      - senior programming purpose/fact/success/failure boundary for non-trivial engineering work
+    required_quality_gates:
+      - PDD gate
+      - requirement gate
+    allowed_next_stages:
+      - architecture-design
+      - implementation-planning
+    forbidden_default_capabilities:
+      - language-idiom-enforcement
+      - test-strategy
+      - refactoring
+      - release-rollback
+
+  - name: architecture-design
+    purpose: module boundaries, layering, dependency direction, data ownership, service boundaries, extensibility, reversibility
+    default_capabilities:
+      - architecture-style-selection
+      - module-boundary-design
+      - layered-architecture-design
+      - architecture-tradeoff-analysis
+      - extensibility-design
+      - solution-optimality-evaluation
+    conditional_capabilities:
+      - architecture-enforcement-tooling
+      - consumer-impact-analysis
+      - dependency-wiring-lifecycle
+      - minimal-correct-implementation
+      - senior-programming-judgment-core
+      - business-semantic-control-plane
+    skip_by_default:
+      - language idiom checks
+      - coding
+      - test authoring
+    required_evidence:
+      - DDD domain invariants
+      - boundary owners
+      - dependency direction
+      - rejected alternatives
+      - simplicity ladder result when extensibility or stack complexity is proposed
+      - reversibility classification
+      - business object ownership, rule authority, and workflow boundary when business semantics affect architecture
+      - object-state-behavior-rule-invariant map when architecture changes object, module, workflow, rule, or ownership boundaries
+    required_quality_gates:
+      - DDD gate
+      - architecture gate
+    allowed_next_stages:
+      - implementation-planning
+    forbidden_default_capabilities:
+      - language-idiom-enforcement
+      - unit-testing
+      - release-rollback
+
+  - name: implementation-planning
+    purpose: code placement, reuse decision, object/function/class/file/directory design, naming, readable main flow, public/private/internal boundaries
+    default_capabilities:
+      - repository-context-map
+      - implementation-structure-design
+      - module-boundary-design
+      - code-clarity-maintainability
+      - language-idiom-enforcement
+    conditional_capabilities:
+      - code-element-professionalism
+      - testability-seam-design
+      - dependency-wiring-lifecycle
+      - algorithm-data-structure-selection
+      - failure-contract-design
+      - configuration-runtime-policy
+      - model-boundary-mapping
+      - data-format-contract-usage
+      - data-side-effect-flow-tracing
+      - cleanup-deletion-governance
+      - minimal-correct-implementation
+      - agent-workflow-state-machine
+      - repository-graph-analysis
+      - plan-execution-consistency
+      - senior-programming-judgment-core
+      - business-semantic-control-plane
+    skip_by_default:
+      - full architecture review
+      - release
+      - deep performance profiling
+    required_evidence:
+      - SDD public API and module placement
+      - SDD design decision points for material choices
+      - user choice status for material design choices
+      - safe assumption rationale when proceeding without user choice
+      - target boundaries inspected before plan
+      - repository context map with owning surface and caller/callee evidence
+      - reuse candidates
+      - simplicity ladder result
+      - deleted or rejected complexity
+      - placement rationale
+      - visibility decisions
+      - test placement
+      - TDD or validation signal
+      - visible Markdown implementation plan
+      - File Responsibility Map
+      - L1/L2 minimal Plan Handoff names Files, Verify, and Residual Risk; L3+ full-plan tasks name Goal, Files, Acceptance Criteria, Verify, Expected, Review, and Stop Conditions
+      - business-to-code mapping and forbidden placement rationale when rules or workflows are affected
+      - senior programming judgment record when object relationships, states, rules, side effects, failure contract, validation map, or observability are materially affected
+    required_quality_gates:
+      - SDD gate
+      - implementation gate
+    allowed_next_stages:
+      - coding
+    forbidden_default_capabilities:
+      - architecture-tradeoff-analysis
+      - release-rollback
+      - profiling
+
+  - name: coding
+    purpose: implement code with language idiom, error handling, resource cleanup, input validation, concurrency, minimal implementation
+    default_capabilities:
+      - language-idiom-enforcement
+      - input-validation
+      - logging-error-handling
+    conditional_capabilities:
+      - code-element-professionalism
+      - dependency-wiring-lifecycle
+      - algorithm-data-structure-selection
+      - failure-contract-design
+      - configuration-runtime-policy
+      - data-format-contract-usage
+      - data-side-effect-flow-tracing
+      - minimal-correct-implementation
+      - agent-tool-permission-sandbox
+      - agent-workflow-state-machine
+      - plan-execution-consistency
+      - senior-programming-judgment-core
+      - business-semantic-control-plane
+    skip_by_default:
+      - architecture deep review
+      - release
+      - full regression suite design
+    required_evidence:
+      - PDD/DDD/SDD/TDD traceability
+      - inspected implementation context
+      - TDD or validation signal before code
+      - idiomatic implementation
+      - validated inputs
+      - released resources
+      - minimal scope diff
+      - deleted or rejected complexity
+      - one reviewable task executed at a time
+      - task completion evidence with files changed validation result review result and residual risk
+      - tool permission and sandbox classification when risky tools or commands are used
+      - business semantic claim-to-code mapping when implementation changes rules, objects, or workflow states
+      - senior programming judgment evidence when behavior, state, rule, invariant, boundary, failure, side effect, validation, or observability changes
+    required_quality_gates:
+      - TDD gate
+      - implementation gate
+    allowed_next_stages:
+      - testing
+      - code-review
+    forbidden_default_capabilities:
+      - architecture-tradeoff-analysis
+      - release-rollback
+      - test-strategy
+
+  - name: debugging-diagnosis
+    purpose: reproduce, collect evidence, gather logs/metrics/traces, eliminate hypotheses, locate verified root cause
+    default_capabilities:
+      - failure-diagnosis
+      - agent-execution-discipline
+      - observability
+    conditional_capabilities:
+      - data-format-contract-usage
+      - senior-programming-judgment-core
+    skip_by_default:
+      - refactoring
+      - release
+      - new feature design
+    required_evidence:
+      - reproduction
+      - symptom/root-cause/contributing-factor split
+      - eliminated hypotheses
+      - verified cause
+      - changeforge_stage_route for debugging-diagnosis handoff
+      - diagnosis_closure with evidence inventory, hypothesis elimination, validation results, independent review results, proof limits, residual risk, and next gate
+      - symptom/root cause mapped to violated fact, invariant, boundary, state transition, side effect, or failure contract when applicable
+    required_quality_gates:
+      - execution discipline gate
+    allowed_next_stages:
+      - bug-fix
+      - implementation-planning
+    forbidden_default_capabilities:
+      - refactoring
+      - release-rollback
+      - requirement-structuring
+
+  - name: bug-fix
+    purpose: minimal fix, same-pattern scan, regression test, compatibility, upstream/downstream impact
+    default_capabilities:
+      - agent-execution-discipline
+      - regression-testing
+      - code-review
+    conditional_capabilities:
+      - code-element-professionalism
+      - data-format-contract-usage
+      - minimal-correct-implementation
+      - execution-trajectory-analysis
+      - project-memory-governance
+      - plan-execution-consistency
+      - agent-workflow-state-machine
+      - senior-programming-judgment-core
+      - business-semantic-control-plane
+    skip_by_default:
+      - architecture redesign
+      - release
+    required_evidence:
+      - minimal diff
+      - deleted or rejected complexity when selected
+      - same-pattern scan record
+      - regression test
+      - blast-radius note
+      - plan versus actual changed-file consistency
+      - business semantic same-pattern scan when the defect is rule, status, permission, or workflow related
+      - senior programming judgment evidence for verified cause, same-pattern scan, failure contract, and regression proof when the fix is non-trivial
+    required_quality_gates:
+      - implementation gate
+      - test gate
+    allowed_next_stages:
+      - testing
+      - code-review
+      - release-delivery
+    forbidden_default_capabilities:
+      - architecture-tradeoff-analysis
+      - release-rollback
+
+  - name: code-review
+    purpose: correctness, structure, naming, reuse, readability, security, reliability, test evidence, hallucinated-API check
+    default_capabilities:
+      - code-review
+      - plan-execution-consistency
+      - implementation-structure-design
+      - code-clarity-maintainability
+      - language-idiom-enforcement
+    conditional_capabilities:
+      - code-element-professionalism
+      - data-format-contract-usage
+      - minimal-correct-implementation
+      - agent-workflow-state-machine
+      - senior-programming-judgment-core
+      - business-semantic-control-plane
+    skip_by_default:
+      - release
+      - deployment
+      - infrastructure
+    required_evidence:
+      - findings with severity
+      - complexity-only delete/shrink findings when selected
+      - evidence
+      - impacted file
+      - required fix
+      - validation required
+      - independent reviewer
+      - Spec Compliance verdict
+      - Code Quality verdict
+      - reviewed files and scope
+      - severity-classified findings and required next action
+      - residual risk after repair/re-review
+      - repair and re-review result
+      - final diff covered by review scope
+      - semantic review result for changed, hidden, stale, rejected, or untested business behavior
+      - senior programming judgment review result for changed object relationships, states, rules, invariants, boundaries, side effects, failure handling, validation, and observability
+    required_quality_gates:
+      - implementation gate
+    allowed_next_stages:
+      - refactoring
+      - bug-fix
+      - testing
+      - documentation-handoff
+    forbidden_default_capabilities:
+      - release-rollback
+      - ci-cd
+      - kubernetes-gateway
+      - containerization
+
+  - name: refactoring
+    purpose: behavior-preserving structure change
+    default_capabilities:
+      - refactoring
+      - implementation-structure-design
+      - code-clarity-maintainability
+      - code-review
+      - regression-testing
+    conditional_capabilities:
+      - code-element-professionalism
+      - testability-seam-design
+      - model-boundary-mapping
+      - data-side-effect-flow-tracing
+      - cleanup-deletion-governance
+      - minimal-correct-implementation
+      - senior-programming-judgment-core
+      - business-semantic-control-plane
+    skip_by_default:
+      - feature design
+      - release
+    required_evidence:
+      - characterization tests
+      - preserved behavior
+      - selection rationale
+      - deleted or rejected complexity
+      - rollback path
+      - business behavior preservation evidence when refactoring touches terms, rules, or workflows
+      - senior programming judgment before/after evidence when behavior preservation depends on object relationships, invariants, side effects, or validation mapping
+    required_quality_gates:
+      - implementation gate
+      - test gate
+    allowed_next_stages:
+      - testing
+      - code-review
+      - documentation-handoff
+    forbidden_default_capabilities:
+      - requirement-structuring
+      - release-rollback
+
+  - name: testing
+    purpose: unit, integration, contract, e2e, regression, fixtures, mocks, concurrency, language-specific tests
+    default_capabilities:
+      - test-strategy
+      - plan-execution-consistency
+      - language-testing-strategy
+      - test-data-management
+    conditional_capabilities:
+      - unit-testing
+      - integration-testing
+      - contract-testing
+      - e2e-testing
+      - regression-testing
+      - testability-seam-design
+      - code-element-professionalism
+      - algorithm-data-structure-selection
+      - failure-contract-design
+      - model-boundary-mapping
+      - data-side-effect-flow-tracing
+      - minimal-correct-implementation
+      - agent-workflow-state-machine
+      - validation-broker
+      - repository-graph-analysis
+      - business-semantic-control-plane
+      - senior-programming-judgment-core
+    skip_by_default:
+      - architecture redesign
+      - coding of new features
+    required_evidence:
+      - validation commands mapped to PDD/DDD/SDD
+      - risk-based layer selection
+      - deterministic data
+      - observable-behavior assertions
+      - evidence of gaps
+      - minimal check rationale when lower-depth validation is selected
+      - validation freshness after final material edits
+      - user-requested verification gate preserved when requested
+      - AC to PROVEN BY mapping
+      - before/after evidence when comparison is the claim
+      - business golden cases or explicit residual risk for material rule, reason-code, permission, and workflow claims
+      - senior programming judgment validation map for material state, invariant, failure, side-effect, and observability claims
+    required_quality_gates:
+      - test gate
+    allowed_next_stages:
+      - code-review
+      - release-delivery
+      - documentation-handoff
+    forbidden_default_capabilities:
+      - architecture-tradeoff-analysis
+      - project-initialization
+
+  - name: release-delivery
+    purpose: CI/CD, configuration, migration, feature flag, canary, rollback, observability
+    default_capabilities:
+      - ci-cd
+      - release-rollback
+      - containerization
+      - kubernetes-gateway
+      - observability
+      - backup-recovery
+    conditional_capabilities:
+      - configuration-runtime-policy
+      - agent-tool-permission-sandbox
+      - plan-execution-consistency
+      - architecture-enforcement-tooling
+      - consumer-impact-analysis
+      - cleanup-deletion-governance
+      - minimal-correct-implementation
+      - senior-programming-judgment-core
+    skip_by_default:
+      - language deep checks
+      - coding
+    required_evidence:
+      - rollout sequence
+      - rollback trigger
+      - config compatibility
+      - health checks
+      - alert ownership
+      - shortcut ceiling and upgrade trigger when shortcuts remain
+      - tool permission and rollback classification for release commands
+      - senior programming judgment residual risk and observability/no-log rationale when release changes non-trivial runtime behavior
+    required_quality_gates:
+      - delivery gate
+    allowed_next_stages:
+      - documentation-handoff
+      - closed
+    forbidden_default_capabilities:
+      - language-idiom-enforcement
+      - code-review
+
+  - name: documentation-handoff
+    purpose: change boundary, validation evidence, residual risk, runbook, API docs, changelog, next actions
+    default_capabilities:
+      - agent-workflow-state-machine
+      - plan-execution-consistency
+      - documentation-generation
+      - agent-execution-discipline
+    conditional_capabilities:
+      - executor-adapter-protocol
+      - validation-broker
+      - execution-trajectory-analysis
+      - project-memory-governance
+      - business-semantic-control-plane
+      - senior-programming-judgment-core
+    skip_by_default:
+      - coding capabilities
+    required_evidence:
+      - validated boundary
+      - validation freshness and plan-execution consistency
+      - residual risk
+      - updated docs list
+      - handoff target
+      - final validation evidence
+      - residual risk and rollback note
+      - ordinary handoff excludes internal state artifacts
+      - business semantic residual risk, owner handoff, and selected/skipped reference rationale when BSP was selected
+      - senior programming judgment closure evidence, proof limits, rollback note, and residual risk when non-trivial engineering work changed behavior
+    required_quality_gates:
+      - documentation gate
+    allowed_next_stages:
+      - closed
+      - requirement-intake
+    forbidden_default_capabilities:
+      - controller-api-implementation
+      - service-business-logic
+      - release-rollback
+
+  - name: skill-authoring
+    purpose: author, review, slim, split, or maintain ChangeForge skills, capabilities, references, registry, or routing rules
+    default_capabilities:
+      - repository-context-map
+      - skill-authoring-expert
+      - skill-efficacy-benchmark
+      - documentation-generation
+      - agent-execution-discipline
+      - plan-execution-consistency
+    conditional_capabilities:
+      - minimal-correct-implementation
+      - agent-workflow-state-machine
+      - executor-adapter-protocol
+      - repository-graph-analysis
+      - project-memory-governance
+      - validation-broker
+      - execution-trajectory-analysis
+      - context-control-plane
+      - senior-programming-judgment-core
+      - business-semantic-control-plane
+    skip_by_default:
+      - product coding
+      - language runtime
+      - release
+    required_evidence:
+      - boundary
+      - trigger precision
+      - output contract
+      - registry/routing/validation impact
+      - skill-efficacy benchmark impact when behavior claims change
+      - minimal scope diff
+      - deleted or rejected complexity
+      - shortcut ceiling and upgrade trigger when shortcuts remain
+      - business semantic schema, fixture, routing, memory, graph, and validation impact when authoring BSP behavior
+      - senior programming judgment schema, hook, routing, fixture, validation, and closure impact when authoring engineering judgment behavior
+    required_quality_gates:
+      - documentation gate
+      - test gate
+    allowed_next_stages:
+      - documentation-handoff
+      - closed
+    forbidden_default_capabilities:
+      - controller-api-implementation
+      - language-runtime-selection
+      - release-rollback
+
+process_stage_ownership:
+  pdd:
+    owner_skill: change-intake-compiler
+    evidence: problem, affected user/system, acceptance criteria, constraints, non-goals, risk surfaces, validation signal
+  ddd:
+    owner_skill: domain-impact-modeler
+    evidence: domain terms, ownership, invariants, side-effect boundaries, code ownership
+  sdd:
+    owner_skill: architecture-impact-reviewer
+    evidence: modules, files, public API, data flow, error contract, compatibility, rollback, structure tradeoffs, design decision points, user choice status, safe assumption rationale
+  sdd_design_choice_gate:
+    owner_skill: development-process-orchestrator
+    evidence: material design choices, options, required/resolved/not_required/assumed_with_rationale status, no-choice rationale, assumption policy
+  sdd_logging_decision:
+    owner_skill: logging-design-gate
+    evidence: log type, placement, level, fields, redaction, correlation, cardinality, tests or no-log rationale
+  tdd:
+    owner_skill: quality-test-gate
+    evidence: acceptance-to-test, invariant-to-test, public-API-to-test, failure-mode tests, validation commands
+  phase_review:
+    owner_skill: phase-review-capsule
+    evidence: bounded review capsule, artifact digest, independent reviewer boundary, phase_review_result, strong provenance, approved scope, finding repair, matching re-review, proof limits, residual risk
+  cross_stage_review:
+    owner_skill: ai-code-review-refactor
+    evidence: concrete mappings across PDD, DDD, SDD, TDD, actual diff, and final validation
+  business_semantics:
+    owner_skill: change-forge-router
+    evidence: task-scoped Business Semantic Pack trigger decision, source-backed facts, memory/graph selector limits, selected and skipped references, validation map, and residual semantic risk
+  senior_programming_judgment:
+    owner_skill: change-forge-router
+    evidence: task-scoped senior programming judgment trigger decision, source-backed facts, object/state/rule/invariant map, boundary and side-effect evidence, failure contract, validation map, observability or no-log rationale, residual risk, and selected specialist handoff
+
+route_manifest_patterns:
+  non_documentation_code_change:
+    selected_skills:
+      - development-process-orchestrator
+      - change-intake-compiler
+      - domain-impact-modeler
+      - architecture-impact-reviewer
+      - quality-test-gate
+    required_quality_gates:
+      - pdd_acceptance_to_tdd_tests
+      - ddd_invariants_to_tdd_tests
+      - sdd_public_api_to_tdd_tests
+      - sdd_failure_modes_to_tdd_tests
+      - sdd_design_choice_gate
+  superpowers_complex_engineering_request:
+    selected_skills:
+      - change-intake-compiler
+      - development-process-orchestrator
+      - task-dag-planner
+      - quality-test-gate
+      - ai-code-review-refactor
+    selected_capabilities:
+      - requirement-clarification
+      - requirement-structuring
+      - acceptance-standard-definition
+      - implementation-structure-design
+      - agent-execution-discipline
+      - plan-execution-consistency
+      - test-strategy
+      - regression-testing
+      - code-review
+    required_quality_gates:
+      - requirement gate
+      - SDD gate
+      - implementation gate
+      - test gate
+      - AI review gate
+  logging_change:
+    selected_skills:
+      - logging-design-gate
+    selected_capabilities:
+      - logging-error-handling
+    required_quality_gates:
+      - logging_decision_has_type_level_fields_redaction
+      - logging_or_security_tests_present
+      - forbidden_secret_fields_absent
+  business_semantic_change:
+    selected_skills:
+      - change-intake-compiler
+      - domain-impact-modeler
+      - quality-test-gate
+      - ai-code-review-refactor
+    selected_capabilities:
+      - business-semantic-control-plane
+      - domain-object-identification
+      - business-rule-extraction
+      - state-machine-modeling
+      - context-control-plane
+    required_quality_gates:
+      - business_semantic_pack_has_source_backed_facts
+      - memory_and_graph_are_selector_only
+      - business_claims_map_to_validation_or_residual_risk
+
+product_surfaces:
+  - surface: frontend-product
+    signals: [frontend, component, route, form, browser, accessibility, state]
+    required_skill: frontend-change-builder
+    default_capabilities: [page-component-decomposition, state-management-design, form-validation-design, frontend-api-integration]
+  - surface: backend-product
+    signals: [backend, service, controller, transaction, background job, auth]
+    required_skill: backend-change-builder
+    default_capabilities: [service-business-logic, authentication-authorization, idempotency-retry-design, logging-error-handling]
+  - surface: api-contract
+    signals: [api, endpoint, dto, schema, response, request, json schema, protobuf, yaml config, xml, toml, parser compatibility, serializer, deserializer, wire format, schema registry, field number, duplicate key, scalar coercion, unknown field, generated model, golden fixture]
+    required_skill: data-api-contract-changer
+    default_capabilities: [api-contract-design, dto-schema-design, error-code-design, version-compatibility]
+  - surface: data-model
+    signals: [data model, table, column, entity, persistence, database]
+    required_skill: data-api-contract-changer
+    default_capabilities: [data-model-design, relational-database, indexing-query-optimization]
+  - surface: database-migration
+    signals: [migration, backfill, rollback, schema change, irreversible data]
+    required_skill: data-api-contract-changer
+    default_capabilities: [data-migration-design, transaction-consistency, release-rollback]
+  - surface: cache
+    signals: [cache, redis, ttl, invalidation, stampede]
+    required_skill: data-middleware-change-builder
+    default_capabilities: [cache-design, concurrency-control]
+  - surface: message-queue
+    signals: [queue, kafka, consumer, producer, dlq, offset, dead letter]
+    required_skill: data-middleware-change-builder
+    default_capabilities: [message-queue-design, idempotency-retry-design]
+  - surface: network-gateway
+    signals: [nginx, envoy, haproxy, cloudflare, cdn, reverse proxy, load balancer, gateway, ingress, tls, websocket, grpc, "502", "503", "504", timeout chain]
+    required_skill: reliability-observability-gate
+    default_capabilities: [network-protocol-gateway-usage, degradation-circuit-breaking, observability]
+  - surface: search-analytics
+    signals: [search, analytics, search index, dashboard, data freshness, warehouse freshness]
+    required_skill: data-middleware-change-builder
+    default_capabilities: [search-analytics-design, indexing-query-optimization]
+  - surface: external-integration
+    signals: [third-party, integration, provider, timeout, retry]
+    required_skill: integration-change-builder
+    default_capabilities: [degradation-circuit-breaking, idempotency-retry-design]
+  - surface: webhook
+    signals: [webhook, hmac, webhook signature, webhook replay, webhook idempotency, provider event]
+    required_skill: integration-change-builder
+    default_capabilities: [authentication-security, idempotency-retry-design]
+  - surface: infrastructure-deployment
+    signals: [deployment, rollout, container, environment, infrastructure, 发布, 部署]
+    required_skill: delivery-release-gate
+    default_capabilities: [containerization, release-rollback, ci-cd]
+  - surface: kubernetes-helm
+    signals: [kubernetes, k8s, helm, chart, values.yaml, ingress, serviceaccount, rbac]
+    required_skill: delivery-release-gate
+    default_capabilities: [kubernetes-gateway, ci-cd, secret-configuration-security]
+  - surface: ci-cd
+    signals: [ci, cd, workflow, pipeline, lockfile, makefile, bazel, gradle, maven, build graph, generated build artifact, remote cache]
+    required_skill: delivery-release-gate
+    default_capabilities: [ci-cd, package-dependency-management, build-tool-professional-usage]
+  - surface: ai-rag-agent
+    signals: [ai, llm, rag, agent, embedding, vector, prompt, model]
+    required_skill: ai-product-extension
+    default_capabilities: [threat-modeling, observability, test-strategy]
+  - surface: web3
+    signals: [web3, wallet, eip-712, smart contract, blockchain, on-chain]
+    required_skill: web3-product-extension
+    default_capabilities: [authentication-security, threat-modeling]
+  - surface: payment-trading
+    signals: [payment, subscription, billing, trading, ledger]
+    required_skill: payment-trading-extension
+    default_capabilities: [idempotency-retry-design, transaction-consistency]
+  - surface: low-level-systems
+    signals: [kernel, driver, ffi, abi, syscall, memory safety]
+    required_skill: low-level-systems-extension
+    default_capabilities: [concurrency-control, language-performance-safety]
+  - surface: linux-systems
+    signals: [linux, systemd, journald, cgroup, namespace, procfs, signal handling, ulimit, service restart, daemon, pid 1]
+    required_skill: reliability-observability-gate
+    default_capabilities: [linux-systems-professional-usage, observability]
+  - surface: sdk-library
+    signals: [sdk, library, client, package, public api]
+    required_skill: data-api-contract-changer
+    default_capabilities: [sdk-library-contract-design, version-compatibility, package-dependency-management]
+  - surface: cli-daemon
+    signals: [cli, daemon, command, stdout, stderr, exit code]
+    required_skill: backend-change-builder
+    default_capabilities: [cli-daemon-interface-design, logging-error-handling]
+  - surface: documentation-only
+    signals: [documentation, docs, readme, changelog, runbook]
+    required_skill: change-documentation-gate
+    default_capabilities: [documentation-generation]
+  - surface: git-workflow
+    signals: [merge conflict, rebase conflict, cherry-pick, conflict, dirty worktree, stash, branch naming, commit message, commit splitting, staged diff, unstaged diff, backup branch, generated file conflict, lease-protected push, signed tag, release tag, bisect, reflog, submodule]
+    required_skill: development-process-orchestrator
+    default_capabilities: [git-professional-usage, repository-context-map, validation-broker, plan-execution-consistency]
+  - surface: skill-authoring
+    signals: [skill, capability, skill registry, routing rule, stage model, hook runtime, context control plane, context budget, reference bloat, selected references, skipped references, senior programming judgment, senior_programming_judgment]
+    required_skill: change-forge-router
+    default_capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency, context-control-plane]
+    conditional_capabilities: [minimal-correct-implementation, senior-programming-judgment-core]
+  - surface: agent-runtime-governance
+    signals: [executor adapter, runtime adapter, adapter capabilities, normalized event, closure contract, unsupported runtime event]
+    required_skill: change-forge-router
+    default_capabilities: [executor-adapter-protocol, agent-tool-permission-sandbox, agent-workflow-state-machine, context-control-plane]
+  - surface: repository-intelligence
+    signals: [repo graph, symbol graph, import graph, call graph, reference graph, test graph, context pack, source of truth unknown]
+    required_skill: change-impact-analyzer
+    default_capabilities: [repository-graph-analysis, repository-context-map, context-packaging, context-control-plane]
+  - surface: project-memory
+    signals: [project memory, repeat failure, fragile file, stale context, previous fix failed, latest commit review follow-up]
+    required_skill: change-forge-router
+    default_capabilities: [project-memory-governance, agent-execution-discipline, plan-execution-consistency, context-control-plane]
+  - surface: business-semantics
+    signals: [business semantic pack, business semantic control plane, business context missing, business intent, business vocabulary, business vocabulary ambiguous, business object, business object ownership unclear, DTO used as business object, business rule, business rule authority unknown, rule authority, business workflow state unclear, workflow state, status transition, business invariant changed, business rule hidden in SQL/controller/UI/test, business golden case missing, business memory affects decision, semantic review, business semantic review required, technical refactor may change business semantics, hidden sql rule, hidden controller rule, stale business memory, graph used as business fact, memory used as business fact]
+    required_skill: change-forge-router
+    default_capabilities: [business-semantic-control-plane, domain-object-identification, business-rule-extraction, state-machine-modeling, context-control-plane, project-memory-governance, repository-graph-analysis, validation-broker]
+  - surface: validation-broker
+    signals: [validation broker, validation command selection, stale validation, validation without outcome, affected tests, changed path validation]
+    required_skill: quality-test-gate
+    default_capabilities: [validation-broker, repository-graph-analysis, plan-execution-consistency, context-control-plane]
+  - surface: execution-trajectory
+    signals: [trajectory, edit before read, repair without re-review, stop without residual risk, skipped engineering stage]
+    required_skill: ai-code-review-refactor
+    default_capabilities: [execution-trajectory-analysis, agent-workflow-state-machine, validation-broker, context-control-plane]
+
+language_surfaces:
+  - language: go
+    capability: go-professional-usage
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.go]
+    signals: [go, golang, goroutine, context, channel]
+  - language: java-jvm
+    capability: java-jvm-professional-usage
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.java, .kt, .kts]
+    signals: [java, jvm, spring, executor, thread]
+  - language: typescript
+    capability: typescript-professional-usage
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.ts, .tsx, .js, .jsx, .mts, .cts]
+    signals: [typescript, ts, node, react, promise]
+  - language: python
+    capability: python-professional-usage
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.py]
+    signals: [python, py, asyncio, pytest, type hints]
+  - language: rust
+    capability: rust-professional-usage
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.rs]
+    signals: [rust, borrow, lifetime, unsafe, cargo]
+  - language: cpp
+    capability: cpp-professional-usage
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.c, .cc, .cpp, .cxx, .h, .hh, .hpp, .ipp, .tpp]
+    signals: [c++, cpp, C ABI, native C, native C++, raii, abi, ffi, sanitizer]
+  - language: shell
+    capability: shell-cli-professional-usage
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.sh, .bash, .zsh]
+    signals: [shell, bash, sh, zsh, cli]
+  - language: sql
+    capability: sql-professional-usage
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.sql]
+    signals: [sql, SQL query, SQL index, .sql]
+
+stage_transitions:
+  - from: requirement-intake
+    to: [architecture-design, implementation-planning]
+  - from: architecture-design
+    to: [implementation-planning]
+  - from: implementation-planning
+    to: [coding]
+  - from: coding
+    to: [testing, code-review]
+  - from: debugging-diagnosis
+    to: [bug-fix, implementation-planning]
+  - from: bug-fix
+    to: [testing, code-review, release-delivery]
+  - from: code-review
+    to: [refactoring, bug-fix, testing, documentation-handoff]
+  - from: refactoring
+    to: [testing, code-review, documentation-handoff]
+  - from: testing
+    to: [code-review, release-delivery, documentation-handoff]
+  - from: release-delivery
+    to: [documentation-handoff, closed]
+  - from: documentation-handoff
+    to: [closed, requirement-intake]
+  - from: skill-authoring
+    to: [documentation-handoff, closed]
+
+stage_resolution:
+  precedence:
+    - explicit_user_stage
+    - active_action_verb
+    - evidence_state
+    - artifact_type
+    - risk_trigger
+  conflict_rules:
+    - when: [review, implementation plan]
+      current_stage: implementation-planning
+      reason: reviewing a plan before code is planning, not code-review
+    - when: [root cause unknown, fix]
+      current_stage: debugging-diagnosis
+      reason: no verified cause exists yet
+    - when: [behavior preserving, extract/move/split]
+      current_stage: refactoring
+      reason: structure movement without behavior change is refactoring
+    - when: [debug, release failure, migration]
+      current_stage: debugging-diagnosis
+      reason: diagnose the failure before release rerouting
+    - when: [test, generated code review]
+      current_stage: code-review
+      reason: generated implementation risk is reviewed before test expansion
+    - when: [docs, validation evidence, residual risk]
+      current_stage: documentation-handoff
+      reason: closure evidence and reader obligations are documentation handoff
+    - when: [skill, registry, routing rule]
+      current_stage: skill-authoring
+      reason: ChangeForge source artifacts use the skill-authoring stage
+    - when: [acceptance criteria, unclear scope]
+      current_stage: requirement-intake
+      reason: clarify the requirement before design or implementation
+    - when: [module boundary, dependency direction]
+      current_stage: architecture-design
+      reason: boundary ownership is architecture work
+    - when: [code placement, reuse decision]
+      current_stage: implementation-planning
+      reason: placement and reuse decisions precede coding
+    - when: [implementation plan, target-project not inspected]
+      current_stage: requirement-intake
+      reason: read-before-plan evidence is required before implementation-planning
+    - when: [coding, TDD signal missing]
+      current_stage: implementation-planning
+      reason: coding waits for TDD or validation signal
+    - when: [review finding, re-review result missing]
+      current_stage: code-review
+      reason: review findings keep the stage in code-review until repair and re-review evidence exists
+    - when: [write implementation, selected design]
+      current_stage: coding
+      reason: active action is implementation
+    - when: [rollout, rollback, config]
+      current_stage: release-delivery
+      reason: rollout mechanics belong to release delivery

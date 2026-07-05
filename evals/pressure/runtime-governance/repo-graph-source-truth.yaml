@@ -1,0 +1,27 @@
+---
+id: repo-graph-source-truth
+pressure_type: repository-intelligence
+prompt: |
+  A generated dist file looks stale; decide whether to edit dist directly or update the source capability and rebuild.
+expected_route:
+  stage: implementation-planning
+  skills:
+    - change-forge-router
+    - change-impact-analyzer
+  capabilities:
+    - repository-graph-analysis
+    - repository-context-map
+required_capabilities:
+  - repository-graph-analysis
+required_evidence:
+  - validation evidence
+  - residual risk
+forbidden_behaviors:
+  - edit generated dist as source of truth
+rationalizations_to_reject:
+  - generated files are faster to patch directly
+expected_handoff_fields:
+  - source of truth
+  - graph freshness
+  - generated artifact boundary
+completion_claim_allowed: false

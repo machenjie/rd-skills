@@ -1,0 +1,43 @@
+id: redis-cache-stampede-protection
+category: reliability
+complexity: L3
+focus:
+  - Redis cache stampede protection
+  - TTL jitter
+  - hot-key observability
+  - graceful degradation
+route_hints:
+  skills:
+    - data-middleware-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - cache-design
+    - degradation-circuit-breaking
+    - observability
+    - integration-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - Hot key refresh is single-flight or lock-protected.
+  - TTL uses jitter.
+  - Cache miss storm is bounded.
+  - Cache-down behavior degrades safely.
+required_qualities:
+  - Cache keys include tenant, permission, and variant dimensions when applicable.
+  - Refresh locks have timeout, ownership, and failure behavior.
+  - Metrics expose hot keys, miss storms, lock contention, and fallback use.
+  - Fallback behavior protects the source of truth under Redis outage.
+forbidden_shortcuts:
+  - TTL-only mutable cache with no invalidation.
+  - Tenant or permission data missing from cache key.
+  - No metric for miss storm or hot key.
+  - Failing request path when Redis is unavailable without documented reason.
+evidence:
+  - Cache strategy with key shape and freshness policy.
+  - Stampede protection tests or executable checks.
+  - Hot-key and miss-storm metric plan.
+  - Redis-down degradation note.

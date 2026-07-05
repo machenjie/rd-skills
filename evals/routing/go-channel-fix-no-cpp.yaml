@@ -1,0 +1,24 @@
+---
+id: go-channel-fix-no-cpp
+description: Go channel bug fix must select Go usage and avoid adjacent systems languages.
+prompt: |
+  Fix the deadlock in internal/worker/channel_fanout.go and add a regression test.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: bug-fix
+  expected_context_budget_mode: single-stage
+  expected_product_surface: backend-product
+  expected_language_surface: go
+  risk_triggers: []
+  skills: [backend-change-builder, quality-test-gate]
+  capabilities: [implementation-structure-design, regression-testing, code-review, go-professional-usage]
+  domain_extensions: []
+  quality_gates: [implementation gate, test gate]
+forbidden:
+  skills: [frontend-change-builder, delivery-release-gate]
+  capabilities: [cpp-professional-usage, rust-professional-usage, typescript-professional-usage]
+  domain_extensions: [low-level-systems-extension, web3-product-extension]
+  quality_gates: [delivery gate]
+notes: |
+  Go extension and channel signal must not diffuse into C++ or Rust.

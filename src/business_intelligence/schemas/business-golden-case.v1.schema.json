@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/business-intelligence/business-golden-case.v1.schema.json",
+  "title": "ChangeForge Business Golden Case",
+  "description": "Business-facing golden case that maps an intent, rule, object, or workflow claim to executable or reviewable validation evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["business_golden_case"],
+  "$defs": {
+    "boundedStringList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {"type": "string", "minLength": 1, "maxLength": 300}
+    }
+  },
+  "properties": {
+    "business_golden_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "case_id",
+        "business_claim_ids",
+        "given",
+        "when",
+        "then",
+        "expected_outcome",
+        "validation_target",
+        "residual_risk"
+      ],
+      "properties": {
+        "schema_version": {"const": 1},
+        "case_id": {"type": "string", "minLength": 1, "maxLength": 160, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "business_claim_ids": {"$ref": "#/$defs/boundedStringList"},
+        "business_object_ids": {"$ref": "#/$defs/boundedStringList"},
+        "business_rule_ids": {"$ref": "#/$defs/boundedStringList"},
+        "workflow_transition_ids": {"$ref": "#/$defs/boundedStringList"},
+        "given": {"$ref": "#/$defs/boundedStringList"},
+        "when": {"type": "string", "minLength": 1, "maxLength": 500},
+        "then": {"$ref": "#/$defs/boundedStringList"},
+        "expected_outcome": {"type": "string", "minLength": 1, "maxLength": 500},
+        "negative_cases": {"$ref": "#/$defs/boundedStringList"},
+        "validation_target": {"type": "string", "minLength": 1, "maxLength": 300},
+        "owner_review": {"type": "string", "maxLength": 300},
+        "residual_risk": {"$ref": "#/$defs/boundedStringList"}
+      }
+    }
+  }
+}

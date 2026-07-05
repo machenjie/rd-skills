@@ -1,0 +1,22 @@
+expected_stage: implementation-planning
+expected_professional_skill: data-middleware-change-builder
+expected_capabilities:
+  - cache-design
+  - permission-boundary-modeling
+  - observability
+expected_hidden_risks:
+  - cross-tenant cache collision
+  - stale authorization or entitlement state
+  - unbounded cache cardinality or hot key
+expected_evidence:
+  - tenant-scoped cache key schema
+  - TTL and invalidation validation evidence
+  - memory cardinality and hot-key monitoring evidence
+forbidden_behaviors:
+  - omit tenant from a multi-tenant cache key
+  - cache authorization or entitlement state without invalidation
+  - skip memory cardinality or hot-key review
+expected_output_obligations:
+  - source-of-truth and cache lifecycle analysis
+  - validation evidence for key isolation and invalidation
+  - residual stale authorization risk owner

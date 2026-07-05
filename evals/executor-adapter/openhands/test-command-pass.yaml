@@ -1,0 +1,50 @@
+id: openhands-test-command-pass
+runtime: openhands
+description: OpenHands test command produces current validation pass evidence while live metrics remain unmeasured.
+coverage_targets:
+  - event_recognition
+  - tool_category
+  - validation_outcome
+input_payload:
+  event_type: test_command
+  event_id: openhands-test-command-pass
+  command: pytest tests
+  exit_code: 0
+  changed_paths:
+    - /workspace/project/tests/test_app.py
+expected_normalized_event:
+  adapter: openhands
+  event_kind: post_tool_use
+  tool_category: test
+  command_kind: pytest
+  command_outcome: pass
+  validation_candidate: true
+  validation_outcome: pass
+  validation_freshness: current
+  changed_paths:
+    - tests/test_app.py
+expected_gate_result:
+  outcome: pass
+expected_evidence_delta:
+  normalized_event_supported: true
+  changed_files:
+    - tests/test_app.py
+  validation_strength: strong
+  validation_freshness: current
+  validation_outcome: pass
+  command_risk_outcome: safe
+  bounded_path_count: 1
+  privacy_redaction_count: 1
+expected_closure_effect:
+  verdict: needs_validation
+  validation_status:
+    strength: strong
+    freshness: current
+    outcome: pass
+privacy_expectations:
+  redactions_include:
+    - "command:kind_only"
+  blocked_strings:
+    - pytest tests
+    - /workspace/project
+  forbid_absolute_paths: true

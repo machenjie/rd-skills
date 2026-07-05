@@ -1,0 +1,151 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_session_bootstrap.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_professional_injector.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_sdd_material_choice_gate.py\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_pre_edit_structure_gate.py\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_permission_policy_gate.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_permission_policy_gate.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|Bash|Read|Grep|Glob|LS|Search|View|Open|Fetch|fetch_file|fetch_pr_patch|get_pr_diff|MCP|GitHub|mcp__filesystem__read_file|mcp__filesystem__list_directory|mcp__github__get_file_contents|mcp__github__pull_request_read|mcp__github__search_code|mcpfilesystemreadfile|mcpfilesystemlistdirectory|mcpgithubgetfilecontents|mcpgithubpullrequestread|mcpgithubsearchcode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_post_tool_collector.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolBatch": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_post_tool_collector.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_post_tool_collector.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_subagent_review_gate.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_subagent_review_gate.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_compaction.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_compaction.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_stop_closure_gate.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

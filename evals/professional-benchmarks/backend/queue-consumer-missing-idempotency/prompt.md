@@ -1,0 +1,1 @@
+Review a new queue consumer that processes `OrderPaid` messages. It retries failed messages automatically and commits the queue offset after calling the fulfillment service, but it has no idempotency key, dedupe table, DLQ, or replay procedure.

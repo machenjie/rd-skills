@@ -1,0 +1,27 @@
+---
+id: project-memory-repeat-failure
+pressure_type: project-memory
+prompt: |
+  The previous two attempts changed the same fragile file and failed validation; a third attempt proposes the same patch.
+expected_route:
+  stage: debugging-diagnosis
+  skills:
+    - change-forge-router
+    - quality-test-gate
+  capabilities:
+    - project-memory-governance
+    - agent-execution-discipline
+required_capabilities:
+  - project-memory-governance
+required_evidence:
+  - validation evidence
+  - residual risk
+forbidden_behaviors:
+  - repeat same patch path a third time
+rationalizations_to_reject:
+  - the next retry may work without new evidence
+expected_handoff_fields:
+  - repeat failure gate
+  - memory projection
+  - new hypothesis
+completion_claim_allowed: false

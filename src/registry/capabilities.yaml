@@ -1,0 +1,1363 @@
+---
+schema_version: 1
+kind: changeforge.capabilities
+description: Foundation capabilities compiled into professional skill references.
+capabilities:
+  - id: "01"
+    name: requirement-clarification
+    group: intake-requirements
+    path: src/foundation/capabilities/requirement-clarification
+    status: implemented
+    used_by: [change-intake-compiler]
+    triggers: [clarify ambiguous goals constraints assumptions missing information]
+    risk_notes: [Unclear intent can invalidate all downstream design and implementation]
+    expected_outputs: [clarified requirement questions assumptions and decision log]
+  - id: "02"
+    name: requirement-structuring
+    group: intake-requirements
+    path: src/foundation/capabilities/requirement-structuring
+    status: implemented
+    used_by: [change-intake-compiler]
+    triggers: [structure raw request into scope constraints dependencies and deliverables]
+    risk_notes: [Unstructured requests hide conflicts and unstated acceptance gaps]
+    expected_outputs: [structured change brief with scope constraints dependencies and unknowns]
+  - id: "03"
+    name: user-role-identification
+    group: intake-requirements
+    path: src/foundation/capabilities/user-role-identification
+    status: implemented
+    used_by: [change-intake-compiler, experience-impact-modeler, security-privacy-gate]
+    triggers: [identify actors personas operators administrators customers and service accounts]
+    risk_notes: [Wrong role boundaries cause permission defects and broken workflows]
+    expected_outputs: [role inventory with responsibilities permissions and affected journeys]
+  - id: "04"
+    name: scenario-decomposition
+    group: intake-requirements
+    path: src/foundation/capabilities/scenario-decomposition
+    status: implemented
+    used_by: [change-intake-compiler, acceptance-criteria-builder]
+    triggers: [break request into happy path edge case negative path and operational scenario]
+    risk_notes: [Missing scenarios create false completion and weak regression coverage]
+    expected_outputs: [scenario set with primary alternate exceptional and recovery paths]
+  - id: "05"
+    name: acceptance-standard-definition
+    group: intake-requirements
+    path: src/foundation/capabilities/acceptance-standard-definition
+    status: implemented
+    used_by: [acceptance-criteria-builder, quality-test-gate]
+    triggers: [define measurable acceptance criteria evidence and verification standard]
+    risk_notes: [Vague acceptance standards make done subjective and difficult to test]
+    expected_outputs: [acceptance criteria with measurable outcomes evidence and owners]
+  - id: "06"
+    name: non-goal-boundary-definition
+    group: intake-requirements
+    path: src/foundation/capabilities/non-goal-boundary-definition
+    status: implemented
+    used_by: [change-intake-compiler, task-dag-planner]
+    triggers: [separate in-scope work from non-goals exclusions and deferred decisions]
+    risk_notes: [Unbounded scope expands implementation and review beyond safe control]
+    expected_outputs: [scope boundary with explicit non-goals exclusions and deferrals]
+  - id: "07"
+    name: information-architecture
+    group: experience-design
+    path: src/foundation/capabilities/information-architecture
+    status: implemented
+    used_by: [experience-impact-modeler, frontend-change-builder]
+    triggers: [organize content hierarchy navigation labels and object relationships]
+    risk_notes: [Poor structure makes workflows harder to scan learn and operate]
+    expected_outputs: [information model with hierarchy labels grouping and navigation impact]
+  - id: "08"
+    name: user-flow-modeling
+    group: experience-design
+    path: src/foundation/capabilities/user-flow-modeling
+    status: implemented
+    used_by: [experience-impact-modeler, frontend-change-builder]
+    triggers: [model user journey page flow decision points and interruptions]
+    risk_notes: [Unmodeled flows miss dead ends recovery states and cross-page regressions]
+    expected_outputs: [flow map with entry points actions decisions exits and recovery paths]
+  - id: "09"
+    name: prototype-description
+    group: experience-design
+    path: src/foundation/capabilities/prototype-description
+    status: implemented
+    used_by: [experience-impact-modeler, frontend-change-builder]
+    triggers: [describe prototype layout behavior content hierarchy and interaction intent]
+    risk_notes: [Ambiguous prototype language leads to mismatched implementation choices]
+    expected_outputs: [prototype brief with layout behavior states and content obligations]
+  - id: "10"
+    name: interaction-state-modeling
+    group: experience-design
+    path: src/foundation/capabilities/interaction-state-modeling
+    status: implemented
+    used_by: [experience-impact-modeler, frontend-change-builder, quality-test-gate]
+    triggers: [model empty loading error success disabled focused and permission states]
+    risk_notes: [Missing states create inaccessible confusing or brittle user experiences]
+    expected_outputs: [state matrix with triggers visuals behavior and test expectations]
+  - id: "11"
+    name: design-system-rules
+    group: experience-design
+    path: src/foundation/capabilities/design-system-rules
+    status: implemented
+    used_by: [experience-impact-modeler, frontend-change-builder]
+    triggers: [apply design tokens component conventions spacing typography and interaction rules]
+    risk_notes: [Design drift increases inconsistency maintenance cost and user confusion]
+    expected_outputs: [design rule checklist with token component and exception decisions]
+  - id: "12"
+    name: domain-object-identification
+    group: domain-modeling
+    path: src/foundation/capabilities/domain-object-identification
+    status: implemented
+    used_by: [domain-impact-modeler, data-api-contract-changer, backend-change-builder]
+    triggers: [identify entities value objects aggregates resources and lifecycle owners]
+    risk_notes: [Incorrect objects distort persistence contracts permissions and events]
+    expected_outputs: [domain object inventory with ownership identity lifecycle and relationships]
+  - id: "13"
+    name: business-rule-extraction
+    group: domain-modeling
+    path: src/foundation/capabilities/business-rule-extraction
+    status: implemented
+    used_by: [domain-impact-modeler, backend-change-builder]
+    triggers: [extract invariants policies calculations constraints and decision authority]
+    risk_notes: [Hidden rules leak into UI or tests and become inconsistent]
+    expected_outputs: [business rule catalog with authority invariants exceptions and examples]
+  - id: "14"
+    name: state-machine-modeling
+    group: domain-modeling
+    path: src/foundation/capabilities/state-machine-modeling
+    status: implemented
+    used_by: [domain-impact-modeler, backend-change-builder, quality-test-gate]
+    triggers: [model lifecycle states transitions guards side effects and terminal states]
+    risk_notes: [Invalid transitions cause data corruption and unrecoverable workflow states]
+    expected_outputs: [state machine table with guards events side effects and invalid paths]
+  - id: "15"
+    name: use-case-modeling
+    group: domain-modeling
+    path: src/foundation/capabilities/use-case-modeling
+    status: implemented
+    used_by: [domain-impact-modeler, change-impact-analyzer]
+    triggers: [model use cases actors preconditions postconditions and success guarantees]
+    risk_notes: [Weak use cases blur product behavior with implementation mechanics]
+    expected_outputs: [use case set with actors preconditions flow variants and guarantees]
+  - id: "16"
+    name: permission-boundary-modeling
+    group: domain-modeling
+    path: src/foundation/capabilities/permission-boundary-modeling
+    status: implemented
+    used_by: [domain-impact-modeler, security-privacy-gate, backend-change-builder]
+    triggers: [model authorization boundaries ownership tenant scope and privilege transitions]
+    risk_notes: [Permission mistakes expose data or block legitimate workflows]
+    expected_outputs: [permission matrix with actors resources actions scopes and denials]
+  - id: "17"
+    name: domain-event-modeling
+    group: domain-modeling
+    path: src/foundation/capabilities/domain-event-modeling
+    status: implemented
+    used_by: [domain-impact-modeler, integration-change-builder, data-middleware-change-builder]
+    triggers: [model domain events producers consumers payloads timing and consistency expectations]
+    risk_notes: [Incorrect events create duplicate effects missed notifications and stale projections]
+    expected_outputs: [event catalog with schema producer consumer ordering and idempotency notes]
+  - id: "18"
+    name: architecture-style-selection
+    group: architecture-design
+    path: src/foundation/capabilities/architecture-style-selection
+    status: implemented
+    used_by: [architecture-impact-reviewer]
+    triggers: [select monolith modular layered service event driven or hybrid architecture style]
+    risk_notes: [Premature complexity or undersized structure increases delivery and operations risk]
+    expected_outputs: [architecture style decision with forces tradeoffs and constraints]
+  - id: "19"
+    name: module-boundary-design
+    group: architecture-design
+    path: src/foundation/capabilities/module-boundary-design
+    status: implemented
+    used_by: [architecture-impact-reviewer, backend-change-builder, frontend-change-builder, domain-impact-modeler, ai-code-review-refactor]
+    triggers:
+      - define module ownership interfaces dependencies allowed coupling directory density module split relationship change locality public API expansion shared common ownership
+      - module internal object cluster module object graph public facade private internals internal dependency direction module object family module next-change location
+    risk_notes: [Weak boundaries spread changes across unrelated code amplify regressions expose internals and turn shared folders into business logic dumping grounds]
+    expected_outputs:
+      - module boundary map with ownership contracts dependencies forbidden crossings directory density module relationship type change locality and shared module audit
+      - module internal composition plan
+      - module object graph
+      - module public facade
+      - module private internals
+      - internal dependency direction
+  - id: "20"
+    name: layered-architecture-design
+    group: architecture-design
+    path: src/foundation/capabilities/layered-architecture-design
+    status: implemented
+    used_by: [architecture-impact-reviewer, backend-change-builder]
+    triggers: [design presentation application domain infrastructure and persistence layering]
+    risk_notes: [Layer violations hide business rules and make testing expensive]
+    expected_outputs: [layering decision with responsibilities dependency direction and exceptions]
+  - id: "21"
+    name: microservice-splitting
+    group: architecture-design
+    path: src/foundation/capabilities/microservice-splitting
+    status: implemented
+    used_by: [architecture-impact-reviewer, delivery-release-gate]
+    triggers: [evaluate service split boundaries ownership deployment data and operational cost]
+    risk_notes: [Poor splits create distributed transactions and coordination overhead]
+    expected_outputs: [service split assessment with boundaries data ownership and rejection reasons]
+  - id: "22"
+    name: event-driven-architecture
+    group: architecture-design
+    path: src/foundation/capabilities/event-driven-architecture
+    status: implemented
+    used_by: [architecture-impact-reviewer, integration-change-builder, data-middleware-change-builder]
+    triggers: [design asynchronous event flow ordering idempotency replay and eventual consistency]
+    risk_notes: [Event systems fail through duplicate messages ordering gaps and invisible lag]
+    expected_outputs: [event architecture plan with topics payloads consumers retries and observability]
+  - id: "23"
+    name: architecture-tradeoff-analysis
+    group: architecture-design
+    path: src/foundation/capabilities/architecture-tradeoff-analysis
+    status: implemented
+    used_by: [architecture-impact-reviewer, change-impact-analyzer]
+    triggers: [compare architecture options constraints forces risks and long term cost]
+    risk_notes: [Unstated tradeoffs make decisions hard to revisit or defend]
+    expected_outputs: [tradeoff matrix with decision forces alternatives and consequences]
+  - id: "24"
+    name: extensibility-design
+    group: architecture-design
+    path: src/foundation/capabilities/extensibility-design
+    status: implemented
+    used_by: [architecture-impact-reviewer, ai-code-review-refactor]
+    triggers: [design extension points configuration variation plugins and policy hooks]
+    risk_notes: [Overgeneralization bloats code while underdesign blocks expected variation]
+    expected_outputs: [extensibility plan with extension points constraints and anti-overengineering check]
+  - id: "25"
+    name: data-model-design
+    group: data-api-contracts
+    path: src/foundation/capabilities/data-model-design
+    status: implemented
+    used_by: [data-api-contract-changer, domain-impact-modeler]
+    triggers: [design records entities attributes relationships cardinality and lifecycle]
+    risk_notes: [Bad data models create migration pain and inconsistent domain behavior]
+    expected_outputs: [data model proposal with entities relationships constraints and migration impact]
+  - id: "26"
+    name: api-contract-design
+    group: data-api-contracts
+    path: src/foundation/capabilities/api-contract-design
+    status: implemented
+    used_by: [data-api-contract-changer, integration-change-builder]
+    triggers: [design API endpoints resources methods payloads pagination and compatibility]
+    risk_notes: [Contract ambiguity breaks clients and makes backward compatibility difficult]
+    expected_outputs: [API contract specification with request response errors and compatibility notes]
+  - id: "27"
+    name: dto-schema-design
+    group: data-api-contracts
+    path: src/foundation/capabilities/dto-schema-design
+    status: implemented
+    used_by: [data-api-contract-changer, backend-change-builder, frontend-change-builder]
+    triggers: [design DTO schemas fields validation defaults nullability and serialization]
+    risk_notes: [Schema drift causes client defects and inconsistent validation behavior]
+    expected_outputs: [DTO schema contract with fields types defaults validation and examples]
+  - id: "28"
+    name: error-code-design
+    group: data-api-contracts
+    path: src/foundation/capabilities/error-code-design
+    status: implemented
+    used_by: [data-api-contract-changer, backend-change-builder, frontend-change-builder]
+    triggers: [design error model codes messages remediation and client behavior]
+    risk_notes: [Poor errors hide recoverability and create inconsistent frontend handling]
+    expected_outputs: [error catalog with codes meanings retryability and user safe messages]
+  - id: "29"
+    name: version-compatibility
+    group: data-api-contracts
+    path: src/foundation/capabilities/version-compatibility
+    status: implemented
+    used_by: [data-api-contract-changer, delivery-release-gate]
+    triggers: [assess backward compatibility deprecation version negotiation and client migration]
+    risk_notes: [Breaking compatibility can strand clients and block safe rollout]
+    expected_outputs: [compatibility assessment with breaking changes migration path and deprecation plan]
+  - id: "30"
+    name: data-migration-design
+    group: data-api-contracts
+    path: src/foundation/capabilities/data-migration-design
+    status: implemented
+    used_by: [data-api-contract-changer, delivery-release-gate, data-middleware-change-builder]
+    triggers: [design schema migration data backfill rollback validation and deployment ordering]
+    risk_notes: [Unsafe migrations can lock tables lose data or block rollback]
+    expected_outputs: [migration plan with phases validation rollback and operational safeguards]
+  - id: "31"
+    name: page-component-decomposition
+    group: frontend-engineering
+    path: src/foundation/capabilities/page-component-decomposition
+    status: implemented
+    used_by: [frontend-change-builder, experience-impact-modeler]
+    triggers: [decompose page into components responsibilities props and reusable boundaries]
+    risk_notes: [Poor decomposition creates brittle components and unclear state ownership]
+    expected_outputs: [component map with responsibilities data needs props and reuse decisions]
+  - id: "32"
+    name: routing-navigation-design
+    group: frontend-engineering
+    path: src/foundation/capabilities/routing-navigation-design
+    status: implemented
+    used_by: [frontend-change-builder, experience-impact-modeler]
+    triggers: [design routes navigation guards deep links breadcrumbs and back behavior]
+    risk_notes: [Routing mistakes break discoverability permissions and browser expectations]
+    expected_outputs: [route plan with paths guards navigation states and fallback behavior]
+  - id: "33"
+    name: state-management-design
+    group: frontend-engineering
+    path: src/foundation/capabilities/state-management-design
+    status: implemented
+    used_by: [frontend-change-builder]
+    triggers: [choose local server global derived optimistic and persisted state boundaries]
+    risk_notes: [Wrong state ownership causes stale data duplicated logic and race defects]
+    expected_outputs: [state ownership map with sources updates invalidation and synchronization rules]
+  - id: "34"
+    name: form-validation-design
+    group: frontend-engineering
+    path: src/foundation/capabilities/form-validation-design
+    status: implemented
+    used_by: [frontend-change-builder, quality-test-gate]
+    triggers: [design form fields validation messages submission states and error recovery]
+    risk_notes: [Weak validation loses user input and creates inconsistent server rejection paths]
+    expected_outputs: [form contract with fields validation timing errors and submission states]
+  - id: "35"
+    name: frontend-api-integration
+    group: frontend-engineering
+    path: src/foundation/capabilities/frontend-api-integration
+    status: implemented
+    used_by: [frontend-change-builder, data-api-contract-changer]
+    triggers: [integrate frontend with API loading caching errors retries and optimistic updates]
+    risk_notes: [Integration gaps create stale views duplicate requests and misleading UI states]
+    expected_outputs: [frontend API plan with fetch lifecycle cache invalidation and error behavior]
+  - id: "36"
+    name: frontend-testing
+    group: frontend-engineering
+    path: src/foundation/capabilities/frontend-testing
+    status: implemented
+    used_by: [frontend-change-builder, quality-test-gate]
+    triggers: [test components routes interactions accessibility and API state handling]
+    risk_notes: [Missing frontend tests leave regressions in user visible workflows]
+    expected_outputs: [frontend test plan with component integration and E2E coverage targets]
+  - id: "37"
+    name: controller-api-implementation
+    group: backend-engineering
+    path: src/foundation/capabilities/controller-api-implementation
+    status: implemented
+    used_by: [backend-change-builder, data-api-contract-changer]
+    triggers: [implement controller routing request parsing validation response and status codes]
+    risk_notes: [Controller mistakes leak transport details and inconsistent error semantics]
+    expected_outputs: [controller implementation plan with route handling validation and response contract]
+  - id: "38"
+    name: service-business-logic
+    group: backend-engineering
+    path: src/foundation/capabilities/service-business-logic
+    status: implemented
+    used_by: [backend-change-builder, domain-impact-modeler]
+    triggers: [place application service orchestration policies invariants and transaction scope]
+    risk_notes: [Business logic in the wrong layer becomes duplicated and hard to audit]
+    expected_outputs: [service logic plan with responsibilities invariants dependencies and tests]
+  - id: "39"
+    name: domain-logic-implementation
+    group: backend-engineering
+    path: src/foundation/capabilities/domain-logic-implementation
+    status: implemented
+    used_by: [backend-change-builder, domain-impact-modeler]
+    triggers: [implement domain invariants calculations transitions policies and aggregate behavior]
+    risk_notes: [Weak domain logic allows invalid states and inconsistent rule enforcement]
+    expected_outputs: [domain implementation contract with invariants operations and failure cases]
+  - id: "40"
+    name: repository-persistence
+    group: backend-engineering
+    path: src/foundation/capabilities/repository-persistence
+    status: implemented
+    used_by: [backend-change-builder, data-middleware-change-builder]
+    triggers: [implement repository queries persistence mapping transactions and data access boundaries]
+    risk_notes: [Leaky persistence couples domain behavior to storage details]
+    expected_outputs: [repository contract with methods queries transaction expectations and tests]
+  - id: "41"
+    name: authentication-authorization
+    group: backend-engineering
+    path: src/foundation/capabilities/authentication-authorization
+    status: implemented
+    used_by: [backend-change-builder, security-privacy-gate]
+    triggers: [implement authentication authorization sessions tokens roles policies and denials]
+    risk_notes: [Auth defects can expose protected actions or break legitimate access]
+    expected_outputs: [auth implementation plan with identity source policies denials and audits]
+  - id: "42"
+    name: idempotency-retry-design
+    group: backend-engineering
+    path: src/foundation/capabilities/idempotency-retry-design
+    status: implemented
+    used_by: [backend-change-builder, integration-change-builder, reliability-observability-gate]
+    triggers: [design idempotency keys retries backoff deduplication and replay safety]
+    risk_notes: [Unsafe retries cause duplicate writes or permanent partial failure]
+    expected_outputs: [idempotency and retry contract with keys windows backoff and duplicate handling]
+  - id: "43"
+    name: async-job-design
+    group: backend-engineering
+    path: src/foundation/capabilities/async-job-design
+    status: implemented
+    used_by: [backend-change-builder, data-middleware-change-builder, reliability-observability-gate]
+    triggers: [design background jobs queues schedules workers retries and status visibility]
+    risk_notes: [Async work can hide failures duplicate effects and block observability]
+    expected_outputs: [job design with lifecycle retries idempotency observability and operator actions]
+  - id: "44"
+    name: logging-error-handling
+    group: backend-engineering
+    path: src/foundation/capabilities/logging-error-handling
+    status: implemented
+    used_by: [backend-change-builder, reliability-observability-gate, logging-design-gate]
+    triggers: [design structured errors logging context propagation and safe diagnostics]
+    risk_notes: [Poor errors and logs slow diagnosis or leak sensitive data]
+    expected_outputs: [error handling and logging plan with taxonomy context and redaction rules]
+  - id: "45"
+    name: relational-database
+    group: data-middleware
+    path: src/foundation/capabilities/relational-database
+    status: implemented
+    used_by: [data-middleware-change-builder, data-api-contract-changer]
+    triggers: [design relational tables constraints joins normalization and transactional access]
+    risk_notes: [Relational misuse creates integrity gaps query pain and migration risk]
+    expected_outputs: [relational design with schema constraints indexes and transaction notes]
+  - id: "46"
+    name: nosql-database
+    group: data-middleware
+    path: src/foundation/capabilities/nosql-database
+    status: implemented
+    used_by: [data-middleware-change-builder]
+    triggers: [design document key value wide column or graph storage access patterns]
+    risk_notes: [NoSQL choices fail when access patterns consistency and indexes are vague]
+    expected_outputs: [NoSQL design with access patterns partitioning consistency and limits]
+  - id: "47"
+    name: indexing-query-optimization
+    group: data-middleware
+    path: src/foundation/capabilities/indexing-query-optimization
+    status: implemented
+    used_by: [data-middleware-change-builder, reliability-observability-gate]
+    triggers: [optimize indexes query plans pagination filters sorting and read paths]
+    risk_notes: [Slow queries degrade reliability and can trigger costly production incidents]
+    expected_outputs: [query optimization plan with indexes plans cardinality and verification]
+  - id: "48"
+    name: transaction-consistency
+    group: data-middleware
+    path: src/foundation/capabilities/transaction-consistency
+    status: implemented
+    used_by: [data-middleware-change-builder, backend-change-builder]
+    triggers: [design transaction boundaries isolation consistency locking and conflict handling]
+    risk_notes: [Weak consistency causes lost updates stale reads and broken invariants]
+    expected_outputs: [consistency plan with transaction scope isolation conflicts and tests]
+  - id: "49"
+    name: cache-design
+    group: data-middleware
+    path: src/foundation/capabilities/cache-design
+    status: implemented
+    used_by: [data-middleware-change-builder, reliability-observability-gate]
+    triggers:
+      - design cache keys TTL invalidation stampede protection and freshness policy
+      - Redis ElastiCache Cloud Memorystore Memcached Redis Cluster Redis Sentinel Redis ACL RDB AOF maxmemory eviction hot key pipeline cache stampede cache penetration cache avalanche
+    risk_notes: [Cache mistakes serve stale data or overload the source of truth]
+    expected_outputs: [cache strategy with keys freshness invalidation and fallback behavior]
+  - id: "50"
+    name: message-queue-design
+    group: data-middleware
+    path: src/foundation/capabilities/message-queue-design
+    status: implemented
+    used_by: [data-middleware-change-builder, integration-change-builder]
+    triggers:
+      - design queues topics consumers ordering retries dead letters and backpressure
+      - Kafka topic partition consumer group offset commit schema registry retention compaction DLQ consumer lag replay transactional outbox Kafka Connect
+    risk_notes: [Queue misuse creates duplicate work invisible failure and processing lag]
+    expected_outputs: [message queue plan with topology ordering retries DLQ and metrics]
+  - id: "51"
+    name: search-analytics-design
+    group: data-middleware
+    path: src/foundation/capabilities/search-analytics-design
+    status: implemented
+    used_by: [data-middleware-change-builder, experience-impact-modeler, acceptance-criteria-builder, quality-test-gate]
+    triggers: [design search indexing analytics events aggregation and query experience]
+    risk_notes: [Search and analytics drift can mislead users and product decisions]
+    expected_outputs: [search analytics design with events indexes queries and quality checks]
+  - id: "52"
+    name: threat-modeling
+    group: security-privacy
+    path: src/foundation/capabilities/threat-modeling
+    status: implemented
+    used_by: [security-privacy-gate, architecture-impact-reviewer]
+    triggers: [identify assets trust boundaries adversaries threats mitigations and residual risk]
+    risk_notes: [Unmodeled threats leave exploitable gaps in design and implementation]
+    expected_outputs: [threat model with assets boundaries threats mitigations and residual risk]
+  - id: "53"
+    name: input-validation
+    group: security-privacy
+    path: src/foundation/capabilities/input-validation
+    status: implemented
+    used_by: [security-privacy-gate, backend-change-builder, frontend-change-builder]
+    triggers: [validate input types ranges encodings formats schemas and hostile payloads]
+    risk_notes: [Weak validation enables injection corruption and business rule bypass]
+    expected_outputs: [input validation contract with allowed values rejection behavior and tests]
+  - id: "54"
+    name: web-security
+    group: security-privacy
+    path: src/foundation/capabilities/web-security
+    status: implemented
+    used_by: [security-privacy-gate, frontend-change-builder, backend-change-builder]
+    triggers: [assess XSS CSRF SSRF CORS clickjacking headers cookies and browser controls]
+    risk_notes: [Web security gaps can expose sessions data and privileged actions]
+    expected_outputs: [web security checklist with threats controls tests and residual risks]
+  - id: "55"
+    name: authentication-security
+    group: security-privacy
+    path: src/foundation/capabilities/authentication-security
+    status: implemented
+    used_by: [security-privacy-gate, backend-change-builder]
+    triggers: [secure authentication sessions tokens passwords MFA and account recovery]
+    risk_notes: [Authentication weakness compromises identity and downstream authorization]
+    expected_outputs: [authentication security review with controls failure cases and audits]
+  - id: "56"
+    name: secret-configuration-security
+    group: security-privacy
+    path: src/foundation/capabilities/secret-configuration-security
+    status: implemented
+    used_by: [security-privacy-gate, delivery-release-gate, logging-design-gate]
+    triggers:
+      - secure secrets environment variables configuration defaults KMS key policy secret manager scope and runtime exposure
+      - Helm values.yaml values-prod.yaml secret-like keys password token apiKey clientSecret privateKey rendered manifest Secret ConfigMap credential leakage
+    risk_notes: [Secret leaks unsafe defaults and broad key policies create immediate operational exposure]
+    expected_outputs: [secret and config review with storage access rotation KMS policy and redaction rules]
+  - id: "57"
+    name: dependency-vulnerability-scanning
+    group: security-privacy
+    path: src/foundation/capabilities/dependency-vulnerability-scanning
+    status: implemented
+    used_by: [security-privacy-gate, delivery-release-gate]
+    triggers: [assess dependency vulnerabilities supply chain risk licenses and update policy]
+    risk_notes: [Unreviewed dependencies can introduce exploitable or unsupported code paths]
+    expected_outputs: [dependency risk report with findings severity remediation and exceptions]
+  - id: "58"
+    name: test-strategy
+    group: quality-testing
+    path: src/foundation/capabilities/test-strategy
+    status: implemented
+    used_by: [quality-test-gate, task-dag-planner]
+    triggers: [choose risk based test levels coverage depth and verification evidence]
+    risk_notes: [Wrong test strategy wastes effort while missing critical regressions]
+    expected_outputs: [test strategy with scope levels risk mapping and evidence requirements]
+  - id: "59"
+    name: unit-testing
+    group: quality-testing
+    path: src/foundation/capabilities/unit-testing
+    status: implemented
+    used_by: [quality-test-gate, backend-change-builder, frontend-change-builder]
+    triggers: [test pure logic edge cases invariants branches and failure paths]
+    risk_notes: [Weak unit tests miss localized defects and make refactoring unsafe]
+    expected_outputs: [unit test plan with cases inputs expected results and coverage rationale]
+  - id: "60"
+    name: integration-testing
+    group: quality-testing
+    path: src/foundation/capabilities/integration-testing
+    status: implemented
+    used_by: [quality-test-gate, integration-change-builder]
+    triggers: [test module database service or external integration boundaries]
+    risk_notes: [Integration gaps hide contract mismatches and environment failures]
+    expected_outputs: [integration test plan with boundaries fixtures dependencies and assertions]
+  - id: "61"
+    name: contract-testing
+    group: quality-testing
+    path: src/foundation/capabilities/contract-testing
+    status: implemented
+    used_by: [quality-test-gate, data-api-contract-changer, integration-change-builder]
+    triggers: [test API schemas provider consumer compatibility and breaking changes]
+    risk_notes: [Untested contracts break clients even when services pass local tests]
+    expected_outputs: [contract test plan with schemas examples providers consumers and compatibility checks]
+  - id: "62"
+    name: e2e-testing
+    group: quality-testing
+    path: src/foundation/capabilities/e2e-testing
+    status: implemented
+    used_by: [quality-test-gate, frontend-change-builder]
+    triggers: [test complete user workflows browser flows permissions and critical paths]
+    risk_notes: [Missing E2E coverage leaves user visible regressions undiscovered]
+    expected_outputs: [E2E test plan with journeys data states assertions and flake controls]
+  - id: "63"
+    name: test-data-management
+    group: quality-testing
+    path: src/foundation/capabilities/test-data-management
+    status: implemented
+    used_by: [quality-test-gate, data-middleware-change-builder]
+    triggers: [manage fixtures factories seeded data isolation cleanup and sensitive data rules]
+    risk_notes: [Poor test data creates flaky tests misleading coverage and data exposure]
+    expected_outputs: [test data plan with fixtures isolation cleanup and safety constraints]
+  - id: "64"
+    name: regression-testing
+    group: quality-testing
+    path: src/foundation/capabilities/regression-testing
+    status: implemented
+    used_by: [quality-test-gate, ai-code-review-refactor]
+    triggers: [identify regression surfaces historical bugs impacted flows and guard tests]
+    risk_notes: [Regression gaps allow fixed behavior to fail again after adjacent changes]
+    expected_outputs: [regression matrix with affected surfaces prior defects and guard coverage]
+  - id: "65"
+    name: performance-budgeting
+    group: reliability-operations
+    path: src/foundation/capabilities/performance-budgeting
+    status: implemented
+    used_by: [reliability-observability-gate, frontend-change-builder, delivery-release-gate, quality-test-gate]
+    triggers: [set latency throughput memory cloud cost query scan per feature cost and rendering performance budgets]
+    risk_notes: [No budget makes performance or cost regressions subjective and late to detect]
+    expected_outputs: [performance and cost budget with metrics thresholds scenarios measurement plan and approval gates]
+  - id: "66"
+    name: profiling
+    group: reliability-operations
+    path: src/foundation/capabilities/profiling
+    status: implemented
+    used_by: [reliability-observability-gate, data-middleware-change-builder]
+    triggers: [profile CPU memory IO database network rendering cloud cost unit economics and bottlenecks]
+    risk_notes: [Guessing at bottlenecks or cost drivers wastes effort and can worsen real constraints]
+    expected_outputs: [profiling plan with measurements bottlenecks cost drivers evidence and next actions]
+  - id: "67"
+    name: concurrency-control
+    group: reliability-operations
+    path: src/foundation/capabilities/concurrency-control
+    status: implemented
+    used_by: [reliability-observability-gate, backend-change-builder, data-middleware-change-builder]
+    triggers: [control concurrent writes races locks leases optimistic conflicts and queues]
+    risk_notes: [Concurrency defects cause duplicate effects lost updates and intermittent failures]
+    expected_outputs: [concurrency plan with critical sections locks conflicts and tests]
+  - id: "68"
+    name: degradation-circuit-breaking
+    group: reliability-operations
+    path: src/foundation/capabilities/degradation-circuit-breaking
+    status: implemented
+    used_by: [reliability-observability-gate, integration-change-builder]
+    triggers: [design fallback degradation timeout bulkhead circuit breaker and recovery behavior]
+    risk_notes: [No degradation path turns dependency failures into full outages]
+    expected_outputs: [resilience plan with timeouts fallbacks circuit thresholds and recovery checks]
+  - id: "69"
+    name: observability
+    group: reliability-operations
+    path: src/foundation/capabilities/observability
+    status: implemented
+    used_by: [reliability-observability-gate, backend-change-builder, logging-design-gate]
+    triggers: [design logs metrics traces dashboards alerts SLI and diagnostic context]
+    risk_notes: [Insufficient observability makes incidents longer and verification weaker]
+    expected_outputs: [observability plan with signals dashboards alerts and investigation paths]
+  - id: "70"
+    name: backup-recovery
+    group: reliability-operations
+    path: src/foundation/capabilities/backup-recovery
+    status: implemented
+    used_by: [reliability-observability-gate, delivery-release-gate]
+    triggers: [plan backups restore recovery point recovery time and disaster scenarios]
+    risk_notes: [Untested recovery makes data loss or long outage likely during failure]
+    expected_outputs: [backup recovery plan with RPO RTO restore tests and ownership]
+  - id: "71"
+    name: project-initialization
+    group: delivery-platform
+    path: src/foundation/capabilities/project-initialization
+    status: implemented
+    used_by: [delivery-release-gate, architecture-impact-reviewer]
+    triggers: [initialize project structure monorepo workspace dependencies configuration scripts and quality gates]
+    risk_notes: [Weak initialization creates inconsistent environments hidden setup debt and broken module graphs]
+    expected_outputs: [project setup plan with structure monorepo policy commands configs and verification]
+  - id: "72"
+    name: containerization
+    group: delivery-platform
+    path: src/foundation/capabilities/containerization
+    status: implemented
+    used_by: [delivery-release-gate]
+    triggers: [design Docker images build context layers runtime user and health checks]
+    risk_notes: [Unsafe containers increase attack surface and deployment inconsistency]
+    expected_outputs: [container plan with image strategy build rules runtime config and checks]
+  - id: "73"
+    name: ci-cd
+    group: delivery-platform
+    path: src/foundation/capabilities/ci-cd
+    status: implemented
+    used_by: [delivery-release-gate, quality-test-gate, security-privacy-gate, architecture-impact-reviewer]
+    triggers:
+      - design CI CD pipelines IaC Terraform plan cost impact monorepo affected tests artifacts environments approvals and deployment gates
+      - Helm chart pipeline helm lint helm template helm diff values.schema.json Chart.lock OCI chart helm upgrade atomic wait rendered manifest validation
+    risk_notes: [Weak pipelines allow unverified unreproducible unaudited or high cost changes into production]
+    expected_outputs: [pipeline plan with stages gates artifacts secrets IaC cost evidence monorepo policy and rollback hooks]
+  - id: "74"
+    name: kubernetes-gateway
+    group: delivery-platform
+    path: src/foundation/capabilities/kubernetes-gateway
+    status: implemented
+    used_by: [delivery-release-gate, reliability-observability-gate]
+    triggers:
+      - design Kubernetes workload service ingress gateway DNS CDN WAF probes scaling cloud exposure and rollout controls
+      - k8s Deployment StatefulSet DaemonSet Job CronJob Pod Service Ingress Gateway API HPA KEDA VPA PDB NetworkPolicy ServiceAccount RBAC ConfigMap Secret Helm chart values.yaml
+    risk_notes: [Kubernetes and gateway misconfiguration causes exposure outages or failed rollouts]
+    expected_outputs: [Kubernetes gateway plan with resources routes probes scaling cloud exposure and safety checks]
+  - id: "75"
+    name: release-rollback
+    group: delivery-platform
+    path: src/foundation/capabilities/release-rollback
+    status: implemented
+    used_by: [delivery-release-gate]
+    triggers: [plan release sequencing rollout flags canary validation rollback and communication]
+    risk_notes: [No rollback path turns defects into extended customer impact]
+    expected_outputs: [release plan with rollout steps checks rollback triggers and owners]
+  - id: "76"
+    name: context-packaging
+    group: engineering-workflow
+    path: src/foundation/capabilities/context-packaging
+    status: implemented
+    used_by: [task-dag-planner, ai-code-review-refactor]
+    triggers: [package task context constraints decisions files evidence and open questions]
+    risk_notes: [Poor context transfer causes duplicated analysis and incorrect assumptions]
+    expected_outputs: [context package with scope files decisions evidence and unresolved questions]
+  - id: "77"
+    name: task-dag-decomposition
+    group: engineering-workflow
+    path: src/foundation/capabilities/task-dag-decomposition
+    status: implemented
+    used_by: [task-dag-planner]
+    triggers: [decompose work into dependency aware parallel reviewable and testable tasks]
+    risk_notes: [Bad task order creates blockers merge conflicts and missed verification]
+    expected_outputs: [task DAG with dependencies ownership verification and handoff points]
+  - id: "78"
+    name: code-review
+    group: engineering-workflow
+    path: src/foundation/capabilities/code-review
+    status: implemented
+    used_by: [ai-code-review-refactor, quality-test-gate]
+    triggers: [review code for defects regressions contracts security performance maintainability readability structure quality side effect pollution weak signatures change locality cleanup debt]
+    risk_notes: [Superficial review misses behavioral bugs hidden risk boundary pollution and maintainability defects that spread future changes]
+    expected_outputs: [review findings with severity evidence impact remediation non findings and structure quality assessment]
+  - id: "79"
+    name: refactoring
+    group: engineering-workflow
+    path: src/foundation/capabilities/refactoring
+    status: implemented
+    used_by: [ai-code-review-refactor, architecture-impact-reviewer]
+    triggers: [reshape code while preserving behavior tests contracts ownership boundaries large object split large file split behavior preserving file merge behavior preserving file split small file merge refactor merge/split import export preservation module split dead code deprecated API feature flag cleanup compatibility branch complexity evidence]
+    risk_notes: [Refactors without safety checks or cleanup exits cause unintended behavior changes permanent compatibility debt unreadable split structures reckless file merges hidden side effects and broken public contracts]
+    expected_outputs: [refactor plan with preserved behavior tests boundaries rollback notes split plans file merge refactor plan split merge behavior preservation evidence import export before after public contract preserved dependency direction preserved cleanup plan and before after complexity evidence]
+  - id: "80"
+    name: documentation-generation
+    group: engineering-workflow
+    path: src/foundation/capabilities/documentation-generation
+    status: implemented
+    used_by: [change-documentation-gate]
+    triggers: [generate or update README API docs ADR changelog runbook and migration notes]
+    risk_notes: [Outdated docs mislead operators users and future implementers]
+    expected_outputs: [documentation update plan with affected docs audience and verification]
+  - id: "81"
+    name: failure-diagnosis
+    group: engineering-workflow
+    path: src/foundation/capabilities/failure-diagnosis
+    status: implemented
+    used_by: [reliability-observability-gate, delivery-release-gate, quality-test-gate, change-documentation-gate, ai-code-review-refactor]
+    triggers: [diagnose failures SEV incident response symptoms logs metrics regressions hypotheses root cause and postmortem actions]
+    risk_notes: [Jumping to fixes without evidence or incident command can mask root cause and extend customer impact]
+    expected_outputs: [diagnosis report with severity roles symptoms evidence hypotheses root cause customer comms and postmortem actions]
+  - id: "82"
+    name: solution-optimality-evaluation
+    group: engineering-workflow
+    path: src/foundation/capabilities/solution-optimality-evaluation
+    status: implemented
+    used_by: [backend-change-builder, frontend-change-builder, data-api-contract-changer, data-middleware-change-builder, integration-change-builder, ai-code-review-refactor, architecture-impact-reviewer, reliability-observability-gate, change-impact-analyzer]
+    triggers: [evaluate algorithm complexity performance dimensions cpu memory network disk locks tps concurrency latency rendering self-question optimality alternatives simplest design cognitive complexity reversibility]
+    risk_notes: [Accepting the first working approach without challenge is the most common source of preventable production performance incidents]
+    expected_outputs: [three-challenge answers ten-dimension assessment cognitive complexity rating reversibility classification optimization deferral log with threshold and owner]
+  - id: "83"
+    name: technology-stack-selection
+    group: technology-selection
+    path: src/foundation/capabilities/technology-stack-selection
+    status: implemented
+    used_by: [architecture-impact-reviewer, delivery-release-gate, ai-code-review-refactor, change-impact-analyzer, change-forge-router]
+    triggers: [select review technology stack framework runtime platform infrastructure component product technical baseline boring proven novelty reversibility migration path operational model]
+    risk_notes: [Fashion driven stack choices create long lived maintenance operational security and hiring cost]
+    expected_outputs: [stack decision record with constraints options tradeoffs reversibility ownership migration path and risk acceptance]
+  - id: "84"
+    name: language-runtime-selection
+    group: technology-selection
+    path: src/foundation/capabilities/language-runtime-selection
+    status: implemented
+    used_by: [architecture-impact-reviewer, backend-change-builder, frontend-change-builder, low-level-systems-extension, ai-code-review-refactor, delivery-release-gate]
+    triggers: [choose programming language runtime Go vs Python Java vs Go introducing Rust workload type safety concurrency GC memory deployment lifecycle observability]
+    risk_notes: [Language choices without workload fit and operational ownership become hard to debug and expensive to reverse]
+    expected_outputs: [language runtime decision with workload fit runtime behavior ownership deployment package manager risks and selected language capability]
+  - id: "85"
+    name: language-idiom-enforcement
+    group: technology-selection
+    path: src/foundation/capabilities/language-idiom-enforcement
+    status: implemented
+    used_by: [backend-change-builder, frontend-change-builder, ai-code-review-refactor, quality-test-gate]
+    triggers: [language idioms error handling type modeling resource management module boundaries naming casing visibility exports public API naming predicate boolean names collection names concurrency formatting standard library hallucinated APIs non idiomatic code]
+    risk_notes: [Non idiomatic code hides correctness defects and increases maintenance cost even when tests pass]
+    expected_outputs: [idiom review with local conventions naming discipline risks required rewrites justified exceptions tooling checks and residual concerns]
+  - id: "86"
+    name: language-testing-strategy
+    group: technology-selection
+    path: src/foundation/capabilities/language-testing-strategy
+    status: implemented
+    used_by: [quality-test-gate, backend-change-builder, frontend-change-builder, ai-code-review-refactor]
+    triggers: [language specific testing unit integration contract concurrency property snapshot visual fixtures mocks race detector sanitizer CI execution]
+    risk_notes: [Generic tests miss runtime specific failures such as races event loop blocking sanitizer defects and unvalidated dynamic inputs]
+    expected_outputs: [language test plan mapping failure modes to tests runtime tools CI commands evidence gaps and acceptance criteria]
+  - id: "87"
+    name: language-performance-safety
+    group: technology-selection
+    path: src/foundation/capabilities/language-performance-safety
+    status: implemented
+    used_by: [reliability-observability-gate, backend-change-builder, frontend-change-builder, low-level-systems-extension, solution-optimality-evaluation, implementation-structure-design, design-pattern-selection, ai-code-review-refactor, quality-test-gate]
+    triggers:
+      - language performance safety allocation GC async blocking FFI unsafe native hot path memory concurrency event loop runtime constraints
+      - CPU-bound storage IO network IO file IO blocking IO non-blocking IO coroutine goroutine thread pool worker pool lock held across IO event-loop blocking unbounded fan-out pool sizing per-operation client construction response body leak object allocation regression design pattern performance risk
+    risk_notes: [Runtime specific performance and safety issues often appear only under representative load or native boundary stress]
+    expected_outputs: [runtime performance safety assessment with hot path classification allocation concurrency unsafe boundary pattern performance impact hidden IO client/pool lifecycle cleanup backpressure cancellation evidence mitigation and residual risk]
+  - id: "88"
+    name: package-dependency-management
+    group: technology-selection
+    path: src/foundation/capabilities/package-dependency-management
+    status: implemented
+    used_by: [security-privacy-gate, delivery-release-gate, project-initialization, ai-code-review-refactor, technology-stack-selection, architecture-impact-reviewer, quality-test-gate]
+    triggers: [package manager lockfile workspace monorepo dependency upgrade dependency removal new package license provenance transitive dependency supply chain generated files native extension SDK library public API]
+    risk_notes: [Dependency graph changes can introduce vulnerabilities license obligations install side effects runtime incompatibility hidden monorepo coupling and unreproducible builds]
+    expected_outputs: [dependency decision with justification lockfile module graph transitive impact vulnerability license provenance compatibility tests generated file policy and accepted exceptions]
+  - id: "89"
+    name: go-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/go-professional-usage
+    status: implemented
+    used_by: [backend-change-builder, integration-change-builder, data-middleware-change-builder, quality-test-gate, ai-code-review-refactor, language-runtime-selection]
+    triggers: [Go professional usage context propagation goroutine lifecycle error wrapping interfaces table driven tests race detector package boundaries CLI service worker]
+    risk_notes: [Go defects often come from leaked goroutines missing cancellation lost root cause errors and premature interfaces]
+    expected_outputs: [Go usage review with context flow goroutine lifecycle errors interfaces packages tests race checks and deployment impact]
+  - id: "90"
+    name: java-jvm-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/java-jvm-professional-usage
+    status: implemented
+    used_by: [backend-change-builder, data-middleware-change-builder, reliability-observability-gate, quality-test-gate, ai-code-review-refactor, language-runtime-selection]
+    triggers: [Java JVM Kotlin Spring transaction proxy self invocation thread pools GC memory exception taxonomy dependency injection lifecycle enterprise systems]
+    risk_notes: [JVM issues commonly hide in transaction proxy boundaries unbounded executors blocking IO and GC allocation pressure]
+    expected_outputs: [JVM usage review with transaction boundaries executors blocking behavior exception taxonomy type model DI lifecycle GC risk and tests]
+  - id: "91"
+    name: typescript-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/typescript-professional-usage
+    status: implemented
+    used_by: [frontend-change-builder, backend-change-builder, data-api-contract-changer, sdk-library-contract-design, quality-test-gate, ai-code-review-refactor, language-runtime-selection]
+    triggers: [TypeScript strict any unknown runtime validation schema API contracts async errors state modeling frontend Node SDK public types bundle impact]
+    risk_notes: [TypeScript compile time safety does not validate runtime data and unsafe public type changes break consumers]
+    expected_outputs: [TypeScript review with strictness unsafe escapes runtime validation API alignment async handling state model bundle impact and public type compatibility]
+  - id: "92"
+    name: python-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/python-professional-usage
+    status: implemented
+    used_by: [backend-change-builder, ai-product-extension, bigdata-product-extension, quality-test-gate, delivery-release-gate, ai-code-review-refactor, language-runtime-selection]
+    triggers: [Python professional usage type hints runtime validation packaging virtual environment pytest fixtures async blocking asyncio GIL scripts reproducible execution]
+    risk_notes: [Python failures often come from unvalidated dynamic boundaries fixture leakage blocking async code and unreproducible environments]
+    expected_outputs: [Python usage review with type boundaries validation async sync risks packaging fixtures GIL script idempotency and tests]
+  - id: "93"
+    name: rust-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/rust-professional-usage
+    status: implemented
+    used_by: [low-level-systems-extension, backend-change-builder, reliability-observability-gate, quality-test-gate, ai-code-review-refactor, language-runtime-selection]
+    triggers: [Rust professional usage ownership lifetimes Result typed errors traits async runtime unsafe FFI concurrency WASM systems performance Cargo]
+    risk_notes: [Rust safety can be undermined by undocumented unsafe panic across boundaries unjustified traits and hidden clone based ownership workarounds]
+    expected_outputs: [Rust review with ownership errors panic boundaries trait justification async runtime unsafe invariants Cargo impact and checks]
+  - id: "94"
+    name: cpp-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/cpp-professional-usage
+    status: implemented
+    used_by: [low-level-systems-extension, reliability-observability-gate, quality-test-gate, ai-code-review-refactor, language-runtime-selection]
+    triggers: [C C++ professional usage RAII undefined behavior ownership ABI FFI sanitizers thread safety memory ordering native embedded performance]
+    risk_notes: [Native defects from undefined behavior unsafe ownership ABI drift and missing sanitizer coverage can escape ordinary tests]
+    expected_outputs: [C C++ review with ownership RAII UB ABI error model thread safety sanitizer static analysis build portability and tests]
+  - id: "95"
+    name: shell-cli-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/shell-cli-professional-usage
+    status: implemented
+    used_by: [delivery-release-gate, ci-cd, project-initialization, quality-test-gate, ai-code-review-refactor, cli-daemon-interface-design]
+    triggers: [Shell CLI script safety set euo pipefail quoting exit codes temp files destructive command dry run stdout stderr idempotency rerun safety]
+    risk_notes: [Operational scripts fail dangerously through unquoted variables ambiguous output unsafe temp files and non idempotent destructive reruns]
+    expected_outputs: [Shell CLI review with safety options quoting temp files target validation dry run output contract exit codes idempotency and tests]
+  - id: "96"
+    name: sql-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/sql-professional-usage
+    status: implemented
+    used_by: [data-middleware-change-builder, data-api-contract-changer, backend-change-builder, quality-test-gate, reliability-observability-gate]
+    triggers: [SQL professional usage query migration report analytics transaction safety indexing query plan lock behavior pagination NULL timezone injection money precision]
+    risk_notes: [SQL defects can corrupt data expose injection lock production tables or degrade user facing paths through unbounded scans]
+    expected_outputs: [SQL review with parameters plan evidence indexes locks transactions pagination NULL timezone precision migration compatibility injection safety and tests]
+  - id: "97"
+    name: sdk-library-contract-design
+    group: interface-contracts
+    path: src/foundation/capabilities/sdk-library-contract-design
+    status: implemented
+    used_by: [data-api-contract-changer, integration-change-builder, change-documentation-gate, quality-test-gate, typescript-professional-usage, package-dependency-management]
+    triggers: [SDK library generated client package public API internal library semver deprecation examples migration consumer contract tests publication]
+    risk_notes: [SDK and library contract changes can silently break downstream consumers even when service behavior remains compatible]
+    expected_outputs: [SDK library contract plan with public surface semver compatibility generated client reproducibility examples consumer tests docs and migration guarantees]
+  - id: "98"
+    name: cli-daemon-interface-design
+    group: interface-contracts
+    path: src/foundation/capabilities/cli-daemon-interface-design
+    status: implemented
+    used_by: [backend-change-builder, integration-change-builder, delivery-release-gate, quality-test-gate, shell-cli-professional-usage]
+    triggers: [CLI TUI daemon command flags config precedence stdout stderr exit codes signals dry run background process scriptability]
+    risk_notes: [Ambiguous command and daemon contracts break automation hide failures and make destructive operations hard to recover]
+    expected_outputs: [CLI daemon interface design with command model config precedence output contract exit codes dry run signal lifecycle daemon behavior and tests]
+  - id: "99"
+    name: file-storage-processing
+    group: data-middleware
+    path: src/foundation/capabilities/file-storage-processing
+    status: implemented
+    used_by: [backend-change-builder, security-privacy-gate, data-middleware-change-builder, reliability-observability-gate, frontend-change-builder]
+    triggers: [file upload object storage large file streaming MIME detection virus scanning signed URL media processing lifecycle retention cleanup]
+    risk_notes: [File handling defects expose private content malware oversized payload outages orphaned objects and cross tenant access]
+    expected_outputs: [file storage design with file classes state machine storage layout access control scanning transfer processing lifecycle cleanup observability and tests]
+  - id: "100"
+    name: i18n-timezone-money-safety
+    group: cross-cutting-safety
+    path: src/foundation/capabilities/i18n-timezone-money-safety
+    status: implemented
+    used_by: [frontend-change-builder, backend-change-builder, data-api-contract-changer, payment-trading-extension, quality-test-gate, typescript-professional-usage, python-professional-usage, java-jvm-professional-usage, sql-professional-usage]
+    triggers: [internationalization localization timezone date time currency number formatting collation pluralization locale fallback monetary precision rounding]
+    risk_notes: [Locale timezone and money mistakes create region specific correctness defects billing errors deadline drift and irreversible data ambiguity]
+    expected_outputs: [i18n timezone money safety design with locale model time model money model formatting collation contract impact migration and boundary tests]
+  - id: "101"
+    name: implementation-structure-design
+    group: engineering-workflow
+    path: src/foundation/capabilities/implementation-structure-design
+    status: implemented
+    used_by: [backend-change-builder, frontend-change-builder, ai-code-review-refactor, architecture-impact-reviewer, code-review, refactoring, quality-test-gate]
+    triggers:
+      - variable naming function naming method naming class naming file naming directory naming package naming module naming public API naming
+      - reuse existing function reuse existing class reuse existing module extension reuse composition adapter wrapper delegation
+      - function placement method placement class placement file placement directory placement component placement hook placement service method repository method public private internal
+      - object modeling object-oriented design object responsibility encapsulation invariant protection inheritance polymorphism class hierarchy value object domain object service object interface abstract class subclassing traits protocols substitutability object collaboration
+      - object-method encapsulation method placement parent-child object sibling object object relationship map inheritance vs composition delegation anemic object helper-bag object god object object boundary lost during merge object boundary missing during split module internal composition module object graph
+      - design pattern selection pattern misuse pattern overengineering pattern performance risk factory builder singleton adapter facade decorator proxy strategy state command observer visitor object pool worker pool pipeline
+      - file main object main responsibility long file oversized object large function method clusters function signature boolean trap weak typed bag side effect boundary collaborator dependency injection state lifecycle invariant
+      - file granularity anti-fragmentation micro-file sprawl one-function file tiny helper file small file merge merge restraint navigation cost keep in existing file split merge decision one-function file without boundary excessive file split private helper co-location
+      - shared utils common utils helper utility business logic in utils dependency direction cohesion coupling shared common pollution
+      - doc comments exported comments public API comments test comments redundant comments stale comments comment quality
+    risk_notes: [Poor naming and placement create duplicated logic shared utility pollution accidental public APIs circular dependencies architecture drift micro-file sprawl navigation cost regression and unmaintainable AI generated patches. Poor file granularity causes either big-ball-of-mud files or scattered tiny files that increase navigation cost and AI maintenance drift.]
+    expected_outputs:
+      - implementation structure plan with reuse candidates vocabulary naming decisions responsibility taxonomy main object per file oversized assessment anti-fragmentation assessment file granularity decision keep-in-existing-file alternative small-file merge decision merge-restraint rationale navigation cost before/after object split decision function signature decision side effect boundary collaborator lifecycle decisions placement rationale dependency direction shared utility audit and test placement
+      - Object-Method Encapsulation Decision
+      - Object Relationship Map
+      - Inheritance vs Composition Decision
+      - Module Internal Composition Plan
+
+  - id: "102"
+    name: agent-execution-discipline
+    group: engineering-workflow
+    path: src/foundation/capabilities/agent-execution-discipline
+    status: implemented
+    used_by: [change-forge-router, change-intake-compiler, change-impact-analyzer, acceptance-criteria-builder, task-dag-planner, experience-impact-modeler, domain-impact-modeler, architecture-impact-reviewer, data-api-contract-changer, frontend-change-builder, backend-change-builder, data-middleware-change-builder, integration-change-builder, quality-test-gate, security-privacy-gate, reliability-observability-gate, delivery-release-gate, ai-code-review-refactor, change-documentation-gate]
+    triggers: [agent execution AI assisted change evidence based completion verified diagnosis repeated retry route repair same pattern scan reuse rationale placement rationale proactive closure handoff readiness]
+    risk_notes: [Agent assisted changes silently ship without evidence diagnose without verified cause retry the same failing path duplicate logic across the codebase add structure without justification and hand off without risk or validation summary]
+    expected_outputs: [execution discipline report with evidence inventory verified cause statement route repair record same pattern scan results reuse and placement rationale and handoff package with risk boundary and validation results]
+
+  - id: "103"
+    name: skill-authoring-expert
+    group: engineering-workflow
+    path: src/foundation/capabilities/skill-authoring-expert
+    status: implemented
+    used_by: [change-forge-router, change-documentation-gate, ai-code-review-refactor, quality-test-gate]
+    triggers: [SKILL.md authoring skill writing skill content governance skill slimming skill splitting skill reference design capability authoring routing rule authoring skill registry update prompt skill design agent skill package design professional skill review]
+    risk_notes: [Poorly written skills cause over-routing under-routing context bloat stale rules missing references and unreliable Agent behavior]
+    expected_outputs: [skill authoring plan with boundary trigger non-goals reference split routing impact validation impact and context budget rationale]
+
+  - id: "104"
+    name: engineering-stage-professionalism
+    group: engineering-workflow
+    path: src/foundation/capabilities/engineering-stage-professionalism
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, backend-change-builder, frontend-change-builder, data-api-contract-changer, architecture-impact-reviewer, ai-code-review-refactor, quality-test-gate, delivery-release-gate]
+    triggers: [engineering stage launch current stage product surface language surface risk surface minimum sufficient capability stage by stage execution explicit skip context budget next stage handoff design coding debugging bug fix code review refactoring testing release documentation handoff]
+    risk_notes: [Loading every relevant capability at once bloats context hides the next action and launches out-of-stage considerations such as architecture review during coding or release gate during code review]
+    expected_outputs: [stage professional launch plan with current and next stage product and language surface selected and explicitly skipped capabilities skip rationale context budget required evidence quality gates and handoff target]
+
+  - id: "105"
+    name: code-clarity-maintainability
+    group: engineering-workflow
+    path: src/foundation/capabilities/code-clarity-maintainability
+    status: implemented
+    used_by: [change-forge-router, architecture-impact-reviewer, backend-change-builder, frontend-change-builder, ai-code-review-refactor, quality-test-gate]
+    triggers:
+      - code clarity readability maintainability main flow happy path guard clause nesting function size cognitive complexity
+      - complex condition boolean trap mode kind fallback compatibility magic number magic string comment quality readable tests
+      - change locality deletion path extension point over abstraction under abstraction future maintainer navigation
+      - excessive file split reckless file merge navigation cost regression next-change location unclear after split or merge one-function file trivial helper file micro-file sprawl split merge readability
+    risk_notes: [Working code that is hard to read change test or delete increases regression risk review cost excessive file split navigation cost regression and AI generated maintenance drift. Reducing file count or increasing file count without boundary evidence can make the main flow harder to maintain.]
+    expected_outputs: [code clarity maintainability review with main flow control flow function purpose condition naming signature readability comment quality change navigation file navigation cost assessment split/merge readability review split merge readability decision next-change location before/after test clarity rejected split/merge simplification rejected simplifications and validation evidence]
+
+  - id: "106"
+    name: design-pattern-selection
+    group: engineering-workflow
+    path: src/foundation/capabilities/design-pattern-selection
+    status: implemented
+    used_by: [implementation-structure-design, architecture-impact-reviewer, backend-change-builder, frontend-change-builder, ai-code-review-refactor, refactoring, quality-test-gate]
+    triggers:
+      - design pattern pattern selection factory builder singleton adapter facade decorator proxy composite bridge strategy state command observer pubsub mediator chain of responsibility template method visitor specification repository unit of work dependency injection object pool producer consumer worker pool pipeline reactor proactor pattern misuse overengineering pattern performance risk
+    risk_notes: [Wrong patterns create speculative abstraction hidden global state side-effect opacity lifecycle leaks performance regressions and brittle object relationships]
+    expected_outputs: [Design Pattern Decision Record with selected/rejected patterns simpler alternative object relationship method placement performance/concurrency/IO impact tests and residual risk]
+  - id: "107"
+    name: testability-seam-design
+    group: engineering-workflow
+    path: src/foundation/capabilities/testability-seam-design
+    status: implemented
+    used_by: [quality-test-gate, backend-change-builder, frontend-change-builder, integration-change-builder, data-middleware-change-builder, ai-code-review-refactor]
+    triggers:
+      - testability seam planning
+      - testability seam
+      - testability seam public behavior boundary test seam dependency injection fake stub mock spy characterization test fixture ownership test data builder private helper not exported deterministic clock randomness UUID external IO
+    risk_notes: [Poor seams force private-helper tests over-mock internals create flaky tests and make external dependencies uncontrollable]
+    expected_outputs: [Testability Seam Plan with public behavior boundary seam map test double decision fixture ownership deterministic controls private-helper non-export test split flaky mitigation and rejected shortcuts]
+  - id: "108"
+    name: dependency-wiring-lifecycle
+    group: engineering-workflow
+    path: src/foundation/capabilities/dependency-wiring-lifecycle
+    status: implemented
+    used_by: [backend-change-builder, integration-change-builder, data-middleware-change-builder, reliability-observability-gate, architecture-impact-reviewer, ai-code-review-refactor, quality-test-gate]
+    triggers:
+      - dependency wiring lifecycle
+      - dependency wiring lifecycle checks
+      - dependency wiring lifecycle composition root constructor injection factory provider service locator lifecycle scope singleton reusable client pool startup validation shutdown cleanup test override circular dependency configuration driven wiring
+    risk_notes: [Unclear dependency ownership causes per-operation clients service locators global mutable state circular graphs resource leaks and untestable wiring]
+    expected_outputs: [Dependency Wiring Plan with composition root dependency graph lifecycle scope owners shutdown test override cycle check service locator decision client pool lifecycle config binding and residual risk]
+  - id: "109"
+    name: algorithm-data-structure-selection
+    group: technology-selection
+    path: src/foundation/capabilities/algorithm-data-structure-selection
+    status: implemented
+    used_by: [backend-change-builder, frontend-change-builder, data-middleware-change-builder, reliability-observability-gate, ai-code-review-refactor, quality-test-gate, architecture-impact-reviewer]
+    triggers:
+      - algorithm data structure Big O input size worst case memory budget map set list heap queue deque tree trie graph bloom filter LRU LFU interval tree segment tree top K dedupe grouping sorting streaming chunking pagination nested scan load all hot key skew
+    risk_notes: [Working code can still fail at production scale through O(n squared) nested scans unbounded memory full sorting load-all processing and mismatched data structures]
+    expected_outputs: [Algorithm Data Structure Decision with problem shape input scale candidates selected structure time space worst case memory budget streaming chunking rejected alternatives benchmark evidence and scale risk]
+  - id: "110"
+    name: failure-contract-design
+    group: backend-engineering
+    path: src/foundation/capabilities/failure-contract-design
+    status: implemented
+    used_by: [backend-change-builder, data-api-contract-changer, data-middleware-change-builder, integration-change-builder, reliability-observability-gate, quality-test-gate, ai-code-review-refactor, frontend-change-builder]
+    triggers:
+      - failure contract error taxonomy retryable terminal validation permission conflict timeout cancellation dependency failure partial failure degraded response compensation DLQ user visible internal safe diagnostics cause preservation adapter repository translation silent fallback
+    risk_notes: [Unclear failure semantics swallow errors leak raw internals confuse retry behavior hide partial failures and break async recovery]
+    expected_outputs: [Failure Contract with error taxonomy boundary translation retryability fallback degradation compensation DLQ user message log metric trace fields cause preservation negative tests and residual risk]
+  - id: "111"
+    name: configuration-runtime-policy
+    group: delivery-platform
+    path: src/foundation/capabilities/configuration-runtime-policy
+    status: implemented
+    used_by: [delivery-release-gate, backend-change-builder, frontend-change-builder, integration-change-builder, reliability-observability-gate, architecture-impact-reviewer, change-documentation-gate, ai-code-review-refactor]
+    triggers:
+      - configuration runtime policy typed config default validation fail fast hot reload feature flag owner expiry cleanup kill switch stale flag mode kind switch tenant user experiment rollout rollback config observability
+    risk_notes: [Untyped config stale flags and vague mode switches bypass invariants create hidden strategy systems and make rollout rollback unsafe]
+    expected_outputs: [Configuration Policy with scope schema defaults validation fail fast flag lifecycle kill switch runtime switch rationale test matrix cleanup owner rollout rollback and residual config risk]
+  - id: "112"
+    name: model-boundary-mapping
+    group: data-api-contracts
+    path: src/foundation/capabilities/model-boundary-mapping
+    status: implemented
+    used_by: [data-api-contract-changer, backend-change-builder, frontend-change-builder, integration-change-builder, ai-code-review-refactor, quality-test-gate]
+    triggers:
+      - model boundary mapping API DTO command query domain object value object persistence model ORM event payload view model mapper assembler null default optional schema version serialization validation generated handwritten leakage
+    risk_notes: [Model leakage couples API persistence domain and generated boundaries causing semantic drift validation ambiguity and consumer breakage]
+    expected_outputs: [Model Boundary Map with source target mapping owner validation owner null default semantics version compatibility generated handwritten boundary mapping tests and rejected leakage alternatives]
+  - id: "113"
+    name: data-side-effect-flow-tracing
+    group: engineering-workflow
+    path: src/foundation/capabilities/data-side-effect-flow-tracing
+    status: implemented
+    used_by: [backend-change-builder, data-middleware-change-builder, integration-change-builder, reliability-observability-gate, ai-code-review-refactor, quality-test-gate, architecture-impact-reviewer]
+    triggers:
+      - data side effect flow input validation mapping policy mutation transaction persistence cache event external IO logging metrics file IO clock random env outbox publish after commit idempotency compensation hidden side effect mapper getter
+    risk_notes: [Hidden side effects in mappers getters policies or domain objects break transaction ordering cache consistency idempotency and testability]
+    expected_outputs: [Data and Side Effect Flow Map with input validation mapping policy mutation transaction persistence cache event external IO ordering idempotency compensation observability tests and residual risk]
+  - id: "114"
+    name: architecture-enforcement-tooling
+    group: architecture-design
+    path: src/foundation/capabilities/architecture-enforcement-tooling
+    status: implemented
+    used_by: [architecture-impact-reviewer, backend-change-builder, frontend-change-builder, delivery-release-gate, change-documentation-gate, ai-code-review-refactor, quality-test-gate]
+    triggers:
+      - architecture enforcement tooling import boundary check cycle detection public private export forbidden dependency lint type strictness dead code complexity threshold generated code exclusion CI ArchUnit Dependency Cruiser import linter eslint boundaries go vet staticcheck
+    risk_notes: [Architecture rules that live only in documents drift because imports exports cycles and forbidden dependencies are not blocked by CI]
+    expected_outputs: [Architecture Enforcement Plan with rule list tool choice CI command failure examples generated code exceptions migration path ownership and residual unenforced rule]
+  - id: "115"
+    name: consumer-impact-analysis
+    group: data-api-contracts
+    path: src/foundation/capabilities/consumer-impact-analysis
+    status: implemented
+    used_by: [data-api-contract-changer, integration-change-builder, frontend-change-builder, backend-change-builder, architecture-impact-reviewer, change-documentation-gate, quality-test-gate, ai-code-review-refactor]
+    triggers:
+      - consumer impact analysis API SDK schema event public export generated client mobile web backend consumer compatibility migration deprecation telemetry rollout rollback unknown consumer risk
+    risk_notes: [Contract changes can break known and unknown consumers even when local tests pass and server behavior looks correct]
+    expected_outputs: [Consumer Impact Report with changed contract consumers compatibility migration deprecation telemetry rollout rollback tests documentation updates and residual consumer risk]
+  - id: "116"
+    name: cleanup-deletion-governance
+    group: engineering-workflow
+    path: src/foundation/capabilities/cleanup-deletion-governance
+    status: implemented
+    used_by: [ai-code-review-refactor, backend-change-builder, frontend-change-builder, data-api-contract-changer, architecture-impact-reviewer, delivery-release-gate, change-documentation-gate, quality-test-gate]
+    triggers:
+      - cleanup deletion governance deletion path dead code caller search runtime generated reflection references feature flag removal fallback expiry compatibility branch deprecated API expand contract cleanup telemetry unused rollback cleanup issue
+    risk_notes: [AI assisted work tends to add flags fallbacks compatibility branches and dead code without deletion path telemetry or rollback evidence]
+    expected_outputs: [Cleanup Deletion Plan with target artifact owner removal condition callers searched telemetry evidence tests rollback path cleanup issue tracking and residual deletion risk]
+  - id: "117"
+    name: minimal-correct-implementation
+    group: engineering-workflow
+    path: src/foundation/capabilities/minimal-correct-implementation
+    status: implemented
+    used_by: [change-forge-router, backend-change-builder, frontend-change-builder, data-api-contract-changer, data-middleware-change-builder, integration-change-builder, delivery-release-gate, quality-test-gate, security-privacy-gate, ai-code-review-refactor, code-review, refactoring, implementation-structure-design, code-clarity-maintainability, design-pattern-selection, package-dependency-management, cleanup-deletion-governance]
+    triggers:
+      - minimal correct implementation simplest solution shortest correct path YAGNI overengineering bloat boilerplate deletion first shrink code fewer lines
+      - standard library stdlib native platform feature framework feature browser feature database constraint existing dependency avoid new dependency
+      - one implementation interface abstract class factory strategy builder speculative abstraction scaffold for later unused config mode switch dead flexibility
+      - deliberate shortcut ceiling upgrade trigger changeforge-shortcut shortcut ledger
+    risk_notes: [Overengineered AI changes add dependencies abstractions files configuration and future-proof scaffolding that increase maintenance cost without improving correctness]
+    expected_outputs: [Minimal Correctness Decision with existence check simplicity ladder result delete or shrink findings dependency abstraction and file decisions shortcut ledger validation evidence residual risk and next gate]
+  - id: "118"
+    name: repository-context-map
+    group: engineering-workflow
+    path: src/foundation/capabilities/repository-context-map
+    status: implemented
+    used_by: [change-forge-router, backend-change-builder, frontend-change-builder, data-api-contract-changer, data-middleware-change-builder, integration-change-builder, delivery-release-gate, change-impact-analyzer, architecture-impact-reviewer, task-dag-planner, ai-code-review-refactor, quality-test-gate, change-documentation-gate, skill-authoring-expert, agent-execution-discipline]
+    triggers:
+      - repository context map read before plan files inspected ownership caller callee tests configs docs local conventions source of truth generated artifact source dist boundary
+      - plan before repository inspection wrong placement missing call graph no repo map unfamiliar codebase registry hook runtime skill authoring
+    risk_notes: [Prompt-only plans miss owners callers tests generated artifacts docs and source-of-truth boundaries causing wrong placement stale validation and broad unreviewed changes]
+    expected_outputs: [Repository Context Map with inspected files searches ownership caller callee dependent tests docs configs local conventions source-of-truth boundary evidence limits and next gate]
+  - id: "119"
+    name: agent-workflow-state-machine
+    group: engineering-workflow
+    path: src/foundation/capabilities/agent-workflow-state-machine
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, task-dag-planner, quality-test-gate, ai-code-review-refactor, delivery-release-gate, reliability-observability-gate, change-documentation-gate, skill-authoring-expert, agent-execution-discipline]
+    triggers:
+      - agent workflow state machine current stage next stage legal transition owner reviewer repair re-review validation freshness stop condition closure evidence
+      - illegal workflow transition self approval stale validation review repair loop state drift compaction handoff stage manifest
+    risk_notes: [Agent work drifts across stages when clarification read planning coding testing review repair and handoff are not explicit and evidence-gated]
+    expected_outputs: [Workflow State Summary with current stage entry evidence exit criteria owner reviewer transition history validation freshness review repair ledger stop condition and closure status]
+  - id: "120"
+    name: agent-tool-permission-sandbox
+    group: engineering-workflow
+    path: src/foundation/capabilities/agent-tool-permission-sandbox
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, security-privacy-gate, delivery-release-gate, reliability-observability-gate, quality-test-gate, ai-code-review-refactor, skill-authoring-expert, agent-execution-discipline]
+    triggers:
+      - agent tool permission sandbox command risk destructive command approval policy sandbox mode external side effect secret exposure MCP tool untrusted connector
+      - rm reset clean force chmod chown sudo deploy push publish migrate apply delete overwrite credential token key raw command output
+    risk_notes: [Unsafe tool execution can delete source mutate external systems expose secrets bypass approval policy or produce unreviewed release side effects]
+    expected_outputs: [Tool Permission Sandbox Record with risk class sandbox approval state target boundary side effects safety controls telemetry boundary residual risk and next gate]
+  - id: "121"
+    name: skill-efficacy-benchmark
+    group: engineering-workflow
+    path: src/foundation/capabilities/skill-efficacy-benchmark
+    status: implemented
+    used_by: [change-forge-router, skill-authoring-expert, quality-test-gate, ai-code-review-refactor, change-documentation-gate, agent-execution-discipline]
+    triggers:
+      - skill efficacy benchmark baseline treatment agent behavior improvement claim routing quality evidence quality review defects token overhead turn overhead over routing under routing
+      - eval fixture professional benchmark skill benchmark no baseline unsupported efficacy claim skill authoring validation behavior regression
+    risk_notes: [Skill changes can claim quality improvements without baseline treatment evidence overhead tracking or caveats separating structural fixtures from real-world performance]
+    expected_outputs: [Skill Efficacy Benchmark with task baseline treatment metrics token and turn overhead over under routing verdict caveats and regression command]
+  - id: "122"
+    name: plan-execution-consistency
+    group: engineering-workflow
+    path: src/foundation/capabilities/plan-execution-consistency
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, task-dag-planner, quality-test-gate, ai-code-review-refactor, delivery-release-gate, reliability-observability-gate, change-documentation-gate, skill-authoring-expert, agent-execution-discipline]
+    triggers:
+      - plan execution consistency planned files actual changed files extra file stale validation unplanned behavior review scope repair re-review final handoff
+      - plan drift actual diff differs validation before final edit partial validation reported as full extra generated file missing planned file
+    risk_notes: [Agent handoffs can hide scope drift stale validation extra files unreviewed repairs and claims that no longer match the final patch]
+    expected_outputs: [Plan Execution Consistency Report with plan summary actual diff variance table behavior mapping validation freshness review scope docs registry consistency residual risk and closure decision]
+  - id: "123"
+    name: executor-adapter-protocol
+    group: agent-runtime-governance
+    path: src/foundation/capabilities/executor-adapter-protocol
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, security-privacy-gate, delivery-release-gate, quality-test-gate, ai-code-review-refactor, change-documentation-gate, agent-execution-discipline]
+    triggers:
+      - executor adapter runtime adapter adapter capabilities AdapterCapabilities NormalizedEvent LifecycleState EvidenceLedger GateResult ClosureContract unsupported runtime event runtime capability degradation
+      - normalized event closure contract fail open fail closed unsupported event handling adapter capability missing stop closure unsupported
+    risk_notes: [Executor adapters can silently overclaim closure when unsupported events degraded runtime capability or fail-open policy is not represented]
+    expected_outputs: [Executor Adapter Protocol Record with AdapterCapabilities NormalizedEvent LifecycleState EvidenceLedger GateResult ClosureContract degradation fail-open fail-closed unsupported event handling and residual risk]
+  - id: "124"
+    name: repository-graph-analysis
+    group: repository-intelligence
+    path: src/foundation/capabilities/repository-graph-analysis
+    status: implemented
+    used_by: [change-forge-router, change-impact-analyzer, architecture-impact-reviewer, task-dag-planner, quality-test-gate, ai-code-review-refactor, change-documentation-gate, agent-execution-discipline]
+    triggers:
+      - repository graph analysis
+      - repository graph
+      - repo graph symbol graph import graph call graph reference graph test graph ownership graph generated artifact graph context pack source of truth unknown freshness drift
+      - repository intelligence graph stale context pack anti context bloat generated dist do not edit affected tests owner graph
+    risk_notes: [Repository graph output can become stale or bloated and generated artifacts can be edited instead of their source of truth]
+    expected_outputs: [Repository Graph Analysis with graph sources freshness selected nodes context pack anti-bloat decision validation candidates generated artifact source-of-truth and residual drift risk]
+  - id: "125"
+    name: project-memory-governance
+    group: project-memory
+    path: src/foundation/capabilities/project-memory-governance
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, quality-test-gate, ai-code-review-refactor, change-documentation-gate, agent-execution-discipline, skill-authoring-expert]
+    triggers:
+      - project memory append-only memory event memory projection deterministic retrieval repeat failure fragile file stale context previous fix failed latest commit review follow-up
+      - repeat failure third attempt fragile file without preflight stale context refresh required human promotion only privacy boundary
+    risk_notes: [Project memory can become unsafe source substitution or automatic learning unless it remains append-only bounded deterministic private and human-governed]
+    expected_outputs: [Project Memory Governance Record with append-only event memory projection deterministic retrieval repeat failure gate fragile file gate stale context gate privacy boundary promotion decision and residual risk]
+  - id: "126"
+    name: validation-broker
+    group: quality-testing
+    path: src/foundation/capabilities/validation-broker
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, quality-test-gate, delivery-release-gate, ai-code-review-refactor, change-documentation-gate, agent-execution-discipline]
+    triggers:
+      - validation broker validation command selection stale validation validation without outcome affected tests changed path validation changed-path-to-validation mapping validator selection
+      - narrow module full validator selection validation result parsing validation freshness negative validation evidence stop closure integration
+    risk_notes: [Validation can be stale partial unparsed or mismatched to changed paths while handoff still claims full verification]
+    expected_outputs: [Validation Broker Result with changed-path mapping validator selection command ledger parsed outcomes freshness negative evidence stop closure input residual risk and next validator]
+  - id: "127"
+    name: execution-trajectory-analysis
+    group: engineering-workflow
+    path: src/foundation/capabilities/execution-trajectory-analysis
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, quality-test-gate, ai-code-review-refactor, change-documentation-gate, agent-execution-discipline, skill-authoring-expert]
+    triggers:
+      - execution trajectory trajectory builder trajectory analyzer illegal transition edit before read repair without re-review stop without residual risk skipped engineering stage
+      - repair re-review ledger validation freshness timeline pressure behavior candidate generation lifecycle trajectory review
+    risk_notes: [Final diff review can miss illegal stage transitions stale validation edit-before-read behavior and repair without re-review]
+    expected_outputs: [Execution Trajectory Analysis with ordered lifecycle events illegal transition findings repair re-review ledger validation freshness timeline pressure behavior candidates closure advice and residual risk]
+  - id: "128"
+    name: context-control-plane
+    group: engineering-workflow
+    path: src/foundation/capabilities/context-control-plane
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, quality-test-gate, ai-code-review-refactor, change-documentation-gate, skill-authoring-expert, agent-execution-discipline]
+    triggers:
+      - context control plane context budget token overhead reference bloat selected references skipped references
+      - just in time retrieval JIT retrieval graph as selector tool output boundary artifact reference compaction snapshot branch summary route repair summary
+      - context lost after compaction stale context over routing under routing context bloat output truncation live benchmark overhead
+    risk_notes: [Context-control changes can reduce signal hide required evidence leak private data or increase token overhead without improving agent behavior]
+    expected_outputs: [Context Control Record with budget mode selected skipped references JIT retrieval plan tool-output boundary snapshot requirements branch summary requirements overhead evidence residual context risk and validation commands]
+  - id: "129"
+    name: code-element-professionalism
+    group: engineering-workflow
+    path: src/foundation/capabilities/code-element-professionalism
+    status: implemented
+    used_by: [backend-change-builder, frontend-change-builder, ai-code-review-refactor, code-review, refactoring, quality-test-gate]
+    triggers:
+      - code element variable expression statement local element uninitialized variable variable shadowing variable reused unrelated purpose sentinel null default mutable default loop counter mutation
+      - hidden assignment expression mixed operator precedence truthiness nullish default magic constant nested ternary comprehension side effect expression side effect getter
+      - empty loop empty branch switch fallthrough broad try scope missing resource cleanup ignored return event before commit cache before commit external io before commit
+    risk_notes: [Small local variables expressions and statements can silently change permissions defaults cleanup transactions events or generated-code behavior while broader structure review appears satisfied]
+    expected_outputs: [Code Element Professionalism Review with variable expression statement bridge risk fix direction validation evidence and residual risk]
+  - id: "130"
+    name: git-professional-usage
+    group: engineering-workflow
+    path: src/foundation/capabilities/git-professional-usage
+    status: implemented
+    used_by: [development-process-orchestrator, quality-test-gate, ai-code-review-refactor, delivery-release-gate, change-documentation-gate]
+    triggers:
+      - git merge rebase cherry-pick conflict worktree index branch upstream reflog reset revert stash force-with-lease tag signed tag release tag submodule sparse checkout generated file conflict dirty worktree
+      - generated output source authority ours theirs merge base conflict marker unrelated staged changes unstaged diff staged diff user changes overwrite rollback ref protected branch history rewrite backup branch branch naming commit message commit splitting bisect failure isolation
+    risk_notes: [Git operations can overwrite user work resolve generated conflicts incorrectly rewrite shared history or claim validation without current worktree and rollback evidence]
+    expected_outputs: [Git Professional Usage Record with operation state inspected ownership boundary decision record generated artifact policy safety controls validation commands rollback note residual risk and handoff summary]
+  - id: "131"
+    name: build-tool-professional-usage
+    group: delivery-platform
+    path: src/foundation/capabilities/build-tool-professional-usage
+    status: implemented
+    used_by: [delivery-release-gate, architecture-impact-reviewer, quality-test-gate, ai-code-review-refactor, change-documentation-gate]
+    triggers:
+      - Makefile make Ant Bazel Buck Pants Gradle Maven npm script pnpm yarn Turborepo Nx build graph generated artifact codegen strict deps remote cache remote execution hermetic build
+      - undeclared dependency generated source generated source declaration generator output source of truth reproducible artifact checksum digest build cache action key toolchain pin local CI mismatch make parallel phony target order-only dependency bazel sandbox classpath sourcepath output directory
+    risk_notes: [Build graph changes can pass locally while CI release or remote cache uses stale generated artifacts undeclared dependencies hidden environment inputs or non-reproducible outputs]
+    expected_outputs: [Build Tool Usage Record with build surface graph boundary generated artifact policy cache contract artifact contract decision record validation commands tool permission boundary and residual risk]
+  - id: "132"
+    name: linux-systems-professional-usage
+    group: reliability-operations
+    path: src/foundation/capabilities/linux-systems-professional-usage
+    status: implemented
+    used_by: [reliability-observability-gate, delivery-release-gate, security-privacy-gate, backend-change-builder, ai-code-review-refactor]
+    triggers:
+      - Linux systemd systemd-resolved journald cgroup namespace procfs sysfs signal handling daemon pid file PID 1 ulimit file descriptor socket permission sudo root capability seccomp service restart
+      - distro kernel init container runtime cgroup v2 unit file EnvironmentFile TimeoutStopSec User Group WorkingDirectory OOM fd exhaustion resolver /etc/hosts /etc/resolv.conf search domain ndots mount tmpfs logrotate privileged port SELinux AppArmor
+    risk_notes: [Linux runtime changes can fail through service lifecycle cgroup limits signals permissions namespaces logs or host/container differences that application tests do not cover]
+    expected_outputs: [Linux Systems Usage Record with runtime surface environment evidence service contract process contract filesystem permission contract resource contract observability contract decision record validation commands and residual risk]
+  - id: "133"
+    name: network-protocol-gateway-usage
+    group: reliability-operations
+    path: src/foundation/capabilities/network-protocol-gateway-usage
+    status: implemented
+    used_by: [integration-change-builder, reliability-observability-gate, security-privacy-gate, delivery-release-gate, backend-change-builder]
+    triggers:
+      - Nginx Envoy HAProxy Cloudflare Fastly CloudFront ALB NLB ingress API gateway service mesh WAF CDN reverse proxy load balancer TLS DNS SNI ALPN
+      - HTTP proxy header X-Forwarded-For Forwarded Host CORS WebSocket SSE gRPC timeout chain 502 503 504 retry amplification upstream status edge origin trace context path rewrite cache key TTL invalidation purge stale behavior per-user data health check origin shielding
+    risk_notes: [Gateway and protocol changes can mask upstream failures amplify retries trust spoofed headers break TLS or streaming behavior and produce 5xx symptoms without hop-chain evidence]
+    expected_outputs: [Network Protocol Gateway Record with network surface hop chain protocol contract timeout retry contract header identity contract security contract observability contract decision record validation commands and residual risk]
+  - id: "134"
+    name: data-format-contract-usage
+    group: data-api-contracts
+    path: src/foundation/capabilities/data-format-contract-usage
+    status: implemented
+    used_by: [data-api-contract-changer, data-middleware-change-builder, integration-change-builder, quality-test-gate, backend-change-builder, ai-code-review-refactor, consumer-impact-analysis, configuration-runtime-policy]
+    triggers:
+      - JSON Schema YAML XML TOML CSV CPE Protobuf Avro Parquet schema registry parser compatibility parser serializer deserializer serialization wire format storage format field evolution compatibility generated model golden fixture
+      - protobuf field number reserved field enum value wire type breaking change old reader new writer YAML safe loader YAML 1.1 YAML 1.2 scalar coercion TOML type strictness duplicate key unknown field boolean timestamp XML canonicalization size depth limit parser differential CPE normalization version matching
+    risk_notes: [Data format changes can break consumers or stored data through parser defaults coercion field-number reuse generated drift unsafe loaders duplicate keys and untested old-reader new-writer behavior]
+    expected_outputs: [Data Format Contract Record with format surface schema authority parser contract compatibility class field evolution security contract generated artifact policy fixtures validation decision record and residual risk]
+  - id: "135"
+    name: business-semantic-control-plane
+    group: business-intelligence
+    path: src/foundation/capabilities/business-semantic-control-plane
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, domain-impact-modeler, quality-test-gate, ai-code-review-refactor, change-documentation-gate, skill-authoring-expert]
+    triggers:
+      - business semantic pack business semantic control plane business context missing business intent business vocabulary business vocabulary ambiguous business object business object ownership unclear
+      - business rule authority unknown business workflow state unclear business invariant changed business rule hidden in SQL/controller/UI/test DTO used as business object
+      - business memory affects decision business golden case missing technical refactor may change business semantics business semantic review required graph used as business fact memory used as business fact
+      - hidden business rule controller sql mapper dto memory business signal stale business memory graph selector business fact evidence owner review source-backed business rule
+    risk_notes: [Business semantic changes can silently alter rules workflows owner intent or golden cases when graph or memory hints are treated as facts without current evidence]
+    expected_outputs: [Business Semantic Control Record with task-scoped BSP scope intent vocabulary objects rules workflows memory graph golden cases validation map selected and skipped references evidence limits residual risk and handoff]
+  - id: "136"
+    name: senior-programming-judgment-core
+    group: engineering-workflow
+    path: src/foundation/capabilities/senior-programming-judgment-core
+    status: implemented
+    used_by:
+      - change-forge-router
+      - change-intake-compiler
+      - development-process-orchestrator
+      - architecture-impact-reviewer
+      - backend-change-builder
+      - frontend-change-builder
+      - data-api-contract-changer
+      - data-middleware-change-builder
+      - integration-change-builder
+      - security-privacy-gate
+      - reliability-observability-gate
+      - quality-test-gate
+      - ai-code-review-refactor
+      - change-documentation-gate
+      - skill-authoring-expert
+      - agent-execution-discipline
+    triggers:
+      - senior programming judgment purpose facts objects states behaviors rules invariants boundaries failure contract side effects reuse placement minimality validation observability residual risk
+      - non-trivial engineering structural edit helper shared common public API state transition hidden rule invariant side effect failure path validation map observability map
+      - skill authoring hook runtime routing registry eval benchmark closure behavior requires bounded judgment evidence
+    risk_notes: [Non-trivial changes can pass local checks while missing source-backed facts object ownership state/rule invariants side effects failure handling validation proof observability and residual risk]
+    expected_outputs: [Senior Programming Judgment Record with purpose source-backed facts objects states behaviors rules invariants boundaries failure contract side effects reuse and placement minimality decision validation map observability map residual risk and handoff]

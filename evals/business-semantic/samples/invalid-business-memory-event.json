@@ -1,0 +1,16 @@
+{
+  "business_memory_event": {
+    "schema_version": 1,
+    "event_id": "business_rule_changed_001",
+    "event_type": "business_rule_changed",
+    "verdict": "accepted",
+    "summary": "Invalid memory event id and missing source check requirement.",
+    "bounded_paths": ["src/domain/order.py"],
+    "source_check_required": false,
+    "source_confirmation": {
+      "status": "confirmed",
+      "current_source_paths": ["src/domain/order.py"],
+      "residual_risk": []
+    }
+  }
+}

@@ -1,0 +1,20 @@
+---
+id: missing-ddd-before-sdd
+scenario: PDD is reviewed, but DDD review evidence is missing before SDD completion.
+adapter: codex
+event: Stop
+expected_gate: changeforge_process_phase_gate
+ledger:
+  phase_status:
+    pdd: reviewed
+    ddd: pending
+    sdd: draft
+    tdd: pending
+expected_result:
+  decision: block
+  missing_phase: ddd
+  blocked_next_stage: sdd
+forbidden_claims:
+  - SDD is complete while DDD is pending.
+  - A phase can be marked reviewed by owner self-approval.
+privacy_boundary: Store phase names, statuses, and review IDs only.

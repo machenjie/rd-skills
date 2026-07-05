@@ -1,0 +1,37 @@
+id: cline-plan-mode-edit-degradation
+runtime: cline
+description: Cline plan-mode edit attempt degrades instead of claiming hook lifecycle support.
+coverage_targets:
+  - degradation
+  - tool_category
+pressure_cases:
+  - unsupported_runtime_event
+input_payload:
+  event_name: mode_change
+  event_id: cline-plan-mode-edit-degradation
+  mode: Plan
+  changeforge_stage: implementation-planning
+  tool_name: write
+  path: src/planned.py
+expected_normalized_event:
+  adapter: cline
+  event_kind: user_prompt_submit
+  tool_category: edit
+  stage_signal: implementation-planning
+  bounded_paths:
+    - src/planned.py
+  capability_degradation_contains:
+    - cline_user_prompt_submit_unsupported
+    - cline_plan_mode_edit_evidence_unsupported
+expected_gate_result:
+  outcome: degraded
+expected_evidence_delta:
+  normalized_event_supported: false
+  adapter_degradation_strength: partial
+expected_closure_effect:
+  verdict: needs_validation
+  unsupported_checks_contains:
+    - runtime_adapter_degradation
+privacy_expectations:
+  forbid_absolute_paths: true
+

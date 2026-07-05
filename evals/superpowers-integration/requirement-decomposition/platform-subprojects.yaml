@@ -1,0 +1,47 @@
+id: requirement-decomposition-platform-subprojects
+phase: P1 requirement decomposition and design readiness
+prompt: "Build a platform with login, billing, reporting, admin permissions, and notifications."
+expected_behavior:
+  - do not produce one full implementation plan for all subsystems
+  - decompose independent subprojects before design
+  - select a first deliverable slice
+  - preserve deferred slices as non-current scope
+  - require project context before design
+  - ask one blocking question at a time
+  - provide design options before design lock
+  - emit a Design Summary readiness block
+required_contracts:
+  - path: src/professional-skills/change-intake-compiler/SKILL.md
+    must_contain:
+      - "Project context before design"
+      - "One-question-at-a-time clarification"
+      - "Subproject decomposition before planning"
+      - "Subprojects / First Slice"
+  - path: src/professional-skills/development-process-orchestrator/SKILL.md
+    must_contain:
+      - "Design Readiness Output"
+      - "Option A / Option B"
+      - "Recommendation"
+      - "Ready for implementation planning: Yes/No"
+  - path: src/foundation/capabilities/requirement-clarification/SKILL.md
+    must_contain:
+      - "Ask one blocking question at a time"
+  - path: src/foundation/capabilities/requirement-structuring/SKILL.md
+    must_contain:
+      - "Check project context before design"
+      - "Split multi-system requests into subprojects before design"
+      - "subprojects"
+  - path: src/foundation/capabilities/acceptance-standard-definition/SKILL.md
+    must_contain:
+      - "selected first deliverable slice"
+  - path: src/foundation/capabilities/non-goal-boundary-definition/SKILL.md
+    must_contain:
+      - "Non-current subprojects are non-goals for the active slice"
+  - path: src/foundation/capabilities/scenario-decomposition/SKILL.md
+    must_contain:
+      - "Decompose only the active slice"
+forbidden_contract_terms:
+  - "task ledger"
+  - "json:metadata"
+  - ".changeforge hook state"
+  - "process_phase_ledgers"

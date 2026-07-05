@@ -1,0 +1,247 @@
+#!/usr/bin/env python3
+"""Validate published benchmark report consistency."""
+
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+
+ROOT = Path(__file__).resolve().parents[1]
+VALIDATOR_PATH = ROOT / "scripts" / "validate-codex-live-benchmark-reports.py"
+CONTEXT_CONTROL_REPORT = ROOT / "reports" / "context-control-plane-eval.json"
+CONTEXT_CONTROL_ROW = "context_control_overhead"
+HIGH_CONTEXT_INPUT_TOKEN_OVERHEAD_PCT = 100.0
+HIGH_CONTEXT_OUTPUT_TOKEN_OVERHEAD_PCT = 25.0
+
+TIMESTAMP_ONLY_JSON_RE = re.compile(
+    r'^"(?:generated_at|timestamp|report_generated_at)"\s*:\s*"[^"]*"[,]?$'
+)
+TIMESTAMP_ONLY_MARKDOWN_RE = re.compile(
+    r'^(?:[-*]\s*)?(?:generated_at|timestamp|report_generated_at|generated|report generated at)\s*[:=]',
+    re.IGNORECASE,
+)
+
+
+def _report_diff_path(line: str) -> str:
+    if not line.startswith("diff --git "):
+        return ""
+    parts = line.split()
+    if len(parts) < 4:
+        return ""
+    candidate = parts[3]
+    return candidate[2:] if candidate.startswith("b/") else candidate
+
+
+def _is_report_path(path: str) -> bool:
+    return path.startswith("reports/") and path.endswith((".json", ".md"))
+
+
+def _timestamp_only_line(line: str, *, markdown: bool) -> bool:
+    content = line[1:].strip() if line[:1] in {"+", "-"} else line.strip()
+    if not content:
+        return True
+    if markdown:
+        return bool(TIMESTAMP_ONLY_MARKDOWN_RE.match(content))
+    return bool(TIMESTAMP_ONLY_JSON_RE.match(content))
+
+
+def timestamp_only_report_diff_errors(diff_text: str) -> list[str]:
+    """Return errors for report files whose diff only changes timestamp fields."""
+    errors: list[str] = []
+    current_path = ""
+    changed: dict[str, list[str]] = {}
+    for line in diff_text.splitlines():
+        path = _report_diff_path(line)
+        if path:
+            current_path = path
+            if _is_report_path(current_path):
+                changed.setdefault(current_path, [])
+            continue
+        if not current_path or not _is_report_path(current_path):
+            continue
+        if line.startswith(("+++", "---")):
+            continue
+        if line.startswith(("+", "-")):
+            changed.setdefault(current_path, []).append(line)
+    for path, lines in changed.items():
+        meaningful = [line for line in lines if line[1:].strip()]
+        if not meaningful:
+            continue
+        markdown = path.endswith(".md")
+        if all(_timestamp_only_line(line, markdown=markdown) for line in meaningful):
+            errors.append(f"{path} has timestamp-only report diff")
+    return errors
+
+
+def report_timestamp_only_diff_errors(root: Path = ROOT) -> list[str]:
+    result = subprocess.run(
+        ["git", "diff", "HEAD", "--", ":(glob)reports/*.json", ":(glob)reports/*.md"],
+        cwd=root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode not in {0, 1}:
+        return [f"git diff for report timestamp guard failed: {result.stderr.strip()}"]
+    return timestamp_only_report_diff_errors(result.stdout)
+
+
+def _default(path: str) -> Path:
+    return ROOT / path
+
+
+def _load_validator():
+    spec = importlib.util.spec_from_file_location("validate_codex_live_benchmark_reports", VALIDATOR_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load {VALIDATOR_PATH}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _read_json(path: Path) -> Any | None:
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _find_named(items: Any, name: str) -> dict[str, Any] | None:
+    if not isinstance(items, list):
+        return None
+    for item in items:
+        if isinstance(item, dict) and item.get("name") == name:
+            return item
+    return None
+
+
+def _context_control_expected_status(report: dict[str, Any] | None) -> str:
+    if not isinstance(report, dict):
+        return "not_collected"
+    overhead = report.get("context_control_overhead")
+    if not isinstance(overhead, dict):
+        return "fail"
+    report_status = str(report.get("status") or "unknown")
+    release_status = str(report.get("release_status") or report_status)
+    overhead_status = str(overhead.get("status") or "unknown")
+    if report_status not in {"pass", "partial", "fail"} or release_status not in {"pass", "partial", "fail"}:
+        return "fail"
+    if overhead_status not in {"pass", "partial", "fail", "not_collected"}:
+        return "fail"
+    if _high_token_overhead(overhead) and overhead_status == "pass":
+        return "fail"
+    if report_status == "fail" or overhead_status == "fail":
+        return "fail"
+    if report_status != release_status:
+        return "fail"
+    if release_status == "partial":
+        return "partial"
+    if overhead_status != "pass":
+        return "fail"
+    return "pass"
+
+
+def _high_token_overhead(overhead: dict[str, Any]) -> bool:
+    input_overhead = overhead.get("input_token_overhead_pct")
+    output_overhead = overhead.get("output_token_overhead_pct")
+    return (
+        isinstance(input_overhead, (int, float))
+        and float(input_overhead) > HIGH_CONTEXT_INPUT_TOKEN_OVERHEAD_PCT
+    ) or (
+        isinstance(output_overhead, (int, float))
+        and float(output_overhead) > HIGH_CONTEXT_OUTPUT_TOKEN_OVERHEAD_PCT
+    )
+
+
+def context_control_report_consistency_errors(
+    *,
+    context_report_path: Path = CONTEXT_CONTROL_REPORT,
+    scorecard_path: Path | None = None,
+    public_summary_path: Path | None = None,
+) -> list[str]:
+    """Validate that scorecard/public reports mirror context-control overhead evidence."""
+    errors: list[str] = []
+    report = _read_json(context_report_path)
+    expected_status = _context_control_expected_status(report if isinstance(report, dict) else None)
+    if isinstance(report, dict):
+        overhead = report.get("context_control_overhead")
+        if isinstance(overhead, dict) and _high_token_overhead(overhead):
+            verdict = str(overhead.get("overhead_policy_verdict") or "").casefold()
+            if "ungoverned p2 risk" not in verdict and "do not claim" not in verdict:
+                errors.append("context_control_overhead high-token-overhead case must document no-claim boundary")
+        if expected_status == "fail":
+            errors.append("context-control eval failure blocks pass")
+        if isinstance(overhead, dict):
+            report_status = str(report.get("status") or "unknown")
+            release_status = str(report.get("release_status") or report_status)
+            overhead_status = str(overhead.get("status") or "unknown")
+            if report_status == "pass" and overhead_status != "pass":
+                errors.append("context-control overhead partial/fail must not be wrapped as pass")
+            if report_status != release_status:
+                errors.append("context-control eval status and release_status conflict")
+
+    if scorecard_path is not None and scorecard_path.exists():
+        scorecard = _read_json(scorecard_path)
+        item = _find_named(scorecard.get("dimensions") if isinstance(scorecard, dict) else None, CONTEXT_CONTROL_ROW)
+        if item is None:
+            errors.append("scorecard missing context_control_overhead dimension")
+        elif item.get("status") != expected_status:
+            errors.append(
+                f"scorecard context_control_overhead status {item.get('status')!r} "
+                f"does not match expected {expected_status!r}"
+            )
+
+    if public_summary_path is not None and public_summary_path.exists():
+        public = _read_json(public_summary_path)
+        item = _find_named(public.get("items") if isinstance(public, dict) else None, CONTEXT_CONTROL_ROW)
+        if item is None:
+            errors.append("public summary missing context_control_overhead evidence row")
+        elif item.get("status") != expected_status:
+            errors.append(
+                f"public summary context_control_overhead status {item.get('status')!r} "
+                f"does not match expected {expected_status!r}"
+            )
+    return errors
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--summary", type=Path, default=_default("reports/codex-live-benchmark-summary.json"))
+    parser.add_argument("--scorecard", type=Path, default=_default("reports/professional-scorecard.json"))
+    parser.add_argument("--public-summary", type=Path, default=_default("reports/public-benchmark-summary.json"))
+    parser.add_argument("--dashboard", type=Path, default=_default("docs/SCORECARD_DASHBOARD.md"))
+    parser.add_argument("--readme", type=Path, default=_default("README.md"))
+    args = parser.parse_args(argv)
+
+    validator = _load_validator()
+    errors = validator.validate_report_consistency(
+        args.summary,
+        scorecard_path=args.scorecard if args.scorecard.exists() else None,
+        public_summary_path=args.public_summary if args.public_summary.exists() else None,
+        dashboard_path=args.dashboard if args.dashboard.exists() else None,
+        readme_path=args.readme if args.readme.exists() else None,
+    )
+    errors.extend(
+        context_control_report_consistency_errors(
+            scorecard_path=args.scorecard if args.scorecard.exists() else None,
+            public_summary_path=args.public_summary if args.public_summary.exists() else None,
+        )
+    )
+    errors.extend(report_timestamp_only_diff_errors(ROOT))
+    if errors:
+        for error in errors:
+            print(f"validate-report-consistency: ERROR: {error}", file=sys.stderr)
+        return 1
+    print("validate-report-consistency: reports are consistent")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

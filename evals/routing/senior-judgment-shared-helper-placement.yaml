@@ -1,0 +1,53 @@
+---
+id: senior-judgment-shared-helper-placement
+description: |
+  A proposed shared helper needs senior judgment tied to reuse, ownership,
+  boundary, minimality, validation, and residual risk evidence.
+prompt: |
+  Add a shared helper `normalizeOrderStatus` under src/common/status_utils.py.
+  The plan says it is "obvious" and does not include existing helper search,
+  selected owner, rejected domain placement, object/rule boundary, validation
+  map, or residual risk owner.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - senior programming judgment missing
+    - new structure without reuse and placement rationale
+    - shared utility pollution risk
+  skills:
+    - backend-change-builder
+    - architecture-impact-reviewer
+    - quality-test-gate
+    - ai-code-review-refactor
+  capabilities:
+    - senior-programming-judgment-core
+    - implementation-structure-design
+    - module-boundary-design
+    - validation-broker
+    - agent-execution-discipline
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - test gate
+    - AI review gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - release-rollback
+    - data-migration-design
+  domain_extensions:
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Shared helpers are accepted only after reuse and placement evidence proves the
+  helper is not hiding domain behavior in a generic module.
+  Hidden risks covered: shared/common helper pollution; rule owner hidden in
+  generic utility; validation can pass without proving caller invariants.

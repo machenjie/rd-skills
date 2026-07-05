@@ -1,0 +1,39 @@
+---
+id: redis-hot-key-lock-duplicate
+description: |
+  Redis hot key and distributed lock duplicate-side-effect routing.
+prompt: |
+  A Redis-backed cache has one hot key and a lock with a TTL shorter than the
+  work it protects. Duplicate workers sometimes run and write the same side
+  effect. Redesign keys, hot-key controls, and lock safety.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - cache mutation source of truth unclear
+  skills:
+    - data-middleware-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - cache-design
+    - concurrency-control
+    - data-side-effect-flow-tracing
+    - observability
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+forbidden:
+  skills:
+    - data-api-contract-changer
+    - integration-change-builder
+  capabilities:
+    - message-queue-design
+    - data-format-contract-usage
+notes: |
+  Redis topology, hot key, and lock safety belong to cache design plus
+  reliability, not queue design.

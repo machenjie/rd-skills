@@ -1,0 +1,44 @@
+id: lock-held-across-io
+category: performance
+complexity: L4
+focus:
+  - lock scope
+  - IO inside critical section
+  - deadlock and contention risk
+  - stress and race evidence
+route_hints:
+  skills:
+    - backend-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - concurrency-control
+    - language-performance-safety
+    - profiling
+    - implementation-structure-design
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - Critical section is shrunk and no lock is held across network or storage IO.
+  - IO occurs after releasing the lock or moves to optimistic, transaction, queue, or outbox pattern.
+  - Timeout, deadlock, contention, and race behavior are analyzed.
+  - Stress, race-detector, or lock-contention evidence is required.
+required_qualities:
+  - Produces a concurrency design with named invariant and lock scope.
+  - Records Performance-Aware Structure Decision for lock and IO boundaries.
+  - Defines timeout and deadlock analysis.
+  - Adds stress, race, or contention measurement evidence.
+forbidden_shortcuts:
+  - Lock held across network or storage IO.
+  - No timeout.
+  - No deadlock analysis.
+  - No stress or race evidence.
+evidence:
+  - Concurrency design with invariant, lock scope, and conflict behavior.
+  - Runtime performance assessment with lock-contention measurement plan.
+  - Tests or stress evidence for concurrent operations.
+  - Review note proving IO is outside the critical section.

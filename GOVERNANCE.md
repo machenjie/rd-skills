@@ -1,0 +1,42 @@
+# Governance
+
+This document defines the default governance model for ChangeForge Skill Mesh until maintainers publish a more formal structure.
+
+## Roles
+
+Maintainers are responsible for repository direction, review standards, release decisions, security handling, and enforcement of project boundaries.
+
+Contributors propose issues, pull requests, documentation, tests, examples, and review feedback. Contributors do not gain release authority unless maintainers explicitly grant it.
+
+## Decision Process
+
+Routine fixes may be accepted after maintainer review and passing validation.
+
+Docs-only typo fixes can be treated as docs-only. Documentation that changes
+hook behavior, validation command sets, quality levels, stage routing,
+operating-model semantics, benchmark interpretation, eval fixtures, routing
+rules, or release evidence changes execution or evidence semantics and must run
+the corresponding validation gate.
+
+Changes require explicit maintainer agreement when they affect:
+
+- Runtime profile semantics.
+- Installer, upgrade, uninstall, or doctor behavior.
+- Registry schema or routing behavior.
+- Security, privacy, licensing, or release policy.
+- Public documentation promises.
+- The repository boundary against personal asset mapping or raw `src/` installation.
+
+Maintainers should prefer small, evidence-backed changes with clear validation output. Unresolved assumptions should be documented in the pull request or release handoff.
+
+## Release Authority
+
+Only maintainers may cut releases, publish packaged artifacts, or change project license metadata. Releases must follow [docs/RELEASE.md](docs/RELEASE.md).
+
+## Conflict Of Interest
+
+A maintainer should recuse themselves from final decisions when they have a direct personal, employment, financial, or security-reporting conflict that could reasonably affect judgment.
+
+## License Decision
+
+The repository is licensed under the MIT License. Maintainers may change project license metadata only through an explicit governance decision, documentation update, and release-readiness validation.

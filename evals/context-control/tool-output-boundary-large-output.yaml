@@ -1,0 +1,81 @@
+---
+id: tool-output-boundary-large-output
+input:
+  scenario: Large command output must be represented by a bounded tool-output boundary record.
+  context_risk: true
+  routing_fixture_path: evals/routing/context-control-tool-output-boundary.yaml
+  routing_actual_path: evals/routing-outputs/context-control-tool-output-boundary.actual.yaml
+  runtime_resolver:
+    stage: testing
+    risk_surfaces:
+      - validation
+    product_surfaces: []
+    classification:
+      stage: testing
+      prompt_signals:
+        - tool output boundary
+        - output truncation
+expected:
+  context_control_selected: true
+  selected_skills:
+    - quality-test-gate
+  selected_capabilities:
+    - context-control-plane
+    - agent-tool-permission-sandbox
+    - validation-broker
+    - repository-graph-analysis
+    - plan-execution-consistency
+    - agent-execution-discipline
+  budget_mode: single-stage
+  selected_reference_count: 4
+  selected_reference_count_max: 8
+  skipped_reference_count: 2
+  skipped_references:
+    - reference: references/capabilities/65-performance-budgeting.md
+      reason: The issue is output size, not runtime performance budget.
+    - reference: references/capabilities/75-release-rollback.md
+      reason: No release action is in scope.
+  safety_result: pass
+  closure_result: partial
+  forbidden_raw_fields:
+    - raw_prompt
+    - prompt
+    - stdout
+    - stderr
+    - command_output
+    - raw_output
+    - full_output
+    - full_diff
+    - file_contents
+    - environment
+    - env
+    - secret
+    - credentials
+context_budget:
+  budget_mode: single-stage
+  budget_profile: runtime
+  budget_rationale: Testing route needs one bounded validation-output record.
+  context_budget_tokens: 700
+  selected_capability_count: 6
+  selected_reference_count: 4
+  skipped_reference_count: 2
+  over_budget: false
+  residual_context_risk:
+    - Full raw output is intentionally excluded and must be inspected through an artifact if needed.
+tool_output_boundary:
+  required: true
+  record:
+    schema_version: 1
+    tool_name: Bash
+    event_name: PostToolUse
+    output_size_class: large
+    output_bytes: 64000
+    output_lines: 900
+    artifact_path: artifacts/validation/pytest.log
+    artifact_path_source: explicit_tool_result
+    digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaa
+    bounded_summary: pytest failed in validation broker fixture; rerun with redirect for full log
+    truncation_advice: rerun_with_redirect
+    llm_context_policy: artifact_reference_only
+    privacy_status: pass
+    unsupported_reason: null

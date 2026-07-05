@@ -1,0 +1,52 @@
+id: double-entry-refund
+category: payment
+complexity: L5
+focus:
+  - double entry ledger
+  - refund idempotency
+  - reconciliation
+  - money precision
+route_hints:
+  skills:
+    - domain-impact-modeler
+    - backend-change-builder
+    - data-api-contract-changer
+    - security-privacy-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - transaction-consistency
+    - repository-persistence
+    - state-machine-modeling
+    - i18n-timezone-money-safety
+    - integration-testing
+    - regression-testing
+  domain_extensions:
+    - payment-trading-extension
+  quality_gates:
+    - domain gate
+    - API/data gate
+    - implementation gate
+    - security gate
+    - test gate
+    - documentation gate
+expected_outcomes:
+  - Every refund creates balanced debit and credit ledger entries.
+  - Repeated provider refund events are idempotent.
+  - Partial refunds cannot exceed the refundable balance.
+  - Reconciliation surfaces provider mismatch without corrupting ledger state.
+required_qualities:
+  - Money values use integer minor units or exact decimal types.
+  - Ledger writes are transactional with refund state changes.
+  - Tests cover duplicate webhook, partial refund, and over refund denial.
+  - Audit records include provider identifiers without sensitive payment data.
+forbidden_shortcuts:
+  - Updating payment status without balanced ledger entries.
+  - Using floating point arithmetic for refund amounts.
+  - Allowing duplicate provider events to post multiple refunds.
+  - Fixing reconciliation mismatches with manual silent adjustments.
+evidence:
+  - Ledger invariant tests for balanced entries.
+  - Idempotency tests for repeated provider events.
+  - Reconciliation test for mismatched provider state.
+  - Audit and documentation evidence for refund lifecycle.

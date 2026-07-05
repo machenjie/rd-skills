@@ -1,0 +1,18 @@
+id: repair-rereview
+phase: P5 repair and re-review
+required_contracts:
+  - path: src/foundation/capabilities/agent-workflow-state-machine/SKILL.md
+    must_contain:
+      - "Repair requires a targeted re-review"
+  - path: src/foundation/capabilities/plan-execution-consistency/SKILL.md
+    must_contain:
+      - "Repair after review requires targeted re-review"
+repair_rereview_cases:
+  - name: important-fix-without-rereview-fails
+    input: |
+      Reviewer found Important issue in changed validation mapping.
+      Implementer fixed it.
+      Final says done.
+    expected_status: fail
+    expected_missing:
+      - re_review_after_repair

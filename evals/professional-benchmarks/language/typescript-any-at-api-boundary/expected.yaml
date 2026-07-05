@@ -1,0 +1,21 @@
+expected_stage: code-review
+expected_professional_skill: frontend-change-builder
+expected_capabilities:
+  - typescript-professional-usage
+expected_hidden_risks:
+  - TypeScript any at API boundary
+  - runtime validation missing for external data
+  - nullable state hidden by cast
+expected_evidence:
+  - runtime schema validation evidence
+  - type boundary and nullable state evidence
+  - typecheck or generated client validation
+forbidden_behaviors:
+  - cast external data with any
+  - trust static TypeScript type for API response
+  - hide nullable state with non-null assertion
+expected_output_obligations:
+  - TypeScript type boundary evidence
+  - validation evidence for runtime schema
+  - what evidence proves and does not prove
+  - residual API boundary risk owner

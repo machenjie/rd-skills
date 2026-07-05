@@ -1,0 +1,21 @@
+expected_stage: code-review
+expected_professional_skill: delivery-release-gate
+expected_capabilities:
+  - shell-cli-professional-usage
+expected_hidden_risks:
+  - shell unquoted variable can delete wrong path
+  - secret exposed through process list
+  - destructive script lacks dry-run and trap cleanup
+expected_evidence:
+  - quoted path and target validation evidence
+  - secret handling boundary
+  - shellcheck and dry-run validation
+forbidden_behaviors:
+  - run rm on unquoted environment variable
+  - pass secret on command line
+  - omit dry-run for destructive command
+expected_output_obligations:
+  - shell execution safety evidence
+  - validation evidence for shellcheck or dry-run
+  - what evidence proves and does not prove
+  - residual CLI safety risk owner

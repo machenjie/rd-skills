@@ -1,0 +1,23 @@
+expected_stage: release-delivery
+expected_professional_skill: delivery-release-gate
+expected_capabilities:
+  - release-rollback
+  - data-migration-design
+  - version-compatibility
+  - agent-execution-discipline
+expected_hidden_risks:
+  - rollback fails because schema moved forward
+  - rolling deploy version skew breaks old pods or consumers
+  - contract phase removal before migration evidence
+expected_evidence:
+  - expand-migrate-contract plan or accepted exception
+  - rollback migration test
+  - old/new version compatibility matrix and consumer readiness
+forbidden_behaviors:
+  - claim rollback is redeploy-only when data changed
+  - drop contract before consumers migrate
+  - approve release without rollback validation evidence
+expected_output_obligations:
+  - migration-sensitive release mode selected
+  - validation evidence for rollback rehearsal
+  - residual risk and release owner

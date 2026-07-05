@@ -1,0 +1,38 @@
+---
+id: linux-systemd-container-env-cgroup
+description: |
+  Linux systemd/container/cgroup service lifecycle routing.
+prompt: |
+  A systemd-managed containerized worker ignores its EnvironmentFile and is
+  killed by the cgroup memory limit. Diagnose the Linux service lifecycle,
+  PID 1 shutdown, journald logs, and cgroup behavior.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: debugging-diagnosis
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - linux service lifecycle failure
+  skills:
+    - reliability-observability-gate
+    - delivery-release-gate
+    - security-privacy-gate
+  capabilities:
+    - linux-systems-professional-usage
+    - observability
+    - agent-tool-permission-sandbox
+  domain_extensions: []
+  quality_gates:
+    - reliability gate
+    - delivery gate
+    - security gate
+    - implementation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+  capabilities:
+    - data-format-contract-usage
+    - message-queue-design
+notes: |
+  This is Linux runtime and service-manager behavior, not generic backend code.

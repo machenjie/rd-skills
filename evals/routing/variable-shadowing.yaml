@@ -1,0 +1,42 @@
+---
+id: variable-shadowing
+description: |
+  A Go backend patch shadows an outer error variable and can return success after a failed write.
+prompt: |
+  Review this Go service change. Inside the transaction block it uses `if err := repo.Save(ctx, item); err != nil { ... }`
+  and later checks the outer `err`, so a failed save can be missed. Route for variable shadowing.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - variable shadowing
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - language-idiom-enforcement
+    - implementation-structure-design
+    - code-review
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+  domain_extensions:
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Shadowing should be treated as a local code element plus language-specific review issue.
+

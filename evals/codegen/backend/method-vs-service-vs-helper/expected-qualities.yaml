@@ -1,0 +1,44 @@
+id: method-vs-service-vs-helper
+category: backend
+complexity: L3
+focus:
+  - method placement
+  - service orchestration boundary
+  - helper scope and naming
+  - business versus utility classification
+route_hints:
+  skills:
+    - domain-impact-modeler
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - language-idiom-enforcement
+    - service-business-logic
+    - business-rule-extraction
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - domain gate
+    - implementation gate
+    - test gate
+expected_outcomes:
+  - Cancellation eligibility stays with the object or policy that protects the order invariant.
+  - OrderService keeps orchestration, authorization, transaction, and collaborator coordination responsibilities.
+  - A local helper is used only for narrow technical transformation, not business deadline rules.
+  - Names describe order cancellation concepts and avoid generic processor, handler, helper, data, or result buckets.
+required_qualities:
+  - Existing Order, OrderPolicy, OrderService, and cancellation tests are inspected before new code is added.
+  - Method placement is justified by state, invariant, lifecycle, collaborator, or protocol role usage.
+  - Service placement is justified by use case orchestration rather than one-call wrapping.
+  - Public behavior tests cover allowed, denied, and deadline boundary cancellation cases.
+forbidden_shortcuts:
+  - Adding canCancelOrder to shared utils or common helpers.
+  - Creating OrderProcessor or CancellationHelper without state or invariant ownership.
+  - Naming values data, item, result, or info when the order concept is known.
+  - Testing only a private helper instead of cancellation behavior.
+evidence:
+  - Implementation Structure Plan with naming evidence and responsibility taxonomy.
+  - Tests through OrderService or public order behavior.
+  - Review note rejecting shared utility business logic.
+  - Method placement rationale for the selected object, policy, service, or helper.

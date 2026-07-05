@@ -1,0 +1,26 @@
+{
+  "dimensions": [
+    {
+      "detail": "items=165; release_blocking=26; review_required=620",
+      "name": "professionalism_depth",
+      "score": 78.16,
+      "source": "reports/skill-professionalism-depth.json",
+      "status": "fail",
+      "verification_command": "python3 scripts/eval-skill-professionalism.py",
+      "weight": 0.6
+    },
+    {
+      "detail": "benchmarks=3; measured=0; structural=3; warnings=3",
+      "name": "efficacy",
+      "score": 100.0,
+      "source": "reports/skill-efficacy-eval.json",
+      "status": "partial",
+      "verification_command": "python3 scripts/eval-skill-efficacy.py",
+      "weight": 0.4
+    }
+  ],
+  "dimensions_checked": 2,
+  "generated_at": "2026-07-04T06:05:26.629859+00:00",
+  "overall_score": 86.9,
+  "overall_status": "fail"
+}

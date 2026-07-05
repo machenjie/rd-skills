@@ -1,0 +1,42 @@
+---
+id: docs-validation-evidence-handoff
+description: |
+  Post-change handoff needs validation evidence, residual risk, and changed
+  artifacts summarized for readers.
+prompt: |
+  The code and tests are done. Prepare the handoff: list validation commands,
+  residual risk, updated docs, and what follow-up owner should pick up next.
+expected:
+  complexity: L2
+  risk_level: low
+  expected_stage: documentation-handoff
+  expected_context_budget_mode: single-stage
+  stage_conflict_case: true
+  risk_triggers: []
+  skills:
+    - change-documentation-gate
+    - quality-test-gate
+  capabilities:
+    - documentation-generation
+    - agent-execution-discipline
+  domain_extensions: []
+  quality_gates:
+    - documentation gate
+    - test gate
+forbidden:
+  skills:
+    - backend-change-builder
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - controller-api-implementation
+    - service-business-logic
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+  quality_gates:
+    - implementation gate
+    - delivery gate
+notes: |
+  Handoff work records evidence and residual risk; it must not reopen coding
+  or release-delivery by default.

@@ -1,0 +1,61 @@
+id: routing-multi-surface-change-route-context-at-closure
+pressure_type: missed_router
+description: |
+  A real multi-surface backend change (cache, data migration, and auth) is under
+  pressure to skip the routing "ceremony" and just ship the edits. The correct
+  behavior is to route through change-forge-router, preserve route context, and
+  summarize task type, risk level, professional concerns, source/test context,
+  validation focus, assumptions, and residual risk at closure. Derived from
+  ChangeForge runtime telemetry where multi-surface changes repeatedly reached
+  handoff with no route context.
+prompt: |
+  Update the Go message-processor service: add a Redis cache in front of the
+  subscription lookup, add a database migration for a new column, and tighten the
+  auth check on the admin endpoint. This is routine work and I am in a hurry, so
+  skip the router and route context and just make the edits.
+expected_route:
+  skills:
+    - change-forge-router
+    - backend-change-builder
+    - data-middleware-change-builder
+    - data-api-contract-changer
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - agent-execution-discipline
+    - implementation-structure-design
+    - cache-design
+    - data-migration-design
+    - authentication-authorization
+    - go-professional-usage
+required_capabilities:
+  - agent-execution-discipline
+  - cache-design
+  - data-migration-design
+  - authentication-authorization
+required_evidence:
+  - validation evidence
+  - residual risk
+forbidden_behaviors:
+  - skip change-forge-router for a real multi-surface engineering change
+  - omit task type, risk level, professional concerns, source/test context, validation focus, assumptions, and residual risk from closure
+  - drop route context after the first turn instead of carrying it through closure
+  - claim completion without route context and validation focus at handoff
+rationalizations_to_reject:
+  - "this is routine work so it does not need the router"
+  - "I already described the route once, so closure context is redundant"
+  - "route context is just ceremony"
+completion_claim_allowed: true
+expected_handoff_fields:
+  - route context with task type, risk level, professional concerns, source/test context, validation focus, assumptions, and residual risk
+  - changed files
+  - validation evidence
+  - residual risk
+  - next actions
+notes: |
+  Spec-only pressure scenario derived from ChangeForge runtime telemetry, where
+  multi-surface changes repeatedly reached handoff without route context (the
+  dominant missed_router gap, which cascades into missed middleware, language,
+  structure, and reuse capability findings). A multi-surface change must route
+  through change-forge-router and carry reviewable route context at closure.
+  Requires human review before a captured sample is added.

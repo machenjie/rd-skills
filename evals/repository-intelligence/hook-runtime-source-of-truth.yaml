@@ -1,0 +1,14 @@
+---
+id: hook-runtime-source-of-truth
+scenario: Identify source hook runtime files as the editable truth and generated dist artifacts as outputs.
+expected_capabilities:
+  - repository-graph-analysis
+  - repository-context-map
+expected_evidence:
+  - Generated artifact graph links source hook runtime to built dist support files.
+  - Context pack excludes direct dist edits.
+  - Freshness marker states whether build artifacts are stale.
+forbidden_claims:
+  - Built dist files are edited as source truth.
+  - Whole repository graph is included in context.
+privacy_boundary: Repository path and graph edge facts only.

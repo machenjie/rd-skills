@@ -1,0 +1,51 @@
+id: object-auth-order-read
+category: backend
+complexity: L4
+focus:
+  - object level authorization
+  - tenant isolation
+  - safe denial responses
+  - audit behavior
+route_hints:
+  skills:
+    - change-intake-compiler
+    - domain-impact-modeler
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - authentication-authorization
+    - permission-boundary-modeling
+    - controller-api-implementation
+    - repository-persistence
+    - input-validation
+    - integration-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - domain gate
+    - implementation gate
+    - security gate
+    - test gate
+expected_outcomes:
+  - Order owners can read their own orders.
+  - Tenant administrators can read orders in their tenant only.
+  - Support agents require an active case linked to the order.
+  - Cross tenant and anonymous reads are denied without sensitive data exposure.
+required_qualities:
+  - Authorization policy is centralized and testable.
+  - Repository access is scoped by tenant or allowed relationship.
+  - Denial responses use safe status and body semantics.
+  - Audit events capture enough context for investigation.
+  - Tests cover every role and denial branch.
+forbidden_shortcuts:
+  - Frontend only authorization.
+  - Returning full order details before checking access.
+  - Role checks that ignore tenant or active support case scope.
+  - Logs that include shipment address on denied requests.
+evidence:
+  - Unit tests for policy decisions.
+  - Integration tests for endpoint behavior by role.
+  - Security note for object authorization and tenant isolation.
+  - Changed query or repository evidence showing scoped access.

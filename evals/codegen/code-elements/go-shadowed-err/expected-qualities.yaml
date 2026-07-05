@@ -1,0 +1,39 @@
+id: go-shadowed-err
+category: code-elements
+complexity: L2
+focus:
+  - Go error shadowing
+  - transaction failure behavior
+  - regression proof
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - code-element-professionalism
+    - language-idiom-enforcement
+    - code-review
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+expected_outcomes:
+  - Failed writes propagate an error to callers.
+  - Transaction rollback behavior is preserved.
+  - Shadowing is removed or explicitly proven harmless.
+required_qualities:
+  - Uses Go scoping idioms safely.
+  - Keeps transaction scope no broader than needed.
+  - Adds a failed-save regression test.
+forbidden_shortcuts:
+  - Leaving a shadowed err that can hide write failure.
+  - Swallowing errors or returning success on failure.
+  - Adding a new transaction wrapper for a local shadowing bug.
+evidence:
+  - Code Element Professionalism Review naming the shadowed err.
+  - Failed-save regression test output.
+  - Transaction rollback evidence.
+

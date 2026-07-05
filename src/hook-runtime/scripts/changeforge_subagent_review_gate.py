@@ -1,0 +1,514 @@
+#!/usr/bin/env python3
+"""Bound subagent phase reviews to capsule/result contracts."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import sys
+from pathlib import Path
+from typing import Any
+
+from changeforge_adapter_capabilities import adapter_capabilities_for
+from changeforge_common import (
+    cwd_from_event,
+    detect_runtime,
+    event_name,
+    is_subagent_start,
+    is_subagent_stop,
+    load_state,
+    merge_state,
+    read_event,
+    repo_root,
+    session_id_from_event,
+    write_telemetry_event,
+)
+from changeforge_hook_policy import gate_mode, run_gate_with_policy, should_emit_context
+from changeforge_runtime_adapters import adapter_for
+
+try:
+    from runtime_governance.process_phase import (
+        phase_review_passes,
+        review_findings_blocking,
+        sanitize_phase_review_result,
+    )
+    from runtime_governance.review_capsule import sanitize_review_capsule
+except ModuleNotFoundError:
+    _src_root = Path(__file__).resolve().parents[2]
+    if str(_src_root) not in sys.path:
+        sys.path.insert(0, str(_src_root))
+    from runtime_governance.process_phase import (  # type: ignore[no-redef]
+        phase_review_passes,
+        review_findings_blocking,
+        sanitize_phase_review_result,
+    )
+    from runtime_governance.review_capsule import sanitize_review_capsule  # type: ignore[no-redef]
+
+
+GATE_NAME = "subagent_review"
+PHASES = {"pdd", "ddd", "sdd", "tdd", "implementation", "closure"}
+JSON_OBJECT_RE = re.compile(r"\{.*\}", re.DOTALL)
+DIGEST_RE = re.compile(r"^sha256:[A-Fa-f0-9]{12,64}$")
+
+
+def main() -> int:
+    return run_gate_with_policy(GATE_NAME, _main, fail_closed=_fail_closed)
+
+
+def _fail_closed(exc: Exception) -> None:
+    runtime = detect_runtime({})
+    adapter_for(runtime).emit_permission_decision(
+        "block",
+        f"ChangeForge Subagent Review Gate failed closed: {exc}",
+    )
+
+
+def _main() -> int:
+    event = read_event()
+    if not event:
+        return 0
+    mode = gate_mode(GATE_NAME)
+    if mode == "off":
+        return 0
+    runtime = detect_runtime(event)
+    repo = repo_root(cwd_from_event(event))
+    state = load_state(repo)
+    if is_subagent_start(event):
+        return _handle_subagent_start(event, runtime, repo, state, mode)
+    if is_subagent_stop(event):
+        return _handle_subagent_stop(event, runtime, repo, state, mode)
+    return 0
+
+
+def _handle_subagent_start(event: dict, runtime: str, repo: Path, state: dict, mode: str) -> int:
+    if not _review_requested(event, state):
+        return 0
+    review_type = _review_type(event, state)
+    capsule = build_review_capsule(event, state, review_type=review_type)
+    degraded = _adapter_degraded(runtime)
+    merge_state(
+        repo,
+        runtime,
+        review_capsules=[capsule],
+        phase_review_seen=False,
+        process_phase_blocked=bool(degraded),
+        process_phase_blocked_reason="; ".join(degraded)[:300],
+        prompt_signals=["subagent_review_capsule"],
+    )
+    write_telemetry_event(
+        repo,
+        runtime=runtime,
+        hook_name="subagent_review_gate",
+        event_name=event_name(event) or "SubagentStart",
+        mode=mode,
+        session_id=session_id_from_event(event),
+        cwd=cwd_from_event(event),
+        review_capsules=[capsule],
+        process_phase_blocked=bool(degraded),
+        process_phase_blocked_reason="; ".join(degraded)[:300],
+        hook_findings={"degraded": degraded},
+    )
+    if mode not in {"monitor", "off"} and should_emit_context(GATE_NAME):
+        adapter_for(runtime).emit_context(event_name(event) or "SubagentStart", render_capsule_message(capsule, degraded))
+    return 0
+
+
+def _handle_subagent_stop(event: dict, runtime: str, repo: Path, state: dict, mode: str) -> int:
+    result = extract_phase_review_result(event)
+    if not result and not _review_requested(event, state):
+        return 0
+    if not result:
+        result = insufficient_evidence_result(_review_type(event, state))
+    result = sanitize_phase_review_result(result)
+    expected_digest = expected_review_digest(event, state, result)
+    capsule_id = _safe_event_token(event.get("capsule_id") or event.get("review_capsule_id"))
+    result.update(
+        {
+            "review_source": "subagent_review_gate",
+            "capsule_id": capsule_id,
+            "expected_artifact_digest": expected_digest,
+            "review_context_strength": "strong" if expected_digest else "insufficient",
+            "reviewer_boundary": "subagent",
+        }
+    )
+    result = sanitize_phase_review_result(result)
+    findings = review_findings_blocking([result])
+    digest_findings = _digest_evidence_findings(result, expected_digest)
+    findings = _unique_findings([*findings, *digest_findings])
+    result = sanitize_phase_review_result(result)
+    reviewed = bool(expected_digest) and phase_review_passes(
+        result,
+        artifact_digest=expected_digest,
+        require_strong_source=True,
+    )
+    phase = str(result.get("phase") or "")
+    reviewed_flags = {
+        "pdd_reviewed": reviewed if phase == "pdd" else None,
+        "ddd_reviewed": reviewed if phase == "ddd" else None,
+        "sdd_reviewed": reviewed if phase == "sdd" else None,
+        "tdd_reviewed": reviewed if phase == "tdd" else None,
+    }
+    degraded = _adapter_degraded(runtime)
+    blocked = bool(findings or degraded)
+    reason = "; ".join([str(item.get("evidence") or item.get("finding_id")) for item in findings] + degraded)[:300]
+    merge_state(
+        repo,
+        runtime,
+        phase_review_results=[result],
+        phase_review_findings=findings,
+        phase_review_seen=True,
+        process_phase_blocked=blocked,
+        process_phase_blocked_reason=reason,
+        phase_repair_required=bool(findings),
+        prompt_signals=["subagent_phase_review_result"],
+        **reviewed_flags,
+    )
+    write_telemetry_event(
+        repo,
+        runtime=runtime,
+        hook_name="subagent_review_gate",
+        event_name=event_name(event) or "SubagentStop",
+        mode=mode,
+        session_id=session_id_from_event(event),
+        cwd=cwd_from_event(event),
+        phase_review_results=[result],
+        phase_review_findings=findings,
+        phase_review_seen=True,
+        process_phase_blocked=blocked,
+        process_phase_blocked_reason=reason,
+        phase_repair_required=bool(findings),
+        pdd_reviewed=bool(reviewed_flags["pdd_reviewed"]),
+        ddd_reviewed=bool(reviewed_flags["ddd_reviewed"]),
+        sdd_reviewed=bool(reviewed_flags["sdd_reviewed"]),
+        tdd_reviewed=bool(reviewed_flags["tdd_reviewed"]),
+        hook_findings={"findings": findings, "degraded": degraded},
+    )
+    return 0
+
+
+def expected_review_digest(event: dict, state: dict, result: dict) -> str:
+    """Resolve the digest the phase review was expected to cover."""
+    phase = str(result.get("phase") or "").strip().casefold()
+    capsule_id = _safe_event_token(event.get("capsule_id") or event.get("review_capsule_id"))
+    capsules = [item for item in state.get("review_capsules") or [] if isinstance(item, dict)]
+    if capsule_id:
+        for capsule in reversed(capsules):
+            if str(capsule.get("capsule_id") or "") == capsule_id:
+                digest = _capsule_artifact_digest(capsule)
+                if digest:
+                    return digest
+    for capsule in reversed(capsules):
+        review_type = str(capsule.get("review_type") or "").strip().casefold()
+        artifact = capsule.get("artifact_under_review")
+        artifact_phase = ""
+        if isinstance(artifact, dict):
+            artifact_phase = str(artifact.get("phase") or "").strip().casefold()
+        if phase and phase in {review_type, artifact_phase}:
+            digest = _capsule_artifact_digest(capsule)
+            if digest:
+                return digest
+    for ledger in reversed([item for item in state.get("process_phase_ledgers") or [] if isinstance(item, dict)]):
+        digests = ledger.get("artifact_digests")
+        if isinstance(digests, dict):
+            digest = _bounded_digest(digests.get(phase))
+            if digest:
+                return digest
+        for artifact in ledger.get("process_phase_artifacts") or []:
+            if isinstance(artifact, dict) and str(artifact.get("phase") or "").casefold() == phase:
+                digest = _bounded_digest(artifact.get("artifact_digest"))
+                if digest:
+                    return digest
+    for artifact in reversed([item for item in state.get("process_phase_artifacts") or [] if isinstance(item, dict)]):
+        if str(artifact.get("phase") or "").strip().casefold() == phase:
+            digest = _bounded_digest(artifact.get("artifact_digest"))
+            if digest:
+                return digest
+    return _bounded_digest(event.get("artifact_digest"))
+
+
+def _digest_evidence_findings(result: dict, expected_digest: str) -> list[dict[str, Any]]:
+    phase = str(result.get("phase") or "implementation").strip().casefold()
+    reviewed_digest = _bounded_digest(result.get("reviewed_artifact_digest"))
+    if not expected_digest:
+        result["verdict"] = "insufficient_evidence"
+        result["score"] = 0
+        result["required_next_action"] = ["repair", "run_validation"]
+        result["residual_risk"] = [
+            *[item for item in result.get("residual_risk") or [] if isinstance(item, dict)],
+            {
+                "risk": "phase review lacks expected artifact digest from capsule or ledger",
+                "owner": "development-process-orchestrator",
+                "next_gate": "subagent_review_gate",
+            },
+        ]
+        return [
+            {
+                "finding_id": f"{phase}-review-missing-expected-digest",
+                "phase": phase,
+                "severity": "high",
+                "evidence": "phase review has no expected artifact digest from capsule or ledger",
+                "required_fix": "rerun review with a review capsule or current process phase ledger digest",
+                "blocks_next_stage": True,
+                "resolved": False,
+            }
+        ]
+    if reviewed_digest != expected_digest:
+        return [
+            {
+                "finding_id": f"{phase}-review-stale-digest",
+                "phase": phase,
+                "severity": "high",
+                "evidence": "phase review reviewed_artifact_digest is stale",
+                "required_fix": "rerun independent review against the current capsule or ledger artifact digest",
+                "blocks_next_stage": True,
+                "resolved": False,
+            }
+        ]
+    return []
+
+
+def _capsule_artifact_digest(capsule: dict[str, Any]) -> str:
+    artifact = capsule.get("artifact_under_review")
+    if not isinstance(artifact, dict):
+        return ""
+    if str(artifact.get("cannot_pass_review") or "").casefold() == "true":
+        return ""
+    return _bounded_digest(artifact.get("artifact_digest"))
+
+
+def _bounded_digest(value: object) -> str:
+    text = str(value or "").strip()
+    if "\n" in text or "\r" in text or "\x00" in text or len(text) > 120:
+        return ""
+    return text if DIGEST_RE.match(text) else ""
+
+
+def _safe_event_token(value: object) -> str:
+    text = str(value or "").strip()
+    if "\n" in text or "\r" in text or "\x00" in text or len(text) > 120:
+        return ""
+    return text if re.match(r"^[A-Za-z0-9_.:-]{1,120}$", text) else ""
+
+
+def _unique_findings(findings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    result: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for finding in findings:
+        finding_id = str(finding.get("finding_id") or "").strip()
+        key = finding_id or json.dumps(finding, sort_keys=True, default=str)
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(finding)
+    return result
+
+
+def build_review_capsule(event: dict, state: dict, *, review_type: str) -> dict[str, Any]:
+    """Return a bounded review capsule derived from state, never raw prompts."""
+    artifact_digest = _real_artifact_digest(event, state, review_type)
+    paths = [str(path) for path in (state.get("read_paths") or state.get("changed_paths") or [])[:20]]
+    read_files = [
+        {
+            "path": path[:300],
+            "digest": _digest_for(path),
+            "excerpt_summary": "bounded source path observed by parent context",
+        }
+        for path in paths
+    ]
+    capsule = {
+        "schema_version": 1,
+        "capsule_id": str(event.get("capsule_id") or f"{review_type}-capsule-1")[:120],
+        "review_type": review_type,
+        "user_request_summary": "bounded parent-supplied engineering request summary",
+        "accepted_constraints": [
+            "review only the artifact digest and bounded source evidence",
+            "return phase_review_result only",
+        ],
+        "source_evidence": {
+            "read_files": read_files,
+            "searched_patterns": [str(item)[:300] for item in (state.get("searched_patterns") or [])[:20]],
+        },
+        "artifact_under_review": {
+            "phase": review_type,
+            "artifact_digest": artifact_digest,
+            "artifact_summary": str(event.get("artifact_summary") or f"bounded {review_type} artifact summary")[:600],
+            "evidence_strength": "strong" if artifact_digest else "insufficient",
+            "review_context_strength": "strong" if artifact_digest else "insufficient",
+            "cannot_pass_review": not bool(artifact_digest),
+        },
+        "allowed_context": [
+            "user_request_summary",
+            "accepted_constraints",
+            "source_evidence",
+            "artifact_under_review",
+        ],
+        "forbidden_inputs": [
+            "raw prompt",
+            "raw secrets",
+            "full command output",
+            "implementer self-approval",
+            "unverified completion claims",
+        ],
+    }
+    return sanitize_review_capsule(capsule)
+
+
+def _real_artifact_digest(event: dict, state: dict, phase: str) -> str:
+    digest = _bounded_digest(event.get("artifact_digest"))
+    if digest:
+        return digest
+    phase = str(phase or "").strip().casefold()
+    for ledger in reversed([item for item in state.get("process_phase_ledgers") or [] if isinstance(item, dict)]):
+        digests = ledger.get("artifact_digests")
+        if isinstance(digests, dict):
+            digest = _bounded_digest(digests.get(phase))
+            if digest:
+                return digest
+        for artifact in ledger.get("process_phase_artifacts") or []:
+            if isinstance(artifact, dict) and str(artifact.get("phase") or "").casefold() == phase:
+                digest = _bounded_digest(artifact.get("artifact_digest"))
+                if digest:
+                    return digest
+    for artifact in reversed([item for item in state.get("process_phase_artifacts") or [] if isinstance(item, dict)]):
+        if str(artifact.get("phase") or "").strip().casefold() == phase:
+            digest = _bounded_digest(artifact.get("artifact_digest"))
+            if digest:
+                return digest
+    return ""
+
+
+def extract_phase_review_result(event: dict) -> dict[str, Any]:
+    """Extract a structured phase_review_result from bounded hook event fields."""
+    direct = event.get("phase_review_result")
+    if isinstance(direct, dict):
+        return direct
+    for key in ("response", "result", "last_assistant_message", "lastAssistantMessage"):
+        value = event.get(key)
+        if not isinstance(value, str):
+            continue
+        parsed = _json_from_text(value)
+        if isinstance(parsed, dict):
+            if isinstance(parsed.get("phase_review_result"), dict):
+                return parsed["phase_review_result"]
+            if "review_id" in parsed and "verdict" in parsed:
+                return parsed
+    return {}
+
+
+def insufficient_evidence_result(phase: str) -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "review_id": f"{phase}-review-insufficient-evidence",
+        "phase": phase if phase in PHASES else "implementation",
+        "reviewer_skill": "phase-review-capsule",
+        "owner_skill": "development-process-orchestrator",
+        "reviewed_artifact_digest": "",
+        "expected_artifact_digest": "",
+        "review_source": "subagent_review_gate",
+        "review_context_strength": "insufficient",
+        "reviewer_boundary": "subagent",
+        "verdict": "insufficient_evidence",
+        "score": 0,
+        "findings": [
+            {
+                "finding_id": f"{phase}-review-missing",
+                "severity": "high",
+                "evidence": "subagent did not return phase_review_result",
+                "required_fix": "rerun independent review and return phase_review_result",
+                "blocks_next_stage": True,
+            }
+        ],
+        "approved_scope": {"files": [], "behaviors": [], "facts": []},
+        "not_reviewed": ["phase artifact was not independently reviewed"],
+        "required_next_action": ["repair"],
+        "residual_risk": [
+            {
+                "risk": "missing independent review evidence",
+                "owner": "development-process-orchestrator",
+                "next_gate": "subagent_review_gate",
+            }
+        ],
+    }
+
+
+def render_capsule_message(capsule: dict[str, Any], degraded: list[str]) -> str:
+    lines = ["ChangeForge Subagent Review Gate: review capsule required"]
+    lines.append(f"- review_type: {capsule.get('review_type')}")
+    lines.append("- return only phase_review_result; do not return raw reasoning or transcript")
+    for item in degraded:
+        lines.append(f"- degraded enforcement: {item}")
+    return "\n".join(lines)
+
+
+def _review_type(event: dict, state: dict) -> str:
+    for value in (event.get("review_type"), event.get("phase"), state.get("process_current_phase")):
+        text = str(value or "").strip().casefold()
+        if text in PHASES:
+            return text
+    return "implementation"
+
+
+def _review_requested(event: dict, state: dict) -> bool:
+    """Return true only for explicit review-capsule or phase-review surfaces."""
+    if extract_phase_review_result(event):
+        return True
+    for key in (
+        "review_type",
+        "phase",
+        "capsule_id",
+        "review_capsule_id",
+        "artifact_digest",
+        "artifact_summary",
+    ):
+        if str(event.get(key) or "").strip():
+            return True
+    for key in (
+        "review_capsules",
+        "process_phase_ledgers",
+        "process_phase_artifacts",
+        "phase_review_results",
+        "phase_review_findings",
+        "implementation_review_results",
+        "implementation_review_findings",
+    ):
+        value = state.get(key)
+        if isinstance(value, list) and value:
+            return True
+    if state.get("process_phase_blocked") or state.get("implementation_review_required"):
+        return True
+    if state.get("review_intent_seen") or state.get("review_evidence_seen"):
+        return True
+    signals = state.get("prompt_signals")
+    if isinstance(signals, list):
+        return any("review" in str(signal).casefold() or "capsule" in str(signal).casefold() for signal in signals)
+    return False
+
+
+def _adapter_degraded(runtime: str) -> list[str]:
+    capabilities = adapter_capabilities_for(runtime)
+    if capabilities.supports_subagent_stop:
+        return []
+    return [f"{runtime} lacks SubagentStop support; require parent-context review result or CI validation"]
+
+
+def _json_from_text(text: str) -> Any:
+    stripped = text.strip()
+    candidates = [stripped]
+    match = JSON_OBJECT_RE.search(stripped)
+    if match:
+        candidates.append(match.group(0))
+    for candidate in candidates:
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+    return None
+
+
+def _digest_for(value: str) -> str:
+    return "sha256:" + hashlib.sha256(str(value).encode("utf-8")).hexdigest()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

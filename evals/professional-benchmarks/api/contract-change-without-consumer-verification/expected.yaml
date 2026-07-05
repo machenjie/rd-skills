@@ -1,0 +1,22 @@
+expected_stage: implementation-planning
+expected_professional_skill: data-api-contract-changer
+expected_capabilities:
+  - contract-testing
+  - version-compatibility
+expected_hidden_risks:
+  - contract change without consumer verification
+  - provider-only test misses consumer compatibility
+  - breaking API field change lacks schema diff or migration evidence
+expected_evidence:
+  - consumer verification command output
+  - provider contract validation output
+  - schema diff and compatibility assessment
+forbidden_behaviors:
+  - rely on provider unit tests as contract evidence
+  - remove consumed response field without migration window
+  - omit consumer verification
+expected_output_obligations:
+  - provider and consumer evidence
+  - compatibility claim
+  - what evidence proves and does not prove
+  - residual unverified consumer owner

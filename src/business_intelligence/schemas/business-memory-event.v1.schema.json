@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/business-intelligence/business-memory-event.v1.schema.json",
+  "title": "ChangeForge Business Memory Event",
+  "description": "Bounded business semantic projection over project memory. It is advisory and cannot prove a business FACT without current source confirmation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["business_memory_event"],
+  "$defs": {
+    "boundedStringList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {"type": "string", "minLength": 1, "maxLength": 300}
+    },
+    "boundedPathList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {"type": "string", "minLength": 1, "maxLength": 220, "not": {"pattern": "^(/|~|\\.\\.)"}}
+    }
+  },
+  "properties": {
+    "business_memory_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "event_id",
+        "event_type",
+        "verdict",
+        "summary",
+        "bounded_paths",
+        "source_check_required",
+        "source_confirmation"
+      ],
+      "properties": {
+        "schema_version": {"const": 1},
+        "event_id": {"type": "string", "minLength": 1, "maxLength": 300, "pattern": "^mem_"},
+        "event_type": {
+          "type": "string",
+          "enum": [
+            "business_rule_changed",
+            "business_rule_rejected",
+            "business_object_ownership_changed",
+            "business_term_ambiguous",
+            "workflow_transition_bug",
+            "missing_entry_point_bug",
+            "hidden_sql_rule_bug",
+            "stale_business_context",
+            "golden_case_added",
+            "golden_case_failed",
+            "owner_decision_superseded"
+          ]
+        },
+        "verdict": {"type": "string", "enum": ["accepted", "rejected", "stale", "not_verified"]},
+        "summary": {"type": "string", "minLength": 1, "maxLength": 240},
+        "bounded_paths": {"$ref": "#/$defs/boundedPathList"},
+        "related_rule_ids": {"$ref": "#/$defs/boundedStringList"},
+        "related_object_ids": {"$ref": "#/$defs/boundedStringList"},
+        "related_workflow_ids": {"$ref": "#/$defs/boundedStringList"},
+        "source_check_required": {"type": "boolean", "const": true},
+        "source_confirmation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "current_source_paths", "residual_risk"],
+          "properties": {
+            "status": {"type": "string", "enum": ["confirmed", "rejected", "stale", "not_verified"]},
+            "current_source_paths": {"$ref": "#/$defs/boundedPathList"},
+            "residual_risk": {"$ref": "#/$defs/boundedStringList"}
+          }
+        }
+      }
+    }
+  }
+}

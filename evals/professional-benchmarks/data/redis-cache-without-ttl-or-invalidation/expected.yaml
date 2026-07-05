@@ -1,0 +1,23 @@
+expected_stage: implementation-planning
+expected_professional_skill: data-middleware-change-builder
+expected_capabilities:
+  - cache-design
+  - performance-budgeting
+  - observability
+  - permission-boundary-modeling
+expected_hidden_risks:
+  - stale entitlement state
+  - cross-tenant cache collision
+  - unbounded Redis memory growth or hot key
+expected_evidence:
+  - cache key schema with tenant boundary
+  - TTL and invalidation strategy
+  - cache hit, memory, and stale-read validation evidence
+forbidden_behaviors:
+  - rely on implicit TTL-only invalidation for mutable entitlement state
+  - omit tenant from a multi-tenant cache key
+  - skip observability for cache hit rate or memory
+expected_output_obligations:
+  - source-of-truth and cache lifecycle analysis
+  - validation evidence for invalidation behavior
+  - residual staleness risk and owner

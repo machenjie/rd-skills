@@ -1,0 +1,36 @@
+id: roo-unsupported-runtime-event
+runtime: roo
+description: Roo review-mode edit event degrades through mode policy and unsupported runtime event evidence.
+coverage_targets:
+  - degradation
+  - tool_category
+pressure_cases:
+  - unsupported_runtime_event
+input_payload:
+  event_name: tool_use
+  event_id: roo-unsupported-runtime-event
+  mode: review
+  tool_name: write
+  path: src/security.py
+expected_normalized_event:
+  adapter: roo
+  event_kind: post_tool_use
+  tool_category: edit
+  stage_signal: code-review
+  bounded_paths:
+    - src/security.py
+  capability_degradation_contains:
+    - roo_post_tool_use_unsupported
+    - roo_review_mode_edit_tools_unsupported
+expected_gate_result:
+  outcome: degraded
+expected_evidence_delta:
+  normalized_event_supported: false
+  adapter_degradation_strength: partial
+expected_closure_effect:
+  verdict: needs_validation
+  unsupported_checks_contains:
+    - runtime_adapter_degradation
+privacy_expectations:
+  forbid_absolute_paths: true
+
