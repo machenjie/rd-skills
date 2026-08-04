@@ -7,22 +7,21 @@ focus:
   - re-review closure
   - final diff coverage
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
-    - agent-execution-discipline
-    - implementation-structure-design
-    - code-review
-    - unit-testing
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
-    - AI review gate
-    - execution discipline gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
+release_contract:
+  case_id: review/repair-rereview-required
+  control_path: direct
+  primary_skill: backend-change-builder
+  task_skill: backend-change-builder
+  review_skill: ai-code-review-refactor
+  tasks:
+    - task_id: repair-and-prove
+      skill: backend-change-builder
+      review_skill: ai-code-review-refactor
 expected_outcomes:
   - Review, repair, and re-review appear as separate steps.
   - The repair is tied to the review finding.

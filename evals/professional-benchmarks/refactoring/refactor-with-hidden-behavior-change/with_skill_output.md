@@ -1,6 +1,6 @@
 Selected stage: refactoring.
 Selected professional skill: ai-code-review-refactor.
-Selected capabilities: refactoring, implementation-structure-design, code-clarity-maintainability, code-review.
+Selected Layer 3 Skills: refactoring, implementation-structure-design, code-review.
 
 Hidden risks: hidden behavior change during supposedly behavior-preserving refactor; public API or error semantics changed without evidence; deletion path not proven safe.
 

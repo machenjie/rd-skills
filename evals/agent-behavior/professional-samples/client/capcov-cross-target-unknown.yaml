@@ -1,0 +1,36 @@
+id: capcov-behavior-cross-target-unknown
+description: Unknown cross-platform client targets require repository evidence before one bounded question.
+prompt: |
+  Prepare an implementation for a Flutter packaged client change.
+  The target platform is not stated.
+expected:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: [repository-context-map]
+  review_skill: architecture-impact-reviewer
+  required_professional_obligations:
+    - inspect repository before target inference
+    - check build targets
+    - check release configuration
+    - ask one bounded question only after evidence remains inconclusive
+  forbidden_behaviors:
+    - load cross-platform-client-extension without a real target platform
+    - ask an unbounded target-platform question before repository inspection
+actual:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: [repository-context-map]
+  review_skill: architecture-impact-reviewer
+  handoff:
+    result: blocked on target platform
+    changed_files: []
+    commands_run: [none]
+    validation_results: fixture shape validated
+    findings: inspect repository before target inference; check build targets; check release configuration; ask one bounded question only after evidence remains inconclusive
+    unverified_scope: repository build targets, release configuration, and published artifacts
+    residual_risk: the framework name can hide the actual release platforms
+    recommended_next_step: inspect repository, build, release, and published-artifact evidence before one bounded target question
+review:
+  human_review_required: true
+  promotion_status: candidate
+  notes: Repository-first target discovery is required before one bounded question.

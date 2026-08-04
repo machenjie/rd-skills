@@ -1,10 +1,12 @@
 # Authentication Security Checklist
 
-- Identify identity provider, credential types, sessions, cookies, access tokens, and refresh tokens.
-- Define issuance, expiration, refresh, rotation, revocation, and logout behavior.
-- Prevent session fixation by rotating identifiers after login and privilege changes.
-- Configure cookie HttpOnly, Secure, SameSite, path, domain, and lifetime settings.
-- Define MFA, step-up, and account recovery controls for high-risk actions.
-- Confirm credential and token storage uses approved secure mechanisms.
-- Ensure secrets, tokens, and reset links are not logged or placed in URLs.
-- Test replay, refresh reuse, logout, revocation, recovery, and privilege changes.
+- Identify the IdP, clients/browsers, credential/authenticator types, session/token authority, assurance target, threat model, and applicable policy.
+- Define issuance, transport, storage, renewal, privilege change, compromise, revocation, logout, recovery, and audit outcomes only for affected flows.
+- When local passwords are stored, prove a maintained purpose-built password hashing or KDF with policy- and latency-derived parameters, excluding fast hashes and custom cryptography.
+- For cookie sessions, derive script, transport, cross-site, scope, and lifetime controls from the actual browser, SSO, or embedding flow.
+- Verify the intended protection instead of requiring one universal attribute set.
+- Select MFA/step-up, refresh rotation/reuse detection, sender constraints, revocation, and recovery controls from assurance, IdP/client capability, replay/takeover risk, UX, and policy.
+- Ensure secrets, credentials, tokens, reset links, and session identifiers do not leak through URLs, logs, analytics, crash reports, referrers, or artifacts.
+- `analysis-agent` defines attack paths and validation plans and inspects already-existing source/provider/config/test evidence; it does not run dynamic validation.
+- `task-agent` runs only accepted post-edit dynamic checks that the changed flow triggers: fixation, replay/reuse, logout/revocation, recovery/linking, enumeration, password verification, callback, or denied step-up.
+- `review-agent` independently inspects the actual diff/evidence and runs only host-permitted, non-modifying checks; missing dynamic proof remains an explicit residual exposure.

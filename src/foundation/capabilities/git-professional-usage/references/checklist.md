@@ -7,6 +7,6 @@
 - Resolve conflicts from evidence: inspect ours/theirs/base or source authority, generated policy, behavior preserved, same-pattern scan, and validator mapped to resolved paths.
 - Review generated artifact policy: source spec, generator command, generated output, lockfile or vendored artifact authority, drift check, and committed/ignored decision.
 - Review commit hygiene: staged diff only, unrelated changes excluded, commit split boundaries, branch naming convention, commit message behavior/risk statement, and signature/tag expectations when relevant.
-- Review remote/release safety: branch ownership, protected branch policy, force-with-lease ceiling, signed tag status, tag mutation owner, rollback communication, and downstream release impact.
+- Review remote/release safety: branch ownership, protected policy, exact force-update remote ref and expected object ID, independent observation and stable lease basis, advanced-tip stop, signed-tag status, rollback communication, server-policy limits, and concurrent-update limits.
 - Validate with the smallest command, test, generator, diff, or report that can fail for the changed Git boundary, then state what it proves and does not prove.
-- Treat repository graph, project memory, old diffs, previous command output, branch summaries, and old CI logs as selectors only until current worktree/ref/source evidence confirms them.
+- Treat repository inspection, prior task evidence, old diffs, previous command output, branch summaries, and old CI logs as selectors only until current worktree/ref/source evidence confirms them.

@@ -37,8 +37,14 @@ evals/codegen/
   bigdata/
   iot/
   low-level/
+  code-elements/
   devex/
+  logging/
+  pressure/
+  review/
+  validation/
   structure/
+  performance/
   finops/
 ```
 
@@ -70,15 +76,21 @@ required file exists, markdown files contain the required sections, and
 `expected-qualities.yaml` references real ChangeForge skills, capabilities,
 domain extensions, and quality gates.
 
-The default execution runner path validates that setup, test, and security
-scripts run from `starter-repo/`, that `test-suite/README.md` expected commands
-match `run.sh`, and that each benchmark has at least one executable test or
-automatic review failure condition covering its `forbidden_shortcuts`.
+The default `--limit` path selects assertion-backed cases first, validates the
+checked-in setup/test/security harness, and executes the real assertions as a
+negative control against the intentionally incomplete starter. A smoke case
+fails if its starter unexpectedly passes every product assertion. Candidate
+mode never executes a candidate-supplied setup or test script. It does execute
+candidate code through the checked-in harness and assertions, using a minimal
+environment and a sanitized temporary snapshot. Environment filtering is not
+an operating-system sandbox: run candidate mode only in a disposable container
+or VM with no mounted credentials or sensitive host data.
 
 To evaluate a generated implementation for one benchmark, apply the generated
 code to a copy of that benchmark's `starter-repo/` and pass that directory:
 
 ```bash
+CHANGEFORGE_RUN_CODEGEN_CANDIDATE=1 \
 python3 scripts/run-codegen-benchmarks.py \
   --benchmark security/ssrf-url-allowlist \
   --candidate-dir /path/to/generated/ssrf-url-allowlist

@@ -1,6 +1,6 @@
 Selected stage: bug-fix.
 Selected professional skill: backend-change-builder.
-Selected capabilities: permission-boundary-modeling, authentication-authorization, agent-execution-discipline, regression-testing.
+Selected Layer 3 Skills: permission-boundary-modeling, authentication-authorization, regression-testing.
 
 Hidden risks: IDOR from missing object ownership check; tenant data leak from identifier-only query; local fix without same-pattern scan.
 

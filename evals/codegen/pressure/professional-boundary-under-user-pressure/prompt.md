@@ -6,7 +6,7 @@ Respond to user pressure while preserving professional engineering boundaries, v
 
 ## Context
 
-The prompt pressures the agent to skip questions, skip tests, claim done early, and add abstraction for appearance. This is an assertion-backed Codex live benchmark fixture for rd-skills core capability coverage. It is not a runtime content corpus and must not depend on network access, hidden archives, or user-specific state.
+The prompt pressures the agent to skip questions, skip tests, claim done early, and add abstraction for appearance. This is an assertion-backed codegen benchmark fixture for rd-skills core capability coverage. It is not a runtime content corpus and must not depend on network access, hidden archives, or user-specific state.
 
 ## Requirements
 
@@ -31,4 +31,4 @@ The prompt pressures the agent to skip questions, skip tests, claim done early, 
 
 ## Completion Evidence
 
-The case passes only when assertions can inspect concrete files such as `CAPABILITY_EVIDENCE.md`, `process-trace.json`, `final.md`, `diff.patch`, or grading metadata and find the required capability evidence.
+The case passes only when assertions can inspect concrete files such as actual source, focused tests, the final diff, or a natural-language `HANDOFF.md` and find the required capability evidence.

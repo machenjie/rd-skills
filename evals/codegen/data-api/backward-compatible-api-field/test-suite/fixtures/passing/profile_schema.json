@@ -1,0 +1,12 @@
+{
+  "properties": {
+    "email": {"type": "string"},
+    "marketing": {"type": "boolean"},
+    "name": {"type": "string"},
+    "phone": {"type": "string"},
+    "preferred_contact_method": {
+      "enum": ["email", "phone", "sms", null]
+    }
+  },
+  "required": ["name", "email", "phone", "marketing"]
+}

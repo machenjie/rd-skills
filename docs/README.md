@@ -1,79 +1,84 @@
-# Documentation
+# ChangeForge Documentation
 
-Start here when you need the current documentation map for ChangeForge Skill Mesh. This page is hand-authored navigation; generated reports and catalogs are labeled below as snapshots.
+Use this page as the map for both the installed ChangeForge product and its
+authoring repository. Installable artifacts come from `dist/`; `src/` is never
+an installation source.
 
-## New Users
+## Install And Complete A First Task
 
-- [Quickstart](QUICKSTART.md)
-- [Installation](INSTALLATION.md)
-- [First prompts / Usage](USAGE.md)
-- [Troubleshooting](USAGE.md#troubleshooting)
+- [Quickstart](QUICKSTART.md): prepare the repository, choose a host/scope/profile,
+  preview, install, run doctor, and submit a first request.
+- [Installation](INSTALLATION.md): supported hosts and scopes, default paths,
+  build/install/upgrade/uninstall, backup boundaries, and recovery.
+- [Usage](USAGE.md): copyable Direct Task, Analyzed Work, and review-only
+  requests, plus expected interaction and handoff contents.
+- [Scenario Showcase](SHOWCASE.md): generated routes and complete evidence
+  obligations from the repository examples.
+- [Routing examples](ROUTING_EXAMPLES.md): additional routing decisions.
+- [Migration to the hookless architecture](MIGRATING_TO_HOOKLESS.md): legacy
+  removal, compatibility, and rollback.
 
-## Daily Users
+## Understand The System
 
-- [Usage](USAGE.md)
-- [Profiles](INSTALLATION.md#profiles)
-- [Hooks](HOOKS.md)
-- [Examples](../examples/README.md)
+- [Hookless architecture](HOOKLESS_ARCHITECTURE.md): product structure and
+  non-intercepting execution model.
+- [AI control boundaries](AI_CONTROL_BOUNDARIES.md): authority and enforcement
+  limits.
+- [Operating model](OPERATING_MODEL.md): task, evidence, and completion
+  contracts.
+- [Subagent model](SUBAGENT_MODEL.md): four roles, handoffs, and write
+  serialization.
+- [Build profiles](BUILD_PROFILES.md): `recommended`, `full`, and `dev`
+  composition and manifests.
+- [Marketplace](MARKETPLACE.md): how to use the source-derived discovery views.
+- [Marketplace Catalog](MARKETPLACE_CATALOG.md): generated Skill inventory and
+  navigation.
 
-## System Model
+## Author Or Maintain Skills
 
-- [Operating model](OPERATING_MODEL.md): source-vs-runtime boundary, routing flow, skill layers, hooks, telemetry, and reference loading.
-- [Quality model](QUALITY_MODEL.md): L1-L5 risk levels and required evidence.
-- [Engineering stage model](ENGINEERING_STAGE_MODEL.md): stage-specific capability launch, handoff, and evidence requirements.
-- [Runtime profiles](RUNTIME_PROFILES.md): `recommended`, `full`, and `dev` profile composition.
-- [Packaging](PACKAGING.md): OpenAI API zip contract, profile effects, and packaging guardrails.
-- [Telemetry](TELEMETRY.md): fact-log boundaries, privacy guarantees, review, and human promotion.
-- [Routing examples](ROUTING_EXAMPLES.md): examples for interpreting router output and evidence depth.
+- [Skill content governance](SKILL_CONTENT_GOVERNANCE.md): root/reference
+  placement, review evidence, and validation ownership.
+- [Skill authoring base standard](skill_authoring_standard/SKILL_AUTHORING_BASE_STANDARD.md)
+- [Professional Skill authoring standard](skill_authoring_standard/PROFESSIONAL_SKILL_AUTHORING_STANDARD.md)
+- [Foundation capability authoring standard](skill_authoring_standard/FOUNDATION_CAPABILITY_AUTHORING_STANDARD.md)
+- [Domain extension authoring standard](skill_authoring_standard/DOMAIN_EXTENSION_AUTHORING_STANDARD.md)
 
-## Contributors
+Professional quality is defined separately from AI readability:
+
+- [Skill professionalism base standard](skill_professionalism_standard/SKILL_PROFESSIONALISM_BASE_STANDARD.md)
+- [Professionalism dimension rubric](skill_professionalism_standard/SKILL_PROFESSIONALISM_DIMENSION_RUBRIC.md)
+- [Professionalism evaluation and governance](skill_professionalism_standard/SKILL_PROFESSIONALISM_EVALUATION_AND_GOVERNANCE.md)
+
+## Validate, Interpret Evidence, And Release
+
+- [Validation](VALIDATION.md): the canonical ordinary and formal command paths.
+- [Quality model](QUALITY_MODEL.md): evidence types, limits, and quality levels.
+- [Benchmarks](BENCHMARKS.md): routing, behavior, pressure, and code-generation
+  evidence.
+- [Scorecard](SCORECARD.md): handwritten evidence expectations, never generated
+  status or a current-tree pass report.
+- [Release](RELEASE.md): formal operator sequence, stop conditions, packaging,
+  and release handoff limits.
+- [Open-source readiness](OPEN_SOURCE_READINESS.md): publication metadata and
+  repository checks.
+- [Reports index](../reports/README.md): generated and captured report owners.
+- [Agent-behavior eval](../evals/agent-behavior/README.md)
+- [Code-generation eval](../evals/codegen/README.md)
+- [Pressure eval](../evals/pressure/README.md)
+
+The complete worked-example source is in the [examples index](../examples/README.md).
+Generated reports and eval outputs are evidence snapshots; they do not own the
+rules they measure.
+
+## Contribute Or Get Help
 
 - [Contributing](../CONTRIBUTING.md)
-- [Validation](VALIDATION.md)
-- [Authoring workflow](USAGE.md#authoring-workflow)
-- [Content governance](SKILL_CONTENT_GOVERNANCE.md)
-- Skill authoring standards:
-  - [Base standard](skill_authoring_standard/SKILL_AUTHORING_BASE_STANDARD.md)
-  - [Professional skill standard](skill_authoring_standard/PROFESSIONAL_SKILL_AUTHORING_STANDARD.md)
-  - [Foundation capability standard](skill_authoring_standard/FOUNDATION_CAPABILITY_AUTHORING_STANDARD.md)
-  - [Domain extension standard](skill_authoring_standard/DOMAIN_EXTENSION_AUTHORING_STANDARD.md)
-- Skill professionalism standards:
-  - [Professionalism base standard](skill_professionalism_standard/SKILL_PROFESSIONALISM_BASE_STANDARD.md)
-  - [Dimension rubric](skill_professionalism_standard/SKILL_PROFESSIONALISM_DIMENSION_RUBRIC.md)
-  - [Evaluation and governance](skill_professionalism_standard/SKILL_PROFESSIONALISM_EVALUATION_AND_GOVERNANCE.md)
+- [Governance](../GOVERNANCE.md)
+- [Security policy](../SECURITY.md)
+- [Support](../SUPPORT.md)
+- [Code of Conduct](../CODE_OF_CONDUCT.md)
+- [Changelog](../CHANGELOG.md)
 
-`docs/skill_authoring_standard/` is the canonical source for skill shape,
-activation, reference loading, and type overlays.
-`docs/skill_professionalism_standard/` is the canonical source for
-professional-depth scoring and regression governance.
-`docs/SKILL_CONTENT_GOVERNANCE.md` governs body/reference layering, size,
-duplication, and context efficiency.
-
-## Maintainers
-
-- [Release](RELEASE.md)
-- [Benchmarks](BENCHMARKS.md)
-- [Scorecard](SCORECARD.md)
-- [Quality model](QUALITY_MODEL.md)
-- [Professionalism release checklist](PROFESSIONALISM_RELEASE_CHECKLIST.md)
-- [Professionalism enhancement standard](PROFESSIONALISM_ENHANCEMENT_STANDARD.md)
-- [Professionalism enhancement matrix](PROFESSIONALISM_ENHANCEMENT_MATRIX.md)
-- [Open Source Readiness](OPEN_SOURCE_READINESS.md)
-- [License decision](LICENSE_DECISION.md)
-- [Reports](../reports/README.md)
-
-## Generated / Snapshot Docs
-
-- [Scorecard Dashboard](SCORECARD_DASHBOARD.md): generated release snapshot from `reports/professional-scorecard.json`.
-- [Marketplace Catalog](MARKETPLACE_CATALOG.md): generated local/source-derived discovery catalog only.
-- [Marketplace](MARKETPLACE.md): local/source-derived discovery boundary and non-official marketplace status.
-- [Showcase](SHOWCASE.md): generated scenario showcase from `examples/`.
-- [Reports](../reports/README.md): generated validation, benchmark, and release-readiness snapshots.
-
-## Reference And Comparison
-
-- [Comparison](COMPARISON.md): category-level positioning without live market claims.
-
-`docs/VALIDATION.md` is the canonical developer command set. Other documents should reference its Fast Source Invariants, Full Local, and [Release Gate](VALIDATION.md#release-gate) sections instead of copying long validation suites.
-
-`docs/INSTALLATION.md` is the installation and hook behavior fact source. Other documents may summarize profile choice and hook defaults, but detailed install matrices, activation levels, upgrade, uninstall, doctor, and smoke checks belong there.
+Static checks, fixtures, builds, and simulated installation do not prove
+real-host Profile startup, wall-clock performance, provider behavior,
+production accuracy, or the installed user experience.

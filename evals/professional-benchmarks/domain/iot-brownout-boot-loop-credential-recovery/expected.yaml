@@ -1,0 +1,22 @@
+coverage_class: standard
+expected_stage: release-review
+expected_professional_skill: delivery-release-gate
+expected_capabilities:
+  - iot-embedded-extension
+expected_hidden_risks:
+  - brownout during image activation can leave no bootable slot
+  - automatic rollback can loop forever when credential recovery requires network access
+  - expired device credentials can make fallback recovery unreachable
+expected_evidence:
+  - power-cut fault injection across write activation and first boot
+  - boot-attempt and last-known-good recovery trace
+  - offline credential-loss recovery exercise on representative hardware
+forbidden_behaviors:
+  - mark update successful before stable boot health
+  - assume A-B slots guarantee recovery
+  - require cloud connectivity for every credential recovery
+expected_output_obligations:
+  - go or no-go rollout verdict
+  - boot rollback and credential recovery state machine
+  - fleet stop signals proof limits and residual owner
+expected_with_skill_status: pass

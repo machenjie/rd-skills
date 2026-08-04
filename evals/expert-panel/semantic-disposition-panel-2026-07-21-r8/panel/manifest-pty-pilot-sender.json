@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-21-r8",
+  "created_on": "2026-07-21",
+  "packet_sha256": "ba7548790f485283d5bbb7052f1e14c6b3186428d3092495968703c2194a3061",
+  "source_fingerprints": {
+    "audit": "5e49c3da23e0401e5bfd63514dcbe72f9b364c5ac8383834e23a718ecdc2b7ee",
+    "reference_candidates": "8cd666f6f7d224e381bc03da02db1f2c8d8b3666221b82150e1ef79bd3863742",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "403e570e4affa455751542fa00717665d99287e84723b4646b8d26f0323633c8",
+    "root_candidates": "823330a7b936959b857e04d674bc306d3648e07b494bcb23dceda99a5c3f0d79",
+    "root_context": "1c67310bee74dc1b1cbff2354445d992360654482c4268329e9f4d6e90e6e6f4",
+    "root_detector": "0d8c01715fb11258126a474356e03b944ddb720f358163915e6ecf912498c33c",
+    "root_source": "9aed2782962f173af96437c2359a641daf7a15f4fb67a76dd7e116b5a90aebc2"
+  },
+  "voter": {
+    "voter_id": "manifest-pty-pilot-sender",
+    "agent_id": "/root/manifest_pty_pilot_sender",
+    "role": "semantic-control-plane-reviewer",
+    "expertise": [
+      "Control-plane evidence handoff and semantic governance review"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "root:dedb43e54a606e6da19a38addf8e0ff7daea4cea347fbb74ef197f69c9c88120",
+      "axis": "root",
+      "candidate_id": "dedb43e54a606e6da19a38addf8e0ff7daea4cea347fbb74ef197f69c9c88120",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Valid contextual rule. In this Skill, the requirement is scoped to deciding whether proven variation warrants an abstraction; the same rule names the evidence an agent must collect and the direct-code or configuration fallback when evidence is absent. It prevents speculative authority and compatibility surfaces rather than imposing an unconditional mechanism.",
+      "authority_or_condition": "extensibility-design owns this decision only when a task proposes an extension point, plugin, policy hook, or shared configuration boundary and claims independently evolving consumers.",
+      "decision_owner": "extensibility-design",
+      "mitigation": "Name current consumers, distinct change reasons, ownership, and likely evolution; keep the variation in direct code or configuration and escalate unresolved ownership until that evidence supports a narrow extension contract.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:eadab0abf6618f23f50755c1ce5d68a142649950ed7446261d44109502b5b98a",
+      "axis": "root",
+      "candidate_id": "eadab0abf6618f23f50755c1ce5d68a142649950ed7446261d44109502b5b98a",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Valid contextual rule. The surrounding trust rule distinguishes executable or update boundaries and mutable or consequential activation from config-only or static cases. Requiring inspected evidence and rationale before declaring a listed control inapplicable preserves fail-closed trust, metadata authentication, and rollback behavior; absent evidence, the agent has a clear stop rather than permission to bypass a control.",
+      "authority_or_condition": "extensibility-design owns non-applicability only for a task-local extension control after inspecting artifact type, install or update trust boundary, update metadata channel, activation mutability, and failure consequence.",
+      "decision_owner": "extensibility-design",
+      "mitigation": "Do not waive origin, authenticity, integrity, authenticated update metadata, or rehearsed last-known-good rollback on assertion alone; retain the applicable control or escalate until inspected evidence supports non-applicability, and re-evaluate when those conditions change.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "This static review establishes semantic disposition for the bound authoring snapshot only; it does not prove runtime enforcement, host behavior, or production safety.",
+    "The ballot does not update the disposition configuration or close lifecycle state; aggregation and majority application remain separate.",
+    "The declared reviewer identity and expertise are not external proof of credentials or experience."
+  ]
+}

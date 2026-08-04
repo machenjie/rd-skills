@@ -1,5 +1,0 @@
-{
-  "runtime": "codex",
-  "hook_event_name": "SessionStart",
-  "source": "compact"
-}

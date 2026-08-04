@@ -15,9 +15,9 @@ source_evidence:
 - Inspected: export route, export worker job, finance role policy, storage writer docs, accounting platform contract.
 - Not inspected: production IAM bindings and live accounting-platform credentials.
 
-graph_memory_trajectory_judgment:
-- Accepted: repository graph links export route to worker and storage writer.
-- Rejected: old project memory saying support can download exports; current policy docs show metadata-only support access.
+current_evidence_judgment:
+- Accepted: repository inspection links export route to worker and storage writer.
+- Rejected: old prior task evidence saying support can download exports; current policy docs show metadata-only support access.
 - Unknown: last production credential rotation date.
 
 actor_taxonomy:

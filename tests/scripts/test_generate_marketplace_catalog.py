@@ -16,51 +16,147 @@ def _load_module():
     if scripts_dir not in sys.path:
         sys.path.insert(0, scripts_dir)
     spec = importlib.util.spec_from_file_location("generate_marketplace_catalog", SCRIPT)
-    assert spec is not None
+    assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
-    assert spec.loader is not None
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
 
 class GenerateMarketplaceCatalogTests(unittest.TestCase):
-    def test_catalog_is_derived_from_exported_indexes(self) -> None:
-        module = _load_module()
-        payload = module.generate_catalog(ROOT, "recommended")
-        self.assertEqual(len(payload["indexes"]["recommended"]["items"]), 165)
-        self.assertEqual(len(payload["items"]), 165)
-        self.assertIn("change-forge-router", payload["items"])
-        self.assertIn("implementation-structure-design", payload["items"])
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.module = _load_module()
+        cls.payload = cls.module.generate_catalog(ROOT, "recommended")
+        cls.rendered = cls.module.render_catalog(cls.payload)
 
-    def test_rendered_catalog_has_required_sections_and_boundary(self) -> None:
-        module = _load_module()
-        rendered = module.render_catalog(module.generate_catalog(ROOT, "recommended"))
+    def test_catalog_is_derived_from_v3_exported_indexes(self) -> None:
+        self.assertEqual(len(self.payload["indexes"]["recommended"]["items"]), 190)
+        self.assertEqual(len(self.payload["items"]), 190)
+        self.assertEqual(
+            self.payload["indexes"]["recommended"]["schema_version"],
+            3,
+        )
+        self.assertIn("engineering-control-plane", self.payload["items"])
+        self.assertIn("backend-change-builder", self.payload["items"])
+        self.assertIn("transaction-consistency", self.payload["items"])
+
+    def test_rendered_catalog_has_new_architecture_sections(self) -> None:
         for section in (
+            "## How To Use This Catalog",
+            "## Quick Navigation",
             "## Profile Summary",
+            "## Control Skills",
             "## Professional Skills",
-            "## Foundation Capabilities By Group",
-            "## Domain Extensions",
-            "## Browse By Quality Gate",
-            "## Browse By Risk Trigger",
-            "## Browse By Profile Exposure",
+            "## Foundation Skills By Group",
+            "## Domain Skills",
+            "## Browse By Agent Profile",
+            "## Browse By Trigger Signal",
+            "## Browse By Profile Delivery",
         ):
-            self.assertIn(section, rendered)
-        self.assertIn("Official Codex and Claude marketplace publishing is intentionally not implemented", rendered)
+            self.assertIn(section, self.rendered)
+        self.assertIn("| `recommended` | 27 | 154 | 9 |", self.rendered)
+        self.assertIn("| `full` | 40 | 141 | 9 |", self.rendered)
+        self.assertIn("| `dev` | 190 | 0 | 0 |", self.rendered)
+        self.assertIn("### `engineering-control-plane`", self.rendered)
+        self.assertIn("### `backend-change-builder`", self.rendered)
+        self.assertIn("#### `transaction-consistency`", self.rendered)
+        self.assertIn("- Task routable: `true`", self.rendered)
+        self.assertIn("- Profile delivery:", self.rendered)
+        self.assertIn("Marketplace schema v3 discovery view", self.rendered)
+        self.assertIn(
+            "Official marketplace publishing is intentionally not implemented",
+            self.rendered,
+        )
+
+    def test_large_browse_groups_are_split_into_short_lists(self) -> None:
+        agent_browse = self.rendered.split(
+            "## Browse By Agent Profile", 1
+        )[1].split("## Browse By Trigger Signal", 1)[0]
+        delivery_browse = self.rendered.split(
+            "## Browse By Profile Delivery", 1
+        )[1]
+
+        self.assertIn("### `task-agent`", agent_browse)
+        self.assertIn("### `dev` — `top_level_skill`", delivery_browse)
+        for section in (agent_browse, delivery_browse):
+            name_lines = [line for line in section.splitlines() if line.startswith("- `")]
+            self.assertTrue(name_lines)
+            self.assertLessEqual(max(line.count("`, `") + 1 for line in name_lines), 3)
+            self.assertLess(max(map(len, name_lines)), 200)
+
+    def test_generated_markdown_avoids_unreadable_long_lines(self) -> None:
+        long_lines = [
+            (number, len(line))
+            for number, line in enumerate(self.rendered.splitlines(), start=1)
+            if len(line) > 200
+        ]
+
+        self.assertEqual([], long_lines)
+
+    def test_wrapping_preserves_hyphenated_tokens_and_inline_code(self) -> None:
+        split_hyphenated_tokens = [
+            (number, line)
+            for number, line in enumerate(self.rendered.splitlines(), start=1)
+            if line.rstrip().endswith("-")
+        ]
+        unbalanced_inline_code = [
+            (number, line)
+            for number, line in enumerate(self.rendered.splitlines(), start=1)
+            if line.count("`") % 2
+        ]
+
+        self.assertEqual([], split_hyphenated_tokens)
+        self.assertEqual([], unbalanced_inline_code)
+        for token in (
+            "`task-agent`",
+            "`review-agent`",
+            "no-repo",
+            "cross-context",
+            "authentication-to-authorization",
+        ):
+            with self.subTest(token=token):
+                self.assertIn(token, self.rendered)
+
+    def test_every_registry_item_remains_discoverable(self) -> None:
+        for name in self.payload["items"]:
+            with self.subTest(name=name):
+                self.assertIn(f"`{name}`", self.rendered)
+
+    def test_rendered_catalog_has_no_obsolete_pack_metadata(self) -> None:
+        for marker in (
+            ".changeforge-packs",
+            "JIT agent packs",
+            "specialist pack",
+            "review pack",
+            "runtime_path",
+        ):
+            self.assertNotIn(marker, self.rendered)
 
     def test_check_mode_catches_stale_output(self) -> None:
-        module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "MARKETPLACE_CATALOG.md"
             out.write_text("stale\n", encoding="utf-8")
-            self.assertEqual(module.main(["--profile", "recommended", "--check", "--out", str(out)]), 1)
+            self.assertEqual(
+                self.module.main(
+                    ["--profile", "recommended", "--check", "--out", str(out)]
+                ),
+                1,
+            )
 
     def test_check_mode_accepts_generated_output(self) -> None:
-        module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "MARKETPLACE_CATALOG.md"
-            self.assertEqual(module.main(["--profile", "recommended", "--out", str(out)]), 0)
-            self.assertEqual(module.main(["--profile", "recommended", "--check", "--out", str(out)]), 0)
+            self.assertEqual(
+                self.module.main(["--profile", "recommended", "--out", str(out)]),
+                0,
+            )
+            self.assertEqual(
+                self.module.main(
+                    ["--profile", "recommended", "--check", "--out", str(out)]
+                ),
+                0,
+            )
 
 
 if __name__ == "__main__":

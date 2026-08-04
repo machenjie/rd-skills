@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-decision",
+  "review_id": "semantic-disposition-panel-2026-07-18-r3",
+  "decided_on": "2026-07-18",
+  "decision_method": "three-independent-experts-majority",
+  "source_fingerprints": {
+    "audit": "3cdcfec7d3553a27c25d606b21e388ac223a0f25bb66c1dda26770be40d01a5b",
+    "reference_candidates": "64e8e891cdaf7404edd8458b5481d12ef976c3595ff22b4f9a981c1f5ac88cdf",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "12241471c661d9d158ce5f6278f4b2055b167c92fc85ab05f9175c3bcb2055e5",
+    "root_candidates": "2f79d3d9f852326602871ca5b970f3a3d1b7e366f1b82021136c9dafd3e80aac",
+    "root_context": "e3d2a3ca3aac273039b6c4d04c05c728942236757d35a2e46903c5bfa27f71a9",
+    "root_detector": "0d8c01715fb11258126a474356e03b944ddb720f358163915e6ecf912498c33c",
+    "root_source": "83c74d4fe26357937eff18fffc91fabe0988bce647c623652f0b74f14faee963"
+  },
+  "panel_contract": {
+    "decision_method": "three-independent-experts-majority",
+    "required_voters": 3,
+    "abstentions_allowed": false,
+    "minimum_winning_votes": 2,
+    "independent_ballots": true,
+    "required_target_count": 3,
+    "required_axis_target_counts": {
+      "root": 3,
+      "reference": 0
+    },
+    "allowed_dispositions": [
+      "false-positive",
+      "rewrite",
+      "time-bounded-exception",
+      "valid-contextual-rule"
+    ]
+  },
+  "packet": {
+    "path": "evals/expert-panel/semantic-disposition-panel-2026-07-18-r3/packet.json",
+    "sha256": "ea88f6df9f1d747b1238d1be9f132dcdb7c43bc159663a4b3932984fcc1978f3"
+  },
+  "voters": [
+    {
+      "voter_id": "semantic-r3-rule-reviewer",
+      "agent_id": "semantic-r3-rule-agent",
+      "role": "senior-semantic-rule-reviewer",
+      "expertise": [
+        "professional rule precision and validation-safety semantics"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r3-rule-reviewer.json",
+      "ballot_sha256": "c0e5dfaa924e53129ebbc764260e5f7727f2677f76b8ce20506fc585470b75e7"
+    },
+    {
+      "voter_id": "semantic-r3-readability-reviewer",
+      "agent_id": "semantic-r3-readability-agent",
+      "role": "senior-ai-readability-reviewer",
+      "expertise": [
+        "AI readability and front-loaded actionability review"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r3-readability-reviewer.json",
+      "ballot_sha256": "137769c71ee7336a91df3b3a963024698f48f73cf71a0cccdee44d82a54925c4"
+    },
+    {
+      "voter_id": "semantic-r3-safety-reviewer",
+      "agent_id": "semantic-r3-safety-agent",
+      "role": "senior-validation-safety-semantic-reviewer",
+      "expertise": [
+        "validation safety boundaries and professional semantic precision"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r3-safety-reviewer.json",
+      "ballot_sha256": "b2ae9f19587601e8b6c521188b7d1b65a3e544c09e509db4bbddbe7c884eca2f"
+    }
+  ],
+  "semantic_decisions": [
+    {
+      "target_id": "root:48a64b23286b9c09b4638e01b4f7ddff96c348c587f4ff066a44805e2062ea74",
+      "axis": "root",
+      "candidate_id": "48a64b23286b9c09b4638e01b4f7ddff96c348c587f4ff066a44805e2062ea74",
+      "candidate_fingerprint": "c7d5855c13fc20127800144d86891238d9c34c20563aa00bfb50742338ce4dfa",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "semantic-r3-rule-reviewer",
+        "semantic-r3-readability-reviewer",
+        "semantic-r3-safety-reviewer"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "semantic-r3-rule-reviewer",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The imperative applies only to candidate validation checks inside the Execution Checklist. Deriving every check's effects from observed command behavior, repository guidance, and task context prevents name-based or host-mode classification and supplies the evidence needed for the later capability and authority verdict. The sentence is concise and does not prescribe a vendor or universal workflow.",
+          "authority_or_condition": "During targeted-validation-selection, for every candidate check being considered, current command behavior, repository guidance, and the Task Contract task context are the authoritative inputs; an incomplete classification is recorded as unknown.",
+          "decision_owner": "changeforge-maintainers",
+          "mitigation": "Keep the rule scoped to candidate checks, preserve unknown for incomplete evidence, and re-review if the effect taxonomy or Profile authority contract changes.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r3-readability-reviewer",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Within this Skill, each candidate means each validation check under consideration. Deriving effects is the necessary input to tool, workspace, and authority matching, so the instruction is scoped, actionable, and does not force a vendor mechanism.",
+          "authority_or_condition": "The targeted-validation-selection Root and Registry contract when an active Profile is selecting candidate validation checks for changed paths and acceptance.",
+          "decision_owner": "changeforge-maintainers",
+          "mitigation": "Keep candidate scope bounded to checks under consideration, derive effects from current repository and task evidence, and record unknown rather than inventing a classification.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r3-safety-reviewer",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Every candidate check must receive a task-local effect classification before authority can be evaluated; allowing an unclassified candidate to bypass this step would make unsafe execution appear eligible.",
+          "authority_or_condition": "Applies only after targeted-validation-selection is selected and only to candidate checks within the active Task Contract; incomplete effects are classified unknown.",
+          "decision_owner": "targeted-validation-selection",
+          "mitigation": "Use unknown when effects cannot be derived, then mark unsupported or unauthorized checks planned, blocked, or unrun; do not execute them.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:858ac0ababfde208b1b45f8cfb0bd5690589d88ca695c0dd5c9c612e8bbf07d9",
+      "axis": "root",
+      "candidate_id": "858ac0ababfde208b1b45f8cfb0bd5690589d88ca695c0dd5c9c612e8bbf07d9",
+      "candidate_fingerprint": "5d65b2938d1c3bf05c594e523d15bcb338e357b9c094b5bba0c9fcbb11670066",
+      "winning_disposition": "false-positive",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 2,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 1
+      },
+      "supporting_voters": [
+        "semantic-r3-readability-reviewer",
+        "semantic-r3-safety-reviewer"
+      ],
+      "dissenting_voters": [
+        "semantic-r3-rule-reviewer"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "semantic-r3-rule-reviewer",
+          "disposition": "valid-contextual-rule",
+          "rationale": "In context, one or more is the minimum cardinality for a multi-label effect classification, not a duration, success threshold, retry count, or status policy. One command can simultaneously write the workspace, contact an external system, require privilege, or be destructive, while the following rule preserves unknown separately. The wording is readable and the open-ended cardinality is safety-relevant.",
+          "authority_or_condition": "When targeted-validation-selection has at least one known effect for a candidate check, apply every applicable label from the enumerated effect taxonomy; keep unknown separate when the classification remains incomplete.",
+          "decision_owner": "changeforge-maintainers",
+          "mitigation": "Do not force a known label when evidence is incomplete, retain all simultaneous known effects, and re-review if the taxonomy or unknown-handling contract changes.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r3-readability-reviewer",
+          "disposition": "false-positive",
+          "rationale": "The phrase one or more defines a multi-label effect taxonomy; it is not a duration, pass threshold, response status, or organizational quota. Full context explicitly separates unknown effects and uses the labels to constrain execution.",
+          "authority_or_condition": "The per-command classification section of targeted-validation-selection, where a candidate check may legitimately have multiple simultaneous known effects.",
+          "decision_owner": "changeforge-maintainers",
+          "mitigation": "Retain the multi-label wording, preserve unknown as a separate outcome, and re-review only if the count becomes an operational success or policy threshold.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r3-safety-reviewer",
+          "disposition": "false-positive",
+          "rationale": "The detector mistakes categorical multiplicity for a fixed threshold. The sentence permits a command to carry several known effect labels and the following rule keeps unknown separate; no duration or status cutoff is imposed.",
+          "authority_or_condition": "The phrase one or more describes simultaneous membership in the closed known-effect taxonomy; it is not a duration, pass threshold, or status rule.",
+          "decision_owner": "targeted-validation-selection",
+          "mitigation": "Retain the effect taxonomy and its separate unknown state; no source rewrite or time-bounded exception is needed.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:fc8cbb1d2a680664d43b0b02990c69d2dc0fa6a40900f07fb9879f9d63d4ad96",
+      "axis": "root",
+      "candidate_id": "fc8cbb1d2a680664d43b0b02990c69d2dc0fa6a40900f07fb9879f9d63d4ad96",
+      "candidate_fingerprint": "7859624bbbe673075fb2b80f0614ee63df9e0d8d85c0852bb691a7083d11009e",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "semantic-r3-rule-reviewer",
+        "semantic-r3-readability-reviewer",
+        "semantic-r3-safety-reviewer"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "semantic-r3-rule-reviewer",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The sentence states a real execution boundary rather than a generic process mandate. The review Profile is read-only, exposes execute-read-only, and independently limits execution to non-modifying commands; tool support without a non-modifying classification is insufficient, while a safe classification without an available tool is not executable. Both conjuncts are clear and necessary.",
+          "authority_or_condition": "When the active Profile is review-agent and a candidate validation check is considered for execution, src/agent-profiles/role-agents.json authorizes only active-Profile-supported non-modifying commands; otherwise the check remains planned, blocked, or unrun.",
+          "decision_owner": "changeforge-maintainers",
+          "mitigation": "Treat unknown effects, missing tool support, and any modifying classification as non-executable for review; re-review if the static review Profile capability boundary changes.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r3-readability-reviewer",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The review Profile has read, search, and execute-read-only tools and is contractually non-modifying. Requiring both actual tool support and a non-modifying classification prevents unsupported or mutating execution while remaining directly actionable.",
+          "authority_or_condition": "The review-agent Profile and targeted-validation-selection contract when review-agent independently runs a validation check.",
+          "decision_owner": "changeforge-maintainers",
+          "mitigation": "Evaluate the actual command effects and active host tools; mark unsupported, unknown, or modifying checks planned, blocked, or unrun instead of executing them.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r3-safety-reviewer",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The conjunction is a fail-closed safety boundary, not an unconditional mechanism prescription: review can execute only supported read-only tools and only when the candidate is classified non-modifying.",
+          "authority_or_condition": "Applies only to review-agent execution; the Profile exposes execute-read-only and explicitly requires non-modifying commands, so both capability and effect classification are mandatory.",
+          "decision_owner": "targeted-validation-selection",
+          "mitigation": "If either tool support or non-modifying classification is missing, stop before execution and return the check as planned, blocked, or unrun.",
+          "review_after": null
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "semantic_dispositions": {
+      "false-positive": 1,
+      "rewrite": 0,
+      "time-bounded-exception": 0,
+      "valid-contextual-rule": 2
+    }
+  },
+  "limitations": [
+    "This majority is authoring lifecycle evidence only.",
+    "It cannot satisfy readability or professional-completeness formal attestations.",
+    "The record contains no generated single-source-of-truth disposition entries.",
+    "A rewrite majority requires a source edit before any resolved governance entry can exist."
+  ]
+}

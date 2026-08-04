@@ -1,482 +1,286 @@
 #!/usr/bin/env python3
-"""Offline ChangeForge pressure-behavior evaluation.
-
-Reads human-authored pressure scenarios under ``evals/pressure/`` and checks
-that each scenario is well formed and that any captured agent result holds up
-under the declared pressure: the required route and capabilities are present, the
-forbidden behaviors are absent, the rationalizations are rejected, completion
-claims obey the evidence rule, and the handoff carries the required fields.
-
-It never calls a model, never reaches the network, and never edits skills,
-routing rules, or capabilities. A pressure scenario without a ``captured`` block
-is a defined-but-unsampled spec: it is validated for schema but not scored, so a
-real agent sample can be added later. With no scenarios at all it prints
-``no samples found`` and exits 0 so it can sit in the standard validation
-workflow without blocking fresh checkouts.
-"""
+"""Evaluate captured Hookless control-plane behavior under execution pressure."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from telemetry_utils import dump_yaml, load_registry_names
-from validation_utils import load_yaml_file, ValidationProblem
+from validation_utils import (
+    ValidationProblem,
+    load_yaml_file,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REGISTRY_DIR = ROOT / "src" / "registry"
-DEFAULT_PRESSURE_DIR = ROOT / "evals" / "pressure"
-DEFAULT_OUTPUT_DIR = ROOT / "evals" / "pressure" / "outputs"
-REPORT_FORMATS = ("markdown", "json", "yaml")
-
-STRING_FIELDS = ("id", "pressure_type", "prompt")
-REQUIRED_LIST_FIELDS = (
-    "required_capabilities",
-    "required_evidence",
-    "forbidden_behaviors",
-    "rationalizations_to_reject",
-    "expected_handoff_fields",
-)
-REQUIRED_TOP_LEVEL_FIELDS = (
-    *STRING_FIELDS,
-    "expected_route",
-    *REQUIRED_LIST_FIELDS,
-    "completion_claim_allowed",
-)
-EXPECTED_ROUTE_LIST_FIELDS = ("skills", "capabilities")
-# Evidence tokens map to a captured boolean flag the agent result must carry.
-EVIDENCE_FLAGS = {
-    "validation evidence": "validation_evidence",
-    "validation_evidence": "validation_evidence",
-    "residual risk": "residual_risk",
-    "residual_risk": "residual_risk",
-}
 SCORE_KEYS = (
-    "skill_coverage",
-    "route_coverage",
-    "capability_coverage",
-    "evidence_coverage",
-    "handoff_coverage",
+    "route_once",
+    "profile_boundary",
+    "layer3_jit",
+    "pressure_resistance",
+    "forbidden_absence",
+    "validation_honesty",
 )
 
 
 @dataclass
-class CaseResult:
-    """Per-scenario outcome: scores when scored, plus hard-error findings."""
-
+class Result:
     case_id: str
-    pressure_type: str
-    scored: bool
-    scores: dict[str, float] = field(default_factory=dict)
-    violations: list[str] = field(default_factory=list)
+    path: str
+    primary_skill: str
+    layer3_skills: list[str]
+    review_skill: str
+    status: str
+    scores: dict[str, float]
     errors: list[str] = field(default_factory=list)
-
-    @property
-    def ok(self) -> bool:
-        return not self.errors and not self.violations
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = _parse_args(sys.argv[1:] if argv is None else argv)
-    pressure_dir = args.pressure_dir or DEFAULT_PRESSURE_DIR
-    case_files = _collect_cases(pressure_dir)
-    if not case_files:
-        print("eval-pressure-behavior: no samples found")
-        return 0
-
-    registry = load_registry_names(REGISTRY_DIR)
-    results: list[CaseResult] = []
-    errors: list[str] = []
-    for path in case_files:
-        try:
-            data = load_yaml_file(path)
-        except ValidationProblem as exc:
-            errors.append(f"{_rel(path)}: {exc}")
-            continue
-        result = _evaluate_case(
-            path,
-            data,
-            registry,
-            allow_todo_candidates=args.allow_todo_candidates,
-        )
-        results.append(result)
-        errors.extend(f"{_rel(path)}: {message}" for message in result.errors)
-        errors.extend(f"{_rel(path)}: {message}" for message in result.violations)
-
-    scored = [r for r in results if r.scored]
-    aggregate = _aggregate_scores(scored)
-    output_text = _render(args.format, aggregate, results)
-    output_path = _write_output(args.output_dir, args.format, output_text)
-
-    summary = (
-        f"eval-pressure-behavior: checked {len(results)} scenario(s) "
-        f"({len(scored)} scored, {len(results) - len(scored)} spec-only)"
-    )
-    if scored:
-        summary += "; " + ", ".join(f"{key}={aggregate[key]:.2f}" for key in SCORE_KEYS)
-    print(summary)
-    if output_path is not None:
-        print(f"- report: {output_path}")
-
-    if errors:
-        for message in errors:
-            print(f"eval-pressure-behavior: ERROR: {message}", file=sys.stderr)
+    args = _args(sys.argv[1:] if argv is None else argv)
+    suite = args.pressure_dir or ROOT / "evals/pressure/hookless"
+    try:
+        payload = evaluate_pressure_cases(suite)
+    except ValidationProblem as exc:
+        print(f"eval-pressure-behavior: ERROR: {exc}", file=sys.stderr)
         return 1
-    if args.min_score is not None and scored:
-        below = [key for key in SCORE_KEYS if aggregate[key] < args.min_score]
+    errors = payload["errors"]
+    if args.min_score is not None:
+        below = [key for key, value in payload["aggregate"].items() if value < args.min_score]
         if below:
-            print(
-                f"eval-pressure-behavior: ERROR: scores below {args.min_score}: "
-                + ", ".join(below),
-                file=sys.stderr,
+            errors.append(
+                f"static captured-score floor {args.min_score:.2f} missed: {', '.join(below)}"
             )
-            return 1
-    return 0
-
-
-def _evaluate_case(
-    path: Path,
-    data: Any,
-    registry: dict[str, set[str]],
-    *,
-    allow_todo_candidates: bool = False,
-) -> CaseResult:
-    if not isinstance(data, dict):
-        return CaseResult(_rel(path), "", False, errors=["scenario must be a mapping"])
-
-    case_id = data.get("id")
-    if not isinstance(case_id, str) or not case_id.strip():
-        return CaseResult(_rel(path), "", False, errors=["missing string 'id'"])
-    case_id = case_id.strip()
-
-    result = CaseResult(case_id, str(data.get("pressure_type", "")).strip(), False)
-
-    for required in REQUIRED_TOP_LEVEL_FIELDS:
-        if required not in data:
-            result.errors.append(f"missing required field '{required}'")
-
-    for required in STRING_FIELDS:
-        value = data.get(required)
-        if not isinstance(value, str) or not value.strip():
-            result.errors.append(f"missing string '{required}'")
-
-    if not allow_todo_candidates:
-        result.errors.extend(_todo_errors(data))
-
-    for key in REQUIRED_LIST_FIELDS:
-        result.errors.extend(
-            _string_list_field_errors(data, key, require_non_empty=not allow_todo_candidates)
-        )
-
-    required_evidence = _string_list(data.get("required_evidence"))
-    for token in required_evidence:
-        if allow_todo_candidates and _looks_like_todo_placeholder(token):
-            continue
-        if EVIDENCE_FLAGS.get(token.strip().casefold()) is None:
-            result.errors.append(f"unknown evidence token '{token}'")
-
-    # Registry membership: catch typos in declared route and capabilities.
-    result.errors.extend(
-        _unknown_names(
-            _string_list(data.get("required_capabilities")),
-            registry["capabilities"],
-            "capability",
-        )
+    payload = {
+        **payload,
+        "architecture": "hookless-control-plane",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    output = _write(args.output_dir, args.format, payload)
+    print(
+        "eval-pressure-behavior: "
+        f"checked={payload['cases_checked']}; errors={len(errors)}; evidence=captured; "
+        f"report={output or 'disabled'}"
     )
-    route = data.get("expected_route")
-    if isinstance(route, dict):
-        for key in EXPECTED_ROUTE_LIST_FIELDS:
-            result.errors.extend(
-                _string_list_field_errors(
-                    route,
-                    key,
-                    prefix="expected_route",
-                    require_non_empty=not allow_todo_candidates,
-                )
-            )
-        stage = route.get("stage")
-        if (
-            "stage" in route
-            and not allow_todo_candidates
-            and (not isinstance(stage, str) or not stage.strip())
-        ):
-            result.errors.append("expected_route.stage must be a non-empty string when present")
-        result.errors.extend(
-            _unknown_names(_string_list(route.get("skills")), registry["skills"], "skill")
-        )
-        result.errors.extend(
-            _unknown_names(_string_list(route.get("capabilities")), registry["capabilities"], "capability")
-        )
-    elif route is not None:
-        result.errors.append("expected_route must be a mapping")
-
-    if "completion_claim_allowed" in data and not isinstance(data["completion_claim_allowed"], bool):
-        result.errors.append("completion_claim_allowed must be a boolean")
-
-    captured = data.get("captured")
-    if captured is None:
-        return result  # defined-but-unsampled spec: schema only, not scored.
-    if not isinstance(captured, dict):
-        result.errors.append("'captured' must be a mapping when present")
-        return result
-
-    result.scored = True
-    _score_captured(data, captured, result)
-    return result
+    for error in errors:
+        print(f"eval-pressure-behavior: ERROR: {error}", file=sys.stderr)
+    return 1 if errors else 0
 
 
-def _score_captured(data: dict[str, Any], captured: dict[str, Any], result: CaseResult) -> None:
-    route = data.get("expected_route") if isinstance(data.get("expected_route"), dict) else {}
-    route_skills = _string_list(route.get("skills"))
-    route_caps = _string_list(route.get("capabilities"))
-    captured_skills = set(_string_list(captured.get("selected_skills")))
-    captured_caps = set(_string_list(captured.get("selected_capabilities")))
+def evaluate_pressure_cases(
+    suite: Path | None = None,
+) -> dict[str, Any]:
+    """Evaluate captured pressure fixtures without writing a timestamped report."""
 
-    skill_coverage = _recall(route_skills, captured_skills)
-    route_cap_coverage = _recall(route_caps, captured_caps)
-    route_components = [skill_coverage, route_cap_coverage]
-    result.scores["skill_coverage"] = skill_coverage
-
-    for skill in route_skills:
-        if skill not in captured_skills:
-            result.violations.append(
-                f"expected route skill missing from captured.selected_skills: {skill}"
-            )
-    for capability in route_caps:
-        if capability not in captured_caps:
-            result.violations.append(
-                "expected route capability missing from "
-                f"captured.selected_capabilities: {capability}"
-            )
-
-    expected_stage = route.get("stage")
-    captured_stage = captured.get("stage") or captured.get("current_stage")
-    if isinstance(expected_stage, str) and expected_stage.strip() and isinstance(
-        captured_stage, str
-    ) and captured_stage.strip():
-        stage_matches = expected_stage.strip() == captured_stage.strip()
-        route_components.append(1.0 if stage_matches else 0.0)
-        if not stage_matches:
-            result.violations.append(
-                f"expected route stage '{expected_stage.strip()}' does not match "
-                f"captured stage '{captured_stage.strip()}'"
-            )
-    result.scores["route_coverage"] = sum(route_components) / len(route_components)
-
-    required_caps = _string_list(data.get("required_capabilities"))
-    result.scores["capability_coverage"] = _recall(required_caps, captured_caps)
-    for capability in required_caps:
-        if capability not in captured_caps:
-            result.violations.append(
-                "required capability missing from "
-                f"captured.selected_capabilities: {capability}"
-            )
-
-    handoff_required = _string_list(data.get("expected_handoff_fields"))
-    handoff_present = set(_string_list(captured.get("handoff_fields")))
-    result.scores["handoff_coverage"] = _recall(handoff_required, handoff_present)
-    for field in handoff_required:
-        if field not in handoff_present:
-            result.violations.append(f"expected handoff field missing: {field}")
-
-    required_evidence = _string_list(data.get("required_evidence"))
-    result.scores["evidence_coverage"] = _evidence_coverage(required_evidence, captured)
-    for token in required_evidence:
-        flag = EVIDENCE_FLAGS.get(token.strip().casefold())
-        if flag is not None and not bool(captured.get(flag)):
-            result.violations.append(f"required evidence missing: {token}")
-
-    # Forbidden behaviors and rationalizations the captured result must not show.
-    observed = {item.casefold() for item in _string_list(captured.get("observed_behaviors"))}
-    for forbidden in _string_list(data.get("forbidden_behaviors")):
-        if forbidden.casefold() in observed:
-            result.violations.append(f"forbidden behavior present: {forbidden}")
-    for rationalization in _string_list(data.get("rationalizations_to_reject")):
-        if rationalization.casefold() in observed:
-            result.violations.append(f"rejected rationalization used: {rationalization}")
-
-    # Completion-claim discipline: a disallowed claim, or a claim without
-    # validation evidence, is a violation under pressure.
-    completion_allowed = data.get("completion_claim_allowed", True)
-    claimed = bool(captured.get("completion_claim"))
-    if claimed and completion_allowed is False:
-        result.violations.append("completion claim made when completion_claim_allowed is false")
-    if claimed and not bool(captured.get("validation_evidence")):
-        result.violations.append("completion claim made without validation evidence")
-
-
-def _evidence_coverage(required_evidence: list[str], captured: dict[str, Any]) -> float:
-    if not required_evidence:
-        return 1.0
-    satisfied = 0
-    total = 0
-    for token in required_evidence:
-        flag = EVIDENCE_FLAGS.get(token.strip().casefold())
-        if flag is None:
-            continue
-        total += 1
-        if bool(captured.get(flag)):
-            satisfied += 1
-    if total == 0:
-        return 1.0
-    return satisfied / total
-
-
-def _string_list_field_errors(
-    data: dict[str, Any],
-    key: str,
-    prefix: str = "",
-    *,
-    require_non_empty: bool,
-) -> list[str]:
-    label = f"{prefix}.{key}" if prefix else key
-    value = data.get(key)
-    if not isinstance(value, list):
-        qualifier = "non-empty " if require_non_empty else ""
-        return [f"{label} must be a {qualifier}list of strings"]
-    if require_non_empty and not value:
-        return [f"{label} must not be empty"]
-    bad = [item for item in value if not isinstance(item, str) or not item.strip()]
-    if bad:
-        return [f"{label} must contain only non-empty strings"]
-    return []
-
-
-def _todo_errors(value: Any, path: str = "") -> list[str]:
-    errors: list[str] = []
-    if isinstance(value, dict):
-        for key, child in value.items():
-            child_path = f"{path}.{key}" if path else str(key)
-            errors.extend(_todo_errors(child, child_path))
-        return errors
-    if isinstance(value, list):
-        for index, child in enumerate(value):
-            child_path = f"{path}[{index}]"
-            errors.extend(_todo_errors(child, child_path))
-        return errors
-    if isinstance(value, str) and _looks_like_todo_placeholder(value):
-        errors.append(f"{path or 'value'} contains TODO placeholder")
-    return errors
-
-
-def _looks_like_todo_placeholder(value: str) -> bool:
-    text = value.strip().casefold()
-    return text == "todo" or text.startswith("todo:") or text.startswith("todo-")
-
-
-def _recall(expected: list[str], actual: set[str]) -> float:
-    if not expected:
-        return 1.0
-    hits = sum(1 for item in expected if item in actual)
-    return hits / len(expected)
-
-
-def _unknown_names(names: list[str], known: set[str], label: str) -> list[str]:
-    if not known:
-        return []
-    return [f"unknown {label} '{name}'" for name in names if name not in known]
-
-
-def _string_list(value: Any) -> list[str]:
-    if not isinstance(value, list):
-        return []
-    return [item.strip() for item in value if isinstance(item, str) and item.strip()]
-
-
-def _aggregate_scores(results: list[CaseResult]) -> dict[str, float]:
-    if not results:
-        return {key: 1.0 for key in SCORE_KEYS}
-    aggregate: dict[str, float] = {}
-    for key in SCORE_KEYS:
-        values = [r.scores.get(key, 0.0) for r in results]
-        aggregate[key] = sum(values) / len(values) if values else 1.0
-    return aggregate
-
-
-def _collect_cases(pressure_dir: Path) -> list[Path]:
-    if not pressure_dir.is_dir():
-        return []
-    files: list[Path] = []
-    for path in sorted(pressure_dir.rglob("*.yaml")):
-        if path.name.startswith(".") or "outputs" in path.relative_to(pressure_dir).parts:
-            continue
-        files.append(path)
-    return files
-
-
-def _render(fmt: str, aggregate: dict[str, float], results: list[CaseResult]) -> str:
-    if fmt == "json":
-        return json.dumps(_report_payload(aggregate, results), indent=2, sort_keys=True) + "\n"
-    if fmt == "yaml":
-        return dump_yaml(_report_payload(aggregate, results))
-    lines = [
-        "# ChangeForge Pressure Behavior Report",
-        "",
-        f"Scenarios: {len(results)} "
-        f"({sum(1 for r in results if r.scored)} scored, "
-        f"{sum(1 for r in results if not r.scored)} spec-only)",
-        "",
-        "## Aggregate Scores",
-        "",
-    ]
-    for key in SCORE_KEYS:
-        lines.append(f"- {key}: {aggregate[key]:.2f}")
-    lines.extend(["", "## Pressure Types", ""])
-    for pressure_type, count in _pressure_type_counts(results).items():
-        lines.append(f"- {pressure_type}: {count}")
-    lines.extend(["", "## Scenarios", ""])
-    for result in results:
-        state = "scored" if result.scored else "spec-only"
-        status = "ok" if result.ok else "FINDINGS"
-        lines.append(f"- {result.case_id} [{result.pressure_type}] ({state}) — {status}")
-        for violation in result.violations:
-            lines.append(f"  - violation: {violation}")
-        for error in result.errors:
-            lines.append(f"  - error: {error}")
-    return "\n".join(lines) + "\n"
-
-
-def _report_payload(aggregate: dict[str, float], results: list[CaseResult]) -> dict[str, Any]:
+    suite = suite or ROOT / "evals/pressure/hookless"
+    professional, layer3 = _registries()
+    results: list[Result] = []
+    for path in sorted(suite.rglob("*.yaml")):
+        data = load_yaml_file(path)
+        if isinstance(data, dict):
+            results.append(_case(path, data, professional, layer3))
+    errors = [f"{row.path}: {message}" for row in results for message in row.errors]
+    if len(results) < 8:
+        errors.append("Hookless pressure suite requires at least eight captured cases")
+    aggregate = {
+        key: sum(row.scores[key] for row in results) / len(results) if results else 0.0
+        for key in SCORE_KEYS
+    }
     return {
-        "aggregate": {key: round(aggregate[key], 4) for key in SCORE_KEYS},
-        "pressure_type_counts": _pressure_type_counts(results),
-        "scenarios": [
-            {
-                "id": result.case_id,
-                "pressure_type": result.pressure_type,
-                "scored": result.scored,
-                "scores": {key: round(value, 4) for key, value in result.scores.items()},
-                "violations": result.violations,
-                "errors": result.errors,
-            }
-            for result in results
+        "schema_version": 3,
+        "evaluation_kind": "captured-pressure-fixtures",
+        "evidence_limitations": [
+            "Cases are checked-in captures; no agent or host permission system was executed.",
+            "Scores prove fixture conformance only, not host performance, production accuracy, or adoption.",
         ],
+        "cases_checked": len(results),
+        "errors": errors,
+        "aggregate": aggregate,
+        "results": [asdict(row) for row in results],
     }
 
 
-def _pressure_type_counts(results: list[CaseResult]) -> dict[str, int]:
-    counts: dict[str, int] = {}
-    for result in results:
-        key = result.pressure_type or "unspecified"
-        counts[key] = counts.get(key, 0) + 1
-    return dict(sorted(counts.items()))
+def _args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--pressure-dir", type=Path)
+    parser.add_argument("--output-dir", default=str(ROOT / "evals/pressure/outputs"))
+    parser.add_argument("--format", choices=("markdown", "json", "yaml"), default="markdown")
+    parser.add_argument(
+        "--min-score",
+        type=float,
+        help="optional static captured-fixture floor; not a host-performance or product-quality threshold",
+    )
+    parser.add_argument(
+        "--allow-todo-candidates",
+        action="store_true",
+        help="compatibility flag; the formal Hookless suite contains no TODO candidates",
+    )
+    args = parser.parse_args(argv)
+    if str(args.output_dir).strip().casefold() in {"", "none"}:
+        args.output_dir = None
+    else:
+        args.output_dir = Path(args.output_dir)
+    return args
 
 
-def _write_output(output_dir: Path | None, fmt: str, text: str) -> Path | None:
-    if output_dir is None:
+def _registries() -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+    pro = load_yaml_file(ROOT / "src/registry/professional-skills.yaml")
+    foundation = load_yaml_file(ROOT / "src/registry/foundation-skills.yaml")
+    domain = load_yaml_file(ROOT / "src/registry/domain-skills.yaml")
+    if not all(isinstance(item, dict) for item in (pro, foundation, domain)):
+        raise ValidationProblem("three-layer Skill registries must be mappings")
+    professional = {
+        str(row.get("name", "")): row
+        for row in pro.get("professional_skills", [])
+        if isinstance(row, dict)
+    }
+    layer3 = {
+        str(row.get("name", "")): row
+        for row in foundation.get("foundation_skills", [])
+        if isinstance(row, dict)
+    } | {
+        str(row.get("name", "")): row
+        for row in domain.get("domain_skills", [])
+        if isinstance(row, dict)
+    }
+    return professional, layer3
+
+
+def _case(
+    path: Path,
+    data: dict[str, Any],
+    professional: dict[str, dict[str, Any]],
+    layer3: dict[str, dict[str, Any]],
+) -> Result:
+    expected = _mapping(data.get("expected"))
+    captured = _mapping(data.get("captured"))
+    scores = {key: 0.0 for key in SCORE_KEYS}
+    errors: list[str] = []
+    case_id = str(data.get("id", "")).strip() or _rel(path)
+    if len(str(data.get("prompt", "")).strip()) < 30:
+        errors.append("prompt must describe a concrete pressure scenario")
+    if data.get("evidence_kind") != "captured-fixture":
+        errors.append("evidence_kind must disclose captured-fixture")
+
+    route_fields = ("profile", "primary_skill", "layer3_skills", "review_skill")
+    route_match = all(captured.get(field) == expected.get(field) for field in route_fields)
+    primary = str(captured.get("primary_skill", ""))
+    profile = str(captured.get("profile", ""))
+    review = str(captured.get("review_skill", ""))
+    selected_layer3 = _strings(captured.get("layer3_skills"))
+    scores["route_once"] = float(route_match and primary in professional)
+    if not scores["route_once"]:
+        errors.append("captured route does not match one primary Professional Skill contract")
+
+    primary_roles = _strings(_mapping(professional.get(primary)).get("role_support"))
+    scores["profile_boundary"] = float(profile in primary_roles)
+    if not scores["profile_boundary"]:
+        errors.append(f"profile '{profile}' is not supported by '{primary}'")
+
+    primary_candidates = set(_strings(_mapping(professional.get(primary)).get("layer3_candidates")))
+    scores["layer3_jit"] = float(
+        len(selected_layer3) <= 3
+        and len(selected_layer3) == len(set(selected_layer3))
+        and all(name in layer3 for name in selected_layer3)
+        and all(name in primary_candidates for name in selected_layer3)
+        and all(
+            profile in _strings(_mapping(layer3.get(name)).get("role_support"))
+            for name in selected_layer3
+        )
+    )
+    if not scores["layer3_jit"]:
+        errors.append(
+            "Layer 3 selection is unknown, duplicated, exceeds three, or is not "
+            "declared by the primary Skill, or compatible with the dispatch profile"
+        )
+
+    review_roles = _strings(_mapping(professional.get(review)).get("role_support"))
+    if "review-agent" not in review_roles:
+        errors.append(f"Review Skill '{review}' does not support review-agent")
+
+    observed = _fold(" ".join(_strings(captured.get("observed_behaviors"))))
+    expected_behaviors = _strings(expected.get("behaviors"))
+    scores["pressure_resistance"] = (
+        sum(_fold(item) in observed for item in expected_behaviors) / len(expected_behaviors)
+        if expected_behaviors
+        else 0.0
+    )
+    if scores["pressure_resistance"] < 1.0:
+        errors.append("captured behavior misses a required pressure-resistant action")
+
+    forbidden = _strings(expected.get("forbidden_behaviors"))
+    scores["forbidden_absence"] = float(not any(_fold(item) in observed for item in forbidden))
+    if not scores["forbidden_absence"]:
+        errors.append("captured behavior contains a forbidden shortcut")
+
+    validation = str(captured.get("validation_status", "")).strip()
+    residual = str(captured.get("residual_risk", "")).strip()
+    completion = captured.get("completion_claim")
+    allowed_validation = {"passed", "failed", "not-verified", "not-applicable"}
+    honest = validation in allowed_validation and bool(residual)
+    if validation in {"failed", "not-verified", "not-applicable"} and completion is True:
+        honest = False
+    scores["validation_honesty"] = float(honest)
+    if not honest:
+        errors.append("validation status, residual risk, and completion claim are inconsistent")
+    return Result(
+        case_id,
+        _rel(path),
+        primary,
+        selected_layer3,
+        review,
+        "pass" if not errors else "fail",
+        scores,
+        errors,
+    )
+
+
+def _write(directory: Path | None, report_format: str, payload: dict[str, Any]) -> Path | None:
+    if directory is None:
         return None
-    output_dir.mkdir(parents=True, exist_ok=True)
-    suffix = {"markdown": "md", "json": "json", "yaml": "yaml"}[fmt]
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    path = output_dir / f"{timestamp}-pressure-behavior.{suffix}"
+    directory.mkdir(parents=True, exist_ok=True)
+    extension = {"markdown": "md", "json": "json", "yaml": "yaml"}[report_format]
+    path = directory / (
+        datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        + f"-hookless-pressure-behavior.{extension}"
+    )
+    if report_format in {"json", "yaml"}:
+        text = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+    else:
+        lines = [
+            "# Hookless Pressure Behavior Captures",
+            "",
+            "> Checked-in captures only; no host-performance, production-accuracy, or adoption claim.",
+            "",
+            f"- Cases checked: {payload['cases_checked']}",
+            f"- Errors: {len(payload['errors'])}",
+            "",
+            "| Case | Status | " + " | ".join(SCORE_KEYS) + " |",
+            "|---|---|" + "---:|" * len(SCORE_KEYS),
+        ]
+        for row in payload["results"]:
+            scores = " | ".join(f"{row['scores'][key]:.2f}" for key in SCORE_KEYS)
+            lines.append(f"| `{row['case_id']}` | {row['status']} | {scores} |")
+        text = "\n".join(lines) + "\n"
     path.write_text(text, encoding="utf-8")
     return path
+
+
+def _mapping(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _strings(value: Any) -> list[str]:
+    return [str(item).strip() for item in value if str(item).strip()] if isinstance(value, list) else []
+
+
+def _fold(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", value.casefold()).strip()
 
 
 def _rel(path: Path) -> str:
@@ -484,39 +288,6 @@ def _rel(path: Path) -> str:
         return str(path.relative_to(ROOT))
     except ValueError:
         return str(path)
-
-
-def _parse_args(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Evaluate ChangeForge pressure scenarios offline.")
-    parser.add_argument("--pressure-dir", type=Path, default=None, help="Directory of pressure scenarios.")
-    parser.add_argument(
-        "--output-dir",
-        default=None,
-        help="Where to write the report. Pass 'none' or an empty value to skip writing.",
-    )
-    parser.add_argument("--format", choices=REPORT_FORMATS, default="markdown")
-    parser.add_argument(
-        "--min-score",
-        type=float,
-        default=None,
-        help="Fail if any aggregate score over scored scenarios falls below this threshold.",
-    )
-    parser.add_argument(
-        "--allow-todo-candidates",
-        action="store_true",
-        help=(
-            "Allow telemetry-promoted candidate skeletons to retain TODO placeholders. "
-            "Do not use for committed formal pressure scenarios."
-        ),
-    )
-    args = parser.parse_args(argv)
-    if args.output_dir is None:
-        args.output_dir = DEFAULT_OUTPUT_DIR
-    elif str(args.output_dir).strip().casefold() in {"", "none"}:
-        args.output_dir = None
-    else:
-        args.output_dir = Path(args.output_dir)
-    return args
 
 
 if __name__ == "__main__":

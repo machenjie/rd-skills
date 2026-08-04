@@ -9,4 +9,4 @@
 - Review privilege and security boundaries: sudo/root, capabilities, seccomp, SELinux/AppArmor, privileged ports, setuid/setgid, public sockets, writable directories, and least-privilege alternatives.
 - Classify commands as read-only inspection, state-mutating service action, package action, host configuration change, cleanup/delete, privileged command, or rollback command before execution.
 - Validate with the smallest command, test, log slice, or artifact that can fail for the changed Linux runtime boundary, then state what it proves and does not prove.
-- Treat repository graph, project memory, old incident notes, previous command output, and runbooks as selectors only until current source, config, host, or representative runtime evidence confirms them.
+- Treat repository inspection, prior task evidence, old incident notes, previous command output, and runbooks as selectors only until current source, config, host, or representative runtime evidence confirms them.

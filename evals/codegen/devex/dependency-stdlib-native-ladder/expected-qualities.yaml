@@ -7,20 +7,11 @@ focus:
   - deterministic UTC formatting
   - supply-chain evidence
 route_hints:
-  skills:
-    - ai-code-review-refactor
-    - security-privacy-gate
-    - quality-test-gate
-  capabilities:
-    - minimal-correct-implementation
-    - package-dependency-management
-    - dependency-vulnerability-scanning
-    - unit-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
-    - security gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: security-privacy-gate
+  layer3_skills: []
+  review_skill: security-privacy-gate
 expected_outcomes:
   - The dependency ladder is answered before any package addition.
   - Standard library or native runtime support is selected when sufficient.

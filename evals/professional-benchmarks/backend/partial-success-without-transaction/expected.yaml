@@ -4,7 +4,6 @@ expected_capabilities:
   - transaction-consistency
   - service-business-logic
   - logging-error-handling
-  - data-migration-design
 expected_hidden_risks:
   - inconsistent account and billing state
   - event emitted without durable state or compensation

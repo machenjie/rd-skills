@@ -6,20 +6,11 @@ focus:
   - falsey value preservation
   - expression-level regression proof
 route_hints:
-  skills:
-    - frontend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
-    - code-element-professionalism
-    - language-idiom-enforcement
-    - code-review
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
-    - AI review gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: frontend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Missing values are defaulted without overwriting valid falsey values.
   - The changed expression is simple enough to review without hidden coercion.

@@ -1,6 +1,6 @@
 # Diagnostic Evidence Freshness
 
-Use this reference when a diagnosis depends on repository graph, project memory, generated reports, prior command output, validation freshness, or execution trajectory. Treat those signals as selectors until reconciled with current source and post-edit validation.
+Use this reference when a diagnosis depends on repository inspection, prior task evidence, generated reports, prior command output, validation freshness, or observable action sequence. Treat those signals as selectors until reconciled with current source and post-edit validation.
 
 ## Freshness Decision
 
@@ -9,11 +9,14 @@ Use this reference when a diagnosis depends on repository graph, project memory,
 - **Stale evidence:** older than the latest relevant code, config, fixture, dependency, generated report, command path, rollout, or mitigation change.
 - **Rejected evidence:** contradicts current source, fresh command output, or stronger operational data; record why it was rejected so it is not reused later.
 
-## Graph, Memory, And Execution Coupling
+## Current Evidence And Freshness
 
-- **Repository graph:** use call edges, ownership, generated-file boundaries, tests, configs, and registry links to select the diagnostic scope; verify candidate edges against current files before claiming blast radius or cause.
-- **Project memory:** list each remembered claim, source, date or commit when available, validation anchor, and accepted/rejected decision; never let memory override current source or fresh operational evidence.
-- **Execution trajectory:** preserve failed command, working directory, exit code, output signature, attempted fix, and learned fact; after two same-path failures, route repair before another retry.
+- **Repository inspection:** use call edges, ownership, generated-file boundaries, tests, configurations, and registry links to select diagnostic scope.
+- Verify candidate edges against current files before any blast-radius or cause claim.
+- **Prior task evidence:** list each remembered claim, source, available date or commit, validation anchor, and accepted or rejected decision.
+- Never let memory override current source or fresh operational evidence.
+- **Observable action sequence:** preserve failed command, working directory, exit code, output signature, attempted fix, and learned fact.
+- After two same-path failures, choose a new hypothesis or return a concrete blocker.
 - **Validation freshness:** after a code, config, fixture, dependency, generated-artifact, or command-path change, rerun the relevant validator or downgrade previous green output to selector-only.
 
 ## Closure Record

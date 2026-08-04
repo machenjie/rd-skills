@@ -1,6 +1,6 @@
 # Experience Output And Gates
 
-Load this reference when `experience-impact-modeler` needs deeper experience proof than the body checklist can carry. Keep the skill body compact; use this file for state-to-validation mapping, graph/memory/trajectory coupling, analytics proof, and closure gates.
+Load this reference when `experience-impact-modeler` needs deeper experience proof than the body checklist can carry. Keep the Skill body compact; use this file for state-to-validation mapping, current-source freshness, analytics proof, and closure.
 
 ## Flow Evidence Matrix
 
@@ -14,35 +14,35 @@ Load this reference when `experience-impact-modeler` needs deeper experience pro
 
 ## Accessibility And Recovery Gates
 
-- **Keyboard path**: tab order, focus trap, Escape behavior, route-change focus destination, and focus restoration must be named for every modal, drawer, toast, validation error, and async update.
-- **Screen reader behavior**: accessible name, role, description, live region, announcement timing, and hidden/decorative content decisions must be explicit.
-- **Visual perception**: contrast, non-color status indicator, target size, text resizing, reduced motion, and layout shift obligations must be stated.
-- **Input preservation**: failed submit, timeout, refresh, back-navigation, and permission transition must preserve recoverable user input or explain why preservation is unsafe.
-- **Recovery path**: every recoverable error needs retry, cancel, edit, contact, undo, or request-access behavior; unrecoverable states need a safe exit.
+- **Keyboard path**: For each affected interactive or dynamic surface, state its applicable keyboard and focus behavior. Require trapping, Escape handling, route-change focus, and restoration only where its interaction model needs them.
+- **Screen reader behavior**: For changed content or interaction semantics, record the applicable accessible-name, role, description, live-region, announcement-timing, and hidden or decorative-content obligations. If the change creates a plausible semantic or operability risk in an adjacent dimension that is skipped, record why.
+- **Visual perception**: For changed visual content or interactions, record the applicable perceivability and operability obligations among contrast, non-color status, target size, text resize, reduced motion, and layout shift. If the change creates a plausible user risk in an adjacent dimension that is skipped, record why.
+- **Input preservation**: Preserve affected user input only while it remains authorized, current, and safe to recover. Otherwise, record the concrete reason and recovery alternative.
+- **Recovery path**: For an affected error classified recoverable, provide the recovery action allowed by product and security semantics—retry, cancel, edit, contact, undo, request access, or another owned path. For an unrecoverable state, provide a safe exit and terminal reason.
 
 ## Analytics And Experiment Coupling
 
 - **Event taxonomy**: event name, schema, owner, compatibility rule, deprecated event mapping, and dashboard consumer must be named when instrumentation changes.
-- **Exposure proof**: exposure event, assignment unit, de-duplication rule, conflict set, and eligibility filter must match the user-visible entry point.
-- **Metric proof**: primary metric, guardrails, freshness, query/report owner, sample ratio mismatch check, and rollback threshold must be connected to the flow state that can affect them.
-- **Dashboard migration**: old/new dashboard mapping, backfill need, freshness expectation, and stakeholder sign-off must be identified before removing or renaming events.
+- **Exposure proof**: when a user-visible entry triggers analytics or experiment assignment, align the emitted exposure event and assignment unit with that entry path. The same alignment covers the de-duplication rule, conflict set, and eligibility filter. Record unobserved identity joins or channels.
+- **Metric proof**: When analytics or an experiment is in scope, connect affected flow states to the selected primary metric and guardrails. Also connect data freshness and the query/report owner. Add sample-ratio-mismatch checks and rollback thresholds when assignment or release decisions use them.
+- **Dashboard migration**: before an instrumentation change removes or renames an event, identify the affected old/new dashboard mapping, backfill need, freshness expectation, and stakeholder sign-off.
 - **Not-enough-proof condition**: passing analytics events does not prove accessibility, content clarity, permission recovery, or breakpoint behavior.
 
-## Graph, Memory, And Trajectory Coupling
+## Current Evidence And Freshness
 
-- **Repository graph**: inspect existing route ownership, component boundaries, design-system primitives, content utilities, event taxonomy, permission wrappers, and shared state helpers before proposing placement.
-- **Project memory**: check current requirements, prior decisions, acceptance criteria, regression history, and known UX constraints; mark memory stale when it predates the final product or code change.
-- **Execution trajectory**: compare the proposed experience model with the latest diffs, test results, review comments, and validation runs; rerun or downgrade evidence when material files changed after validation.
-- **Conflict handling**: when graph, memory, and current execution disagree, prefer current source and fresh validation, then record the stale artifact and next gate owner.
+- **repository inspection**: inspect existing route ownership, component boundaries, design-system primitives, content utilities, event taxonomy, permission wrappers, and shared state helpers before proposing placement.
+- **Prior task evidence**: check current requirements, prior decisions, acceptance criteria, regression history, and known UX constraints; mark a prior claim stale when it predates the final product or code change.
+- **Observable action sequence**: compare the proposed experience model with the latest diffs, test results, review comments, and validation runs; rerun or downgrade evidence when material files changed after validation.
+- **Conflict handling**: when repository inspection, prior task evidence, and the latest diff disagree, prefer current source and fresh validation, then record the stale artifact and recommended next step owner.
 - **Efficiency rule**: reuse existing repository patterns before adding new structure; add a new component, event, or dependency only when the existing repository cannot satisfy the required behavior.
 
 ## Validation Evidence Patterns
 
 - **State-to-validation map**: each state and accessibility obligation maps to a test, validator, manual walkthrough, screenshot, report, artifact, or explicit not-run risk.
 - **Command evidence**: capture command, expected output, actual output summary, exit code, artifact/report path, and freshness after final material edit.
-- **Visual evidence**: screenshots or recordings must identify viewport, browser, state, data condition, and whether they prove layout, focus, content, or only rendering.
-- **Manual evidence**: keyboard and screen-reader checks must list the path walked, controls reached, announcements heard, and unsupported assistive technology combinations.
-- **Evidence limits**: every closure states what evidence proves and what it does not prove about production data, browsers, breakpoints, accessibility tooling, analytics freshness, or release readiness.
+- **Visual evidence**: when screenshots or recordings support an experience claim, identify viewport, browser, state, data condition, and whether they prove layout, focus, content, or rendering alone.
+- **Manual evidence**: when keyboard or screen-reader checks support experience closure, record the path walked, controls reached, announcements heard, and unsupported assistive-technology combinations.
+- **Evidence limits**: For the affected flow and inspected states, state what the selected evidence proves and identify material untested production-data, browser, breakpoint, accessibility-tooling, analytics-freshness, or release-readiness limits.
 
 ## Anti-Patterns To Reject
 
@@ -55,14 +55,4 @@ Load this reference when `experience-impact-modeler` needs deeper experience pro
 
 ## Handoff Closure
 
-Close the experience model with:
-- Mode selected and why.
-- Boundaries inspected and skipped with reason.
-- Flow graph and state matrix.
-- Accessibility and recovery obligations.
-- Analytics, experiment, and dashboard impact.
-- Reuse and placement rationale.
-- Behavior preservation statement.
-- State-to-validation map with fresh evidence.
-- What evidence proves and what it does not prove.
-- Residual risk, next gate, and owner.
+Close with the selected mode, inspected and skipped boundaries, flow and state models, and accessibility, recovery, analytics, reuse, placement, and behavior-preservation obligations. Include fresh state-to-validation evidence and its limits, residual risk, next step, and owner.

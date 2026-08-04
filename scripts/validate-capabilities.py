@@ -1,679 +1,373 @@
 #!/usr/bin/env python3
-"""Validate authored foundation capabilities."""
+"""Validate focused Foundation Layer 3 Skills."""
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
+from capability_coverage import fixture_ids, validate_capability_coverage
 from validation_utils import (
-    EXPECTED_DOMAIN_EXTENSION_COUNT,
     EXPECTED_FOUNDATION_CAPABILITY_COUNT,
-    EXPECTED_PROFESSIONAL_SKILL_COUNT,
-    EXPECTED_PROFILE_TOP_LEVEL_COUNTS,
-    NAME_RE,
     ValidationProblem,
-    entry_path,
-    entry_ref,
-    extract_section_body,
+    ai_markdown_list_sentence_counts,
+    ai_readability_findings,
+    empty_markdown_headings,
     fail_many,
+    foundation_decision_card,
+    heading_entries,
     load_yaml_file,
     parse_frontmatter,
-    registry_items,
-    relpath,
-    validate_description_length,
-    validate_no_beginner_sections,
-    validate_no_personal_references,
-    validate_expected_count,
-    validate_name,
-    validate_required_frontmatter,
+    reference_paths,
+    validate_ai_readability,
+    validate_ai_markdown_format,
     validate_required_sections,
-    validate_skill_text_quality,
-    visible_child_dirs,
 )
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFESSIONAL_SKILLS_DIR = ROOT / "src" / "professional-skills"
-CAPABILITIES_DIR = ROOT / "src" / "foundation" / "capabilities"
-CAPABILITIES_REGISTRY = ROOT / "src" / "registry" / "capabilities.yaml"
-CAPABILITY_TEMPLATE_DIR = CAPABILITIES_DIR / "_template"
-DOMAIN_EXTENSIONS_DIR = ROOT / "src" / "domain-extensions"
-ALLOWED_CAPABILITIES_ROOT_FILES = {".gitkeep", "README.md"}
-BANNED_MAPPING_PATHS = (
-    ROOT / "registry" / "toolbox.yaml",
-    ROOT / "src" / "registry" / "toolbox.yaml",
-    ROOT / "src" / "toolbox",
-)
-REGISTRY_REQUIRED_FIELDS = (
-    "id",
-    "name",
-    "group",
-    "path",
-    "status",
-    "used_by",
-    "triggers",
-    "risk_notes",
-    "expected_outputs",
-)
-REGISTRY_LIST_FIELDS = ("used_by", "triggers", "risk_notes", "expected_outputs")
-REGISTRY_STATUSES = {"implemented"}
-REQUIRED_FRONTMATTER = (
-    "name",
-    "description",
-    "license",
-    "changeforge_kind",
-    "changeforge_capability_id",
-    "changeforge_version",
-)
+SKILLS_ROOT = ROOT / "src" / "foundation" / "capabilities"
+REGISTRY = ROOT / "src" / "registry" / "foundation-skills.yaml"
+CAPABILITY_MATRIX = ROOT / "evals" / "capability-coverage" / "matrix.yaml"
 REQUIRED_SECTIONS = (
-    "Mission",
-    "Capability Boundary",
-    "Load When",
-    "Do Not Load When",
-    "Used By / Owner Skill Compatibility",
-    "Required Input Fragment",
-    "Decision Rules",
-    "Critical Gotchas",
-    "Reference Loading Policy",
-    "Output Fragment",
-    "Evidence Requirement",
-    "Return To Owner Skill",
-    "Completion Criteria",
+    "Registry Trigger",
+    "Skill Role",
+    "High-Value Rules",
+    "Anti-Patterns",
+    "Targeted References",
 )
-STRUCTURED_CODE_CORRECTNESS_CAPABILITIES = frozenset(
+OPTIONAL_SECTIONS = (
+    "Inputs",
+    "Execution Checklist",
+    "Stop Conditions",
+    "Output Contract",
+    "Standards",
+)
+SECTION_ORDER = (
+    "Registry Trigger",
+    "Skill Role",
+    "Inputs",
+    "High-Value Rules",
+    "Anti-Patterns",
+    "Execution Checklist",
+    "Stop Conditions",
+    "Output Contract",
+    "Standards",
+    "Targeted References",
+)
+FORBIDDEN_GENERIC_SCAFFOLD_LINES = frozenset(
     {
-        "107",
-        "108",
-        "109",
-        "110",
-        "111",
-        "112",
-        "113",
-        "114",
-        "115",
-        "116",
-        "117",
-        "129",
+        "- current task contract",
+        "- selected primary Professional Skill",
+        "- task-local trigger evidence",
+        "- current task contract; selected primary Professional Skill; task-local trigger evidence",
+        "1. Confirm the concrete trigger and the primary Professional Skill.",
+        "2. Inspect only the current source, tests, contracts, and targeted references needed for this decision.",
+        "3. Apply the narrow rules without expanding task scope or taking over ownership.",
+        "4. Return the decision, evidence, proof limits, escalation, and residual risk.",
+        "- State source evidence, what the decision proves, what remains unverified, and the next owner.",
+        "- Return to the primary Professional Skill after this decision; do not load adjacent Layer 3 Skills speculatively.",
+        "- Read [checklist.md](references/checklist.md) only when its subject changes the current decision.",
+        "- Read [evidence-patterns.md](references/evidence-patterns.md) only when its subject changes the current decision.",
+        "Support `analysis-agent`, `task-agent`, and `review-agent` as a focused Layer 3",
+        "Support an `analysis-agent`, `task-agent`, or `review-agent` as a focused Layer 3",
     }
 )
-REFERENCE_LOADING_POLICY_CAPABILITIES = frozenset(
-    {
-        "105",
-        "106",
-        "107",
-        "108",
-        "109",
-        "110",
-        "111",
-        "112",
-        "113",
-        "114",
-        "115",
-        "116",
-        "117",
-        "129",
-    }
+FORBIDDEN = (
+    "task context compiler", "runtime dispatch bridge", "private evidence ledger",
+    "runtime evidence ledger", "hidden evidence ledger",
+    "runtime identity", "runtime digest", "hidden pack", ".changeforge-packs",
+    "phase artifact", "process phase ledger", "finding id", "pretooluse", "posttooluse",
 )
-REFERENCE_LOADING_POLICY_POSITION_CAPABILITIES = frozenset(
-    {
-        "105",
-        "106",
-        "107",
-        "108",
-        "109",
-        "110",
-        "111",
-        "112",
-        "113",
-        "114",
-        "117",
-        "129",
-    }
-)
-STRUCTURED_CODE_CORRECTNESS_REQUIRED_SECTIONS = ("Evidence Requirement",)
-REFERENCE_LOADING_POLICY_REQUIRED_TERMS = (
-    "inline-only",
-    "deep reference",
-    "l1",
-    "l2",
-    "l3",
-    "output",
-)
-ANTI_FRAGMENTATION_KEYWORDS = (
-    "anti-fragmentation",
-    "file granularity",
-    "micro-file sprawl",
-    "one-function file",
-    "tiny helper file",
-    "navigation cost",
-    "keep in existing file",
-    "small file merge",
-    "merge restraint",
-    "reckless file merge",
-    "lost small-file boundary",
-    "split merge decision",
-)
-OBJECT_ORGANIZATION_KEYWORDS = (
-    "object-method encapsulation",
-    "method placement",
-    "object relationship map",
-    "parent-child object",
-    "sibling object",
-    "inheritance vs composition",
-    "delegation",
-    "anemic object",
-    "helper-bag object",
-    "god object",
-    "module internal composition",
-    "module object graph",
-    "module public facade",
-    "module private internals",
-    "internal dependency direction",
-    "object boundary lost during file merge",
-    "object boundary missing during file split",
-)
-CAPABILITY_KEYWORD_REQUIREMENTS = {
-    "implementation-structure-design": ANTI_FRAGMENTATION_KEYWORDS + OBJECT_ORGANIZATION_KEYWORDS,
-    "code-clarity-maintainability": ANTI_FRAGMENTATION_KEYWORDS,
-}
 
 
-def _validate_description_prefix(description: object, context: str, errors: list[str]) -> None:
-    if not isinstance(description, str):
-        return
-    if not description.startswith("Use this capability when "):
-        errors.append(
-            f"{context}: frontmatter 'description' must start with "
-            "'Use this capability when '"
+def validate_capability_coverage_matrix(
+    matrix_path: Path = CAPABILITY_MATRIX,
+    *,
+    root: Path = ROOT,
+    foundation_registry: object | None = None,
+) -> list[str]:
+    """Validate matrix Layer 3 IDs and Professional ownership."""
+
+    registry_root = root / "src" / "registry"
+    professional_path = registry_root / "professional-skills.yaml"
+    foundation_path = registry_root / "foundation-skills.yaml"
+    domain_path = registry_root / "domain-skills.yaml"
+    professional_registry = (
+        load_yaml_file(professional_path) if professional_path.is_file() else None
+    )
+    if foundation_registry is None and foundation_path.is_file():
+        foundation_registry = load_yaml_file(foundation_path)
+    domain_registry = (
+        load_yaml_file(domain_path) if domain_path.is_file() else None
+    )
+    evidence_documents = [
+        (path.relative_to(root).as_posix(), load_yaml_file(path))
+        for path in (
+            root / "evals" / "capability-coverage" / "admission-cases.yaml",
+            root / "evals" / "routing" / "capability-coverage-cases.yaml",
         )
-
-
-def _is_nonempty_string_list(value: object) -> bool:
-    return isinstance(value, list) and all(
-        isinstance(item, str) and item.strip() for item in value
-    )
-
-
-def _normalize_capability_id(value: object) -> str | None:
-    if isinstance(value, str) and re.fullmatch(r"\d+", value):
-        number = int(value)
-        if 1 <= number <= EXPECTED_FOUNDATION_CAPABILITY_COUNT:
-            return f"{number:02d}" if number < 100 else str(number)
-    if isinstance(value, int) and 1 <= value <= EXPECTED_FOUNDATION_CAPABILITY_COUNT:
-        return f"{value:02d}" if value < 100 else str(value)
-    return None
-
-
-def _validate_registry_format(registry_data: object, errors: list[str]) -> list[object]:
-    entries = registry_items(
-        registry_data,
-        "capabilities",
-        CAPABILITIES_REGISTRY,
-        errors,
-    )
-    seen_ids: dict[str, int] = {}
-    seen_names: dict[str, int] = {}
-    seen_paths: dict[str, int] = {}
-
-    for index, entry in enumerate(entries):
-        context = f"capabilities.yaml:capabilities[{index}]"
-        if not isinstance(entry, dict):
-            errors.append(f"{context}: entry must be a mapping")
-            continue
-
-        for field in REGISTRY_REQUIRED_FIELDS:
-            if field not in entry:
-                errors.append(f"{context}: missing required field '{field}'")
-
-        capability_id = entry.get("id")
-        if _normalize_capability_id(capability_id) != capability_id:
-            errors.append(f"{context}: field 'id' must be a valid capability id string")
-        elif capability_id in seen_ids:
-            errors.append(
-                f"{context}: duplicate id '{capability_id}' first used at "
-                f"capabilities.yaml:capabilities[{seen_ids[capability_id]}]"
-            )
-        else:
-            seen_ids[capability_id] = index
-
-        name = entry.get("name")
-        if not isinstance(name, str) or not NAME_RE.fullmatch(name):
-            errors.append(f"{context}: field 'name' must be lowercase hyphen-separated text")
-            name = None
-        elif name in seen_names:
-            errors.append(
-                f"{context}: duplicate name '{name}' first used at "
-                f"capabilities.yaml:capabilities[{seen_names[name]}]"
-            )
-        else:
-            seen_names[name] = index
-
-        group = entry.get("group")
-        if not isinstance(group, str) or not NAME_RE.fullmatch(group):
-            errors.append(f"{context}: field 'group' must be lowercase hyphen-separated text")
-
-        path = entry.get("path")
-        expected_path = f"src/foundation/capabilities/{name}" if name else None
-        if not isinstance(path, str) or not path:
-            errors.append(f"{context}: field 'path' must be a non-empty string")
-        elif path.startswith("src/toolbox") or "toolbox.yaml" in path:
-            errors.append(f"{context}: path must not reference banned mapping content")
-        elif expected_path and path != expected_path:
-            errors.append(f"{context}: field 'path' must be {expected_path}")
-        elif path in seen_paths:
-            errors.append(
-                f"{context}: duplicate path '{path}' first used at "
-                f"capabilities.yaml:capabilities[{seen_paths[path]}]"
-            )
-        else:
-            seen_paths[path] = index
-
-        status = entry.get("status")
-        if not isinstance(status, str) or status.casefold() not in REGISTRY_STATUSES:
-            errors.append(
-                f"{context}: field 'status' must be one of "
-                f"{', '.join(sorted(REGISTRY_STATUSES))}"
-            )
-
-        for field in REGISTRY_LIST_FIELDS:
-            if not _is_nonempty_string_list(entry.get(field)):
-                errors.append(f"{context}: field '{field}' must be a non-empty list of strings")
-
-    return entries
-
-
-def _validate_capability_template(errors: list[str]) -> None:
-    required_files = (
-        CAPABILITY_TEMPLATE_DIR / "SKILL.md",
-        CAPABILITY_TEMPLATE_DIR / "references" / "checklist.md",
-        CAPABILITY_TEMPLATE_DIR / "examples" / "example-output.md",
-    )
-    for path in required_files:
-        if not path.is_file():
-            errors.append(f"missing capability template file: {relpath(ROOT, path)}")
-
-    skill_file = CAPABILITY_TEMPLATE_DIR / "SKILL.md"
-    if not skill_file.is_file():
-        return
-
-    file_context = relpath(ROOT, skill_file)
-    try:
-        metadata, raw_frontmatter, body = parse_frontmatter(skill_file)
-    except ValidationProblem as exc:
-        errors.append(str(exc).replace(str(ROOT) + "/", ""))
-        return
-
-    validate_required_frontmatter(metadata, REQUIRED_FRONTMATTER, file_context, errors)
-    validate_name(metadata.get("name"), file_context, errors)
-    if metadata.get("changeforge_kind") != "foundation-capability":
-        errors.append(
-            f"{file_context}: frontmatter 'changeforge_kind' must be foundation-capability"
-        )
-    description = metadata.get("description")
-    validate_description_length(description, 120, 700, file_context, errors)
-    _validate_description_prefix(description, file_context, errors)
-    validate_required_sections(
-        body,
-        REQUIRED_SECTIONS,
-        file_context,
-        errors,
-        require_order=True,
-    )
-    validate_no_beginner_sections(body, file_context, errors)
-    validate_no_personal_references(raw_frontmatter + "\n" + body, file_context, errors)
-
-
-def _validate_targeted_content_keywords(
-    name: str | None,
-    body: str,
-    context: str,
-    errors: list[str],
-) -> None:
-    if name not in CAPABILITY_KEYWORD_REQUIREMENTS:
-        return
-    folded = body.casefold()
-    missing = [
-        keyword
-        for keyword in CAPABILITY_KEYWORD_REQUIREMENTS[name]
-        if keyword.casefold() not in folded
+        if path.is_file()
     ]
-    if missing:
+    evidence_catalog, evidence_errors = fixture_ids(*evidence_documents)
+    return [
+        *evidence_errors,
+        *validate_capability_coverage(
+            matrix_path,
+            root=root,
+            professional_registry=professional_registry,
+            foundation_registry=foundation_registry,
+            domain_registry=domain_registry,
+            evidence_ids=evidence_catalog,
+        ),
+    ]
+
+
+def _section(body: str, heading: str) -> str:
+    marker = f"## {heading}"
+    start = body.find(marker)
+    if start < 0:
+        return ""
+    content_start = start + len(marker)
+    end = body.find("\n## ", content_start)
+    return body[content_start:] if end < 0 else body[content_start:end]
+
+
+def _output_contract_items(section: str) -> tuple[list[str], list[str]]:
+    """Return normalized top-level bullets from a root Output Contract."""
+
+    items: list[str] = []
+    errors: list[str] = []
+    current: list[str] | None = None
+    for raw_line in section.splitlines():
+        if raw_line.startswith("- "):
+            if current is not None:
+                items.append(" ".join(current))
+            value = " ".join(raw_line[2:].split())
+            current = [value] if value else []
+            if not value:
+                errors.append("contains an empty bullet")
+            continue
+        if not raw_line.strip():
+            continue
+        if current is not None and raw_line[:1].isspace():
+            current.append(" ".join(raw_line.split()))
+            continue
+        errors.append(f"contains non-bullet content {raw_line.strip()!r}")
+    if current is not None:
+        items.append(" ".join(current))
+    if not items:
+        errors.append("must contain at least one top-level bullet")
+    return items, errors
+
+
+def _registry_trigger_errors(section: str) -> list[str]:
+    """Return errors for the canonical Foundation trigger boundaries."""
+
+    labels = {
+        line.strip().strip("*_").strip().casefold()
+        for line in section.splitlines()
+    }
+    errors: list[str] = []
+    if "use when" not in labels:
+        errors.append("Registry Trigger must contain a 'Use when' boundary")
+    if "do not use when" not in labels:
+        errors.append("Registry Trigger must contain a 'Do not use when' boundary")
+    return errors
+
+
+def _decision_card_errors(body: str) -> list[str]:
+    result = foundation_decision_card(body)
+    findings = set(result["findings"])
+    metrics = result["metrics"]
+    errors: list[str] = []
+    if "trigger-boundaries-not-front-loaded" in findings:
         errors.append(
-            f"{context}: missing required anti-fragmentation keyword(s): "
-            + ", ".join(missing)
+            "Registry Trigger Use/Do not use boundaries must precede High-Value Rules"
         )
-
-
-def _validate_structured_code_correctness_sections(
-    capability_id: str | None,
-    body: str,
-    context: str,
-    errors: list[str],
-) -> None:
-    if capability_id not in STRUCTURED_CODE_CORRECTNESS_CAPABILITIES:
-        return
-
-    validate_required_sections(
-        body,
-        STRUCTURED_CODE_CORRECTNESS_REQUIRED_SECTIONS,
-        context,
-        errors,
-    )
-
-
-def _validate_reference_loading_policy(
-    capability_id: str | None,
-    body: str,
-    context: str,
-    errors: list[str],
-) -> None:
-    validate_required_sections(
-        body,
-        ("Reference Loading Policy",),
-        context,
-        errors,
-    )
-
-    top_level_titles: list[str] = []
-    for line in body.splitlines():
-        match = re.match(r"^#\s+(.+?)\s*#*\s*$", line)
-        if match:
-            top_level_titles.append(match.group(1).strip())
-
-    if top_level_titles.count("Reference Loading Policy") != 1:
-        errors.append(f"{context}: expected exactly one top-level Reference Loading Policy section")
-    else:
-        required_order = (
-            "Critical Gotchas",
-            "Reference Loading Policy",
-            "Output Fragment",
+    if "high-value-rules-not-early" in findings:
+        errors.append(
+            "High-Value Rules must begin within the first 60 lines"
         )
-        if all(title in top_level_titles for title in required_order):
-            critical_index = top_level_titles.index("Critical Gotchas")
-            policy_index = top_level_titles.index("Reference Loading Policy")
-            output_index = top_level_titles.index("Output Fragment")
-            if not critical_index < policy_index < output_index:
-                errors.append(
-                    f"{context}: Reference Loading Policy must appear after "
-                    "Critical Gotchas and before Output Fragment"
-                )
-
-    if capability_id not in REFERENCE_LOADING_POLICY_CAPABILITIES:
-        return
-
-    policy = extract_section_body(body, "Reference Loading Policy")
-    if policy is None:
-        return
-
-    folded = policy.casefold()
-    for term in REFERENCE_LOADING_POLICY_REQUIRED_TERMS:
-        if term not in folded:
-            errors.append(
-                f"{context}: foundation capability Reference Loading Policy must mention "
-                f"'{term}'"
-            )
-
-
-def _validate_capability_section_semantics(body: str, context: str, errors: list[str]) -> None:
-    """Validate capability fragment semantics that heading presence cannot prove."""
-    validate_skill_text_quality(body, context, errors)
-
-    boundary = extract_section_body(body, "Capability Boundary") or ""
-    folded_boundary = boundary.casefold()
-    for phrase in ("returns a narrow", "does not replace"):
-        if phrase not in folded_boundary:
-            errors.append(f"{context}: Capability Boundary must mention '{phrase}'")
-
-    required_input = extract_section_body(body, "Required Input Fragment") or ""
-    folded_input = required_input.casefold()
-    for phrase in ("owner skill", "missing"):
-        if phrase not in folded_input:
-            errors.append(f"{context}: Required Input Fragment must mention '{phrase}'")
-
-    output = extract_section_body(body, "Output Fragment") or ""
-    if "return" not in output.casefold():
-        errors.append(f"{context}: Output Fragment must describe what the capability returns")
+    if "decision-rule-count-outside-3-8" in findings:
+        errors.append("High-Value Rules must contain 3-8 decision rules")
+    if "decision-density-low" in findings:
+        errors.append(
+            "High-Value Rules decision density must equal 1.0; found "
+            f"{float(metrics['decision_density']):.3f}"
+        )
+    if "non-list-content" in findings:
+        errors.append(
+            "High-Value Rules must contain only list items and "
+            "content-indented continuations"
+        )
+    if "stop-conditions-missing-or-late" in findings:
+        errors.append(
+            "Stop Conditions must be present after High-Value Rules and before "
+            "applicable Output Contract and Targeted References"
+        )
+    return errors
 
 
 def main() -> int:
     errors: list[str] = []
-
-    if not CAPABILITIES_DIR.exists():
-        errors.append("missing src/foundation/capabilities")
-        return fail_many("validate-capabilities", errors)
-
-    if not CAPABILITIES_REGISTRY.is_file():
-        errors.append("missing src/registry/capabilities.yaml")
-        return fail_many("validate-capabilities", errors)
-
-    for path in BANNED_MAPPING_PATHS:
-        if path.exists():
-            errors.append(f"banned mapping path exists: {relpath(ROOT, path)}")
-
-    registry_text = CAPABILITIES_REGISTRY.read_text(encoding="utf-8")
-    validate_no_personal_references(
-        registry_text,
-        relpath(ROOT, CAPABILITIES_REGISTRY),
-        errors,
-    )
     try:
-        registry_data = load_yaml_file(CAPABILITIES_REGISTRY)
+        data = load_yaml_file(REGISTRY)
     except ValidationProblem as exc:
         errors.append(str(exc))
-        registry_data = {}
-
-    registered_entries = _validate_registry_format(registry_data, errors)
-    validate_expected_count(
-        errors,
-        "capability registry entrie(s)",
-        len(registered_entries),
-        EXPECTED_FOUNDATION_CAPABILITY_COUNT,
-        relpath(ROOT, CAPABILITIES_REGISTRY),
-    )
-
-    _validate_capability_template(errors)
-
-    capability_dirs = visible_child_dirs(CAPABILITIES_DIR, excluded_prefixes=(".", "_"))
-    professional_dirs = visible_child_dirs(PROFESSIONAL_SKILLS_DIR)
-    domain_extension_dirs = visible_child_dirs(DOMAIN_EXTENSIONS_DIR)
-    profile_counts = {
-        "recommended": len(professional_dirs),
-        "full": len(professional_dirs) + len(domain_extension_dirs),
-        "dev": len(professional_dirs) + len(capability_dirs) + len(domain_extension_dirs),
-    }
-
-    validate_expected_count(
-        errors,
-        "professional skill(s)",
-        len(professional_dirs),
-        EXPECTED_PROFESSIONAL_SKILL_COUNT,
-        relpath(ROOT, PROFESSIONAL_SKILLS_DIR),
-    )
-    validate_expected_count(
-        errors,
-        "foundation capability(s)",
-        len(capability_dirs),
-        EXPECTED_FOUNDATION_CAPABILITY_COUNT,
-        relpath(ROOT, CAPABILITIES_DIR),
-    )
-    validate_expected_count(
-        errors,
-        "domain extension(s)",
-        len(domain_extension_dirs),
-        EXPECTED_DOMAIN_EXTENSION_COUNT,
-        relpath(ROOT, DOMAIN_EXTENSIONS_DIR),
-    )
-    for profile, expected_count in EXPECTED_PROFILE_TOP_LEVEL_COUNTS.items():
-        validate_expected_count(
-            errors,
-            f"{profile} profile top-level skill(s)",
-            profile_counts[profile],
-            expected_count,
-            "source profile counts",
-        )
-
-    for child in sorted(CAPABILITIES_DIR.iterdir()):
-        if child.name.startswith(".") and child.name != ".gitkeep":
-            errors.append(f"invalid hidden capability path: {relpath(ROOT, child)}")
-        if child.is_dir() and child.name.startswith("_") and child.name != "_template":
-            errors.append(f"invalid template capability path: {relpath(ROOT, child)}")
-        if child.is_file() and child.name not in ALLOWED_CAPABILITIES_ROOT_FILES:
-            errors.append(f"unexpected file in capabilities root: {relpath(ROOT, child)}")
-
-    if not capability_dirs:
-        if errors:
-            return fail_many("validate-capabilities", errors)
-        print(
-            "validate-capabilities: validated "
-            f"{len(registered_entries)} capability registry entries and template."
-        )
-        return 0
-
-    registered_refs = {
-        ref
-        for entry in registered_entries
-        for ref in (
-            entry_ref(
-                entry,
-                (
-                    "changeforge_capability_id",
-                    "capability_id",
-                    "id",
-                    "name",
-                    "capability",
-                ),
-            ),
-        )
-        if ref
-    }
-    registered_paths = {
-        str((ROOT / path).resolve())
-        for entry in registered_entries
-        for path in (entry_path(entry),)
-        if path
-    }
-
-    capability_ids: dict[str, Path] = {}
-    capability_names: dict[str, Path] = {}
-    implemented_capabilities: list[tuple[str, str | None, str | None, str]] = []
-
-    for capability_dir in capability_dirs:
-        context = relpath(ROOT, capability_dir)
-        skill_file = capability_dir / "SKILL.md"
-        if not skill_file.is_file():
-            errors.append(f"{context}: missing SKILL.md")
+        return fail_many("validate-capabilities", errors)
+    entries = data.get("foundation_skills") if isinstance(data, dict) else None
+    if not isinstance(entries, list):
+        errors.append("foundation-skills.yaml:foundation_skills must be a list")
+        return fail_many("validate-capabilities", errors)
+    if len(entries) != EXPECTED_FOUNDATION_CAPABILITY_COUNT:
+        errors.append(f"expected {EXPECTED_FOUNDATION_CAPABILITY_COUNT} Foundation Skills, found {len(entries)}")
+    registered: set[str] = set()
+    for entry in entries:
+        if not isinstance(entry, dict):
             continue
-
-        file_context = relpath(ROOT, skill_file)
+        name, path_value = entry.get("name"), entry.get("path")
+        if not isinstance(name, str) or not isinstance(path_value, str):
+            continue
+        registered.add(name)
+        skill_file = ROOT / path_value / "SKILL.md"
+        context = str(skill_file.relative_to(ROOT))
+        if not skill_file.is_file():
+            errors.append(f"{context}: missing")
+            continue
         try:
-            metadata, raw_frontmatter, body = parse_frontmatter(skill_file)
+            metadata, _raw, body = parse_frontmatter(skill_file)
         except ValidationProblem as exc:
             errors.append(str(exc).replace(str(ROOT) + "/", ""))
             continue
-
-        validate_required_frontmatter(metadata, REQUIRED_FRONTMATTER, file_context, errors)
-
-        if metadata.get("changeforge_kind") != "foundation-capability":
-            errors.append(
-                f"{file_context}: frontmatter 'changeforge_kind' must be foundation-capability"
-            )
-
-        capability_id = metadata.get("changeforge_capability_id")
-        normalized_capability_id = _normalize_capability_id(capability_id)
-        if normalized_capability_id is None:
-            errors.append(
-                f"{file_context}: frontmatter 'changeforge_capability_id' must be a "
-                "valid capability id"
-            )
-        elif normalized_capability_id in capability_ids:
-            errors.append(
-                f"{file_context}: duplicate capability id also declared in "
-                f"{relpath(ROOT, capability_ids[normalized_capability_id])}"
-            )
-        else:
-            capability_ids[normalized_capability_id] = skill_file
-
-        name = metadata.get("name")
-        validate_name(name, file_context, errors)
-        if isinstance(name, str):
-            if name != capability_dir.name:
-                errors.append(f"{file_context}: frontmatter 'name' must match directory name")
-            if name in capability_names:
-                errors.append(
-                    f"{file_context}: duplicate capability name also declared in "
-                    f"{relpath(ROOT, capability_names[name])}"
-                )
-            else:
-                capability_names[name] = skill_file
-
+        if set(metadata) != {"name", "description"}:
+            errors.append(f"{context}: frontmatter must contain only name and description")
+        if metadata.get("name") != name or skill_file.parent.name != name:
+            errors.append(f"{context}: name must match registry and directory")
         description = metadata.get("description")
-        validate_description_length(description, 120, 700, file_context, errors)
-        _validate_description_prefix(description, file_context, errors)
-
-        implemented_capabilities.append(
-            (
-                file_context,
-                normalized_capability_id,
-                name if isinstance(name, str) else None,
-                str(capability_dir.resolve()),
+        if not isinstance(description, str) or len(description.strip()) < 60:
+            errors.append(f"{context}: description must contain trigger and boundary guidance")
+        elif isinstance(description, str):
+            validate_ai_readability(
+                description,
+                f"{context}#description",
+                errors,
+                check_bullets=False,
             )
-        )
-
         validate_required_sections(
             body,
             REQUIRED_SECTIONS,
-            file_context,
+            context,
             errors,
             require_order=True,
         )
-        _validate_structured_code_correctness_sections(
-            normalized_capability_id,
+        for line_number, _level, title in empty_markdown_headings(body):
+            errors.append(f"{context}: empty heading '{title}' at line {line_number}")
+        validate_ai_markdown_format(
             body,
-            file_context,
+            context,
             errors,
+            check_bullets=False,
         )
-        _validate_reference_loading_policy(
-            normalized_capability_id,
-            body,
-            file_context,
-            errors,
+        for error in _decision_card_errors(body):
+            errors.append(f"{context}: {error}")
+        for rule in ai_markdown_list_sentence_counts(
+            _section(body, "High-Value Rules")
+        ):
+            sentence_count = int(rule["sentences"])
+            if sentence_count <= 2:
+                continue
+            errors.append(
+                f"{context}: Foundation High-Value Rule exceeds the two-sentence "
+                f"limit; found {sentence_count} sentences"
+            )
+        for finding in ai_readability_findings(body, context):
+            if finding.get("band") != "tighten":
+                continue
+            errors.append(
+                f"{context}:{finding['line']}: Foundation root sentence requires "
+                f"tightening; {finding['words']} words exceeds the 32-word root limit"
+            )
+        h2_titles = [
+            title for _line, level, title in heading_entries(body) if level == 2
+        ]
+        all_heading_titles = [title for _line, _level, title in heading_entries(body)]
+        for title in REQUIRED_SECTIONS:
+            if title in all_heading_titles and title not in h2_titles:
+                errors.append(
+                    f"{context}: required Foundation section '{title}' must be level 2"
+                )
+        allowed_sections = set(REQUIRED_SECTIONS) | set(OPTIONAL_SECTIONS)
+        unexpected = [title for title in h2_titles if title not in allowed_sections]
+        if unexpected:
+            errors.append(
+                f"{context}: unsupported Foundation section(s): {', '.join(unexpected)}"
+            )
+        positions = [SECTION_ORDER.index(title) for title in h2_titles if title in allowed_sections]
+        if positions != sorted(positions):
+            errors.append(f"{context}: Foundation sections are out of order")
+        duplicate_optional = sorted(
+            title for title in OPTIONAL_SECTIONS if h2_titles.count(title) > 1
         )
-        _validate_capability_section_semantics(body, file_context, errors)
-        validate_no_beginner_sections(body, file_context, errors)
-        validate_no_personal_references(raw_frontmatter + "\n" + body, file_context, errors)
-        _validate_targeted_content_keywords(
-            name if isinstance(name, str) else None,
-            body,
-            file_context,
-            errors,
-        )
-
-    for context, capability_id, name, capability_path in implemented_capabilities:
-        refs = {ref for ref in (capability_id, name) if ref}
-        if not refs.intersection(registered_refs) and capability_path not in registered_paths:
-            errors.append(f"{context}: implemented capability is missing from capabilities.yaml")
-
-    solution_capability = next(
-        (
-            item
-            for item in implemented_capabilities
-            if item[2] == "solution-optimality-evaluation"
-        ),
-        None,
-    )
-    if solution_capability is None:
-        errors.append("solution-optimality-evaluation: capability 82 source is missing")
-    elif solution_capability[1] != "82":
-        errors.append(
-            f"{solution_capability[0]}: solution-optimality-evaluation must use "
-            "changeforge_capability_id 82"
-        )
-
+        if duplicate_optional:
+            errors.append(
+                f"{context}: duplicate optional Foundation section(s): "
+                + ", ".join(duplicate_optional)
+            )
+        for line in body.splitlines():
+            if line.strip() in FORBIDDEN_GENERIC_SCAFFOLD_LINES:
+                errors.append(
+                    f"{context}: contains forbidden generic scaffold line {line.strip()!r}"
+                )
+        if len(body.splitlines()) > 120:
+            errors.append(f"{context}: root Layer 3 Skill exceeds 120 lines")
+        folded = body.casefold()
+        for term in FORBIDDEN:
+            if term in folded:
+                errors.append(f"{context}: contains obsolete mechanism {term!r}")
+        trigger_section = _section(body, "Registry Trigger")
+        for error in _registry_trigger_errors(trigger_section):
+            errors.append(f"{context}: {error}")
+        output_section = _section(body, "Output Contract")
+        if output_section:
+            root_outputs, output_errors = _output_contract_items(output_section)
+            for error in output_errors:
+                errors.append(f"{context}: Output Contract {error}")
+            registry_outputs = entry.get("output_contract")
+            normalized_registry_outputs = (
+                [" ".join(value.split()) for value in registry_outputs]
+                if isinstance(registry_outputs, list)
+                and all(isinstance(value, str) for value in registry_outputs)
+                else []
+            )
+            if len(root_outputs) != len(set(root_outputs)):
+                errors.append(f"{context}: Output Contract contains duplicate bullets")
+            if len(normalized_registry_outputs) != len(set(normalized_registry_outputs)):
+                errors.append(f"{context}: registry output_contract contains duplicate values")
+            if set(root_outputs) != set(normalized_registry_outputs):
+                missing = sorted(set(root_outputs) - set(normalized_registry_outputs))
+                extra = sorted(set(normalized_registry_outputs) - set(root_outputs))
+                errors.append(
+                    f"{context}: Output Contract bullet-set must exactly match registry "
+                    f"output_contract; missing={missing!r}; extra={extra!r}"
+                )
+        reference_section = _section(body, "Targeted References")
+        for reference in reference_paths(
+            entry.get("reference_index"), f"{context}.reference_index", owner=name
+        ):
+            if not (skill_file.parent / str(reference)).is_file():
+                errors.append(f"{context}: missing targeted reference {reference}")
+            if str(reference) not in reference_section:
+                errors.append(f"{context}: Targeted References must link {reference}")
+    actual = {
+        path.name for path in SKILLS_ROOT.iterdir()
+        if path.is_dir() and not path.name.startswith((".", "_"))
+    }
+    if actual != registered:
+        errors.append(f"Foundation Skill directory/registry mismatch: {sorted(actual ^ registered)}")
+    errors.extend(validate_capability_coverage_matrix())
     if errors:
         return fail_many("validate-capabilities", errors)
-
-    print(f"validate-capabilities: validated {len(capability_dirs)} foundation capability(s).")
+    print(f"validate-capabilities: validated {len(registered)} focused Foundation Skill(s).")
     return 0
 
 

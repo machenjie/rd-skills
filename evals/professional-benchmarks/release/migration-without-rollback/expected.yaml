@@ -4,7 +4,6 @@ expected_capabilities:
   - release-rollback
   - data-migration-design
   - version-compatibility
-  - agent-execution-discipline
 expected_hidden_risks:
   - rollback fails because schema moved forward
   - rolling deploy version skew breaks old pods or consumers

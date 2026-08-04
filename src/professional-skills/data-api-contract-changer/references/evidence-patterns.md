@@ -10,7 +10,7 @@ Use this reference when a contract change needs proof stronger than a local code
 - **Deprecation or deletion:** prove telemetry/caller search, sunset date, replacement path, owner acknowledgement, cleanup issue, and rollback after deletion.
 
 ## Evidence Rules
-- Every accepted evidence item names command or validator, report artifact, exit code, freshness, and the exact contract claim it proves.
+- For executable or report-backed contract claims, record the validator, artifact, status, freshness, and exact claim; for manual review or owner evidence, record the procedure, result, scope, and proof limits.
 - Every evidence item also states what it does not prove: unknown consumers, mobile/client lag, production data skew, version skew during rollout, or rollback under live traffic.
 - Prefer existing OpenAPI/Protobuf/GraphQL generators, contract tests, migration validators, and repository consumer searches before adding new support machinery.
 - Do not close a breaking change on schema diff alone; pair it with consumer readiness, versioning or EMC plan, and rollback evidence.

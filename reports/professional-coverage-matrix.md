@@ -1,71 +1,200 @@
-# Professional Coverage Matrix
+# Hookless Professional Coverage Matrix
 
-- Generated: 2026-07-05T01:24:25.172909+00:00
-- Rows checked: 64
+> Coverage is deterministic and captured-fixture evidence, not observed production or live-agent performance.
 
-| Item | Kind | Mode Matrix | Proactive Triggers | Evidence Contract | Output Contract | Failure Modes | Quality Gate | Reference Loading Hint | Senior Programming Judgment Coverage | Routing Coverage | Benchmark Coverage | Anti-bloat Status | Status |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `algorithm-data-structure-selection` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (1) | yes (1) | ok | sample-grade |
-| `architecture-enforcement-tooling` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | no | yes (1) | ok | sample-grade |
-| `async-job-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (1) | yes (2) | ok | sample-grade |
-| `cache-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (6) | yes (5) | ok | sample-grade |
-| `cleanup-deletion-governance` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (3) | yes (3) | ok | sample-grade |
-| `code-element-professionalism` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (16) | yes (8) | ok | sample-grade |
-| `code-review` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (14) | yes (21) | ok | sample-grade |
-| `configuration-runtime-policy` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (1) | yes (2) | ok | sample-grade |
-| `consumer-impact-analysis` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (1) | yes (2) | ok | sample-grade |
-| `contract-testing` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (17) | yes (12) | ok | sample-grade |
-| `cpp-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (3) | yes (2) | ok | sample-grade |
-| `data-side-effect-flow-tracing` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (4) | yes (2) | ok | sample-grade |
-| `dependency-wiring-lifecycle` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | no | yes (1) | ok | sample-grade |
-| `e2e-testing` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (4) | yes (1) | ok | sample-grade |
-| `failure-contract-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (3) | yes (2) | ok | sample-grade |
-| `failure-diagnosis` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (9) | yes (3) | ok | sample-grade |
-| `go-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (2) | yes (1) | ok | sample-grade |
-| `idempotency-retry-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (12) | yes (10) | ok | sample-grade |
-| `integration-testing` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (12) | yes (15) | ok | sample-grade |
-| `java-jvm-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (1) | yes (1) | ok | sample-grade |
-| `language-idiom-enforcement` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (6) | yes (9) | ok | sample-grade |
-| `language-performance-safety` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (4) | yes (9) | ok | sample-grade |
-| `language-testing-strategy` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (4) | yes (5) | ok | sample-grade |
-| `logging-error-handling` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (8) | yes (5) | ok | sample-grade |
-| `message-queue-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (5) | yes (4) | ok | sample-grade |
-| `minimal-correct-implementation` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (9) | yes (3) | ok | sample-grade |
-| `model-boundary-mapping` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | no | yes (1) | ok | sample-grade |
-| `observability` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (39) | yes (19) | ok | sample-grade |
-| `python-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (1) | yes (1) | ok | sample-grade |
-| `refactoring` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (11) | yes (13) | ok | sample-grade |
-| `regression-testing` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (49) | yes (48) | ok | sample-grade |
-| `relational-database` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (3) | yes (2) | ok | sample-grade |
-| `release-rollback` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (20) | yes (6) | ok | sample-grade |
-| `rust-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (2) | yes (1) | ok | sample-grade |
-| `senior-programming-judgment-core` | foundation-capability | yes | yes | yes | yes | yes | yes | yes | yes | yes (5) | yes (5) | ok | sample-grade |
-| `shell-cli-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (1) | yes (1) | ok | sample-grade |
-| `sql-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (2) | yes (2) | ok | sample-grade |
-| `test-strategy` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (10) | no | ok | sample-grade |
-| `testability-seam-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | no | yes (1) | ok | sample-grade |
-| `transaction-consistency` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (10) | yes (7) | ok | sample-grade |
-| `typescript-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (3) | yes (1) | ok | sample-grade |
-| `unit-testing` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | n/a | yes (21) | yes (29) | ok | sample-grade |
-| `acceptance-criteria-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (6) | no | ok | sample-grade |
-| `ai-code-review-refactor` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (36) | yes (46) | ok | sample-grade |
-| `architecture-impact-reviewer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (20) | yes (5) | ok | sample-grade |
-| `backend-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (67) | yes (67) | ok | sample-grade |
-| `change-documentation-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (42) | yes (14) | ok | sample-grade |
-| `change-forge-router` | professional-skill | yes | yes | yes | partial | yes | yes | yes | partial (14/15) | n/a (router owns routing fixture corpus; eval-routing cases=171) | n/a (covered by eval-routing and agent-behavior) | ok | sample-grade |
-| `change-impact-analyzer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (18) | yes (4) | ok | sample-grade |
-| `change-intake-compiler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (19) | yes (7) | ok | sample-grade |
-| `data-api-contract-changer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (21) | yes (11) | ok | sample-grade |
-| `data-middleware-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (18) | yes (12) | ok | sample-grade |
-| `delivery-release-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (33) | yes (10) | ok | sample-grade |
-| `development-process-orchestrator` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (3) | yes (1) | ok | sample-grade |
-| `domain-impact-modeler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (9) | yes (6) | ok | sample-grade |
-| `experience-impact-modeler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (6) | yes (1) | ok | sample-grade |
-| `frontend-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (17) | yes (9) | ok | sample-grade |
-| `integration-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (16) | yes (9) | ok | sample-grade |
-| `logging-design-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | no | no | ok | sample-grade |
-| `phase-review-capsule` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | no | no | ok | sample-grade |
-| `quality-test-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (150) | yes (76) | ok | sample-grade |
-| `reliability-observability-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (44) | yes (24) | ok | sample-grade |
-| `security-privacy-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (39) | yes (12) | ok | sample-grade |
-| `task-dag-planner` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a | yes (4) | no | ok | sample-grade |
+- Required Skills: 10
+- Coverage gate failures: 0
+- Source errors: 0
+
+| Layer | Skill | Authoring | +Route | -Route | Behavior | Pressure | Release-critical | Coverage gate |
+|---|---|---|---:|---:|---:|---:|---:|---|
+| control | `engineering-control-plane` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| professional | `routing-quality-review` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| professional | `change-intake-compiler` | pass | 1 | 0 | 0 | 1 | 0 | not-required |
+| professional | `engineering-change-analysis` | pass | 103 | 0 | 2 | 8 | 0 | not-required |
+| professional | `acceptance-criteria-builder` | pass | 1 | 0 | 0 | 0 | 0 | not-required |
+| professional | `task-dag-planner` | pass | 1 | 0 | 0 | 0 | 0 | not-required |
+| professional | `high-risk-design-review` | pass | 3 | 0 | 0 | 0 | 0 | not-required |
+| professional | `engineering-artifact-review` | pass | 2 | 0 | 0 | 0 | 0 | not-required |
+| professional | `experience-impact-modeler` | pass | 3 | 0 | 0 | 0 | 0 | not-required |
+| professional | `domain-impact-modeler` | pass | 3 | 0 | 1 | 0 | 0 | not-required |
+| professional | `architecture-impact-reviewer` | pass | 98 | 1 | 1 | 0 | 1 | pass |
+| professional | `data-api-contract-changer` | pass | 4 | 0 | 2 | 0 | 0 | not-required |
+| professional | `frontend-change-builder` | pass | 10 | 0 | 2 | 0 | 0 | not-required |
+| professional | `backend-change-builder` | pass | 26 | 0 | 11 | 3 | 0 | not-required |
+| professional | `data-middleware-change-builder` | pass | 7 | 0 | 5 | 0 | 0 | not-required |
+| professional | `integration-change-builder` | pass | 3 | 0 | 2 | 0 | 0 | not-required |
+| professional | `quality-test-gate` | pass | 6 | 0 | 5 | 2 | 0 | not-required |
+| professional | `security-privacy-gate` | pass | 17 | 8 | 2 | 1 | 1 | pass |
+| professional | `reliability-observability-gate` | pass | 9 | 5 | 1 | 0 | 1 | pass |
+| professional | `logging-design-gate` | pass | 7 | 1 | 1 | 0 | 1 | pass |
+| professional | `delivery-release-gate` | pass | 7 | 0 | 4 | 0 | 0 | not-required |
+| professional | `ai-code-review-refactor` | pass | 82 | 0 | 5 | 1 | 0 | not-required |
+| professional | `change-documentation-gate` | pass | 4 | 0 | 0 | 0 | 0 | not-required |
+| professional | `installed-client-change-builder` | pass | 9 | 0 | 1 | 0 | 0 | not-required |
+| professional | `platform-infrastructure-change-builder` | pass | 3 | 0 | 0 | 0 | 0 | not-required |
+| professional | `repository-tooling-change-builder` | pass | 8 | 1 | 0 | 0 | 0 | not-required |
+| professional | `incident-response-coordinator` | pass | 1 | 1 | 0 | 0 | 0 | not-required |
+| foundation | `requirement-clarification` | pass | 1 | 0 | 0 | 1 | 0 | not-required |
+| foundation | `requirement-structuring` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `user-role-identification` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `scenario-decomposition` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `acceptance-standard-definition` | pass | 1 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `non-goal-boundary-definition` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `information-architecture` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `user-flow-modeling` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `prototype-description` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `interaction-state-modeling` | pass | 2 | 1 | 1 | 0 | 0 | not-required |
+| foundation | `design-system-rules` | pass | 2 | 1 | 0 | 0 | 0 | not-required |
+| foundation | `domain-object-identification` | pass | 3 | 2 | 1 | 0 | 0 | not-required |
+| foundation | `business-rule-extraction` | pass | 1 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `state-machine-modeling` | pass | 1 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `use-case-modeling` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `permission-boundary-modeling` | pass | 8 | 0 | 3 | 1 | 1 | not-required |
+| foundation | `domain-event-modeling` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `architecture-style-selection` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `module-boundary-design` | pass | 3 | 5 | 1 | 0 | 1 | not-required |
+| foundation | `layered-architecture-design` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `microservice-splitting` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `event-driven-architecture` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `architecture-tradeoff-analysis` | pass | 0 | 0 | 1 | 0 | 1 | not-required |
+| foundation | `extensibility-design` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `data-model-design` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `api-contract-design` | pass | 4 | 2 | 2 | 0 | 0 | not-required |
+| foundation | `dto-schema-design` | pass | 0 | 0 | 2 | 0 | 0 | not-required |
+| foundation | `error-code-design` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `version-compatibility` | pass | 10 | 0 | 3 | 0 | 0 | not-required |
+| foundation | `data-migration-design` | pass | 1 | 0 | 2 | 0 | 0 | not-required |
+| foundation | `page-component-decomposition` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `routing-navigation-design` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `state-management-design` | pass | 8 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `form-validation-design` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `frontend-api-integration` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `frontend-testing` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `controller-api-implementation` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `service-business-logic` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `domain-logic-implementation` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `repository-persistence` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `authentication-authorization` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `idempotency-retry-design` | pass | 1 | 0 | 3 | 0 | 1 | not-required |
+| foundation | `async-job-design` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `logging-error-handling` | pass | 5 | 0 | 2 | 0 | 1 | not-required |
+| foundation | `relational-database` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `nosql-database` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `indexing-query-optimization` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `transaction-consistency` | pass | 5 | 0 | 1 | 1 | 0 | not-required |
+| foundation | `cache-design` | pass | 0 | 0 | 2 | 0 | 0 | not-required |
+| foundation | `message-queue-design` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `search-analytics-design` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `threat-modeling` | pass | 9 | 0 | 0 | 1 | 0 | not-required |
+| foundation | `input-validation` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `web-security` | pass | 1 | 0 | 2 | 0 | 1 | not-required |
+| foundation | `authentication-security` | pass | 1 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `secret-configuration-security` | pass | 3 | 0 | 2 | 0 | 2 | not-required |
+| foundation | `dependency-vulnerability-scanning` | pass | 7 | 3 | 0 | 0 | 0 | not-required |
+| foundation | `test-strategy` | pass | 0 | 0 | 5 | 2 | 0 | not-required |
+| foundation | `unit-testing` | pass | 0 | 0 | 2 | 0 | 0 | not-required |
+| foundation | `integration-testing` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `contract-testing` | pass | 1 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `e2e-testing` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `test-data-management` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `regression-testing` | pass | 4 | 0 | 2 | 1 | 0 | not-required |
+| foundation | `performance-budgeting` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `profiling` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `concurrency-control` | pass | 2 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `degradation-circuit-breaking` | pass | 7 | 0 | 1 | 0 | 1 | not-required |
+| foundation | `observability` | pass | 9 | 0 | 6 | 0 | 2 | not-required |
+| foundation | `backup-recovery` | pass | 5 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `project-initialization` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `containerization` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `ci-cd` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `kubernetes-gateway` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `release-rollback` | pass | 8 | 0 | 2 | 0 | 0 | not-required |
+| foundation | `task-handoff-context` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `task-dag-decomposition` | pass | 1 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `code-review` | pass | 1 | 0 | 3 | 1 | 0 | not-required |
+| foundation | `refactoring` | pass | 9 | 2 | 1 | 0 | 0 | not-required |
+| foundation | `documentation-generation` | pass | 4 | 1 | 0 | 0 | 0 | not-required |
+| foundation | `failure-diagnosis` | pass | 2 | 0 | 2 | 0 | 0 | not-required |
+| foundation | `solution-optimality-evaluation` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `technology-stack-selection` | pass | 2 | 6 | 0 | 0 | 0 | not-required |
+| foundation | `language-runtime-selection` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `language-idiom-enforcement` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `language-testing-strategy` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `language-performance-safety` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `package-dependency-management` | pass | 2 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `go-professional-usage` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `java-jvm-professional-usage` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `typescript-professional-usage` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `python-professional-usage` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `rust-professional-usage` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `cpp-professional-usage` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `shell-cli-professional-usage` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `sql-professional-usage` | pass | 0 | 0 | 2 | 0 | 0 | not-required |
+| foundation | `sdk-library-contract-design` | pass | 1 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `cli-daemon-interface-design` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `file-storage-processing` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `i18n-timezone-money-safety` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `implementation-structure-design` | pass | 7 | 11 | 2 | 0 | 0 | not-required |
+| foundation | `agent-execution-discipline` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `skill-authoring-expert` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `code-clarity-maintainability` | pass | 1 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `design-pattern-selection` | pass | 4 | 1 | 0 | 0 | 0 | not-required |
+| foundation | `testability-seam-design` | pass | 0 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `dependency-wiring-lifecycle` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `algorithm-data-structure-selection` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `failure-contract-design` | pass | 2 | 0 | 1 | 0 | 0 | not-required |
+| foundation | `configuration-runtime-policy` | pass | 8 | 3 | 0 | 0 | 0 | not-required |
+| foundation | `model-boundary-mapping` | pass | 1 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `data-side-effect-flow-tracing` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `architecture-enforcement-tooling` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `consumer-impact-analysis` | pass | 2 | 0 | 1 | 0 | 1 | not-required |
+| foundation | `cleanup-deletion-governance` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `minimal-correct-implementation` | pass | 4 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `repository-context-map` | pass | 79 | 0 | 2 | 7 | 0 | not-required |
+| foundation | `agent-tool-permission-sandbox` | pass | 0 | 1 | 0 | 0 | 0 | not-required |
+| foundation | `skill-efficacy-benchmark` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `plan-execution-consistency` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `repository-impact-inspection` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `repeat-failure-analysis` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `targeted-validation-selection` | pass | 7 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `observable-action-sequence-analysis` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `task-context-selection` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `code-element-professionalism` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `git-professional-usage` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `build-tool-professional-usage` | pass | 7 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `linux-systems-professional-usage` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `network-protocol-gateway-usage` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `data-format-contract-usage` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `business-invariant-analysis` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `senior-programming-judgment-core` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `accessibility-inclusive-design` | pass | 2 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `client-application-testing` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `client-lifecycle-state-restoration` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `csharp-dotnet-professional-usage` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `infrastructure-as-code-safety` | pass | 3 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `kotlin-professional-usage` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `offline-sync-conflict-resolution` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `powershell-professional-usage` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `privacy-data-lifecycle` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `swift-professional-usage` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `web-platform-professional-usage` | pass | 2 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `filesystem-process-safety` | pass | 1 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `nodejs-runtime-professional-usage` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `tenant-isolation` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `distributed-workflow-consistency` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `cryptography-key-lifecycle` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| foundation | `audit-evidence-integrity` | pass | 0 | 0 | 0 | 0 | 0 | not-required |
+| domain | `web3-product-extension` | pass | 5 | 3 | 1 | 0 | 0 | pass |
+| domain | `ai-product-extension` | pass | 8 | 3 | 1 | 0 | 0 | pass |
+| domain | `bigdata-product-extension` | pass | 5 | 3 | 1 | 0 | 0 | pass |
+| domain | `iot-embedded-extension` | pass | 5 | 4 | 1 | 0 | 0 | pass |
+| domain | `payment-trading-extension` | pass | 8 | 4 | 1 | 0 | 0 | pass |
+| domain | `low-level-systems-extension` | pass | 5 | 2 | 1 | 0 | 0 | pass |
+| domain | `android-platform-extension` | pass | 6 | 1 | 1 | 0 | 0 | not-required |
+| domain | `cloud-platform-extension` | pass | 2 | 1 | 0 | 0 | 0 | not-required |
+| domain | `cross-platform-client-extension` | pass | 2 | 1 | 0 | 0 | 0 | not-required |
+| domain | `ios-ipados-platform-extension` | pass | 3 | 1 | 0 | 0 | 0 | not-required |
+| domain | `linux-desktop-platform-extension` | pass | 2 | 1 | 0 | 0 | 0 | not-required |
+| domain | `macos-platform-extension` | pass | 2 | 1 | 0 | 0 | 0 | not-required |
+| domain | `windows-platform-extension` | pass | 4 | 1 | 0 | 0 | 0 | not-required |

@@ -1,6 +1,5 @@
 # Shell CLI Evidence Patterns
-
-Use this reference when shell/CLI closure depends on repository graph, project memory, execution trajectory, validation freshness, destructive-command proof, stdout/stderr contract evidence, secret-handling proof, tool permission boundaries, or changed-surface-to-validation mapping. Keep it as an evidence map, not a shell tutorial.
+Use this reference when shell/CLI closure depends on current or prior evidence, validation freshness, destructive/output/secret proof, profile tool boundaries, or changed-surface-to-validation mapping. Keep it as an evidence map, not a shell tutorial.
 
 ## Changed-Shell-Surface-To-Validation Map
 
@@ -14,24 +13,22 @@ Use this reference when shell/CLI closure depends on repository graph, project m
 | Prior command evidence is fresh | current source/help/caller paths, cwd/env assumptions, accepted/rejected memory, command/report path, and final-edit freshness | The prior command claim still matches inspected current files | Later script edits, hidden aliases, shell startup files, or uninspected CI jobs remain covered |
 
 ## Evidence Quality Labels
-
-- **Strong evidence**: current script/help/caller inspected, command or artifact named, exit code or review status recorded, final-edit freshness stated, and proof limits named.
-- **Weak evidence**: ShellCheck alone for destructive/filesystem behavior, old runbook output, manual terminal success, style guide citation, or memory claim without current source.
-- **Missing evidence**: no dry-run output, no target guard, no stdout/stderr sample, no hostile filename fixture, no secret-boundary review, no rollback path, or no owner for not-run validation.
-- **Invalid evidence**: printed command that differs from apply argv, `eval` with external input, secret in argv/history/logs, stale command help, or inaccessible report.
+- **Strong evidence**: current script/help/caller inspected, role-permitted command or existing artifact named when used, result/freshness recorded, and proof limits named.
+- **Weak evidence:** ShellCheck alone for destructive behavior, or stale or manual output.
+- **Missing evidence:** an unavailable accepted check without `planned` or `not_run` status, reason, and owner.
+- **Invalid evidence:** apply argv that differs from the printed command, external input through `eval`, secret exposure, or inaccessible output.
 
 ## Tool Permission Boundary
-
-| Action | Boundary record |
-| --- | --- |
-| Source reads, `--help`, dry-run commands, graph search, report review, and ShellCheck/shfmt diff-only checks | Read-only or non-mutating local action; cite searched paths and avoid full output dumps. |
-| bats tests, fixture creation, formatter rewrites, generated reports, temp directory commands, and local sandbox scripts | State-mutating only for caches, reports, temp files, fixtures, or local artifacts; cite command, exit code, artifact path, and cleanup/rollback. |
-| package install, chmod/chown, service restart, cloud/kube/terraform apply/delete, migration, release, rollback, or production-target command | High-risk state-mutating action; require explicit scope, dry-run proof, rollback/forward-fix path, redaction, stop condition, and permission record. |
+- For installs, permission changes, service operations, and external mutations, name the exact target and authority.
+- Use a dry-run or preview when supported.
+- Define the stop condition and cleanup or rollback command.
+- When closure relies on shell or CLI evidence, distinguish displayed commands from executed argv and record the run's shell and working directory. Retained output omits or redacts expanded secrets and credential-bearing environment values.
 
 ## Handoff Evidence Shape
 
 ```yaml
 shell_cli_evidence_closure:
+  profile: analysis-agent | task-agent | review-agent
   inspected_paths:
     - path: ""
       finding: ""
@@ -46,9 +43,10 @@ shell_cli_evidence_closure:
       risk: destructive | output_contract | path_temp | secret | command_injection | freshness
       command_or_artifact: ""
       exit_code_or_status: ""
+      reason_if_planned_or_not_run: ""
       proves: ""
       does_not_prove: ""
-      freshness: fresh | stale | partial | not_run
+      freshness: fresh | stale | partial | planned | not_run
       owner: ""
   tool_permission_boundary:
     action_class: ""

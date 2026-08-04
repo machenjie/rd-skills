@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate productization showcase examples."""
+"""Validate Hookless Direct, Analyzed, and Review example contracts."""
 
 from __future__ import annotations
 
@@ -8,343 +8,93 @@ import re
 import sys
 from pathlib import Path
 
-from validation_utils import load_yaml_file, load_yaml_text
+from validation_utils import load_yaml_file
 
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_FILES = ("prompt.md", "expected-route.md", "expected-evidence.md")
-REQUIRED_ROUTE_TERMS = ("selected_skills", "selected_capabilities", "required_quality_gates")
-REQUIRED_EVIDENCE_TERMS = (
-    "read before plan",
-    "TDD",
-    "validation evidence",
-    "independent review",
-    "residual risk",
-    "handoff",
-)
-SHORT_CIRCUIT_PATTERNS = (
-    re.compile(r"\bjust\s+edit\b", re.IGNORECASE),
-    re.compile(r"\bskip\s+(the\s+)?(tests|validation|review)\b", re.IGNORECASE),
-    re.compile(r"\bno\s+need\s+to\s+(read|inspect|test|review)\b", re.IGNORECASE),
-    re.compile(r"直接改代码"),
-)
-ROUTE_BLOCK_RE = re.compile(r"```yaml\n(.*?)\n```", re.DOTALL)
-SUPPLEMENTAL_ROUTE_KEYS = {
-    "selected_skills": "skills",
-    "selected_capabilities": "capabilities",
-    "required_quality_gates": "quality_gates",
-}
-SUPPLEMENTAL_REASON_FORBIDDEN = (
-    "convenience",
-    "marketing",
-    "fluff",
-    "showcase",
-    "demo",
-    "nice to have",
+FORBIDDEN = (
+    "selected_skills",
+    "selected_capabilities",
+    "required_quality_gates",
+    "route manifest",
+    "runtime id",
+    "digest",
+    "```yaml",
+    "```json",
 )
 
 
-def _known_names(root: Path) -> tuple[set[str], set[str]]:
-    skills = load_yaml_file(root / "src" / "registry" / "skills.yaml").get("skills", [])
-    extensions = load_yaml_file(root / "src" / "registry" / "domain-extensions.yaml").get("domain_extensions", [])
-    capabilities = load_yaml_file(root / "src" / "registry" / "capabilities.yaml").get("capabilities", [])
-    skill_names = {item["name"] for item in skills} | {item["name"] for item in extensions}
-    capability_names = {item["name"] for item in capabilities}
-    return skill_names, capability_names
-
-
-def _known_quality_gates(root: Path) -> set[str]:
-    path = root / "src" / "registry" / "routing-rules.yaml"
-    if not path.exists():
-        return set()
-    return {str(item) for item in load_yaml_file(path).get("quality_gates", [])}
-
-
-def _routing_fixtures(root: Path) -> dict[str, dict[str, object]]:
-    fixtures: dict[str, dict[str, object]] = {}
-    for path in sorted((root / "evals" / "routing").glob("*.yaml")):
-        loaded = load_yaml_file(path)
-        if isinstance(loaded, dict) and loaded.get("id"):
-            fixtures[str(loaded["id"])] = loaded
-    return fixtures
-
-
-def _route_payload(route_text: str, path: Path) -> dict[str, object]:
-    match = ROUTE_BLOCK_RE.search(route_text)
-    if not match:
-        return {}
-    loaded = load_yaml_text(match.group(1), path)
-    return loaded if isinstance(loaded, dict) else {}
-
-
-def _list_value(payload: dict[str, object], key: str) -> list[str]:
-    value = payload.get(key)
-    return [str(item) for item in value] if isinstance(value, list) else []
-
-
-def _supplemental_value(payload: dict[str, object], key: str) -> list[str]:
-    items = payload.get("supplemental_route_items")
-    if not isinstance(items, dict):
-        return []
-    value = items.get(key)
-    return [str(item) for item in value] if isinstance(value, list) else []
-
-
-def _expected_fixture_values(fixture: dict[str, object], key: str) -> list[str]:
-    expected = fixture.get("expected")
-    if not isinstance(expected, dict):
-        return []
-    value = expected.get(key)
-    return [str(item) for item in value] if isinstance(value, list) else []
-
-
-def _forbidden_fixture_values(fixture: dict[str, object], key: str) -> list[str]:
-    forbidden = fixture.get("forbidden")
-    if not isinstance(forbidden, dict):
-        return []
-    value = forbidden.get(key)
-    return [str(item) for item in value] if isinstance(value, list) else []
-
-
-def _append_overlap_error(
-    errors: list[str],
-    scenario: Path,
-    root: Path,
-    field: str,
-    actual: list[str],
-    expected: list[str],
-) -> None:
-    if actual and expected and not (set(actual) & set(expected)):
-        errors.append(
-            f"{scenario.relative_to(root)}/expected-route.md has no {field} overlap with routing fixture"
-        )
-
-
-def _append_forbidden_overlap_error(
-    errors: list[str],
-    scenario: Path,
-    root: Path,
-    field: str,
-    actual: list[str],
-    forbidden: list[str],
-) -> None:
-    overlap = sorted(set(actual) & set(forbidden))
-    if overlap:
-        errors.append(
-            f"{scenario.relative_to(root)}/expected-route.md {field} "
-            f"conflicts with routing fixture forbidden: {', '.join(overlap)}"
-        )
-
-
-def _append_subset_error(
-    errors: list[str],
-    scenario: Path,
-    root: Path,
-    field: str,
-    actual: list[str],
-    expected: list[str],
-    supplemental: list[str],
-) -> None:
-    allowed = set(expected) | set(supplemental)
-    extras = sorted(set(actual) - allowed)
-    if extras:
-        errors.append(
-            f"{scenario.relative_to(root)}/expected-route.md {field} exceeds routing fixture expected values"
-            f" without supplemental rationale: {', '.join(extras)}"
-        )
-
-
-def _append_supplemental_errors(
-    errors: list[str],
-    scenario: Path,
-    root: Path,
-    payload: dict[str, object],
-    fixture: dict[str, object],
-    known_skills: set[str],
-    known_capabilities: set[str],
-    known_quality_gates: set[str],
-) -> None:
-    supplemental = payload.get("supplemental_route_items")
-    if supplemental is None:
-        return
-    if not isinstance(supplemental, dict):
-        errors.append(f"{scenario.relative_to(root)}/expected-route.md supplemental_route_items must be a mapping")
-        return
-
-    reason = str(payload.get("supplemental_reason", "")).strip()
-    if not reason:
-        errors.append(f"{scenario.relative_to(root)}/expected-route.md supplemental_reason must be non-empty")
-    lowered_reason = reason.lower()
-    for forbidden in SUPPLEMENTAL_REASON_FORBIDDEN:
-        if forbidden in lowered_reason:
-            errors.append(
-                f"{scenario.relative_to(root)}/expected-route.md supplemental_reason looks like convenience or marketing: {forbidden}"
-            )
-
-    known_by_key = {
-        "skills": known_skills,
-        "capabilities": known_capabilities,
-        "quality_gates": known_quality_gates,
+def _names(root: Path) -> tuple[dict[str, dict], set[str]]:
+    professional_data = load_yaml_file(root / "src/registry/professional-skills.yaml")
+    foundation_data = load_yaml_file(root / "src/registry/foundation-skills.yaml")
+    domain_data = load_yaml_file(root / "src/registry/domain-skills.yaml")
+    professional = {item["name"]: item for item in professional_data["professional_skills"]}
+    layer3 = {
+        item["name"]
+        for item in [*foundation_data["foundation_skills"], *domain_data["domain_skills"]]
     }
-    for supplemental_key, fixture_key in SUPPLEMENTAL_ROUTE_KEYS.items():
-        values = _supplemental_value(payload, supplemental_key)
-        known = known_by_key[fixture_key]
-        for value in values:
-            if value not in known:
-                errors.append(
-                    f"{scenario.relative_to(root)}/expected-route.md supplemental {fixture_key[:-1]} is unknown: {value}"
-                )
-        _append_forbidden_overlap_error(
-            errors,
-            scenario,
-            root,
-            supplemental_key,
-            values,
-            _forbidden_fixture_values(fixture, fixture_key),
-        )
+    return professional, layer3
 
 
-def validate_examples(root: Path) -> list[str]:
-    """Return validation errors for showcase scenario structure and evidence."""
+def validate_examples(root: Path = ROOT) -> list[str]:
     errors: list[str] = []
-    known_skills, known_capabilities = _known_names(root)
-    known_quality_gates = _known_quality_gates(root)
-    routing_fixtures = _routing_fixtures(root)
+    professional, layer3 = _names(root)
     examples_root = root / "examples"
-    if not (examples_root / "README.md").is_file():
-        errors.append("examples/README.md is missing")
-    scenario_dirs = [
-        path
-        for path in sorted(examples_root.glob("[0-9][0-9]-*"))
-        if path.is_dir()
-    ]
-    if len(scenario_dirs) < 5:
-        errors.append(f"expected at least 5 numbered example scenarios, found {len(scenario_dirs)}")
+    scenarios = [path for path in sorted(examples_root.glob("[0-9][0-9]-*")) if path.is_dir()]
+    if len(scenarios) < 4:
+        errors.append(f"expected at least four numbered examples, found {len(scenarios)}")
+    for scenario in scenarios:
+        relative = scenario.relative_to(root)
+        for name in REQUIRED_FILES:
+            if not (scenario / name).is_file():
+                errors.append(f"{relative}: missing {name}")
+        route_path = scenario / "expected-route.md"
+        evidence_path = scenario / "expected-evidence.md"
+        if not route_path.is_file() or not evidence_path.is_file():
+            continue
+        route = route_path.read_text(encoding="utf-8")
+        evidence = evidence_path.read_text(encoding="utf-8")
+        folded = route.casefold()
+        if "## path" not in folded:
+            errors.append(f"{relative}: expected route must declare Path")
+        if not any(marker in folded for marker in ("task assignment", "analysis assignment", "review assignment")):
+            errors.append(f"{relative}: expected route needs a bounded assignment")
+        for token in FORBIDDEN:
+            if token in folded:
+                errors.append(f"{relative}: obsolete route token {token}")
 
-    for scenario in scenario_dirs:
-        for filename in REQUIRED_FILES:
-            if not (scenario / filename).is_file():
-                errors.append(f"{scenario.relative_to(root)} missing {filename}")
-        prompt = (scenario / "prompt.md").read_text(encoding="utf-8") if (scenario / "prompt.md").exists() else ""
-        route = (scenario / "expected-route.md").read_text(encoding="utf-8") if (scenario / "expected-route.md").exists() else ""
-        evidence = (scenario / "expected-evidence.md").read_text(encoding="utf-8") if (scenario / "expected-evidence.md").exists() else ""
-        for pattern in SHORT_CIRCUIT_PATTERNS:
-            if pattern.search(prompt + "\n" + route + "\n" + evidence):
-                errors.append(f"{scenario.relative_to(root)} contains short-circuit wording: {pattern.pattern}")
-        for term in REQUIRED_ROUTE_TERMS:
-            if term not in route:
-                errors.append(f"{scenario.relative_to(root)}/expected-route.md missing {term}")
-        payload = _route_payload(route, scenario / "expected-route.md")
-        for skill in _list_value(payload, "selected_skills"):
-            if skill not in known_skills:
-                errors.append(f"{scenario.relative_to(root)}/expected-route.md references unknown skill: {skill}")
-        for capability in _list_value(payload, "selected_capabilities"):
-            if capability not in known_capabilities:
-                errors.append(f"{scenario.relative_to(root)}/expected-route.md references unknown capability: {capability}")
-        for gate in _list_value(payload, "required_quality_gates"):
-            if gate not in known_quality_gates:
-                errors.append(f"{scenario.relative_to(root)}/expected-route.md references unknown quality gate: {gate}")
-        scenario_id = str(payload.get("scenario_id", "")).strip()
-        if not scenario_id:
-            errors.append(f"{scenario.relative_to(root)}/expected-route.md missing scenario_id")
-        elif scenario_id not in routing_fixtures:
-            errors.append(f"{scenario.relative_to(root)}/expected-route.md has no routing eval fixture: {scenario_id}")
-        else:
-            fixture = routing_fixtures[scenario_id]
-            _append_supplemental_errors(
-                errors,
-                scenario,
-                root,
-                payload,
-                fixture,
-                known_skills,
-                known_capabilities,
-                known_quality_gates,
+        profiles = re.findall(r"Profile:\s*`([^`]+)`", route)
+        for profile in profiles:
+            if profile not in {"analysis-agent", "task-agent", "review-agent"}:
+                errors.append(f"{relative}: unknown Profile {profile}")
+        primary = re.findall(r"(?:Primary Professional Skill|Review Skill):\s*`([^`]+)`", route)
+        for name in primary:
+            if name not in professional:
+                errors.append(f"{relative}: unknown Professional Skill {name}")
+        selected_layer3 = [name for name in layer3 if f"`{name}`" in route]
+        if len(selected_layer3) > 3:
+            errors.append(f"{relative}: route loads more than three Layer 3 Skills")
+        available = {
+            candidate
+            for name in primary
+            for candidate in professional.get(name, {}).get("layer3_candidates", [])
+        }
+        unavailable = sorted(set(selected_layer3) - available)
+        if unavailable:
+            errors.append(
+                f"{relative}: Layer 3 Skills are not available from the named primary/review Skills: "
+                + ", ".join(unavailable)
             )
-            _append_overlap_error(
-                errors,
-                scenario,
-                root,
-                "selected_skills",
-                _list_value(payload, "selected_skills"),
-                _expected_fixture_values(fixture, "skills"),
-            )
-            _append_overlap_error(
-                errors,
-                scenario,
-                root,
-                "selected_capabilities",
-                _list_value(payload, "selected_capabilities"),
-                _expected_fixture_values(fixture, "capabilities"),
-            )
-            _append_overlap_error(
-                errors,
-                scenario,
-                root,
-                "required_quality_gates",
-                _list_value(payload, "required_quality_gates"),
-                _expected_fixture_values(fixture, "quality_gates"),
-            )
-            _append_forbidden_overlap_error(
-                errors,
-                scenario,
-                root,
-                "selected_skills",
-                _list_value(payload, "selected_skills"),
-                _forbidden_fixture_values(fixture, "skills"),
-            )
-            _append_forbidden_overlap_error(
-                errors,
-                scenario,
-                root,
-                "selected_capabilities",
-                _list_value(payload, "selected_capabilities"),
-                _forbidden_fixture_values(fixture, "capabilities"),
-            )
-            _append_forbidden_overlap_error(
-                errors,
-                scenario,
-                root,
-                "required_quality_gates",
-                _list_value(payload, "required_quality_gates"),
-                _forbidden_fixture_values(fixture, "quality_gates"),
-            )
-            _append_subset_error(
-                errors,
-                scenario,
-                root,
-                "selected_skills",
-                _list_value(payload, "selected_skills"),
-                _expected_fixture_values(fixture, "skills"),
-                _supplemental_value(payload, "selected_skills"),
-            )
-            _append_subset_error(
-                errors,
-                scenario,
-                root,
-                "selected_capabilities",
-                _list_value(payload, "selected_capabilities"),
-                _expected_fixture_values(fixture, "capabilities"),
-                _supplemental_value(payload, "selected_capabilities"),
-            )
-            _append_subset_error(
-                errors,
-                scenario,
-                root,
-                "required_quality_gates",
-                _list_value(payload, "required_quality_gates"),
-                _expected_fixture_values(fixture, "quality_gates"),
-                _supplemental_value(payload, "required_quality_gates"),
-            )
-        for term in REQUIRED_EVIDENCE_TERMS:
-            if term not in evidence:
-                errors.append(f"{scenario.relative_to(root)}/expected-evidence.md missing {term}")
 
+        evidence_folded = evidence.casefold()
+        for phrase in ("validation evidence", "independent review", "residual risk", "unverified scope"):
+            if phrase not in evidence_folded:
+                errors.append(f"{relative}: evidence is missing {phrase}")
     return errors
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entrypoint for example validation."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", default=str(ROOT))
     args = parser.parse_args(argv)
@@ -353,9 +103,9 @@ def main(argv: list[str] | None = None) -> int:
         for error in errors:
             print(f"validate-examples: ERROR: {error}", file=sys.stderr)
         return 1
-    print("validate-examples: validated showcase examples")
+    print("validate-examples: Direct, Analyzed, and Review examples are valid.")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

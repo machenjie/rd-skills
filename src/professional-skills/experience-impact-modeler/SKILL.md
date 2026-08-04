@@ -1,259 +1,69 @@
 ---
 name: experience-impact-modeler
-description: "Use this skill when implementing, reviewing, planning, or validating product or code changes that need experience impact analysis across user flows, page flows, navigation, interaction states, accessibility, validation states, content, and product-level usability risks."
-license: MIT
-changeforge_kind: professional-skill
-changeforge_version: 0.1.0
-metadata:
-  changeforge.profile: recommended
-  changeforge.skill_type: professional
+description: "Use `analysis-agent` to map user-flow, interaction-state, accessibility, content, and recovery impact when experience behavior changes. Skip backend-only work with no experience effect and question-only requests."
 ---
 
-# Experience Impact Modeler
+# experience-impact-modeler
 
-## Mission
-Map the full user experience impact of a proposed change — from entry point through completion, across all states, accessibility requirements, content implications, interaction design, and recovery paths — so that frontend implementation is grounded in complete UX specification and critical failure modes are identified before the first line of code is written.
+## Role
 
-## Stage Ownership
-
-`experience-impact-modeler` owns or reviews only the stage slices where its declared surface changes the next engineering decision. It hands off adjacent API, security/privacy, data middleware, reliability, release, documentation, or domain-extension work to the selected owner or gate instead of acting as a catch-all.
+Support `analysis-agent` in mapping affected journeys, interaction states,
+accessibility behavior, and recovery expectations.
 
 ## When To Use
-- A change affects pages, screens, flows, navigation, or the user journey.
-- New UI components, forms, controls, or interactions are introduced.
-- Existing interactions change behavior, appearance, or feedback.
-- Empty states, loading states, error states, or edge states need specification.
-- Accessibility requirements need to be identified or validated.
-- Content, labeling, or user-facing copy is being added or changed.
-- Destructive, payment, permission-restricted, or onboarding flows are involved.
-- A product analytics event needs to be added, renamed, or removed.
-- A/B tests, feature experiments, exposure logging, funnel/cohort tracking, dashboard migrations, or metric guardrails affect the user journey.
 
-## Do Not Use When
-- The change is purely backend, data-model, or infrastructure with zero user-visible behavior change.
-- The experience impact was already fully modeled in a prior artifact that is current and accurate.
+- user flow change
+- interaction state change
 
-## Adjacent Skill Conflict Resolution
+## Do Not Use
 
-For `experience-impact-modeler`, keep this skill primary only when user flow, page flow, navigation, interaction state, accessibility, validation, empty/loading/error/success/disabled state, or task outcome impact decides the next action. Hand API/schema compatibility to `data-api-contract-changer`, storage/query/migration concerns to `data-middleware-change-builder`, security/privacy decisions to `security-privacy-gate`, reliability/observability decisions to `reliability-observability-gate`, release/rollback readiness to `delivery-release-gate`, and documentation contract updates to `change-documentation-gate`. Domain extensions add risk-specific addenda after the primary owner is selected; record skipped plausible owners when the routing choice affects handoff or validation.
+- backend only with no experience impact
+- question only
 
-## Required Context / Missing Information Policy
+## Required Inputs
 
-Before `experience-impact-modeler` plans or closes work, collect current behavior, desired behavior, non-goals, affected surface, owner module, validation signal, existing conventions, and material data/API/security/release boundaries. Ask or block only when the missing fact can change public contract, data model, authorization, tenant behavior, migration/rollback, irreversible operation, or domain semantics; otherwise proceed with explicit reversible assumptions.
+- intent slice
+- existing flow evidence
+- read scope
 
-## Critical Gotchas
+## Professional Decision Rules
 
-- `experience-impact-modeler` must inspect the owning source, tests, configs, docs, and generated-artifact boundaries before planning material engineering work.
-- `experience-impact-modeler` must select only risk-changing references, capabilities, gates, or domain extensions; do not load nearby material because it exists.
-- `experience-impact-modeler` must close with fresh validation evidence, evidence limits, residual risk, and next owner or gate when work remains.
+- Map entry, action, system feedback, success, failure, recovery, and exit states for every affected user role.
+- Include loading, empty, disabled, permission, offline, retry, focus, keyboard, responsive, and accessibility behavior when triggered.
+- Preserve the user task and information hierarchy before optimizing component structure.
+- Separate design choices requiring user input from behavior already established in source.
 
-## Stage Fit
-Use this skill whenever the user-visible path can change across planning, coding, bug-fix, debugging, code-review, refactoring, testing, release preparation, or handoff. It is strongest before implementation and during review, but it also applies after a defect report when the verified cause points to a missing state, inaccessible interaction, stale instrumentation, or broken recovery path.
+## High-Value Gotchas
 
-- **Planning stage**: turn raw feature intent into actors, entry points, state coverage, accessibility obligations, analytics impact, and acceptance criteria before implementation starts.
-- **Coding stage**: keep component work aligned with the modeled flow, and stop implementation when a required state, content decision, permission path, or measurement contract is missing.
-- **Bug-fix and debugging stage**: verify the reported symptom against the full journey, not only the failing component; identify whether the defect is missing UX state, broken focus, stale analytics, or server/client contract drift.
-- **Code-review and refactoring stage**: confirm behavior preservation, route ownership, design-system reuse, and no regression in empty/loading/error/success/disabled/focus states.
-- **Testing and release stage**: map each experience risk to test, validator, command, screenshot, report, artifact, and exit code evidence, then hand off only with residual risk and next gate named.
+- Happy-path mockups hide error, permission, focus, and responsive failures.
+- Visual similarity does not prove semantic or accessibility equivalence.
+- Async stale responses can overwrite newer user intent.
 
-## Non-Negotiable Rules
-- **Direct use still runs the runtime prompt flow.** When `experience-impact-modeler` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
-- **Cover the full user flow, not only the changed component**: every upstream entry point and downstream exit state must be enumerated.
-- **All states are required for every interactive element**: empty, loading, success, error, disabled, and validation states are not optional — they are the design contract.
-- **Accessibility is a product requirement, not an afterthought**: WCAG 2.1 AA is the baseline; keyboard navigation, focus management, screen reader labels, and color contrast must be specified before implementation, not as a post-ship audit.
-- **Destructive, payment, and irreversible actions require explicit confirmation UX and recovery paths**: a confirmation dialog without a defined recovery path is incomplete specification.
-- **Do not hide authorization or validation only in the client**: client-side guards are UX conveniences — business rules must be enforced server-side.
-- **Preserve user intent through failures**: if an error occurs mid-flow, the user must be able to recover without losing their entered state where feasible.
-- **Content is part of the product specification**: error messages, empty state copy, labels, and help text are not filler — they communicate the product's intent to users.
-- **High-volume operational interfaces have performance perception requirements**: skeleton loading, progressive rendering, and perceived performance must be designed for screens used repetitively.
-- **Experiment exposure is part of the experience contract**: users must be assigned consistently, exposure must be logged exactly once per qualifying view/action, and guardrail regressions must have rollback behavior.
+## Execution Checklist
 
-## Industry Benchmarks
-- **WCAG 2.1 / WCAG 2.2 (W3C)**: Web Content Accessibility Guidelines — Perceivable, Operable, Understandable, Robust. AA compliance is the minimum for production products; AAA for high-accessibility contexts. Every interactive element has a specification obligation.
-- **Nielsen's 10 Usability Heuristics (NN/g)**: Visibility of system status, match between system and real world, user control and freedom, error prevention, recognition rather than recall, help users recognize/diagnose/recover from errors. Apply to every screen.
-- **Inclusive Design Principles (Microsoft)**: Design for people at the margins first — the solution that works for someone using only a keyboard or a screen reader works better for everyone.
-- **Google Material Design / Apple Human Interface Guidelines**: Interaction patterns, motion principles, touch target minimums (44×44 dp), navigation conventions — platform-specific baselines for mobile and web.
-- **Form Design Best Practices (Caroline Jarrett, Luke Wroblewski)**: One question per page, inline validation, label-above-field, error message proximity, submit button copy that describes the action. Standard for complex forms.
-- **Core Web Vitals (Google)**: LCP < 2.5s (Largest Contentful Paint), CLS < 0.1 (Cumulative Layout Shift), INP < 200ms (Interaction to Next Paint). Performance targets with measurable thresholds.
+1. Trace each affected actor from entry through success, failure, recovery, and exit.
+2. Select the interaction states that materially change user action or system feedback.
+3. Map accessibility, responsive, permission, and stale-response risks to observable checks.
+4. Stop modeling when source cannot establish a consequential content or behavior choice.
 
-### State Coverage Matrix (Required for Every Interactive Screen)
+## Stop / Escalation Conditions
 
-| State | Trigger | Required UX Specification |
-|---|---|---|
-| Empty (zero-data) | No records, no data | Friendly message; call-to-action; avoid blank whitespace |
-| Loading | Async data fetch in progress | Skeleton screen or spinner; non-blocking for background updates |
-| Success | Action completed | Confirmation message; next step or auto-advance |
-| Error (recoverable) | Action failed; user can retry | Specific error message; retry path; preserved input state |
-| Error (unrecoverable) | System failure; cannot proceed | Graceful fallback; contact/support path |
-| Validation failure | Invalid input before submit | Inline field-level error; summary at top for long forms |
-| Disabled | Prerequisite not met | Visual indicator; tooltip explaining why; re-enable trigger |
-| Permission-denied | User lacks access | Specific denial reason (if safe to reveal); upgrade or request path |
-
-## Technical Selection Criteria
-Evaluate the experience impact against:
-- **Actor and role enumeration**: Who are the users of this flow? What roles or permissions do they have? What is the context of use (mobile, desktop, assistive technology)?
-- **Entry point coverage**: All navigation paths that lead to the affected screens — internal links, deep links, redirects, notifications.
-- **State completeness**: Is every state in the State Coverage Matrix specified for every interactive element?
-- **Focus management**: After modals open/close, after async operations complete, after validation fails — where does keyboard focus land?
-- **Form design**: Are fields labeled correctly (not placeholder-only)? Is validation inline or on-submit? Is error message copy specific enough for the user to act?
-- **Accessible name and ARIA**: Do all interactive elements have accessible names? Are ARIA roles correct? Is live region needed for async updates?
-- **Color contrast**: Do text and interactive elements meet WCAG AA contrast ratios (4.5:1 for normal text, 3:1 for large text and UI components)?
-- **Touch target size**: Are interactive targets at least 44×44 dp for mobile?
-- **Analytics events**: What user interactions need to be tracked? Are event names consistent with existing taxonomy?
-- **Experimentation**: What is the assignment unit, exposure event, primary metric, guardrail metrics, conflict set, and rollback condition?
-- **Responsive behavior**: How does the layout adapt at breakpoints? Are touch and hover interactions differentiated?
-
-## Mode Selection
-Select the experience mode before modeling the flow.
-
-| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
-|---|---|---|---|---|---|
-| New or changed journey | New screen, route, workflow, onboarding, checkout, settings, or repeated operator flow. | Map entry, step, decision, recovery, and exit without dead ends. | User flow map, actors, entry points, state matrix, acceptance link. | `user-flow-modeling`, `acceptance-criteria-builder` | Component implementation until flow states are specified. |
-| Form/state repair | Form, validation, loading, empty, error, disabled, focus, or success behavior changes. | Specify state-specific UX, accessibility, and preservation of user input. | Loading/empty/error/success/disabled/focus states, copy, keyboard path. | `interaction-state-modeling`, `form-validation-design`, `e2e-testing` | Visual polish unrelated to interaction state. |
-| Accessibility review | Keyboard, screen reader, color, focus, modal, route, or assistive tech risk appears. | Treat accessibility as acceptance, not optional audit. | WCAG criteria, focus destination, accessible names, contrast, manual/automated check. | `quality-test-gate`, `frontend-testing` | Analytics or release gates unless behavior requires them. |
-| Analytics/experiment impact | Exposure event, funnel, metric, dashboard, A/B test, cohort, assignment, or guardrail changes. | Keep user experience and measurement contract aligned. | Event taxonomy, exposure point, assignment unit, guardrails, SRM and rollback rule. | `bigdata-product-extension`, `acceptance-criteria-builder` | Code implementation before metric contract exists. |
-| Destructive/sensitive flow | Delete, revoke, payment, permission, account, compliance, or irreversible action. | Specify confirmation, denial, audit, recovery, and user intent preservation. | Consequence copy, undo/recovery path, permission-denied state, audit evidence. | `security-privacy-gate`, `delivery-release-gate` | Client-only guard as sufficient protection. |
-
-## Proactive Professional Triggers
-These triggers are hidden-risk escalators, not ordinary checklist items.
-
-- **Signal:** A UI change mentions only the changed component, button, modal, or form field. **Hidden risk:** upstream entry, downstream exit, empty/loading/error, or back-navigation state breaks. **Required professional action:** model the complete journey before handoff. **Route to:** `user-flow-modeling`, `acceptance-criteria-builder`. **Evidence required:** actor/entry/step/exit map and state matrix.
-- **Signal:** Form validation is described without focus destination, screen-reader announcement, disabled state, or input preservation. **Hidden risk:** accessible users get trapped or lose work on error. **Required professional action:** specify focus, live region, validation timing, and recovery behavior. **Route to:** `interaction-state-modeling`, `frontend-testing`. **Evidence required:** keyboard walkthrough, WCAG references, state-specific copy.
-- **Signal:** Loading or empty state is omitted for async data or zero records. **Hidden risk:** blank screen or layout shift is perceived as broken workflow. **Required professional action:** require loading/empty/error/success/disabled state coverage. **Route to:** `experience-impact-modeler`, `e2e-testing`. **Evidence required:** state table, skeleton/layout behavior, acceptance criterion.
-- **Signal:** Analytics event is renamed, added, or removed without assignment/exposure and dashboard impact. **Hidden risk:** funnels, experiments, or guardrails become invalid while UX appears fine. **Required professional action:** route measurement contract and dashboard migration. **Route to:** `bigdata-product-extension`, `acceptance-criteria-builder`. **Evidence required:** event schema, exposure point, dashboard owner, SRM/guardrail rule.
-- **Signal:** Destructive, payment, permission, or account flow has generic confirmation or denial copy. **Hidden risk:** users cannot make informed consent or recover from irreversible action. **Required professional action:** define consequence communication, denial path, audit/recovery state. **Route to:** `security-privacy-gate`, `quality-test-gate`. **Evidence required:** confirmation copy, undo/receipt/audit evidence, permission-denied state.
-
-## Experimentation And Analytics Impact
-
-Model experiment and analytics impact whenever behavior, copy, targeting, or instrumentation changes:
-
-- **Exposure event**: the exact event that proves the user saw or entered the experiment, with de-duplication rules.
-- **Assignment unit**: user, account, tenant, device, session, request, or job; must remain stable for the experiment duration.
-- **Primary metric**: north-star or decision metric, owner, directionality, and minimum detectable effect.
-- **Guardrail metrics**: latency, errors, retention, revenue, support contacts, accessibility, safety, or data quality regressions that can reject rollout.
-- **Analytics event compatibility**: event taxonomy, schema compatibility, deprecated names, and historical dashboard migration.
-- **Dashboard migration**: old/new dashboard mapping, freshness, backfill, and owner acceptance.
-- **A/B test conflict**: mutually exclusive experiments, overlapping cohorts, interaction effects, and priority rules.
-
-### Decision Tree: Accessibility Obligation Level
-
-```
-Does this change affect a primary user workflow (core purchase, onboarding, settings)?
-├── Yes → WCAG 2.1 AA required + keyboard walkthrough + screen reader test
-Does this change affect a form or interactive control?
-├── Yes → Label audit + focus management + validation error announcement
-Does this change affect navigation or routing?
-├── Yes → Focus destination on route change + skip link check
-Does this change add image, icon, or non-text content?
-├── Yes → Alt text / aria-label required; decorative images aria-hidden
-Does this change only affect layout or spacing with no interactive element change?
-└── Color contrast check + CLS validation (Core Web Vitals)
-```
-
-## Risk Escalation
-- Escalate when the flow handles payments, financial amounts, or irreversible transactions — requires confirmation UX, receipt/confirmation state, and recovery path.
-- Escalate when destructive actions (delete, archive, revoke) lack confirmation dialogs with specific consequence communication and undo path.
-- Escalate when permission-restricted screens do not have a clear, accessible denial state with a path forward.
-- Escalate when onboarding, checkout, or activation flows have experience gaps — conversion impact is direct.
-- Escalate when empty states or zero-data states are not specified — blank screens in production are user-facing defects.
-- Escalate when WCAG AA requirements would be violated — accessibility blockers in primary user flows are product defects, not enhancements.
-- Escalate when high-volume operational screens (order management, content moderation) have loading states that block productive work — performance perception directly affects operator efficiency.
-- Escalate when analytics event changes would break existing dashboards, funnels, or A/B test tracking.
-- Escalate when exposure logging is missing, assignment unit is unstable, sample ratio mismatch is likely, experiment conflicts are unresolved, or guardrail regression has no rollback rule.
-
-## Critical Details
-- **Error messages must be specific**: "Something went wrong" is not an error message. "Payment declined — your card was not charged. Try a different card or contact your bank." is an error message. Vague errors increase support volume and reduce user trust.
-- **Skeleton screens vs. spinners**: Spinners are appropriate for short waits (< 300ms). Skeleton screens reduce perceived wait time for content loads > 300ms and should match the content layout they replace.
-- **Inline validation timing**: Validate on blur (when the user leaves the field), not on keystroke. On-keystroke validation creates error noise while the user is still typing. Exception: password strength indicators are on-keystroke by convention.
-- **Focus trap in modals**: All keyboard focus must be trapped inside open modals — Tab cycles within the modal; Escape closes the modal and returns focus to the trigger element.
-- **Color cannot be the only differentiator**: Use shape, icon, or label in addition to color to communicate status — required for color-blind users and low-contrast environments.
-- **Empty state design is product design**: An empty state that says "No results" without a call-to-action is a dead end. Design empty states with context ("You haven't added any products yet") and a primary action.
-- **Notification fatigue**: Every notification, badge, and alert added to a UI has a user-attention cost. Design the notification behavior (frequency, persistence, dismissibility) with the same rigor as the feature itself.
-- **Sample ratio mismatch is a product signal**: if assignment counts diverge from planned allocation, the experiment result is invalid until routing, targeting, bot traffic, or logging defects are explained.
-
-### Anti-Examples
-
-| Experience Pattern | Problem | Corrected Approach |
-|---|---|---|
-| Form with placeholder text as only label | Label disappears when user starts typing; inaccessible to screen readers | Persistent label above field; placeholder is hint text only |
-| Error state: "Error occurred" with no recovery path | User has no path forward; calls support | Specific error with cause and retry or contact option |
-| Delete button with no confirmation | Accidental destructive action with no recovery | Confirmation dialog: "Delete 'Order #1234'? This cannot be undone." + explicit cancel |
-| Loading state: page goes blank during async fetch | CLS, user confusion, perceived page break | Skeleton screen or preserved layout with loading indicator |
-| Interactive icon with no accessible label | Screen reader user cannot identify action | `aria-label="Delete order"` on icon button |
-
-## Failure Modes
-- **Designing only the happy path**: The nominal case works; the empty state, validation failure, API error, and network timeout produce broken or empty screens.
-- **Missing error recovery**: An error occurs mid-form; the user's input is cleared; there is no way to recover — conversion drops to zero for that failure path.
-- **Keyboard trap**: A modal can be opened but not closed without a mouse — keyboard-only and screen reader users are blocked.
-- **Confirmation without consequence**: A confirmation dialog says "Are you sure?" without specifying what will be deleted or what the consequences are — users proceed without informed consent.
-- **Empty state blank screen**: A section with zero data renders as an empty container with no explanation — users think the page is broken.
-- **Analytics event rename breaks funnel**: An event renamed without a migration plan causes historical funnel data to go to zero, invalidating A/B tests and growth metrics.
-- **Color-only status indication**: A red/green status badge is the only differentiator — colorblind users cannot distinguish states.
-- **Stale experience evidence**: screenshots, flow diagrams, analytics reports, or accessibility checks predate the final UI, copy, routing, or instrumentation edit.
-- **Graph and memory blind spot**: the model ignores existing repository ownership, prior product decisions, or execution trajectory, so the proposed flow conflicts with established navigation, content, or event taxonomy.
-
-## Reference Loading Policy
-Do not load every reference by default. For L1 `experience-impact-modeler` work, use this body unless selected risk requires more detail.
-For L2, L3, L4, and L5 `experience-impact-modeler` work, read `references/capabilities/index.md` only to locate selected capability references; load selected files at `references/capabilities/<capability-id>-<capability-name>.md`, then add `references/experience-output-and-gates.md` or domain references only when route risk requires them.
-
-## Execution Procedure
-
-For `experience-impact-modeler`: confirm activation and role; classify missing context; inspect relevant source/test/config/doc evidence; select mode, complexity, risk, and minimal references; execute or review only the owned surface; validate with concrete commands, diffs, tests, evals, or not-run limits; route repair through the owner; hand off with residual risk and next gate.
+- Stop implementation planning when actor, entry/exit path, state matrix, content decision, accessibility obligation, permission/denial path, or breakpoint behavior is implicit.
+- Stop form or modal closure when focus destination, keyboard path, screen-reader announcement, validation timing, disabled state, and input preservation are missing.
+- Stop analytics or experiment closure when exposure, assignment, event taxonomy, dashboard migration, guardrail, SRM check, or rollback owner is unknown.
+- Stop destructive/sensitive-flow closure when consequence copy, confirmation, denial path, audit/receipt, recovery/undo, or server-side enforcement owner is absent.
 
 ## Output Contract
-Return an experience impact model with:
-- **Mode selected**: Experience mode and trigger signal that selected it.
-- **User flow map**: All actors, entry points, steps, decision branches, and exit states.
-- **State specification**: Complete state coverage matrix for every interactive screen or component.
-- **Accessibility obligations**: WCAG criteria checklist, focus management design, ARIA requirements, color contrast targets.
-- **Content delta**: New or changed copy, labels, error messages, empty state text, confirmation messages.
-- **Form design specification**: Field list, validation rules, error messages, submission behavior.
-- **Analytics impact**: Events added, modified, or deprecated — with naming taxonomy and migration plan if needed.
-- **Experimentation impact**: Exposure event, assignment unit, primary metric, guardrail metrics, sample ratio mismatch checks, A/B conflict rules, and rollback condition for guardrail regression.
-- **Responsive behavior**: Breakpoints and layout adaptation for affected screens.
-- **Risk classification**: Flows with payment, destruction, permission-denial, or onboarding that require escalation.
-- **Boundaries inspected**: screens, routes, components, state surfaces, content, analytics events, accessibility paths, permissions, and docs inspected or skipped with reason.
-- **Professional judgment**: user confusion/dead-end risks ruled out, states accepted/deferred, and why the flow is handoff-ready.
-- **Graph, memory, and trajectory judgment**: existing repository ownership, prior decisions, route graph, design-system conventions, event taxonomy, and latest execution trajectory accepted or flagged as stale.
-- **Reuse and placement rationale**: existing design system, content pattern, event taxonomy, component ownership, and route placement considered.
-- **Behavior preservation statement**: existing navigation, input persistence, analytics, and accessibility behavior preserved or intentionally changed.
-- **State-to-validation map**: each state, breakpoint, accessibility obligation, analytics event, and experiment guardrail mapped to a test, validator, command, screenshot, report, artifact, exit code, or explicit not-run risk.
-- **Validation evidence**: keyboard walk, screen-reader check, visual/E2E test, analytics assertion, command output, validator report, screenshot artifact, exit code, or not-verified disclosure.
-- **Evidence limits**: what the experience evidence proves and does not prove about production data, assistive tech coverage, experiments, and breakpoints.
-- **Residual risk and next gate**: unresolved state, breakpoint, accessibility, analytics, or release risk with owner.
 
-## Evidence Contract
-Close an experience impact model only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
-- **Basis**: the user flow and the WCAG criteria the change is judged against.
-- **Files and boundaries inspected**: every interactive screen's full state matrix — loading, empty, error, permission-denied, partial-success, timeout, retry, cancel, and back-navigation — with each state's content and behavior named or marked not-applicable.
-- **Placement rationale**: why each analytics event, A/B exposure, and guardrail metric binds to the UI behavior it does, with the naming taxonomy.
-- **Validation commands**: the accessibility checks, keyboard walkthrough, test suite, validator, screenshot capture, and exposure/guardrail assertions that will verify the flow, each with command, expected output, exit code, report or artifact path, and expected signal.
-- **Experience judgment and evidence limits**: mode selected, user confusion/dead-end risk, graph/memory/trajectory freshness, behavior preservation, what evidence proves, what it does not prove, residual risk, and next gate.
-- **Residual risk**: the unhandled state, untested breakpoint, or guardrail-regression path that remains, with the named owner.
+- flow evidence
+- affected states
+- experience constraints
 
-## Quality Gate
-1. All actors and entry points are enumerated — no orphaned flows.
-2. Every interactive element has specifications for all 8 required states (empty, loading, success, error, validation, disabled, permission-denied, unrecoverable).
-3. WCAG 2.1 AA compliance requirements are identified for every interactive element.
-4. Focus management is specified for modals, async updates, route changes, and validation failures.
-5. All error messages are specific and actionable — no generic "Something went wrong" messages.
-6. Destructive and irreversible actions have confirmation UX with consequence communication.
-7. Color is never the only differentiator for status or state.
-8. Analytics events are specified with naming taxonomy consistent with existing events.
-9. Form design follows label-above-field, blur-triggered inline validation, and specific error copy.
-10. Empty states have contextual messaging and a primary call-to-action.
-11. Experiments define exposure event, assignment unit, primary metric, guardrails, conflict rules, dashboard migration, and rollback condition.
-12. Graph, repository memory, design-system precedent, route ownership, and execution trajectory are checked for stale assumptions before implementation or handoff.
-13. Validation evidence is fresh after the final material edit and names command, test, validator, output, exit code, screenshot/report/artifact, and not-run obligations.
-14. The skill output stays efficient: reuse existing repository patterns first, avoid new dependency or new component ownership unless justified, and shrink duplicated detail into targeted references.
+## Targeted References
 
-## Handoff
-- **frontend-change-builder** — for component implementation from experience specification.
-- **acceptance-criteria-builder** — to formalize experience states and flows as testable acceptance criteria.
-- **quality-test-gate** — for E2E test coverage, accessibility test obligations, and visual regression strategy.
-- **bigdata-product-extension** — for funnel/cohort data, analytics warehouse, event taxonomy, dashboard migration, and metric data quality.
-- **security-privacy-gate** — when flows handle sensitive data, permissions, or destructive actions.
-- **change-documentation-gate** — when user-facing copy, help text, or onboarding content changes require documentation updates.
-
-## Completion Criteria
-Experience impact is fully modeled when all actors and entry points are enumerated, all interactive elements have complete state specifications, WCAG AA accessibility requirements are identified, all error messages are specific and actionable, all confirmation and recovery paths are designed, analytics events are specified consistently with existing taxonomy, and the complete specification can be handed to a frontend implementer without UX ambiguity.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [checklist](references/checklist.md) | decision-checklist | A bounded review needs actor, entry, state, accessibility, analytics, and verification inventory | Full flow evidence, accessibility gates, or experiment proof decides closure | analysis-agent | checklist-result, residual-risk |
+| [experience output and gates](references/experience-output-and-gates.md) | targeted | Closure depends on flow evidence, accessibility/recovery gates, analytics coupling, state-to-validation maps, or handoff fields | The body output contract is enough and evidence is not being closed | analysis-agent | gate-decision, residual-risk |
+| [index](references/index.md) | index | competing experience impact modeler references require dependency, conflict, or output-fragment selection | the experience impact modeler root or a task-named reference already resolves selection | analysis-agent | reference-selection |
+| [journey risk](references/journey-risk-patterns.md) | benchmark-pattern | Journey risks involve destructive/sensitive flows, high-volume operational work, experiment instrumentation, stale prior-evidence claims, or proof limits | A local component UX check has no journey, analytics, or sensitive-flow risk | analysis-agent | option-comparison, selected-approach |

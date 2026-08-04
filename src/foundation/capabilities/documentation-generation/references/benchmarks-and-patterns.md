@@ -1,6 +1,6 @@
 # Documentation Generation Benchmarks And Patterns
 
-Use this reference only when the root `SKILL.md` needs deeper support for source/doc evidence mapping, generated documentation validation, graph/memory/execution coupling, command safety, no-docs proof, or stale-doc failure review. Keep examples small, use safe placeholders, and do not include secrets, private topology, real user data, or exploit detail beyond audience need.
+Use this reference only when the root `SKILL.md` needs deeper support for source/doc evidence mapping, generated documentation validation, current source/diff/validation coupling, command safety, no-docs proof, or stale-doc failure review. Keep examples small, use safe placeholders, and do not include secrets, private topology, real user data, or exploit detail beyond audience need.
 
 ## Documentation Evidence Matrix
 
@@ -13,12 +13,12 @@ Use this reference only when the root `SKILL.md` needs deeper support for source
 | ADR/compliance/handoff evidence | Decision records, approvals, exception records, validation logs, retention owner. | Evidence owner, freshness date, retention location, risk acceptance. | Agent summary claims validation without artifact, timestamp, or scope. |
 | Generated docs | Generator config, source inputs, checked-in output, CI job, changed paths. | Regeneration diff, generator exit code, link/spec check after final edit. | Generator ran before final source change or with stale inputs. |
 
-## Graph, Memory, And Execution Coupling
+## Current Evidence And Freshness
 
-- Repository graph selects source files, schema/config owners, generated docs, examples, tests, build steps, release notes, runbooks, and likely stale siblings; inspect those current files before making factual claims.
-- Project memory can identify prior doc drift, fragile setup commands, accepted wording, or release-debt decisions, but memory is only a selector until current source and validation confirm it.
-- Execution trajectory decides whether docs validation ran after the final material source/doc edit and whether a generated artifact, link check, or command example is stale.
-- Validation broker maps each documentation claim to a source path, generator, link checker, schema diff, test command, manual review, owner response, or explicit residual risk.
+- repository inspection selects source files, schema/config owners, generated docs, examples, tests, build steps, release notes, runbooks, and likely stale siblings; inspect those current files before making factual claims.
+- When using prior task evidence for documentation, use it to identify potential drift, fragile setup commands, accepted wording, or release-debt decisions. Keep each resulting factual claim unverified until current source and validation confirm it.
+- Observable action sequence decides whether docs validation ran after the final material source/doc edit and whether a generated artifact, link check, or command example is stale.
+- targeted validation selection maps each documentation claim to a source path, generator, link checker, schema diff, test command, manual review, owner response, or explicit residual risk.
 - Agent-tool permission/sandbox evidence is required before documenting or running commands that mutate files, data, infrastructure, credentials, release state, or operator-visible systems.
 
 ## Documentation Claim Validation Map

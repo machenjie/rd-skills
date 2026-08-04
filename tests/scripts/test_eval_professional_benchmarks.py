@@ -8,337 +8,258 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "scripts" / "eval-professional-benchmarks.py"
+SCRIPT = ROOT / "scripts/eval-professional-benchmarks.py"
 
 
 def _load_module():
-    scripts_dir = str(ROOT / "scripts")
-    if scripts_dir not in sys.path:
-        sys.path.insert(0, scripts_dir)
-    spec = importlib.util.spec_from_file_location("eval_professional_benchmarks", SCRIPT)
-    assert spec is not None
+    scripts = str(ROOT / "scripts")
+    if scripts not in sys.path:
+        sys.path.insert(0, scripts)
+    spec = importlib.util.spec_from_file_location(
+        "eval_professional_benchmarks_contract",
+        SCRIPT,
+    )
+    assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
-    assert spec.loader is not None
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
 
-class EvalProfessionalBenchmarksTests(unittest.TestCase):
-    def test_valid_case_schema_passes_registry_checks(self) -> None:
-        module = _load_module()
-        registry = {
-            "skills": {"backend-change-builder"},
-            "capabilities": {"agent-execution-discipline", "regression-testing"},
-        }
-        with tempfile.TemporaryDirectory() as tmp:
-            case_dir = Path(tmp) / "backend" / "case"
-            case_dir.mkdir(parents=True)
-            (case_dir / "prompt.md").write_text(
-                "Fix a backend bug and require same-pattern scan plus regression evidence.",
-                encoding="utf-8",
-            )
-            (case_dir / "expected.yaml").write_text(
-                "\n".join(
-                    [
-                        "expected_stage: bug-fix",
-                        "expected_professional_skill: backend-change-builder",
-                        "expected_capabilities:",
-                        "  - agent-execution-discipline",
-                        "  - regression-testing",
-                        "expected_hidden_risks:",
-                        "  - local fix without same-pattern scan",
-                        "  - unverified authorization regression",
-                        "expected_evidence:",
-                        "  - regression validation evidence",
-                        "  - same-pattern scan output",
-                        "forbidden_behaviors:",
-                        "  - claim completion without command output",
-                        "  - patch only one endpoint without sibling scan",
-                        "expected_output_obligations:",
-                        "  - validation evidence for backend regression and residual risk",
-                        "  - inspected backend boundaries",
-                        "  - next gate named",
-                    ]
-                )
-                + "\n",
-                encoding="utf-8",
-            )
-            result = module._evaluate_case(case_dir, registry, {"bug-fix"}, "schema-only")
-            self.assertEqual(result.errors, [])
-            self.assertEqual(result.schema_status, "pass")
-            self.assertEqual(result.comparison_status, "schema-only")
+def _write_case(
+    directory: Path,
+    *,
+    coverage_class: str | None = None,
+    expected_status: str = "pass",
+    baseline: str,
+    with_skill: str,
+) -> None:
+    class_line = f"coverage_class: {coverage_class}\n" if coverage_class else ""
+    (directory / "expected.yaml").write_text(
+        class_line
+        + "expected_stage: implementation-review\n"
+        "expected_professional_skill: primary-skill\n"
+        "expected_capabilities: [layer3-skill]\n"
+        "expected_hidden_risks: [hidden risk one, hidden risk two]\n"
+        "expected_evidence: [evidence one, evidence two]\n"
+        "forbidden_behaviors: [unsafe shortcut one, unsafe shortcut two]\n"
+        "expected_output_obligations: [output one, output two, output three]\n"
+        f"expected_with_skill_status: {expected_status}\n",
+        encoding="utf-8",
+    )
+    (directory / "prompt.md").write_text(
+        "Review a concrete production boundary with enough detail to exercise the fixture contract.",
+        encoding="utf-8",
+    )
+    (directory / "baseline_output.md").write_text(baseline, encoding="utf-8")
+    (directory / "with_skill_output.md").write_text(with_skill, encoding="utf-8")
 
-    def test_missing_forbidden_behaviors_is_error(self) -> None:
-        module = _load_module()
-        registry = {"skills": {"backend-change-builder"}, "capabilities": {"regression-testing"}}
-        with tempfile.TemporaryDirectory() as tmp:
-            case_dir = Path(tmp) / "backend" / "case"
-            case_dir.mkdir(parents=True)
-            (case_dir / "prompt.md").write_text(
-                "Fix a backend bug with enough concrete detail to require regression validation.",
-                encoding="utf-8",
-            )
-            (case_dir / "expected.yaml").write_text(
-                "\n".join(
-                    [
-                        "expected_stage: bug-fix",
-                        "expected_professional_skill: backend-change-builder",
-                        "expected_capabilities:",
-                        "  - regression-testing",
-                        "expected_hidden_risks:",
-                        "  - tenant authorization regression gap",
-                        "  - missing denied-path backend coverage",
-                        "expected_evidence:",
-                        "  - validation evidence",
-                        "  - regression command output",
-                        "forbidden_behaviors: []",
-                        "expected_output_obligations:",
-                        "  - validation evidence for backend regression",
-                        "  - residual tenant authorization risk",
-                        "  - next quality-test gate",
-                    ]
-                )
-                + "\n",
-                encoding="utf-8",
-            )
-            result = module._evaluate_case(case_dir, registry, {"bug-fix"}, "auto")
-            self.assertTrue(any("forbidden_behaviors" in error for error in result.errors))
-            self.assertEqual(result.schema_status, "fail")
-            self.assertTrue(result.missing_expected_items)
 
-    def test_comparison_scores_with_skill_output_higher_than_baseline(self) -> None:
-        module = _load_module()
-        registry = {
-            "skills": {"backend-change-builder"},
-            "capabilities": {"agent-execution-discipline", "regression-testing"},
-        }
-        with tempfile.TemporaryDirectory() as tmp:
-            case_dir = Path(tmp) / "backend" / "case"
-            case_dir.mkdir(parents=True)
-            (case_dir / "prompt.md").write_text(
-                "Fix a backend bug and require same-pattern scan plus regression evidence.",
-                encoding="utf-8",
+class ProfessionalBenchmarkContractTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.module = _load_module()
+        cls.professional = {"primary-skill": {"layer3-skill"}}
+        cls.layer3 = {"layer3-skill"}
+        cls.routable = {"primary-skill"}
+
+    def test_positive_forbidden_behavior_hit_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            directory = Path(raw)
+            _write_case(
+                directory,
+                baseline="unsafe shortcut one",
+                with_skill=(
+                    "primary-skill layer3-skill hidden risk one hidden risk two "
+                    "evidence one evidence two output one output two output three "
+                    "unsafe shortcut one"
+                ),
             )
-            (case_dir / "expected.yaml").write_text(
-                "\n".join(
-                    [
-                        "expected_stage: bug-fix",
-                        "expected_professional_skill: backend-change-builder",
-                        "expected_capabilities:",
-                        "  - agent-execution-discipline",
-                        "  - regression-testing",
-                        "expected_hidden_risks:",
-                        "  - local fix without same-pattern scan",
-                        "  - unverified authorization regression",
-                        "expected_evidence:",
-                        "  - regression validation evidence",
-                        "  - same-pattern scan output",
-                        "forbidden_behaviors:",
-                        "  - claim completion without command output",
-                        "  - patch only one endpoint without sibling scan",
-                        "expected_output_obligations:",
-                        "  - validation evidence for backend regression and residual risk",
-                        "  - inspected backend boundaries",
-                        "  - next gate named",
-                    ]
+            result = self.module._case(
+                directory,
+                self.professional,
+                self.layer3,
+                self.routable,
+                "comparison",
+            )
+        self.assertEqual("fail", result.comparison_status)
+        self.assertTrue(result.forbidden_behavior_hits)
+        self.assertTrue(any("forbidden behavior" in item for item in result.errors))
+
+    def test_release_critical_requires_full_coverage_and_unsafe_baseline(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            directory = Path(raw)
+            _write_case(
+                directory,
+                coverage_class="release-critical",
+                baseline="plausible but incomplete baseline",
+                with_skill=(
+                    "primary-skill layer3-skill hidden risk one "
+                    "evidence one evidence two output one output two output three"
+                ),
+            )
+            result = self.module._case(
+                directory,
+                self.professional,
+                self.layer3,
+                self.routable,
+                "comparison",
+            )
+        self.assertEqual("fail", result.comparison_status)
+        joined = "\n".join(result.errors)
+        self.assertIn("every expected hidden risk", joined)
+        self.assertIn("baseline must contain at least one forbidden behavior", joined)
+
+    def test_adversarial_negative_control_is_classified_separately(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            directory = Path(raw)
+            _write_case(
+                directory,
+                expected_status="fail",
+                baseline="unsafe shortcut one",
+                with_skill="unsafe shortcut two",
+            )
+            result = self.module._case(
+                directory,
+                self.professional,
+                self.layer3,
+                self.routable,
+                "comparison",
+            )
+        self.assertEqual("adversarial-negative-control", result.coverage_class)
+        self.assertEqual("fail", result.expected_status)
+        self.assertEqual("expected-fail-detected", result.comparison_status)
+
+    def test_schema_rejects_repeated_or_cross_group_obligations(self) -> None:
+        mutations = (
+            ("evidence two", "Evidence-one", "must not repeat normalized obligations"),
+            ("output three", "hidden risk one", "distinct across"),
+            (
+                "unsafe shortcut one",
+                "hidden risk one",
+                "forbidden behaviors must be distinct",
+            ),
+        )
+        for before, after, message in mutations:
+            with self.subTest(mutation=(before, after)), tempfile.TemporaryDirectory() as raw:
+                directory = Path(raw)
+                _write_case(
+                    directory,
+                    baseline="unsafe shortcut one",
+                    with_skill="complete captured output",
                 )
-                + "\n",
-                encoding="utf-8",
+                path = directory / "expected.yaml"
+                path.write_text(
+                    path.read_text(encoding="utf-8").replace(before, after),
+                    encoding="utf-8",
+                )
+                result = self.module._case(
+                    directory,
+                    self.professional,
+                    self.layer3,
+                    self.routable,
+                    "comparison",
+                )
+            self.assertEqual("fail", result.schema_status)
+            self.assertTrue(any(message in item for item in result.errors), result.errors)
+
+    def test_schema_requires_expected_stage(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            directory = Path(raw)
+            _write_case(
+                directory,
+                baseline="unsafe shortcut one",
+                with_skill="complete captured output",
             )
-            (case_dir / "baseline_output.md").write_text(
-                "I patched only one endpoint without sibling scan and claim completion without command output.",
-                encoding="utf-8",
-            )
-            (case_dir / "with_skill_output.md").write_text(
-                "\n".join(
-                    [
-                        "Selected stage: bug-fix.",
-                        "Selected professional skill: backend-change-builder.",
-                        "Selected capabilities: agent-execution-discipline, regression-testing.",
-                        "Hidden risks: local fix without same-pattern scan.",
-                        "Hidden risks: unverified authorization regression.",
-                        "Evidence: regression validation evidence; same-pattern scan output.",
-                        "Inspected boundaries: controller, service, repository, permission policy.",
-                        "Output obligations: validation evidence for backend regression and residual risk; inspected backend boundaries; next gate named.",
-                        "Validation command: python3 -m pytest tests/test_backend.py; outcome: not run in fixture.",
-                        "What evidence does not prove: production history is free of leaked reads.",
-                        "Residual risk: concurrency path not verified; owner: backend team.",
-                        "Next gate: quality-test-gate.",
-                    ]
+            path = directory / "expected.yaml"
+            path.write_text(
+                path.read_text(encoding="utf-8").replace(
+                    "expected_stage: implementation-review\n", ""
                 ),
                 encoding="utf-8",
             )
-            result = module._evaluate_case(case_dir, registry, {"bug-fix"}, "auto")
-            self.assertEqual(result.errors, [])
-            self.assertIsNotNone(result.comparison)
-            self.assertEqual(result.comparison.mode, "comparison")
-            self.assertGreater(result.comparison.with_skill_score, result.comparison.baseline_score)
-            self.assertEqual(result.comparison_status, "pass")
-            self.assertEqual(result.forbidden_behavior_hits, [])
-            self.assertGreater(result.professional_delta_summary.delta_score, 0)
-            self.assertIn("selected stage", result.professional_delta_summary.with_skill_present)
-            self.assertTrue(result.professional_delta_summary.baseline_missing)
-            self.assertTrue(result.baseline_defect_hits)
-            self.assertEqual(result.benchmark_quality_status, "pass")
+            result = self.module._case(
+                directory,
+                self.professional,
+                self.layer3,
+                self.routable,
+                "comparison",
+            )
+        self.assertEqual("fail", result.schema_status)
+        self.assertIn("expected_stage must be a non-blank string", result.errors)
 
-    def test_schema_only_mode_skips_case_without_output_pair(self) -> None:
-        module = _load_module()
-        registry = {"skills": {"backend-change-builder"}, "capabilities": {"regression-testing"}}
-        with tempfile.TemporaryDirectory() as tmp:
-            case_dir = Path(tmp) / "backend" / "case"
-            case_dir.mkdir(parents=True)
-            (case_dir / "prompt.md").write_text(
-                "Fix a backend bug with enough concrete detail to require regression validation.",
-                encoding="utf-8",
-            )
-            (case_dir / "expected.yaml").write_text(
-                "\n".join(
-                    [
-                        "expected_stage: bug-fix",
-                        "expected_professional_skill: backend-change-builder",
-                        "expected_capabilities:",
-                        "  - regression-testing",
-                        "expected_hidden_risks:",
-                        "  - tenant authorization regression gap",
-                        "  - missing denied-path backend coverage",
-                        "expected_evidence:",
-                        "  - validation evidence",
-                        "  - regression command output",
-                        "forbidden_behaviors:",
-                        "  - claim completion without evidence",
-                        "  - patch only one endpoint without sibling scan",
-                        "expected_output_obligations:",
-                        "  - validation evidence for backend regression",
-                        "  - residual tenant authorization risk",
-                        "  - next quality-test gate",
-                    ]
-                )
-                + "\n",
-                encoding="utf-8",
-            )
-            result = module._evaluate_case(case_dir, registry, {"bug-fix"}, "schema-only")
-            self.assertEqual(result.errors, [])
-            self.assertIsNotNone(result.comparison)
-            self.assertEqual(result.comparison.mode, "schema-only")
-            self.assertEqual(result.comparison_status, "schema-only")
+    def test_repository_release_critical_cases_pass(self) -> None:
+        payload = self.module.evaluate_benchmarks()
+        release = [
+            row
+            for row in payload["results"]
+            if row["coverage_class"] == "release-critical"
+        ]
+        self.assertEqual(4, len(release))
+        self.assertTrue(all(row["comparison_status"] == "pass" for row in release))
+        self.assertTrue(all(row["baseline_forbidden_behavior_hits"] for row in release))
+        self.assertTrue(all(not row["forbidden_behavior_hits"] for row in release))
 
-    def test_auto_mode_requires_output_pair(self) -> None:
-        module = _load_module()
-        registry = {"skills": {"backend-change-builder"}, "capabilities": {"regression-testing"}}
-        with tempfile.TemporaryDirectory() as tmp:
-            case_dir = Path(tmp) / "backend" / "case"
-            case_dir.mkdir(parents=True)
-            (case_dir / "prompt.md").write_text(
-                "Fix a backend bug with enough concrete detail to require regression validation.",
-                encoding="utf-8",
-            )
-            (case_dir / "expected.yaml").write_text(
-                "\n".join(
-                    [
-                        "expected_stage: bug-fix",
-                        "expected_professional_skill: backend-change-builder",
-                        "expected_capabilities:",
-                        "  - regression-testing",
-                        "expected_hidden_risks:",
-                        "  - tenant authorization regression gap",
-                        "  - missing denied-path backend coverage",
-                        "expected_evidence:",
-                        "  - validation evidence",
-                        "  - regression command output",
-                        "forbidden_behaviors:",
-                        "  - claim completion without evidence",
-                        "  - patch only one endpoint without sibling scan",
-                        "expected_output_obligations:",
-                        "  - validation evidence for backend regression",
-                        "  - residual tenant authorization risk",
-                        "  - next quality-test gate",
-                    ]
-                )
-                + "\n",
-                encoding="utf-8",
-            )
-            result = module._evaluate_case(case_dir, registry, {"bug-fix"}, "auto")
-            self.assertTrue(any("missing baseline_output.md" in error for error in result.errors))
-            self.assertEqual(result.comparison_status, "fail")
-            self.assertEqual(result.benchmark_quality_status, "fail")
+    def test_repository_domain_cases_are_unique_complete_and_passing(self) -> None:
+        payload = self.module.evaluate_benchmarks()
+        domain_names = {
+            "ai-product-extension",
+            "bigdata-product-extension",
+            "iot-embedded-extension",
+            "low-level-systems-extension",
+            "android-platform-extension",
+            "payment-trading-extension",
+            "web3-product-extension",
+        }
+        domain_cases = [
+            row
+            for row in payload["results"]
+            if domain_names.intersection(row["layer3_skills"])
+        ]
 
-    def test_vague_expected_items_are_rejected(self) -> None:
-        module = _load_module()
-        registry = {"skills": {"backend-change-builder"}, "capabilities": {"regression-testing"}}
-        with tempfile.TemporaryDirectory() as tmp:
-            case_dir = Path(tmp) / "backend" / "case"
-            case_dir.mkdir(parents=True)
-            (case_dir / "prompt.md").write_text(
-                "Fix a backend bug with enough concrete detail to require regression validation.",
-                encoding="utf-8",
-            )
-            (case_dir / "expected.yaml").write_text(
-                "\n".join(
-                    [
-                        "expected_stage: bug-fix",
-                        "expected_professional_skill: backend-change-builder",
-                        "expected_capabilities:",
-                        "  - regression-testing",
-                        "expected_hidden_risks:",
-                        "  - check security",
-                        "  - add tests",
-                        "expected_evidence:",
-                        "  - run tests",
-                        "  - do validation",
-                        "forbidden_behaviors:",
-                        "  - use best practices",
-                        "  - handle errors",
-                        "expected_output_obligations:",
-                        "  - ensure quality",
-                        "  - validation evidence",
-                        "  - residual risk",
-                    ]
-                )
-                + "\n",
-                encoding="utf-8",
-            )
-            result = module._evaluate_case(case_dir, registry, {"bug-fix"}, "auto")
-        self.assertTrue(any("vague content" in error for error in result.errors))
-
-    def test_adversarial_markdown_uses_detection_fields_instead_of_delta(self) -> None:
-        module = _load_module()
-        result = module.BenchmarkResult(
-            case_id="evals/professional-benchmarks/adversarial/example",
-            path="evals/professional-benchmarks/adversarial/example",
-            expected_stage="review",
-            expected_skills=["change-forge-router"],
-            expected_with_skill_status="fail",
-            adversarial_detection_status="detected",
-            schema_status="pass",
-            comparison_status="expected-fail",
-            benchmark_quality_status="pass",
-            baseline_defect_hits=["keyword-stuffed baseline"],
-            with_skill_obligation_coverage=["selected stage"],
-            delta_score=9,
-            remaining_gaps=["route relevance"],
-            missing_expected_items=["route relevance", "forbidden behaviors absent", "evidence limits"],
-            forbidden_behavior_hits=["residual risk without owner"],
-            professional_delta_summary=module.ProfessionalDeltaSummary(delta_score=9),
+        self.assertEqual(7, len(domain_cases))
+        self.assertEqual(
+            7,
+            len({row["case_id"] for row in domain_cases}),
         )
-        report = module.BenchmarkReport(
-            generated_at="2026-06-10T00:00:00+00:00",
-            cases_checked=1,
-            mode="auto",
-            errors=[],
-            results=[result],
-            comparison_cases_checked=1,
-        )
+        selected_domains = [
+            name
+            for row in domain_cases
+            for name in row["layer3_skills"]
+            if name in domain_names
+        ]
+        self.assertEqual(domain_names, set(selected_domains))
+        self.assertEqual(7, len(selected_domains))
 
-        markdown = module._render_markdown(report)
-
-        self.assertIn("Expected Failure", markdown)
-        self.assertIn("Adversarial Detection: detected", markdown)
-        self.assertIn("Expected Failure: yes", markdown)
-        self.assertIn("missing expected items=3; forbidden hits=1", markdown)
-        self.assertIn("not applicable", markdown)
-        self.assertNotIn("delta_score: +9", markdown)
-        self.assertNotIn("| +9 |", markdown)
+        for row in domain_cases:
+            with self.subTest(case=row["case_id"]):
+                expected = self.module.load_yaml_file(
+                    ROOT / row["case_id"] / "expected.yaml"
+                )
+                self.assertEqual("standard", row["coverage_class"])
+                self.assertEqual("pass", row["schema_status"])
+                self.assertEqual("pass", row["comparison_status"])
+                self.assertTrue(row["baseline_forbidden_behavior_hits"])
+                self.assertFalse(row["forbidden_behavior_hits"])
+                self.assertEqual(
+                    expected["expected_hidden_risks"],
+                    row["covered_hidden_risks"],
+                )
+                self.assertEqual(
+                    expected["expected_evidence"],
+                    row["covered_evidence"],
+                )
+                self.assertEqual(
+                    expected["expected_output_obligations"],
+                    row["covered_output_obligations"],
+                )
+                for field in (
+                    "expected_hidden_risks",
+                    "expected_evidence",
+                    "forbidden_behaviors",
+                    "expected_output_obligations",
+                ):
+                    self.assertGreaterEqual(len(expected[field]), 3)
 
 
 if __name__ == "__main__":

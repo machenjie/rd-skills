@@ -1,59 +1,28 @@
-# E2E Evidence Patterns
+# E2E Testing Evidence Patterns
 
-Use this reference when `e2e-testing` closure depends on repository graph,
-project memory, old CI output, prior agent claims, validation freshness, command
-artifacts, or changed-journey-to-test mapping. Keep it as an evidence map, not
-a second E2E tutorial.
+These records distinguish assembled-journey proof from lower-level and production claims.
 
-## Changed-Journey-To-Test Map
+## Journey Claim
 
-| Claim | Minimum evidence | What it proves | What it does not prove |
-| --- | --- | --- | --- |
-| Critical journey is covered | Route/source path, user role, entry point, test file, command, trace or screenshot artifact, and owner. | The inspected journey has a runnable browser proof obligation. | Untested journey variants, devices, browsers, locales, or production data are safe. |
-| Auth or permission branch is covered | Allowed role, denied role, session state, redirect or denial assertion, and non-leak check. | The inspected browser path distinguishes allowed, denied, expired, or unauthenticated states. | Backend authorization is complete for every tenant/object combination. |
-| Durable side effect is covered | User-visible assertion plus DB/API/email/event/audit assertion or lower-level integration evidence link. | The E2E journey proves the business outcome, not only navigation. | All downstream jobs, third-party production behavior, or eventual consistency windows are covered. |
-| Flake control is credible | No arbitrary sleeps, semantic selectors, isolated data, controlled stubs, artifact capture, and CI/shard outcome. | The inspected test has deterministic waits, data, and failure diagnostics. | Future route changes, new browser versions, or CI capacity shifts cannot reintroduce flake. |
-| Validation is fresh | Command, working directory, exit code/outcome, report or artifact path, and final-edit freshness. | Evidence was produced after the final material change for the mapped journey. | Later source, fixture, route, CI, stub, generated, or report edits are covered. |
+- Name the journey, role, tenant, starting state, route or entry point, assembled dependencies, and critical branch.
+- Link the changed behavior to the test path and explain why component, API, integration, or contract proof leaves material risk.
+- Record the user-visible oracle, authoritative durable-state oracle, forbidden effects, and readiness condition.
 
-## Graph, Memory, And CI Reconciliation
+## Execution Claim
 
-- Treat repository graph, project memory, old screenshots, old traces, prior CI,
-  and prior agent summaries as discovery inputs until current source confirms
-  them.
-- Accept prior "this E2E covers it" claims only when current route, fixture,
-  role, selector, stub, CI config, and validation artifact still match.
-- Reject or downgrade memory that lacks command, exit code, artifact path, owner,
-  journey scope, role scope, fixture source, or validation freshness.
-- Mark evidence stale after edits to routes, auth/session setup, fixtures,
-  selectors, Playwright/Cypress config, external stubs, CI browser matrix,
-  generated reports, or the asserted journey behavior.
+- For a run, record the scoped command, environment, selected browser/device/version, result, final-edit freshness, and the artifacts actually used to diagnose or support the claim.
+- Record each retained screenshot, trace, video, console, or network artifact's classification, minimized capture scope, redaction, access boundary, retention expiry, disposal owner, and deletion status.
+- For planned or unavailable execution, record the reason, missing environment or authority, release consequence, owner, and next gate without inventing output.
+- Mark evidence stale after material route, fixture, selector, stub, environment, test-config, generated-input, or asserted-behavior changes.
 
-## Handoff Evidence Shape
+## Isolation And Flake Claim
 
-```yaml
-e2e_testing_evidence_closure:
-  inspected_paths:
-    - path: ""
-      finding: ""
-  accepted_prior_claims:
-    - claim: ""
-      current_evidence: ""
-  rejected_or_stale_claims:
-    - claim: ""
-      reason: ""
-  changed_journey_to_test_map:
-    - journey_or_branch: ""
-      route_or_source_path: ""
-      test_file: ""
-      validation_command: ""
-      exit_code_or_status: ""
-      artifact_or_report: ""
-      proves: ""
-      does_not_prove: ""
-      owner: ""
-      freshness: ""
-  residual_risk:
-    - risk: ""
-      owner: ""
-      next_gate: ""
-```
+- Name run-owned data/session keys, setup source, cleanup path, and behavior on assertion failure, timeout, and cancellation.
+- For intermittent failure, retain the signature and first failing result; record diagnostic reruns separately.
+- A quarantine record names affected journey, observed signature, owner, release consequence, current workaround, and repair or removal trigger.
+
+## Proof Limits
+
+- State untested roles, branches, browsers/devices, versions, locales, external behavior, and production-only conditions.
+- State diagnostic artifacts not inspected for sensitive content, redaction not verified, and retention or disposal not executed.
+- Route backend authorization completeness, contract compatibility, capacity, and lower-level boundary behavior to their owning proof.

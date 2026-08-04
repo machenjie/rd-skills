@@ -6,4 +6,6 @@
 - independent review: `delivery-release-gate` reviews rollout/rollback; `reliability-observability-gate` reviews telemetry and alerting.
 - repair/re-review: unsafe same-release removal routes back to `data-api-contract-changer` for expand-contract repair, then re-review repeats.
 - residual risk: unknown downstream reporting queries that read the old column.
-- handoff: include route manifest, compatibility table, migration order, rollback result, validation output, residual risk, and owner decision if a breaking change remains.
+- handoff: include reviewed files, compatibility table, migration order, rollback
+  result, validation output, unverified scope, residual risk, and owner decision
+  if a breaking change remains.

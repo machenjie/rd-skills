@@ -1,6 +1,6 @@
 # Page Component Decomposition Evidence Patterns
 
-Use this reference when closure depends on repository graph, project memory, execution trajectory, validation freshness, command output, report artifacts, tool permission boundaries, or a changed-component-to-validation map. Keep it as an evidence map, not a second component tutorial.
+Use this reference when closure depends on repository inspection, prior task evidence, observable action sequence, validation freshness, command output, report artifacts, tool permission boundaries, or a changed-component-to-validation map. Keep it as an evidence map, not a second component tutorial.
 
 ## Component Decision-To-Evidence Map
 
@@ -13,24 +13,20 @@ Use this reference when closure depends on repository graph, project memory, exe
 | Permission placement is visible | Role/tenant/owner source, allowed/denied/disabled/hidden branches, primitive props, and role fixture/test obligation | UI authorization decisions are visible at page/feature level | Backend authorization or every object-level permission path is enforced |
 | Shared extraction is justified | Current consumer list, stable props contract, owner, design-system alternatives, Storybook/doc obligation, and rejected feature-local placement | Shared placement has current reuse pressure | Future API stability or design-system approval is guaranteed |
 | Test or story boundary is credible | Story/test path, provider/router/network requirements, fixture owner, accessible states, command/report, and exit code or not-run owner | The named component boundary has a validation obligation | Full live browser behavior, visual parity, or accessibility certification is complete |
-| Graph or memory claim is fresh | Prior pattern source/date, current component graph, consumers, stories, tests, design-system contract, and accepted/rejected freshness verdict | Reuse or rejection of a remembered pattern is source-backed | Uninspected branches, old generated artifacts, or abandoned prototypes are current |
+| Prior source or task evidence claim is fresh | Prior pattern source/date, current component graph, consumers, stories, tests, design-system contract, and accepted/rejected freshness verdict | Reuse or rejection of a remembered pattern is source-backed | Uninspected branches, old generated artifacts, or abandoned prototypes are current |
 
-## Graph, Memory, And Execution Reconciliation
+## Current Evidence And Freshness
 
-- Treat repository graph, project memory, prior stories, old screenshots, generated components, and execution trajectory as discovery inputs until current source confirms them.
-- Accept prior "this pattern is reusable", "this story covers it", "this provider is required", or "this component is design-system-owned" claims only when current component source, consumers, stories, tests, and design-system files still match.
+- Treat repository inspection, prior task evidence, prior stories, old screenshots, generated components, and observable action sequence as discovery inputs until current source confirms them.
+- Accept prior reuse or ownership claims only while current component source, consumers, stories, tests, and design-system files still match. Examples include "this pattern is reusable", "this story covers it", "this provider is required", and "this component is design-system-owned".
 - Mark evidence stale after edits to component APIs, hooks, routes, providers, state stores, query keys, fixtures, stories, snapshots, accessibility behavior, validation commands, or build outputs.
 - Record inspected and skipped surfaces: route/page files, components, hooks, stores, providers, stories, tests, design-system components, API fixtures, generated artifacts, browser screenshots, and accessibility reports.
-- Map every final decomposition claim to a source path, story/test path, validator command, screenshot/report artifact, owner review, or explicit not-run residual risk.
+- For each page, component, state-owner, side-effect, permission, extraction, or test-boundary claim made in the final handoff, name its current source or validation artifact, owner review, or explicit not-run residual risk.
 
 ## Tool Permission Boundary
 
-| Action | Boundary record |
-| --- | --- |
-| Local source reads, graph search, report inspection, and markdown validation | Read-only local shell action; cite searched paths and avoid full output dumps |
-| Local component tests, Storybook checks, accessibility scans, visual diffs, validators, and builds | State-mutating only for reports, caches, screenshots, snapshots, dist/build artifacts, or local fixtures; cite command, exit code, artifact path, sandbox, write scope, and cleanup |
-| Snapshot update, story artifact refresh, fixture regeneration, or generated client refresh | State-mutating development action; record source-of-truth input, generated output owner, diff review, and rollback path |
-| Browser cloud, production analytics, session replay, customer screenshots, or connector export | High-risk or connector-scoped action; require permission, redact tenant/user/secret-bearing values, set retention limit, and state residual proof limits |
+- When the task refreshes a snapshot, story, fixture, or generated client, record the source-of-truth input, generated owner, reviewed visual or contract diff, and applicable rollback path; disclose any unavailable proof.
+- Browser-cloud captures, session replay, analytics, and customer screenshots require permission, tenant/user redaction, a retention limit, and a device or viewport coverage limit.
 
 ## Handoff Evidence Shape
 
@@ -52,4 +48,4 @@ page_component_decomposition_evidence_closure:
 
 ## Blocking Conditions
 
-Block completion when component boundaries are justified only by file size, shared extraction has fewer than two current stable consumers, permission checks remain hidden in primitives, presentational components require router/store/network providers, graph or memory evidence is reused without current-source confirmation, changed components lack story/test/validator mapping or not-run owner, or artifact-writing commands lack write-scope and rollback disclosure.
+Block completion when boundaries rely only on file size, shared extraction lacks stable consumers, permission checks hide in primitives, or presentation requires infrastructure providers. Also block stale prior evidence, changed components without validation ownership, and artifact-writing commands without write-scope and rollback disclosure.

@@ -6,20 +6,11 @@ focus:
   - branch behavior proof
   - C++ statement idiom
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
-    - code-element-professionalism
-    - language-idiom-enforcement
-    - code-review
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
-    - AI review gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Fallthrough behavior is removed or explicitly marked and justified.
   - Suspended and active status behavior is tested separately.

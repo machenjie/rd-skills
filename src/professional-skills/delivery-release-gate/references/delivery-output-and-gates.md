@@ -1,56 +1,50 @@
 # Delivery Output And Gates
 
-Load this reference when `delivery-release-gate` needs the full release output field list, exhaustive quality gate, or detailed handoff table. The skill body keeps default runtime context compact.
+Load only when assigned L3-L5 analysis, release-artifact implementation, or independent readiness review needs mode-specific closure plus targeted proof for a selected delivery risk.
+
+## Do Not Load
+
+Do not load for local-only work without a release decision or when the root contract or compact checklist is sufficient. Named Layer 3 Skills own specialized migration, compatibility, security, reliability, and tool mechanisms.
 
 ## Output Contract
-Return a structured release plan with:
-- **Mode selected**: standard rollout, migration-sensitive, progressive delivery, IaC/K8s/Helm/GitOps, incident hotfix, or regulated release, with trigger signal.
-- **Boundaries inspected**: pipeline, artifact, config, secrets, migrations, flags, Helm/K8s/IaC, DNS/CDN/WAF/gateway, cloud IAM/KMS, dashboards, runbooks, consumers, and audit boundaries inspected or skipped with reason.
-- **Professional judgment**: rollout, rollback, migration/config compatibility, canary, incident, or compliance decision and risks ruled out or retained.
-- **Deployment strategy**: rolling / canary / blue-green with configuration (percentages, replica counts, traffic routing).
-- **Pre-deployment checklist**: environment config validation, secrets audit, staging parity confirmation, migration compatibility check.
-- **Cloud governance checklist**: IaC plan review, account/project boundary, namespace boundary, IAM diff, DNS/CDN/WAF/gateway rollback, KMS/key rotation impact, resource tagging, and audit trail.
-- **Helm release plan**: chart version, values diff, rendered manifest diff, CRD/hook handling, atomic upgrade, rollback scope, and verification.
-- **Migration sequence**: forward migration execution order (before or after code deploy), rollback migration, tested execution evidence.
-- **Feature flag plan**: flag state at deployment, percent rollout schedule, disableability confirmation, cleanup task reference.
-- **Rollback procedure**: step-by-step rollback instructions with expected execution time; tested in staging.
-- **Communication plan**: consumer notification, partner coordination, on-call notification if needed.
-- **Incident release plan**: SEV severity, mitigation vs. resolution, incident roles, customer/status page communication owner, and validation signal when applicable.
-- **Compliance evidence**: change approval, deploy audit event, artifact digest, SBOM/vulnerability scan evidence, evidence owner, and retention period.
-- **Post-release monitoring plan**: named owner, dashboards, metrics, SLO burn rate, duration of watch window.
-- **Execution discipline evidence**: deployment commands or pipeline links, exit status, failed-attempt ledger when applicable, route repair decision, and closure package.
-- **Tool permission/sandbox evidence**: deploy/migration/IaC/Helm/Kubernetes/cloud/secret action class, permission state, sandbox boundary, dry-run/rendered diff, rollback or revert path, and redaction rule.
-- **Validation evidence**: pipeline, staging, rollback, Helm/IaC, config, canary, post-release, or audit checks run, with outcomes tied to the release obligation.
-- **Reuse and placement rationale**: why migration, config, flag, Helm/IaC, pipeline, watch, and rollback responsibilities sit in the selected release boundary.
-- **Minimal Correctness Decision**: existing release control selected or rejected, new release machinery avoided or justified, stale flag/config/script deletion plan, and shortcut ceiling with rollback trigger.
-- **Behavior preservation**: old/new version compatibility, config defaults, feature flag off-state, public contract, and rollback behavior preserved or intentionally changed.
-- **Release notes**: human-readable changelog entries (Keep a Changelog format) for affected audiences.
-- **Evidence limits**: what pipeline, staging, rollback, Helm/IaC, config, canary, and post-release evidence proves and what production, consumer, or data risks remain unproven.
-- **Residual risks**: known risks with mitigation or acceptance rationale.
-- **Next gate/handoff**: reliability, security, data/API, docs, incident, or no-next-gate rationale.
+
+Return exactly one mode closure, followed only by fields triggered by the selected risk:
+
+1. **Analysis closure:**
+   - Return the source-backed release plan, authority boundaries, selected rollout and recovery decisions, validation strategy, unknowns, residual risk, and recommended next step.
+   - Make no claim of edits, production action, or approval.
+2. **Task closure:**
+   - Return the actual release-artifact diff, post-edit results, preserved behavior, unverified scope, residual risk, and next independent-review owner.
+   - Obtain explicit authority before any production or privileged action.
+   - Leave approval to an independent reviewer.
+3. **Review closure:**
+   - Return `Go`, `No-Go`, or `Blocked` with severity-ranked findings, reviewed and unreviewed scope, and proof limits.
+   - Use `Blocked` for inaccessible required evidence, naming missing evidence, unblock condition, repair owner, and handoff.
+   - Make no edit, deployment, or rollback.
+4. **Release boundary and artifact:** State the target environment and affected pipeline, artifact, configuration, or secret boundary.
+   - State build and promotion identity.
+   - State material provenance or reproducibility needs and behavior-preservation evidence.
+5. **Rollout, watch, and authority:** State blast radius, selected exposure strategy, and approval or authority boundary.
+   - State stop and containment signals, owner, and required watch evidence.
+   - Justify rolling, canary, blue-green, phased, or direct rollout from current risk.
+6. **Compatibility, migration, and recovery:** When versions or data states can coexist, state ordering, skew or consumer behavior, reconciliation, and cleanup boundary. Rollback, restore, or forward-repair outcomes and rehearsal evidence apply only when reversibility, impact, change type, or policy triggers them.
+7. **IaC, Helm, and GitOps:** When declarative infrastructure is affected, state its desired/effective or rendered change and resource/account/namespace boundary. Also state authority, state/sync/drift behavior, present hooks or CRDs, blast radius, and selected containment/recovery evidence for the actual toolchain.
+8. **Hotfix, regulated, and limits:** When incident mitigation is involved, distinguish mitigation from resolution.
+   - State the incident owner and validation signal.
+   - For a policy-defined regulated release, state required approval, provenance or audit evidence, owner, retention, and exception.
+   - Tie artifacts to claims.
+   - Name unproven production, consumer, and data risks.
 
 ## Quality Gate
-1. Every deployment artifact is immutably tagged; no `latest` tags in production.
-2. All environment variables required by the new version are verified to exist in the target environment.
-3. All secrets are retrieved from an audited secret management service; none hardcoded or in plaintext logs.
-4. The database migration is backward-compatible with the current application version during the rollout window.
-5. The rollback procedure is documented and has been executed in staging.
-6. Feature flags can be disabled without a code deploy.
-7. Staging has been validated with production-equivalent configuration and integration surface.
-8. A named owner with a defined watch window and monitoring dashboard is assigned for post-release observation.
-9. External consumers, partners, and on-call engineers are notified per the communication plan.
-10. Release notes are accurate, human-readable, and audience-appropriate.
-11. IaC/cloud governance changes have reviewed plan evidence, blast-radius boundary, IAM/network/KMS/DNS impact review, and rollback procedure.
-12. Regulated releases retain approval, audit event, artifact digest, SBOM/vulnerability scan evidence, owner, and retention period.
-13. Incident hotfixes distinguish mitigation from resolution and identify incident commander, technical lead, communications owner, and validation signal.
-14. Agent-assisted release work includes evidence inventory, route repair after repeated failure, residual risks, and handoff target.
-15. Release-affecting tools have permission/sandbox evidence before execution, including dry-run/rendered diff when available, rollback/revert path, and redaction rules for secrets and command output.
 
-## Handoff
-- **reliability-observability-gate**: SLO burn rate targets, canary metric baselines, and post-release alert thresholds.
-- **security-privacy-gate**: secrets management, container image security, or compliance evidence.
-- **data-api-contract-changer**: migration rollback safety or API contract versioning must be confirmed before release.
-- **change-documentation-gate**: release notes, runbook updates, and consumer migration guide publishing.
-- **quality-test-gate**: release gate criteria require test evidence that has not yet been produced.
-- **failure-diagnosis**: release is part of incident mitigation or root-cause confirmation.
-- **agent-execution-discipline**: release closure lacks evidence, route repair, risk boundary, or validation results.
+1. When promotion, provenance, or reproducibility risk requires stable artifact identity, prove non-drifting bytes and source or build identity.
+   - Use an artifact-system control without universally banning mutable labels.
+2. When environment differences can change affected behavior, require equivalence evidence only for material dimensions.
+   - Material dimensions include configuration, dependency endpoint, identity, policy, topology, and data shape.
+   - Select staging, ephemeral environments, rendered comparison, or production-safe checks from current risk.
+3. When failure may require reversal or recovery, establish an evidenced outcome for rollback, restore, forward repair, disablement, or containment. Require execution or rehearsal only when risk, policy, prior failure, or change type warrants it; a documented command alone is not proof.
+4. When blast radius or delivery policy warrants controlled exposure, require explicit authority and containment signals.
+   - Require owned observation through a delivery mechanism selected from current capabilities and risk.
+5. When migration, contract, or version skew can expose incompatible code/data/consumers, require coexistence, ordering, reconciliation, and cleanup proof. Expand/contract, dual operation, tolerant readers, coordinated cutover, or forward-only repair are candidates chosen from actual compatibility and recovery constraints.
+6. When IaC, Helm, Kubernetes, or GitOps changes effective infrastructure, require an inspectable intended/effective diff, blast radius, authority, state/sync/drift behavior, and containment evidence. Plan, render, policy check, server-side dry run, GitOps preview, or targeted test are candidates supported by the toolchain.
+7. When an incident hotfix or regulated release is triggered, require only the applicable outcomes. Incident evidence covers the mitigation or resolution boundary, owner, and validation signal; regulated-release evidence covers approval, provenance, audit, retention, and exceptions. Regulated artifacts and fixed incident roles remain conditional on policy or incident evidence.

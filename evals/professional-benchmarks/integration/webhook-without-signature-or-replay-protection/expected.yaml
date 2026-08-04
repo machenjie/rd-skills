@@ -3,7 +3,6 @@ expected_professional_skill: integration-change-builder
 expected_capabilities:
   - web-security
   - idempotency-retry-design
-  - message-queue-design
   - input-validation
 expected_hidden_risks:
   - forged webhook event mutates subscription state

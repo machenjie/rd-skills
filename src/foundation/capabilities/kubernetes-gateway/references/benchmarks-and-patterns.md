@@ -1,28 +1,22 @@
-# Kubernetes Gateway Benchmarks And Patterns
+# Kubernetes Runtime Decision Patterns
 
-## Baseline Standards
+These patterns compare workload, identity, traffic, capacity, and rollout decisions for the changed cluster boundary.
 
-- Use Kubernetes upstream API behavior, Gateway API, Helm chart best practices, GitOps rendered-diff discipline, CIS Kubernetes Benchmark, NSA/CISA Kubernetes Hardening Guide, and Kubernetes Pod Security Standards as review anchors.
-- Treat pinned platform versions, controller versions, admission policies, and chart dependencies as project baselines; update this capability before relying on obsolete Kubernetes, Helm, Gateway API, or policy-tool assumptions.
-- Prefer a simpler managed runtime when platform ownership, on-call, rollback, observability, secret management, and NetworkPolicy enforcement are not ready.
+## Workload And Controller Fit
 
-## Design Patterns
+| Runtime concern | Decision focus | Failure to expose |
+| --- | --- | --- |
+| Process identity and completion | long-running, singleton, per-node, scheduled, finite, or stateful lifecycle | duplicate work, lost completion, or wrong restart behavior |
+| Storage and stable identity | attachment, ownership, failover, fencing, detach/rebind, and restore | split ownership, stale attachment, or unrecoverable state |
+| Health and termination | startup, readiness, liveness, drain, grace, and in-flight work | restart storm, early traffic, or dropped work |
+| Capacity and placement | requests, limits, scaling signal, disruption, topology, priority, and queue pressure | throttling, eviction, correlated failure, or unsafe scale-down |
+| Identity and reachability | workload identity, namespace, permissions, secret/config source, ingress and egress | broad privilege, credential leak, or unintended network path |
+| Traffic exposure | listener, route, backend, TLS/auth, timeout/retry/body/rate policy, tenant and edge ownership | public expansion, incompatible routes, or ambiguous reversal |
+| Rollout state | image/config/secret/route/policy identity, mixed versions, custom resources, hooks, external state | partial rollout or rollback that leaves other surfaces changed |
 
-- Separate liveness, readiness, and startup semantics; liveness must not depend on external services.
-- Size requests, limits, and autoscaling from observed data, forecast, or explicit residual risk; avoid copied values.
-- Use dedicated ServiceAccounts, least-privilege RBAC, default-deny NetworkPolicy, non-root security context, and approved secret sources.
-- Validate Helm/GitOps changes through schema, lint, template/render, diff, policy checks, and CRD/hook ordering before release.
-- Keep Gateway/Ingress rollback explicit across route, DNS, CDN, WAF, TLS secret, Service selector, and backend compatibility.
-- Pair rollout strategy with watch metrics and stop conditions; canary or blue-green requires traffic step ownership and rollback trigger.
+## Selection Notes
 
-## Deviation Record
-
-```markdown
-Kubernetes Gateway Deviation
-- Rule:
-- Reason:
-- Scope:
-- Owner:
-- Expiration or cleanup trigger:
-- Validation proving the exception is bounded:
-```
+- Choose supported resources and controls from the current cluster API, controller behavior, platform policy, and workload consequence; avoid a vendor or standards catalog in task context.
+- Separate rendered intent from admission, defaulting, controller reconciliation, load balancer, DNS/edge, and runtime state.
+- Select disruption, placement, isolation, scaling, and exposure mechanisms when the affected workload risk triggers them, with an explicit proof limit for live cluster behavior.
+- Route image contents to `containerization`, pipeline mutation to `ci-cd`, data change execution to `data-migration-design`, and final release authority to `delivery-release-gate`.

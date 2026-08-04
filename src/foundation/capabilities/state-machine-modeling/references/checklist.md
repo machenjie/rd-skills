@@ -1,7 +1,7 @@
 # State Machine Modeling Checklist
 
 - Identify object or workflow whose lifecycle is being modeled.
-- List all states and terminal states.
+- For the lifecycle being modeled, enumerate the states and terminal outcomes discovered in current source and contracts; record unknown, external, or deferred states rather than inventing them.
 - Define allowed transitions with trigger, actor, and guard.
 - Define illegal transitions and expected rejection behavior.
 - Define side effects that occur after successful transition.

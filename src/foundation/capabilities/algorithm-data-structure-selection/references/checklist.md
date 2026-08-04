@@ -9,4 +9,4 @@
 - Preserve correctness semantics: stable ordering, identity/collision rules, exactness, and determinism.
 - Compare the simplest acceptable approach, storage/index option, cache option, and parallel option.
 - Validate hot paths with benchmark/profile/query-plan/load evidence or state the not-run rationale.
-- Record graph/memory freshness, evidence limits, residual scale risk, and next gate.
+- Record repository inspection/prior evidence freshness, evidence limits, residual scale risk, and recommended next step.

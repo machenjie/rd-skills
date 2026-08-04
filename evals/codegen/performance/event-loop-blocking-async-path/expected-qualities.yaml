@@ -7,21 +7,11 @@ focus:
   - blocking versus non-blocking IO
   - cancellation and backpressure
 route_hints:
-  skills:
-    - backend-change-builder
-    - reliability-observability-gate
-    - quality-test-gate
-  capabilities:
-    - language-performance-safety
-    - concurrency-control
-    - profiling
-    - implementation-structure-design
-    - language-testing-strategy
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - reliability gate
-    - test gate
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: reliability-observability-gate
 expected_outcomes:
   - CPU-bound work is detected on the async request path and offloaded to a worker or executor.
   - Sync file or network IO is replaced with async IO or isolated behind a dedicated bounded pool.

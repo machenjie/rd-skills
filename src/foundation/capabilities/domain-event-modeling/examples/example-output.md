@@ -9,14 +9,14 @@ boundaries_inspected:
 - Producer: `src/export/worker.py`
 - Consumer candidates: notification service, audit service, reporting projection
 - Schema/config: no registry entry found yet
-- Prior memory: export completion event mentioned in design notes; accepted only as a naming hint
+- Prior note: export completion event mentioned in design notes; accepted only as a naming hint
 
 source_evidence:
 - Export worker commits file metadata before emitting the event.
 - No current consumer requires mutable callback to reconstruct the completed export.
 
-graph_memory_trajectory_judgment:
-- Repository graph confirms one producer and three intended consumers.
+current_evidence_judgment:
+- repository inspection confirms one producer and three intended consumers.
 - Memory is not sufficient proof of active consumers; consumer registration remains a validation item.
 
 event_catalog:

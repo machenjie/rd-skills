@@ -1,0 +1,339 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-decision",
+  "review_id": "semantic-disposition-panel-2026-07-21-r10",
+  "decided_on": "2026-07-21",
+  "decision_method": "three-independent-experts-majority",
+  "source_fingerprints": {
+    "audit": "e23da33c93fe688afab3be0e9ed0dffa965ea51e414bd0c9cb4bfff4d38800c4",
+    "reference_candidates": "78f176f697995d8cf8a4217261e91dd73c4e203528854f479a566406119bcc51",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "29f9ca8994790e869778316258ade844675d84fe5a0a3677802eeae8e2a8dffe",
+    "root_candidates": "4dfabd1b8974386dd210f1246424f7c83ed9b52eb7f4824fee7022cab0c6e19f",
+    "root_context": "5e59b6de1449a1a4a4d9caaf0e95983b24ce0308ac3a7bbbc2ea68af392ec884",
+    "root_detector": "0b6168c2f3aaacfc611421aa8ef533171e4adf229986be73016c74154d402aef",
+    "root_source": "3b56ed2006129d0bdc4cf1d731d4c850ece39dc0f23d6dea84cd61b81dc1dee4"
+  },
+  "panel_contract": {
+    "decision_method": "three-independent-experts-majority",
+    "required_voters": 3,
+    "abstentions_allowed": false,
+    "minimum_winning_votes": 2,
+    "independent_ballots": true,
+    "required_target_count": 5,
+    "required_axis_target_counts": {
+      "root": 4,
+      "reference": 1
+    },
+    "allowed_dispositions": [
+      "false-positive",
+      "rewrite",
+      "time-bounded-exception",
+      "valid-contextual-rule"
+    ]
+  },
+  "packet": {
+    "path": "evals/expert-panel/semantic-disposition-panel-2026-07-21-r10/packet.json",
+    "sha256": "5879d0ee0a0991e4a40ee87bf2b130a0a75ad9644278660ff923303660298236"
+  },
+  "voters": [
+    {
+      "voter_id": "semantic-runtime-reviewer-r10-a",
+      "agent_id": "/root/semantic_r10_review_a",
+      "role": "semantic-runtime-contract-reviewer",
+      "expertise": [
+        "fail-closed routing",
+        "runtime control contracts"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-runtime-reviewer-r10-a.json",
+      "ballot_sha256": "2ee69f2a5882fe3d5853598027db5605f3c50820341d54eb7fa00de83dbb422f"
+    },
+    {
+      "voter_id": "semantic-assurance-reviewer-r10-c",
+      "agent_id": "/root/semantic_r10_review_c",
+      "role": "semantic-assurance-reviewer",
+      "expertise": [
+        "independent-assurance-review",
+        "loop-safety"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-assurance-reviewer-r10-c.json",
+      "ballot_sha256": "ff4723d3f988b7ae4abd28b2255c7ba491d70f90676f05bb7f23f79257a1122c"
+    },
+    {
+      "voter_id": "semantic-boundary-reviewer-r10-d",
+      "agent_id": "/root/semantic_r10_review_d",
+      "role": "semantic-boundary-reviewer",
+      "expertise": [
+        "control boundaries",
+        "fail-closed evidence"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-boundary-reviewer-r10-d.json",
+      "ballot_sha256": "a4a359746b70a2bce7bbb8a2f9dcdba33efcce2b12b4ea5ffcd8e3ce26c9a389"
+    }
+  ],
+  "semantic_decisions": [
+    {
+      "target_id": "reference:46c5c30b85043d8b80e7554974a1b8592b2a116d6b85c120319f47b136bce5e5",
+      "axis": "reference",
+      "candidate_id": "46c5c30b85043d8b80e7554974a1b8592b2a116d6b85c120319f47b136bce5e5",
+      "candidate_fingerprint": "ca553fd9855232b15aa94335ab179abdba0c533eb93ee8c568554431222b6635",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "semantic-runtime-reviewer-r10-a",
+        "semantic-assurance-reviewer-r10-c",
+        "semantic-boundary-reviewer-r10-d"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "semantic-runtime-reviewer-r10-a",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The absolute separates closed-schema Core policy from executable prompt instructions, preventing unvalidated JSON text from overriding the dispatch contract.",
+          "authority_or_condition": "The targeted execution-level reference is loaded only while computing or validating execution level, and its JSON is generated from the authoritative Core execution_level_contract.",
+          "decision_owner": "engineering-control-plane",
+          "mitigation": "Retain the data-versus-instruction boundary and the existing closed-schema parser and exact-projection validation.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-assurance-reviewer-r10-c",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The absolute separates executable authority from a generated data reference: the main controller may read the closed JSON contract to compute routing, but treating embedded values as instructions would invert the owning prompt boundary. The surrounding generated block supplies the complete policy schema, making the prohibition actionable rather than unsupported.",
+          "authority_or_condition": "The engineering-control-plane loads this targeted reference only when computing or validating execution level before routing; the main-control-agent prompt remains the instruction authority.",
+          "decision_owner": "engineering-control-plane",
+          "mitigation": "Keep the JSON fenced and closed-schema validated; on missing, invalid, or unknown policy data, use the integrity fallback and block editing.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-boundary-reviewer-r10-d",
+          "disposition": "valid-contextual-rule",
+          "rationale": "This directive is confined to a generated JSON policy reference and prevents the embedded data payload from being treated as executable prompt instructions; the surrounding provenance sentence and fenced JSON make the boundary explicit.",
+          "authority_or_condition": "src/control-skills/engineering-control-plane/references/execution-level-contract.md:3 and src/control-model/core-contracts.json execution_level_contract.projection.runtime_reference",
+          "decision_owner": "engineering-control-plane",
+          "mitigation": "Retain the data-versus-instruction boundary and keep generated-reference parity checks against the authoritative Core contract.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "axis": "root",
+      "candidate_id": "9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "candidate_fingerprint": "57dc124a08ca48dbcff3de6ba4482baee1cdf3e6bd1bdf81ad7f23a7b3b3ab1d",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "semantic-runtime-reviewer-r10-a",
+        "semantic-assurance-reviewer-r10-c",
+        "semantic-boundary-reviewer-r10-d"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "semantic-runtime-reviewer-r10-a",
+          "disposition": "valid-contextual-rule",
+          "rationale": "All seven controls are intentionally non-bypassable across execution levels; omitting one can defeat authority, review, validation, or current completion evidence.",
+          "authority_or_condition": "The Core execution_level_contract enumerates exactly seven non_bypassable controls, and even L1 explicitly retains all non-bypassable controls before routed work proceeds.",
+          "decision_owner": "main-control-agent",
+          "mitigation": "Keep the exact Core-derived count and fail closed whenever the reference schema or identifier set is invalid.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-assurance-reviewer-r10-c",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The rule is grounded by the execution-level contract's exactly seven non-bypassable values and constrains every execution level, so applying all seven is the correct invariant rather than an accidental universal. Each value names an auditable control, while the surrounding routing text supplies failure handling.",
+          "authority_or_condition": "After the execution-level contract is loaded and validated for a repository task, every execution level retains the seven enumerated non-bypassable controls.",
+          "decision_owner": "main-control-agent",
+          "mitigation": "Validate the closed schema and exact unique trigger and L2 identifiers before routing; missing or invalid policy data invokes the L4 integrity fallback with editing blocked.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-boundary-reviewer-r10-d",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The absolute count is not an arbitrary operational shortcut: the authoritative Core contract enumerates exactly seven non-bypassable controls, and the prompt applies that closed set before carrying level evidence through dispatch.",
+          "authority_or_condition": "src/control-model/core-contracts.json execution_level_contract.non_bypassable and src/control-prompts/main-control-agent.md:43-49",
+          "decision_owner": "main-control-agent",
+          "mitigation": "Retain exact enumeration-to-count coupling; any contract count change must update the Core authority and prompt projection together.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "axis": "root",
+      "candidate_id": "ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "candidate_fingerprint": "aa559b94c05dda172eb9a7d559299821759580c5c792983ce69933736825ba72",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "semantic-runtime-reviewer-r10-a",
+        "semantic-assurance-reviewer-r10-c",
+        "semantic-boundary-reviewer-r10-d"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "semantic-runtime-reviewer-r10-a",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The single complete path is an identity-scoped loop guard, while the adjacent gap-or-transition clause permits justified additional validation paths.",
+          "authority_or_condition": "The authoritative validation_loop fixes complete_path_limit at one for the same validation identity and requires a bound gap or verifiable state transition for another path.",
+          "decision_owner": "main-control-agent",
+          "mitigation": "Retain the immediate exception condition and block same-identity repetition lacking a canonical gap or evidence transition.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-assurance-reviewer-r10-c",
+          "disposition": "valid-contextual-rule",
+          "rationale": "This is a count-based validation-loop invariant, not a time estimate: one complete path exhausts a canonical validation identity, while a second path requires a predeclared uncovered gap or a verified material or external-state transition. The adjacent exception makes the threshold conditional, actionable, and loop-safe.",
+          "authority_or_condition": "For one validation identity over material tree, declared scope, effective level, and path identity, one complete path is allowed; another requires a bound gap or transition.",
+          "decision_owner": "main-control-agent",
+          "mitigation": "Bind claim and gap manifests plus transition evidence; when the same identity is already completed or a transition is invalid, stop with blocked or partial status.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-boundary-reviewer-r10-d",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The numeric limit applies to a completed validation path under one bound identity, not to all validation activity; the same sentence permits another path only through a predeclared gap or evidence transition, matching Core.",
+          "authority_or_condition": "src/control-model/core-contracts.json execution_level_contract.validation_loop.complete_path_limit and different_path_requirements; src/control-prompts/main-control-agent.md:48",
+          "decision_owner": "main-control-agent",
+          "mitigation": "Keep the identity and gap-or-transition qualifiers adjacent, and fail closed when a completed path is repeated under the same identity.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "axis": "root",
+      "candidate_id": "d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "candidate_fingerprint": "cf3a0ff9da7d1669fbf0a952f0b1c8991419020ef72a984ad57b72497da62a28",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "semantic-runtime-reviewer-r10-a",
+        "semantic-assurance-reviewer-r10-c",
+        "semantic-boundary-reviewer-r10-d"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "semantic-runtime-reviewer-r10-a",
+          "disposition": "valid-contextual-rule",
+          "rationale": "For supplied-artifact review, a no-edit exporter preserves the reviewed workspace boundary; creating a workspace file would mutate and contaminate that diff scope.",
+          "authority_or_condition": "This rule applies only when supplied-artifact mode lacks an actual diff; the utility capsule requires diff-export/no-edit and permits supplied content or a host-native artifact.",
+          "decision_owner": "main-control-agent",
+          "mitigation": "Preserve pre/post workspace change-set checks and invalidate the utility result if any workspace change occurs.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-assurance-reviewer-r10-c",
+          "disposition": "valid-contextual-rule",
+          "rationale": "When supplied-artifact review lacks an actual diff, delegating a no-edit diff export to task-agent preserves the reviewer's read-only boundary and provides reviewable diff content rather than an unverifiable changed-file summary. Forbidding a workspace file prevents generated evidence from contaminating the change set under review.",
+          "authority_or_condition": "Only supplied-artifact review mode with an absent actual diff uses task-agent diff-export/no-edit; native and unsupported modes follow their separately defined paths.",
+          "decision_owner": "main-control-agent",
+          "mitigation": "Return the diff as supplied content or a host-native artifact, compare the workspace change set before and after, and block review with diff scope unverified if export is unavailable or modifies state.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-boundary-reviewer-r10-d",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The prohibition is scoped to diff-export/no-edit. Returning supplied content or a host-native artifact avoids creating evidence files in a user-owned workspace while preserving the actual diff required by independent review.",
+          "authority_or_condition": "src/control-model/core-contracts.json profile_contract.capability_terms.task-utility-mode rules diff-utility-output and utility-enforcement; src/control-prompts/main-control-agent.md:28-32",
+          "decision_owner": "main-control-agent",
+          "mitigation": "Retain the before-and-after workspace diff comparison; invalidate the utility result and block downstream review if the check changes or is unavailable.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "axis": "root",
+      "candidate_id": "ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "candidate_fingerprint": "e4e3520ee078f1200f1609cb7d80d510c620661058945465fd97b8ccc41e386d",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "semantic-runtime-reviewer-r10-a",
+        "semantic-assurance-reviewer-r10-c",
+        "semantic-boundary-reviewer-r10-d"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "semantic-runtime-reviewer-r10-a",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Declaring formal readiness changes the evidence claim, so ordinary authoring validation cannot substantiate it without the separately required formal evidence gates.",
+          "authority_or_condition": "The Core contract names formal evidence as non-bypassable when formal readiness is declared and separately defines this condition as the validation loop formal_scope_rule.",
+          "decision_owner": "main-control-agent",
+          "mitigation": "Keep formal readiness fail closed until the repository's formal-release evidence commands succeed on the final tree.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-assurance-reviewer-r10-c",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Declared readiness is only a scope trigger and cannot establish release truth; the repository's separate formal evidence gates must still run on the final tree. This condition prevents a routing-level declaration from bypassing explicit release validation and independent reviewer evidence.",
+          "authority_or_condition": "Whenever formal release readiness is explicitly declared in scope, the execution-level floor is L4 and the formal-release evidence contract remains mandatory.",
+          "decision_owner": "main-control-agent",
+          "mitigation": "Require the formal-release evaluator and strict professionalism evidence on the final tree; otherwise report release-not-ready and do not claim formal completion.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-boundary-reviewer-r10-d",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Formal readiness is an explicit release claim whose evidence obligation cannot be satisfied by merely declaring scope; Core lists formal evidence as a non-bypassable control and repeats the formal-scope rule.",
+          "authority_or_condition": "src/control-model/core-contracts.json execution_level_contract.non_bypassable and execution_level_contract.validation_loop.formal_scope_rule; src/control-prompts/main-control-agent.md:48",
+          "decision_owner": "main-control-agent",
+          "mitigation": "Retain the fail-closed formal-evidence gate and report blocked or partial whenever current formal evidence is missing.",
+          "review_after": null
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "semantic_dispositions": {
+      "false-positive": 0,
+      "rewrite": 0,
+      "time-bounded-exception": 0,
+      "valid-contextual-rule": 5
+    }
+  },
+  "limitations": [
+    "This majority is authoring lifecycle evidence only.",
+    "It cannot satisfy readability or professional-completeness formal attestations.",
+    "The record contains no generated single-source-of-truth disposition entries.",
+    "A rewrite majority requires a source edit before any resolved governance entry can exist."
+  ]
+}

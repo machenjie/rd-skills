@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: backend-change-builder.
-Selected capabilities: language-performance-safety.
+Selected Layer 3 Skills: language-performance-safety.
 
 Hidden risks: performance unbounded concurrency; runtime safety invariant missing for concurrent hot path; measurement evidence absent for thread pool saturation.
 

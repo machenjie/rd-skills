@@ -1,0 +1,7 @@
+{
+  "cleanup_gate": ["backfill complete", "mismatch rate zero", "rollback window closed"],
+  "observability": ["progress", "error rate", "read mismatch", "write latency"],
+  "phases": ["expand", "dual-write", "backfill", "cutover", "contract"],
+  "rollback": "disable new reads and continue legacy full_name writes before cleanup",
+  "stop_conditions": ["elevated error rate", "write latency regression", "name mismatch"]
+}

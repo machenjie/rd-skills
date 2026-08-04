@@ -1,0 +1,22 @@
+coverage_class: standard
+expected_stage: implementation-review
+expected_professional_skill: security-privacy-gate
+expected_capabilities:
+  - ai-product-extension
+expected_hidden_risks:
+  - retrieval can return chunks after source authorization is revoked
+  - retrieved prompt injection can compose allowed tools into an unauthorized effect
+  - tool calls can execute with ambient service authority instead of the requesting principal
+expected_evidence:
+  - cross-principal and stale-revocation retrieval negative tests
+  - indirect prompt-injection test against trusted instruction precedence
+  - tool-call principal scope argument validation confirmation and audit proof
+forbidden_behaviors:
+  - trust source UI authorization for retrieval
+  - place retrieved text inside trusted instructions
+  - let the model invoke tools with ambient service authority
+expected_output_obligations:
+  - security verdict and blocked abuse paths
+  - selected retrieval permission and tool-authority controls
+  - evaluation gaps fallback and residual owner
+expected_with_skill_status: pass

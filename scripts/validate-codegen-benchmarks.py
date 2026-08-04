@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from validation_utils import (
     NAME_RE,
@@ -21,11 +21,17 @@ from validation_utils import (
 )
 
 from codegen_benchmark_manifest import EXPECTED_BENCHMARKS
+from routing_scenarios import (
+    load_release_routing_scenarios,
+    project_release_contract,
+    project_release_route_hints,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
 CODEGEN_DIR = ROOT / "evals" / "codegen"
 REGISTRY_DIR = ROOT / "src" / "registry"
+RELEASE_ROUTING_SCENARIOS = ROOT / "src" / "registry" / "release-routing-scenarios.yaml"
 
 VALID_COMPLEXITIES = {"L2", "L3", "L4", "L5"}
 REQUIRED_ROOT_FILES = (
@@ -46,11 +52,19 @@ REQUIRED_LIST_FIELDS = (
     "evidence",
 )
 ROUTE_HINT_FIELDS = (
-    "skills",
-    "capabilities",
-    "domain_extensions",
-    "quality_gates",
+    "work_path",
+    "agent_profile",
+    "primary_skill",
+    "layer3_skills",
+    "review_skill",
 )
+VALID_WORK_PATHS = {"direct-task", "analyzed-work", "diagnosis", "review-only"}
+WORK_PATH_PROFILE = {
+    "direct-task": "task-agent",
+    "analyzed-work": "task-agent",
+    "diagnosis": "analysis-agent",
+    "review-only": "review-agent",
+}
 FIXED_DEPTH_ROOT_LOOKUP_RE = re.compile(r"(\.\./){2,}|(\.\.\\){2,}|parents\[[1-9]")
 
 REQUIRED_MARKDOWN_HEADINGS: dict[str, tuple[str, ...]] = {
@@ -93,49 +107,81 @@ REQUIRED_MARKDOWN_HEADINGS: dict[str, tuple[str, ...]] = {
 }
 
 
-def _load_registry_names() -> tuple[set[str], set[str], set[str], set[str]]:
-    def _names(path: Path, key: str) -> set[str]:
+def _load_registry_entries() -> tuple[
+    dict[str, set[str]],
+    dict[str, set[str]],
+    dict[str, set[str]],
+]:
+    def _entries(path: Path, key: str) -> dict[str, set[str]]:
         if not path.is_file():
-            return set()
+            return {}
         try:
             data = load_yaml_file(path)
         except ValidationProblem:
-            return set()
-        names: set[str] = set()
+            return {}
+        entries: dict[str, set[str]] = {}
         for entry in registry_items(data, key, path, []):
             if isinstance(entry, dict):
                 value = entry.get("name") or entry.get("id")
-                if isinstance(value, str) and value:
-                    names.add(value)
-            elif isinstance(entry, str):
-                names.add(entry)
-        return names
+                roles = entry.get("role_support") or []
+                if isinstance(value, str) and value and isinstance(roles, list):
+                    entries[value] = {
+                        role for role in roles if isinstance(role, str) and role
+                    }
+        return entries
 
-    skills = _names(REGISTRY_DIR / "skills.yaml", "skills")
-    capabilities = _names(REGISTRY_DIR / "capabilities.yaml", "capabilities")
-    extensions = _names(
-        REGISTRY_DIR / "domain-extensions.yaml",
-        "domain_extensions",
+    professional = _entries(
+        REGISTRY_DIR / "professional-skills.yaml",
+        "professional_skills",
     )
-    gates = _load_quality_gates()
-    return skills, capabilities, extensions, gates
-
-
-def _load_quality_gates() -> set[str]:
-    path = REGISTRY_DIR / "routing-rules.yaml"
-    if not path.is_file():
-        return set()
+    professional_candidates: dict[str, set[str]] = {}
+    professional_path = REGISTRY_DIR / "professional-skills.yaml"
     try:
-        data = load_yaml_file(path)
+        professional_data = load_yaml_file(professional_path)
     except ValidationProblem:
-        return set()
-    if not isinstance(data, dict):
-        return set()
-    return {
-        str(item).strip().casefold()
-        for item in data.get("quality_gates", []) or []
-        if isinstance(item, str) and item.strip()
-    }
+        professional_data = {}
+    for entry in registry_items(
+        professional_data,
+        "professional_skills",
+        professional_path,
+        [],
+    ):
+        if not isinstance(entry, dict):
+            continue
+        name = entry.get("name")
+        candidates = _as_string_list(entry.get("layer3_candidates"))
+        if (
+            isinstance(name, str)
+            and entry.get("task_routable") is True
+            and candidates is not None
+        ):
+            professional_candidates[name] = set(candidates)
+    layer3 = _entries(REGISTRY_DIR / "foundation-skills.yaml", "foundation_skills")
+    layer3.update(_entries(REGISTRY_DIR / "domain-skills.yaml", "domain_skills"))
+    return professional, professional_candidates, layer3
+
+
+def _load_release_routing_projections(errors: list[str]) -> dict[str, dict[str, Any]]:
+    """Project core release-routing scenarios into codegen quality metadata."""
+    try:
+        rows = load_release_routing_scenarios(RELEASE_ROUTING_SCENARIOS)
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+        return {}
+    projections: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        codegen_case_id = row["codegen_case_id"]
+        if codegen_case_id in projections:
+            errors.append(
+                "release routing projection contains duplicate codegen_case_id "
+                f"{codegen_case_id!r}"
+            )
+            continue
+        projections[codegen_case_id] = {
+            "release_contract": project_release_contract(row),
+            "route_hints": project_release_route_hints(row),
+        }
+    return projections
 
 
 def _as_string_list(value: Any) -> list[str] | None:
@@ -205,6 +251,60 @@ def _validate_expected_command_contract(case_dir: Path, errors: list[str]) -> No
         )
 
 
+def _real_assertion_files(case_dir: Path) -> list[Path]:
+    roots = (
+        case_dir / "test-suite" / "tests",
+        case_dir / "security-checks" / "security_tests",
+    )
+    return sorted(
+        path
+        for root in roots
+        if root.is_dir()
+        for path in root.rglob("test_*.py")
+        if path.is_file()
+    )
+
+
+def _validate_assertion_contract(case_dir: Path, errors: list[str]) -> None:
+    for path in _real_assertion_files(case_dir):
+        rel = relpath(ROOT, path)
+        text = path.read_text(encoding="utf-8", errors="replace")
+        try:
+            compile(text, str(path), "exec")
+        except SyntaxError as exc:
+            errors.append(f"{rel}: invalid assertion syntax: {exc}")
+            continue
+        runnable_signal = (
+            "def main(" in text
+            or "unittest.TestCase" in text
+            or re.search(
+                r"(?m)^def test_[a-zA-Z0-9_]+\(\)\s*(?:->\s*[^:]+)?\s*:",
+                text,
+            )
+            is not None
+        )
+        if not runnable_signal:
+            errors.append(
+                f"{rel}: assertion must define main(), unittest.TestCase, or a "
+                "zero-argument test function"
+            )
+
+
+def _validate_readme_categories(errors: list[str]) -> None:
+    path = CODEGEN_DIR / "README.md"
+    if not path.is_file():
+        errors.append("evals/codegen/README.md: missing benchmark documentation")
+        return
+    text = path.read_text(encoding="utf-8")
+    documented = set(re.findall(r"(?m)^  ([a-z0-9-]+)/\s*$", text))
+    expected = set(EXPECTED_BENCHMARKS)
+    if documented != expected:
+        errors.append(
+            "evals/codegen/README.md: category list differs from manifest; "
+            f"missing={sorted(expected - documented)}, extra={sorted(documented - expected)}"
+        )
+
+
 def _validate_markdown(
     path: Path,
     relative_name: str,
@@ -262,38 +362,36 @@ def _validate_list_field(
     return values
 
 
-def _validate_membership(
+def _validate_named_role(
     rel: str,
     field: str,
-    values: Iterable[str],
-    allowed: set[str],
+    value: Any,
+    entries: dict[str, set[str]],
+    required_role: str,
     errors: list[str],
 ) -> None:
-    for value in values:
-        if value not in allowed:
-            errors.append(f"{rel}: {field} contains unknown name '{value}'")
-
-
-def _validate_quality_gates(
-    rel: str,
-    gates: list[str],
-    allowed_gates: set[str],
-    errors: list[str],
-) -> None:
-    for gate in gates:
-        if gate.casefold() not in allowed_gates:
-            errors.append(f"{rel}: route_hints.quality_gates contains unknown gate '{gate}'")
-    gate_set = {gate.casefold() for gate in gates}
-    for required_gate in ("implementation gate", "test gate"):
-        if required_gate not in gate_set:
-            errors.append(f"{rel}: route_hints.quality_gates must include '{required_gate}'")
+    if not isinstance(value, str) or not value.strip():
+        errors.append(f"{rel}: route_hints.{field} must be a non-empty string")
+        return
+    roles = entries.get(value)
+    if roles is None:
+        errors.append(f"{rel}: route_hints.{field} contains unknown name '{value}'")
+    elif required_role not in roles:
+        errors.append(
+            f"{rel}: route_hints.{field} '{value}' does not support {required_role}"
+        )
 
 
 def _validate_expected_qualities(
     path: Path,
     category: str,
     case_id: str,
-    registry_names: tuple[set[str], set[str], set[str], set[str]],
+    registry_entries: tuple[
+        dict[str, set[str]],
+        dict[str, set[str]],
+        dict[str, set[str]],
+    ],
+    release_routing_projections: dict[str, dict[str, Any]],
     errors: list[str],
 ) -> None:
     rel = relpath(ROOT, path)
@@ -322,44 +420,108 @@ def _validate_expected_qualities(
     for field in REQUIRED_LIST_FIELDS:
         _validate_list_field(loaded, field, rel, errors)
 
+    codegen_case_id = f"{category}/{case_id}"
+    projection = release_routing_projections.get(codegen_case_id)
+    actual_release_contract = loaded.get("release_contract")
+    expected_release_contract = projection.get("release_contract") if projection else None
+    if (
+        expected_release_contract is not None
+        and actual_release_contract != expected_release_contract
+    ):
+        errors.append(
+            f"{rel}: release_contract disagrees with release-routing-scenarios.yaml projection"
+        )
+    if expected_release_contract is None and actual_release_contract is not None:
+        errors.append(f"{rel}: release_contract has no core release routing scenario")
+
     route_hints = loaded.get("route_hints")
     if not isinstance(route_hints, dict):
         errors.append(f"{rel}: 'route_hints' must be a mapping")
         return
+    if projection is not None and route_hints != projection["route_hints"]:
+        errors.append(f"{rel}: route_hints disagree with release-routing-scenarios.yaml projection")
 
-    skills, capabilities, extensions, allowed_gates = registry_names
-    route_values: dict[str, list[str]] = {}
-    for field in ROUTE_HINT_FIELDS:
-        values = _as_string_list(route_hints.get(field))
-        if values is None:
-            errors.append(f"{rel}: route_hints.{field} must be a list of strings")
-            values = []
-        if field != "domain_extensions" and not values:
-            errors.append(f"{rel}: route_hints.{field} must not be empty")
-        route_values[field] = values
+    unexpected_fields = set(route_hints) - set(ROUTE_HINT_FIELDS)
+    for field in sorted(unexpected_fields):
+        errors.append(f"{rel}: obsolete or unknown route_hints field '{field}'")
 
-    _validate_membership(rel, "route_hints.skills", route_values["skills"], skills, errors)
-    _validate_membership(
+    work_path = route_hints.get("work_path")
+    if work_path not in VALID_WORK_PATHS:
+        errors.append(
+            f"{rel}: route_hints.work_path must be one of {sorted(VALID_WORK_PATHS)}"
+        )
+    agent_profile = route_hints.get("agent_profile")
+    expected_profile = WORK_PATH_PROFILE.get(str(work_path))
+    if agent_profile != expected_profile:
+        errors.append(
+            f"{rel}: route_hints.agent_profile must be {expected_profile!r} for {work_path!r} work"
+        )
+
+    professional, professional_candidates, layer3 = registry_entries
+    primary_skill = route_hints.get("primary_skill")
+    _validate_named_role(
         rel,
-        "route_hints.capabilities",
-        route_values["capabilities"],
-        capabilities,
+        "primary_skill",
+        primary_skill,
+        professional,
+        str(expected_profile or "task-agent"),
         errors,
     )
-    _validate_membership(
-        rel,
-        "route_hints.domain_extensions",
-        route_values["domain_extensions"],
-        extensions,
-        errors,
-    )
-    _validate_quality_gates(rel, route_values["quality_gates"], allowed_gates, errors)
+    if route_hints.get("review_skill") is not None:
+        _validate_named_role(
+            rel,
+            "review_skill",
+            route_hints.get("review_skill"),
+            professional,
+            "review-agent",
+            errors,
+        )
+    if isinstance(primary_skill, str) and primary_skill not in professional_candidates:
+        errors.append(
+            f"{rel}: route_hints.primary_skill '{primary_skill}' is not task-routable"
+        )
+    review_skill = route_hints.get("review_skill")
+    if isinstance(review_skill, str) and review_skill not in professional_candidates:
+        errors.append(
+            f"{rel}: route_hints.review_skill '{review_skill}' is not task-routable"
+        )
+
+    layer3_values = _as_string_list(route_hints.get("layer3_skills"))
+    if layer3_values is None:
+        errors.append(f"{rel}: route_hints.layer3_skills must be a list of strings")
+        layer3_values = []
+    if len(layer3_values) > 3:
+        errors.append(f"{rel}: route_hints.layer3_skills must contain at most 3 entries")
+    if len(set(layer3_values)) != len(layer3_values):
+        errors.append(f"{rel}: route_hints.layer3_skills must not contain duplicates")
+    for value in layer3_values:
+        roles = layer3.get(value)
+        if roles is None:
+            errors.append(
+                f"{rel}: route_hints.layer3_skills contains unknown name '{value}'"
+            )
+        elif expected_profile not in roles:
+            errors.append(
+                f"{rel}: route_hints.layer3_skills '{value}' does not support {expected_profile}"
+            )
+        elif isinstance(primary_skill, str) and value not in professional_candidates.get(
+            primary_skill, set()
+        ):
+            errors.append(
+                f"{rel}: route_hints.layer3_skills '{value}' is not a targeted "
+                f"reference of primary Skill '{primary_skill}'"
+            )
 
 
 def _validate_case(
     case_dir: Path,
     category: str,
-    registry_names: tuple[set[str], set[str], set[str], set[str]],
+    registry_entries: tuple[
+        dict[str, set[str]],
+        dict[str, set[str]],
+        dict[str, set[str]],
+    ],
+    release_routing_projections: dict[str, dict[str, Any]],
     errors: list[str],
 ) -> None:
     case_id = case_dir.name
@@ -376,7 +538,8 @@ def _validate_case(
                 path,
                 category,
                 case_id,
-                registry_names,
+                registry_entries,
+                release_routing_projections,
                 errors,
             )
 
@@ -384,6 +547,7 @@ def _validate_case(
         _validate_directory_readme(case_dir, directory_name, errors)
     _validate_expected_command_contract(case_dir, errors)
     _validate_starter_setup_contract(case_dir, errors)
+    _validate_assertion_contract(case_dir, errors)
 
 
 def _validate_starter_setup_contract(case_dir: Path, errors: list[str]) -> None:
@@ -413,11 +577,13 @@ def main() -> int:
         )
         return 1
 
-    registry_names = _load_registry_names()
-    if not all(registry_names):
+    registry_entries = _load_registry_entries()
+    if not all(registry_entries):
         errors.append("registry data appears empty or unreadable; run validate-registry first")
+    release_routing_projections = _load_release_routing_projections(errors)
 
     category_dirs = {path.name: path for path in visible_child_dirs(CODEGEN_DIR)}
+    _validate_readme_categories(errors)
     expected_categories = set(EXPECTED_BENCHMARKS)
     actual_categories = set(category_dirs)
     for missing in sorted(expected_categories - actual_categories):
@@ -440,13 +606,28 @@ def main() -> int:
             if case_dir is None:
                 continue
             benchmark_count += 1
-            _validate_case(case_dir, category, registry_names, errors)
+            _validate_case(
+                case_dir,
+                category,
+                registry_entries,
+                release_routing_projections,
+                errors,
+            )
+
+    assertion_backed_count = sum(
+        bool(_real_assertion_files(CODEGEN_DIR / category / case_id))
+        for category, case_ids in EXPECTED_BENCHMARKS.items()
+        for case_id in case_ids
+    )
+    if assertion_backed_count < 3:
+        errors.append("codegen suite requires at least three assertion-backed benchmarks")
 
     if errors:
         return fail_many("validate-codegen-benchmarks", errors)
 
     print(
-        f"validate-codegen-benchmarks: validated {benchmark_count} benchmark(s)."
+        f"validate-codegen-benchmarks: validated {benchmark_count} benchmark(s); "
+        f"assertion-backed={assertion_backed_count}."
     )
     return 0
 

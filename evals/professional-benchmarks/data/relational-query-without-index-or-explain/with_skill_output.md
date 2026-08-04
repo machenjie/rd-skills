@@ -1,6 +1,6 @@
 Selected stage: implementation-planning.
 Selected professional skill: data-middleware-change-builder.
-Selected capabilities: relational-database, indexing-query-optimization.
+Selected Layer 3 Skills: relational-database, indexing-query-optimization, sql-professional-usage.
 
 Hidden risks: relational query without index or explain; missing index or query plan evidence on large table; production cardinality not represented by dev data.
 

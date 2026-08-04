@@ -1,72 +1,36 @@
 id: webhook-signature-replay
-description: Webhook review requires signature, replay, raw-body, and idempotency evidence.
+description: Independent webhook review routes once to the security owner and returns evidence limits.
 prompt: |
-  Review a billing webhook handler. It parses JSON before verification, accepts
-  events without timestamp tolerance, and mutates subscription state on every
-  event id.
+  Review a billing webhook handler that parses JSON before verification,
+  accepts events without timestamp tolerance, and mutates state on every event.
 expected:
-  selected_skills:
-    - integration-change-builder
-    - backend-change-builder
-    - security-privacy-gate
-    - quality-test-gate
-  selected_capabilities:
-    - idempotency-retry-design
-    - input-validation
-    - web-security
-    - logging-error-handling
-    - agent-execution-discipline
-    - regression-testing
-  required_references:
-    - references/routing-rules.md
-    - references/skill-registry.md
-    - references/capability-index.md
-    - references/domain-extension-index.md
-    - references/capabilities/42-idempotency-retry-design.md
-    - references/capabilities/54-web-security.md
-  required_quality_gates:
-    - integration gate
-    - security gate
-    - test gate
+  profile: review-agent
+  primary_skill: security-privacy-gate
+  layer3_skills: [idempotency-retry-design, input-validation, web-security]
+  review_skill: security-privacy-gate
   required_professional_obligations:
     - raw body preservation for HMAC
-    - timestamp and nonce replay window
+    - timestamp replay window
     - duplicate event idempotency test
-    - residual risk: provider sandbox signature drift
   forbidden_behaviors:
     - parse JSON before HMAC verification
     - accept unsigned event
-    - no replay protection
+    - claim provider compatibility without a sandbox fixture
 actual:
-  route_manifest:
-    selected_skills:
-      - integration-change-builder
-      - backend-change-builder
-      - security-privacy-gate
-      - quality-test-gate
-    selected_capabilities:
-      - idempotency-retry-design
-      - input-validation
-      - web-security
-      - logging-error-handling
-      - agent-execution-discipline
-      - regression-testing
-    required_references:
-      - references/routing-rules.md
-      - references/skill-registry.md
-      - references/capability-index.md
-      - references/domain-extension-index.md
-      - references/capabilities/42-idempotency-retry-design.md
-      - references/capabilities/54-web-security.md
-    required_quality_gates:
-      - integration gate
-      - security gate
-      - test gate
-  validation_evidence: "raw body preservation for HMAC; timestamp and nonce replay window; duplicate event idempotency test"
-  inspected_boundaries: "boundaries inspected: HTTP raw body middleware, verifier, event store, subscription mutation"
-  residual_risk: "residual risk: provider sandbox signature drift"
-  next_gate: "next gate: integration gate verifies provider sandbox fixture"
+  profile: review-agent
+  primary_skill: security-privacy-gate
+  layer3_skills: [idempotency-retry-design, input-validation, web-security]
+  review_skill: security-privacy-gate
+  handoff:
+    result: fail pending repair
+    changed_files: []
+    commands_run: [focused webhook verification test]
+    validation_results: duplicate event test captured; provider sandbox not run
+    findings: raw body preservation for HMAC; timestamp replay window; duplicate event idempotency test
+    unverified_scope: provider sandbox signature behavior
+    residual_risk: provider sandbox signature drift
+    recommended_next_step: repair verification order, replay guard, and deduplication, then re-review
 review:
   human_review_required: false
   promotion_status: promoted
-  notes: Promoted as a regression guard for webhook security review.
+  notes: Captured fixture; not a fresh live-agent run.

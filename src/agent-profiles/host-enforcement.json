@@ -1,0 +1,230 @@
+{
+  "schema_version": 3,
+  "source_summary": "Static configuration-level enforcement declared by each generated host projection. This matrix contains no host-execution observation.",
+  "status_values": [
+    "native-enforced",
+    "sandbox-enforced",
+    "prompt-enforced",
+    "unsupported"
+  ],
+  "hosts": {
+    "codex": {
+      "profile_delivery": "native-enforced",
+      "skill_loading": "prompt-enforced",
+      "subagent_dispatch": "native-enforced",
+      "partial_handoff": "unsupported",
+      "isolated_workspace": "unsupported",
+      "diff_input_mode": "native",
+      "validation_mode": "native-read-only",
+      "utility_no_edit": "prompt-enforced",
+      "roles": {
+        "main-control-agent": {
+          "tool_allowlist": "prompt-enforced",
+          "workspace_write_protection": "sandbox-enforced",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": ["dispatch"],
+          "limitations": [
+            "Codex Agent Profile TOML has no supported tool allowlist field; dispatch-only behavior is prompt-enforced.",
+            "The read-only sandbox prevents workspace writes but does not turn the declared tools into a native allowlist.",
+            "A parent-agent or invocation-level tool override can expose additional tools; the generated Profile is a declared default, not observed effective enforcement."
+          ]
+        },
+        "analysis-agent": {
+          "tool_allowlist": "prompt-enforced",
+          "workspace_write_protection": "sandbox-enforced",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": ["read", "search"],
+          "limitations": [
+            "The read-only sandbox protects the workspace; the exact read/search tool subset remains prompt-enforced."
+          ]
+        },
+        "task-agent": {
+          "tool_allowlist": "prompt-enforced",
+          "workspace_write_protection": "sandbox-enforced",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": ["read", "search", "edit", "execute"],
+          "limitations": [
+            "The workspace-write sandbox bounds filesystem writes; the exact tool subset remains prompt-enforced."
+          ]
+        },
+        "review-agent": {
+          "tool_allowlist": "prompt-enforced",
+          "workspace_write_protection": "sandbox-enforced",
+          "read_only_command_semantics": "sandbox-enforced",
+          "rendered_tools": ["read", "search", "execute-read-only"],
+          "limitations": [
+            "Read-only command use relies on the host read-only sandbox and still forbids external or production side effects by prompt contract."
+          ]
+        }
+      }
+    },
+    "claude": {
+      "profile_delivery": "native-enforced",
+      "skill_loading": "native-enforced",
+      "subagent_dispatch": "native-enforced",
+      "partial_handoff": "unsupported",
+      "isolated_workspace": "unsupported",
+      "diff_input_mode": "supplied-artifact",
+      "validation_mode": "task-no-edit",
+      "utility_no_edit": "prompt-enforced",
+      "roles": {
+        "main-control-agent": {
+          "tool_allowlist": "native-enforced",
+          "workspace_write_protection": "native-enforced",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": ["Skill", "Task"],
+          "limitations": []
+        },
+        "analysis-agent": {
+          "tool_allowlist": "native-enforced",
+          "workspace_write_protection": "native-enforced",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": ["Skill", "Read", "Grep", "Glob"],
+          "limitations": []
+        },
+        "task-agent": {
+          "tool_allowlist": "native-enforced",
+          "workspace_write_protection": "prompt-enforced",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": ["Skill", "Read", "Grep", "Glob", "Edit", "Write", "Bash"],
+          "limitations": [
+            "The host allowlist exposes the intended tools, but bounded write scope inside Bash remains prompt-enforced."
+          ]
+        },
+        "review-agent": {
+          "tool_allowlist": "native-enforced",
+          "workspace_write_protection": "native-enforced",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": ["Skill", "Read", "Grep", "Glob"],
+          "limitations": [
+            "Claude has no ChangeForge-verified read-only Bash projection, so review receives no Bash and consumes the supplied diff and validation artifacts."
+          ]
+        }
+      }
+    },
+    "copilot": {
+      "profile_delivery": "native-enforced",
+      "skill_loading": "prompt-enforced",
+      "subagent_dispatch": "native-enforced",
+      "partial_handoff": "unsupported",
+      "isolated_workspace": "unsupported",
+      "diff_input_mode": "supplied-artifact",
+      "validation_mode": "task-no-edit",
+      "utility_no_edit": "prompt-enforced",
+      "roles": {
+        "main-control-agent": {
+          "tool_allowlist": "native-enforced",
+          "workspace_write_protection": "native-enforced",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": ["agent"],
+          "limitations": []
+        },
+        "analysis-agent": {
+          "tool_allowlist": "native-enforced",
+          "workspace_write_protection": "native-enforced",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": ["read", "search"],
+          "limitations": []
+        },
+        "task-agent": {
+          "tool_allowlist": "native-enforced",
+          "workspace_write_protection": "prompt-enforced",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": ["read", "search", "edit", "execute"],
+          "limitations": [
+            "The host allowlist exposes the intended tools, but bounded write scope inside execute remains prompt-enforced."
+          ]
+        },
+        "review-agent": {
+          "tool_allowlist": "native-enforced",
+          "workspace_write_protection": "native-enforced",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": ["read", "search"],
+          "limitations": [
+            "Copilot has no ChangeForge-verified read-only execute projection, so review receives no execute and consumes the supplied diff and validation artifacts."
+          ]
+        }
+      }
+    },
+    "cline": {
+      "profile_delivery": "unsupported",
+      "skill_loading": "unsupported",
+      "subagent_dispatch": "unsupported",
+      "partial_handoff": "unsupported",
+      "isolated_workspace": "unsupported",
+      "diff_input_mode": "unsupported",
+      "validation_mode": "unsupported",
+      "utility_no_edit": "unsupported",
+      "roles": {
+        "main-control-agent": {
+          "tool_allowlist": "unsupported",
+          "workspace_write_protection": "unsupported",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": [],
+          "limitations": ["ChangeForge does not emit native Agent Profiles for Cline."]
+        },
+        "analysis-agent": {
+          "tool_allowlist": "unsupported",
+          "workspace_write_protection": "unsupported",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": [],
+          "limitations": ["ChangeForge does not emit native Agent Profiles for Cline."]
+        },
+        "task-agent": {
+          "tool_allowlist": "unsupported",
+          "workspace_write_protection": "unsupported",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": [],
+          "limitations": ["ChangeForge does not emit native Agent Profiles for Cline."]
+        },
+        "review-agent": {
+          "tool_allowlist": "unsupported",
+          "workspace_write_protection": "unsupported",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": [],
+          "limitations": ["ChangeForge does not emit native Agent Profiles for Cline."]
+        }
+      }
+    },
+    "openai-api": {
+      "profile_delivery": "unsupported",
+      "skill_loading": "unsupported",
+      "subagent_dispatch": "unsupported",
+      "partial_handoff": "unsupported",
+      "isolated_workspace": "unsupported",
+      "diff_input_mode": "unsupported",
+      "validation_mode": "unsupported",
+      "utility_no_edit": "unsupported",
+      "roles": {
+        "main-control-agent": {
+          "tool_allowlist": "unsupported",
+          "workspace_write_protection": "unsupported",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": [],
+          "limitations": ["OpenAI API output contains standalone Skill bundles, not native Agent Profiles."]
+        },
+        "analysis-agent": {
+          "tool_allowlist": "unsupported",
+          "workspace_write_protection": "unsupported",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": [],
+          "limitations": ["OpenAI API output contains standalone Skill bundles, not native Agent Profiles."]
+        },
+        "task-agent": {
+          "tool_allowlist": "unsupported",
+          "workspace_write_protection": "unsupported",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": [],
+          "limitations": ["OpenAI API output contains standalone Skill bundles, not native Agent Profiles."]
+        },
+        "review-agent": {
+          "tool_allowlist": "unsupported",
+          "workspace_write_protection": "unsupported",
+          "read_only_command_semantics": "unsupported",
+          "rendered_tools": [],
+          "limitations": ["OpenAI API output contains standalone Skill bundles, not native Agent Profiles."]
+        }
+      }
+    }
+  }
+}

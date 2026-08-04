@@ -19,8 +19,8 @@ candidates or explaining placement.
 - Keep order business terminology inside the order module unless a real shared
   technical utility is justified.
 - Add focused tests for display-name formatting through the public order API.
-- Include an Execution Discipline Report with reuse search evidence and an
-  Implementation Structure Plan.
+- Include a concise final handoff with reuse-search evidence and placement
+  rationale.
 
 ## Constraints
 

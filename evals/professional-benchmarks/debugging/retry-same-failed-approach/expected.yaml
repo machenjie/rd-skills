@@ -1,16 +1,15 @@
 expected_stage: debugging-diagnosis
 expected_professional_skill: delivery-release-gate
 expected_capabilities:
-  - agent-execution-discipline
-  - failure-diagnosis
-  - data-migration-design
   - release-rollback
+  - data-migration-design
+  - failure-diagnosis
 expected_hidden_risks:
-  - repeated same-path retry without route repair
+  - repeated same-path retry without a new hypothesis
   - migration lock impact on production writes
   - diagnosis claim without verified cause
 expected_evidence:
-  - route repair ledger with two failed attempts
+  - concise summary of two failed attempts
   - lock diagnosis evidence and migration plan adjustment
   - rollback or safe retry boundary
 forbidden_behaviors:
@@ -18,6 +17,6 @@ forbidden_behaviors:
   - diagnose as transient without checking lock holder or query plan
   - claim release readiness without validation output
 expected_output_obligations:
-  - route repair decision and new hypothesis
+  - changed hypothesis and next diagnostic action
   - validation evidence for safer migration path
   - residual release risk and owner

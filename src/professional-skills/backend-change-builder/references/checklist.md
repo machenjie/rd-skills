@@ -1,6 +1,6 @@
 # Backend Checklist
 
-- Validate all trusted-boundary inputs.
+- Validate untrusted-boundary fields that can violate the affected invariant or contract while retaining trusted framework-derived context and documenting intentionally unconstrained reachable fields.
 - Enforce authn, authz, ownership, tenancy, and role checks.
 - Define transaction scope and isolation expectations.
 - Make commands idempotent where retries are possible.

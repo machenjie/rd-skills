@@ -1,13 +1,9 @@
 expected_stage: implementation-planning
 expected_professional_skill: data-api-contract-changer
 expected_capabilities:
-  - senior-programming-judgment-core
-  - consumer-impact-analysis
-  - version-compatibility
   - api-contract-design
-  - contract-testing
-  - validation-broker
-  - implementation-structure-design
+  - version-compatibility
+  - dto-schema-design
 expected_hidden_risks:
   - public export may break SDK consumers
   - unit tests may not prove contract compatibility

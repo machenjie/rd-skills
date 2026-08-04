@@ -1,31 +1,140 @@
-"""Shared helpers for ChangeForge runtime installers."""
+"""Shared helpers for hookless ChangeForge Skill and Agent Profile installers."""
 
 from __future__ import annotations
 
 import json
+import hashlib
+import importlib.util
+import os
 import re
 import shutil
 import sys
-from dataclasses import dataclass, field
+import zipfile
+import zlib
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS_DIR = ROOT / "scripts"
-if str(SCRIPTS_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPTS_DIR))
-
-from validation_utils import ValidationProblem, parse_frontmatter  # noqa: E402
-
-
 MANIFEST_NAME = ".changeforge-install-manifest.json"
 BUILD_MANIFEST_NAME = ".changeforge-build-manifest.json"
+COMPILED_LAYER3_FORMAT = "ai-consumption-v1"
+HOST_ENFORCEMENT_SOURCE = ROOT / "src" / "agent-profiles" / "host-enforcement.json"
+CORE_CONTRACTS_SOURCE = ROOT / "src" / "control-model" / "core-contracts.json"
 BACKUP_DIR_NAME = ".changeforge-backups"
 PROFILES = ("recommended", "full", "dev")
+EXPECTED_PROFILE_COUNTS = {"recommended": 27, "full": 40, "dev": 190}
 AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
+SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+AGENT_PROFILE_NAMES = (
+    "main-control-agent",
+    "analysis-agent",
+    "task-agent",
+    "review-agent",
+)
+ENFORCEMENT_STATUSES = {
+    "native-enforced",
+    "sandbox-enforced",
+    "prompt-enforced",
+    "unsupported",
+}
+HOST_ENFORCEMENT_CAPABILITIES = {
+    "profile_delivery",
+    "skill_loading",
+    "subagent_dispatch",
+    "partial_handoff",
+    "isolated_workspace",
+    "utility_no_edit",
+}
+ROLE_ENFORCEMENT_CAPABILITIES = {
+    "tool_allowlist",
+    "workspace_write_protection",
+    "read_only_command_semantics",
+}
+LEGACY_PROFILE_NAMES = (
+    "analysis-worker",
+    "specialist-worker",
+    "validation-agent",
+    "independent-reviewer",
+    "integration-worker",
+    "pdd-freezer",
+    "ddd-freezer",
+    "sdd-contract-freezer",
+    "tdd-behavior-freezer",
+    "task-implementer",
+    "phase-reviewer",
+    "context-scout",
+)
+LEGACY_HOOK_SCRIPT_NAMES = frozenset(
+    {
+        "changeforge_action_classifier.py",
+        "changeforge_adapter_capabilities.py",
+        "changeforge_branch_route_summary.py",
+        "changeforge_closure_contract.py",
+        "changeforge_common.py",
+        "changeforge_compaction.py",
+        "changeforge_compaction_contract.py",
+        "changeforge_compaction_ledger.py",
+        "changeforge_compaction_reinject.py",
+        "changeforge_compaction_snapshot.py",
+        "changeforge_context_control_policy.py",
+        "changeforge_engineering_control_bootstrap.py",
+        "changeforge_engineering_control_router.py",
+        "changeforge_engineering_control_state.py",
+        "changeforge_evidence_adapter.py",
+        "changeforge_evidence_ledger.py",
+        "changeforge_executor_adapter_core.py",
+        "changeforge_gate_result.py",
+        "changeforge_hook.py",
+        "changeforge_hook_policy.py",
+        "changeforge_lifecycle_state.py",
+        "changeforge_light_ledger.py",
+        "changeforge_normalized_event.py",
+        "changeforge_permission_policy_gate.py",
+        "changeforge_phase_artifact_gate.py",
+        "changeforge_phase_capsule.py",
+        "changeforge_phase_subagent_dispatch.py",
+        "changeforge_post_edit_structure_gate.py",
+        "changeforge_post_tool_collector.py",
+        "changeforge_pre_edit_structure_gate.py",
+        "changeforge_pre_tool_risk_preview.py",
+        "changeforge_process_phase_gate.py",
+        "changeforge_professional_injector.py",
+        "changeforge_read_context_gate.py",
+        "changeforge_review_gate.py",
+        "changeforge_risk_surface_gate.py",
+        "changeforge_runtime_adapters.py",
+        "changeforge_runtime_route_resolver.py",
+        "changeforge_sdd_material_choice_gate.py",
+        "changeforge_session_bootstrap.py",
+        "changeforge_skill_index.py",
+        "changeforge_state_reducer.py",
+        "changeforge_stop_closure_gate.py",
+        "changeforge_subagent_review_gate.py",
+        "changeforge_subagent_skill_contract.py",
+        "changeforge_subagent_stop_reminder.py",
+        "changeforge_tool_output_boundary.py",
+        "changeforge_tool_output_boundary_gate.py",
+        "changeforge_user_prompt_route_reminder.py",
+    }
+)
+LEGACY_SUPPORT_FILES = frozenset(
+    {
+        "changeforge_professional_contract.md",
+        "changeforge_copilot_professional_contract.md",
+        "changeforge_copilot_skill_summary.md",
+    }
+)
+LEGACY_SUPPORT_DIRECTORIES = frozenset(
+    {"runtime_governance", "validation_broker", "repository_intelligence", "project_memory"}
+)
+CHANGEFORGE_HOOK_COMMAND_RE = re.compile(r"\bchangeforge_[A-Za-z0-9_]+\.py\b")
+MAX_ZIP_FILES = 500
+MAX_ZIP_BYTES = 5 * 1024 * 1024
+MAX_ZIP_FILE_BYTES = 2 * 1024 * 1024
 
 SOURCE_SKILL_ROOTS = {
     ("codex", "project"): ROOT / "dist" / "codex" / "project" / ".agents" / "skills",
@@ -38,153 +147,156 @@ SOURCE_SKILL_ROOTS = {
     ("cline", "project"): ROOT / "dist" / "cline" / "project" / ".cline" / "skills",
     ("cline", "user"): ROOT / "dist" / "cline" / "user" / ".cline" / "skills",
 }
-
-PROJECT_SUBPATHS = {
+SOURCE_PROFILE_ROOTS = {
+    ("codex", "project"): ROOT / "dist" / "codex" / "project" / ".codex" / "agents",
+    ("codex", "user"): ROOT / "dist" / "codex" / "user" / ".codex" / "agents",
+    ("codex", "admin"): ROOT / "dist" / "codex" / "admin" / "agents",
+    ("claude", "project"): ROOT / "dist" / "claude" / "project" / ".claude" / "agents",
+    ("claude", "user"): ROOT / "dist" / "claude" / "user" / ".claude" / "agents",
+    ("copilot", "project"): ROOT / "dist" / "copilot" / "project" / ".github" / "agents",
+    ("copilot", "user"): ROOT / "dist" / "copilot" / "user" / ".copilot" / "agents",
+}
+PROJECT_SKILL_SUBPATHS = {
     "codex": Path(".agents") / "skills",
     "claude": Path(".claude") / "skills",
     "copilot": Path(".github") / "skills",
     "cline": Path(".cline") / "skills",
 }
-
-DEFAULT_TARGET_DIRS = {
+PROJECT_PROFILE_SUBPATHS = {
+    "codex": Path(".codex") / "agents",
+    "claude": Path(".claude") / "agents",
+    "copilot": Path(".github") / "agents",
+}
+DEFAULT_SKILL_TARGETS = {
     ("codex", "user"): Path.home() / ".agents" / "skills",
     ("codex", "admin"): Path("/etc/codex/skills"),
     ("claude", "user"): Path.home() / ".claude" / "skills",
     ("copilot", "user"): Path.home() / ".copilot" / "skills",
     ("cline", "user"): Path.home() / ".cline" / "skills",
 }
-
-FOUNDATION_MODES = {
-    "recommended": "compiled-references",
-    "full": "compiled-references",
-    "dev": "top-level-and-compiled-references",
+DEFAULT_PROFILE_TARGETS = {
+    ("codex", "user"): Path.home() / ".codex" / "agents",
+    ("codex", "admin"): Path("/etc/codex/agents"),
+    ("claude", "user"): Path.home() / ".claude" / "agents",
+    ("copilot", "user"): Path.home() / ".copilot" / "agents",
 }
-
-# Project and user hook runtime. Supported Codex, Claude, and Copilot scopes are
-# installed by default unless the installer receives --without-hooks. The
-# default_compact hook profile keeps only high-value gates on the executable
-# path: session bootstrap, UserPrompt professional injection where supported,
-# pre-tool structure/material-choice/permission checks, one post-tool collector,
-# review-capsule subagent checks, real compaction events, and Stop closure.
-# Professional process gates are advisory/warn/monitor by default unless strict
-# CI/benchmark or maintainer policy explicitly asks for blocking. User-authored
-# hook entries are preserved while ChangeForge-managed entries are reconciled to
-# the current built template.
-HOOK_SOURCE_ROOTS = {
-    ("codex", "project"): ROOT / "dist" / "codex" / "project" / ".codex",
-    ("codex", "user"): ROOT / "dist" / "codex" / "user" / ".codex",
-    ("claude", "project"): ROOT / "dist" / "claude" / "project" / ".claude",
-    ("claude", "user"): ROOT / "dist" / "claude" / "user" / ".claude",
-    ("copilot", "project"): ROOT / "dist" / "copilot" / "project" / ".github",
-    ("copilot", "user"): ROOT / "dist" / "copilot" / "user" / ".copilot",
-}
-HOOK_AGENTS = ("codex", "claude", "copilot")
-HOOK_SCOPES = ("project", "user")
-# Project hooks install under the project root; user hooks install under the
-# agent home directory (Codex ~/.codex, Claude ~/.claude, Copilot ~/.copilot).
-HOOK_PROJECT_SUBPATH = {
-    "codex": Path(".codex"),
-    "claude": Path(".claude"),
-    "copilot": Path(".github"),
-}
-HOOK_USER_HOME_SUBDIR = {
-    "codex": Path(".codex"),
-    "claude": Path(".claude"),
-    "copilot": Path(".copilot"),
-}
-# Per-agent hook layout relative to the agent config root. Codex and Claude keep
-# scripts in hooks/ with the manifest and bootstrap fragment at the root. VS Code
-# Copilot loads every *.json in the hook folder, so the managed config lives at
-# hooks/changeforge-hooks.json while scripts, manifest, and bootstrap live in a
-# hooks/changeforge/ subfolder VS Code does not scan for config.
-HOOK_SCRIPTS_SUBDIR = {
-    "codex": Path("hooks"),
-    "claude": Path("hooks"),
-    "copilot": Path("hooks") / "changeforge",
-}
-HOOK_AUX_SUBDIR = {
-    "codex": Path("."),
-    "claude": Path("."),
-    "copilot": Path("hooks") / "changeforge",
-}
-HOOK_MANIFEST_NAME = ".changeforge-hook-manifest.json"
-COMMON_HOOK_SUPPORT_FILES = ("changeforge_professional_contract.md",)
-COPILOT_HOOK_SUPPORT_FILES = (
-    "changeforge_copilot_skill_summary.md",
-    "changeforge_copilot_professional_contract.md",
-)
-COMMON_HOOK_SUPPORT_PACKAGES = (
-    "validation_broker",
-    "runtime_governance",
-    "repository_intelligence",
-    "project_memory",
-)
-HOOK_SUPPORT_PACKAGE_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-CHANGEFORGE_HOOK_COMMAND_RE = re.compile(r"\bchangeforge_[A-Za-z0-9_]+\.py\b")
-
-# Advisory route-preflight bootstrap. The fragment is plain guidance text, not an
-# executable hook, so it can be installed for any project scope and never needs
-# to be trusted. It is also the bootstrap path for users who prefer not to trust
-# executable hooks.
-BOOTSTRAP_FRAGMENT_NAME = "changeforge-route-preflight.md"
-PROFESSIONAL_BOOTSTRAP_FRAGMENT_NAME = "changeforge-professional-contract.md"
-UNIVERSAL_BOOTSTRAP_SOURCE = (
-    ROOT / "dist" / "universal" / "bootstrap" / BOOTSTRAP_FRAGMENT_NAME
-)
-UNIVERSAL_PROFESSIONAL_BOOTSTRAP_SOURCE = (
-    ROOT / "dist" / "universal" / "bootstrap" / PROFESSIONAL_BOOTSTRAP_FRAGMENT_NAME
-)
-BOOTSTRAP_PROJECT_SUBPATH = Path(".changeforge")
-BOOTSTRAP_AGENTS = ("codex", "claude", "copilot", "cline")
 
 
 class InstallError(Exception):
-    """Raised for unsafe or unsupported install operations."""
+    """Raised for unsafe or unsupported installation operations."""
 
 
-@dataclass
-class HookPlan:
-    """Describes how project hooks would be installed without writing anything."""
-
-    agent: str
-    source_root: Path
-    target_root: Path
-    script_actions: list[tuple[Path, Path, str]] = field(default_factory=list)
-    support_actions: list[tuple[Path, Path, str]] = field(default_factory=list)
-    support_package_actions: list[tuple[Path, Path, str]] = field(default_factory=list)
-    manifest_action: tuple[Path, Path, str] | None = None
-    bootstrap_action: tuple[Path, Path, str] | None = None
-    config_target: Path | None = None
-    config_payload: dict[str, Any] | None = None
-    config_summary: list[str] = field(default_factory=list)
-    notes: list[str] = field(default_factory=list)
+@dataclass(frozen=True)
+class InstallTargets:
+    skills: Path
+    profiles: Path | None
 
 
-@dataclass
-class HookUninstallPlan:
-    """Describes managed hook runtime files to remove from an agent config root."""
-
-    agent: str
-    scope: str
-    target_root: Path
-    files: list[Path] = field(default_factory=list)
-    directories: list[Path] = field(default_factory=list)
-    config_target: Path | None = None
-    config_payload: dict[str, Any] | None = None
-    config_remove: bool = False
-    config_summary: list[str] = field(default_factory=list)
-    empty_dir_stops: list[tuple[Path, Path]] = field(default_factory=list)
-    notes: list[str] = field(default_factory=list)
+def _path_lexists(path: Path) -> bool:
+    """Return true for regular paths and for live or dangling symlinks."""
+    return path.exists() or path.is_symlink()
 
 
-@dataclass
-class BootstrapUninstallPlan:
-    """Describes standalone advisory bootstrap fragments to remove."""
+def _reject_symlink(path: Path, context: str) -> None:
+    if path.is_symlink():
+        raise InstallError(f"refusing to follow {context} symlink {path}")
 
-    project_root: Path
-    files: list[Path] = field(default_factory=list)
-    empty_dir_stops: list[tuple[Path, Path]] = field(default_factory=list)
-    notes: list[str] = field(default_factory=list)
+
+def _ensure_parent_within(path: Path, roots: list[Path], context: str) -> None:
+    """Reject an ancestor symlink that redirects a managed child outside its roots."""
+    try:
+        parent = path.parent.resolve(strict=False)
+        resolved_roots = [root.expanduser().resolve(strict=False) for root in roots]
+    except (OSError, RuntimeError) as exc:
+        raise InstallError(f"cannot resolve {context} path {path}: {exc}") from exc
+    if not any(parent == root or parent.is_relative_to(root) for root in resolved_roots):
+        raise InstallError(f"refusing {context} path outside its managed root: {path}")
+
+
+def _ensure_path_within(path: Path, root: Path, context: str) -> None:
+    """Reject a managed root or one of its ancestors when it redirects outside."""
+    try:
+        resolved = path.expanduser().resolve(strict=False)
+        resolved_root = root.expanduser().resolve(strict=False)
+    except (OSError, RuntimeError) as exc:
+        raise InstallError(f"cannot resolve {context} path {path}: {exc}") from exc
+    if resolved != resolved_root and not resolved.is_relative_to(resolved_root):
+        raise InstallError(f"refusing {context} path outside its managed root: {path}")
+
+
+def _reject_symlink_chain(path: Path, root: Path, context: str) -> None:
+    """Reject symlinks in a lexically bounded built-source path."""
+    absolute_path = path.expanduser().absolute()
+    absolute_root = root.expanduser().absolute()
+    try:
+        relative = absolute_path.relative_to(absolute_root)
+    except ValueError as exc:
+        raise InstallError(f"refusing {context} outside {absolute_root}: {path}") from exc
+    current = absolute_root
+    _reject_symlink(current, context)
+    for part in relative.parts:
+        current = current / part
+        _reject_symlink(current, context)
+
+
+def _path_forms(path: Path, context: str) -> tuple[Path, Path]:
+    """Return normalized lexical and symlink-resolved forms without mutating paths."""
+    try:
+        expanded = path.expanduser()
+        lexical = Path(os.path.abspath(os.fspath(expanded)))
+        resolved = expanded.resolve(strict=False)
+    except (OSError, RuntimeError) as exc:
+        raise InstallError(f"cannot resolve {context} path {path}: {exc}") from exc
+    return lexical, resolved
+
+
+def _paths_overlap(left: Path, right: Path) -> bool:
+    return (
+        left == right
+        or left.is_relative_to(right)
+        or right.is_relative_to(left)
+    )
+
+
+def validate_install_path_separation(
+    source: Path,
+    source_profiles: Path | None,
+    targets: InstallTargets,
+) -> None:
+    """Reject equal or ancestor-related build sources and install targets.
+
+    Both lexical paths and symlink-resolved paths are checked. This preflight
+    must run before backup, legacy cleanup, replacement, or manifest writes so
+    an install can never delete or overwrite the build artifacts it is copying.
+    """
+    paths = [
+        ("built Skill source", source),
+        *(
+            [("built Agent Profile source", source_profiles)]
+            if source_profiles is not None
+            else []
+        ),
+        ("Skill target", targets.skills),
+        *(
+            [("Agent Profile target", targets.profiles)]
+            if targets.profiles is not None
+            else []
+        ),
+    ]
+    normalized = [
+        (label, path, _path_forms(path, label))
+        for label, path in paths
+    ]
+    for index, (left_label, left_path, left_forms) in enumerate(normalized):
+        for right_label, right_path, right_forms in normalized[index + 1:]:
+            if any(
+                _paths_overlap(left_form, right_form)
+                for left_form, right_form in zip(left_forms, right_forms)
+            ):
+                raise InstallError(
+                    f"unsafe overlapping install paths: {left_label} {left_path} "
+                    f"and {right_label} {right_path} must be disjoint"
+                )
 
 
 def source_version() -> str:
@@ -206,39 +318,16 @@ def utc_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def supported_scopes(agent: str) -> tuple[str, ...]:
-    if agent == "openai-api":
-        return ("project", "user", "admin")
-    return tuple(scope for candidate, scope in SOURCE_SKILL_ROOTS if candidate == agent)
-
-
 def validate_agent_scope(agent: str, scope: str) -> None:
     if agent not in AGENTS:
         raise InstallError(f"unsupported agent: {agent}")
     if scope not in SCOPES:
         raise InstallError(f"unsupported scope: {scope}")
-    if agent != "openai-api" and (agent, scope) not in SOURCE_SKILL_ROOTS:
-        scopes = ", ".join(supported_scopes(agent))
-        raise InstallError(f"{agent} supports scope(s): {scopes}")
-
-
-def resolve_target_dir(agent: str, scope: str, target: Path | None) -> Path:
-    validate_agent_scope(agent, scope)
     if agent == "openai-api":
-        return ROOT / "dist" / "openai-api" / "zips"
-
-    if scope == "project":
-        if target is None:
-            raise InstallError("--target is required for project installs")
-        return target.expanduser().resolve() / PROJECT_SUBPATHS[agent]
-
-    if target is not None:
-        return target.expanduser().resolve()
-
-    default = DEFAULT_TARGET_DIRS.get((agent, scope))
-    if default is None:
-        raise InstallError(f"{agent} {scope} installs are not supported")
-    return default.expanduser()
+        return
+    if (agent, scope) not in SOURCE_SKILL_ROOTS:
+        supported = ", ".join(sorted(value for name, value in SOURCE_SKILL_ROOTS if name == agent))
+        raise InstallError(f"{agent} supports scope(s): {supported}")
 
 
 def resolve_source_profile_dir(agent: str, scope: str, profile: str) -> Path:
@@ -246,45 +335,324 @@ def resolve_source_profile_dir(agent: str, scope: str, profile: str) -> Path:
     if profile not in PROFILES:
         raise InstallError(f"unsupported profile: {profile}")
     if agent == "openai-api":
-        source_root = ROOT / "dist" / "openai-api" / "zips" / profile
-        if not source_root.is_dir():
-            raise InstallError(
-                f"missing OpenAI API zip profile {source_root.relative_to(ROOT)}; "
-                f"run python3 scripts/build.py --profile {profile}"
-            )
-        return source_root
-    source_root = SOURCE_SKILL_ROOTS[(agent, scope)] / profile
-    if not source_root.is_dir():
+        source = ROOT / "dist" / "openai-api" / "zips" / profile
+    else:
+        source = SOURCE_SKILL_ROOTS[(agent, scope)] / profile
+    if not source.is_dir():
         raise InstallError(
-            f"missing built profile {source_root.relative_to(ROOT)}; "
+            f"missing built profile {source.relative_to(ROOT)}; "
             f"run python3 scripts/build.py --profile {profile}"
         )
-    return source_root
+    return source
+
+
+def validate_openai_bundles(profile: str, source: Path) -> int:
+    _reject_symlink_chain(source, ROOT / "dist", "OpenAI API bundle root")
+    _ensure_path_within(source, ROOT / "dist", "OpenAI API bundle root")
+    expected_count = EXPECTED_PROFILE_COUNTS[profile]
+    zips = sorted(source.glob("*.zip"))
+    if len(zips) != expected_count:
+        raise InstallError(f"expected {expected_count} OpenAI API zip files, found {len(zips)}")
+    manifest_root = ROOT / "dist" / "universal" / "skills" / profile
+    manifest = read_build_manifest(manifest_root)
+    validate_authoritative_build_inputs(manifest)
+    validate_build_core_model(manifest)
+    declared = set(manifest.get("top_level_skills") or [])
+    if declared != {path.stem for path in zips}:
+        raise InstallError("OpenAI API zip names do not match the built Skill manifest")
+    for path in zips:
+        _reject_symlink(path, "OpenAI API bundle")
+        _validate_openai_bundle(path)
+    return len(zips)
+
+
+def _validate_openai_bundle(path: Path) -> None:
+    try:
+        with zipfile.ZipFile(path) as archive:
+            entries = [item for item in archive.infolist() if item.filename]
+            members = [item for item in entries if not item.is_dir()]
+            names = [item.filename for item in members]
+            if not names or len(names) > MAX_ZIP_FILES:
+                raise InstallError(f"OpenAI API zip {path} has an invalid file count")
+            if len(names) != len(set(names)):
+                raise InstallError(f"OpenAI API zip {path} contains duplicate file names")
+            for entry in entries:
+                name = entry.filename
+                member_path = PurePosixPath(name)
+                if (
+                    "\\" in name
+                    or member_path.is_absolute()
+                    or ".." in member_path.parts
+                    or not member_path.parts
+                ):
+                    raise InstallError(f"OpenAI API zip {path} contains an unsafe path")
+            top_levels = {PurePosixPath(item.filename).parts[0] for item in entries}
+            if top_levels != {path.stem}:
+                raise InstallError(
+                    f"OpenAI API zip {path} must contain one matching top-level folder"
+                )
+            skill_entries = [name for name in names if name.endswith("/SKILL.md")]
+            if len(skill_entries) != 1 or skill_entries[0] != f"{path.stem}/SKILL.md":
+                raise InstallError(
+                    f"OpenAI API zip {path} must contain exactly one root SKILL.md"
+                )
+            if any(item.file_size > MAX_ZIP_FILE_BYTES for item in members):
+                raise InstallError(f"OpenAI API zip {path} contains an oversized file")
+            if sum(item.file_size for item in members) > MAX_ZIP_BYTES:
+                raise InstallError(f"OpenAI API zip {path} exceeds the uncompressed size limit")
+            bad_member = archive.testzip()
+            if bad_member is not None:
+                raise InstallError(
+                    f"OpenAI API zip {path} failed CRC validation at {bad_member}"
+                )
+    except InstallError:
+        raise
+    except (EOFError, OSError, RuntimeError, zipfile.BadZipFile, zlib.error) as exc:
+        raise InstallError(f"invalid OpenAI API zip {path}: {exc}") from exc
+
+
+def resolve_targets(agent: str, scope: str, target: Path | None) -> InstallTargets:
+    validate_agent_scope(agent, scope)
+    if agent == "openai-api":
+        raise InstallError("openai-api uses zip output and has no installation target")
+    if scope == "project":
+        if target is None:
+            raise InstallError("--target is required for project installs")
+        project = target.expanduser().resolve()
+        skills = project / PROJECT_SKILL_SUBPATHS[agent]
+        profile_subpath = PROJECT_PROFILE_SUBPATHS.get(agent)
+        profiles = project / profile_subpath if profile_subpath is not None else None
+        _ensure_path_within(skills, project, "project Skill target")
+        if profiles is not None:
+            _ensure_path_within(profiles, project, "project Agent Profile target")
+        return InstallTargets(
+            skills=skills,
+            profiles=profiles,
+        )
+    skill_target = target.expanduser().resolve() if target is not None else DEFAULT_SKILL_TARGETS[(agent, scope)]
+    profiles = DEFAULT_PROFILE_TARGETS.get((agent, scope))
+    if target is None:
+        boundary = Path("/etc/codex") if scope == "admin" else Path.home()
+        _ensure_path_within(skill_target, boundary, f"{scope} Skill target")
+    if profiles is not None:
+        boundary = Path("/etc/codex") if scope == "admin" else Path.home()
+        _ensure_path_within(profiles, boundary, f"{scope} Agent Profile target")
+    return InstallTargets(skills=skill_target, profiles=profiles)
+
+
+def resolve_source_profiles(agent: str, scope: str) -> Path | None:
+    return SOURCE_PROFILE_ROOTS.get((agent, scope))
 
 
 def list_skill_dirs(root: Path) -> list[Path]:
     if not root.is_dir():
         return []
     return [
-        path
-        for path in sorted(root.iterdir())
-        if path.is_dir() and not path.name.startswith(".")
+        path for path in sorted(root.iterdir())
+        if path.is_dir() and not path.name.startswith(".") and (path / "SKILL.md").is_file()
     ]
 
 
+def list_profile_files(root: Path | None) -> list[Path]:
+    if root is None or not root.is_dir():
+        return []
+    return [path for path in sorted(root.iterdir()) if path.is_file()]
+
+
+def profile_role_from_filename(value: str) -> str:
+    if value.endswith(".agent.md"):
+        return value.removesuffix(".agent.md")
+    return Path(value).stem
+
+
+def profile_file_sha256(root: Path | None, agent: str) -> dict[str, str]:
+    if root is None:
+        return {}
+    extension = {"codex": ".toml", "claude": ".md", "copilot": ".agent.md"}[agent]
+    digests: dict[str, str] = {}
+    for role in AGENT_PROFILE_NAMES:
+        path = root / f"{role}{extension}"
+        if path.is_symlink():
+            raise InstallError(f"managed Agent Profile must not be a symlink: {path}")
+        if path.is_file():
+            digests[role] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return digests
+
+
+def validate_built_source(
+    agent: str,
+    profile: str,
+    source: Path,
+    source_profiles: Path | None,
+) -> dict[str, Any]:
+    """Fail before any target mutation when built delivery is incomplete."""
+    _reject_symlink_chain(source, ROOT / "dist", "built Skill source")
+    _ensure_path_within(source, ROOT / "dist", "built Skill source")
+    source_symlinks = [path for path in source.rglob("*") if path.is_symlink()]
+    if source_symlinks:
+        raise InstallError(
+            f"built Skill source cannot contain symlinks: {source_symlinks[0]}"
+        )
+    build = read_build_manifest(source)
+    validate_authoritative_build_inputs(build)
+    validate_build_core_model(build)
+    enforcement = read_host_enforcement_source()
+    if build.get("agent_profile_enforcement") != enforcement["hosts"]:
+        raise InstallError("build manifest host enforcement matrix is stale or invalid")
+    enforcement_source = build.get("agent_profile_enforcement_source")
+    expected_digest = hashlib.sha256(HOST_ENFORCEMENT_SOURCE.read_bytes()).hexdigest()
+    if (
+        not isinstance(enforcement_source, dict)
+        or enforcement_source.get("schema_version") != enforcement["schema_version"]
+        or enforcement_source.get("sha256") != expected_digest
+    ):
+        raise InstallError("build manifest host enforcement source digest is stale or invalid")
+    if build.get("profile") != profile:
+        raise InstallError(f"built profile is {build.get('profile')!r}, expected {profile!r}")
+    expected_count = EXPECTED_PROFILE_COUNTS[profile]
+    declared = build.get("top_level_skills")
+    if not isinstance(declared, list) or any(not isinstance(name, str) or not _valid_skill_name(name) for name in declared):
+        raise InstallError("build manifest has invalid top_level_skills")
+    declared_names = set(declared)
+    actual_names = {path.name for path in list_skill_dirs(source)}
+    visible_directories = {
+        path.name for path in source.iterdir()
+        if path.is_dir() and not path.name.startswith(".")
+    }
+    if len(declared) != len(declared_names) or len(declared_names) != expected_count:
+        raise InstallError(f"build manifest must declare exactly {expected_count} unique Skills")
+    if actual_names != declared_names or visible_directories != declared_names:
+        raise InstallError("built Skill directories do not match the build manifest")
+    if source_profiles is not None:
+        _reject_symlink_chain(
+            source_profiles,
+            ROOT / "dist",
+            "built Agent Profile root",
+        )
+        _ensure_path_within(
+            source_profiles,
+            ROOT / "dist",
+            "built Agent Profile source",
+        )
+        extension = {"codex": ".toml", "claude": ".md", "copilot": ".agent.md"}[agent]
+        expected_files = {f"{name}{extension}" for name in AGENT_PROFILE_NAMES}
+        profile_entries = list(source_profiles.iterdir())
+        if any(path.is_symlink() for path in profile_entries):
+            raise InstallError("built Agent Profile directory cannot contain symlinks")
+        profile_paths = [path for path in profile_entries if path.is_file()]
+        actual_files = {path.name for path in profile_paths}
+        if actual_files != expected_files or {path.name for path in profile_entries} != expected_files:
+            raise InstallError("built Agent Profile directory must contain exactly the four profile files")
+        if set(build.get("agent_profiles") or []) != set(AGENT_PROFILE_NAMES):
+            raise InstallError("build manifest must declare exactly the four Agent Profiles")
+        declared_digests = build.get("agent_profile_sha256")
+        expected_digests = (
+            declared_digests.get(agent) if isinstance(declared_digests, dict) else None
+        )
+        actual_digests = profile_file_sha256(source_profiles, agent)
+        if expected_digests != actual_digests:
+            raise InstallError("built Agent Profile digests do not match the build manifest")
+    return build
+
+
+def validate_authoritative_build_inputs(build: dict[str, Any]) -> None:
+    """Use the build authority's sole comparator and fail closed if unavailable."""
+
+    validation_path = ROOT / "scripts" / "validation_utils.py"
+    if not validation_path.is_file():
+        raise InstallError(
+            "authoritative build input comparator is unavailable; source freshness is unverified"
+        )
+    module_name = "changeforge_installer_authoritative_build_inputs"
+    spec = importlib.util.spec_from_file_location(module_name, validation_path)
+    if spec is None or spec.loader is None:
+        raise InstallError("cannot load authoritative build input comparator")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    try:
+        spec.loader.exec_module(module)
+        errors = module.authoritative_build_input_snapshot_errors(
+            build.get("authoritative_build_inputs"),
+            ROOT,
+        )
+    except Exception as exc:
+        raise InstallError(
+            f"authoritative build input freshness validation failed: {exc}"
+        ) from exc
+    finally:
+        sys.modules.pop(module_name, None)
+    if errors:
+        raise InstallError("; ".join(str(error) for error in errors))
+
+
+def validated_built_profile_sha256(
+    agent: str, scope: str, profile: str
+) -> dict[str, str]:
+    """Return Profile digests anchored in the current validated build output."""
+
+    source = resolve_source_profile_dir(agent, scope, profile)
+    source_profiles = resolve_source_profiles(agent, scope)
+    build = validate_built_source(agent, profile, source, source_profiles)
+    build_script = ROOT / "scripts" / "build.py"
+    spec = importlib.util.spec_from_file_location(
+        "changeforge_doctor_source_renderer", build_script
+    )
+    if spec is None or spec.loader is None:
+        raise InstallError("cannot load the current Agent Profile renderer")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    scripts_path = str(ROOT / "scripts")
+    inserted_scripts_path = scripts_path not in sys.path
+    if inserted_scripts_path:
+        sys.path.insert(0, scripts_path)
+    try:
+        spec.loader.exec_module(module)
+        source_digests = module._agent_profile_digests(
+            module._load_agent_profiles(), module._load_host_enforcement()
+        )
+    except Exception as exc:
+        raise InstallError(f"cannot render current authoritative Agent Profiles: {exc}") from exc
+    finally:
+        if inserted_scripts_path:
+            sys.path.remove(scripts_path)
+    digests = build.get("agent_profile_sha256")
+    expected = digests.get(agent) if isinstance(digests, dict) else None
+    if not isinstance(expected, dict) or set(expected) != set(AGENT_PROFILE_NAMES):
+        raise InstallError("validated build has no complete Agent Profile digest map")
+    rendered = source_digests.get(agent)
+    if expected != rendered:
+        raise InstallError(
+            "validated build Agent Profile digests differ from the current source renderer"
+        )
+    return {str(role): str(digest) for role, digest in rendered.items()}
+
+
+def validated_built_core_model(agent: str, scope: str, profile: str) -> dict[str, Any]:
+    """Return core-model metadata anchored in the current validated build."""
+
+    source = resolve_source_profile_dir(agent, scope, profile)
+    source_profiles = resolve_source_profiles(agent, scope)
+    build = validate_built_source(agent, profile, source, source_profiles)
+    return dict(validate_build_core_model(build))
+
+
 def load_json(path: Path) -> dict[str, Any] | None:
+    _reject_symlink(path, "JSON")
     if not path.is_file():
         return None
     try:
-        loaded = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise InstallError(f"{path} contains invalid JSON: {exc}") from exc
-    if not isinstance(loaded, dict):
+    if not isinstance(value, dict):
         raise InstallError(f"{path} must contain a JSON object")
-    return loaded
+    return value
 
 
 def write_json(path: Path, value: dict[str, Any]) -> None:
+    _reject_symlink(path, "JSON")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    _reject_symlink(path, "JSON")
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
@@ -293,61 +661,318 @@ def read_manifest(target_dir: Path) -> dict[str, Any] | None:
 
 
 def read_build_manifest(source_dir: Path) -> dict[str, Any]:
-    manifest = load_json(source_dir / BUILD_MANIFEST_NAME)
-    if manifest is None:
-        raise InstallError(f"{source_dir.relative_to(ROOT)} is missing {BUILD_MANIFEST_NAME}")
-    return manifest
+    value = load_json(source_dir / BUILD_MANIFEST_NAME)
+    if value is None:
+        raise InstallError(f"{source_dir} is missing {BUILD_MANIFEST_NAME}")
+    if value.get("architecture") != "hookless-control-plane-v1":
+        raise InstallError(f"{source_dir} is not a hookless ChangeForge build")
+    if value.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
+        raise InstallError(
+            f"{source_dir} compiled_layer3_format must equal "
+            f"{COMPILED_LAYER3_FORMAT!r}"
+        )
+    return value
 
 
-def skill_metadata(skill_dir: Path) -> dict[str, Any]:
-    skill_file = skill_dir / "SKILL.md"
-    if not skill_file.is_file():
-        raise InstallError(f"{skill_dir} is missing SKILL.md")
-    try:
-        metadata, _raw_frontmatter, _body = parse_frontmatter(skill_file)
-    except ValidationProblem as exc:
-        raise InstallError(str(exc)) from exc
-    return metadata
+def read_core_contract_source() -> dict[str, Any]:
+    """Read the authoritative core model needed to validate delivery metadata."""
+
+    value = load_json(CORE_CONTRACTS_SOURCE)
+    if (
+        value is None
+        or value.get("schema_version") != 1
+        or value.get("kind") != "changeforge.core_contracts"
+    ):
+        raise InstallError(
+            "authoritative core model must use changeforge.core_contracts schema 1"
+        )
+    prompt = value.get("prompt_contract")
+    branches = prompt.get("host_mode_branches") if isinstance(prompt, dict) else None
+    if not isinstance(branches, list) or not branches:
+        raise InstallError("authoritative core model has no host-mode contracts")
+    fields: set[str] = set()
+    for contract in branches:
+        if not isinstance(contract, dict):
+            raise InstallError("authoritative core model has an invalid host-mode contract")
+        field = contract.get("field")
+        modes = contract.get("branches")
+        if not isinstance(field, str) or not field or field in fields:
+            raise InstallError("authoritative core model has duplicate host-mode fields")
+        if not isinstance(modes, list) or not modes:
+            raise InstallError(f"authoritative core model host mode {field!r} is empty")
+        values = [mode.get("value") for mode in modes if isinstance(mode, dict)]
+        if (
+            len(values) != len(modes)
+            or any(not isinstance(item, str) or not item for item in values)
+            or len(values) != len(set(values))
+        ):
+            raise InstallError(
+                f"authoritative core model host mode {field!r} has invalid values"
+            )
+        fields.add(field)
+    if fields != {"diff_input_mode", "validation_mode"}:
+        raise InstallError("authoritative core model host-mode fields are incomplete")
+    return value
 
 
-def classify_source_skills(skill_dirs: list[Path]) -> dict[str, list[str]]:
-    names = {
-        "professional_skills": [],
-        "foundation_capabilities": [],
-        "domain_extensions": [],
-        "all": [],
+def core_model_metadata() -> dict[str, Any]:
+    """Return the exact source digest contract copied through build and install."""
+
+    value = read_core_contract_source()
+    return {
+        "path": CORE_CONTRACTS_SOURCE.relative_to(ROOT).as_posix(),
+        "schema_version": value["schema_version"],
+        "kind": value["kind"],
+        "sha256": hashlib.sha256(CORE_CONTRACTS_SOURCE.read_bytes()).hexdigest(),
     }
-    for skill_dir in skill_dirs:
-        metadata = skill_metadata(skill_dir)
-        name = str(metadata.get("name") or skill_dir.name)
-        kind = metadata.get("changeforge_kind")
-        names["all"].append(name)
-        if kind == "domain-extension":
-            names["domain_extensions"].append(name)
-        elif kind == "foundation-capability":
-            names["foundation_capabilities"].append(name)
-        else:
-            names["professional_skills"].append(name)
-
-    for key, values in names.items():
-        names[key] = sorted(values)
-    return names
 
 
-def managed_names(manifest: dict[str, Any] | None) -> set[str]:
+def validate_build_core_model(build: dict[str, Any]) -> dict[str, Any]:
+    expected = core_model_metadata()
+    if build.get("core_model") != expected:
+        raise InstallError("build manifest core model digest is stale or invalid")
+    return expected
+
+
+def _host_mode_values() -> dict[str, set[str]]:
+    core = read_core_contract_source()
+    return {
+        contract["field"]: {branch["value"] for branch in contract["branches"]}
+        for contract in core["prompt_contract"]["host_mode_branches"]
+    }
+
+
+def read_host_enforcement_source() -> dict[str, Any]:
+    value = load_json(HOST_ENFORCEMENT_SOURCE)
+    if value is None or value.get("schema_version") != 3:
+        raise InstallError("host enforcement source must use schema_version 3")
+    statuses = value.get("status_values")
+    if not isinstance(statuses, list) or set(statuses) != ENFORCEMENT_STATUSES:
+        raise InstallError("host enforcement source has an invalid status enum")
+    hosts = value.get("hosts")
+    if not isinstance(hosts, dict) or set(hosts) != set(AGENTS):
+        raise InstallError("host enforcement source must contain every supported agent")
+    expected_host_fields = HOST_ENFORCEMENT_CAPABILITIES | {
+        "diff_input_mode",
+        "validation_mode",
+        "roles",
+    }
+    host_mode_values = _host_mode_values()
+    for agent in AGENTS:
+        entry = hosts[agent]
+        if not isinstance(entry, dict) or set(entry) != expected_host_fields:
+            raise InstallError(f"{agent}: host enforcement fields must match schema v3")
+        for capability in HOST_ENFORCEMENT_CAPABILITIES:
+            if entry.get(capability) not in ENFORCEMENT_STATUSES:
+                raise InstallError(f"{agent}: invalid {capability} enforcement")
+        diff_input_mode = entry.get("diff_input_mode")
+        validation_mode = entry.get("validation_mode")
+        utility_no_edit = entry.get("utility_no_edit")
+        if diff_input_mode not in host_mode_values["diff_input_mode"]:
+            raise InstallError(f"{agent}: invalid diff_input_mode")
+        if validation_mode not in host_mode_values["validation_mode"]:
+            raise InstallError(f"{agent}: invalid validation_mode")
+        if utility_no_edit not in ENFORCEMENT_STATUSES:
+            raise InstallError(f"{agent}: invalid utility_no_edit enforcement")
+        roles = entry.get("roles")
+        if not isinstance(roles, dict) or set(roles) != set(AGENT_PROFILE_NAMES):
+            raise InstallError(f"{agent}: enforcement roles must be the four static Profiles")
+        for role, role_entry in roles.items():
+            if not isinstance(role_entry, dict):
+                raise InstallError(f"{agent}:{role}: enforcement entry must be an object")
+            for capability in ROLE_ENFORCEMENT_CAPABILITIES:
+                if role_entry.get(capability) not in ENFORCEMENT_STATUSES:
+                    raise InstallError(f"{agent}:{role}: invalid {capability} enforcement")
+            if not isinstance(role_entry.get("rendered_tools"), list):
+                raise InstallError(f"{agent}:{role}: rendered_tools must be a list")
+            if not isinstance(role_entry.get("limitations"), list):
+                raise InstallError(f"{agent}:{role}: limitations must be a list")
+    return value
+
+
+def host_enforcement_for_agent(agent: str) -> dict[str, Any]:
+    if agent not in AGENTS:
+        raise InstallError(f"unsupported agent {agent!r}")
+    return dict(read_host_enforcement_source()["hosts"][agent])
+
+
+def _manifest_names(
+    manifest: dict[str, Any] | None,
+    field: str,
+    validator: Any,
+) -> set[str]:
     if not manifest:
         return set()
+    values = manifest.get(field)
+    if values is None:
+        return set()
+    if not isinstance(values, list):
+        raise InstallError(f"install manifest field {field} must be a list")
     names: set[str] = set()
-    for key in (
-        "installed_skills",
-        "installed_professional_skills",
-        "installed_domain_extensions",
-        "installed_foundation_capabilities",
-    ):
-        value = manifest.get(key, [])
-        if isinstance(value, list):
-            names.update(str(item) for item in value if isinstance(item, str))
+    for value in values:
+        if not isinstance(value, str) or not validator(value):
+            raise InstallError(f"install manifest field {field} contains unsafe name {value!r}")
+        names.add(value)
     return names
+
+
+def _valid_skill_name(value: str) -> bool:
+    return bool(SKILL_NAME_RE.fullmatch(value)) and Path(value).name == value
+
+
+def _valid_profile_file_name(value: str) -> bool:
+    path = Path(value)
+    if value.endswith(".agent.md"):
+        profile_name = value.removesuffix(".agent.md")
+    elif path.suffix in {".toml", ".md"}:
+        profile_name = path.stem
+    else:
+        return False
+    return (
+        path.name == value
+        and profile_name in AGENT_PROFILE_NAMES
+    )
+
+
+def managed_skill_names(manifest: dict[str, Any] | None) -> set[str]:
+    return _manifest_names(manifest, "installed_skills", _valid_skill_name)
+
+
+def managed_profile_files(manifest: dict[str, Any] | None) -> set[str]:
+    return _manifest_names(manifest, "installed_agent_profile_files", _valid_profile_file_name)
+
+
+def _safe_child(root: Path, name: str, *, profile: bool = False) -> Path:
+    valid = _valid_profile_file_name(name) if profile else _valid_skill_name(name)
+    if not valid:
+        raise InstallError(f"unsafe managed artifact name {name!r}")
+    return root / name
+
+
+def find_unmanaged_conflicts(target: Path, names: set[str], managed: set[str]) -> list[str]:
+    conflicts: list[str] = []
+    for name in names:
+        if Path(name).name != name or name in {".", ".."}:
+            raise InstallError(f"unsafe artifact name {name!r}")
+        if _path_lexists(target / name) and name not in managed:
+            conflicts.append(name)
+    return sorted(conflicts)
+
+
+def backup_existing(
+    targets: InstallTargets,
+    skill_names: set[str],
+    profile_names: set[str],
+    action: str,
+    dry_run: bool,
+    extra_paths: list[Path] | None = None,
+) -> Path | None:
+    existing_skills = [
+        path for name in sorted(skill_names)
+        if _path_lexists(path := _safe_child(targets.skills, name))
+    ]
+    existing_profiles = []
+    if targets.profiles is not None:
+        existing_profiles = [
+            path for name in sorted(profile_names)
+            if _path_lexists(path := _safe_child(targets.profiles, name, profile=True))
+        ]
+    manifest = targets.skills / MANIFEST_NAME
+    if _path_lexists(manifest):
+        existing_skills.append(manifest)
+    extras = [path for path in (extra_paths or []) if _path_lexists(path)]
+    if not existing_skills and not existing_profiles and not extras:
+        return None
+
+    for path in existing_skills:
+        _reject_symlink(path, "managed backup source")
+    for path in existing_profiles:
+        _reject_symlink(path, "managed Profile backup source")
+    for path in extras:
+        _reject_symlink(path, "legacy backup source")
+
+    backup_root = targets.skills / BACKUP_DIR_NAME
+    _reject_symlink(backup_root, "backup root")
+    backup = backup_root / f"{action}-{utc_stamp()}"
+    _ensure_parent_within(backup, [targets.skills], "backup")
+    if _path_lexists(backup):
+        raise InstallError(f"backup destination already exists: {backup}")
+    if dry_run:
+        return backup
+    (backup / "skills").mkdir(parents=True, exist_ok=False)
+    for path in existing_skills:
+        destination = backup / "skills" / path.name
+        if path.is_dir():
+            shutil.copytree(path, destination)
+        else:
+            shutil.copy2(path, destination)
+    if existing_profiles:
+        (backup / "profiles").mkdir(parents=True)
+        for path in existing_profiles:
+            shutil.copy2(path, backup / "profiles" / path.name)
+    if extras:
+        (backup / "legacy").mkdir(parents=True)
+        seen: set[Path] = set()
+        for index, path in enumerate(extras, start=1):
+            resolved = path.resolve()
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            destination = backup / "legacy" / f"{index:03d}-{path.name}"
+            if path.is_dir():
+                shutil.copytree(path, destination)
+            else:
+                shutil.copy2(path, destination)
+    return backup
+
+
+def replace_skills(source: Path, target: Path, remove_names: set[str], dry_run: bool) -> None:
+    if dry_run:
+        return
+    target.mkdir(parents=True, exist_ok=True)
+    for name in sorted(remove_names):
+        path = _safe_child(target, name)
+        if path.is_symlink():
+            path.unlink()
+        elif path.is_dir():
+            shutil.rmtree(path)
+        elif path.exists():
+            raise InstallError(f"managed Skill path is not a directory: {path}")
+    for source_dir in list_skill_dirs(source):
+        shutil.copytree(source_dir, target / source_dir.name)
+
+
+def replace_profiles(
+    source: Path | None,
+    target: Path | None,
+    remove_names: set[str],
+    dry_run: bool,
+) -> list[str]:
+    if source is not None:
+        _reject_symlink(source, "built Agent Profile root")
+    source_files = list_profile_files(source)
+    if not source_files or target is None:
+        return []
+    for source_file in source_files:
+        _reject_symlink(source_file, "built Agent Profile source")
+    if not dry_run:
+        target.mkdir(parents=True, exist_ok=True)
+        for name in sorted(remove_names):
+            path = _safe_child(target, name, profile=True)
+            if path.is_symlink():
+                path.unlink()
+            elif path.exists() and path.is_file():
+                path.unlink()
+            elif path.exists():
+                raise InstallError(f"managed Agent Profile path is not a file: {path}")
+        for source_file in source_files:
+            destination = _safe_child(target, source_file.name, profile=True)
+            if _path_lexists(destination):
+                raise InstallError(f"Agent Profile destination was not cleared: {destination}")
+            shutil.copy2(source_file, destination)
+            if hashlib.sha256(source_file.read_bytes()).digest() != hashlib.sha256(destination.read_bytes()).digest():
+                raise InstallError(f"installed Agent Profile digest mismatch: {destination}")
+    return [path.name for path in source_files]
 
 
 def make_manifest(
@@ -355,834 +980,386 @@ def make_manifest(
     agent: str,
     scope: str,
     profile: str,
-    target_dir: Path,
+    targets: InstallTargets,
     source_dir: Path,
+    profile_files: list[str],
     backup_path: Path | None,
 ) -> dict[str, Any]:
-    skill_dirs = list_skill_dirs(source_dir)
-    classified = classify_source_skills(skill_dirs)
-    versions: dict[str, str] = {}
-    for skill_dir in skill_dirs:
-        metadata = skill_metadata(skill_dir)
-        name = str(metadata.get("name") or skill_dir.name)
-        version = metadata.get("changeforge_version")
-        versions[name] = str(version) if version is not None else "unknown"
-
-    build_manifest = read_build_manifest(source_dir)
+    build = read_build_manifest(source_dir)
+    validate_build_core_model(build)
+    installed = [path.name for path in list_skill_dirs(source_dir)]
+    installed_set = set(installed)
+    def present(key: str) -> list[str]:
+        values = build.get(key)
+        return sorted(str(value) for value in values or [] if str(value) in installed_set)
     return {
+        "architecture": "hookless-control-plane-v1",
+        "compiled_layer3_format": str(build["compiled_layer3_format"]),
         "install_time": utc_iso(),
-        "source_version": str(build_manifest.get("source_version", source_version())),
+        "source_version": str(build.get("source_version", source_version())),
         "agent": agent,
         "scope": scope,
         "profile": profile,
-        "target_path": str(target_dir),
-        "installed_professional_skills": classified["professional_skills"],
-        "installed_foundation_capabilities": classified["foundation_capabilities"],
-        "installed_domain_extensions": classified["domain_extensions"],
-        "installed_skills": classified["all"],
-        "foundation_mode": FOUNDATION_MODES[profile],
+        "target_path": str(targets.skills),
+        "agent_profile_target": str(targets.profiles) if targets.profiles is not None else None,
+        "installed_skills": sorted(installed),
+        "installed_control_skills": present("control_skills"),
+        "installed_professional_skills": present("professional_skills"),
+        "installed_foundation_skills": present("foundation_skills"),
+        "installed_domain_skills": present("domain_skills"),
+        "installed_agent_profiles": list(AGENT_PROFILE_NAMES) if profile_files else [],
+        "installed_agent_profile_files": sorted(profile_files),
+        "installed_agent_profile_sha256": (
+            dict(build.get("agent_profile_sha256", {}).get(agent, {}))
+            if profile_files
+            else {}
+        ),
+        "installed_agent_profile_enforcement": build["agent_profile_enforcement"][agent],
+        "agent_profile_enforcement_source": build["agent_profile_enforcement_source"],
+        "core_model": dict(build["core_model"]),
+        "foundation_mode": build.get("foundation_mode"),
         "backup_path": str(backup_path) if backup_path is not None else None,
-        "skill_versions": versions,
     }
 
 
-def backup_existing(
-    target_dir: Path,
-    names: set[str],
-    action: str,
-    dry_run: bool,
-) -> Path | None:
-    existing = [target_dir / name for name in sorted(names) if (target_dir / name).exists()]
-    manifest_path = target_dir / MANIFEST_NAME
-    if manifest_path.exists():
-        existing.append(manifest_path)
-    if not existing:
-        return None
-
-    backup_path = target_dir / BACKUP_DIR_NAME / f"{action}-{utc_stamp()}"
-    if dry_run:
-        return backup_path
-
-    backup_path.mkdir(parents=True, exist_ok=False)
-    for path in existing:
-        destination = backup_path / path.name
-        if path.is_dir():
-            shutil.copytree(path, destination)
-        else:
-            shutil.copy2(path, destination)
-    return backup_path
-
-
-def find_unmanaged_conflicts(
-    target_dir: Path,
-    source_names: set[str],
-    managed: set[str],
-) -> list[str]:
-    return sorted(
-        name
-        for name in source_names
-        if (target_dir / name).exists() and name not in managed
-    )
-
-
-def replace_with_source(
-    source_dir: Path,
-    target_dir: Path,
-    remove_names: set[str],
-    dry_run: bool,
-) -> None:
-    source_skill_dirs = list_skill_dirs(source_dir)
-    if dry_run:
-        return
-
-    target_dir.mkdir(parents=True, exist_ok=True)
-    for name in sorted(remove_names):
-        destination = target_dir / name
-        if destination.exists():
-            shutil.rmtree(destination)
-
-    for skill_dir in source_skill_dirs:
-        shutil.copytree(skill_dir, target_dir / skill_dir.name)
-
-
-def remove_managed(target_dir: Path, names: set[str], dry_run: bool) -> None:
-    if dry_run:
-        return
-    for name in sorted(names):
-        path = target_dir / name
-        if path.exists():
-            shutil.rmtree(path)
-    manifest_path = target_dir / MANIFEST_NAME
-    if manifest_path.exists():
-        manifest_path.unlink()
-
-
-def version_changes(
-    old_manifest: dict[str, Any] | None,
-    new_manifest: dict[str, Any],
-) -> dict[str, list[str]]:
-    old_versions = old_manifest.get("skill_versions", {}) if old_manifest else {}
-    if not isinstance(old_versions, dict):
-        old_versions = {}
-    new_versions = new_manifest.get("skill_versions", {})
-    if not isinstance(new_versions, dict):
-        new_versions = {}
-
-    old_names = {str(name) for name in old_versions}
-    new_names = {str(name) for name in new_versions}
-    changed = sorted(
-        name
-        for name in old_names & new_names
-        if str(old_versions.get(name)) != str(new_versions.get(name))
-    )
+def version_changes(old: dict[str, Any] | None, new: dict[str, Any]) -> dict[str, list[str]]:
+    old_names = managed_skill_names(old)
+    new_names = managed_skill_names(new)
     return {
         "added": sorted(new_names - old_names),
         "removed": sorted(old_names - new_names),
-        "changed": changed,
+        "changed": sorted(old_names & new_names) if old and old.get("source_version") != new.get("source_version") else [],
     }
 
 
-def hooks_supported(agent: str, scope: str) -> bool:
-    """Hooks are supported for Codex, Claude, and Copilot project/user installs."""
-    return agent in HOOK_AGENTS and scope in HOOK_SCOPES
-
-
-def resolve_hook_target_root(agent: str, scope: str, target: Path | None) -> Path:
-    """Resolve the agent config root used by managed hook runtime artifacts."""
-    if not hooks_supported(agent, scope):
-        raise InstallError(
-            f"hooks are only supported for codex, claude, and copilot project or user "
-            f"installs, not {agent} {scope}"
-    )
-    if scope == "project":
-        if target is None:
-            raise InstallError("project hook operation requires the project root target")
-        return target.expanduser().resolve() / HOOK_PROJECT_SUBPATH[agent]
-    return (Path.home() / HOOK_USER_HOME_SUBDIR[agent]).expanduser().resolve()
-
-
-def hook_config_path(agent: str, target_root: Path) -> Path:
-    """Return the hook config path managed or merged for an agent config root."""
-    if agent == "codex":
-        return target_root / "hooks.json"
-    if agent == "claude":
-        return target_root / "settings.changeforge-hooks.fragment.json"
-    if agent == "copilot":
-        return target_root / "hooks" / "changeforge-hooks.json"
-    raise InstallError(f"unsupported hook agent: {agent}")
-
-
-def _default_hook_support_files(agent: str) -> tuple[str, ...]:
-    if agent == "copilot":
-        return (*COMMON_HOOK_SUPPORT_FILES, *COPILOT_HOOK_SUPPORT_FILES)
-    return COMMON_HOOK_SUPPORT_FILES
-
-
-def _hook_support_files_from_manifest(manifest_source: Path, agent: str) -> tuple[str, ...]:
-    if not manifest_source.is_file():
-        return _default_hook_support_files(agent)
-    try:
-        manifest = json.loads(manifest_source.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return _default_hook_support_files(agent)
-    support_files = manifest.get("support_files") if isinstance(manifest, dict) else None
-    if not isinstance(support_files, list):
-        return _default_hook_support_files(agent)
-    files: list[str] = []
-    for item in support_files:
-        if not isinstance(item, str) or not item.strip():
-            return _default_hook_support_files(agent)
-        files.append(item.strip())
-    return tuple(dict.fromkeys(files))
-
-
-def _hook_support_packages_from_manifest(manifest_source: Path) -> tuple[str, ...]:
-    if not manifest_source.is_file():
-        return COMMON_HOOK_SUPPORT_PACKAGES
-    try:
-        manifest = json.loads(manifest_source.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return COMMON_HOOK_SUPPORT_PACKAGES
-    support_packages = manifest.get("support_packages") if isinstance(manifest, dict) else None
-    if not isinstance(support_packages, list):
-        return COMMON_HOOK_SUPPORT_PACKAGES
-    packages: list[str] = []
-    for item in support_packages:
-        if not isinstance(item, str) or not HOOK_SUPPORT_PACKAGE_RE.fullmatch(item.strip()):
-            return COMMON_HOOK_SUPPORT_PACKAGES
-        packages.append(item.strip())
-    return tuple(dict.fromkeys(packages))
-
-
-def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
-    """Compute a merge-safe hook install plan without writing anything.
-
-    Project hooks install under the project root (``--target``). User hooks
-    install under the agent home directory (Codex ``~/.codex``, Claude
-    ``~/.claude``, Copilot ``~/.copilot``); ``--target`` does not relocate user
-    hooks, so the skills ``--target`` override never accidentally redirects them.
-    Set ``HOME`` (or the agent's home variable) to sandbox a user-scope hook
-    install.
-    """
-    source_root = HOOK_SOURCE_ROOTS.get((agent, scope))
-    if source_root is None:
-        raise InstallError(
-            f"hooks are only supported for codex, claude, and copilot project or user "
-            f"installs, not {agent} {scope}"
-        )
-    if not source_root.is_dir():
-        raise InstallError(
-            f"missing built hook runtime {source_root.relative_to(ROOT)}; "
-            "run python3 scripts/build.py --profile <profile>"
-        )
-
-    target_root = resolve_hook_target_root(agent, scope, target)
-    plan = HookPlan(agent=agent, source_root=source_root, target_root=target_root)
-
-    scripts_subdir = HOOK_SCRIPTS_SUBDIR[agent]
-    aux_subdir = HOOK_AUX_SUBDIR[agent]
-    manifest_source = source_root / aux_subdir / HOOK_MANIFEST_NAME
-    scripts_root = source_root / scripts_subdir
-    script_names = tuple(
-        path.name
-        for path in sorted(scripts_root.glob("changeforge_*.py"))
-        if path.is_file()
-    )
-    if not script_names:
-        raise InstallError(f"no built hook scripts found in {scripts_root}")
-    for script_name in script_names:
-        source_script = source_root / scripts_subdir / script_name
-        if not source_script.is_file():
-            raise InstallError(f"missing built hook script {source_script.relative_to(ROOT)}")
-        destination = target_root / scripts_subdir / script_name
-        action = "overwrite" if destination.exists() else "create"
-        plan.script_actions.append((source_script, destination, action))
-
-    support_files = _hook_support_files_from_manifest(manifest_source, agent)
-    for file_name in support_files:
-        source_file = source_root / scripts_subdir / file_name
-        if not source_file.is_file():
-            raise InstallError(f"missing built hook support file {source_file.relative_to(ROOT)}")
-        destination = target_root / scripts_subdir / file_name
-        action = "overwrite" if destination.exists() else "create"
-        plan.support_actions.append((source_file, destination, action))
-
-    support_packages = _hook_support_packages_from_manifest(manifest_source)
-    for package_name in support_packages:
-        source_package = source_root / scripts_subdir / package_name
-        if not source_package.is_dir():
-            raise InstallError(f"missing built hook support package {source_package.relative_to(ROOT)}")
-        destination = target_root / scripts_subdir / package_name
-        action = "overwrite" if destination.exists() else "create"
-        plan.support_package_actions.append((source_package, destination, action))
-
-    manifest_target = target_root / aux_subdir / HOOK_MANIFEST_NAME
-    plan.manifest_action = (
-        manifest_source,
-        manifest_target,
-        "overwrite" if manifest_target.exists() else "create",
-    )
-
-    bootstrap_source = source_root / aux_subdir / BOOTSTRAP_FRAGMENT_NAME
-    if bootstrap_source.is_file():
-        bootstrap_target = target_root / aux_subdir / BOOTSTRAP_FRAGMENT_NAME
-        plan.bootstrap_action = (
-            bootstrap_source,
-            bootstrap_target,
-            "overwrite" if bootstrap_target.exists() else "create",
-        )
-
-    if agent == "codex":
-        _plan_codex_config(plan)
-    elif agent == "copilot":
-        _plan_copilot_config(plan)
-    else:
-        _plan_claude_config(plan)
-    plan.notes.extend(_hook_activation_notes(agent, scope))
-    return plan
-
-
-def _plan_copilot_config(plan: HookPlan) -> None:
-    # VS Code Copilot reads every *.json in the hook folder, so the managed config
-    # is a dedicated, ChangeForge-owned file. Place it (overwrite the managed copy)
-    # without touching any other hook JSON the user authored in the same folder.
-    config_relpath = Path("hooks") / "changeforge-hooks.json"
-    source_config = load_json(plan.source_root / config_relpath)
-    if not isinstance(source_config, dict):
-        raise InstallError("built copilot changeforge-hooks.json is malformed")
-    plan.config_target = plan.target_root / config_relpath
-    plan.config_payload = source_config
-    plan.config_summary.append("place hooks/changeforge-hooks.json (other hook JSON is untouched)")
-    plan.config_summary.append("VS Code loads every *.json in .github/hooks; user hook files are preserved")
-
-
-def _plan_codex_config(plan: HookPlan) -> None:
-    source_config = load_json(plan.source_root / "hooks.json")
-    if not isinstance(source_config, dict):
-        raise InstallError("built codex hooks.json is malformed")
-    target_config_path = plan.target_root / "hooks.json"
-    plan.config_target = target_config_path
-    existing = load_json(target_config_path)
-    if existing is None:
-        plan.config_payload = source_config
-        plan.config_summary.append("create new .codex/hooks.json from ChangeForge template")
-        return
-    merged, summary = _merge_codex_hooks(existing, source_config)
-    plan.config_payload = merged
-    plan.config_summary.extend(summary)
-    plan.config_summary.append(
-        "existing user hooks are preserved; ChangeForge-managed hooks are reconciled"
-    )
-
-
-def _plan_claude_config(plan: HookPlan) -> None:
-    fragment_name = "settings.changeforge-hooks.fragment.json"
-    source_fragment = load_json(plan.source_root / fragment_name)
-    if not isinstance(source_fragment, dict):
-        raise InstallError("built claude settings fragment is malformed")
-    plan.config_target = plan.target_root / fragment_name
-    plan.config_payload = source_fragment
-    plan.config_summary.append(f"place {fragment_name} (settings.json is never modified)")
-    plan.config_summary.append(
-        "merge the fragment 'hooks' into .claude/settings.json manually after review"
-    )
-
-
-def _merge_codex_hooks(
-    existing: dict[str, Any],
-    source: dict[str, Any],
-) -> tuple[dict[str, Any], list[str]]:
-    merged = json.loads(json.dumps(existing))
-    existing_hooks = merged.get("hooks")
-    if not isinstance(existing_hooks, dict):
-        raise InstallError(
-            "existing .codex/hooks.json 'hooks' is not an object; merge ChangeForge hooks manually"
-        )
-    source_hooks = source.get("hooks", {})
-    if not isinstance(source_hooks, dict):
-        raise InstallError("built codex hooks.json 'hooks' is not an object")
-
-    summary: list[str] = []
-    removed_commands, touched_groups = _remove_changeforge_managed_hooks(existing_hooks)
-    if removed_commands:
-        summary.append(
-            f"remove {removed_commands} stale ChangeForge-managed hook command(s) "
-            f"from {touched_groups} group(s)"
-        )
-    added_groups = 0
-    for event, groups in source_hooks.items():
-        if not isinstance(groups, list):
-            continue
-        target_groups = existing_hooks.setdefault(event, [])
-        if not isinstance(target_groups, list):
-            raise InstallError(f"existing hooks.{event} is not a list; merge manually")
-        for group in groups:
-            if not isinstance(group, dict):
-                continue
-            target_groups.append(json.loads(json.dumps(group)))
-            added_groups += 1
-            summary.append(f"add current {event} hook group: {group.get('matcher', '(none)')}")
-    if not added_groups:
-        summary.append("ChangeForge template has no hook groups to add")
-    return merged, summary
-
-
-def _remove_changeforge_managed_hooks(existing_hooks: dict[str, Any]) -> tuple[int, int]:
-    removed_commands = 0
-    touched_groups = 0
-    for event in list(existing_hooks):
-        groups = existing_hooks[event]
-        if not isinstance(groups, list):
-            raise InstallError(f"existing hooks.{event} is not a list; merge manually")
-        next_groups: list[Any] = []
-        for group in groups:
-            if not isinstance(group, dict):
-                next_groups.append(group)
-                continue
-            hooks = group.get("hooks")
-            if not isinstance(hooks, list):
-                next_groups.append(group)
-                continue
-            kept_hooks: list[Any] = []
-            group_removed = 0
-            for hook in hooks:
-                if _is_changeforge_managed_hook(hook):
-                    group_removed += 1
-                    continue
-                kept_hooks.append(hook)
-            if group_removed:
-                touched_groups += 1
-                removed_commands += group_removed
-                if kept_hooks:
-                    next_group = {key: value for key, value in group.items() if key != "hooks"}
-                    next_group["hooks"] = kept_hooks
-                    next_groups.append(next_group)
-            else:
-                next_groups.append(group)
-        if next_groups:
-            existing_hooks[event] = next_groups
-        else:
-            del existing_hooks[event]
-    return removed_commands, touched_groups
-
-
-def _is_changeforge_managed_hook(hook: Any) -> bool:
-    if not isinstance(hook, dict):
-        return False
-    command = hook.get("command")
-    return isinstance(command, str) and bool(CHANGEFORGE_HOOK_COMMAND_RE.search(command))
-
-
-def plan_hook_uninstall(agent: str, scope: str, target: Path | None) -> HookUninstallPlan:
-    """Compute managed hook runtime removals without requiring built dist output."""
-    target_root = resolve_hook_target_root(agent, scope, target)
-    scripts_subdir = HOOK_SCRIPTS_SUBDIR[agent]
-    aux_subdir = HOOK_AUX_SUBDIR[agent]
-    scripts_dir = target_root / scripts_subdir
-    aux_dir = target_root / aux_subdir
-    manifest_path = aux_dir / HOOK_MANIFEST_NAME
-    manifest = load_json(manifest_path) if manifest_path.is_file() else None
-
-    plan = HookUninstallPlan(agent=agent, scope=scope, target_root=target_root)
-    for script_name in _managed_hook_script_names(manifest, scripts_dir):
-        _add_existing_file(plan.files, scripts_dir / script_name)
-    for file_name in _managed_hook_support_file_names(manifest):
-        _add_existing_file(plan.files, scripts_dir / file_name)
-    for directory_name in _managed_hook_support_package_names(manifest):
-        _add_existing_dir(plan.directories, scripts_dir / directory_name)
-    bootstrap_name = _managed_hook_bootstrap_name(manifest)
-    if bootstrap_name:
-        _add_existing_file(plan.files, aux_dir / bootstrap_name)
-    _add_existing_file(plan.files, manifest_path)
-
-    _plan_hook_config_uninstall(plan)
-    plan.empty_dir_stops.append((scripts_dir, target_root))
-    if aux_dir != scripts_dir:
-        plan.empty_dir_stops.append((aux_dir, target_root))
-    if not plan.files and not plan.directories and plan.config_target is None:
-        plan.notes.append("hooks: no ChangeForge-managed hook artifacts found")
-    return plan
-
-
-def _managed_hook_script_names(manifest: dict[str, Any] | None, scripts_dir: Path) -> list[str]:
-    names: list[str] = []
-    hooks = manifest.get("hooks") if isinstance(manifest, dict) else None
-    if isinstance(hooks, list):
-        for item in hooks:
-            if not isinstance(item, str):
-                continue
-            stem = item.strip()
-            filename = f"{stem}.py"
-            if CHANGEFORGE_HOOK_COMMAND_RE.fullmatch(filename):
-                names.append(filename)
-    if names:
-        return sorted(dict.fromkeys(names))
-    return sorted(path.name for path in scripts_dir.glob("changeforge_*.py") if path.is_file())
-
-
-def _managed_hook_support_file_names(manifest: dict[str, Any] | None) -> list[str]:
-    names: list[str] = []
-    support_files = manifest.get("support_files") if isinstance(manifest, dict) else None
-    if isinstance(support_files, list):
-        for item in support_files:
-            if isinstance(item, str) and _safe_relative_name(item):
-                names.append(item)
-    return sorted(dict.fromkeys(names))
-
-
-def _managed_hook_support_package_names(manifest: dict[str, Any] | None) -> list[str]:
-    names: list[str] = []
-    support_packages = manifest.get("support_packages") if isinstance(manifest, dict) else None
-    if isinstance(support_packages, list):
-        for item in support_packages:
-            if isinstance(item, str) and HOOK_SUPPORT_PACKAGE_RE.fullmatch(item.strip()):
-                names.append(item.strip())
-    return sorted(dict.fromkeys(names))
-
-
-def _managed_hook_bootstrap_name(manifest: dict[str, Any] | None) -> str:
-    value = manifest.get("bootstrap_fragment") if isinstance(manifest, dict) else None
-    if value == BOOTSTRAP_FRAGMENT_NAME:
-        return BOOTSTRAP_FRAGMENT_NAME
-    return ""
-
-
-def _safe_relative_name(value: str) -> bool:
-    name = value.strip()
-    return bool(name) and Path(name).name == name and not name.startswith(".")
-
-
-def _add_existing_file(paths: list[Path], path: Path) -> None:
-    if path.is_file() and path not in paths:
-        paths.append(path)
-
-
-def _add_existing_dir(paths: list[Path], path: Path) -> None:
-    if path.is_dir() and path not in paths:
-        paths.append(path)
-
-
-def _plan_hook_config_uninstall(plan: HookUninstallPlan) -> None:
-    config_target = hook_config_path(plan.agent, plan.target_root)
-    if plan.agent == "codex":
-        _plan_codex_config_uninstall(plan, config_target)
-        return
-    if config_target.is_file():
-        plan.config_target = config_target
-        plan.config_remove = True
-        plan.config_summary.append(f"remove managed {config_target.name}")
-
-
-def _plan_codex_config_uninstall(plan: HookUninstallPlan, config_target: Path) -> None:
-    if not config_target.is_file():
-        return
-    existing = load_json(config_target)
-    if existing is None:
-        return
-    hooks = existing.get("hooks")
-    if not isinstance(hooks, dict):
-        if "changeforge_" in config_target.read_text(encoding="utf-8", errors="replace"):
-            raise InstallError(
-                "existing .codex/hooks.json 'hooks' is not an object; remove ChangeForge hooks manually"
-            )
-        return
-    removed_commands, touched_groups = _remove_changeforge_managed_hooks(hooks)
-    if not removed_commands:
-        return
-    plan.config_target = config_target
-    if not hooks and set(existing) == {"hooks"}:
-        plan.config_remove = True
-        plan.config_summary.append(
-            f"remove {config_target.name} because it only contained ChangeForge-managed hooks"
-        )
-    else:
-        plan.config_payload = existing
-        plan.config_summary.append(
-            f"remove {removed_commands} ChangeForge-managed hook command(s) "
-            f"from {touched_groups} group(s)"
-        )
-
-
-def apply_hook_uninstall(plan: HookUninstallPlan, dry_run: bool) -> None:
-    """Remove managed hook runtime files and reconcile managed hook config."""
+def remove_installed(
+    targets: InstallTargets,
+    skill_names: set[str],
+    profile_files: set[str],
+    dry_run: bool,
+) -> None:
     if dry_run:
         return
-    for path in plan.files:
-        if path.is_file():
+    for name in sorted(skill_names):
+        path = _safe_child(targets.skills, name)
+        if path.is_symlink():
             path.unlink()
-    for path in plan.directories:
-        if path.is_dir():
+        elif path.exists() and path.is_dir():
             shutil.rmtree(path)
-    if plan.config_target is not None:
-        if plan.config_remove:
-            if plan.config_target.is_file():
-                plan.config_target.unlink()
-        elif plan.config_payload is not None:
-            write_json(plan.config_target, plan.config_payload)
-    for start, stop in plan.empty_dir_stops:
-        _prune_empty_dirs(start, stop)
+        elif path.exists():
+            raise InstallError(f"managed Skill path is not a directory: {path}")
+    if targets.profiles is not None:
+        for name in sorted(profile_files):
+            path = _safe_child(targets.profiles, name, profile=True)
+            if path.is_symlink():
+                path.unlink()
+            elif path.exists() and path.is_file():
+                path.unlink()
+            elif path.exists():
+                raise InstallError(f"managed Agent Profile path is not a file: {path}")
+    manifest = targets.skills / MANIFEST_NAME
+    if manifest.is_symlink() or manifest.is_file():
+        manifest.unlink()
+    elif manifest.exists():
+        raise InstallError(f"managed install manifest is not a file: {manifest}")
 
 
-def render_hook_uninstall_plan(plan: HookUninstallPlan) -> list[str]:
-    """Human-readable hook uninstall plan."""
-    lines = [
-        f"hooks: agent {plan.agent}",
-        f"hooks: target {plan.target_root}",
-    ]
-    for path in plan.files:
-        lines.append(f"hooks: remove file {path}")
-    for path in plan.directories:
-        lines.append(f"hooks: remove directory {path}")
-    for summary in plan.config_summary:
-        lines.append(f"hooks: config: {summary}")
-    lines.extend(plan.notes)
-    return lines
-
-
-def _hook_activation_notes(agent: str, scope: str) -> list[str]:
-    notes = ["hooks are not auto-trusted"]
-    hook_label = "user hook" if scope == "user" else "project hook"
-    if agent == "codex":
-        notes.insert(
-            0,
-            "hook profile: default_compact; strong professional guidance, not all hard block",
-        )
-        notes.append(f"run /hooks in Codex and trust the {hook_label} after reviewing the command")
-        if scope == "user":
-            notes.append("user hooks were written to ~/.codex; they apply to every Codex project")
-    elif agent == "copilot":
-        notes.insert(
-            0,
-            "hook profile: default_compact; Copilot uses supported decisions and collector evidence",
-        )
-        notes.append("VS Code loads .json hook files automatically; review them before enabling")
-        notes.append("use /hooks or 'Chat: Configure Hooks' in VS Code to inspect loaded hooks")
-        if scope == "project":
-            notes.append("project hooks live in .github/hooks; other hook JSON there is preserved")
-        else:
-            notes.append("user hooks live in ~/.copilot/hooks; they apply to every workspace")
-    else:
-        notes.insert(
-            0,
-            "hook profile: default_compact; strong professional guidance, not all hard block",
-        )
-        notes.append("merge settings.changeforge-hooks.fragment.json into settings.json")
-        if scope == "user":
-            notes.append(
-                "user hooks live in ~/.claude; merge the fragment into ~/.claude/settings.json"
-            )
-    return notes
-
-
-def apply_hook_install(plan: HookPlan, dry_run: bool) -> None:
-    """Write the planned hook files. Preserves existing project hook config."""
-    if dry_run:
-        return
-    # Create each destination parent so layouts that nest scripts (Copilot uses
-    # hooks/changeforge/) are handled the same as the flat Codex/Claude layout.
-    for source_script, destination, _action in plan.script_actions:
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source_script, destination)
-        destination.chmod(0o755)
-    for source_file, destination, _action in plan.support_actions:
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source_file, destination)
-    for source_package, destination, _action in plan.support_package_actions:
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        if destination.exists():
-            shutil.rmtree(destination)
-        shutil.copytree(source_package, destination)
-    if plan.manifest_action is not None:
-        manifest_source, manifest_target, _ = plan.manifest_action
-        manifest_target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(manifest_source, manifest_target)
-    if plan.bootstrap_action is not None:
-        bootstrap_source, bootstrap_target, _ = plan.bootstrap_action
-        bootstrap_target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(bootstrap_source, bootstrap_target)
-    if plan.config_target is not None and plan.config_payload is not None:
-        plan.config_target.parent.mkdir(parents=True, exist_ok=True)
-        write_json(plan.config_target, plan.config_payload)
-
-
-def render_hook_plan(plan: HookPlan) -> list[str]:
-    """Human-readable description of a hook plan for dry-run output."""
-    lines = [
-        f"hooks: agent {plan.agent}",
-        f"hooks: target {plan.target_root}",
-    ]
-    for _source, destination, action in plan.script_actions:
-        lines.append(f"hooks: {action} script {destination.name}")
-    for _source, destination, action in plan.support_actions:
-        lines.append(f"hooks: {action} support {destination.name}")
-    for _source, destination, action in plan.support_package_actions:
-        lines.append(f"hooks: {action} support package {destination.name}")
-    if plan.manifest_action is not None:
-        lines.append(f"hooks: {plan.manifest_action[2]} {HOOK_MANIFEST_NAME}")
-    if plan.bootstrap_action is not None:
-        lines.append(f"hooks: {plan.bootstrap_action[2]} {BOOTSTRAP_FRAGMENT_NAME}")
-    for summary in plan.config_summary:
-        lines.append(f"hooks: config: {summary}")
-    for note in plan.notes:
-        lines.append(f"hooks: note: {note}")
-    return lines
-
-
-@dataclass
-class BootstrapPlan:
-    """Describes how the advisory route-preflight fragment would be installed."""
-
-    agent: str
-    scope: str
-    source: Path
-    target: Path
-    action: str
-    professional_source: Path | None = None
-    professional_target: Path | None = None
-    professional_action: str = ""
-    notes: list[str] = field(default_factory=list)
-
-
-def bootstrap_supported(agent: str, scope: str) -> bool:
-    """The advisory bootstrap fragment can be installed for any project scope."""
-    return scope == "project" and agent in BOOTSTRAP_AGENTS
-
-
-def plan_bootstrap_install(
+def cleanup_legacy_residue(
     agent: str,
     scope: str,
-    project_root: Path,
-    *,
-    include_professional: bool = False,
-) -> BootstrapPlan:
-    """Plan a standalone advisory bootstrap install without writing anything.
-
-    This installs only the route-preflight guidance fragment. It is the
-    bootstrap path for runtimes without a session-start hook (such as Codex) and
-    for users who want the preflight reminder without trusting executable hooks.
-    """
-    if not bootstrap_supported(agent, scope):
-        raise InstallError("--with-bootstrap is only supported for project installs")
-    if not UNIVERSAL_BOOTSTRAP_SOURCE.is_file():
-        raise InstallError(
-            f"missing built bootstrap fragment {UNIVERSAL_BOOTSTRAP_SOURCE.relative_to(ROOT)}; "
-            "run python3 scripts/build.py --profile <profile>"
-        )
-    target = (
-        project_root.expanduser().resolve()
-        / BOOTSTRAP_PROJECT_SUBPATH
-        / BOOTSTRAP_FRAGMENT_NAME
-    )
-    action = "overwrite" if target.exists() else "create"
-    professional_source: Path | None = None
-    professional_target: Path | None = None
-    professional_action = ""
-    if include_professional:
-        if not UNIVERSAL_PROFESSIONAL_BOOTSTRAP_SOURCE.is_file():
-            raise InstallError(
-                "missing built professional bootstrap fragment "
-                f"{UNIVERSAL_PROFESSIONAL_BOOTSTRAP_SOURCE.relative_to(ROOT)}; "
-                "run python3 scripts/build.py --profile <profile>"
-            )
-        professional_source = UNIVERSAL_PROFESSIONAL_BOOTSTRAP_SOURCE
-        professional_target = (
-            project_root.expanduser().resolve()
-            / BOOTSTRAP_PROJECT_SUBPATH
-            / PROFESSIONAL_BOOTSTRAP_FRAGMENT_NAME
-        )
-        professional_action = "overwrite" if professional_target.exists() else "create"
-    notes = [
-        "bootstrap is advisory route-preflight guidance, not an executable hook",
-        "reference this file from your agent instructions (for example AGENTS.md) to enable it",
-    ]
-    if agent == "claude":
-        notes.append(
-            "Claude project hooks can also wire this as a SessionStart hook via --with-hooks"
-        )
-    elif agent == "codex":
-        notes.append(
-            "Codex project hooks can also wire this as a SessionStart hook via --with-hooks; "
-            "this advisory fragment is the no-trust alternative"
-        )
-    return BootstrapPlan(
-        agent=agent,
-        scope=scope,
-        source=UNIVERSAL_BOOTSTRAP_SOURCE,
-        target=target,
-        action=action,
-        professional_source=professional_source,
-        professional_target=professional_target,
-        professional_action=professional_action,
-        notes=notes,
-    )
-
-
-def apply_bootstrap_install(plan: BootstrapPlan, dry_run: bool) -> None:
-    """Write the planned bootstrap fragment. Only touches the managed fragment file."""
+    project_target: Path | None,
+    skill_target: Path,
+    dry_run: bool,
+) -> list[Path]:
+    """Remove only known ChangeForge artifacts from pre-hookless releases."""
+    candidates = _legacy_removal_candidates(agent, scope, project_target, skill_target)
+    config_root = _legacy_config_root(agent, scope, project_target)
+    shared_config = config_root / "hooks.json" if config_root is not None and agent == "codex" else None
+    config_changes = bool(shared_config is not None and _has_changeforge_hook_command(shared_config))
+    existing = [path for path in candidates if _path_lexists(path)]
+    reported = [*existing, *([shared_config] if config_changes and shared_config is not None else [])]
     if dry_run:
-        return
-    plan.target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(plan.source, plan.target)
-    if plan.professional_source is not None and plan.professional_target is not None:
-        plan.professional_target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(plan.professional_source, plan.professional_target)
-
-
-def plan_bootstrap_uninstall(project_root: Path) -> BootstrapUninstallPlan:
-    """Compute standalone advisory bootstrap fragment removals."""
-    root = project_root.expanduser().resolve()
-    bootstrap_dir = root / BOOTSTRAP_PROJECT_SUBPATH
-    plan = BootstrapUninstallPlan(project_root=root)
-    for filename in (BOOTSTRAP_FRAGMENT_NAME, PROFESSIONAL_BOOTSTRAP_FRAGMENT_NAME):
-        _add_existing_file(plan.files, bootstrap_dir / filename)
-    plan.empty_dir_stops.append((bootstrap_dir, root))
-    if not plan.files:
-        plan.notes.append("bootstrap: no standalone ChangeForge bootstrap fragments found")
-    return plan
-
-
-def apply_bootstrap_uninstall(plan: BootstrapUninstallPlan, dry_run: bool) -> None:
-    """Remove standalone advisory bootstrap fragments."""
-    if dry_run:
-        return
-    for path in plan.files:
-        if path.is_file():
+        return reported
+    for path in sorted(existing, key=lambda value: len(value.parts), reverse=True):
+        if not _path_lexists(path):
+            continue
+        if path.is_symlink():
             path.unlink()
-    for start, stop in plan.empty_dir_stops:
-        _prune_empty_dirs(start, stop)
+        elif path.is_dir():
+            shutil.rmtree(path)
+        else:
+            path.unlink()
+    if config_changes and shared_config is not None:
+        _remove_changeforge_commands(shared_config)
+    _prune_empty_legacy_directories(agent, scope, project_target, config_root)
+    return reported
 
 
-def render_bootstrap_uninstall_plan(plan: BootstrapUninstallPlan) -> list[str]:
-    """Human-readable standalone bootstrap uninstall plan."""
-    lines = [f"bootstrap: project {plan.project_root}"]
-    for path in plan.files:
-        lines.append(f"bootstrap: remove file {path}")
-    lines.extend(plan.notes)
-    return lines
-
-
-def _prune_empty_dirs(start: Path, stop: Path) -> None:
-    current = start
-    stop = stop.resolve()
-    while current != stop and current.exists() and current.is_dir():
-        try:
-            current.rmdir()
-        except OSError:
-            return
-        current = current.parent
-
-
-def render_bootstrap_plan(plan: BootstrapPlan) -> list[str]:
-    """Human-readable description of a bootstrap plan for dry-run output."""
-    lines = [
-        f"bootstrap: agent {plan.agent}",
-        f"bootstrap: target {plan.target}",
-        f"bootstrap: {plan.action} {BOOTSTRAP_FRAGMENT_NAME}",
-    ]
-    if plan.professional_target is not None:
-        lines.append(
-            f"bootstrap: {plan.professional_action} {PROFESSIONAL_BOOTSTRAP_FRAGMENT_NAME}"
+def _legacy_removal_candidates(
+    agent: str,
+    scope: str,
+    project_target: Path | None,
+    skill_target: Path,
+) -> list[Path]:
+    candidates = [skill_target / ".changeforge-packs", skill_target / ".changeforge-control"]
+    config_root = _legacy_config_root(agent, scope, project_target)
+    boundaries = _legacy_boundaries(scope, project_target, skill_target, config_root)
+    if config_root is not None:
+        candidates.extend(_legacy_files_under_config(agent, config_root, boundaries))
+    if scope == "project" and project_target is not None:
+        project = project_target.expanduser().resolve()
+        candidates.extend(
+            [
+                project / ".changeforge" / "changeforge-route-preflight.md",
+                project / ".changeforge" / "changeforge-professional-contract.md",
+            ]
         )
-    for note in plan.notes:
-        lines.append(f"bootstrap: note: {note}")
-    return lines
+        if agent == "copilot":
+            instructions = project / ".github" / "copilot-instructions.md"
+            _ensure_parent_within(instructions, boundaries, "legacy Copilot instructions")
+            if _is_legacy_copilot_instructions(instructions):
+                candidates.append(instructions)
+    unique = list(dict.fromkeys(candidates))
+    for path in unique:
+        _ensure_parent_within(path, boundaries, "legacy ChangeForge artifact")
+    return unique
+
+
+def _legacy_boundaries(
+    scope: str,
+    project_target: Path | None,
+    skill_target: Path,
+    config_root: Path | None,
+) -> list[Path]:
+    if scope == "project" and project_target is not None:
+        return [project_target.expanduser().resolve(strict=False)]
+    boundaries = [skill_target]
+    if config_root is not None:
+        boundaries.append(config_root)
+    return boundaries
+
+
+def _legacy_config_root(agent: str, scope: str, target: Path | None) -> Path | None:
+    if agent not in {"codex", "claude", "copilot"}:
+        return None
+    subdir = {"codex": ".codex", "claude": ".claude", "copilot": ".copilot"}[agent]
+    if scope == "project":
+        if target is None:
+            return None
+        if agent == "copilot":
+            return target.expanduser().resolve() / ".github"
+        return target.expanduser().resolve() / subdir
+    if scope == "user":
+        return Path.home() / subdir
+    return None
+
+
+def _legacy_files_under_config(
+    agent: str,
+    root: Path,
+    boundaries: list[Path],
+) -> list[Path]:
+    candidates = [
+        root / ".changeforge-hook-manifest.json",
+        root / "changeforge-route-preflight.md",
+        root / "changeforge-professional-contract.md",
+        root / "settings.changeforge-hooks.fragment.json",
+        root / "hooks" / "changeforge-hooks.json",
+    ]
+    scripts = root / "hooks"
+    if scripts.is_dir():
+        candidates.extend(scripts / name for name in LEGACY_HOOK_SCRIPT_NAMES)
+        candidates.extend(scripts / name for name in LEGACY_SUPPORT_FILES)
+        candidates.extend(scripts / name for name in LEGACY_SUPPORT_DIRECTORIES)
+    if agent == "copilot":
+        candidates.append(root / "hooks" / "changeforge")
+    profiles = root / "agents"
+    extension = ".toml" if agent == "codex" else ".md"
+    candidates.extend(
+        path
+        for name in LEGACY_PROFILE_NAMES
+        if _is_legacy_agent_profile(path := profiles / f"{name}{extension}")
+    )
+    main_profile = profiles / f"main-control-agent{extension}"
+    if agent == "copilot":
+        # Pre-Hookless and early Hookless builds used plain .md names here.
+        # The current Copilot projection uses .agent.md, so these exact reserved
+        # names are legacy even when their leaf is a dangling symlink.
+        candidates.extend(
+            path
+            for name in AGENT_PROFILE_NAMES
+            if _is_legacy_agent_profile(path := profiles / f"{name}.md")
+        )
+        old_project_profiles = root / "copilot" / "agents"
+        candidates.extend(
+            path
+            for name in (*LEGACY_PROFILE_NAMES, *AGENT_PROFILE_NAMES)
+            if _is_legacy_agent_profile(
+                path := old_project_profiles / f"{name}.md"
+            )
+        )
+    else:
+        _ensure_parent_within(main_profile, boundaries, "legacy main Agent Profile")
+        if _is_legacy_main_profile(main_profile):
+            candidates.append(main_profile)
+    return candidates
+
+
+def legacy_managed_profile_files(
+    agent: str,
+    scope: str,
+    project_target: Path | None,
+) -> set[str]:
+    config_root = _legacy_config_root(agent, scope, project_target)
+    if config_root is None:
+        return set()
+    extension = ".toml" if agent == "codex" else ".md"
+    candidate = config_root / "agents" / f"main-control-agent{extension}"
+    boundaries = (
+        [project_target.expanduser().resolve(strict=False)]
+        if scope == "project" and project_target is not None
+        else [config_root]
+    )
+    _ensure_parent_within(candidate, boundaries, "legacy managed Agent Profile")
+    return {candidate.name} if _is_legacy_main_profile(candidate) else set()
+
+
+def _is_legacy_main_profile(path: Path) -> bool:
+    if path.is_symlink():
+        return False
+    if not path.is_file():
+        return False
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return "runtime-backed evidence" in text and "Analysis Worker" in text
+
+
+def _is_legacy_agent_profile(path: Path) -> bool:
+    if path.is_symlink() or not path.is_file():
+        return False
+    text = path.read_text(encoding="utf-8", errors="replace")
+    markers = (
+        "ChangeForge",
+        "change-forge-router",
+        "phase_artifact",
+        "runtime-backed evidence",
+        "Declared tool boundary:",
+        "Analysis Worker",
+        "Specialist Worker",
+        "Independent Reviewer",
+        "Contract_ref:",
+    )
+    return any(marker in text for marker in markers)
+
+
+def _is_legacy_copilot_instructions(path: Path) -> bool:
+    if path.is_symlink():
+        return False
+    if not path.is_file():
+        return False
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return (
+        "# ChangeForge Copilot Professional Contract" in text
+        and "change-forge-router" in text
+        and "dispatch_unavailable" in text
+    )
+
+
+def _has_changeforge_hook_command(path: Path) -> bool:
+    data = load_json(path)
+    if data is None:
+        return False
+    hooks = data.get("hooks")
+    if not isinstance(hooks, dict):
+        return False
+    for groups in hooks.values():
+        if not isinstance(groups, list):
+            continue
+        for group in groups:
+            if not isinstance(group, dict):
+                continue
+            items = group.get("hooks")
+            if isinstance(items, list) and any(_is_changeforge_hook_item(item) for item in items):
+                return True
+    return False
+
+
+def _is_changeforge_hook_item(item: Any) -> bool:
+    if not isinstance(item, dict) or not isinstance(item.get("command"), str):
+        return False
+    names = CHANGEFORGE_HOOK_COMMAND_RE.findall(item["command"])
+    return any(name in LEGACY_HOOK_SCRIPT_NAMES for name in names)
+
+
+def _remove_changeforge_commands(path: Path) -> None:
+    data = load_json(path)
+    if data is None:
+        return
+    hooks = data.get("hooks")
+    if not isinstance(hooks, dict):
+        return
+    changed = False
+    for event, groups in list(hooks.items()):
+        if not isinstance(groups, list):
+            continue
+        kept_groups = []
+        for group in groups:
+            if not isinstance(group, dict):
+                kept_groups.append(group)
+                continue
+            commands = group.get("hooks")
+            if not isinstance(commands, list):
+                kept_groups.append(group)
+                continue
+            kept = [item for item in commands if not _is_changeforge_hook_item(item)]
+            if len(kept) != len(commands):
+                changed = True
+            if kept:
+                updated = dict(group)
+                updated["hooks"] = kept
+                kept_groups.append(updated)
+        hooks[event] = kept_groups
+    if changed:
+        write_json(path, data)
+
+
+def legacy_residue_paths(agent: str, scope: str, project_target: Path | None, skill_target: Path) -> list[Path]:
+    paths = _legacy_removal_candidates(agent, scope, project_target, skill_target)
+    config_root = _legacy_config_root(agent, scope, project_target)
+    if config_root is not None:
+        extension = {
+            "codex": ".toml",
+            "claude": ".md",
+            "copilot": ".agent.md",
+        }.get(agent)
+        if extension is not None:
+            paths.extend(
+                path
+                for name in AGENT_PROFILE_NAMES
+                if (path := config_root / "agents" / f"{name}{extension}").is_symlink()
+            )
+    if config_root is not None and agent == "codex":
+        config = config_root / "hooks.json"
+        if _has_changeforge_hook_command(config):
+            paths.append(config)
+    return [path for path in paths if _path_lexists(path)]
+
+
+def _prune_empty_legacy_directories(
+    agent: str,
+    scope: str,
+    project_target: Path | None,
+    config_root: Path | None,
+) -> None:
+    candidates: list[Path] = []
+    if scope == "project" and project_target is not None:
+        project = project_target.expanduser().resolve()
+        candidates.append(project / ".changeforge")
+        if agent == "copilot":
+            candidates.extend([project / ".github" / "copilot" / "agents", project / ".github" / "copilot"])
+    if config_root is not None:
+        candidates.extend([config_root / "hooks", config_root / "agents"])
+    for path in candidates:
+        if path.is_symlink():
+            continue
+        if path.is_dir() and not any(path.iterdir()):
+            path.rmdir()

@@ -2,7 +2,7 @@
 
 ## Threat Surface
 
-The case may include prompts, route context records, process traces, final handoff text, logging decisions, validation telemetry, and benchmark metadata. These artifacts can accidentally expose raw prompts, secrets, full command output, or local absolute user paths if governance fails.
+The case may include implementation notes, tests, final handoff text, logging decisions, validation summaries, and benchmark metadata. These artifacts must not expose raw prompts, secrets, full command output, or local absolute user paths.
 
 ## Required Checks
 

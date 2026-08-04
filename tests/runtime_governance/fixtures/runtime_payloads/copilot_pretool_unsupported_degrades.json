@@ -1,8 +1,0 @@
-{
-  "runtime": "copilot",
-  "eventName": "PreToolUse",
-  "toolName": "replace_string_in_file",
-  "toolInput": {
-    "filePath": "src/auth/login.py"
-  }
-}

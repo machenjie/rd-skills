@@ -1,255 +1,82 @@
 ---
 name: task-dag-planner
-description: "Use this skill when implementing, reviewing, planning, or validating product or code changes that need dependency-aware task decomposition into reviewable, testable, rollback-aware tasks with ordering, parallelization opportunities, validation points, and handoff boundaries."
-license: MIT
-changeforge_kind: professional-skill
-changeforge_version: 0.1.0
-metadata:
-  changeforge.profile: recommended
-  changeforge.skill_type: professional
+description: "Use `analysis-agent` to create a Task DAG from an accepted source-backed Brief when 2+ tasks have dependencies, parallel value, integration, or release order. Skip single edits, accepted DAGs, and unanalysed requests."
 ---
 
 # Task DAG Planner
 
-## Mission
-Decompose a complex product or code change into a directed acyclic graph (DAG) of small, dependency-ordered, independently reviewable, and rollback-aware tasks — so that implementation can proceed in safe increments, risky changes are never hidden inside broad implementation buckets, verification is built into the graph rather than bolted on at the end, and every rollback path has an explicit owner and procedure.
+## Role
 
-## Stage Ownership
-
-`task-dag-planner` owns or reviews only the stage slices where its declared surface changes the next engineering decision. It hands off adjacent API, security/privacy, data middleware, reliability, release, documentation, or domain-extension work to the selected owner or gate instead of acting as a catch-all.
+Support `analysis-agent` in selecting the First Executable Slice and emitting
+the sole final authoritative Task DAG and Task Contract v2 for genuine multi-task work.
 
 ## When To Use
-- After intake and impact analysis, when a change needs sequencing, parallel work coordination, or multi-team dependency management.
-- When a change involves a database migration, API contract change, and application code change that must be deployed in a specific order.
-- When the change spans multiple bounded contexts, services, or teams with coordination dependencies.
-- When feature flags, progressive rollout, or EMC (Expand/Migrate/Contract) phases need to be sequenced explicitly.
-- When a cross-cutting refactoring needs to be decomposed into safe, verifiable slices.
-- When the rollback path for a complex change needs to be designed and validated as part of the plan.
-- When a product change needs to be decomposed into reviewable increments that each produce a shippable artifact.
 
-## Do Not Use When
-- A single obvious edit with no dependency, test, release, or coordination risk — create the task directly without a DAG.
-- The change is a documentation-only update with no implementation dependencies.
+- explicit Task DAG request with accepted Engineering Brief
+- accepted Brief has multiple tasks with a dependency parallel benefit integration need or release order
 
-## Adjacent Skill Conflict Resolution
+## Do Not Use
 
-For `task-dag-planner`, keep this skill primary only when a product or code change must be split into dependency-aware, reviewable, testable, rollback-aware tasks with explicit sequencing. Hand API/schema compatibility to `data-api-contract-changer`, storage/query/migration concerns to `data-middleware-change-builder`, security/privacy decisions to `security-privacy-gate`, reliability/observability decisions to `reliability-observability-gate`, release/rollback readiness to `delivery-release-gate`, and documentation contract updates to `change-documentation-gate`. Domain extensions add risk-specific addenda after the primary owner is selected; record skipped plausible owners when the routing choice affects handoff or validation.
+- single bounded edit
+- task DAG already accepted
+- unanalysed change request
+- To increase agent count or delay an already safe first slice.
 
-## Required Context / Missing Information Policy
+## Required Inputs
 
-Before `task-dag-planner` plans or closes work, collect current behavior, desired behavior, non-goals, affected surface, owner module, validation signal, existing conventions, and material data/API/security/release boundaries. Ask or block only when the missing fact can change public contract, data model, authorization, tenant behavior, migration/rollback, irreversible operation, or domain semantics; otherwise proceed with explicit reversible assumptions.
+- Accepted source-backed Engineering Brief, owner boundaries, and observable acceptance.
+- Candidate read/write scopes, shared contracts and resources, validation entry points, rollback needs, and host workspace isolation capability.
+- Resource and review boundaries for ordinary, combined, and specialized review.
 
-## Critical Gotchas
+## Professional Decision Rules
 
-- `task-dag-planner` must inspect the owning source, tests, configs, docs, and generated-artifact boundaries before planning material engineering work.
-- `task-dag-planner` must select only risk-changing references, capabilities, gates, or domain extensions; do not load nearby material because it exists.
-- `task-dag-planner` must close with fresh validation evidence, evidence limits, residual risk, and next owner or gate when work remains.
+- Expose the First Executable Slice once remaining analysis cannot invalidate it.
+- Inspect `task-dag-decomposition` candidate-graph evidence for proposed nodes, edges, blockers, critical path, collisions, uncertainty, and proof limits.
+- Accept or reject each proposed node and edge with an evidence-backed reason before constructing the graph.
+- Select the First Executable Slice independently under this Skill's ownership.
+- Only this Skill emits the final authoritative Task DAG and Task Contract v2.
+- Create a DAG only for two or more real tasks whose every edge expresses a blocking fact.
+- Identify the critical path and parallelize only when it shortens that path or adds independent defect discovery.
+- Mark workspace requirement and parallel safety. With shared or unknown workspace, serialize every write task.
+- Reject parallel writes that share files, contracts, schemas, migrations, generated outputs, fixtures, lockfiles, or production resources.
+- Render every node with the authoritative Task Contract v2 and one accountable Owner.
+- Give every parallel group an Integration Owner, Merge Owner, Conflict Resolution Owner, and workspace requirement.
+- Carry graph claims and proof limits in the visible task-local Evidence Ledger.
 
-## Stage Fit
-Use this skill when planning must connect execution stages without loading every downstream gate at once:
-- **Planning and implementation:** split coding work into owner-scoped nodes with repository context, reuse candidates, placement decisions, validation commands, and stop conditions before edits begin.
-- **Coding support:** keep implementation tasks small enough that a fresh agent can inspect, code, validate, and hand off one node without guessing about adjacent nodes.
-- **Debugging and bug-fix:** add diagnosis, reproduction, repair, regression, same-pattern scan, and route-repair nodes instead of retrying an unverified path.
-- **Code-review and refactoring:** separate behavior-preserving movement, API/contract changes, cleanup, generated-file updates, and review gates so reviewers can approve one risk domain at a time.
-- **Testing, release, and handoff:** attach verification, rollback, release-watch, documentation, plan-execution consistency, and residual-risk nodes where they block downstream work.
+## High-Value Gotchas
 
-## Non-Negotiable Rules
-- **Direct use still runs the runtime prompt flow.** When `task-dag-planner` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
-- **Tasks must be small enough to review in a single pass**: a task that requires reviewing 5 modules simultaneously is not a task, it is a phase — break it down further.
-- **All dependencies between tasks must be explicit**: implicit sequencing assumptions cause parallel work collisions; if Task B requires Task A's output, that dependency must be in the graph.
-- **Verification tasks are first-class nodes in the graph**: test, validate, and verify tasks are not afterthoughts — they are blocking gates that prevent downstream work from starting until evidence is produced.
-- **Rollback tasks are first-class nodes**: for every irreversible or high-risk task (migration, deployment, external notification), there must be a corresponding rollback task in the graph with a tested rollback procedure.
-- **Do not hide risky changes in broad implementation tasks**: a task named "implement backend changes" that includes a schema migration, an authorization change, and a breaking API change is three tasks disguised as one.
-- **Migration tasks must precede code tasks that depend on the migrated state**: deploying code that expects a new schema before the migration runs causes immediate production failure.
-- **Feature flag tasks must precede feature implementation tasks**: a feature behind a flag requires the flag to be registered and defaulted off before any implementation ships.
-- **Parallelism must be explicit**: tasks that can safely run concurrently must be identified — undetected sequential bottlenecks delay delivery; undetected parallel conflicts corrupt work.
-- **Every full-plan task must be agent-executable**: for L3+ plans, each task names the exact files to inspect, the exact files to create/modify/delete, the reuse candidates considered, the placement and public/private boundary decision, the validation command and its expected output, the rollback or revert note, the review gate, and the completion evidence required. L1/L2 may use the minimal Plan Handoff fields instead. A task a fresh agent cannot execute from its own text is not planned.
-- **Task-scoped handoff context**: when assigning or reviewing a task, provide only that task's goal, relevant files, constraints, acceptance criteria, validation command, expected result, and decisions that affect that task. Do not paste unrelated previous-task history or the full plan into a single-task review unless cross-task context changes the verdict.
-- **Every plan starts from repository context**: before the DAG is accepted, it must name the owning surface, caller/callee path, sibling conventions, tests, configs, docs, generated artifacts, and rejected placement locations from `repository-context-map`.
-- **Every plan closes with consistency evidence**: before handoff, compare planned nodes against actual changed files, validation commands, skipped work, stale evidence, and residual risks using `plan-execution-consistency`.
-- **No plan placeholders**: reject "TBD", "TODO", "add proper error handling", "write tests" without named test targets, "handle edge cases" without listing the edge cases, and "similar to above" without naming the exact files and behavior. A placeholder is an unplanned task.
-- **Code-change tasks carry an implementation-structure-design decision**: why a new file, function, or directory is created instead of reusing existing structure, and whether shared/common/utils placement is rejected or justified.
-- **Test tasks carry a quality-test-gate decision**: the test level, the test data, the regression target, and the deterministic evidence the task must produce.
+- A broad “implement backend” node hides ownership, migration, authorization, and rollback risks.
+- Verification and rollback are obligations on risky tasks, not decorative nodes.
+- Independent work is not parallel-safe when it mutates a shared contract or workspace.
+- A cycle or placeholder means the work is not executable.
 
-## Industry Benchmarks
-- **Work Breakdown Structure (WBS — PMI PMBOK 7th Edition)**: Hierarchical decomposition of deliverables into work packages. Each work package is assignable, estimable, and independently verifiable.
-- **Trunk-Based Development (Forsgren, Humble, Kim — Accelerate)**: Small, frequent commits to trunk; feature flags protect incomplete work; no long-lived feature branches. Tasks in the DAG should map to trunk-based commits.
-- **Dependency-First Task Ordering (Critical Path Method)**: Identify the critical path — the longest chain of dependent tasks. Compress non-critical tasks into the critical path by parallelizing where possible.
-- **Expand/Migrate/Contract (Database Migration Pattern)**: Phase 1 Expand: add new schema element, code supports both old and new; Phase 2 Migrate: move data or consumers to new element; Phase 3 Contract: remove old element. Each phase is a separate deployable task.
-- **Story Slicing (Richard Lawrence — Elephant Carpaccio)**: Slice user stories into thin, independently demonstrable vertical slices — each produces working software, not just a layer of the stack.
-- **Kanban Flow Efficiency**: Work that spends more time waiting than being worked on has low flow efficiency. Tasks blocked by unmet dependencies reduce flow — make dependencies explicit to unblock.
-- **Rollback as a Designed Artifact (SRE Release Engineering)**: Rollback is a product of engineering discipline, not an emergency improvisation. Every high-risk task has a pre-built, tested rollback procedure that can be executed in under 5 minutes.
+## Execution Checklist
 
-### Task Granularity Guidelines
+1. Identify the First Executable Slice.
+2. Decide whether a DAG is actually required.
+3. Split only by independent owner, risk, dependency, review, or validation boundary.
+4. Check every dependency and shared mutable resource.
+5. Mark critical path, parallel-safe tasks, and workspace requirement.
+6. Define per-task and combined review contracts, integration, validation, rollback, and stop boundaries.
 
-Split tasks that take more than a day, produce no independently reviewable artifact, have more than three hard dependencies, span more than two bounded contexts, combine migration/code/deploy work, or lack a verification step. Corrective action is to slice vertically, separate by owner/risk, add coordination nodes, or attach verification and rollback nodes before implementation begins.
+## Stop / Escalation Conditions
 
-## Technical Selection Criteria
-Evaluate the task decomposition against:
-- **Dependency completeness**: Are all blocking relationships between tasks expressed? Is the DAG acyclic (no circular dependencies)?
-- **Critical path identification**: Which task sequence determines the earliest completion date? What is the longest chain?
-- **Parallelism opportunities**: Which tasks have no shared dependencies and can run simultaneously?
-- **Migration sequencing**: Is schema migration (Expand) before application deployment, not after?
-- **Feature flag readiness**: Is the flag created and defaulted to off before any feature code ships?
-- **Contract compatibility window**: During a rolling deployment, do old and new application versions coexist safely?
-- **Verification task placement**: Is there a verification gate after each high-risk task (migration, deployment, integration point)?
-- **Rollback task placement**: For each irreversible task, is the corresponding rollback task defined and linked?
-- **Owner assignment**: Does each task have an identified owner surface (backend, frontend, data, infrastructure, release)?
-- **Residual risk per task**: For each task, is the rollback or undo cost identified and acceptable?
-
-## Mode Selection
-Select the planning mode before decomposing tasks.
-
-| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
-|---|---|---|---|---|---|
-| Small reviewable plan | L1/L2 task with few files but non-trivial validation or placement risk. | Keep plan minimal while naming boundary, validation, and stop condition. | Files to inspect/change, reuse candidate, validation command, residual risk. | `implementation-structure-design`, `quality-test-gate` | Full DAG when a Plan Handoff is enough. |
-| Multi-surface DAG | Change spans frontend/backend/API/data/docs/tests or multiple owners. | Make dependencies, owner surfaces, review units, and handoffs explicit. | Node list, edges, owner surface, artifact per node, critical path. | `change-impact-analyzer`, `task-dag-decomposition` | Implementation until graph is acyclic. |
-| Migration/release sequencing | Schema, config, rollout, feature flag, rollback, or version skew is involved. | Preserve deployability with expand/code/contract, rollback nodes, and verification gates. | Migration order, old/new coexistence, rollback command, release validation. | `data-migration-design`, `release-rollback`, `delivery-release-gate` | Cleanup/contract tasks before expand and compatibility are safe. |
-| Parallelization review | Team asks what can run concurrently or plan has shared files/resources. | Allow parallel work only when mutable resources and contracts do not collide. | Shared-resource scan, parallelism map, blocked edges, conflict rationale. | `architecture-impact-reviewer`, `ci-cd` | Parallelism by team preference without dependency evidence. |
-| Recovery/stop planning | High-risk task, repeated failure, unclear root cause, or unverified environment. | Define stop condition, route repair point, rollback owner, and evidence boundary. | Stop condition, maximum retry path, next diagnostic gate, rollback/revert note. | `agent-execution-discipline`, `failure-diagnosis` | Retrying same path after two failed attempts. |
-
-## Proactive Professional Triggers
-These triggers are hidden-risk escalators, not ordinary checklist items.
-
-- **Signal:** A task title bundles migration, API, auth, implementation, tests, and deployment in one node. **Hidden risk:** multiple risk domains are hidden from review and rollback. **Required professional action:** split by independently reviewable artifact and dependency edge. **Route to:** `task-dag-decomposition`, `quality-test-gate`. **Evidence required:** before/after node split, dependency edge, validation artifact per node.
-- **Signal:** Plan includes "write tests", "handle edge cases", "cleanup", or "similar to above" without named files or behavior. **Hidden risk:** placeholder task cannot be executed or reviewed. **Required professional action:** convert to agent-executable task contract or block. **Route to:** `agent-execution-discipline`, `test-strategy`. **Evidence required:** exact target files, cases, command, expected output, completion evidence.
-- **Signal:** A migration or rollout task has no rollback or old/new coexistence node. **Hidden risk:** deploy order creates unrecoverable state or version skew failure. **Required professional action:** add expand/contract or rollback task before implementation starts. **Route to:** `release-rollback`, `delivery-release-gate`. **Evidence required:** rollback command/procedure, compatibility window, verification gate.
-- **Signal:** Parallel tasks modify shared table, API contract, generated file, config, fixture, or common utility. **Hidden risk:** parallel work collides and corrupts boundary ownership. **Required professional action:** serialize or split ownership boundary before parallel execution. **Route to:** `architecture-impact-reviewer`, `implementation-structure-design`. **Evidence required:** shared-resource scan, owner, conflict edge, blocked/unblocked rationale.
-- **Signal:** Plan has no explicit stop condition after failed validation or uncertain diagnosis. **Hidden risk:** unverified diagnosis repeats the same path and mutates code without new evidence. **Required professional action:** add stop node and route-repair handoff. **Route to:** `failure-diagnosis`, `agent-execution-discipline`. **Evidence required:** failed command/output, alternate diagnostic route, max-retry rule, and residual risk owner.
-- **Signal:** Plan is written before repository context or later changed files do not match the plan. **Hidden risk:** implementation follows a plausible plan that ignores actual ownership or drifts after editing. **Required professional action:** add repository-context-map before planning and plan-execution-consistency before handoff. **Route to:** `repository-context-map`, `plan-execution-consistency`. **Evidence required:** inspected boundaries, planned nodes, actual diff/file list, validation freshness, and residual-risk reconciliation.
-
-## Risk Escalation
-- Escalate when a migration task is irreversible and the rollback task would require manual data correction — an untested rollback at that task is a P1 incident waiting to happen.
-- Escalate when concurrent tasks would produce write conflicts on a shared resource (shared table, shared configuration, shared API contract).
-- Escalate when a cross-service contract change requires coordinated deployment of two or more services simultaneously — the sequencing must be validated before execution starts.
-- Escalate when a task requires directly correcting production data — data correction tasks require separate review, backup, and approval.
-- Escalate when a task cutover from one external dependency to another (payment processor migration, DNS migration) cannot be rolled back within the deployment window.
-- Escalate when no single owner can be identified for a task — unclear ownership means unclear accountability when the task produces an incident.
-- Escalate when the critical path exceeds the available release window — the plan needs compression, parallelization, or scope reduction.
-
-## Critical Details
-- **DAG validation rule**: run a topological sort on the task graph before execution begins. If the sort fails (cycle detected), the graph has a circular dependency — resolve before implementation starts.
-- **Task granularity is not about size, it is about reviewability**: a task is correctly sized when a reviewer can confirm it is complete, correct, and safe without needing context from adjacent tasks.
-- **The DAG reveals hidden risk**: a task that has 6 incoming dependencies is the riskiest task in the plan — all six must complete successfully before it can start, and any delay in any of them delays the entire plan.
-- **Parallelism requires isolation**: two tasks can run in parallel only if they do not share mutable state, shared database tables with locking risk, or shared API contracts that both modify simultaneously.
-- **Rollback is time-bound**: a rollback task that cannot be executed in under 5 minutes for critical-path changes is a rollback plan in name only. If rollback takes 45 minutes, the change requires a maintenance window.
-- **Verification tasks produce artifacts**: a verification task is not "check that it works." It is "run integration test suite and attach results" or "perform EXPLAIN ANALYZE on migration and confirm < 100ms on test data." The artifact is the evidence.
-- **Feature flag lifecycle as DAG nodes**: create, rollout, and cleanup are three separate tasks. The cleanup task (flag removal) is frequently omitted — it must be a first-class node with an explicit deadline.
-
-### Agent-Executable Task Contract
-
-Every task node carries the fields a fresh agent needs to execute it without guessing:
-
-- **Goal**: the single outcome the task produces.
-- **Files to inspect**: the exact paths to read before changing anything.
-- **Files to modify/create/delete**: the exact paths the task touches.
-- **Reuse candidates**: existing functions, modules, or patterns considered first.
-- **Placement decision**: where new code lives and why (schema from `implementation-structure-design`).
-- **Visibility boundary**: public, internal, or private, and the compatibility implication.
-- **Validation command**: the literal command to run.
-- **Expected output**: the result that proves the task passed.
-- **Rollback or revert note**: how to undo the task.
-- **Review gate**: who or what reviews the task before it closes.
-- **Completion evidence required**: the artifact the task must attach (schema from `agent-execution-discipline`).
-
-### Visible Markdown Plan Contract
-
-Ordinary agents produce and consume Markdown plans, not internal task schemas.
-Each task names exact files, acceptance criteria, validation, expected output,
-review scope, stop conditions, and rollback or revert notes when risk requires.
-Load `references/task-contract-patterns.md` for the full visible shape,
-placeholder-replacement rules, and internal-only artifact boundary.
-
-Plan depth scales with complexity, not the reverse:
-
-- **L1 and L2**: a minimal Plan Handoff is enough — `Files`, `Verify`, and `Residual Risk`. Do not force a long plan onto a small change.
-- **L3, L4, and L5**: every task is an independently reviewable unit. A task may not span more than one independent subsystem; if it does, split it further.
-
-## Failure Modes
-For `task-dag-planner`, state symptom, impact, and detection.
-State repair and evidence before closure.
-
-- **Large tasks hide defects**: a 300-line PR combining migration + feature + auth change gets approved because the reviewer cannot evaluate all three simultaneously.
-- **Missing dependencies block execution**: Task B starts before Task A completes — the shared database table has old schema; Task B's writes fail.
-- **No rollback task creates an unrecoverable incident**: a migration is deployed; it causes a production outage; there is no tested rollback procedure; the incident extends to hours.
-- **No verification task creates false completion**: all implementation tasks are marked done; the feature is deployed; a critical integration test that would have caught a regression was never run.
-- **Circular dependency discovered during execution**: Tasks A and B each depend on the other's output — neither can start; the plan is deadlocked.
-- **Parallel tasks create a write conflict**: two teams modify the same database migration file simultaneously — the merge conflict is resolved incorrectly; both migrations run, one corrupting the other's schema.
-- **Critical path not identified**: the team parallelizes low-risk frontend tasks while the high-risk migration task (the bottleneck) is assigned to a single engineer with no backup — delivery is delayed by the unidentified critical path.
-- **Plan drift goes unnoticed**: implementation touches files or behavior not represented by any node — validation evidence no longer proves the accepted plan and handoff hides unreviewed work.
-
-### Anti-Patterns
-- **Anti-pattern:** bundling API, migration, auth, release, and tests into one task; hidden risk is unreviewable blast radius; detection signal is multiple owners or rollback modes in one node; replacement is owner-scoped DAG nodes.
-- **Anti-pattern:** allowing parallel work on shared mutable artifacts by preference; consequence is corrupt migrations, contracts, or fixtures; detection signal is no shared-resource scan; replacement is explicit dependency edges.
-- **Anti-pattern:** closing a plan without comparing actual diff to planned nodes; hidden risk is unreviewed behavior; detection signal is no plan-execution consistency; replacement is final consistency evidence and repair route.
-
-## Reference Loading Policy
-Do not load every reference by default. For L1 `task-dag-planner` work, use this body unless selected risk requires more detail.
-For L2, L3, L4, and L5 `task-dag-planner` work, read `references/capabilities/index.md` only to locate selected capability references; load selected files at `references/capabilities/<capability-id>-<capability-name>.md`, then add `references/planning-evidence-patterns.md`, `references/task-contract-patterns.md`, or domain references only when route risk requires them.
-
-## Execution Procedure
-
-For `task-dag-planner`: confirm activation and role; classify missing context; inspect relevant source/test/config/doc evidence; select mode, complexity, risk, and minimal references; execute or review only the owned surface; validate with concrete commands, diffs, tests, evals, or not-run limits; route repair through the owner; hand off with residual risk and next gate.
+- Stop for an unknown owner, acceptance, dependency, shared write, verification entry, or rollback boundary that changes safe scheduling.
+- Stop on cycles, placeholders, overlapping writes, or a user-owned destructive or production decision.
 
 ## Output Contract
-Return a task DAG with:
-- **Mode selected**: Planning mode and trigger signal that selected it.
-- **Repository context map**: owning surface, caller/callee flow, local conventions, tests/config/docs, generated artifacts, rejected locations, and not-inspected boundaries.
-- **Task nodes**: Each with ID, title, goal, owner surface, files to inspect, files to modify/create/delete, reuse candidates, placement and visibility decision, dependencies (IDs), parallelism flag, validation command, expected output, rollback note, review gate, and completion evidence required (see Agent-Executable Task Contract).
-- **Plan handoff (L1/L2)**: for low-complexity work, the minimal handoff — files touched, validation command, residual risk — in place of a full DAG.
-- **Dependency graph**: Explicit directed edges showing which tasks must complete before which.
-- **Critical path**: The longest sequence of dependent tasks determining minimum delivery time.
-- **Verification nodes**: Gate tasks that block downstream work until evidence is produced.
-- **Rollback nodes**: Rollback tasks linked to each irreversible or high-risk task, with tested procedure.
-- **Migration sequence**: Expand → code → contract phases in correct dependency order.
-- **Feature flag lifecycle**: Create → implement → rollout → cleanup nodes in sequence.
-- **Parallelism map**: Sets of tasks that can safely execute concurrently.
-- **Risk per task**: Rollback cost and reversibility for each high-risk task.
-- **Residual risk summary**: Accepted risks with justification and mitigating controls.
-- **Boundaries inspected**: files, modules, contracts, data stores, release artifacts, shared resources, owners, and task boundaries inspected.
-- **Professional judgment**: why each node is the smallest reviewable unit and why each edge exists.
-- **Reuse and placement rationale**: existing modules, helpers, fixtures, and task patterns reused before new structure is introduced.
-- **Behavior preservation statement**: old behavior preserved per node or intentionally changed with acceptance link.
-- **Validation evidence**: commands/checks per node, expected output, and not-verified disclosure where execution is deferred.
-- **Plan-execution consistency**: accepted plan nodes compared to actual changed files, validation commands, skipped work, stale evidence, unplanned behavior changes, and residual risk.
-- **Evidence limits**: what the DAG proves and does not prove about runtime scale, unknown owners, and rollback.
-- **Next gate / handoff**: first unblocked implementation/gate node or blocked owner question.
 
-## Evidence Contract
-Close a task DAG only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
-- **Basis**: the change request and dependency facts each task and edge rests on.
-- **Files and boundaries inspected**: the repository context map, surfaces, owners, caller/callee paths, and shared artifacts each task touches, and the tasks that therefore cannot run concurrently because they would collide on the same file or resource.
-- **Placement rationale**: why each node is a single reviewable patch unit with a named input, output, owner, and dependency edge, and why the parallelism map is safe.
-- **Validation commands**: the verification node attached to each task — the literal command or check that must pass before downstream work unblocks — and the rollback procedure for each irreversible task.
-- **Planning judgment and evidence limits**: mode selected, behavior preservation, workflow state, plan-execution consistency, stop condition, what evidence proves, what it does not prove, residual risk, and next gate.
-- **Residual risk**: the sequencing or rollback assumption that remains unproven, with the named owner.
+- sole authoritative Markdown Task DAG Contract v2
+- Status and complete task nodes
+- parallel-group, Integration Owner, and Review Owner boundaries
+- visible task-local Evidence Ledger
+- single Task Capsule when a DAG is unnecessary
 
-## Quality Gate
-1. All task dependencies form a valid DAG (no circular dependencies; topological sort succeeds).
-2. No task combines more than one distinct risk domain (migration, authorization change, API change) into a single unreviewed unit.
-3. Every high-risk or irreversible task has a corresponding rollback task with a tested procedure.
-4. Every integration point, migration, and deployment has a verification gate task.
-5. Migration tasks are sequenced before application code tasks that depend on the migrated state.
-6. Feature flag tasks include creation, rollout, and cleanup nodes.
-7. All parallelizable tasks are identified; no unnecessary sequential bottlenecks remain.
-8. Every task has an identified owner surface.
-9. The critical path is identified and its delivery time is within the release window.
-10. All tasks produce independently reviewable artifacts that can confirm completion without requiring cross-task context.
-11. Every task is agent-executable: it names files to inspect, files to change, a validation command, expected output, a rollback note, and the required completion evidence.
-12. No task uses a placeholder (TBD, TODO, "write tests", "handle edge cases", "similar to above") in place of named files, targets, or behavior.
-13. Every code-change task carries an implementation-structure-design decision (reuse-vs-new and placement); every test task carries a quality-test-gate decision (level, data, regression target, evidence).
-14. No L3-or-higher task spans more than one independent subsystem; oversized tasks are split further.
-15. Repository context is present before planning begins, including owning surface, caller/callee path, local conventions, tests/config/docs, generated artifacts, and rejected placement locations.
-16. Handoff includes plan-execution consistency: accepted plan vs. changed files, validation commands, skipped work, stale evidence, unplanned behavior, and residual risk.
-17. Every deferred validation, unknown owner, skipped reference, and non-parallel edge has a named reason, owner, and unblock condition.
+## Targeted References
 
-## Handoff
-- **backend-change-builder** — receives backend task nodes with dependencies, completion criteria, and rollback notes.
-- **data-api-contract-changer** — receives migration sequencing task nodes with EMC phases.
-- **delivery-release-gate** — receives the deployment and rollback task nodes with sequencing and verification gates.
-- **quality-test-gate** — receives verification task nodes with required test evidence per task.
-- **architecture-impact-reviewer** — receives the DAG for cross-context coordination task review.
-- **domain-impact-modeler** — if domain boundary coordination tasks need inter-team dependency sequencing.
-
-## Completion Criteria
-The task DAG is complete when it forms a valid acyclic graph, every high-risk task has a tested rollback task, every integration point has a verification gate, migrations are sequenced before dependent code, feature flag lifecycle is fully represented, all parallelism opportunities are identified, the critical path is calculated and fits the delivery window, and every task has an identified owner surface and independently reviewable completion artifact.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [checklist](references/checklist.md) | decision-checklist | A bounded review needs a quick DAG readiness and closure checklist | Detailed evidence map or executable node contract is required | analysis-agent | checklist-result, residual-risk |
+| [index](references/index.md) | index | competing task dag planner references require dependency, conflict, or output-fragment selection | the task dag planner root or a task-named reference already resolves selection | analysis-agent | reference-selection |
+| [planning evidence](references/planning-evidence-patterns.md) | evidence-pattern | Closing graph validity, new-hypothesis, parallelization, rollback, or plan-execution consistency | Only task field shape is needed | analysis-agent | evidence-record, proof-limit, residual-risk |
+| [task contract](references/task-contract-patterns.md) | benchmark-pattern | Nodes must be executable by a fresh agent or placeholder tasks need replacement | L1/L2 handoff already has exact files, command, and residual risk | analysis-agent | option-comparison, selected-approach |

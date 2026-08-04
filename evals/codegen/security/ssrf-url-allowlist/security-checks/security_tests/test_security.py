@@ -127,6 +127,35 @@ class SSRFSecurityTests(unittest.TestCase):
         self.assertNotIn("token=", logs)
         self.assertNotIn("secret-token", logs)
 
+    def test_mixed_or_missing_dns_answers_fail_closed_before_fetch(self) -> None:
+        url = "https://preview.example.com/card"
+        for answers in (["93.184.216.34", "127.0.0.1"], []):
+            with self.subTest(answers=answers):
+                http = RecordingHTTP({url: Response(text="<title>unsafe</title>")})
+                result = app.fetch_preview(
+                    url,
+                    http_get=http,
+                    resolver=resolver_for({"preview.example.com": list(answers)}),
+                )
+                self.assertFalse(result_ok(result))
+                self.assertEqual(http.calls, [])
+
+    def test_dns_exception_userinfo_and_non_default_port_fail_closed(self) -> None:
+        def broken_resolver(host: str) -> list[str]:
+            raise OSError("dns unavailable")
+
+        urls = [
+            "https://preview.example.com/card",
+            "https://user@preview.example.com/card",
+            "https://preview.example.com:8443/card",
+        ]
+        for url in urls:
+            with self.subTest(url=url):
+                http = RecordingHTTP({url: Response(text="<title>unsafe</title>")})
+                result = app.fetch_preview(url, http_get=http, resolver=broken_resolver)
+                self.assertFalse(result_ok(result))
+                self.assertEqual(http.calls, [])
+
 
 if __name__ == "__main__":
     unittest.main()

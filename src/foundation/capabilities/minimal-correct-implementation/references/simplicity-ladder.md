@@ -1,39 +1,23 @@
-# Simplicity Ladder
+# Minimality Candidate Record
 
-Load this reference when a change adds a dependency, abstraction, function, class, file, directory, helper, wrapper, configuration option, or new structure.
+This record compares concrete implementation candidates against current acceptance, owner boundaries, and accident-prevention obligations.
 
-## Decision Order
+## Candidate Comparison
 
-1. Does the work need to exist now?
-2. Can existing repository code solve it?
-3. Can the standard library solve it?
-4. Can a native platform, framework, database, browser, or runtime feature solve it?
-5. Can an already-installed dependency solve it?
-6. Can a local one-line or small local implementation solve it?
-7. Only then add the smallest correct new code.
+| Candidate | Fit with current need | Rejection signal | Proof to retain |
+| --- | --- | --- | --- |
+| Omit or delete | Acceptance and protected obligations remain satisfied without the artifact | A reachable consumer, invariant, migration, recovery, or diagnostic path still depends on it | Consumer and generated-path search plus behavior-preserving tests |
+| Existing repository behavior | One current owner already provides the needed semantics at the right boundary | Reuse would cross ownership, expose internals, or merge distinct policy | Owner, contract, caller, and rejected-reuse evidence |
+| Standard or native behavior | Library, runtime, framework, browser, or database semantics match the required boundary | Version, portability, edge behavior, or operational ownership differs | Supported version and boundary-case comparison |
+| Installed dependency | Present package closes a real capability gap without expanding policy or lifecycle | API, transitive surface, ownership, or compatibility cost exceeds direct behavior | Current version, approved owner, API fit, and supply-chain route |
+| Direct local code | One cohesive owner can express the behavior without a reusable contract or lifecycle | Logic duplicates an owner, hides effects, or is likely to diverge across current consumers | Focused behavior test and same-pattern scan |
+| New structure or dependency | Current variants, independent contract, lifecycle, or capability gap survive the nearer comparisons | The rationale is future flexibility, file count, aesthetics, or one trivial implementation | Current force, placement route, validation, rollback or deletion path, and residual risk |
 
-## Evidence Per Step
+## Boundary Checks
 
-- **Existence:** current requirement, acceptance signal, non-goal or rejected speculative work.
-- **Existing code:** search scope, candidate names, owner modules, rejected reuse reason.
-- **Standard library:** API considered, correctness match, edge cases, test or doc evidence.
-- **Native feature:** framework/platform/database/browser/runtime primitive considered, boundary where it applies, mismatch if rejected.
-- **Installed dependency:** package already present, approved owner, version/API verified, no wider transitive surface.
-- **Local minimal code:** why a tiny local implementation is clearer and safer than a shared abstraction.
-- **New code/dependency/abstraction:** current force, placement, validation, rollback/delete path, and residual risk.
-
-## Current Force Rules
-
-- One current implementation is direct code by default.
-- Two current implementations may justify a shared local function or policy only if the shared behavior has one owner.
-- Multiple current variants with a stable contract may justify strategy, factory, interface, provider, or registry.
-- A future variant without current force is not a requirement.
-- A config option with no current setter, owner, default, lifecycle, and tests is not a requirement.
-
-## File Boundary Rule
-
-Do not use "fewest files possible" as a rule. A new file is valid when it protects an owner, object, module, side-effect, adapter, generated/handwritten, public contract, lifecycle, test, or current strategy boundary. A new file is suspect when it exists only to reduce line count, expose a private helper, or make one local behavior look modular.
-
-## Minimal Validation
-
-L1 low-risk work may use the smallest meaningful runnable check. The check must fail when the relevant logic breaks. Higher-risk behavior keeps the normal depth required by `quality-test-gate`.
+- Apply the ladder in order: delete or omit, existing repository behavior, standard or native behavior, installed dependency, direct local code, then new structure.
+- Compare candidates across accepted behavior, authorization, data integrity, accessibility, compatibility, migration, observability, recovery, and incident evidence that the task can affect.
+- Treat line count, file count, and abstraction count as investigation signals rather than proof of minimality.
+- A single current implementation can still protect an independent external contract or lifecycle; the decision records that boundary instead of applying a numeric rule.
+- Deletion and shrink claims state search limits for dynamic registration, reflection, generated code, stored data, and external consumers.
+- Once structure is retained, hand owner-private placement to `implementation-structure-design`; hand a proved variation, lifecycle, protocol, concurrency, or extension force to `design-pattern-selection`.

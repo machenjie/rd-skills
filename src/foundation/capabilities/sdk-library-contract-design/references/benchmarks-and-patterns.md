@@ -24,21 +24,21 @@ Use this reference when an SDK/library change needs benchmark-backed judgment, g
 
 ## Graph Memory Execution Coupling
 
-- Repository graph: inspect exports, package manifests, generated trees, examples, docs, changelog, release scripts, test fixtures, and package dependency edges before classifying the change.
-- Project memory: compare previous compatibility promises, accepted exceptions, deprecation windows, runtime floors, and consumer commitments with the current source; mark stale memory as not verified.
+- repository inspection: inspect exports, package manifests, generated trees, examples, docs, changelog, release scripts, test fixtures, and package dependency edges before classifying the change.
+- prior task evidence: compare previous compatibility promises, accepted exceptions, deprecation windows, runtime floors, and consumer commitments with the current source; mark stale prior evidence as not verified.
 - Consumer graph: identify first-party consumers, fixture projects, generated-client users, public/private export boundaries, and downstream smoke targets; record unknown external consumers as residual risk.
-- Execution trajectory: connect each observed change to the command or review artifact that proves it: API diff, generator command, packed example run, fixture build, contract test, matrix job, SBOM/provenance verification, or explicit not-verified owner.
+- Observable action sequence: connect each observed change to its proving command or review artifact. Evidence may be an API diff, generator command, packed example run, fixture build, contract test, matrix job, SBOM/provenance verification, or explicit not-verified owner.
 
 ## Compatibility Review Patterns
 
-- Patch: bug fix only; no public type, generated shape, runtime floor, error taxonomy, default, package metadata, or dependency-floor break.
+- Under semantic versioning, classify a patch as a backward-compatible bug fix; a public type, generated shape, runtime floor, error taxonomy, default, package metadata, or dependency-floor break requires a higher compatibility classification.
 - Minor: additive surface that old consumers can ignore; examples, docs, changelog, and fixture consumers still pass.
 - Major: removal, rename, required parameter, narrowed type, changed default, module-format flip, runtime-floor raise, error taxonomy break, or changed extension contract.
-- Internal-only: no published package, exported symbol, generated client, docs example, fixture consumer, or package metadata boundary changes; prove with repository graph evidence.
+- Internal-only: no published package, exported symbol, generated client, docs example, fixture consumer, or package metadata boundary changes; prove with repository inspection evidence.
 
 ## Handoff Boundaries
 
 - Hand server API semantics to `api-contract-design`; keep SDK contract focus on generated clients, package surface, examples, and consumer compatibility.
 - Hand mixed-version rollout windows to `version-compatibility`; keep SDK release classification tied to package versions and consumer adoption.
 - Hand dependency/CVE/license/provenance depth to `package-dependency-management` and `security-privacy-gate`; keep this capability focused on publication evidence and rollback/yank behavior.
-- Hand test depth and stale validation decisions to `quality-test-gate` and `validation-broker`; this capability names the required evidence but does not replace the validator.
+- Hand test depth and stale validation decisions to `quality-test-gate` and `targeted-validation-selection`; this capability names the required evidence but does not replace the validator.

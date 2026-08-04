@@ -6,11 +6,11 @@ A minimal Python and Markdown fixture repository prepared by the shared codegen 
 
 ## Initial State
 
-The starter repository contains small text and Python files that are safe to edit during live benchmark runs. The fixture is intentionally bounded so the agent must produce evidence for Repair Re-review Required without relying on external services or hidden state.
+The starter repository contains small text and Python files that are safe to edit during codegen runs. The fixture is intentionally bounded so the agent must produce evidence for Repair Re-review Required without relying on external services or hidden state.
 
 ## Files
 
-- `CAPABILITY_EVIDENCE.md` may be created or updated to hold assertion-backed process evidence.
+- `HANDOFF.md` may be created or updated to hold concise validation, review, and residual-risk evidence.
 - `src/` files may be updated only when the case needs concrete code behavior.
 - `tests/` files may be added by the candidate when validation is part of the task.
 

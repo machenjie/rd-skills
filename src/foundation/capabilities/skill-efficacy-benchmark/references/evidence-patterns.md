@@ -1,110 +1,53 @@
 # Skill Efficacy Benchmark Evidence Patterns
 
-Use this reference when closure depends on graph, memory, execution trajectory, validation freshness, generated reports, runtime profile output, privacy boundary, or proof limits. Keep it as an evidence map, not a second benchmark tutorial.
+Use this reference when closure depends on current source, a baseline/treatment comparison, validation freshness, generated reports, build-profile output, privacy boundaries, or explicit proof limits.
 
 ## Evidence Classification
 
 | Evidence source | Use as | Reject as |
 | --- | --- | --- |
-| Current source diff | Treatment artifact and changed-path input. | Proof that behavior improved without a case. |
-| Generated report | Structural evidence from the generating command. | Live agent performance or user productivity proof. |
-| Repository graph | Selector for affected skills, references, registries, tests, reports, and runtime outputs. | Product intent or efficacy proof without current source. |
-| Project memory | Lead to recurring failures, fragile skills, stale validation, or prior route disputes. | Current source truth without confirmation. |
-| Execution trajectory | Order of edits, validations, failures, repairs, and re-runs. | Fresh evidence when validation predates final material edit. |
+| Current source and diff | Treatment artifact and changed-path input. | Proof that behavior improved without a case. |
+| Generated report | Structural evidence from its generating command. | Live agent performance or user productivity proof. |
+| Prior task note | Lead to a recurring failure or stale validation risk. | Current truth without source confirmation. |
+| Observable action sequence | Order of edits, validations, failures, repairs, and re-runs. | Fresh proof when validation predates the last edit. |
 | Baseline artifact | Comparison point for old behavior. | A representative population unless sampling is defined. |
-| Treatment artifact | Comparison point for changed behavior. | Proof of release safety without validators and caveats. |
-| Validator output | Evidence for the validator's declared scope after final edit. | Evidence for unrun commands, external CI, or production behavior. |
+| Validator output | Evidence for the validator's declared scope after the final edit. | Evidence for unrun commands, external CI, or production behavior. |
 
-## Freshness And Runtime Profile Map
+## Freshness And Build Profile Map
 
 | Changed item | Freshness trigger | Required validation evidence |
 | --- | --- | --- |
-| Capability or skill `SKILL.md` | Any body, trigger, output, evidence, or reference-loading change. | Body links, content size, professionalism eval, audit as applicable. |
-| Bundled reference | New file, renamed file, Markdown link change, or deep reference added. | Body links, content size, build profile, runtime reference links. |
-| Registry or routing rule | `used_by`, trigger, route_to, stage model, priority, or route manifest semantics change. | Registry validation, routing eval, routing coverage. |
-| Hook/runtime support | Prompt template, state schema, script, adapter, or injected context changes. | Hook validation, build profiles, install validation. |
-| Benchmark fixture or eval script | Case, expected output, validator logic, report schema, or promoted sample changes. | Fixture validator and matching eval command. |
-| Generated report or dist output | Report/dist is regenerated or stale after source changes. | Source generator/eval/build command and install/runtime link validator. |
+| Skill `SKILL.md` | Body, trigger, output, stop condition, or loading rule changes. | Body links, content size, professionalism evaluation, and audit as applicable. |
+| Targeted reference | File added, renamed, linked, or materially changed. | Authored links, content size, build, and built-Skill reference validation. |
+| Registry or router | Role support, trigger, anti-trigger, candidates, or route fixture changes. | Registry, deterministic routing, and routing coverage validation. |
+| Agent Profile or control prompt | Permission boundary, responsibility, dispatch, progress, or closure behavior changes. | Profile validation, control-prompt validation, observable action sequence fixtures, and behavior samples. |
+| Benchmark fixture or evaluator | Case, expected result, assertion, report shape, or promoted sample changes. | Fixture validator and matching evaluation command. |
+| Generated report or `dist/` output | Source or generator changes after generation. | Fresh generator/evaluation/build command plus installation or built-reference validation. |
 
-## Benchmark Closure Ledger
+## Current Evidence Reconciliation
 
-```yaml
-skill_efficacy_evidence_closure:
-  inspected_boundaries:
-    - boundary: ""
-      source_or_report: ""
-      finding: ""
-      freshness: current|stale|not_verified
-  baseline_treatment:
-    same_task: true
-    baseline_artifacts: []
-    treatment_artifacts: []
-    unavailable_baseline_reason: null
-  metrics:
-    routing_correctness: ""
-    evidence_completeness: ""
-    defect_catch: ""
-    validation_freshness: ""
-    over_routing: ""
-    under_routing: ""
-    token_overhead: not_collected
-    turn_overhead: not_collected
-  graph_memory_trajectory:
-    accepted: []
-    rejected_or_stale: []
-    selector_limits: []
-  changed_skill_to_validation:
-    - changed_item: ""
-      validator: ""
-      outcome: passed|failed|stale|partial|not_run|not_verified
-      proves: ""
-      does_not_prove: ""
-  privacy_boundary:
-    retained_facts: []
-    rejected_or_redacted: []
-    redaction_rule: ""
-  verdict:
-    status: improved|regressed|no_change|unknown|not_enough_evidence
-    structural_only: true
-    claim_boundary: ""
-  rollback_note: ""
-  residual_risk:
-    - risk: ""
-      owner: ""
-      next_gate: ""
-```
-
-## Graph, Memory, And Trajectory Reconciliation
-
-- Accept graph evidence only after it points to current source, registry, generated artifact, report, or validator boundaries that were inspected.
-- Accept project memory only as current evidence when date, owner, scope, and current-source confirmation are present.
-- Mark validation stale when any material source, reference, registry, hook, fixture, report, build output, or owner decision changes after the command.
+- Confirm every prior note against current source, registries, reports, or validator output before using it as evidence.
+- Mark validation stale when any material source, reference, registry, Profile prompt, fixture, report, build output, or owner decision changes after the command.
 - Preserve repaired failures as evidence only when a later validator covers the failed scope.
-- If a compaction or summary records prior validation, use it as a locator, then confirm the current log or rerun the command.
+- Treat a summary of prior validation as a locator; confirm the current result or rerun the command.
 
 ## Proof Limits
 
 | Claim | Required wording |
 | --- | --- |
-| Static validator passed | "The validator passed for the checked fixture/report scope." |
-| Score improved | "The score improved for the evaluator dimensions measured by this report." |
-| Runtime references valid | "Built profile Markdown links are valid after build." |
-| Agent behavior improved | Only allowed with representative agent-run evidence, sampling limits, and caveats. |
-| Efficiency improved | Requires selected/skipped count plus token/turn overhead or `not_collected` caveat. |
-| Safer closure | Requires negative baseline or forbidden behavior case caught by treatment. |
+| Static validator passed | The validator passed for the checked fixture or report scope. |
+| Score improved | The score improved only for the evaluator dimensions measured by this report. |
+| Built references valid | Built profile Markdown links are valid after the current build. |
+| Agent behavior improved | Allowed only with representative agent-run evidence, sampling limits, and caveats. |
+| Efficiency improved | Requires measured token, turn, or elapsed-time comparison; otherwise use `not_collected`. |
+| Safer closure | Requires a negative baseline or forbidden behavior that the treatment catches. |
 
-## Tool And Output Boundary
+- If approved external measurement or connector lookup, use the approved account/data boundary, redaction, and retention rule.
+- If destructive cleanup or deployment, treat it as outside ordinary skill benchmarking; requires explicit authority and rollback.
 
-| Action | Boundary record |
-| --- | --- |
-| Local source/report inspection | Read-only local shell; cite bounded slices and avoid full output dumps. |
-| Eval, validator, build, install checks | Local-write to reports, caches, dist, or temporary artifacts; cite command, exit code, log path, freshness. |
-| Live benchmark or connector lookup | Requires explicit maintainer authorization, account/data boundary, redaction, and retention note. |
-| Destructive cleanup or deploy | Out of scope for ordinary skill efficacy benchmarking; require owner approval and rollback path. |
+## Result Decisions
 
-## Handoff Rules
-
-- Hand off as `not_enough_evidence` when baseline, treatment, metrics, validator, or caveat is missing.
-- Hand off as `unknown` when evidence is valid but does not discriminate old and new behavior.
-- Hand off as `improved` only when the treatment is better on the named metric and evidence limits are explicit.
-- Always include rollback note, residual risk owner, and next gate when a benchmark supports release, docs, or further skill authoring.
+- Missing comparable baseline yields evidence class `structural-only`, final verdict `not_enough_evidence`, and no empirical-improvement score.
+- Return `not_enough_evidence` when treatment, metrics, validation, or caveat is missing.
+- Return `unknown` when evidence is valid but does not distinguish old and new behavior.
+- Return `improved` only when the treatment is better on a named metric and proof limits are explicit.

@@ -1,6 +1,6 @@
 # Business Rule Extraction Benchmarks And Patterns
 
-Use this reference when root `SKILL.md` needs deeper support for rule authority, decision-table design, graph/memory/execution coupling, audit traceability, or changed-rule-to-validation mapping. Keep examples generic and do not include real customer data, secret values, private policy text, or regulated identifiers.
+Use this reference when root `SKILL.md` needs deeper support for rule authority, decision-table design, current source/diff/validation coupling, audit traceability, or changed-rule-to-validation mapping. Keep examples generic and do not include real customer data, secret values, private policy text, or regulated identifiers.
 
 ## Rule Evidence Matrix
 
@@ -22,12 +22,12 @@ Use this reference when root `SKILL.md` needs deeper support for rule authority,
 | Is this analyst-managed tabular policy? | Prefer decision table with hit policy and owner review. | DMN/table owner, precedence, effective dates, generated/tested artifact. |
 | Is this high-change policy needing an engine? | Use OPA/Cedar/rules engine only with governance, versioning, and performance evidence. | Engine owner, bundle versioning, decision logs, latency/cache validation. |
 
-## Graph, Memory, And Execution Coupling
+## Current Evidence And Freshness
 
-- Repository graph selects duplicate decision sites, entry points, SQL/report paths, jobs/imports/admin scripts, test fixtures, generated artifacts, docs, support macros, and audit schemas.
-- Project memory can identify prior disputed rules, spreadsheet authority, fragile bypass paths, or known support escalations; accept it only after current source, owner, or validation evidence confirms it.
-- Execution trajectory decides whether rule validation, replay, owner review, or graph scan ran after the final rule/catalog/source edit.
-- Validation broker maps each rule id to allowed/denied cases, entry-point checks, replay/audit checks, owner approval, release blocker, stale command, or residual risk.
+- repository inspection selects duplicate decision sites, entry points, SQL/report paths, jobs/imports/admin scripts, test fixtures, generated artifacts, docs, support macros, and audit schemas.
+- prior task evidence can identify prior disputed rules, spreadsheet authority, fragile bypass paths, or known support escalations; accept it only after current source, owner, or validation evidence confirms it.
+- Observable action sequence decides whether rule validation, replay, owner review, or graph scan ran after the final rule/catalog/source edit.
+- targeted validation selection maps each rule id to allowed/denied cases, entry-point checks, replay/audit checks, owner approval, release blocker, stale command, or residual risk.
 - Agent-tool permission/sandbox evidence is required before running broad graph scans, data-replay scripts, spreadsheet exports, support-tool reads, migrations, or rule-engine bundle generation.
 
 ## Rule Validation Map
@@ -43,7 +43,7 @@ Use this reference when root `SKILL.md` needs deeper support for rule authority,
 ## Anti-Patterns To Reject
 
 - Treating a UI disabled state, SQL filter, fixture value, or spreadsheet copy as the rule authority without cataloging owner and enforcement.
-- Closing a rule catalog from project memory, old tickets, or generated summaries without current source and validation freshness.
+- Closing a rule catalog from prior task evidence, old tickets, or generated summaries without current source and validation freshness.
 - Returning booleans without reason codes, evidence, or rule version for money, eligibility, audit, or compliance decisions.
 - Allowing admin/support overrides without owner, allowed conditions, audit, expiry, and precedence.
 - Claiming every entry point is covered when jobs, imports, retries, migrations, admin tools, or support paths were not scanned.

@@ -1,0 +1,26 @@
+id: hookless-synchronous-first-executable-slice
+pressure_type: synchronous_dispatch_blocks_first_edit
+prompt: The host has synchronous dispatch; return the minimum safe slice and do not wait for independent downstream analysis.
+expected:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: [repository-context-map]
+  review_skill: ai-code-review-refactor
+  behaviors:
+    - ended the first analysis invocation after the safe slice handoff
+    - named only uninspected non-overlapping remaining scope
+  forbidden_behaviors:
+    - claim background analysis continues on a synchronous host
+    - repeat completed scope in a second preparation pass
+captured:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: [repository-context-map]
+  review_skill: ai-code-review-refactor
+  observed_behaviors:
+    - ended the first analysis invocation after the safe slice handoff
+    - named only uninspected non-overlapping remaining scope
+  validation_status: not-applicable
+  residual_risk: downstream scope remains explicitly uninspected
+  completion_claim: false
+evidence_kind: captured-fixture

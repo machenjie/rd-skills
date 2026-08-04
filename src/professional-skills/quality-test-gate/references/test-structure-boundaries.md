@@ -20,14 +20,14 @@ Use this reference when a change adds test helpers, fixtures, factories, golden 
 ## Fixture And Helper Ownership
 
 - Fixture, factory, mock, and golden data belong to the module whose behavior they represent.
-- Shared test utilities must be pure technical helpers: builders, clock controls, temp directories, HTTP test harnesses, or assertion helpers with no business vocabulary.
+- Keep repository-wide or cross-domain test utilities technical; place domain-specific builders, fixtures, and assertions in their owning module with explicit behavior and fixture ownership.
 - Business fixtures such as order cancellation, refund, tenant entitlement, invoice state, or permission role data belong in the owning module's test boundary.
 - A shared helper with domain terms is a test-structure smell and should be moved or renamed with ownership.
 
 ## Mock Boundary Rules
 
 - Mock external systems, public module APIs, time, randomness, and slow side-effect boundaries.
-- Do not mock internal implementation details created by a refactor; test through observable behavior.
+- Test refactored code through observable behavior rather than mocked internal implementation details.
 - If a mock encodes provider behavior, validate the assumption with contract or integration evidence.
 
 ## Test Readability Rules

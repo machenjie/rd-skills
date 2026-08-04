@@ -1,84 +1,219 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.invalid/changeforge/marketplace-index.schema.json",
-  "title": "ChangeForge Marketplace Index",
+  "title": "ChangeForge Marketplace Index v3",
+  "description": "Source-derived discovery metadata for the four Skill layers and three build profiles.",
   "type": "object",
-  "required": ["schema_version", "profile", "generated_by", "source_of_truth", "items"],
+  "required": [
+    "schema_version",
+    "profile",
+    "generated_by",
+    "source_of_truth",
+    "items"
+  ],
   "properties": {
-    "schema_version": { "const": 1 },
+    "schema_version": { "const": 3 },
     "profile": { "enum": ["recommended", "full", "dev"] },
-    "generated_by": { "type": "string" },
+    "generated_by": { "type": "string", "minLength": 1 },
     "source_of_truth": {
       "type": "array",
-      "items": { "type": "string" },
-      "minItems": 1
+      "prefixItems": [
+        { "const": "src/registry/control-skills.yaml" },
+        { "const": "src/registry/professional-skills.yaml" },
+        { "const": "src/registry/foundation-skills.yaml" },
+        { "const": "src/registry/domain-skills.yaml" }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
     },
     "items": {
       "type": "array",
-      "items": { "$ref": "#/$defs/item" }
+      "items": { "$ref": "#/$defs/item" },
+      "uniqueItems": true
     }
   },
   "additionalProperties": false,
   "$defs": {
-    "visibility": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "nonEmptyStringList": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "stringList": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "delivery": {
       "type": "object",
-      "required": ["top_level", "compiled_reference", "router_index", "authoring_visibility"],
+      "required": ["mode", "top_level", "targeted_reference", "routing_index"],
       "properties": {
+        "mode": {
+          "enum": ["top_level_skill", "targeted_reference", "routing_index_only"]
+        },
         "top_level": { "type": "boolean" },
-        "compiled_reference": { "type": "boolean" },
-        "router_index": { "type": "boolean" },
-        "authoring_visibility": { "type": "boolean" }
+        "targeted_reference": { "type": "boolean" },
+        "routing_index": { "const": true }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "mode": { "const": "top_level_skill" } } },
+          "then": {
+            "properties": {
+              "top_level": { "const": true },
+              "targeted_reference": { "const": false }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "mode": { "const": "targeted_reference" } } },
+          "then": {
+            "properties": {
+              "top_level": { "const": false },
+              "targeted_reference": { "const": true }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "mode": { "const": "routing_index_only" } } },
+          "then": {
+            "properties": {
+              "top_level": { "const": false },
+              "targeted_reference": { "const": false }
+            }
+          }
+        }
+      ]
     },
     "item": {
       "type": "object",
       "required": [
         "name",
         "type",
-        "profile_visibility",
+        "delivery_scope",
+        "task_routable",
+        "profile_delivery",
         "summary",
-        "triggers",
-        "risk_notes",
-        "expected_outputs",
+        "role_support",
+        "trigger_signals",
+        "anti_trigger_signals",
+        "required_inputs",
+        "required_inputs_by_role",
+        "output_contract",
+        "output_contract_by_role",
+        "escalation_signals",
+        "reference_index",
+        "related_layer3_skills",
         "used_by",
-        "required_quality_gates",
-        "runtime_path",
+        "group",
         "source_path"
       ],
       "properties": {
-        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "name": { "$ref": "#/$defs/name" },
         "type": {
-          "enum": ["professional_skill", "foundation_capability", "domain_extension"]
+          "enum": [
+            "control_skill",
+            "professional_skill",
+            "foundation_skill",
+            "domain_skill"
+          ]
         },
-        "profile_visibility": { "$ref": "#/$defs/visibility" },
-        "summary": { "type": "string" },
-        "triggers": {
-          "type": "array",
-          "items": { "type": "string" }
+        "delivery_scope": {
+          "enum": ["product", "authoring-only", "dev-only", null]
         },
-        "risk_notes": {
+        "task_routable": { "type": ["boolean", "null"] },
+        "profile_delivery": { "$ref": "#/$defs/delivery" },
+        "summary": { "type": "string", "minLength": 1 },
+        "role_support": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "enum": [
+              "main-control-agent",
+              "analysis-agent",
+              "task-agent",
+              "review-agent"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
         },
-        "expected_outputs": {
+        "trigger_signals": { "$ref": "#/$defs/nonEmptyStringList" },
+        "anti_trigger_signals": { "$ref": "#/$defs/nonEmptyStringList" },
+        "required_inputs": { "$ref": "#/$defs/nonEmptyStringList" },
+        "required_inputs_by_role": {
+          "type": "object",
+          "properties": {
+            "main-control-agent": { "$ref": "#/$defs/nonEmptyStringList" },
+            "analysis-agent": { "$ref": "#/$defs/nonEmptyStringList" },
+            "task-agent": { "$ref": "#/$defs/nonEmptyStringList" },
+            "review-agent": { "$ref": "#/$defs/nonEmptyStringList" }
+          },
+          "additionalProperties": false
+        },
+        "output_contract": { "$ref": "#/$defs/nonEmptyStringList" },
+        "output_contract_by_role": {
+          "type": "object",
+          "properties": {
+            "main-control-agent": { "$ref": "#/$defs/nonEmptyStringList" },
+            "analysis-agent": { "$ref": "#/$defs/nonEmptyStringList" },
+            "task-agent": { "$ref": "#/$defs/nonEmptyStringList" },
+            "review-agent": { "$ref": "#/$defs/nonEmptyStringList" }
+          },
+          "additionalProperties": false
+        },
+        "escalation_signals": { "$ref": "#/$defs/nonEmptyStringList" },
+        "reference_index": { "$ref": "#/$defs/stringList" },
+        "related_layer3_skills": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "$ref": "#/$defs/name" },
+          "uniqueItems": true
         },
         "used_by": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "$ref": "#/$defs/name" },
+          "uniqueItems": true
         },
-        "required_quality_gates": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "runtime_path": {
-          "type": ["string", "null"]
-        },
-        "source_path": { "type": "string" }
+        "group": { "type": ["string", "null"], "minLength": 1 },
+        "source_path": { "type": "string", "minLength": 1 }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "foundation_skill" } },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "delivery_scope": {
+                "enum": ["product", "authoring-only", "dev-only"]
+              }
+            }
+          },
+          "else": {
+            "properties": { "delivery_scope": { "const": null } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "professional_skill" } },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": { "task_routable": { "type": "boolean" } }
+          },
+          "else": {
+            "properties": { "task_routable": { "const": null } }
+          }
+        }
+      ]
     }
   }
 }

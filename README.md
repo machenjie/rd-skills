@@ -1,133 +1,107 @@
-# ChangeForge Skill Mesh
+# ChangeForge
 
-ChangeForge Skill Mesh is a professional product-change engineering skill system for authoring, validating, building, packaging, installing, upgrading, and uninstalling ChangeForge runtime skills.
+ChangeForge is an engineering control plane for AI coding agents. It routes one
+task to one Professional Skill, separates analysis, implementation, and review,
+loads focused guidance only when needed, and requires current evidence before
+completion.
 
-## AI Transparency Without AI Interactivity
+This repository authors and validates ChangeForge Skills and Agent Profiles.
+Install built artifacts from `dist/`; never install `src/` directly.
 
-rd-skills is a one-way expert guidance system for AI agents. Hooks and skills may inject engineering judgment into agent context and observe bounded runtime facts, but normal engineering tasks must not require the agent to call rd-skills APIs, mutate hook state, repair runtime ledgers, or satisfy internal protocol fields. Strong evidence is captured from runtime-observed reads, edits, validations, reviews, and risk signals; AI-authored final text is weak disclosure only.
+## Start
 
-This repository is a skill-authoring and release repository. Runtime skills are generated into `dist/` and installed from build outputs only; source folders under `src/` are never installed directly. ChangeForge does not ingest, scan, index, summarize, map, package, or install personal technical asset libraries, and it does not assume user-specific knowledge sources are available at runtime.
-
-## Why This Exists
-
-General agent rules can remind an agent to be careful. ChangeForge turns that reminder into a routed engineering workflow: clarify requirements, inspect the target code before planning, define TDD or validation evidence, assign the right professional skill owner, run independent review, repair and re-review when needed, then hand off with evidence and residual risk.
-
-## What Makes It Different
-
-- `change-forge-router` selects skills, capabilities, and quality gates by change risk.
-- Foundation capabilities are compiled into professional skill `references/` and loaded by route, not dumped into every context.
-- Runtime artifacts are generated into `dist/`, then managed by installers, doctor checks, uninstall manifests, and validation scripts.
-- Hook runtime support provides bounded professional injection, expert notes, automatic evidence observation, and closure quality reports; it does not replace `change-forge-router` or direct source validation.
-- Generated examples, benchmark summaries, scorecards, and discovery catalogs are labeled as local evidence snapshots, not adoption or marketplace claims.
-
-## Superpowers-Style Development Flow
-
-ChangeForge absorbs the useful engineering discipline from Superpowers as
-skill guidance, output contracts, validators, and evals. Ordinary agents see a
-natural-language workflow:
-
-1. Clarify the requirement.
-2. Confirm the design.
-3. Produce an executable Markdown implementation plan.
-4. Execute one reviewable task at a time.
-5. Validate each task.
-6. Review spec compliance and code quality.
-7. Repair important findings and re-review them.
-8. Finalize with validation evidence and residual risk.
-
-Ordinary agents are not asked to read or write internal task graphs, ledgers,
-hook state, reducer facts, or metadata schemas. Maintainer, CI, benchmark,
-doctor, and advisory hook tooling may derive bounded verification artifacts
-from visible Markdown plans, but those artifacts are not part of the ordinary
-agent workflow.
-
-## One-Command Quickstart
+Requirements: Python 3.11 or newer and a checkout of this repository.
 
 ```bash
-python3 scripts/quickstart.py --agent codex --scope user
+python3 --version
+python3 -m pip install .
 ```
 
-For local dry-run review:
+Choose a profile:
+
+- `recommended`: normal use.
+- `full`: also exposes Domain Skills at the top level.
+- `dev`: Skill authoring and registry development.
+
+Supported hosts are `codex`, `claude`, `copilot`, `cline`, and `openai-api`.
+Project scope requires `--target` with the project root. See
+[Installation](docs/INSTALLATION.md) for supported scopes and paths.
+
+Preview a Codex user installation:
 
 ```bash
-python3 scripts/quickstart.py --agent codex --scope user --dry-run
+python3 scripts/quickstart.py --agent codex --scope user --profile recommended --dry-run
 ```
 
-To remove a managed local install:
+Install and run the built-in checks:
 
 ```bash
-python3 installers/uninstall.py --agent codex --scope user --dry-run
-python3 installers/uninstall.py --agent codex --scope user
+python3 scripts/quickstart.py --agent codex --scope user --profile recommended
+python3 installers/doctor.py --agent codex --scope user --profile recommended
 ```
 
-Supported Codex, Claude Code, and GitHub Copilot project/user quickstart and install paths enable non-blocking expert advisor/professional-injection behavior by default. Strict block mode is reserved for explicit CI, benchmark, maintainer, or safety/permission boundaries. Use `--without-hooks` or `--activation-level none` to opt out. `--activation-level bootstrap` installs only the non-executable route-preflight fragment, and `--with-hooks` remains accepted as a backward-compatible legacy flag.
+Use another host or project scope through [Quickstart](docs/QUICKSTART.md).
 
-## Profiles
+## Submit A First Task
 
-| Profile | Use | Top-Level Runtime Skills |
-| --- | --- | ---: |
-| `recommended` | Default user/global install. | 22 |
-| `full` | Project install with domain extensions exposed. | 29 |
-| `dev` | ChangeForge authoring and debugging only. | 165 |
+Slash Skill syntax: `/skill-name`.
 
-Stable profile counts are `recommended=22`, `full=29`, and `dev=165`; these generated manifests are the authoritative runtime profile count source. Local install starts with `python3 scripts/quickstart.py --agent codex --scope user`; official Codex/Claude marketplace publishing is intentionally not implemented.
+Start with `/engineering-control-plane`. Replace the sample paths and command
+with facts from a small test repository:
 
-The profile composition is: `recommended` has 22 professional skills, `full` has 22 professional skills plus 7 domain extensions, and `dev` has 22 professional skills plus 136 foundation capabilities plus 7 domain extensions. Foundation capabilities are compiled into professional references for `recommended` and `full`.
+```text
+/engineering-control-plane
+
+Goal: Add an empty-string check to src/example.py without changing its public API.
+Acceptance: Empty input returns the existing validation error; valid input is unchanged.
+Allowed scope: src/example.py and its existing test file only.
+Verify: Run python3 -m unittest tests.test_example.
+Stop if: Ownership, the public contract, or the verification command differs.
+```
+
+Some hosts do not provide native Slash UI or autocomplete. Enter the literal
+`/engineering-control-plane` in the request text in that case. It expresses
+routing intent; it does not prove native Slash support.
+
+A bounded implementation should produce:
+
+- one primary Professional Skill;
+- implementation by a `task-agent`;
+- validation after the final edit;
+- independent review by a `review-agent`;
+- a handoff with changed files, results, Unverified scope, and Residual risk.
+
+Unknown ownership, placement, impact, or verification switches the request to
+Analyzed Work before editing. [Usage](docs/USAGE.md) provides Direct Task,
+Analyzed Work, and review-only examples.
+
+## Boundaries
+
+- `main-control-agent` dispatches only.
+- `analysis-agent` reads and analyzes.
+- `task-agent` implements and validates bounded work.
+- `review-agent` independently reviews without repairing its own findings.
+- Shared-workspace writes are serial.
+- Foundation and Domain guidance loads only for a concrete task signal.
+
+## Evidence Limits
+
+Repository checks cover static contracts, deterministic and captured fixtures,
+builds, packages, and simulated installation. They do not prove real-host
+startup, host-enforced permissions, wall-clock performance, production
+accuracy, provider behavior, official marketplace publication, or installed
+user experience.
 
 ## Documentation
 
-Start with [docs/README.md](docs/README.md).
-
+- [Documentation map](docs/README.md)
 - [Quickstart](docs/QUICKSTART.md)
-- [Installation](docs/INSTALLATION.md)
+- [Installation and recovery](docs/INSTALLATION.md)
 - [Usage](docs/USAGE.md)
-- [Hooks](docs/HOOKS.md)
 - [Validation](docs/VALIDATION.md)
-- [Content Governance](docs/SKILL_CONTENT_GOVERNANCE.md)
-- [Skill Authoring Standards](docs/skill_authoring_standard/SKILL_AUTHORING_BASE_STANDARD.md)
-- [Skill Professionalism Standards](docs/skill_professionalism_standard/SKILL_PROFESSIONALISM_BASE_STANDARD.md)
 - [Release](docs/RELEASE.md)
-- [Benchmarks](docs/BENCHMARKS.md)
-- [Scorecard](docs/SCORECARD.md)
-- [Open Source Readiness](docs/OPEN_SOURCE_READINESS.md)
-- [Reports](reports/README.md)
+- [Skill content governance](docs/SKILL_CONTENT_GOVERNANCE.md)
 
-`docs/INSTALLATION.md` is the detailed installation and hook behavior fact
-source. `docs/VALIDATION.md` is the canonical developer command set.
-`docs/skill_authoring_standard/` owns how skills are authored;
-`docs/skill_professionalism_standard/` owns professional-depth evaluation; and
-`docs/SKILL_CONTENT_GOVERNANCE.md` owns body/reference layering and
-content-efficiency governance.
-
-## Evidence
-
-These signals are generated or validator-backed local evidence. They are not external popularity, official marketplace availability, or broad live-task success claims.
-
-<!-- changeforge-scorecard-summary:start -->
-| Evidence | Status | Source |
-| --- | --- | --- |
-| Profile build reproducibility | `pass` | [docs/SCORECARD_DASHBOARD.md](docs/SCORECARD_DASHBOARD.md) |
-| Example coverage | `pass` | [scripts/validate-examples.py](scripts/validate-examples.py) |
-| Codex CLI live pass-rate benchmark | `pass` | [reports/codex-live-benchmark-summary.json](reports/codex-live-benchmark-summary.json) |
-| Codex CLI live capability coverage | `partial` | [reports/codex-live-benchmark-summary.json](reports/codex-live-benchmark-summary.json) |
-| Marketplace index validation | `pass` | [scripts/validate-marketplace-index.py](scripts/validate-marketplace-index.py) |
-| Open-source readiness | `pass` | [docs/OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md) |
-<!-- changeforge-scorecard-summary:end -->
-
-The marketplace index and catalog are local/source-derived discovery assets only. Official Codex/Claude marketplace publishing is intentionally not implemented.
-
-## Community And Governance
-
-- [CONTRIBUTING.md](CONTRIBUTING.md): contribution workflow, boundaries, validation tiers, and pull request expectations.
-- [GOVERNANCE.md](GOVERNANCE.md): maintainer responsibilities, decision process, and release authority.
-- [SECURITY.md](SECURITY.md): vulnerability reporting and security handling policy.
-- [SUPPORT.md](SUPPORT.md): support channels and scope.
-- [CHANGELOG.md](CHANGELOG.md): human-readable release history.
-- [docs/OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md): publication readiness audit and release validation gates.
-
-## License
-
-This repository is licensed under the MIT License; see [LICENSE](LICENSE).
-Contributions are accepted under MIT unless maintainers document otherwise.
-
-Repository/tooling license metadata and per-skill runtime frontmatter are separate contracts. Build and install tooling preserves each generated skill's runtime frontmatter instead of inheriting repository metadata.
+Community policies: [Contributing](CONTRIBUTING.md),
+[Governance](GOVERNANCE.md), [Security](SECURITY.md),
+[Support](SUPPORT.md), and [Code of Conduct](CODE_OF_CONDUCT.md).

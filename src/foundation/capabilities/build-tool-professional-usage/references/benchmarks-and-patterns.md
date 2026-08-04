@@ -1,7 +1,5 @@
 # Build Tool Benchmarks And Patterns
 
-## Benchmarks
-
 - Bazel hermeticity, strict deps, sandboxing, and remote execution guidance.
 - Gradle build cache and configuration cache guidance.
 - Maven reproducible-build practices and dependency mediation.

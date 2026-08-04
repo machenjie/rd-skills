@@ -1,9 +1,16 @@
-# Agent Execution Discipline Checklist
+# Execution Evidence Assessment Checklist
 
-- Attach concrete evidence before claiming a change is complete.
-- State the verified cause before accepting a diagnosis or fix.
-- Change route after two failed attempts with the same approach.
-- Scan for the same defect pattern before applying a local bug fix.
-- Document reuse search and placement rationale before adding structure.
-- Record boundary, validation results, residual risk, and handoff target.
-- Reject entertainment rhetoric, persona narration, and runtime state as evidence.
+Use this checklist for one claim and one declared scope.
+
+| Decision | Check | Record |
+|---|---|---|
+| Claim | Is the asserted result precise enough to test against an artifact? | Exact claim and artifact identity |
+| Source | Are producer, origin, and inputs known? | Source or missing provenance |
+| Freshness | Could a relevant change have invalidated the artifact? | Freshness basis and invalidating changes |
+| Scope | Does the artifact cover the claimed target and boundary? | Covered and uncovered scope |
+| Reproducibility | Are procedure, inputs, environment, and observable result available? | Reproducibility basis or missing facts |
+| Reuse | Does the artifact match the same claim, scope, input identity, and mechanism? | Reuse decision and mismatches |
+| Contradiction | Do supplied artifacts disagree about the claim? | Contradictions and unresolved relationship |
+| Proof | What does the evidence establish, and what remains unknown? | Proof limit and residual uncertainty |
+
+Classify each artifact as `invalid`, `reusable`, `contradictory`, or `insufficient`. Do not infer a stronger result than the recorded artifact supports.

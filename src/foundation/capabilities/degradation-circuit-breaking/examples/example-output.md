@@ -7,7 +7,7 @@ mode_selected: optional graceful degradation.
 
 resilience_evidence:
 - Source inspected: product detail controller and recommendation client.
-- Graph/memory/trajectory judgment: prior memory that recommendations are optional accepted only after current source confirmed no checkout dependency.
+- current source/diff/validation judgment: prior note that recommendations are optional accepted only after current source confirmed no checkout dependency.
 - Validation freshness: fallback unit test planned after final implementation.
 
 Dependency: recommendation service.

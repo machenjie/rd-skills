@@ -7,21 +7,11 @@ focus:
   - deadlock and contention risk
   - stress and race evidence
 route_hints:
-  skills:
-    - backend-change-builder
-    - reliability-observability-gate
-    - quality-test-gate
-  capabilities:
-    - concurrency-control
-    - language-performance-safety
-    - profiling
-    - implementation-structure-design
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - reliability gate
-    - test gate
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: reliability-observability-gate
 expected_outcomes:
   - Critical section is shrunk and no lock is held across network or storage IO.
   - IO occurs after releasing the lock or moves to optimistic, transaction, queue, or outbox pattern.

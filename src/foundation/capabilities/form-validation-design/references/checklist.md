@@ -1,11 +1,10 @@
 # Form Validation Design Checklist
 
 - Select mode: basic field contract, async validation, side-effecting submit, error mapping, multi-step/bulk, or security-sensitive form.
-- Inspect current form, backend schema/handler, API error contract, tests, stories, repository graph, project memory, and validation freshness.
-- Record graph/memory/trajectory assumptions only when current source and validation confirm them.
-- List fields, required rules, formats, ranges, dependencies, and business rules.
-- Identify backend validation authority for every rule.
-- Treat frontend validation as UX feedback only.
+- Inspect current form, backend schema/handler, API error contract, tests, stories, repository inspection, prior task evidence, and validation freshness.
+- Record current source/diff/validation assumptions only when current source and validation confirm them.
+- For changed form rules, separate presentation or interaction feedback from correctness, security, and business rules; for the latter, name the backend schema, handler, or policy authority and the direct-bypass or denied-case proof.
+- Keep consequential policy at its backend schema or trusted enforcement authority, so frontend validation exposes only disclosure-safe constraints or responses and neither duplicates nor replaces backend correctness, authorization, security, or business-rule enforcement.
 - Define validation timing for change, blur, submit, async check, and server response.
 - Cancel or ignore stale async validation results.
 - Prevent duplicate submits and define idempotency where side effects are possible.

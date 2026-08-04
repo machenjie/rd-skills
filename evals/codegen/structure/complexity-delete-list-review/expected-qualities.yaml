@@ -7,20 +7,19 @@ focus:
   - behavior preservation
   - cleanup governance
 route_hints:
-  skills:
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
+  work_path: review-only
+  agent_profile: review-agent
+  primary_skill: ai-code-review-refactor
+  layer3_skills:
     - minimal-correct-implementation
-    - code-clarity-maintainability
-    - cleanup-deletion-governance
-    - design-pattern-selection
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
-    - AI review gate
+  review_skill: ai-code-review-refactor
+release_contract:
+  case_id: structure/complexity-delete-list-review
+  control_path: review-only
+  primary_skill: ai-code-review-refactor
+  task_skill: null
+  review_skill: ai-code-review-refactor
+  tasks: []
 expected_outcomes:
   - Complexity findings are tagged as delete, shrink, stdlib, native, existing-code, or yagni.
   - Wrapper-only delegation and one-implementation abstractions are rejected unless current force exists.
@@ -31,11 +30,13 @@ required_qualities:
   - Minimal Correctness Decision records shortcut ceiling and upgrade trigger when shortcuts remain.
   - Regression evidence protects the billing rule.
   - Handoff includes residual risk and next gate.
+  - Each finding includes a concrete review.patch location and behavioral or maintenance impact.
 forbidden_shortcuts:
   - Approving wrapper-only delegation without a real boundary.
   - Keeping one-implementation interfaces for future proofing.
   - Deleting behavior without caller search and regression evidence.
   - Treating fewer lines as approval when boundaries would be lost.
+  - Modifying or applying the patch during review.
 evidence:
   - Complexity Delete List with tags.
   - Caller search or no-runtime-consumer rationale.

@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-21-r9",
+  "created_on": "2026-07-21",
+  "packet_sha256": "4cffd459b27e612ded2c4656a958ba2a9f4bdee6b462686967a11f5cbfad5f94",
+  "source_fingerprints": {
+    "audit": "6e3dd9472af80c94fb7bb65dca6f26c9ead2f3926c9191780287cf745a1501f3",
+    "reference_candidates": "1ae63844eba9d6095379933eeb1e58390b41f4a1136917ea2f04ba2cbb07a94d",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "d4d61e0fa32c0f98690545801b6a48e1b1eb0f17a8525585f5a407392acce684",
+    "root_candidates": "6698d1c4c5856260717d7eb0fad104b56dfad85606f2c858bcd4ca6780faa2dc",
+    "root_context": "76b8846ac13fec6c10f74df745492eef939b9ee49eda1e91d48d73944b81d65e",
+    "root_detector": "0d8c01715fb11258126a474356e03b944ddb720f358163915e6ecf912498c33c",
+    "root_source": "c220adcb87e6ea3b4ca01b4c651e669d71dc8e843f7bf64c3dc8c3746aa2c789"
+  },
+  "voter": {
+    "voter_id": "semantic-assurance-reviewer-r9-c",
+    "agent_id": "/root/combined_release_diff_review",
+    "role": "semantic-assurance-reviewer",
+    "expertise": [
+      "Release assurance, independent review, and loop-safety boundaries"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "reference:162c05a8a374e35aafbff7ea8cd5df89355d6c7e65f6f73055010d1ec3869820",
+      "axis": "reference",
+      "candidate_id": "162c05a8a374e35aafbff7ea8cd5df89355d6c7e65f6f73055010d1ec3869820",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The absolute obligation is bounded to the explicit L1 execution level and the contract's closed non-bypassable control set. Keeping those controls active at the minimum level prevents a low-level request from bypassing authority, sandbox, destructive-action, formal-evidence, post-edit validation, review, or scoped-completion safeguards. The rule is professionally correct, actionable, and appropriately placed under Level Obligations.",
+      "authority_or_condition": "When Requested or effective level is L1, every control explicitly classified by the execution-level contract as non-bypassable remains mandatory.",
+      "decision_owner": "Execution-level contract owner",
+      "mitigation": "Keep the non-bypassable set closed and source-owned; reopen this disposition if its membership, authority, or L1 semantics change.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:2137580e8372a59977b055dac012fe403749f2d65bfb57f612c74537382cf800",
+      "axis": "reference",
+      "candidate_id": "2137580e8372a59977b055dac012fe403749f2d65bfb57f612c74537382cf800",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The word only constrains selection of L5 to an explicit request rather than silently escalating ordinary work. Its stronger independent design review, safety, negative-path, failure-path, and final-review obligations are bounded to the declared scope, while the final clause correctly prevents L5 from being misrepresented as formal-release, full-validation, or CI evidence. This is a valid review-strength boundary rather than an unconditional universal mechanism.",
+      "authority_or_condition": "L5 applies only after an explicit request, and its exhaustive review obligations cover the declared scope without substituting for separately triggered formal-release, full-validation, or CI requirements.",
+      "decision_owner": "Execution-level assurance owner",
+      "mitigation": "Preserve explicit opt-in, declared-scope bounds, and the formal-evidence non-substitution clause; reopen if L5 activation or proof claims broaden.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:3b66c9b354fd6fddf2bc52405900c88021dfb2f5585565bce2234c27f34fd702",
+      "axis": "reference",
+      "candidate_id": "3b66c9b354fd6fddf2bc52405900c88021dfb2f5585565bce2234c27f34fd702",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The numeric limit is an identity and loop-safety invariant, not a generic time, cost, or quality threshold. One complete validation path is allowed for the same material tree, scope, effective level, and canonical path identity; another path requires a predeclared uncovered-claim gap or a bound external-state transition. This prevents repeated equivalent validation from being presented as new evidence while still allowing a justified distinct path.",
+      "authority_or_condition": "For one complete-path identity composed of material tree, declared scope, effective level, and validation path identity, the completion limit is one unless the contract authorizes a distinct bound gap or transition path.",
+      "decision_owner": "Validation identity owner",
+      "mitigation": "Retain canonical identity fields and the predeclared-gap or verified-transition escape conditions; reopen if path identity or distinct-path rules change.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:4c2c105182db2facbec0f9f4f342cfcf70ef70efe72d095d29554f0d010c4726",
+      "axis": "reference",
+      "candidate_id": "4c2c105182db2facbec0f9f4f342cfcf70ef70efe72d095d29554f0d010c4726",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The restriction implements the repository's dispatch-only Main boundary. Main may calculate execution level from user facts or a source-backed analysis handoff, but reading target source would collapse the separation between control-plane routing and bounded professional analysis. The closed evidence-source rule is therefore professionally necessary, actionable, and correctly placed before trigger evaluation.",
+      "authority_or_condition": "While Main performs execution-level projection and routing, its evidence inputs are limited to user_fact and analysis_handoff; target-source inspection belongs to a bounded analysis agent.",
+      "decision_owner": "Main control boundary owner",
+      "mitigation": "Keep source inspection delegated and reject inferred evidence types; reopen if the Main profile or execution-level evidence contract changes.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:6f97978a0a7cc1506452f03440280af41ae06164e8eae9a80ede2e19d5232607",
+      "axis": "reference",
+      "candidate_id": "6f97978a0a7cc1506452f03440280af41ae06164e8eae9a80ede2e19d5232607",
+      "disposition": "valid-contextual-rule",
+      "rationale": "L2 is intentionally the smallest reversible bounded execution route, so every closed eligibility predicate must be evidenced before it is selected. The surrounding rule explicitly rejects L2 when a predicate is false or unknown, preventing unresolved ownership, scope, rollback, validation, consumer, or safety boundaries from being downgraded. The absolute all is therefore a valid fail-closed eligibility condition.",
+      "authority_or_condition": "L2 may be selected only when every closed L2 eligibility predicate is proven true from the named user-fact, Task Contract, or analysis-handoff source.",
+      "decision_owner": "Execution-level eligibility owner",
+      "mitigation": "Preserve the closed predicate list and false-or-unknown rejection behavior; reopen if L2 eligibility or evidence anchors change.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:d63e7f3f3e947be3610b51c1f7a3617c24beb0fd8a7969ee8cab24df761947cb",
+      "axis": "reference",
+      "candidate_id": "d63e7f3f3e947be3610b51c1f7a3617c24beb0fd8a7969ee8cab24df761947cb",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The obligation applies only after evidence establishes an L4 high-risk boundary and only to specialized gates whose triggers are applicable. It does not require every available gate for every task. Requiring all triggered gates prevents selective omission of security, migration, compatibility, production, financial, or physical-safety review while retaining applicability-based scope control.",
+      "authority_or_condition": "At effective L4, every specialized gate whose closed trigger is supported by current evidence must be applied; gates with an absent trigger remain out of scope.",
+      "decision_owner": "High-risk assurance owner",
+      "mitigation": "Keep gate activation tied to closed positive triggers and recorded non-applicability; reopen if trigger aggregation or specialized-gate ownership changes.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:dadd644c2882205dbdeb9574ce92909f9a24e633c576ee3d1b3c87324b767d7a",
+      "axis": "reference",
+      "candidate_id": "dadd644c2882205dbdeb9574ce92909f9a24e633c576ee3d1b3c87324b767d7a",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The prohibition preserves a single source of truth for execution-level computation. The router consumes the already derived effective level and then selects Skills; allowing it to own another level matrix would create conflicting floors, downgrade paths, and loop behavior. The statement is a valid architectural boundary under Canonical Formula and Boundary.",
+      "authority_or_condition": "After the Core execution-level contract derives the effective level, the Professional Skill router may select Skills but may not independently redefine or recompute the level matrix.",
+      "decision_owner": "Routing architecture owner",
+      "mitigation": "Keep the level matrix generated from the Core contract and reject duplicate router-owned level rules; reopen if source ownership moves.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:deeb9bf737e4d1cdcf838579f2ba65cc0799c4fc490f44f20fa5e209cb375c31",
+      "axis": "reference",
+      "candidate_id": "deeb9bf737e4d1cdcf838579f2ba65cc0799c4fc490f44f20fa5e209cb375c31",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The inheritance rule binds execution-level history to Task ID and Scope Lineage rather than mutable tree identity. Scope expansion must retain historical maximum floor and effective level so a rebase, squash, repair, or enlarged scope cannot erase prior risk. Lowering is permitted only through a new Task ID, child lineage, and strict narrowing proof, which provides a bounded escape without enabling relabel-based downgrade loops.",
+      "authority_or_condition": "Within one Task ID and Scope Lineage, scope expansion inherits historical maxima; lowering is authorized only for a new child lineage with canonical evidence that the scope truly narrowed.",
+      "decision_owner": "Scope lineage owner",
+      "mitigation": "Retain lineage-bound historical maxima and strict narrowing proof; reopen if lineage identity, expansion, or lowering semantics change.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:e5bff0e1b640611fd177d7d8eaaa8eb564b9e51f9433675bcddb635eafdb1844",
+      "axis": "reference",
+      "candidate_id": "e5bff0e1b640611fd177d7d8eaaa8eb564b9e51f9433675bcddb635eafdb1844",
+      "disposition": "false-positive",
+      "rationale": "The detected word all appears inside the explicit anti-trigger for external-integration-or-unknown-consumer, not in an unconditional mandate. The complete sentence conditionally permits the anti-trigger only when consumer evidence is exhaustive: every consumer is local, known, and unchanged. If that proof is absent, the positive trigger raises the task to L3. The unconditional-absolute detector family therefore does not describe the complete contextual rule.",
+      "authority_or_condition": "The anti-trigger applies only when current Task Contract or analysis-handoff evidence establishes that every affected consumer is local, known, and unchanged.",
+      "decision_owner": "Consumer-boundary routing owner",
+      "mitigation": "Keep the positive trigger, anti-trigger, and evidence anchor together; reopen if the quantifier is detached from the conditional route or unknown consumers stop raising L3.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:fc4a99ffb4ef40e43a751b7050478b7614e8f938799809302249b1d04a2b2b3d",
+      "axis": "reference",
+      "candidate_id": "fc4a99ffb4ef40e43a751b7050478b7614e8f938799809302249b1d04a2b2b3d",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The sentence defines fail-closed admission to L2 rather than a universal engineering mechanism. Because L2 omits the analysis depth of higher levels, each ownership, scope, reversibility, observability, validation, consumer, safety, and evidence-gap predicate must be affirmatively true. Treating false or unknown as rejection prevents uncertainty from becoming an automatic downgrade.",
+      "authority_or_condition": "During L2 eligibility evaluation, every predicate in the closed registry must be true; any false or unknown result rejects L2 and leaves the higher computed level in force.",
+      "decision_owner": "Execution-level eligibility owner",
+      "mitigation": "Maintain three-valued fail-closed evaluation and closed predicate coverage; reopen if unknown handling or L2 obligations change.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:2999ed063f13583a1a8b1780eb7df84999bbd595c806d85a828fd4696162db02",
+      "axis": "root",
+      "candidate_id": "2999ed063f13583a1a8b1780eb7df84999bbd595c806d85a828fd4696162db02",
+      "disposition": "valid-contextual-rule",
+      "rationale": "This is the authoritative Main prompt boundary corresponding to the router projection. Restricting execution-level evidence to user facts and analysis handoffs prevents the dispatch-only Main from inspecting target source or making professional findings itself. The rule is context-bound to pre-routing level calculation and is necessary to preserve independent bounded analysis.",
+      "authority_or_condition": "Before routing, Main may apply the Core execution-level projection using only user_fact or analysis_handoff evidence and must delegate target-source inspection.",
+      "decision_owner": "Main control prompt owner",
+      "mitigation": "Keep the evidence vocabulary closed and the target-source prohibition aligned with the Main Agent Profile; reopen if either authority changes.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "axis": "root",
+      "candidate_id": "ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The fixed limit applies to a canonical complete-path identity, not to elapsed time or an arbitrary quality target. Repeating the same complete path cannot add claim coverage and would create validation loops or evidence inflation. The adjacent rule still permits a second path for a predeclared current-claim gap and treats new claims as a scope change, so the limit is both bounded and actionable.",
+      "authority_or_condition": "For the same canonical complete-path identity, one completed path is sufficient; another path requires the Core-defined predeclared gap or verified state-transition basis.",
+      "decision_owner": "Validation loop-safety owner",
+      "mitigation": "Preserve canonical path identity and explicit distinct-path authorization; reopen if claim coverage, gap, or transition semantics change.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:b61da714f82520865615d8f43b04368d741da1b26010a59cb6a3982aba447284",
+      "axis": "root",
+      "candidate_id": "b61da714f82520865615d8f43b04368d741da1b26010a59cb6a3982aba447284",
+      "disposition": "valid-contextual-rule",
+      "rationale": "One primary Professional Skill gives each task a single professional owner while named Layer 3 references supply bounded specialist guidance and the Review Skill remains independently assigned. Allowing multiple primaries would duplicate authority, encourage rerouting, and create competing completion contracts. The fixed count is therefore an intentional architecture invariant rather than an arbitrary organizational threshold.",
+      "authority_or_condition": "For each routed task, Main assigns exactly one primary Professional Skill; optional Layer 3 guidance and the independent Review Skill do not become additional primary owners.",
+      "decision_owner": "Professional routing owner",
+      "mitigation": "Keep primary ownership singular and route specialist depth through named Layer 3 guidance; reopen if the product architecture changes its ownership model.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "axis": "root",
+      "candidate_id": "d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The mechanism is narrowly conditioned on supplied-artifact review when the actual diff is absent. A task-agent in diff-export/no-edit may expose the diff, but returning it as content or a host-native artifact instead of a workspace file prevents review preparation from mutating the reviewed tree or creating hidden evidence state. The rule preserves independent review and is correctly placed in diff routing.",
+      "authority_or_condition": "When supplied-artifact review lacks an actual diff and the host supports the utility path, task-agent may perform diff-export/no-edit and must return the result without creating a workspace file.",
+      "decision_owner": "Diff review boundary owner",
+      "mitigation": "Retain before-and-after no-edit enforcement and block review when neither native nor supplied diff evidence is available; reopen if transport capabilities change.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "axis": "root",
+      "candidate_id": "ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The sentence distinguishes scope narrowing from evidence waiver. Out-of-scope formal panels and CI polling may stop when the task no longer claims formal readiness, but a task that still declares formal readiness must provide the formal evidence required by that claim. This prevents ordinary authoring, L5 review, or local validation from being substituted for the formal release gate.",
+      "authority_or_condition": "Whenever formal readiness remains in the declared task scope, the repository's formal evidence contract remains mandatory regardless of execution level or narrowed nonformal work.",
+      "decision_owner": "Formal release evidence owner",
+      "mitigation": "Keep formal readiness explicit in scope and fail closed when current formal evidence is absent; reopen if the formal gate contract changes.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:faf517472eb6c4de41f69645bafe95242ce2096188ee12b0a4742ade745f0360",
+      "axis": "root",
+      "candidate_id": "faf517472eb6c4de41f69645bafe95242ce2096188ee12b0a4742ade745f0360",
+      "disposition": "valid-contextual-rule",
+      "rationale": "A repair changes the diff that was validated and reviewed, so earlier evidence no longer proves the current tree. Requiring fresh post-repair validation and independent re-review prevents stale approval from closing a modified implementation and prevents repair-review loops from inheriting superseded findings or evidence. The rule is context-bound to material repair and correctly placed in Review and Repair.",
+      "authority_or_condition": "After a repair or other material edit supersedes the reviewed diff, validation and independent review must be rerun against the latest material state before closure.",
+      "decision_owner": "Independent review assurance owner",
+      "mitigation": "Bind validation and review evidence to the latest material edit and mark prior evidence superseded or invalid; reopen if freshness or repair semantics change.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "This ballot covers all 16 packet-bound fresh targets and no carried candidates.",
+    "This panel is authoring lifecycle evidence for semantic dispositions only.",
+    "It cannot satisfy or replace readability or professional-completeness formal attestations.",
+    "A majority rewrite remains a decision record and does not create a single-source-of-truth disposition entry.",
+    "Static semantic review does not prove real-host or production behavior."
+  ]
+}

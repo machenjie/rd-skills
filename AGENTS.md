@@ -1,94 +1,145 @@
 # Agent Instructions
 
-Codex must treat this repository as a ChangeForge skill-authoring repository.
+Codex must treat this repository as a ChangeForge Skill-authoring repository.
 
 ## Repository Purpose
 
-This repository exists only to author, validate, build, package, install, upgrade, and uninstall ChangeForge skills and approved ChangeForge runtime support artifacts. It is not a runtime user-specific content corpus and must not become one.
+This repository exists only to author, validate, build, package, install, upgrade, and uninstall ChangeForge Skills and Agent Profile artifacts. It is not a runtime user-specific content corpus and must not become one.
 
 ## Non-Negotiable Boundaries
 
 - Do not add personal asset ingestion, scanning, indexing, summarization, mapping, packaging, or installation.
 - Do not add toolbox mappings for user-specific technical archives.
-- Do not create `src/toolbox`.
-- Do not create `registry/toolbox.yaml`.
-- Do not assume a user-specific content corpus is available at runtime.
-- Do not install `src/` directly.
-- Do not install `src/registry` as runtime content.
-- Do not install `src/hook-runtime` directly; optional hook runtime artifacts must be built into `dist/` first.
+- Do not assume a user-specific content corpus is available.
+- Do not install `src/` or source registries directly.
+- Do not add executable interception, an internal task state engine, private evidence storage, hidden Skill packaging, or a second workspace/sandbox manager.
+- Keep the product architecture limited to the control prompt, four Agent Profiles, and three Skill layers.
 
 ## Change Discipline
 
-Every change to the skill system must be validated before handoff. At minimum, run:
+Every change to the Skill system must be validated before handoff. At minimum, run:
 
 ```bash
-python3 scripts/validate-skills.py
-python3 scripts/validate-capabilities.py
-python3 scripts/validate-domain-extensions.py
-python3 scripts/validate-registry.py
-python3 scripts/validate-skill-body-links.py
-python3 scripts/validate-skill-content-size.py
-python3 scripts/audit-skill-content.py
-python3 scripts/eval-routing.py
-python3 scripts/eval-skill-professionalism.py
-python3 scripts/eval-skill-professionalism.py --coverage-matrix
-python3 scripts/eval-professional-benchmarks.py
-python3 scripts/validate-professionalism-regression.py
-python3 scripts/validate-professionalism-regression.py --strict
-python3 scripts/validate-professional-routing-coverage.py
-python3 scripts/validate-stage-routing-architecture.py
-python3 scripts/eval-context-control-plane.py
-python3 scripts/validate-hooks.py
-python3 scripts/eval-agent-behavior.py
-python3 scripts/eval-professional-agent-samples.py --promoted-only --strict
-python3 scripts/eval-pressure-behavior.py
+python3 scripts/eval-core-principles.py --gate authoring
+python3 scripts/validate-examples.py
+python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md --check
+python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md --check
+python3 scripts/validate-marketplace-index.py --profile recommended
+python3 scripts/validate-marketplace-index.py --profile full
+python3 scripts/validate-marketplace-index.py --profile dev
+python3 scripts/validate-productization-assets.py
+python3 scripts/validate-open-source-readiness.py --require-pass
 python3 -m unittest discover -s tests
 python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/run-codegen-benchmarks.py --limit 3
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
-python3 scripts/validate-runtime-reference-links.py
-python3 scripts/validate-installation.py
+python3 scripts/quickstart.py --agent codex --scope user --dry-run
+python3 scripts/quickstart.py --agent claude --scope project --target /tmp/changeforge-quickstart-claude --dry-run
+python3 scripts/quickstart.py --agent copilot --scope project --target /tmp/changeforge-quickstart-copilot --dry-run
+python3 scripts/quickstart.py --agent openai-api --dry-run
 ```
 
-`eval-skill-professionalism.py` writes both the main eval and key foundation coverage matrix;
-`--coverage-matrix` writes only the coverage matrix reports for release checklist compatibility.
-
-Run extended routing fixture comparison when updating or verifying captured actual router outputs:
+The command set above is the ordinary authoring gate. A formal release also
+requires both commands below on the final tree. The independent
+`.github/workflows/formal-release.yml` workflow is the remote release evidence;
+ordinary pull-request CI remains authoring-only.
 
 ```bash
-python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
+python3 scripts/eval-core-principles.py --gate formal-release
+python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review
 ```
 
-## Runtime Content Rules
+Release evidence is limited to static contracts, deterministic fixtures,
+code-generation definitions and harness/negative-control checks, builds, and
+simulated installation. It does not prove real-host Profile startup, wall-clock
+performance, production accuracy, provider behavior, or the installed user
+experience. State those limits in every release handoff.
 
-Runtime skills must be emitted into `dist/`. Installed skill folders must contain `SKILL.md` at their root. Foundation capabilities are compiled into professional skill `references/` unless the development profile is selected. Optional project-level hook runtime artifacts are support artifacts, not skills, and must also be emitted into `dist/`.
+If a listed evaluator is intentionally replaced, update this command set and the CI workflow in the same change. Do not report success from a stale generated report.
 
-`SKILL.md` is loaded when a skill is selected. `references/` is not assumed to be fully loaded automatically. The router selects capabilities, and professional skills read only selected capability references according to the L1/L2/L3/L4/L5 `Reference Loading Policy`.
+`scripts/audit-skill-content.py` is the single source collector for root Skill
+content and indexed/physical Reference content. The required strict
+`validate-reference-content.py` run reuses that collector, writes no report, and
+gates every indexed Reference's effective type, load, and do-not-load contract.
 
-References are a precision mechanism, not a dumping ground. Programming language knowledge is represented as professional engineering rules and language-runtime capabilities, not as personal technical asset mapping or beginner guides.
+## Built Content Rules
+
+The source inventory is 1 Control, 26 Professional, 150 Foundation, and 13
+Domain Skills: 190 total and 189 non-Control. Built Skills must be emitted into
+`dist/`, and every installed Skill folder must contain `SKILL.md` at its root.
+The `recommended`, `full`, and `dev` builds contain 27, 40, and 190 top-level
+Skills respectively. Their delivery modes are 154/9, 141/9, and 0/0 targeted
+companions/routing-only entries. All supported Codex, Claude, and Copilot
+builds contain the four static Agent Profiles.
+
+Foundation and Domain guidance is compiled into Professional Skill `references/` only when the Professional registry names it. The development build additionally exposes Layer 3 Skills for authoring. `references/` is loaded selectively; it is not a catalog to read in full.
 
 ## Agent Execution Discipline
 
-Every agent-assisted change must obey these execution rules:
+Every agent-assisted change must obey these rules:
 
 1. No evidence, no completion.
 2. No verified cause, no diagnosis.
 3. No repeated same-path retry after two failures.
-4. No local fix without same-pattern scan.
+4. No local fix without a same-pattern scan.
 5. No new structure without reuse and placement rationale.
-6. No handoff without risk, boundary, and validation result.
+6. No handoff without risk, boundary, and validation results.
 
-These rules are behavior constraints only. Do not add entertainment rhetoric, corporate-flavor narration, user-shaming language, or runtime-specific PUA state files. Optional hook runtime state, when present, must stay outside the project source tree and remain warning-only unless a maintainer explicitly enables stricter behavior.
+AI-readability and professional-completeness use separate schema-5
+attestations. Readability uses schema-2 panel artifacts and exactly
+three independent senior-agent reviewers with distinct voter, agent, and role
+identities; every reviewer covers every target and cannot abstain. Retain its
+immutable packet, three canonical ballots, and derived two-of-three decision
+record. The schema-2 packet binds every advisory sentence to an independently
+re-extracted logical document part, closed source selector, exact codepoint
+span, and canonical sentence fingerprint. Each ballot decides every finding;
+the reviewer supplies no document override. Any nested tightening derives that
+reviewer's document disposition before the document majority. Professional
+completeness formal evidence uses schema-3 incremental
+artifacts. Its machine-derived review plan carries only an exactly unchanged
+review-visible package binding from a direct depth-zero fresh origin; changed
+packages and their affected dependencies receive fresh target-scoped capsules
+and ballots. A fresh round uses a reviewer pool with unique voter and agent
+identities. Each fresh ballot covers a non-empty assigned Skill subset, and
+every fresh Skill receives exactly three independent votes: two domain
+reviewers whose closed-set expertise tags cover that Skill and one reviewer
+whose only panel expertise tag is `skill-reference-architecture`. An all-carry
+round uses zero fresh reviewers, ballots, capsules, and input bytes. The
+effective decision still contains three votes per Skill, with carried evidence
+bound to its direct fresh-origin decision, packet, ballots, and capsules. The
+aggregator derives fresh assignments from capsule-bound ballot subsets; the
+packet does not contain reviewer pre-assignment. Maintainers do not select or
+override dispositions. Readability also covers every weak
+front-loaded-action target and formal release requires zero
+`tracked-tightening`, unresolved `detector-false-positive`, and
+`rewrite-required` decisions. Professional completeness decides each of its
+four ordinary criteria independently by two-of-three criterion majority; the
+overall ballot majority is audit-only. Any qualified domain
+reviewer's defect on professional correctness, erroneous rules, material
+omissions, failure modes, boundary conditions, or verification methods becomes
+`unresolved-professional-disagreement`; schema 3 has no arbitration or
+override. Its evidence binds
+criterion-specific source anchors, examined failure and omission candidates,
+independently ranked adjacent candidates, and proof limits. Schema-3 claims
+also quote contiguous non-generic source phrases: each non-defect criterion,
+failure, and omission assertion needs an anchor-local bigram, and each
+non-defect adjacency rationale needs one from each package. The schema-3-only
+phrase matcher cannot bridge generic tokens, lines, or anchors. Relaxed defect
+and uniform-template guards are fingerprinted review contracts;
+schema 1 and schema 2 semantics remain unchanged. Formal release also
+requires all 189 non-Control Skill packages to be accepted with zero
+professional corrections and zero unresolved professional disagreements.
+Qualification claims are static declarations and do not prove reviewer identity,
+credentials, or experience. Professional schema 1 and schema 2 remain
+auditable but cannot satisfy formal release or authorize carry. The checked-in
+schema-3 rounds form one unforked chain whose selected decision is the unique
+head; direct-origin evidence, the full round chain, and the current artifacts
+must be tracked, byte-equal to `HEAD`, and clean. Plan lineage is capped at
+eight rounds before a full-fresh checkpoint. A review-contract change forces
+all 189 packages fresh; a local binding change reopens only the package and its
+machine-derived affected dependencies.
 
-## Hook Runtime Professional Injection
+The Phase 2 inventory is the current and final inventory. Selected r21 Readability and r16 schema-3 Professional Completeness evidence is checked in and current for all 189 non-Control packages; formal release still requires the final-tree formal gates and same-commit remote workflow.
 
-The optional hook runtime may inject action-aware professional context for
-planning, read, edit, review, repair, test, permission, release, compaction, and
-subagent stages. This context is a runtime support artifact, not skill content.
-It must be built into `dist/` before installation and must keep state outside
-project source. It may store bounded facts such as stage, selected skill names,
-capability names, gate names, compact signal names, and paths; it must not store
-raw prompts, secrets, environment variables, full command output, personal
-archives, or toolbox mappings.
+Use the four Profile boundaries defined in `src/agent-profiles/role-agents.json`. The main agent dispatches only; analysis reads and searches; task agents implement bounded work; review agents perform independent non-modifying review. Shared-workspace writes are serial unless the host supplies isolated workspaces and the tasks have no dependency or shared write surface.
+
+Do not add entertainment rhetoric, corporate-flavor narration, user-shaming language, private prompts, secrets, full command logs, personal archives, or user-specific mappings to generated artifacts.

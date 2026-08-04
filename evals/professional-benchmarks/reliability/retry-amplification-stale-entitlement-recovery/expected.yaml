@@ -1,0 +1,31 @@
+coverage_class: release-critical
+expected_stage: release-review
+expected_professional_skill: reliability-observability-gate
+expected_capabilities:
+  - idempotency-retry-design
+  - degradation-circuit-breaking
+  - observability
+expected_hidden_risks:
+  - retry counts multiply across client gateway and service
+  - stale entitlement fallback can grant revoked access
+  - recovery path depends on the failed datastore
+  - user and request labels create unbounded telemetry cardinality
+  - alert lacks an operator action
+expected_evidence:
+  - end-to-end attempt count under injected timeout
+  - revoked-entitlement fallback negative test
+  - recovery exercise with the primary datastore unavailable
+  - representative traffic volume and cardinality estimate
+  - alert owner runbook and executable operator action
+forbidden_behaviors:
+  - add retries at every layer
+  - serve stale entitlement on dependency failure
+  - recover through the failed datastore
+  - label metrics with user and request identifiers
+  - page on error rate without an operator action
+expected_output_obligations:
+  - go or no-go verdict
+  - degradation and recovery contract
+  - observable disable or rollback condition
+  - residual risk and evidence limits
+expected_with_skill_status: pass

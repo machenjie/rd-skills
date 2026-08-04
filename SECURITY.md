@@ -1,6 +1,6 @@
 # Security Policy
 
-ChangeForge Skill Mesh is a skill-authoring, validation, build, packaging, and installer repository. Security reports may involve installer behavior, generated runtime skill artifacts, package shape, registry validation, routing rules, or documentation that could cause unsafe agent behavior.
+ChangeForge is a skill-authoring, validation, build, packaging, and installer repository. Security reports may involve installer behavior, generated runtime skill artifacts, package shape, registry validation, routing rules, or documentation that could cause unsafe agent behavior.
 
 ## Supported Versions
 
@@ -40,4 +40,7 @@ Security fixes must preserve repository boundaries:
 
 ## Security Validation
 
-Security-sensitive changes should run the relevant validation tier from [docs/VALIDATION.md](docs/VALIDATION.md), plus any targeted reproducer or regression test needed for the report.
+Security-sensitive changes must complete the ordinary authoring gate from
+[docs/VALIDATION.md](docs/VALIDATION.md), plus the targeted reproducer or
+regression test needed for the report. Run the formal gate only when preparing
+a formal release.

@@ -7,24 +7,24 @@ focus:
   - deployment ordering
   - data integrity
 route_hints:
-  skills:
-    - data-api-contract-changer
-    - delivery-release-gate
-    - quality-test-gate
-    - change-documentation-gate
-  capabilities:
-    - data-migration-design
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: delivery-release-gate
+  layer3_skills:
     - release-rollback
     - ci-cd
     - version-compatibility
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - API/data gate
-    - implementation gate
-    - delivery gate
-    - test gate
-    - documentation gate
+  review_skill: delivery-release-gate
+release_contract:
+  case_id: delivery/rollback-migration-compatibility
+  control_path: analyzed
+  primary_skill: engineering-change-analysis
+  task_skill: delivery-release-gate
+  review_skill: delivery-release-gate
+  tasks:
+    - task_id: rollback-compatible-release
+      skill: delivery-release-gate
+      review_skill: delivery-release-gate
 expected_outcomes:
   - Old and new application versions can run during the migration window.
   - Forward migration, backfill, read cutover, and cleanup are separated.

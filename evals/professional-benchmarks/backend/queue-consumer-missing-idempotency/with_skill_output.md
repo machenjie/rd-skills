@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: backend-change-builder.
-Selected capabilities: idempotency-retry-design, message-queue-design, async-job-design, observability.
+Selected Layer 3 Skills: idempotency-retry-design, message-queue-design, observability.
 
 Hidden risks: duplicate fulfillment from retry or redelivery; poison message retry loop; lost replay path and invisible failure.
 

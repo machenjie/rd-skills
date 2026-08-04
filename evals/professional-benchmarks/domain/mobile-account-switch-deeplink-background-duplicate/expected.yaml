@@ -1,0 +1,22 @@
+coverage_class: standard
+expected_stage: implementation-review
+expected_professional_skill: installed-client-change-builder
+expected_capabilities:
+  - android-platform-extension
+expected_hidden_risks:
+  - account switch can expose prior-account cache files keys queued work or local rows
+  - an unverified deep link can act with stale tenant authority
+  - background retry after process recreation can duplicate a committed effect
+expected_evidence:
+  - account-switch isolation test across cache files keys rows and queue
+  - deep-link association authorization and stale-session negative tests
+  - process-death duplicate-dispatch recovery test
+forbidden_behaviors:
+  - preserve account-scoped cache across logout
+  - trust deep-link route parameters as actor authority
+  - use in-memory retry identity for background work
+expected_output_obligations:
+  - mobile lifecycle and authority contract
+  - storage cleanup deep-link and background idempotency controls
+  - user-visible recovery proof limits and residual owner
+expected_with_skill_status: pass

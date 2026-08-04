@@ -1,6 +1,6 @@
 Selected stage: testing.
 Selected professional skill: quality-test-gate.
-Selected capabilities: language-testing-strategy.
+Selected Layer 3 Skills: language-testing-strategy, test-strategy.
 
 Hidden risks: language runtime risk tested at wrong layer; Python async blocking call lacks async harness; runtime boundary not covered by language-specific validation.
 

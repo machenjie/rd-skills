@@ -1,6 +1,8 @@
 # Contributing
 
-Thank you for helping improve ChangeForge Skill Mesh. This repository authors, validates, builds, packages, installs, upgrades, and uninstalls ChangeForge runtime skills. Contributions should preserve that boundary.
+Thank you for helping improve ChangeForge. This repository authors, validates,
+builds, packages, installs, upgrades, and uninstalls standard AI Skills and
+static Agent Profiles. Contributions should preserve that boundary.
 
 ## Repository Boundaries
 
@@ -13,7 +15,12 @@ Contributions must not:
 - Create `src/toolbox` or `registry/toolbox.yaml`.
 - Treat generated `references/` as automatic context loaded for every task.
 
-Runtime skills are generated into `dist/` and installed from build outputs only.
+Installable Skills and optional host-native Agent Profiles are generated into
+`dist/` and installed from build outputs only. Hook interception, hidden pack
+delivery, runtime state engines, private or persistent evidence-ledger
+machinery, and user-specific content corpora are outside the architecture.
+Implementation handoffs still require the visible task-local Markdown Evidence
+Ledger defined by the operating and subagent models.
 
 ## Before Opening An Issue
 
@@ -33,6 +40,12 @@ For bugs, include the command you ran, the profile, the agent target, the releva
 - A clean checkout of this repository.
 - Generated runtime outputs must come from `scripts/build.py`.
 
+Install the declared validation dependency before running repository checks:
+
+```bash
+python3 -m pip install .
+```
+
 Build a profile before testing install behavior:
 
 ```bash
@@ -41,29 +54,32 @@ python3 scripts/build.py --profile full
 
 ## Validation Required Before Pull Request
 
-Run the validation tier that matches the change from
-[docs/VALIDATION.md](docs/VALIDATION.md). For most productization and release
-work, run **Fast Source Invariants** during development, then **Full Local** or
-**Release Gate** before handoff. `docs/VALIDATION.md` is the canonical command
-set; do not copy the full suite into pull request notes or other docs.
+Every Skill-system change must run the complete ordinary authoring gate from
+[Validation](docs/VALIDATION.md) on the final material edit, in the documented
+order. This includes documentation-only changes because documentation,
+generated discovery assets, productization, unit tests, code-generation checks,
+and quickstart dry runs share current-tree evidence. Do not replace the complete
+gate with a smaller set of individually passing checks.
 
-When updating or verifying captured router outputs, also run:
-
-```bash
-python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
-```
+Targeted tests remain useful while developing, but they are diagnostic evidence
+until the complete ordinary gate passes. Formal-release commands and the remote
+`Formal Release` workflow are additional release evidence; they are not part of
+the ordinary pull-request gate.
 
 ## Pull Request Checklist
 
 Every pull request should state:
 
 - What changed and why.
-- Which skills, capabilities, registries, docs, installers, or evals were affected.
+- Which Control, Professional, Foundation, or Domain Skills, Agent Profiles, registries, docs, installers, or evals were affected.
 - Which validation commands passed.
 - Any risk, rollback, compatibility, or migration notes.
 - Any unresolved assumptions or maintainer decisions.
 
-Documentation updates are required when a change affects CLI flags, install targets, runtime profiles, packaging behavior, release process, or skill selection behavior. Docs-only typo fixes can remain docs-only, but documentation that changes hook, validation, quality, stage, operating-model, benchmark, eval, routing, or release semantics must run the corresponding validation gate.
+Documentation updates are required when a change affects CLI flags, install
+targets, build profiles, packaging behavior, release process, or Skill
+selection behavior. Small wording fixes may remain documentation-only in file
+scope, but they still run the complete ordinary authoring gate.
 
 ## Contribution Licensing
 

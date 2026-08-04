@@ -1,13 +1,13 @@
 # I18n Timezone Money Safety Checklist
 
 - Select the mode before writing the design.
-- State source evidence, accepted/rejected repository graph evidence, project memory, execution trajectory, and freshness limits.
+- State source evidence, accepted/rejected repository inspection evidence, prior task evidence, observable action sequence, and freshness limits.
 - Define supported locales, BCP 47 tags, negotiation, fallback, and missing translation behavior.
 - Separate canonical API/storage formats from localized display formats.
 - Classify each time value as instant, local date, local datetime, recurring local time, or duration.
 - Define timezone source, DST policy, ambiguous time behavior, and server-time assumptions.
-- Represent money as minor-unit integer or fixed-precision decimal with ISO 4217 currency.
-- Define precision, rounding mode, currency exponent, tax/payment constraints, and display format.
+- Represent authoritative amounts as exact decimals or integer units with an explicit ISO or non-ISO currency or asset identity and governing namespace.
+- Name the authoritative scale or exponent source; define precision bounds, operation-specific rounding and timing, overflow behavior, validation and rejection, tax/payment constraints, and display format.
 - Define pluralization, interpolation, collation, normalization, and localized search/sort behavior.
 - Identify API, database, migration, generated-client, report/export, and backward compatibility impact.
 - Map old/new clients, persisted values, historical timestamps, translation keys, reports, and exports to preservation or migration behavior.

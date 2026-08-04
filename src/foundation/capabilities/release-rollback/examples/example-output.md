@@ -1,40 +1,24 @@
 # Example Output
 
 ```markdown
-## Release Rollback Plan
+## Release Recovery Decision
 
-Mode selected:
-- External-integration rollback with migration-sensitive release sequencing.
+Release identity:
+- Source revision, application artifact, configuration, additive schema state, feature control, provider configuration, and target environment are linked.
 
-Source evidence:
-- Current API deployment manifest, additive migration file, payment provider config change, feature flag definition, prior release runbook, and canary dashboard were inspected.
+Compatibility and order:
+- Earlier and later application versions both tolerate the additive schema and disabled control state.
+- Provider configuration changes after compatibility proof and before bounded exposure.
 
-Changed surfaces:
-- API code, payment provider config, additive database column, feature flag.
+Exposure and stop:
+- Initial exposure scope follows current blast-radius policy rather than a fixed percentage.
+- Payment failure, missing provider callbacks, and reconciliation divergence are watched against current baselines with a named stop authority.
 
-Release order:
-- Apply additive migration.
-- Deploy code with feature flag off.
-- Enable provider config in staging, then production canary.
-- Turn flag on for 5 percent of traffic.
+Recovery:
+- Disable exposure and the feature control, restore prior provider configuration, then redeploy the earlier artifact if compatibility remains valid.
+- Leave additive schema state in place; data migration cleanup is a later forward-recovery decision.
+- Reconcile in-flight provider actions and duplicate or missing callbacks before closing recovery.
 
-Rollback triggers:
-- Payment error rate above threshold for 10 minutes.
-- Missing settlement webhook events.
-
-Rollback actions:
-- Disable feature flag.
-- Restore previous provider config.
-- Redeploy prior API only if flag disable does not recover.
-- Leave additive column in place and forward-fix cleanup later.
-
-Graph/memory/execution validation:
-- Prior runbook claim that provider config is self-service is accepted because current provider admin docs and deployment checklist still show the same reversal path.
-- Canary evidence proves the metric path is wired; it does not prove full-traffic provider behavior.
-
-Changed release to validation map:
-- API code -> smoke test and canary 5xx monitor.
-- Provider config -> settlement webhook test and provider admin audit log.
-- Additive column -> migration status query and old-code compatibility test.
-- Feature flag -> safe-default test and flag propagation check.
+Evidence limit:
+- Current staged proof covers selected compatibility and signal paths; broader provider traffic and live recovery authority remain with the operational and delivery gates.
 ```

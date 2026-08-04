@@ -1,6 +1,6 @@
 Selected stage: release-delivery.
 Selected professional skill: delivery-release-gate.
-Selected capabilities: release-rollback, data-migration-design, version-compatibility, agent-execution-discipline.
+Selected Layer 3 Skills: release-rollback, data-migration-design, version-compatibility.
 
 Hidden risks: rollback fails because schema moved forward; rolling deploy version skew breaks old pods or consumers; contract phase removal before migration evidence.
 Inspected boundaries: forward migration, rollback path, old/new application compatibility, consumer readiness, and release owner.

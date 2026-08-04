@@ -1,21 +1,29 @@
 # Expected Route
 
-```yaml
-scenario_id: implementation-structure-shared-utils-pollution
-selected_skills:
-  - architecture-impact-reviewer
-  - backend-change-builder
-  - quality-test-gate
-selected_capabilities:
-  - implementation-structure-design
-  - module-boundary-design
-  - business-rule-extraction
-  - unit-testing
-required_quality_gates:
-  - architecture gate
-  - implementation gate
-  - test gate
-review_owner: architecture-impact-reviewer
-```
+## Path
 
-The route must force a placement decision: reuse an existing domain/order module if present, avoid shared utility dumping, and scan all same-pattern calculation copies before changing one path.
+Analyzed Work, because ownership and the complete same-pattern impact are not
+known from the request.
+
+## Analysis Assignment
+
+- Profile: `analysis-agent`
+- Primary Professional Skill: `architecture-impact-reviewer`
+- Layer 3 Skills: `module-boundary-design`, `architecture-tradeoff-analysis`
+- First Executable Slice: add characterization coverage for the three known
+  calculation paths before extraction.
+
+## Implementation Assignment
+
+- Profile: `task-agent`
+- Primary Professional Skill: `backend-change-builder`
+- Constraint: prefer the owning order/domain module; do not create a generic
+  shared utility without evidence that the calculation is domain-free
+- Verify: targeted characterization and regression tests for every found path
+
+## Independent Review
+
+- Profile: `review-agent`
+- Review Skill: `architecture-impact-reviewer`
+- Boundary: actual diff, owner placement, dependency direction, same-pattern
+  coverage, and rejected locations

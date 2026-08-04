@@ -4,57 +4,39 @@ Use this reference when a real state matrix needs detailed benchmark anchors, st
 
 ## Benchmark Anchors
 
-- **Nielsen's 10 Usability Heuristics**: visibility of system status, error prevention, and recoverable errors require explicit state transitions and user actions.
-- **WCAG 2.1 / 2.2**: status messages use `role` or `aria-live`; relationships and disabled explanations remain programmatically determinable; all functionality remains keyboard reachable.
-- **XState**: explicit finite states prevent impossible combinations and make transitions reviewable.
-- **TanStack Query / React Query**: `status`, `fetchStatus`, stale state, background refetch, pause, retry, and error states separate data availability from request progress.
-- **SWR**: stale-while-revalidate distinguishes existing data, loading, validation, and error.
+- **Nielsen / XState**: visible status, prevention, recovery, and explicit finite transitions expose impossible combinations and user actions.
+- **WCAG 2.1/2.2 / ARIA APG**: prefer native semantics for user-facing functions affected by the state change.
+- Select urgency-appropriate `aria-busy`, `aria-live`, or `role="alert"` semantics.
+- Preserve programmatic relationships, explainable disabled states, and keyboard operability.
+- Verify the changed interaction without claiming unaffected routes or assistive technologies.
+- **TanStack Query / SWR**: separate data availability from request progress across status/fetchStatus, stale data, background refresh, pause, retry, validation, and error.
 - **Remix `useNavigation` / `useFetcher`**: idle, submitting, and loading states distinguish form submission from page loading.
-- **Skeleton loading**: skeletons fit layout-defining content; spinners fit short actions such as button submit or file upload.
-- **ARIA authoring practices**: use `aria-busy`, `aria-live="polite"`, and `role="alert"` according to urgency.
+- **Progress treatment**: skeletons and action-level indicators are candidates selected from layout stability, duration, interaction, and accessibility needs.
 
-## Complete State Matrix
+## Non-Normative State Examples
 
-| State | Trigger | User-visible treatment | ARIA / Accessibility | Allowed actions | Recovery |
-| --- | --- | --- | --- | --- | --- |
-| Idle | Page load, reset | Default content or empty prompt | None required | All available actions | N/A |
-| Loading | API call initiated | Skeleton or spinner; disable submit | `aria-busy="true"` on container; `aria-label="Loading..."` | Cancel when cancellable; navigation | Retry or cancel |
-| Success | Durable 2xx completion | Content rendered; transient success status | `aria-live="polite"` on status region | All actions | N/A |
-| Error | 4xx/5xx or network error | Error message with recovery CTA | `role="alert"` or `aria-live="assertive"` | Retry; dismiss; contact support | Retry; fix input |
-| Empty | 2xx with zero results | Empty state plus meaningful CTA | Visible text; no special ARIA | Create; import; invite | Create first item |
-| Permission-denied | 403 or policy check | Non-leaking unavailable/access message | `role="alert"` when blocking | Request access when allowed | Request access CTA |
-| Disabled | Prerequisite unmet or no permission | Focusable disabled affordance plus reason | `aria-disabled="true"` plus `aria-describedby` | Focus to see reason | Complete prerequisite |
-| Partial | Some data or actions failed | Available data plus warning banner | `aria-live="polite"` warning | Use available data; retry failed parts | Retry failed parts |
-| Timeout | Threshold exceeded | Uncertainty copy plus refresh/check action | `aria-live="polite"` | Refresh to check; cancel only when true | Refresh; retry safely |
-| Optimistic | UI updated before durable confirmation | Projected state with pending indication | `aria-busy="true"` on affected item | Undo when available | Rollback on error |
-| Rollback | Optimistic update rejected | Revert UI plus error message | `role="alert"` for error | Retry; dismiss | Retry action |
+These rows are calibration prompts, not a complete matrix or default mapping. Select only distinctions supported by product and operation semantics.
+Derive treatment, actions, recovery, and accessibility signals from authority, side effects, recoverability, disclosure, urgency, focus behavior, and current evidence.
 
-## State Machine Decision Tree
+| Example distinction | Evidence that may justify it | Decisions to derive |
+| --- | --- | --- |
+| Available or idle | No active operation, or authoritative data is ready. | Available actions, empty meaning, focus entry, and refresh behavior. |
+| Pending or unknown | Work is accepted, running, disconnected, timed out, or awaiting reconciliation. | Progress treatment, repeat safety, cancellation truth, stale data, and status urgency. |
+| Durable success or empty | Authoritative outcome and returned data cardinality are known. | Whether acknowledgement, empty guidance, follow-up action, or no announcement is useful. |
+| Rejected, denied, missing, or filtered | Typed operation outcome and disclosure policy distinguish the reason. | Safe explanation, visible actions, focus, and whether access recovery exists. |
+| Failed or retryable | Failure mechanism, provider guidance, idempotency, and operation cost support recovery. | Retry eligibility, backoff, preserved input, diagnostics, and support path. |
+| Partial, optimistic, or rolled back | Local projection or subset completion differs from durable state. | Reconciliation, compensation, duplicate prevention, conflict handling, and announcement. |
+| Transport outcome | A 2xx, 4xx, 5xx, or network result describes one exchange, not the complete operation state. | Interpret payload, durability, authority, disclosure, and retry contract before choosing UI behavior. |
 
-For each async operation:
+## State Derivation Questions
 
-1. Define initial state:
-   - User-triggered action starts in idle.
-   - Page-triggered fetch starts in loading or stale-with-refreshing.
-2. Define loading transition:
-   - Layout-defining content uses skeleton loading.
-   - Short actions use button-level spinner or status.
-   - Timeout threshold is explicit.
-3. Define success outcomes:
-   - Returned data maps to success.
-   - Empty array maps to empty, not error.
-   - `202 Accepted` maps to pending/processing, not durable success.
-4. Define error outcomes:
-   - Network error maps to retryable error.
-   - 4xx maps to fix-input, unavailable, or permission state.
-   - 5xx maps to retry/backoff or support state.
-   - Timeout uses uncertainty language.
-5. Define disabled state:
-   - Temporary in-flight work should show progress, not unexplained disabled UI.
-   - Permission or prerequisite disabled states remain reachable with an explanation.
-6. Define optimistic rollback:
-   - Durable success preserves optimistic state.
-   - Rejection reverts and announces the error.
+1. Identify the authoritative outcome and whether a transport response proves durable completion.
+2. Determine whether repeat, cancel, or navigation can duplicate or abandon side effects.
+3. Offer retry only when idempotency, provider guidance, operation cost, and current authority make it safe.
+4. Derive submit availability from duplicate-effect risk, prerequisites, cancellation, and supported concurrency.
+5. Choose status text, focus behavior, live regions, or alerts from urgency, interruption cost, and accessibility requirements.
+6. Apply disclosure policy before distinguishing denied, missing, filtered, or failed states.
+7. Keep unknown, partial, and optimistic outcomes distinct until reconciliation evidence closes them.
 
 ## Anti-Pattern Review
 

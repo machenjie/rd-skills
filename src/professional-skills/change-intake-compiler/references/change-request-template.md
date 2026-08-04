@@ -1,8 +1,8 @@
 # Change Request Structure Template
 
-Deep reference for the `change-intake-compiler` skill. The body enumerates the same fields in
-its `Output Contract`; this file is the fill-in authoring template with per-field notes. It
-ships with the skill in every profile.
+Deep reference for the `change-intake-compiler` skill. The durable Change Request extends the
+core intent slice with provenance, user-value, and early risk metadata. This file is the
+fill-in authoring template with per-field notes and ships with the skill in every profile.
 
 ```
 ## Change Request

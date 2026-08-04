@@ -4,7 +4,6 @@ expected_capabilities:
   - cache-design
   - performance-budgeting
   - observability
-  - permission-boundary-modeling
 expected_hidden_risks:
   - stale entitlement state
   - cross-tenant cache collision

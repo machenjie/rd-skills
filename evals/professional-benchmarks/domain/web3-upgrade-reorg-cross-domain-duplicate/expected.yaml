@@ -1,0 +1,22 @@
+coverage_class: standard
+expected_stage: implementation-review
+expected_professional_skill: integration-change-builder
+expected_capabilities:
+  - web3-product-extension
+expected_hidden_risks:
+  - proxy upgrade can corrupt storage layout or rerun initialization
+  - a reorg can invalidate the source event after the destination effect
+  - duplicate cross-domain delivery can execute the same effect twice
+expected_evidence:
+  - storage-layout diff initializer and rollback proof
+  - fork and reorg fixture through confirmation and reconciliation
+  - duplicate message identity and destination replay negative test
+forbidden_behaviors:
+  - upgrade without storage-layout compatibility proof
+  - treat source confirmation as destination finality
+  - execute a cross-domain message without destination replay state
+expected_output_obligations:
+  - chain and cross-domain invariant
+  - upgrade ordering finality and duplicate-execution controls
+  - deployment identity proof limits and residual owner
+expected_with_skill_status: pass

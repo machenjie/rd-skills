@@ -1,6 +1,6 @@
 Selected stage: debugging-diagnosis.
 Selected professional skill: backend-change-builder.
-Selected capabilities: senior-programming-judgment-core, failure-diagnosis, failure-contract-design, idempotency-retry-design, observability, validation-broker, agent-execution-discipline.
+Selected Layer 3 Skills: failure-diagnosis, failure-contract-design, observability.
 
 Hidden risks: timeout label is not a verified violated invariant; duplicate charge is a side effect; patch-first diagnosis may miss retry and failure-contract boundaries.
 Senior programming judgment required: map symptom/root cause to violated fact, invariant, boundary, state transition, side effect, or failure contract.

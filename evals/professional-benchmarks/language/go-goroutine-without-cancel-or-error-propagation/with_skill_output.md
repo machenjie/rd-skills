@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: backend-change-builder.
-Selected capabilities: go-professional-usage.
+Selected Layer 3 Skills: go-professional-usage.
 
 Hidden risks: Go goroutine without cancel or error propagation; goroutine leak from missing cancellation; error propagation lost in goroutine.
 

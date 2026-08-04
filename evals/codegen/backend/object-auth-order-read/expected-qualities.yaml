@@ -7,27 +7,11 @@ focus:
   - safe denial responses
   - audit behavior
 route_hints:
-  skills:
-    - change-intake-compiler
-    - domain-impact-modeler
-    - backend-change-builder
-    - security-privacy-gate
-    - quality-test-gate
-  capabilities:
-    - authentication-authorization
-    - permission-boundary-modeling
-    - controller-api-implementation
-    - repository-persistence
-    - input-validation
-    - integration-testing
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - requirement gate
-    - domain gate
-    - implementation gate
-    - security gate
-    - test gate
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: security-privacy-gate
 expected_outcomes:
   - Order owners can read their own orders.
   - Tenant administrators can read orders in their tenant only.

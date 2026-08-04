@@ -1,0 +1,9 @@
+# Acceptance Criteria Builder Reference Index
+
+Use this index to load only the local reference needed for the selected acceptance-criteria risk. Record skipped-reference rationale when a plausible reference is not loaded.
+
+| Reference | Load When | Do Not Load When | Depends On | Conflicts With | Max Level | Output Fragment |
+| --- | --- | --- | --- | --- | --- | --- |
+| `../examples/example-output.md` | A builder needs a tiny example before drafting compact criteria. | The body output contract is enough or task evidence must be artifact-specific. | Mode selected, actor, behavior, verification method, and residual risk. | Treating example text as validation evidence or as a substitute for source requirements. | L1 | Compact happy, negative, permission, regression, and product verification examples. |
+| `references/checklist.md` | A bounded L2 draft or review needs a compact coverage check for actor, precondition, action, result, normal, invalid, boundary, permission, regression, compatibility, and evidence. | The body quality gate is enough or evidence mapping/sign-off freshness is material. | Source request, affected behavior, criteria owner, and validation signal. | Checklist completion replacing criterion-level verifier, rejection condition, stakeholder acceptance, or residual-risk proof. | L2 | Acceptance checklist with coverage and evidence owner. |
+| `references/evidence-patterns.md` | Closure depends on criteria-to-validation mapping, stakeholder sign-off freshness, manual/audit evidence limits, or accepted residual risk. | No criterion needs proof beyond the body evidence contract and quality gate. | Criterion IDs, source requirements, validators/procedures, expected pass/reject, owner, and artifact freshness. | Narrative sign-off replacing command/procedure evidence or stale sign-off after scope changed. | L4 | Evidence map and validation map for criteria closure. |

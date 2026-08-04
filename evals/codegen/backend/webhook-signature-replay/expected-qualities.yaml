@@ -7,29 +7,12 @@ focus:
   - idempotent processing
   - secret handling
 route_hints:
-  skills:
-    - change-intake-compiler
-    - integration-change-builder
-    - backend-change-builder
-    - security-privacy-gate
-    - reliability-observability-gate
-    - quality-test-gate
-    - change-documentation-gate
-  capabilities:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
     - idempotency-retry-design
-    - input-validation
-    - secret-configuration-security
-    - integration-testing
-    - logging-error-handling
-    - observability
-  domain_extensions: []
-  quality_gates:
-    - requirement gate
-    - implementation gate
-    - security gate
-    - reliability gate
-    - test gate
-    - documentation gate
+  review_skill: security-privacy-gate
 expected_outcomes:
   - Valid signed events are accepted and processed once.
   - Tampered bodies and invalid signatures are rejected before side effects.

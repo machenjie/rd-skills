@@ -7,9 +7,9 @@ Mode selected: Layer responsibility map and transaction/exception boundary.
 
 Layering scope: Subscription cancellation use case in the subscriptions module; excludes public API schema redesign and distributed saga design.
 
-Source evidence: Subscription controller, cancel use-case handler, Subscription aggregate, repository interface, Postgres repository adapter, event outbox adapter, import rule config, and service tests inspected. Project memory about direct ORM use rejected because current repository adapter owns persistence.
+Source evidence: Subscription controller, cancel use-case handler, Subscription aggregate, repository interface, Postgres repository adapter, event outbox adapter, import rule config, and service tests inspected. prior task evidence about direct ORM use rejected because current repository adapter owns persistence.
 
-Graph/memory/trajectory judgment:
+current source/diff/validation judgment:
 - Accepted: existing subscriptions domain package owns lifecycle invariants.
 - Rejected: legacy pattern where controller checked `subscription.status`.
 - Not verified: CI execution of the architecture rule and real database adapter test.

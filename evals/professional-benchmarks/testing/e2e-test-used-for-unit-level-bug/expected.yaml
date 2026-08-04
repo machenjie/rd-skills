@@ -3,6 +3,7 @@ expected_professional_skill: quality-test-gate
 expected_capabilities:
   - e2e-testing
   - unit-testing
+  - test-strategy
 expected_hidden_risks:
   - E2E test used for unit-level bug
   - slow browser test hides cheaper unit coverage

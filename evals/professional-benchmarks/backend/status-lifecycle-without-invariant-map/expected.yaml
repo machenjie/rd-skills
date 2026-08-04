@@ -1,12 +1,9 @@
 expected_stage: implementation-planning
 expected_professional_skill: domain-impact-modeler
 expected_capabilities:
-  - senior-programming-judgment-core
-  - business-semantic-control-plane
   - business-rule-extraction
   - state-machine-modeling
-  - validation-broker
-  - implementation-structure-design
+  - domain-object-identification
 expected_hidden_risks:
   - enum-only patch changes lifecycle behavior
   - forbidden transitions may become possible

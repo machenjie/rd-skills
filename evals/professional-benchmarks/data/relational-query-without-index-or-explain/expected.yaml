@@ -3,6 +3,7 @@ expected_professional_skill: data-middleware-change-builder
 expected_capabilities:
   - relational-database
   - indexing-query-optimization
+  - sql-professional-usage
 expected_hidden_risks:
   - relational query without index or explain
   - missing index or query plan evidence on large table

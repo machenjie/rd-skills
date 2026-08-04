@@ -1,0 +1,1 @@
+Review a proxy upgrade and cross-domain bridge consumer. The upgrade changes storage fields and can rerun initialization, while a source-chain event triggers a destination effect before finality and the relayer retries messages after reorgs. Establish upgrade compatibility, chain finality, message identity, duplicate-execution, reconciliation, and recovery proof.

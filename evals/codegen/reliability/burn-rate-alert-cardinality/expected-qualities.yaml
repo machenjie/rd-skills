@@ -7,21 +7,14 @@ focus:
   - alert noise control
   - runbook evidence
 route_hints:
-  skills:
-    - reliability-observability-gate
-    - quality-test-gate
-    - change-documentation-gate
-  capabilities:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: reliability-observability-gate
+  layer3_skills:
     - observability
     - performance-budgeting
     - degradation-circuit-breaking
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - reliability gate
-    - test gate
-    - documentation gate
+  review_skill: reliability-observability-gate
 expected_outcomes:
   - Fast and slow burn alerts use bounded labels and stable SLO windows.
   - High cardinality user, request, and raw path labels are rejected.

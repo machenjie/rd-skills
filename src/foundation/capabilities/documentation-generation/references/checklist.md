@@ -1,6 +1,6 @@
 # Documentation Generation Checklist
 
-- Identify audience and docs that must change.
+- When changed behavior, contract, or operating procedure alters an audience's decisions, identify that audience and the current docs requiring updates.
 - Verify claims against source, schemas, configs, tests, commands, or accepted decisions.
 - Update API contracts, examples, error codes, and compatibility notes.
 - Update migration, configuration, operation, and rollback details where affected.

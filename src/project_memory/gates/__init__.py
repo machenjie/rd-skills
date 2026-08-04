@@ -1,2 +1,0 @@
-"""Pure memory gate evaluators."""
-

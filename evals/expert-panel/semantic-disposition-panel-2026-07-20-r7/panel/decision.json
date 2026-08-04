@@ -1,0 +1,730 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-decision",
+  "review_id": "semantic-disposition-panel-2026-07-20-r7",
+  "decided_on": "2026-07-20",
+  "decision_method": "three-independent-experts-majority",
+  "source_fingerprints": {
+    "audit": "f95dc94cfa58646ed544c2e8c246a9b0ecce65def612a0911534e891139411d6",
+    "reference_candidates": "8cd666f6f7d224e381bc03da02db1f2c8d8b3666221b82150e1ef79bd3863742",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "0a27c7917f36464e1ee5a072b7ee5379b98daa36e37d4ac6b3403fe1bd3082c3",
+    "root_candidates": "56be30b3add1255c270ec786ccbe3332a52beef5b034d054d69751a9d52a8f65",
+    "root_context": "48448bee04d69d9bb46fd3212570c978823039a2e760e86569bb0dedeeedc8cf",
+    "root_detector": "0d8c01715fb11258126a474356e03b944ddb720f358163915e6ecf912498c33c",
+    "root_source": "e2c1be9c6f491f7058fa1f622d9180bad84a4da963f56b16db0cf17fddba43c3"
+  },
+  "panel_contract": {
+    "decision_method": "three-independent-experts-majority",
+    "required_voters": 3,
+    "abstentions_allowed": false,
+    "minimum_winning_votes": 2,
+    "independent_ballots": true,
+    "required_target_count": 13,
+    "required_axis_target_counts": {
+      "root": 13,
+      "reference": 0
+    },
+    "allowed_dispositions": [
+      "false-positive",
+      "rewrite",
+      "time-bounded-exception",
+      "valid-contextual-rule"
+    ]
+  },
+  "packet": {
+    "path": "evals/expert-panel/semantic-disposition-panel-2026-07-20-r7/packet.json",
+    "sha256": "c1adfa8fa063f51e078442e4dfab8a99874e173e87805d5550c629aeaf93300f"
+  },
+  "voters": [
+    {
+      "agent_id": "synthetic-semantic-r7-professional-agent",
+      "expertise": [
+        "Synthetic R7 review scope: professional decision semantics and boundary precision"
+      ],
+      "independent_review": true,
+      "role": "synthetic-r7-professional-semantics-review-role",
+      "voter_id": "synthetic-semantic-r7-professional-voter",
+      "ballot_path": "synthetic-semantic-r7-professional-voter.json",
+      "ballot_sha256": "2748433fe02293a60f03b4ba9dd6b5671dce9e966c0080825ee4c886b66536a8"
+    },
+    {
+      "agent_id": "synthetic-semantic-r7-readability-agent",
+      "expertise": [
+        "Synthetic R7 review scope: AI instruction readability and semantic clarity"
+      ],
+      "independent_review": true,
+      "role": "synthetic-r7-readability-clarity-review-role",
+      "voter_id": "synthetic-semantic-r7-readability-voter",
+      "ballot_path": "synthetic-semantic-r7-readability-voter.json",
+      "ballot_sha256": "755b91d66676da4e7fba143202ed30f37586d427d189b761f0f49bd081227cb8"
+    },
+    {
+      "voter_id": "synthetic-semantic-r7-evidence-voter",
+      "agent_id": "synthetic-semantic-r7-evidence-agent",
+      "role": "synthetic-r7-evidence-lifecycle-review-role",
+      "expertise": [
+        "Synthetic R7 review scope: evidence binding and disposition lifecycle verification"
+      ],
+      "independent_review": true,
+      "ballot_path": "synthetic-semantic-r7-evidence-voter.json",
+      "ballot_sha256": "bbefe2e8795338f9f0caca9d4628de4f5c5ee077730b6c042fec51f233b9d8f1"
+    }
+  ],
+  "semantic_decisions": [
+    {
+      "target_id": "root:08dd74dc38dc2fc0a4426321b31e1059e6dc978d651878df5f3cbcfbb9790b71",
+      "axis": "root",
+      "candidate_id": "08dd74dc38dc2fc0a4426321b31e1059e6dc978d651878df5f3cbcfbb9790b71",
+      "candidate_fingerprint": "9edc08b1cf539b5ce4c109f1381691bddd72aa7ce963307518cb783f84a53c6b",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "synthetic-semantic-r7-professional-voter",
+        "synthetic-semantic-r7-readability-voter",
+        "synthetic-semantic-r7-evidence-voter"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "synthetic-semantic-r7-professional-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Reference loading is the mechanism under review, and the selected-trigger requirement gives it a task-local decision boundary rather than a universal catalog ban.",
+          "authority_or_condition": "The task-context-selection owner applies this rule only while assembling context for a single isolated agent and an immediately relevant decision.",
+          "decision_owner": "task-context-selection",
+          "mitigation": "Record excluded References and proof limits, and reopen selection when a later decision activates another Reference contract.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-readability-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The loading restriction is understandable and tied to decision relevance.",
+          "authority_or_condition": "While building bounded context for an isolated task, only a Reference with a satisfied trigger that can affect the next decision is eligible for loading.",
+          "decision_owner": "task-context-selection",
+          "mitigation": "Leave speculative catalogs unloaded, identify excluded context, and state any resulting proof limitation.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-evidence-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The selective-load mandate is professionally valid because this Skill governs task-local context and limits Reference loading to a trigger that can change the next decision.",
+          "authority_or_condition": "Applies only during task-context selection when an individual Reference trigger changes the next decision; speculative catalog loading remains excluded.",
+          "decision_owner": "task-context-selection",
+          "mitigation": "Preserve per-Reference trigger checks, record excluded context and proof limits, and stop when required current source or task evidence is unavailable.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:14aaa5b0bd39e0ca590c6ec806c428f2193044de760a13fa0096a29e8dbb6e54",
+      "axis": "root",
+      "candidate_id": "14aaa5b0bd39e0ca590c6ec806c428f2193044de760a13fa0096a29e8dbb6e54",
+      "candidate_fingerprint": "fa8746394d103f430d801d651422ca98c9277896e6c88eab2c4234f23597fc5d",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "synthetic-semantic-r7-professional-voter",
+        "synthetic-semantic-r7-readability-voter",
+        "synthetic-semantic-r7-evidence-voter"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "synthetic-semantic-r7-professional-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Benchmark definition is the mechanism, and these fields form the minimum reproducibility boundary for comparing treatment with baseline without overstating efficacy.",
+          "authority_or_condition": "Applies only to a task-local Skill efficacy benchmark making structural, empirical, routing, or regression claims.",
+          "decision_owner": "skill-efficacy-benchmark",
+          "mitigation": "Mark unavailable measures and caveats explicitly; do not convert missing comparison evidence into a positive efficacy claim.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-readability-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "These fields make a benchmark comparison reproducible and interpretable.",
+          "authority_or_condition": "When skill-efficacy-benchmark evaluates an efficacy or regression claim, each benchmark covers one task with explicit baseline, treatment, measures, verdict, caveats, and input boundary.",
+          "decision_owner": "skill-efficacy-benchmark",
+          "mitigation": "Classify missing comparison evidence honestly, record uncollected overhead, and keep conclusions within the demonstrated evidence class.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-evidence-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Each listed field is necessary to make a Skill efficacy benchmark reproducible and to prevent structural fixture results from being presented as empirical behavior evidence.",
+          "authority_or_condition": "Applies to each benchmark governed by skill-efficacy-benchmark when a baseline, treatment, or efficacy claim is being evaluated for the same bounded task.",
+          "decision_owner": "skill-efficacy-benchmark",
+          "mitigation": "Keep task, baseline, treatment, metrics, verdict, caveats, and input boundary explicit; classify missing-baseline work as structural-only with not_enough_evidence.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:1c01cd67f882124a42ffe72ad6731e7239a3b07fca9bc46b8f53909eec9a9918",
+      "axis": "root",
+      "candidate_id": "1c01cd67f882124a42ffe72ad6731e7239a3b07fca9bc46b8f53909eec9a9918",
+      "candidate_fingerprint": "95b62a871b4bda30d4edd5788236cc4aea24fa6c54b6ac8f90ea7de25025dd70",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "synthetic-semantic-r7-professional-voter",
+        "synthetic-semantic-r7-readability-voter",
+        "synthetic-semantic-r7-evidence-voter"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "synthetic-semantic-r7-professional-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The one-primary count expresses a control-plane ownership invariant; supporting Layer 3 Skills and selected References remain plural and independently triggered.",
+          "authority_or_condition": "Applies when an isolated agent task context is selected under the ChangeForge layered Skill architecture.",
+          "decision_owner": "task-context-selection",
+          "mitigation": "Name all triggered supporting guidance and refresh the primary choice if task ownership materially changes.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-readability-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The two singular scopes clearly define one bounded agent context.",
+          "authority_or_condition": "The Registry trigger applies when one isolated agent needs task-local context and one Professional Skill must own the primary decision contract.",
+          "decision_owner": "task-context-selection",
+          "mitigation": "Create separate task contexts when ownership diverges and include only explicitly triggered supplementary Skills or References.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-evidence-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "One primary Professional Skill is a bounded routing invariant for an isolated task, while triggered Layer 3 Skills and selected References remain independently plural.",
+          "authority_or_condition": "Applies under the task-context-selection Registry Trigger when an isolated agent needs a minimal task-local context package.",
+          "decision_owner": "task-context-selection",
+          "mitigation": "Name exactly one primary Professional Skill, list triggered Layer 3 Skills and References separately, and route unresolved context-boundary decisions back to analysis.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:24cba4fb951adedce60a07a7c67130f4f5406c0388a3db4b491af1c47e69674a",
+      "axis": "root",
+      "candidate_id": "24cba4fb951adedce60a07a7c67130f4f5406c0388a3db4b491af1c47e69674a",
+      "candidate_fingerprint": "8f7f4fcc5e070a5a76968cad2c69860588230f72e80e96e486bb1d94c8729e61",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "synthetic-semantic-r7-professional-voter",
+        "synthetic-semantic-r7-readability-voter",
+        "synthetic-semantic-r7-evidence-voter"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "synthetic-semantic-r7-professional-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The three modes yield incompatible analysis contracts, so a single selected mode is necessary to keep diagnosis, preparation, and repository answers from leaking into one another.",
+          "authority_or_condition": "Applies after an eligible source-backed request is classified by engineering-change-analysis and before its mode contract is loaded.",
+          "decision_owner": "engineering-change-analysis",
+          "mitigation": "Permit independently triggered supporting References while binding the dispatch and final result to one mode contract.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-readability-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The three named modes are mutually exclusive analysis contracts.",
+          "authority_or_condition": "For general source-backed change preparation, verified-cause diagnosis, or a repository answer, engineering-change-analysis selects the single mode matching the request and evidence.",
+          "decision_owner": "engineering-change-analysis",
+          "mitigation": "Issue a separate bounded dispatch if subsequent work needs another mode or output contract.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-evidence-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Exactly one analysis mode is required because the three supported modes have distinct triggers and output contracts, and crossing modes would make the result ambiguous.",
+          "authority_or_condition": "Applies after engineering-change-analysis classifies the request as implementation-preparation, diagnosis-only, or source-backed-answer from current source evidence.",
+          "decision_owner": "engineering-change-analysis",
+          "mitigation": "Bind the dispatch to the selected mode-contract, load supporting References only on their own triggers, and stop when an unresolved user decision could invalidate classification.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:5e685961c3733c26d6f023b0646bac8473bac164e4e486a2c0ed2b1248c18045",
+      "axis": "root",
+      "candidate_id": "5e685961c3733c26d6f023b0646bac8473bac164e4e486a2c0ed2b1248c18045",
+      "candidate_fingerprint": "f12e392fa4d4f7299cf11300b359ee92edd6c78ef6a73d962d6712e14f289165",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "synthetic-semantic-r7-professional-voter",
+        "synthetic-semantic-r7-readability-voter",
+        "synthetic-semantic-r7-evidence-voter"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "synthetic-semantic-r7-professional-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "This sentence fixes only primary professional ownership at one; facts, supporting Skills, References, acceptance evidence, and verification remain selected by task need.",
+          "authority_or_condition": "Applies to one bounded task context for one isolated agent, not to multi-task planning or cross-agent orchestration.",
+          "decision_owner": "task-context-selection",
+          "mitigation": "Include every materially triggered support item and stop when missing source evidence prevents a reliable context boundary.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-readability-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "One primary Skill keeps ownership singular while allowing triggered supplements.",
+          "authority_or_condition": "For one bounded task, task-context-selection assigns one primary Professional Skill and separately names triggered Layer 3 Skills and selected References.",
+          "decision_owner": "task-context-selection",
+          "mitigation": "Split or hand off the task if no single primary decision contract remains authoritative.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-evidence-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The fixed primary-Skill count is valid within this capability because it defines the smallest coherent authority package for one task without limiting triggered supporting guidance.",
+          "authority_or_condition": "Applies when task-context-selection assembles current facts, authority, acceptance, verification, and stop conditions for one isolated task.",
+          "decision_owner": "task-context-selection",
+          "mitigation": "Keep the primary Skill singular, preserve independently triggered Layer 3 and Reference selections, refresh stale facts, and expose excluded context and residual risk.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:914347dbde87a4adb4d2ca982f7e68750166cb2197a3c8d730f8bd1b9ce79f38",
+      "axis": "root",
+      "candidate_id": "914347dbde87a4adb4d2ca982f7e68750166cb2197a3c8d730f8bd1b9ce79f38",
+      "candidate_fingerprint": "97c8430fdd9b08c5d87bc7a2dfe55b07008a8ba4e22f090ccc9814e51ed0fd83",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "synthetic-semantic-r7-professional-voter",
+        "synthetic-semantic-r7-readability-voter",
+        "synthetic-semantic-r7-evidence-voter"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "synthetic-semantic-r7-professional-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Telemetry is a genuine required mechanism here, but the sentence limits it to cases where gateway diagnosis or operation depends on hop-level evidence.",
+          "authority_or_condition": "Applies to affected client-to-origin gateway paths whose failure or operation cannot be distinguished without correlated hop telemetry.",
+          "decision_owner": "network-protocol-gateway-usage",
+          "mitigation": "Collect only relevant result, duration, retry, and correlation fields while preserving proxy trust and privacy boundaries.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-readability-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The telemetry requirement has an explicit operational-need condition.",
+          "authority_or_condition": "On an affected gateway path, hop-identifying telemetry is required when diagnosis or operation depends on distinguishing the reporting hop, failing hop, and upstream result.",
+          "decision_owner": "network-protocol-gateway-usage",
+          "mitigation": "Collect only necessary hop fields and apply privacy, retention, and bounded-cardinality controls.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-evidence-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Failing-hop telemetry is required only when diagnosis or operation depends on it, making the mechanism conditional on an observable gateway decision rather than universal.",
+          "authority_or_condition": "Applies to affected client-to-origin gateway paths when operational acceptance or diagnosis depends on identifying the failing hop, upstream result, duration, retries, and correlation.",
+          "decision_owner": "network-protocol-gateway-usage",
+          "mitigation": "Instrument only affected hops, retain correlation and upstream evidence, record proof limits, and route security, reliability, contract, or rollout concerns to their specialist gates.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:995a2da65067c989f15b16e783b05fbe367e11d8e1eae1db094efaa3c5d038aa",
+      "axis": "root",
+      "candidate_id": "995a2da65067c989f15b16e783b05fbe367e11d8e1eae1db094efaa3c5d038aa",
+      "candidate_fingerprint": "6ab62ffcd3775b884c723e89af3f6bcdf020c46b723f5cbd63c236e9a253d1a8",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "synthetic-semantic-r7-professional-voter",
+        "synthetic-semantic-r7-readability-voter",
+        "synthetic-semantic-r7-evidence-voter"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "synthetic-semantic-r7-professional-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Source and ownership evidence is a necessary entry condition for impact traversal, and the equivalent-inspection alternative avoids binding the rule to one tool.",
+          "authority_or_condition": "Applies after repository-impact-inspection receives a proposed owner and change surface for a repository-specific impact question.",
+          "decision_owner": "repository-impact-inspection",
+          "mitigation": "Return unresolved discovery to repository-context-map and label dynamic or unavailable consumers as uninspected residual risk.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-readability-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The prerequisite prevents impact analysis from starting with guessed ownership.",
+          "authority_or_condition": "Repository-impact-inspection begins after current source-of-truth, candidate-owner, and change-surface evidence exists from repository-context-map or equivalent direct inspection.",
+          "decision_owner": "repository-impact-inspection",
+          "mitigation": "Stop and route discovery to repository-context-map whenever the prerequisite evidence is missing or stale.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-evidence-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Source-of-truth and candidate-owner evidence is a necessary entry condition for bounded impact inspection; without it, consumer and validation conclusions would lack authority.",
+          "authority_or_condition": "Applies after a candidate owner and change surface are known through repository-context-map or equivalent current direct inspection.",
+          "decision_owner": "repository-impact-inspection",
+          "mitigation": "Accept equivalent direct inspection, distinguish direct from inferred impact, record uninspected scope, and route missing source or ownership discovery to repository-context-map.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:a34e73896f07647684074bfcb5700441dd170f595fe7fc00fdde73403a9aa6eb",
+      "axis": "root",
+      "candidate_id": "a34e73896f07647684074bfcb5700441dd170f595fe7fc00fdde73403a9aa6eb",
+      "candidate_fingerprint": "58c0c1d96645858ea7bdd780d06a7776dbd86e5410868577aeda99ca4b4a3e3d",
+      "winning_disposition": "false-positive",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 2,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 1
+      },
+      "supporting_voters": [
+        "synthetic-semantic-r7-professional-voter",
+        "synthetic-semantic-r7-readability-voter"
+      ],
+      "dissenting_voters": [
+        "synthetic-semantic-r7-evidence-voter"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "synthetic-semantic-r7-professional-voter",
+          "disposition": "false-positive",
+          "rationale": "The mechanism token belongs to the specialist-ownership sentence, while Require governs a benefit-cost criterion; the detector joins distinct propositions and therefore misclassifies the rule family.",
+          "authority_or_condition": "The service-split owner compares coupling reduction against distributed-system cost while specialist Skills retain authority over their own mechanisms.",
+          "decision_owner": "microservice-splitting",
+          "mitigation": "Preserve the architectural criterion and make sentence-level detector segmentation prevent cross-proposition mechanism matches.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-readability-voter",
+          "disposition": "false-positive",
+          "rationale": "The word mechanisms describes retained specialist ownership, not a required mechanism.",
+          "authority_or_condition": "In the service-split role, microservice-splitting owns the integrated tradeoff and exit criteria while named specialist Skills retain authority over their respective mechanisms.",
+          "decision_owner": "microservice-splitting",
+          "mitigation": "Support the coupling-versus-cost decision with current alternatives and operating evidence, and leave mechanism selection with each named specialist.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-evidence-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "A service split is justified only when its coupling reduction exceeds the new distributed-system cost, because the Skill owns the integrated approve, reject, or defer decision.",
+          "authority_or_condition": "Applies to a proposed independently deployed service boundary after business, data, contract, failure, deployability, rollback, ownership, and operating-capacity evidence is available.",
+          "decision_owner": "microservice-splitting",
+          "mitigation": "Compare viable in-process alternatives, integrate specialist-owned mechanisms, defer when evidence is insufficient, and retain phased transition, rollback, exit, and residual-owner evidence.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:c49edfe7eee4b0ee995f29a6be806ce1fd2f642bbce67850d31fae3232fe4bfc",
+      "axis": "root",
+      "candidate_id": "c49edfe7eee4b0ee995f29a6be806ce1fd2f642bbce67850d31fae3232fe4bfc",
+      "candidate_fingerprint": "02647e14c61438082fa2eb6731903de3bdd4b92b08041bd00e847dcb5c4b6065",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "synthetic-semantic-r7-professional-voter",
+        "synthetic-semantic-r7-readability-voter",
+        "synthetic-semantic-r7-evidence-voter"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "synthetic-semantic-r7-professional-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Review evidence is the relevant mechanism, and checking every material claim is proportionate because unsupported material claims can invalidate the downstream artifact decision.",
+          "authority_or_condition": "Applies to material claims in an ordinary pre-implementation engineering artifact within engineering-artifact-review declared scope.",
+          "decision_owner": "engineering-artifact-review",
+          "mitigation": "Separate unverified claims, scale checking to risk, and route high-risk or release verdicts to their specialist reviewers.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-readability-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Evidence for material claims is necessary to make review conclusions actionable.",
+          "authority_or_condition": "During ordinary engineering-artifact-review, claims material to the artifact decision are checked against current source or evidence from an explicit accountable owner.",
+          "decision_owner": "engineering-artifact-review",
+          "mitigation": "Apply materiality proportionally to risk and mark unavailable evidence as unverified instead of implying certainty.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-evidence-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Verifying every material claim is valid for independent artifact review because downstream decisions must not rely on unsupported ownership, contract, failure, validation, or rollback assertions.",
+          "authority_or_condition": "Applies only to material claims in an ordinary Engineering Brief, Task Plan, acceptance artifact, or contract within the stated review boundary.",
+          "decision_owner": "engineering-artifact-review",
+          "mitigation": "Use current source or explicit owner evidence, separate reviewed from unverified scope, and route high-risk design or release, deployment, and migration readiness to specialist reviewers.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:d5ccb23d89c42a830dd5100ded1dd0e0bfd54b4ca40810469c8b4620c92f5b66",
+      "axis": "root",
+      "candidate_id": "d5ccb23d89c42a830dd5100ded1dd0e0bfd54b4ca40810469c8b4620c92f5b66",
+      "candidate_fingerprint": "d8074678ff05d20958e4c8f7d52d62acf2dff78e5d533613d622a5d85030ded4",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "synthetic-semantic-r7-professional-voter",
+        "synthetic-semantic-r7-readability-voter",
+        "synthetic-semantic-r7-evidence-voter"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "synthetic-semantic-r7-professional-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Inspected evidence is conditionally required only after a control is judged inapplicable, which prevents silent omissions without forcing irrelevant controls.",
+          "authority_or_condition": "Applies within extensibility-design when current trust, activation, compatibility, or consequence evidence makes a listed control inapplicable.",
+          "decision_owner": "extensibility-design",
+          "mitigation": "Escalate uncertain applicability and retain a concise reason tied to the inspected boundary and accountable owner.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-readability-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The requirement is expressly limited to controls judged inapplicable.",
+          "authority_or_condition": "After extensibility-design evaluates the current trust, activation, and consequence boundary, any inapplicable control needs concise rationale supported by inspected evidence.",
+          "decision_owner": "extensibility-design",
+          "mitigation": "Record a control-specific non-applicability decision and apply every control whose trigger remains satisfied.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-evidence-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Requiring inspected evidence for an inapplicable control is valid because it prevents trust-boundary, authenticity, rollback, or recovery obligations from being dismissed without analysis.",
+          "authority_or_condition": "Applies only when an extensibility control is claimed inapplicable after evaluating artifact trust, activation mutability, consequence, isolation, compatibility, and recovery boundaries.",
+          "decision_owner": "extensibility-design",
+          "mitigation": "Record a concise non-applicability rationale with inspected evidence and escalate whenever trust, consequence, compatibility, isolation, or recovery uncertainty remains material.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:dedb43e54a606e6da19a38addf8e0ff7daea4cea347fbb74ef197f69c9c88120",
+      "axis": "root",
+      "candidate_id": "dedb43e54a606e6da19a38addf8e0ff7daea4cea347fbb74ef197f69c9c88120",
+      "candidate_fingerprint": "d84cc4ddc03a2d742ab4adca811b8c7d69e2d1730c75c0dd31211c03c800266f",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "synthetic-semantic-r7-professional-voter",
+        "synthetic-semantic-r7-readability-voter",
+        "synthetic-semantic-r7-evidence-voter"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "synthetic-semantic-r7-professional-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Evidence before abstraction is a valid design gate because speculative extension points create compatibility and authority costs without demonstrated variation.",
+          "authority_or_condition": "Applies when extensibility-design is considering an abstraction, plugin, hook, or policy extension for claimed variation.",
+          "decision_owner": "extensibility-design",
+          "mitigation": "Use direct code or configuration until current consumers, independent change reasons, ownership, and evolution evidence are established.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-readability-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The evidence categories make the anti-speculation rule directly actionable.",
+          "authority_or_condition": "Before introducing an extension abstraction, extensibility-design requires current consumers, distinct change reasons, ownership, and likely evolution to demonstrate real variation.",
+          "decision_owner": "extensibility-design",
+          "mitigation": "Keep variation in direct code or configuration until current evidence supports a stable shared extension boundary.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-evidence-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Evidence of real variation before abstraction is the governing extensibility invariant and prevents speculative plugins, hooks, and compatibility surfaces from creating needless authority and lifecycle cost.",
+          "authority_or_condition": "Applies when extensibility-design evaluates a proposed extension point, plugin, policy hook, configuration variation, or other shared variation boundary.",
+          "decision_owner": "extensibility-design",
+          "mitigation": "Name current consumers, distinct change reasons, ownership, and likely evolution; prefer direct code or configuration when variation remains unproven or locally owned.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:e59a6530f983bfee0e1f36d33148f98c866da5d49b70573c2126338276fe2300",
+      "axis": "root",
+      "candidate_id": "e59a6530f983bfee0e1f36d33148f98c866da5d49b70573c2126338276fe2300",
+      "candidate_fingerprint": "b6898e2c0e78ee54258b83ce0d98c9984ef270795f496a284454dd9b378871d1",
+      "winning_disposition": "false-positive",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 2,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 1
+      },
+      "supporting_voters": [
+        "synthetic-semantic-r7-readability-voter",
+        "synthetic-semantic-r7-evidence-voter"
+      ],
+      "dissenting_voters": [
+        "synthetic-semantic-r7-professional-voter"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "synthetic-semantic-r7-professional-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The directive mandates an impact record, not automatic test creation; that record is the Skill bounded output and must distinguish affected from uninspected surfaces.",
+          "authority_or_condition": "Applies after the candidate owner and change surface are confirmed and repository impact is being classified.",
+          "decision_owner": "repository-impact-inspection",
+          "mitigation": "Record existing, missing, and uninspected test surfaces without claiming that every change requires a newly created test artifact.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-readability-voter",
+          "disposition": "false-positive",
+          "rationale": "The instruction records test impact status; it does not mandate creating tests.",
+          "authority_or_condition": "Within repository-impact-inspection, the checklist classifies affected and uninspected consumers, tests, contracts, and generated surfaces for the bounded impact map.",
+          "decision_owner": "repository-impact-inspection",
+          "mitigation": "Record absent or uninspected test surfaces explicitly and require new tests only when acceptance or risk evidence independently justifies them.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-evidence-voter",
+          "disposition": "false-positive",
+          "rationale": "The sentence requires recording impact status for affected and uninspected tests; it does not mandate creating, running, or retaining a test artifact as the detector family assumes.",
+          "authority_or_condition": "Applies within repository-impact-inspection after the candidate owner and change surface are known, with tests classified as inspected impact subjects alongside consumers and contracts.",
+          "decision_owner": "repository-impact-inspection",
+          "mitigation": "Keep affected and uninspected qualifiers explicit; reopen semantic review if the source later requires a test artifact rather than recording bounded impact evidence.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:e6c088e78ad47b278277d5e80d01d32887185418676eb71b3854ec5a99c9737d",
+      "axis": "root",
+      "candidate_id": "e6c088e78ad47b278277d5e80d01d32887185418676eb71b3854ec5a99c9737d",
+      "candidate_fingerprint": "f01aeff9978c6c7db03c5643901c2917016ded14fad886d09c76dea948337246",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "synthetic-semantic-r7-professional-voter",
+        "synthetic-semantic-r7-readability-voter",
+        "synthetic-semantic-r7-evidence-voter"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "synthetic-semantic-r7-professional-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The two-task threshold is inherent to this product multi-task DAG boundary, and factual edges prevent graph ceremony for a single independent change.",
+          "authority_or_condition": "Applies only to an accepted source-backed Brief with at least two real tasks and genuine blocking relationships.",
+          "decision_owner": "task-dag-planner",
+          "mitigation": "Emit one Task Capsule when no DAG is needed and reject placeholder nodes, cycles, or nonblocking dependency edges.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-readability-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Two nodes are the minimum needed for an inter-task dependency graph.",
+          "authority_or_condition": "When an accepted Brief contains genuine multi-task dependency, integration, parallel, or release-order value, every DAG node is a real task and every edge names a blocking fact.",
+          "decision_owner": "task-dag-planner",
+          "mitigation": "Return a single Task Capsule when only one task exists and never manufacture nodes to reach the threshold.",
+          "review_after": null
+        },
+        {
+          "voter_id": "synthetic-semantic-r7-evidence-voter",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Two or more real tasks is the structural minimum for a DAG, and limiting edges to blocking facts prevents decorative dependencies and unsafe scheduling claims.",
+          "authority_or_condition": "Applies after an accepted source-backed Brief establishes genuine multi-task work with dependencies, parallel value, integration need, or release order.",
+          "decision_owner": "task-dag-planner",
+          "mitigation": "Emit a single Task Capsule when a DAG is unnecessary, validate every edge and shared resource, serialize writes in shared or unknown workspaces, and stop on unresolved scheduling boundaries.",
+          "review_after": null
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "semantic_dispositions": {
+      "false-positive": 2,
+      "rewrite": 0,
+      "time-bounded-exception": 0,
+      "valid-contextual-rule": 11
+    }
+  },
+  "limitations": [
+    "This majority is authoring lifecycle evidence only.",
+    "It cannot satisfy readability or professional-completeness formal attestations.",
+    "The record contains no generated single-source-of-truth disposition entries.",
+    "A rewrite majority requires a source edit before any resolved governance entry can exist."
+  ]
+}

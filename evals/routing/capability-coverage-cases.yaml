@@ -1,0 +1,281 @@
+---
+schema_version: 1
+cases:
+  - id: capcov-route-react-web-owner
+    main_execution: {producer: main-control-agent, task_id: capcov-route-react-web-owner, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-react-web-owner:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted React web browser frontend component change.
+    excluded_skills: [installed-client-change-builder]
+    expected: {path: direct, profile: task-agent, primary_skill: frontend-change-builder, layer3_skills: [web-platform-professional-usage], review_skill: ai-code-review-refactor}
+  - id: capcov-route-pwa-only-owner
+    main_execution: {producer: main-control-agent, task_id: capcov-route-pwa-only-owner, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-pwa-only-owner:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted PWA-only frontend component change with service-worker offline behavior.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, ios-ipados-platform-extension]
+    expected: {path: direct, profile: task-agent, primary_skill: frontend-change-builder, layer3_skills: [web-platform-professional-usage], review_skill: ai-code-review-refactor}
+  - id: capcov-route-android-owner
+    main_execution: {producer: main-control-agent, task_id: capcov-route-android-owner, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-android-owner:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Android mobile lifecycle fix for permission revocation after process recreation.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [android-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-route-ios-owner
+    main_execution: {producer: main-control-agent, task_id: capcov-route-ios-owner, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-ios-owner:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted iOS mobile lifecycle fix for permission revocation after process recreation.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [ios-ipados-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-route-windows-owner
+    main_execution: {producer: main-control-agent, task_id: capcov-route-windows-owner, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-windows-owner:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Windows packaged desktop application protocol-handler change.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [windows-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-route-macos-owner
+    main_execution: {producer: main-control-agent, task_id: capcov-route-macos-owner, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-macos-owner:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted macOS AppKit application window-lifecycle change.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [macos-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-route-linux-desktop-owner
+    main_execution: {producer: main-control-agent, task_id: capcov-route-linux-desktop-owner, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-linux-desktop-owner:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Linux graphical desktop application D-Bus integration change.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [linux-desktop-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-route-flutter-android-ios
+    main_execution: {producer: main-control-agent, task_id: capcov-route-flutter-android-ios, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-flutter-android-ios:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Flutter application change targeting Android and iOS.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [cross-platform-client-extension, android-platform-extension, ios-ipados-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-route-electron-windows
+    main_execution: {producer: main-control-agent, task_id: capcov-route-electron-windows, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-electron-windows:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Electron packaged application change targeting Windows.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [cross-platform-client-extension, windows-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-route-cross-alone-rejected
+    main_execution: {producer: main-control-agent, task_id: capcov-route-cross-alone-rejected, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-cross-alone-rejected:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Prepare an implementation for a cross-platform packaged client whose target platforms are not yet known.
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-route-backend-no-installed-client
+    main_execution: {producer: main-control-agent, task_id: capcov-route-backend-no-installed-client, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-backend-no-installed-client:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted backend service behavior fix; installed-client lifecycle, packaging, and platform behavior are unchanged.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, ios-ipados-platform-extension, windows-platform-extension, macos-platform-extension, linux-desktop-platform-extension, cross-platform-client-extension]
+    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}
+  - id: capcov-route-kotlin-backend-no-android
+    main_execution: {producer: main-control-agent, task_id: capcov-route-kotlin-backend-no-android, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-kotlin-backend-no-android:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted backend service Kotlin coroutine behavior fix; Android and installed-client behavior are unchanged.
+    excluded_skills: [installed-client-change-builder, android-platform-extension]
+    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [kotlin-professional-usage], review_skill: ai-code-review-refactor}
+  - id: capcov-route-terraform-source
+    main_execution: {producer: main-control-agent, task_id: capcov-route-terraform-source, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-terraform-source:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Terraform module source change without applying it to production.
+    excluded_skills: [delivery-release-gate]
+    expected: {path: direct, profile: task-agent, primary_skill: platform-infrastructure-change-builder, layer3_skills: [infrastructure-as-code-safety], review_skill: ai-code-review-refactor}
+  - id: capcov-route-terraform-apply
+    main_execution: {producer: main-control-agent, task_id: capcov-route-terraform-apply, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-terraform-apply:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Review a Terraform production apply as a production rollout decision.
+    expected: {path: direct, profile: review-agent, primary_skill: delivery-release-gate, layer3_skills: [release-rollback, version-compatibility], review_skill: delivery-release-gate}
+  - id: capcov-removed-mobile-skill-id-unsupported
+    main_execution: {producer: main-control-agent, task_id: capcov-removed-mobile-skill-id-unsupported, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-removed-mobile-skill-id-unsupported:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: The removed mobile-product-extension Skill id is unsupported; inspect repository, build, release, and published-artifact evidence for this installed-client change before asking a bounded question because its target platform is unknown.
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-unknown-installed-client-target-analysis
+    main_execution: {producer: main-control-agent, task_id: capcov-unknown-installed-client-target-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-unknown-installed-client-target-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Prepare an implementation for an installed shared client whose target platforms are not yet known; inspect repository, build, release, and published-artifact evidence before asking a bounded question.
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-natural-android-screen-state
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-android-screen-state, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-android-screen-state:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement the accepted Android screen state handling when the app returns after process recreation.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [android-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-android-foreground-background
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-android-foreground-background, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-android-foreground-background:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement the accepted Android app foreground service and background work scheduling behavior.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [android-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-ios-swiftui-view-state
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-ios-swiftui-view-state, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-ios-swiftui-view-state:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement the accepted iOS SwiftUI view state update for the phone app.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [ios-ipados-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-ios-scene-background-task
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-ios-scene-background-task, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-ios-scene-background-task:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement the accepted iOS scene and background task expiration behavior.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [ios-ipados-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-windows-packaged-desktop-app
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-windows-packaged-desktop-app, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-windows-packaged-desktop-app:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement the accepted Windows packaged desktop app window state behavior.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [windows-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-macos-appkit-app
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-macos-appkit-app, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-macos-appkit-app:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement the accepted macOS AppKit app window state behavior.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [macos-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-linux-graphical-desktop-app
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-linux-graphical-desktop-app, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-linux-graphical-desktop-app:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement the accepted Linux graphical desktop app window state behavior.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [linux-desktop-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-flutter-android-ios
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-flutter-android-ios, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-flutter-android-ios:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement the accepted Flutter shared client change targeting Android and iOS.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [cross-platform-client-extension, android-platform-extension, ios-ipados-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-electron-windows
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-electron-windows, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-electron-windows:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement the accepted Electron shared client change targeting Windows.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [cross-platform-client-extension, windows-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-kotlin-backend
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-kotlin-backend, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-kotlin-backend:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted backend service change in Kotlin coroutine behavior.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, cross-platform-client-extension, ios-ipados-platform-extension, linux-desktop-platform-extension, macos-platform-extension, windows-platform-extension]
+    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [kotlin-professional-usage], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-swift-linux-backend
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-swift-linux-backend, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-swift-linux-backend:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Linux server backend service change in Swift concurrency code.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, cross-platform-client-extension, ios-ipados-platform-extension, linux-desktop-platform-extension, macos-platform-extension, windows-platform-extension]
+    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-csharp-linux-backend
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-csharp-linux-backend, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-csharp-linux-backend:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Linux server .NET service C# async disposal behavior change.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, cross-platform-client-extension, ios-ipados-platform-extension, linux-desktop-platform-extension, macos-platform-extension, windows-platform-extension]
+    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [csharp-dotnet-professional-usage], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-cpp-linux-server
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-cpp-linux-server, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-cpp-linux-server:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted C++ Linux server backend service request parsing change.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, cross-platform-client-extension, ios-ipados-platform-extension, linux-desktop-platform-extension, macos-platform-extension, windows-platform-extension]
+    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-dart-backend
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-dart-backend, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-dart-backend:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Dart backend service request validation change.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, cross-platform-client-extension, ios-ipados-platform-extension, linux-desktop-platform-extension, macos-platform-extension, windows-platform-extension]
+    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-cross-target-unknown
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-cross-target-unknown, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-cross-target-unknown:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Prepare an implementation for a Flutter shared client whose target platforms are not yet known.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, cross-platform-client-extension, ios-ipados-platform-extension, linux-desktop-platform-extension, macos-platform-extension, windows-platform-extension]
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-natural-pwa-web-only
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-pwa-web-only, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-pwa-web-only:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted PWA web-only offline component change in the browser.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, cross-platform-client-extension, ios-ipados-platform-extension, linux-desktop-platform-extension, macos-platform-extension, windows-platform-extension]
+    expected: {path: direct, profile: task-agent, primary_skill: frontend-change-builder, layer3_skills: [web-platform-professional-usage], review_skill: ai-code-review-refactor}
+  - id: capcov-natural-android-store-rollout
+    main_execution: {producer: main-control-agent, task_id: capcov-natural-android-store-rollout, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-natural-android-store-rollout:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Review an Android app store production rollout decision for the already-built package.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, cross-platform-client-extension, ios-ipados-platform-extension, linux-desktop-platform-extension, macos-platform-extension, windows-platform-extension]
+    expected: {path: direct, profile: review-agent, primary_skill: delivery-release-gate, layer3_skills: [release-rollback, version-compatibility], review_skill: delivery-release-gate}
+  - id: capcov-neighbor-android-app-state-backend-payload
+    main_execution: {producer: main-control-agent, task_id: capcov-neighbor-android-app-state-backend-payload, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-neighbor-android-app-state-backend-payload:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted backend service parser change for an Android app state payload.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, cross-platform-client-extension, ios-ipados-platform-extension, linux-desktop-platform-extension, macos-platform-extension, windows-platform-extension]
+    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}
+  - id: capcov-neighbor-ios-app-state-backend-payload
+    main_execution: {producer: main-control-agent, task_id: capcov-neighbor-ios-app-state-backend-payload, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-neighbor-ios-app-state-backend-payload:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted backend service parser change for an iOS app state payload.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, cross-platform-client-extension, ios-ipados-platform-extension, linux-desktop-platform-extension, macos-platform-extension, windows-platform-extension]
+    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}
+  - id: capcov-neighbor-macos-swiftui-window
+    main_execution: {producer: main-control-agent, task_id: capcov-neighbor-macos-swiftui-window, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-neighbor-macos-swiftui-window:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement the accepted macOS SwiftUI app window update.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [macos-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-neighbor-android-compose-view
+    main_execution: {producer: main-control-agent, task_id: capcov-neighbor-android-compose-view, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-neighbor-android-compose-view:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement the accepted Android Jetpack Compose view update for the phone app.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [android-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-neighbor-windows-wpf-window
+    main_execution: {producer: main-control-agent, task_id: capcov-neighbor-windows-wpf-window, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-neighbor-windows-wpf-window:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement the accepted Windows WPF packaged desktop app window update.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [windows-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-neighbor-windows-winui-view
+    main_execution: {producer: main-control-agent, task_id: capcov-neighbor-windows-winui-view, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-neighbor-windows-winui-view:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement the accepted Windows WinUI packaged desktop app view update.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [windows-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-docs-order-android-compose
+    main_execution: {producer: main-control-agent, task_id: capcov-docs-order-android-compose, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-docs-order-android-compose:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Analyze only Android Jetpack Compose screen documentation; application behavior remains unchanged.
+    excluded_skills: [installed-client-change-builder, android-platform-extension]
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-docs-order-leading-only-android-compose-inspect
+    main_execution: {producer: main-control-agent, task_id: capcov-docs-order-leading-only-android-compose-inspect, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-docs-order-leading-only-android-compose-inspect:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Only inspect Android Jetpack Compose screen documentation; application behavior remains unchanged.
+    excluded_skills: [installed-client-change-builder, android-platform-extension]
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-docs-order-leading-only-android-compose-analyze
+    main_execution: {producer: main-control-agent, task_id: capcov-docs-order-leading-only-android-compose-analyze, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-docs-order-leading-only-android-compose-analyze:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Only analyze Android Jetpack Compose screen documentation; application behavior remains unchanged.
+    excluded_skills: [installed-client-change-builder, android-platform-extension]
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-docs-order-leading-only-android-compose-review
+    main_execution: {producer: main-control-agent, task_id: capcov-docs-order-leading-only-android-compose-review, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-docs-order-leading-only-android-compose-review:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Only review Android Jetpack Compose screen documentation; application behavior remains unchanged.
+    excluded_skills: [installed-client-change-builder, android-platform-extension]
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-docs-order-macos-swiftui
+    main_execution: {producer: main-control-agent, task_id: capcov-docs-order-macos-swiftui, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-docs-order-macos-swiftui:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Inspect only macOS SwiftUI window documentation; application behavior remains unchanged.
+    excluded_skills: [installed-client-change-builder, macos-platform-extension]
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-docs-order-windows-wpf
+    main_execution: {producer: main-control-agent, task_id: capcov-docs-order-windows-wpf, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-docs-order-windows-wpf:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Analyze only Windows WPF window documentation; application behavior remains unchanged.
+    excluded_skills: [installed-client-change-builder, windows-platform-extension]
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-docs-order-windows-winui
+    main_execution: {producer: main-control-agent, task_id: capcov-docs-order-windows-winui, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-docs-order-windows-winui:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Inspect only Windows WinUI view documentation; application behavior remains unchanged.
+    excluded_skills: [installed-client-change-builder, windows-platform-extension]
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-route-android-accessibility-owner
+    main_execution: {producer: main-control-agent, task_id: capcov-route-android-accessibility-owner, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-android-accessibility-owner:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Android installed application screen accessibility behavior change for TalkBack and Switch Access.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [android-platform-extension, accessibility-inclusive-design], review_skill: ai-code-review-refactor}
+  - id: capcov-route-android-compose-semantics
+    main_execution: {producer: main-control-agent, task_id: capcov-route-android-compose-semantics, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-android-compose-semantics:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Android app Compose semantics behavior change.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [android-platform-extension, accessibility-inclusive-design], review_skill: ai-code-review-refactor}
+  - id: capcov-route-android-dpad-navigation
+    main_execution: {producer: main-control-agent, task_id: capcov-route-android-dpad-navigation, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-android-dpad-navigation:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Android app D-pad navigation behavior change.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [android-platform-extension, accessibility-inclusive-design], review_skill: ai-code-review-refactor}
+  - id: capcov-route-android-pointer-alternative
+    main_execution: {producer: main-control-agent, task_id: capcov-route-android-pointer-alternative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-android-pointer-alternative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Android app pointer alternative behavior change.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [android-platform-extension, accessibility-inclusive-design], review_skill: ai-code-review-refactor}
+  - id: capcov-route-flutter-android-accessibility
+    main_execution: {producer: main-control-agent, task_id: capcov-route-flutter-android-accessibility, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-flutter-android-accessibility:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Flutter application change targeting Android for TalkBack accessibility behavior and keyboard focus.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [cross-platform-client-extension, android-platform-extension, accessibility-inclusive-design], review_skill: ai-code-review-refactor}
+  - id: capcov-route-react-native-android-accessibility
+    main_execution: {producer: main-control-agent, task_id: capcov-route-react-native-android-accessibility, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-react-native-android-accessibility:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted React Native application change targeting Android for TalkBack accessibility behavior and Switch Access.
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [cross-platform-client-extension, android-platform-extension, accessibility-inclusive-design], review_skill: ai-code-review-refactor}
+  - id: capcov-route-android-accessibility-review
+    main_execution: {producer: main-control-agent, task_id: capcov-route-android-accessibility-review, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-android-accessibility-review:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Review the actual diff for an Android application accessibility behavior change affecting TalkBack and Switch Access.
+    expected: {path: direct, profile: review-agent, primary_skill: ai-code-review-refactor, layer3_skills: [android-platform-extension, accessibility-inclusive-design], review_skill: ai-code-review-refactor}
+  - id: capcov-route-flutter-android-ios-accessibility-overflow
+    main_execution: {producer: main-control-agent, task_id: capcov-route-flutter-android-ios-accessibility-overflow, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-flutter-android-ios-accessibility-overflow:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted Flutter application change targeting Android and iOS for accessibility behavior affecting TalkBack and VoiceOver.
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-route-android-accessibility-api-name-negative
+    main_execution: {producer: main-control-agent, task_id: capcov-route-android-accessibility-api-name-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-android-accessibility-api-name-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Inspect Android TalkBack API names only; no Android behavior changes and no implementation is requested.
+    excluded_skills: [android-platform-extension, accessibility-inclusive-design]
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-route-android-talkback-constant-rename-negative
+    main_execution: {producer: main-control-agent, task_id: capcov-route-android-talkback-constant-rename-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-android-talkback-constant-rename-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Rename the Android TalkBack API constant used by the app; no runtime behavior changes.
+    excluded_skills: [android-platform-extension, accessibility-inclusive-design]
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
+  - id: capcov-route-backend-json-dynamic-type-negative
+    main_execution: {producer: main-control-agent, task_id: capcov-route-backend-json-dynamic-type-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-backend-json-dynamic-type-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted backend application change to JSON-decoder dynamic type handling.
+    excluded_skills: [android-platform-extension, accessibility-inclusive-design]
+    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}
+  - id: capcov-route-backend-kotlin-accessibility-field-negative
+    main_execution: {producer: main-control-agent, task_id: capcov-route-backend-kotlin-accessibility-field-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-backend-kotlin-accessibility-field-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement accepted backend Kotlin code for a field named accessibility; no user interface behavior changes.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, accessibility-inclusive-design]
+    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [kotlin-professional-usage], review_skill: ai-code-review-refactor}
+  - id: capcov-route-backend-accessibility-diff-field-negative
+    main_execution: {producer: main-control-agent, task_id: capcov-route-backend-accessibility-diff-field-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-backend-accessibility-diff-field-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Review the actual diff for a backend field named accessibility; no user interface behavior changes.
+    excluded_skills: [android-platform-extension, accessibility-inclusive-design]
+    expected: {path: direct, profile: review-agent, primary_skill: ai-code-review-refactor, layer3_skills: [code-review], review_skill: ai-code-review-refactor}
+  - id: capcov-route-ios-lifecycle-no-android-accessibility
+    main_execution: {producer: main-control-agent, task_id: capcov-route-ios-lifecycle-no-android-accessibility, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-ios-lifecycle-no-android-accessibility:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Implement an accepted iOS application lifecycle change with no Android behavior.
+    excluded_skills: [android-platform-extension, accessibility-inclusive-design]
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [ios-ipados-platform-extension], review_skill: ai-code-review-refactor}
+  - id: capcov-route-android-accessibility-docs-negative
+    main_execution: {producer: main-control-agent, task_id: capcov-route-android-accessibility-docs-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-android-accessibility-docs-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Update Android accessibility API documentation only without changing application behavior.
+    excluded_skills: [installed-client-change-builder, android-platform-extension, accessibility-inclusive-design]
+    expected: {path: direct, profile: task-agent, primary_skill: change-documentation-gate, layer3_skills: [documentation-generation], review_skill: change-documentation-gate}
+  - id: capcov-route-cross-platform-accessibility-target-unknown
+    main_execution: {producer: main-control-agent, task_id: capcov-route-cross-platform-accessibility-target-unknown, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:capcov-route-cross-platform-accessibility-target-unknown:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    prompt: Prepare an implementation for a Flutter accessibility behavior change whose target platforms are not yet known.
+    excluded_skills: [installed-client-change-builder, cross-platform-client-extension, android-platform-extension, accessibility-inclusive-design]
+    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}

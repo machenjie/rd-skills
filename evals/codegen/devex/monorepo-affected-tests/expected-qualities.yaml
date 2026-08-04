@@ -7,24 +7,28 @@ focus:
   - build cache safety
   - CI fallback
 route_hints:
-  skills:
-    - architecture-impact-reviewer
-    - delivery-release-gate
-    - reliability-observability-gate
-    - quality-test-gate
-  capabilities:
-    - ci-cd
-    - package-dependency-management
-    - language-testing-strategy
-    - performance-budgeting
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - architecture gate
-    - implementation gate
-    - reliability gate
-    - delivery gate
-    - test gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: integration-change-builder
+  layer3_skills:
+    - contract-testing
+  review_skill: ai-code-review-refactor
+release_contract:
+  case_id: devex/monorepo-affected-tests
+  control_path: direct
+  primary_skill: integration-change-builder
+  task_skill: null
+  review_skill: ai-code-review-refactor
+  tasks:
+    - task_id: graph-selection
+      skill: integration-change-builder
+      review_skill: ai-code-review-refactor
+    - task_id: cache-and-explanations
+      skill: integration-change-builder
+      review_skill: ai-code-review-refactor
+    - task_id: integrate-parallel-slices
+      skill: integration-change-builder
+      review_skill: ai-code-review-refactor
 expected_outcomes:
   - Changed shared packages select downstream test suites.
   - Lockfile and generated contract changes invalidate affected test caches.

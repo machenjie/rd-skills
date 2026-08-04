@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-08-02-r23",
+  "created_on": "2026-08-02",
+  "packet_sha256": "c688bf15c7f4b9e6a77616a4386578418e7f1f10447696287a6c8f39fd6ffbed",
+  "source_fingerprints": {
+    "audit": "0dad4fcd5a86c7621a8e0ce763bb6f93af2bd1a9fea7ffba0e98aaa35433b78e",
+    "reference_candidates": "bd2bc0a08b4ba5514b178ab3eb9f76faaa61184a5bed37b0ea6d787b86c4abed",
+    "reference_detector": "4b04a9b693ac3079a1af6154425ed64408474d5027c0119ed6360c9288356112",
+    "reference_groups": "aa063d66e92ded0513416306d5a118f5519e9205806d70477ded8417aabb5a79",
+    "reference_source": "835aa65b4dbbf80eb352beeff61d4f0604082dca8ad76bc3ff419268b6a0c4a7",
+    "root_candidates": "f358156437bc40fdc4067229eae4b92fa2a7a12d2826cbf59b22e2e0a348458d",
+    "root_context": "5a1604414a94a6b17a08125a82027fc33981f2752f939a2d25022b32577c750b",
+    "root_detector": "998c2581653aac9c406208b35436660dfee1fd1862514c38264d2ad52a3f73ad",
+    "root_source": "e0eed4245eede01ba2085bcbaaa4a270e6828f23da2914e791d43b90319c51c3"
+  },
+  "voter": {
+    "voter_id": "semantic-r23-clarity",
+    "agent_id": "semantic-r23-clarity-agent",
+    "role": "senior-ai-language-clarity-reviewer",
+    "expertise": [
+      "language-clarity-and-one-rule-per-sentence"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "root:1af5f56a14fdd4e0844be1cdf446861e201eb5ca4e92ff95b40c78fc910e94af",
+      "axis": "root",
+      "candidate_id": "1af5f56a14fdd4e0844be1cdf446861e201eb5ca4e92ff95b40c78fc910e94af",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Line 25 contains one directive: record the Android evidence inventory. Its comma-separated terms are parallel inputs rather than independent actions. In the Required Inputs context, artifact/signing source identifies evidence provenance alongside manifest, permission, storage, device, ANR, and startup facts; it neither creates a separate artifact nor authorizes signing. The mandatory-artifact detector therefore reaches a real, intentionally mandatory recording rule, and the Android-only scope makes that rule professionally valid.",
+      "authority_or_condition": "android-platform-extension is selected only for a confirmed Android target whose platform behavior changes; lines 19-20 exclude non-Android work, rollout, signing authorization, and release/rollback approval.",
+      "decision_owner": "android-platform-extension",
+      "mitigation": "Keep the single Record action and treat every listed noun phrase as an evidence dimension for the affected Android scope; record unavailable evidence explicitly instead of inventing it, and route signing or rollout authorization to delivery-release-gate.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "Reviewed only the single packet target against the bound audit, the exact Android root sentence and local Root context, and the android-platform-extension contract.",
+    "This static language-clarity review does not validate Android runtime behavior, build or signing outputs, real devices, provider behavior, or production behavior.",
+    "The audit is modified and the packet is untracked in the working tree; validator currentness covers their present bytes, not commit or release-integration cleanliness."
+  ]
+}

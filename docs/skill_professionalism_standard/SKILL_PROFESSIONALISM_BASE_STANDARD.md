@@ -1,7 +1,7 @@
 # ChangeForge Skill Professionalism Base Standard
 
 Status: normative  
-Applies to: all ChangeForge skills and skill-like runtime content  
+Applies to: all authored and built ChangeForge Skill content
 Skill types covered: professional skills, foundation capabilities, domain extensions  
 Primary goal: evaluate whether the skill content itself expresses professional-grade judgment for its declared responsibility
 
@@ -204,7 +204,7 @@ Professional skills are top-level task owners, reviewers, gates, or orchestrator
 A professional skill must include:
 
 1. Declared owner/reviewer/gate role.
-2. Stage or work-surface ownership.
+2. Task or work-surface ownership.
 3. Expert judgment axes for the owned surface.
 4. Mode-specific decision criteria.
 5. Material hidden risks.
@@ -253,6 +253,40 @@ A domain extension fails professionalism review if it activates on keyword-only 
 ---
 
 ## 7. Professional Content Quality Rules
+
+### 7.0 Runtime-Facing Professional Actionability
+
+Professional skills must expose judgment as executable runtime actions, not as
+background expertise or generic advice. A selected skill should tell the agent
+what to do first, when to stop, what evidence changes the decision, and what to
+hand off next. This is the runtime expression of existing professionalism
+dimensions: decision criteria, failure modes, the evidence contract, output
+actionability, anti-patterns, and validation semantics.
+
+A professional skill body or selected reference must make these action surfaces
+clear:
+
+- **First Moves** — the first inspected objects, files, contracts, examples,
+  commands, or questions that establish the skill's owned boundary before
+  planning or editing.
+- **Stop Conditions** — the missing facts, failed checks, safety boundaries, or
+  conflicting evidence that require the agent to ask, reroute, repair, or return
+  `needs_user_choice` instead of guessing.
+- **Action-changing Decision Rules** — ordered if/then rules that change
+  implementation, review, validation depth, handoff target, or residual-risk
+  ownership.
+- **Concrete Good/Bad Examples** — short examples showing the rejected behavior,
+  why it fails, how to detect it, and the professional replacement.
+- **Agent-native Rationalizations** — common excuses an agent may use to close
+  early, over-generalize, skip evidence, or treat prose as proof, paired with the
+  required corrective action.
+- **Minimal Verification Chain** — the smallest evidence path that can fail for
+  the named risk, including what the validation proves, what it does not prove,
+  and the residual risk when validation is not run.
+
+Runtime-facing actionability does not add a third-language score, language
+rubric, or style score. It is part of professional depth because it determines
+whether the skill's judgment can be executed under real task pressure.
 
 ### 7.1 Specificity Rule
 

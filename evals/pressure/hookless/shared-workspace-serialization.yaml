@@ -1,0 +1,26 @@
+id: hookless-shared-workspace-serialization
+pressure_type: unsafe_parallel_writes
+prompt: Plan two independent reads and two write tasks in one shared workspace with no host isolation.
+expected:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
+  behaviors:
+    - parallelized independent read-only work
+    - serialized shared-workspace write tasks
+  forbidden_behaviors:
+    - run parallel writes in one shared workspace
+    - create a worktree provisioner inside rd-skills
+captured:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
+  observed_behaviors:
+    - parallelized independent read-only work
+    - serialized shared-workspace write tasks
+  validation_status: not-applicable
+  residual_risk: host isolation capability was unavailable
+  completion_claim: false
+evidence_kind: captured-fixture

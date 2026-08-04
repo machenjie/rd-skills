@@ -1,0 +1,3295 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-decision",
+  "review_id": "semantic-disposition-panel-2026-07-26-r20",
+  "decided_on": "2026-07-26",
+  "decision_method": "three-independent-experts-majority",
+  "source_fingerprints": {
+    "audit": "d2df2efb2afc6ea3da9846ec07737156b23dcea79b1e6c51e63574c31ad18c24",
+    "reference_candidates": "bd98cb75ad5e395607548553438f43b7ee04192fff6739e179956b12f8755bd0",
+    "reference_detector": "4b04a9b693ac3079a1af6154425ed64408474d5027c0119ed6360c9288356112",
+    "reference_groups": "aa063d66e92ded0513416306d5a118f5519e9205806d70477ded8417aabb5a79",
+    "reference_source": "8ed8ae80ab76eea5092d2f1517653e621803207299ebf9fa5696ad88fddffe1a",
+    "root_candidates": "6ee2515c48ccc4981f22460d7520b3640435f60bf8fd9cc6b610aa47b0c1f390",
+    "root_context": "b5efa0db6b1b7ee158b0bcde030c973b1e446d4910bc06002cf1d025bbf8e476",
+    "root_detector": "9df851662901af2902ad76b3f80044d6762e0508ae431a858b4b830e6d7ad60d",
+    "root_source": "77563c0ffa5b26a6e85b7bf3b5a9f9bb7bb53a81c189418eec5ba7e1a4d4af81"
+  },
+  "panel_contract": {
+    "decision_method": "three-independent-experts-majority",
+    "required_voters": 3,
+    "abstentions_allowed": false,
+    "minimum_winning_votes": 2,
+    "independent_ballots": true,
+    "required_target_count": 65,
+    "required_axis_target_counts": {
+      "root": 25,
+      "reference": 40
+    },
+    "allowed_dispositions": [
+      "false-positive",
+      "rewrite",
+      "time-bounded-exception",
+      "valid-contextual-rule"
+    ]
+  },
+  "packet": {
+    "path": "evals/expert-panel/semantic-disposition-panel-2026-07-26-r20/packet.json",
+    "sha256": "a44f8617c8d6fb5dab56d496e81be11f4d2e048fa71319e4a84d3cb12cc33c53"
+  },
+  "voters": [
+    {
+      "voter_id": "r20-semantic-runtime",
+      "agent_id": "semantic-runtime-agent-20260726",
+      "role": "senior-runtime-contract-reviewer",
+      "expertise": [
+        "runtime contract correctness",
+        "failure and recovery boundaries"
+      ],
+      "independent_review": true,
+      "ballot_path": "r20-semantic-runtime.json",
+      "ballot_sha256": "b8307061e0646d789940825c20c17f94af254d0d32744dacdbd80f065929ad87"
+    },
+    {
+      "voter_id": "r20-semantic-assurance",
+      "agent_id": "semantic-assurance-agent-20260726",
+      "role": "senior-assurance-reviewer",
+      "expertise": [
+        "verification evidence and professional assurance",
+        "semantic false-positive discrimination"
+      ],
+      "independent_review": true,
+      "ballot_path": "r20-semantic-assurance.json",
+      "ballot_sha256": "fe878fb12ff500624816cc173ec20b67f0d6e06380454cb48eaea4d685cd0219"
+    },
+    {
+      "voter_id": "r20-semantic-boundary",
+      "agent_id": "semantic-boundary-agent-20260726",
+      "role": "senior-skill-reference-boundary-reviewer",
+      "expertise": [
+        "skill-layer ownership",
+        "conditional reference loading",
+        "required-output boundaries",
+        "semantic disposition governance"
+      ],
+      "independent_review": true,
+      "ballot_path": "r20-semantic-boundary.json",
+      "ballot_sha256": "d2af5b751c6c7cbb08ec76b3c4fa60b00408f168839a2af829594db5fe329b9c"
+    }
+  ],
+  "semantic_decisions": [
+    {
+      "target_id": "reference:003650c01eeb9de86d82172a56ac893b378958202fdb56c69058ffdd953ad568",
+      "axis": "reference",
+      "candidate_id": "003650c01eeb9de86d82172a56ac893b378958202fdb56c69058ffdd953ad568",
+      "candidate_fingerprint": "92a7c7b98118c21254127ace1836e17720b104392200043fbfbdb9c13fdea83a",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The source pairs living-standard semantics with explicit target-engine support checks, bounding the requirement.",
+          "authority_or_condition": "When HTML or DOM behavior remains unresolved on declared target engines.",
+          "decision_owner": "web-platform-professional-usage Skill owner",
+          "mitigation": "Retain engine-version evidence and mark unsupported paths unverified.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Living-standard algorithms define semantics, while target-engine support still requires direct compatibility evidence.",
+          "authority_or_condition": "WHATWG HTML and DOM semantics, conditioned on the repository's supported browser and engine versions.",
+          "decision_owner": "web-platform-professional-usage",
+          "mitigation": "Record versioned engine checks and leave unsupported or untested behavior explicitly unverified.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At document-event-rendering-contracts.md:21, standards define semantics while the sentence explicitly requires supported-engine evidence. The audit loads this targeted Reference only for unresolved document, event, rendering, or accessibility-tree behavior, so the requirement is bounded rather than universal.",
+          "authority_or_condition": "Valid when unresolved HTML, DOM, rendering, or accessibility-tree behavior requires a selected approach and an engine-specific proof limit.",
+          "decision_owner": "web-platform-professional-usage",
+          "mitigation": "Retain the standards-versus-implementation boundary and name tested engines plus unverified support in the required proof-limit output.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:099e6cdb5c868af220a170a98d3d5f05bb422c5ae3c7a4594047f03150c62021",
+      "axis": "reference",
+      "candidate_id": "099e6cdb5c868af220a170a98d3d5f05bb422c5ae3c7a4594047f03150c62021",
+      "candidate_fingerprint": "6cbb0d4119f0c421235d7ce8f70b64a221c06504bda56b3fba0e27b69263c737",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Rolling Kotlin and Android documentation cannot establish repository or runtime versions.",
+          "authority_or_condition": "When coroutine, Compose, lifecycle, compiler, or platform behavior informs a decision.",
+          "decision_owner": "kotlin-professional-usage Skill owner",
+          "mitigation": "Record repository versions and runtime evidence before relying on documented behavior.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Rolling Kotlin and Android documentation cannot establish the repository's effective toolchain versions.",
+          "authority_or_condition": "Version-sensitive coroutine, Compose, lifecycle, compiler, and platform decisions using current repository or runtime evidence.",
+          "decision_owner": "kotlin-professional-usage",
+          "mitigation": "Pin compiler, library, platform, and lifecycle versions before claiming the documented behavior.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At coroutine-flow-state-contracts.md:43, rolling documentation is expressly separated from repository and runtime version evidence. The audit limits loading to coroutine, Flow, state-holder, or Compose collection changes and requires proof limits and residual risk.",
+          "authority_or_condition": "Valid when Kotlin asynchronous state or Compose behavior changes and repository or runtime evidence identifies the applicable versions.",
+          "decision_owner": "kotlin-professional-usage",
+          "mitigation": "Keep the version-evidence requirement and report any unavailable compiler, lifecycle, library, or platform evidence as an explicit proof limit.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:0caa3ee1e803461a57128b991f6a9965437ce9d764b38a176953e623991a6324",
+      "axis": "reference",
+      "candidate_id": "0caa3ee1e803461a57128b991f6a9965437ce9d764b38a176953e623991a6324",
+      "candidate_fingerprint": "dc05d39439f0b3d650c80b5c1582b8c6032da7ad3ba28bc01ef01a7539e631b1",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The non-inference prevents unsafe equivalence among HTTP, clocks, cursors, and application effects.",
+          "authority_or_condition": "When offline reconciliation uses HTTP idempotency, device time, or synchronization cursors.",
+          "decision_owner": "offline-sync-conflict-resolution Skill owner",
+          "mitigation": "Require operation identity, comparable clocks, and applied-write or deletion evidence.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "HTTP method semantics, device clocks, and sync cursors cannot prove application-level reconciliation outcomes.",
+          "authority_or_condition": "Offline synchronization decisions involving retries, conflicts, timestamps, cursors, writes, or deletion markers.",
+          "decision_owner": "offline-sync-conflict-resolution",
+          "mitigation": "Require business operation identity, authoritative revisions, and cursor-plus-state transaction evidence.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At sync-reconciliation-contracts.md:44, the three prohibitions prevent invalid equivalence between transport idempotency, device/server clocks, and cursor completeness. The targeted Reference loads only while authority, conflict, partial-sync, or resumable-transfer choices compete.",
+          "authority_or_condition": "Valid while an offline authority, conflict, cursor, or resumable-transfer decision remains unresolved and its proof limits must be recorded.",
+          "decision_owner": "offline-sync-conflict-resolution",
+          "mitigation": "Retain the inference limits and require operation identity, clock authority, tombstone coverage, and cursor completeness to be evidenced independently.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:0ec6f2d160bdddece3dd6e2ea13a127f57ce42437b9bed6298738d56082e3d5b",
+      "axis": "reference",
+      "candidate_id": "0ec6f2d160bdddece3dd6e2ea13a127f57ce42437b9bed6298738d56082e3d5b",
+      "candidate_fingerprint": "8d055397c8feb67ff4bb38158da0b8022397b50e68cc2fb64ff8e428e17a3719",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Excluded client environments are correctly classified as unverified rather than silently covered.",
+          "authority_or_condition": "When the selected client matrix omits an otherwise relevant environment dimension.",
+          "decision_owner": "client-application-testing Skill owner",
+          "mitigation": "List exclusions explicitly and prevent broader coverage claims.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Excluded supported-environment dimensions are proof gaps rather than silently passing test coverage.",
+          "authority_or_condition": "The changed installed-client risk and its selected supported operating-system, device, architecture, locale, accessibility, and install-state matrix.",
+          "decision_owner": "client-application-testing",
+          "mitigation": "List each applicable exclusion with consequence, owner, and remaining validation path.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At client-test-matrix.md:24, every quantifier applies to excluded dimensions in the selected changed-risk matrix, not every possible platform configuration. The audit requires a validation plan and residual risk when several client dimensions remain relevant.",
+          "authority_or_condition": "Valid after the changed client failure mechanism determines the applicable operating-system, device, architecture, locale, accessibility, and install-state dimensions.",
+          "decision_owner": "client-application-testing",
+          "mitigation": "Keep exclusions visible as unverified scope and avoid expanding the matrix beyond dimensions that can change the accepted behavior.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:1933ffb92ea6c5966c9edfd64130ef03b5d6391c6d487c8e59da5da7f2afda90",
+      "axis": "reference",
+      "candidate_id": "1933ffb92ea6c5966c9edfd64130ef03b5d6391c6d487c8e59da5da7f2afda90",
+      "candidate_fingerprint": "ada64e9563bdfb67f32b38a189fc8a50fe71d3d8422c0bbcced38609eb8076dc",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 1,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-assurance"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Sequential reruns from one initial state correctly test administrative idempotency and post-state stability.",
+          "authority_or_condition": "When administrative work changes persistent target state and supports repeat execution.",
+          "decision_owner": "powershell-professional-usage Skill owner",
+          "mitigation": "Run without resetting after the first execution and verify the final state.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "rewrite",
+          "rationale": "Resetting both executions to the same initial state cannot prove second-run convergence.",
+          "authority_or_condition": "Administrative idempotency proof must run once from a known state and repeat against the resulting post-state.",
+          "decision_owner": "powershell-professional-usage",
+          "mitigation": "Rewrite the probe to preserve first-run post-state, then verify the immediate repeat performs no unintended mutation.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At remoting-provider-and-administration-contracts.md:21, the second-run requirement sits under convergent administrative-state proof, whose matrix names desired state, minimal mutation, verification, rollback, and repeated-execution failure. It does not govern inherently non-convergent operations.",
+          "authority_or_condition": "Valid for administrative work selected as a convergent desired-state change with a defined current-state predicate and post-state oracle.",
+          "decision_owner": "powershell-professional-usage",
+          "mitigation": "Retain two-run proof for convergent administration and classify non-convergent rotation or event operations outside this rule with their own acceptance contract.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:2663ee89a8b10aa9ac035b35cf5ef684cd805bd3219c600f161a1ddf9cbb6c05",
+      "axis": "reference",
+      "candidate_id": "2663ee89a8b10aa9ac035b35cf5ef684cd805bd3219c600f161a1ddf9cbb6c05",
+      "candidate_fingerprint": "ef181830194cc7965a652c3a6016f3b1088ae983cf429c873777991aff014b43",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Platform lifecycle sources explicitly differ, so uniform background or termination events are unsafe.",
+          "authority_or_condition": "When shared restoration behavior spans more than one client platform or application model.",
+          "decision_owner": "client-lifecycle-state-restoration Skill owner",
+          "mitigation": "Record platform-specific event availability and test interruption paths separately.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Platform lifecycle models demonstrably differ and may omit final background or termination callbacks.",
+          "authority_or_condition": "Cross-client restoration design spanning Android, Apple, Windows, or framework lifecycle abstractions.",
+          "decision_owner": "client-lifecycle-state-restoration",
+          "mitigation": "Bind persistence and recovery to each confirmed platform's actual reliable lifecycle points.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At restoration-boundaries.md:40, the prohibition rejects cross-platform lifecycle-event equivalence and unverified snapshot authority. The audit loads this Reference only when termination, restoration, compatibility, or duplicate activation remains unresolved.",
+          "authority_or_condition": "Valid when lifecycle or restoration behavior spans clients whose event delivery and snapshot guarantees have not been established.",
+          "decision_owner": "client-lifecycle-state-restoration",
+          "mitigation": "Preserve platform-specific event evidence and state authority; name unsupported lifecycle paths and incompatible snapshots in the proof limit.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:2f23a9fe91e194ce1825c40ef9bc774efb6d00a547aabf05a401252349ffff56",
+      "axis": "reference",
+      "candidate_id": "2f23a9fe91e194ce1825c40ef9bc774efb6d00a547aabf05a401252349ffff56",
+      "candidate_fingerprint": "7687b6aa471986e8d4b1794e724c892393dad80dad8a44fc52c3b040749cebb3",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 1,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-assurance"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Service-classified retryability plus idempotency, backoff, jitter, and budget forms a safe retry boundary.",
+          "authority_or_condition": "When an exact cloud service operation exposes retry and idempotency semantics.",
+          "decision_owner": "cloud-platform-extension Skill owner",
+          "mitigation": "Bind retry classification to the provider operation and handle unknown results separately.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "rewrite",
+          "rationale": "Intrinsic idempotency is too narrow because proven idempotency keys or deduplication can make retries safe.",
+          "authority_or_condition": "Service-specific retry classification plus operation-level duplicate-safety and unknown-result handling for the exact cloud API.",
+          "decision_owner": "cloud-platform-extension",
+          "mitigation": "Rewrite around proven duplicate-safe effects, including service idempotency tokens, bounded backoff, jitter, and retry budgets.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At region-failure-domain-consistency-and-quota-contracts.md:22-23, retry is conditioned on service classification, effective idempotency, bounded backoff, jitter, and budget. The audit activates this rule only when cloud retry, throttle, propagation, or failure-domain behavior affects acceptance.",
+          "authority_or_condition": "Valid when the exact cloud service classifies an operation as retryable and repeat-safe and the task records a bounded retry budget.",
+          "decision_owner": "cloud-platform-extension",
+          "mitigation": "Keep service-specific retry classification and record unknown-result reconciliation instead of treating generic HTTP or SDK behavior as authority.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:2f5d35a8a352a5f701a628d96f442e57272da1a3878439c1b4cddba4b9e7be84",
+      "axis": "reference",
+      "candidate_id": "2f5d35a8a352a5f701a628d96f442e57272da1a3878439c1b4cddba4b9e7be84",
+      "candidate_fingerprint": "6739b18dae7985ad092c2ab4fe74e956119f6466489c968bba9ef61cf4787faf",
+      "winning_disposition": "false-positive",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 3,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 0
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "false-positive",
+          "rationale": "The absolute word appears inside a failure-signal table cell, not a prescribed runtime rule.",
+          "authority_or_condition": "Within the structured-task row's failure-signal column only.",
+          "decision_owner": "swift-professional-usage Skill owner",
+          "mitigation": "Retain the failure example while excluding it from absolute-rule governance.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "false-positive",
+          "rationale": "This text is a failure-signal list, not an unconditional instruction or guarantee.",
+          "authority_or_condition": "Structured-task decision-matrix context describing evidence that a selected design has failed.",
+          "decision_owner": "swift-professional-usage",
+          "mitigation": "Retain the failure signals and preserve their table heading when auditing semantics.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "false-positive",
+          "rationale": "At concurrency-interop-and-ui-contracts.md:9, the detected phrase appears in a Failure signal column describing evidence of a broken structured-task boundary. It is neither an instruction nor an unconditional claim that cancellation is never checked.",
+          "authority_or_condition": "The complete Decision Matrix context classifies an observed failure signal for structured tasks rather than prescribing universal cancellation behavior.",
+          "decision_owner": "swift-professional-usage",
+          "mitigation": "Record this candidate as a detector false positive while preserving the table heading and failure-signal column that establish its non-prescriptive role.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:34b7f09c8c4feae161fd085427944a836775f228221999aa0580b436206de9c0",
+      "axis": "reference",
+      "candidate_id": "34b7f09c8c4feae161fd085427944a836775f228221999aa0580b436206de9c0",
+      "candidate_fingerprint": "fa7a51e151b4b9db6f52ade02f85abc2fdcdbddda3fd2ece779824f7fd26ca7b",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 1,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-runtime"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "rewrite",
+          "rationale": "D-Bus signals cannot uniformly use request timeout, cancellation, authorization, or retry semantics.",
+          "authority_or_condition": "When D-Bus methods, properties, or signals cross a process boundary.",
+          "decision_owner": "linux-desktop-platform-extension Skill owner",
+          "mitigation": "Separate method and property request controls from signal validation, resynchronization, and disconnect recovery.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "D-Bus surfaces cross process boundaries and require explicit failure and trust decisions.",
+          "authority_or_condition": "Changed D-Bus methods, signals, or properties, with each listed control classified as applicable or explicitly inapplicable.",
+          "decision_owner": "linux-desktop-platform-extension",
+          "mitigation": "Document validation, authorization, lifecycle, timeout, cancellation, disconnect, and retry treatment per affected interface.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At dbus-portal-and-session-integration-contracts.md:12-13, every quantifier is limited to D-Bus methods, signals, and properties in the affected IPC boundary. The audit loads the Reference only when D-Bus, portal, consent, or graphical-session integration affects the decision.",
+          "authority_or_condition": "Valid for each affected D-Bus surface after bus, name, path, interface, signature, activation, and ownership boundaries are identified.",
+          "decision_owner": "linux-desktop-platform-extension",
+          "mitigation": "Retain explicit IPC rules, allowing timeout, cancellation, authorization, or retry to be recorded as inapplicable where the specific surface cannot use them.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:3841cd60387c494449931f46622ae1952e711251dde50db393d517d0cd10220d",
+      "axis": "reference",
+      "candidate_id": "3841cd60387c494449931f46622ae1952e711251dde50db393d517d0cd10220d",
+      "candidate_fingerprint": "1832aaac767d7d1b288c482627a0c6d3a1a23f8bce3288f6151fc05b1455406c",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Affected Flutter release targets can differ in restoration, links, plugins, and packaging behavior.",
+          "authority_or_condition": "When the repository uses Flutter and those behaviors change on confirmed release targets.",
+          "decision_owner": "installed-client-change-builder Skill owner",
+          "mitigation": "Test each affected target and name excluded release targets as unverified.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Framework behavior can diverge by target, so affected release targets need direct evidence.",
+          "authority_or_condition": "The active Flutter section and only release targets affected by restoration, links, plugins, or packaging changes.",
+          "decision_owner": "installed-client-change-builder",
+          "mitigation": "Name affected targets, test release-shaped artifacts, and mark excluded targets unverified.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At framework-contracts.md:6, every is expressly bounded to affected Flutter release targets and to restoration, links, plugins, or packaging behavior. The audit excludes native-only clients and requires the task-agent to return approach, validation, and proof limits.",
+          "authority_or_condition": "Valid when an affected cross-platform framework release target can exhibit different restoration, link, plugin, or packaging behavior.",
+          "decision_owner": "installed-client-change-builder",
+          "mitigation": "Keep per-affected-target release proof and record unbuilt or unavailable targets in the validation plan and proof limit.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:3e909d7c74dd1b34cba8e5b2883391226f3afffbf1f6bad4e907108ac2e1177d",
+      "axis": "reference",
+      "candidate_id": "3e909d7c74dd1b34cba8e5b2883391226f3afffbf1f6bad4e907108ac2e1177d",
+      "candidate_fingerprint": "bf5ac4cf0111940f3d2c5d1bb4fb3b130714db2a9089f19c171300039ca0d3eb",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Deletion correctness requires removing owned copies while preserving other accounts' data boundaries.",
+          "authority_or_condition": "When Android-local data deletion or account-scoped storage behavior changes.",
+          "decision_owner": "android-platform-extension Skill owner",
+          "mitigation": "Inventory owned copies and test cross-account preservation during deletion.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Account-scoped Android deletion must cover owned copies without crossing another account boundary.",
+          "authority_or_condition": "Android-local data, backup, migration, encryption, key lifecycle, logout, or account-switch changes.",
+          "decision_owner": "android-platform-extension",
+          "mitigation": "Inventory copies and exercise deletion using distinct account fixtures and recovery paths.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At storage-and-keystore-contracts.md:24, all is bounded to copies owned by the affected Android account or application while explicitly protecting another account's data. The audit loads this Reference only for Android-local data, key, backup, migration, logout, or recovery decisions.",
+          "authority_or_condition": "Valid when the task has identified the Android application's owned copies and account boundaries for a deletion behavior change.",
+          "decision_owner": "android-platform-extension",
+          "mitigation": "Retain owned-copy deletion proof, exclude provider-unowned retention, and report backup or hardware deletion limits in the validation plan.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:3e97e367ed96a458e21821692cfeaa2cc45a931a6acfbb49e858975d34552506",
+      "axis": "reference",
+      "candidate_id": "3e97e367ed96a458e21821692cfeaa2cc45a931a6acfbb49e858975d34552506",
+      "candidate_fingerprint": "0b2fe53b26dc744de2ed287187df618d6c76350581becb745e0a0fbe29a17f71",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Framework feature availability is correctly separated from repository publication and support evidence.",
+          "authority_or_condition": "When framework documentation is used to evaluate a confirmed cross-platform client.",
+          "decision_owner": "cross-platform-client-extension Skill owner",
+          "mitigation": "Require build, release, and published-artifact evidence for every support claim.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Framework capability establishes feasibility, not repository publication or support commitments.",
+          "authority_or_condition": "Cross-platform target discovery using repository, build, release, and published-artifact evidence.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Distinguish compilable, tested, packaged, published, and supported states for each target.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At shared-and-target-ownership-contracts.md:42, never rejects the unsupported inference from framework capability to the repository's published or supported target set. The audit loads this targeted ownership Reference only while a shared or native boundary can change.",
+          "authority_or_condition": "Valid whenever framework availability is considered as evidence for a concrete repository target, release, or support claim.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Require repository build, release, and published-artifact evidence for each target and preserve unknown targets as an explicit proof limit.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:481addbe1655a9451820a1aa431e790877a50711e024347626ac63b8d6c9399c",
+      "axis": "reference",
+      "candidate_id": "481addbe1655a9451820a1aa431e790877a50711e024347626ac63b8d6c9399c",
+      "candidate_fingerprint": "a66c78325d55ad33aed05ffcd44a22ba7c3a9e4a25868d00cfecd01f0f3adf21",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Each affected adapter can implement shared transitions with distinct lifecycle and permission failures.",
+          "authority_or_condition": "When a shared state transition crosses confirmed native target adapters.",
+          "decision_owner": "cross-platform-client-extension Skill owner",
+          "mitigation": "Exercise all affected adapters and isolate platform-specific failures from shared state.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Shared state can fail differently at each changed native adapter boundary.",
+          "authority_or_condition": "A shared state transition whose behavior or ownership changes on confirmed affected targets.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Exercise the transition and its failure outcome through each affected adapter.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At shared-and-target-ownership-contracts.md:21, every is narrowed to affected target adapters and one shared state transition under review. The audit condition requires an unresolved shared, native, lifecycle, persistence, permission, or packaging ownership decision.",
+          "authority_or_condition": "Valid after the affected shared transition and its concrete target adapters have been identified from repository and release evidence.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Exercise each affected adapter, record excluded targets, and keep platform-only failure ownership with the corresponding concrete Domain Skill.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:493b94a5b2dd492e0f34add6b1d0938d7936efbfc20def7c002b019152e032e3",
+      "axis": "reference",
+      "candidate_id": "493b94a5b2dd492e0f34add6b1d0938d7936efbfc20def7c002b019152e032e3",
+      "candidate_fingerprint": "38b8dc0faca09cae14a84ffd454fc41c087506e3dda66b276ec002741c5a2d37",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Keyring behavior legitimately varies across desktop, session, display-manager, and headless environments.",
+          "authority_or_condition": "When Linux desktop secret storage or keyring behavior affects the decision.",
+          "decision_owner": "linux-desktop-platform-extension Skill owner",
+          "mitigation": "Record the actual provider and test unavailable or locked states.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Secret-service availability and unlock policy vary across Linux desktop session environments.",
+          "authority_or_condition": "Linux desktop keyring behavior across confirmed desktops, display managers, remote sessions, or headless execution.",
+          "decision_owner": "linux-desktop-platform-extension",
+          "mitigation": "Record the actual provider and exercise locked, unavailable, migrated, and logout states.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At desktop-entry-mime-and-keyring-contracts.md:17-18, never prevents portability inference across materially different Linux sessions and secret providers. The audit loads this Reference only when launcher, association, identity, activation, or keyring behavior affects the decision.",
+          "authority_or_condition": "Valid when Linux keyring availability, persistence, or unlock behavior is material and the actual desktop, session, and provider are not yet evidenced.",
+          "decision_owner": "linux-desktop-platform-extension",
+          "mitigation": "Name the observed provider and session conditions and keep unavailable, locked, remote, and headless behavior in the required proof limit.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:5ae7ba03296b14710e157adc0cd870e59382387de6c4918bd11e747f90d96f95",
+      "axis": "reference",
+      "candidate_id": "5ae7ba03296b14710e157adc0cd870e59382387de6c4918bd11e747f90d96f95",
+      "candidate_fingerprint": "7f7ae5152bf9eddb32c0d434a64c499d979f4ba297f982b6152fb8ea85031544",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The evidence rule prevents framework capability from becoming an unsupported target claim.",
+          "authority_or_condition": "When determining concrete targets for a shared installed client.",
+          "decision_owner": "cross-platform-client-extension Skill owner",
+          "mitigation": "Record only evidence-backed targets and distinguish compiled, tested, packaged, published, and supported.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Task evidence must bound target claims and their distinct maturity states.",
+          "authority_or_condition": "Cross-platform target selection based on inspected manifests, source sets, builds, releases, or artifacts.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Record evidence for each target and avoid promoting compilation into publication or support.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At framework-target-evidence-contracts.md:12-13, only limits target claims to task evidence and requires distinct compilable, tested, packaged, published, and supported states. The audit classifies this as an evidence-pattern Reference for determining the concrete platform set.",
+          "authority_or_condition": "Valid while framework support, build targets, release configuration, or published artifacts determine which concrete platforms are in scope.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Preserve the evidence-state distinctions, leave the modifier unloaded while targets remain unknown, and return proof limits and residual risk.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:6c1005671fc3e5ea5907b7cb0abba5702479f7098107a1dfe67c905bfcf25c8c",
+      "axis": "reference",
+      "candidate_id": "6c1005671fc3e5ea5907b7cb0abba5702479f7098107a1dfe67c905bfcf25c8c",
+      "candidate_fingerprint": "73df0ff675fccd8d5e602f304dad4623df82b2ce5fe4bcc80dd432cb05447ee7",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Test hooks cannot reproduce operating-system-owned lifecycle, permission, network, or activation behavior.",
+          "authority_or_condition": "When client tests introduce observation or controllability hooks.",
+          "decision_owner": "client-application-testing Skill owner",
+          "mitigation": "Keep hooks bounded and retain capable production-path tests.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Test hooks cannot substitute for operating-system-owned transitions that determine production behavior.",
+          "authority_or_condition": "Installed-client lifecycle, permission, network, or activation behavior requiring a capable production-like boundary.",
+          "decision_owner": "client-application-testing",
+          "mitigation": "Limit hooks to observation or control and retain release-shaped system-path evidence.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At client-test-matrix.md:25, test hooks are explicitly bounded to observation or controllable conditions and cannot substitute for the production mechanism being tested. The audit activates the rule only for a multi-dimensional changed client validation boundary.",
+          "authority_or_condition": "Valid when a test hook is proposed for lifecycle, permission, network, activation, or another operating-system-owned client behavior.",
+          "decision_owner": "client-application-testing",
+          "mitigation": "Retain production-path coverage and use hooks only to observe or induce conditions; disclose any unavailable real transition as residual risk.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:76382de18745ca87e681ea4e09ad7fc502a6c7f2c85073e8b76e44dc5561aca0",
+      "axis": "reference",
+      "candidate_id": "76382de18745ca87e681ea4e09ad7fc502a6c7f2c85073e8b76e44dc5561aca0",
+      "candidate_fingerprint": "456753e33a149610d35a786fa055f0179d60e18ea3ebafbd20ee2f01408c789d",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Private-by-default Android components and justified exports reduce externally reachable privileged surfaces.",
+          "authority_or_condition": "When Android component exposure or external entry authority changes.",
+          "decision_owner": "android-platform-extension Skill owner",
+          "mitigation": "Inventory exported surfaces and validate all caller-controlled input before privileged work.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Private-by-default Android components reduce unauthorized external entry and privilege exposure.",
+          "authority_or_condition": "Android components whose manifest exposure or external entry behavior changes.",
+          "decision_owner": "android-platform-extension",
+          "mitigation": "Justify each exported surface and test malformed, unauthorized, duplicate, and wrong-account inputs.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At components-permissions-and-background-contracts.md:12-13, every is bounded to exported Android components in the affected entry and authority surface. The audit excludes changes with no Android entry, permission, background, or notification effect.",
+          "authority_or_condition": "Valid when an Android component is exported or its external entry authority can change.",
+          "decision_owner": "android-platform-extension",
+          "mitigation": "Default unaffected components to private, document each necessary export, and validate caller-controlled input before privileged work.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:777223b0a07e616bef84021bde0df12444b3cb9d638ce5f04aeeaf0a9eac3cb6",
+      "axis": "reference",
+      "candidate_id": "777223b0a07e616bef84021bde0df12444b3cb9d638ce5f04aeeaf0a9eac3cb6",
+      "candidate_fingerprint": "b95f9858c0ef4de6412638bbb4dfb1954d0491049fbf5b818f1b0c567842d20a",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "An administrator token establishes elevation, not application identity or business authorization.",
+          "authority_or_condition": "When Windows elevation or privileged IPC affects authorization decisions.",
+          "decision_owner": "windows-platform-extension Skill owner",
+          "mitigation": "Perform application-level authorization separately and preserve least privilege.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Administrator elevation changes privilege but does not establish application resource authorization.",
+          "authority_or_condition": "Windows privilege, identity, IPC, service, container, or protected-operation decisions.",
+          "decision_owner": "windows-platform-extension",
+          "mitigation": "Separate principal, elevation, session, package identity, and application authorization checks.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At security-ipc-and-loading-contracts.md:12-13, never preserves the distinction between operating-system elevation and application authorization. The audit loads this Reference only when Windows privilege, container, secret, IPC, instance, or module-loading behavior changes.",
+          "authority_or_condition": "Valid whenever an administrator or elevated token could otherwise be treated as sufficient application-level authorization.",
+          "decision_owner": "windows-platform-extension",
+          "mitigation": "Keep least privilege and require an independent application identity and authorization check at each privileged Windows boundary.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:7d0571d75593233f82bbd331da1021bce619f6cd45857f1252c73f85ad80d050",
+      "axis": "reference",
+      "candidate_id": "7d0571d75593233f82bbd331da1021bce619f6cd45857f1252c73f85ad80d050",
+      "candidate_fingerprint": "7468ba9961820f3819d8a4d45214bc0b523e53623b8754a9a7863af48d89979e",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Minimal resumable state limits stale restoration while idempotency protects repeated background execution.",
+          "authority_or_condition": "When iOS or iPadOS background work can expire, repeat, or resume.",
+          "decision_owner": "ios-ipados-platform-extension Skill owner",
+          "mitigation": "Persist bounded state and test expiration, duplicate scheduling, and no-run outcomes.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Bounded resumable state and repeat-safe execution address unpredictable iOS background scheduling.",
+          "authority_or_condition": "iOS or iPadOS background work selected from current eligibility, expiration, cancellation, and retry constraints.",
+          "decision_owner": "ios-ipados-platform-extension",
+          "mitigation": "Persist only restart inputs and exercise expiration, duplication, termination, and no-run outcomes.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At lifecycle-scenes-and-background-contracts.md:21-22, only limits persisted state to the minimum needed to resume selected iOS background work and pairs that limit with idempotent repetition. The audit confines this to lifecycle, scene, restoration, or background-execution decisions.",
+          "authority_or_condition": "Valid for resumable iOS or iPadOS background work after its owner, expiration, cancellation, retry, and recovery state are defined.",
+          "decision_owner": "ios-ipados-platform-extension",
+          "mitigation": "Persist no unnecessary authority or payload, make repetition safe, and record system scheduling and completion limits in the proof limit.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:7f059e6a121660efdb8a9eb9795fcf40197e939765f14c5a0d9bb15b2920c6fb",
+      "axis": "reference",
+      "candidate_id": "7f059e6a121660efdb8a9eb9795fcf40197e939765f14c5a0d9bb15b2920c6fb",
+      "candidate_fingerprint": "2124c37dfa646a6d616c82ddcc187fd0eb0d34e597892c2d988c4fde253eb41a",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Provider-specific key and service semantics cannot safely become one generic operational guarantee.",
+          "authority_or_condition": "When comparing cloud KMS, replication, cost, or managed-service behavior.",
+          "decision_owner": "cloud-platform-extension Skill owner",
+          "mitigation": "Keep provider and service guarantees separate and record live-state proof limits.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Cloud key and service guarantees differ materially across providers and specific services.",
+          "authority_or_condition": "Cloud encryption, KMS, replication, recovery, cost, or managed-service decisions crossing provider documentation.",
+          "decision_owner": "cloud-platform-extension",
+          "mitigation": "Bind every guarantee to the exact provider, service, location, live state, and version.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At encryption-kms-and-cost-contracts.md:44-46, must not rejects a generic guarantee precisely because provider and service semantics differ. The audit loads this Reference only when cloud key lifecycle, cost, or resource-spend behavior is material.",
+          "authority_or_condition": "Valid when comparing key, encryption, recovery, capacity, price, or cost semantics across cloud providers or services.",
+          "decision_owner": "cloud-platform-extension",
+          "mitigation": "Keep provider-specific evidence and label unavailable live state, prices, replication, alerts, and recovery behavior as residual risk.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:850cc530db65460fd860a6904b44f13da250a9dc30d76d8cdabdbbe9a1d5ca1f",
+      "axis": "reference",
+      "candidate_id": "850cc530db65460fd860a6904b44f13da250a9dc30d76d8cdabdbbe9a1d5ca1f",
+      "candidate_fingerprint": "48d8f58730e588f1e02abbbbdd0797da234f94d7493da98331817c4c260b4311",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Confirmed targets need explicit shared, adapter, persistence, and native integration ownership.",
+          "authority_or_condition": "When shared code or adapters change cross-platform ownership.",
+          "decision_owner": "cross-platform-client-extension Skill owner",
+          "mitigation": "Map owners for each confirmed target and retain native authority in platform domains.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Cross-platform correctness requires explicit owners for every confirmed target boundary.",
+          "authority_or_condition": "Shared installed-client work with confirmed concrete targets and changed shared or native ownership.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Record domain, presentation, persistence, adapter, and native owners per confirmed target.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At shared-and-target-ownership-contracts.md:10-11, every is restricted to confirmed targets and the shared/domain/presentation/persistence/adapter/native ownership map. The audit activates the Reference only while those shared-platform boundaries may change.",
+          "authority_or_condition": "Valid after repository evidence confirms the concrete cross-platform target set whose ownership boundaries affect the task.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Map owners for every confirmed target, keep platform decisions with concrete Domains, and leave unconfirmed targets outside claimed scope.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:8f70a899490f3c7b92ce18951b5db307356d037ed52d21b55d39c7ecc97ec158",
+      "axis": "reference",
+      "candidate_id": "8f70a899490f3c7b92ce18951b5db307356d037ed52d21b55d39c7ecc97ec158",
+      "candidate_fingerprint": "41b36395ece3cb71c7bd6b1f9a8bcedda6aedb4b941dd10a38ee460d33db6ca8",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "One bridge implementation provides no runtime evidence for distinct target implementations.",
+          "authority_or_condition": "When bridge, plugin, FFI, or generated binding behavior changes across targets.",
+          "decision_owner": "cross-platform-client-extension Skill owner",
+          "mitigation": "Test each affected implementation and its release-shaped packaging.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Bridge implementations and packaging differ per target, so one implementation proves no peer.",
+          "authority_or_condition": "Affected bridge, plugin, FFI, generated-binding, serialization, or package implementations on confirmed targets.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Exercise failure mapping and release-shaped registration or linking on every affected target implementation.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At bridge-plugin-and-ffi-contracts.md:23-24, every is bounded to affected target implementations and explicitly rejects proof transfer from one bridge implementation to another. The audit loads the Reference only when a shared/native invocation or plugin boundary changes.",
+          "authority_or_condition": "Valid when a bridge, FFI, plugin, binding, serialization, threading, error, or version change affects multiple concrete target implementations.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Test each affected implementation and report unavailable release-shaped target evidence in the validation plan rather than inferring parity.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:902046ecb8f1d2e1a2d6a7933cd51b6543b652e39a6a2cf998f5d3fbf6f1c0dc",
+      "axis": "reference",
+      "candidate_id": "902046ecb8f1d2e1a2d6a7933cd51b6543b652e39a6a2cf998f5d3fbf6f1c0dc",
+      "candidate_fingerprint": "f8fb60c1885e292bf72ecaa3cd9ae59c99869877fb958363703e75eb9b168a2d",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Pointer-independent reachability is a bounded keyboard accessibility acceptance signal for user outcomes.",
+          "authority_or_condition": "When an affected interaction is expected to support keyboard or switch operation.",
+          "decision_owner": "accessibility-inclusive-design Skill owner",
+          "mitigation": "Verify equivalent outcomes without pointer input and document genuine platform limits.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Pointer-independent outcomes are an explicit acceptance signal for inclusive keyboard interaction.",
+          "authority_or_condition": "Applicable interactive outcomes under the supported accessibility contract, including equivalent alternatives for direct manipulation.",
+          "decision_owner": "accessibility-inclusive-design",
+          "mitigation": "Test keyboard or equivalent non-pointer completion and record any authority-backed exception as unverified scope.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At inclusive-interaction-contracts.md:12, every outcome is the acceptance signal for the Keyboard decision family, not a claim that every pointer gesture must be duplicated. The audit loads this Reference only while inclusive interaction obligations remain open.",
+          "authority_or_condition": "Valid for affected user outcomes once product authority and platform constraints establish the applicable keyboard accessibility obligation.",
+          "decision_owner": "accessibility-inclusive-design",
+          "mitigation": "Preserve outcome-level keyboard reachability, document any authority-backed exception, and avoid claiming conformance from a single automated or manual check.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:98da52cd30b34a3ddb2565b7022a66bf76c0add02600917c4989a052285fd0af",
+      "axis": "reference",
+      "candidate_id": "98da52cd30b34a3ddb2565b7022a66bf76c0add02600917c4989a052285fd0af",
+      "candidate_fingerprint": "88cc98d94d697d3a0c53cddb4eeb16ccb8e607706c7dcae0510121b445aec9c8",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 1,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-runtime"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "rewrite",
+          "rationale": "The combined probe requires unrelated existential, associated-type, and unowned-lifetime tests for any loaded decision.",
+          "authority_or_condition": "When protocol existential, associated-type, or unowned ownership behavior actually changes.",
+          "decision_owner": "swift-professional-usage Skill owner",
+          "mitigation": "Split the probes and require each only for its affected type or ownership boundary.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Changed existential, associated-type, and unowned boundaries need direct invalid-lifetime proof.",
+          "authority_or_condition": "Swift identity, ownership, protocol storage, or lifetime behavior changed at the reviewed API boundary.",
+          "decision_owner": "swift-professional-usage",
+          "mitigation": "Exercise each changed unowned access and retain explicit trap or valid-lifetime evidence.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At value-memory-and-type-contracts.md:21, every is bounded to unowned accesses in the changed ownership graph, while the surrounding checklist permits unowned only under a live-referent invariant with an accepted trap. The audit requires residual-risk output for that boundary.",
+          "authority_or_condition": "Valid when Swift ownership or representation changes introduce or retain unowned accesses whose lifetime invariant can be exercised.",
+          "decision_owner": "swift-professional-usage",
+          "mitigation": "Exercise changed unowned lifetime failures, document intentionally untestable traps, and prefer weak ownership when valid absence is part of the model.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:a0ba1191f6fe8e819d8e62a3a10068a4914da901a09e9b56f6513876f69ba4b7",
+      "axis": "reference",
+      "candidate_id": "a0ba1191f6fe8e819d8e62a3a10068a4914da901a09e9b56f6513876f69ba4b7",
+      "candidate_fingerprint": "42299f9d31dc403ff85af8bdaa66ae3bc0518184a9cb8465c2552234e6af1787",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Process boundaries can expose spoofed peers, malformed input, and excess requested authority.",
+          "authority_or_condition": "When macOS XPC, helpers, agents, daemons, or login items cross processes.",
+          "decision_owner": "macos-platform-extension Skill owner",
+          "mitigation": "Verify code identity, entitlements, input, and requested authority before action.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "A macOS process boundary does not inherently authenticate its peer or requested authority.",
+          "authority_or_condition": "Changed XPC, helper, agent, daemon, login-item, or other macOS interprocess protocol.",
+          "decision_owner": "macos-platform-extension",
+          "mitigation": "Verify peer identity, effective entitlements, input schema, requested privilege, and protocol version.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At keychain-xpc-and-helper-contracts.md:14-15, every is limited to macOS process boundaries in the affected Keychain, XPC, helper, agent, daemon, login-item, identity, or privilege decision. Treating cross-process input as untrusted is the correct default.",
+          "authority_or_condition": "Valid when a macOS process boundary carries caller-controlled input or requested authority and identity has not yet been verified.",
+          "decision_owner": "macos-platform-extension",
+          "mitigation": "Verify code identity, entitlements, input, and requested authority at each affected boundary and record unavailable identity evidence as a proof limit.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:a3f59bc18c0bec3fe63fdbe0c79616a5938f26dec10652936840e4c0db4d7caf",
+      "axis": "reference",
+      "candidate_id": "a3f59bc18c0bec3fe63fdbe0c79616a5938f26dec10652936840e4c0db4d7caf",
+      "candidate_fingerprint": "e29b483ce271cb4d495a75d67f36649e3a856aae88a21c8637e59efcfa98ffa1",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 1,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-runtime"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "rewrite",
+          "rationale": "The proof line mandates actor and non-Sendable tests even when only unrelated Swift boundaries change.",
+          "authority_or_condition": "When actor reentrancy or unsafe and imported non-Sendable crossings are affected.",
+          "decision_owner": "swift-professional-usage Skill owner",
+          "mitigation": "Condition actor-reentrancy and crossing probes independently on the changed concurrency boundary.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Actor reentrancy and unsafe Sendable crossings are concrete concurrency failure mechanisms.",
+          "authority_or_condition": "Changed Swift actor isolation or unsafe/imported non-Sendable boundaries in the reviewed scope.",
+          "decision_owner": "swift-professional-usage",
+          "mitigation": "Exercise suspension-point reentrancy and enumerate every changed unsafe crossing with version evidence.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At concurrency-interop-and-ui-contracts.md:21, every is bounded to unsafe or imported non-Sendable crossings in the affected Swift concurrency boundary. The audit loads this Reference only when actor, Sendable, task, cancellation, continuation, interop, or UI-state behavior changes.",
+          "authority_or_condition": "Valid when changed Swift concurrency or interop code crosses actor isolation through unsafe or imported non-Sendable values.",
+          "decision_owner": "swift-professional-usage",
+          "mitigation": "Test each affected unsafe crossing, retain actor-reentrant proof, and record imported-type or toolchain limitations as residual risk.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:b35564fa7bb53618a1c788d3c5131e1e82dabd812fb7d476e0a5376b165eed9b",
+      "axis": "reference",
+      "candidate_id": "b35564fa7bb53618a1c788d3c5131e1e82dabd812fb7d476e0a5376b165eed9b",
+      "candidate_fingerprint": "ade013ef96d7981010de4dd806719f017d356871c3d1a7bd022f6446d72e99ea",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 1,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-assurance"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Rendering stages are diagnostic concepts and cannot guarantee optimization boundaries across browser engines.",
+          "authority_or_condition": "When rendering performance or compositing behavior is inferred from Mozilla guidance.",
+          "decision_owner": "web-platform-professional-usage Skill owner",
+          "mitigation": "Measure supported engines and avoid cross-engine optimization guarantees.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "false-positive",
+          "rationale": "This is a bounded source-characterization and non-inference, not an absolute mechanism.",
+          "authority_or_condition": "Mozilla rendering guidance used as diagnostic staging evidence across potentially different browser engines.",
+          "decision_owner": "web-platform-professional-usage",
+          "mitigation": "Retain the engine-specific proof limit and require target-engine measurement for optimization claims.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At document-event-rendering-contracts.md:24, all appears inside a denial of cross-engine optimization guarantees. The Source-Derived Constraints section and audit load condition make this a browser-engine proof boundary, not an unconditional implementation prescription.",
+          "authority_or_condition": "Valid when rendering-stage guidance is used to explain or optimize behavior across supported browser engines.",
+          "decision_owner": "web-platform-professional-usage",
+          "mitigation": "Use rendering stages diagnostically, require supported-engine evidence, and avoid presenting one engine's optimization boundary as portable.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:bb2c68ea01879d0182bd5f213eb1dee65c2a58df676c5a77da37c59219b54bb2",
+      "axis": "reference",
+      "candidate_id": "bb2c68ea01879d0182bd5f213eb1dee65c2a58df676c5a77da37c59219b54bb2",
+      "candidate_fingerprint": "9b10346c9162219f5f3fba15972dcd5f3c168ae8dc9f944a2f5592636d691abf",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "A macOS architecture claim depends on every executable component in the delivered artifact.",
+          "authority_or_condition": "When universal, Apple Silicon, or Intel support is claimed for a final bundle.",
+          "decision_owner": "macos-platform-extension Skill owner",
+          "mitigation": "Inspect slices for all bundled executables and record excluded architectures.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "A universal main executable cannot prove every nested macOS binary supports claimed architectures.",
+          "authority_or_condition": "macOS architecture, deployment-target, update, or final-artifact compatibility claims.",
+          "decision_owner": "macos-platform-extension",
+          "mitigation": "Inspect all affected nested binaries and exercise claimed hardware or translation behavior.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At architecture-and-update-contracts.md:10-12, every is bounded to executable components actually included in the final affected macOS artifact. The audit loads this Reference only when architecture, update, installation, or compatibility evidence changes.",
+          "authority_or_condition": "Valid when a final macOS artifact makes Apple Silicon, Intel, deployment-target, installer, updater, or mixed-version claims.",
+          "decision_owner": "macos-platform-extension",
+          "mitigation": "Inspect each bundled executable component, record unavailable hardware or distribution evidence, and avoid inferring dependency slices from the main executable.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:be1608702047e14c60fa1f30a25d66f697e4d4fb1d8584ddea4f7029088a7992",
+      "axis": "reference",
+      "candidate_id": "be1608702047e14c60fa1f30a25d66f697e4d4fb1d8584ddea4f7029088a7992",
+      "candidate_fingerprint": "b62a17a808b61a89d5a9045dfff7784e6c23353738fb7583ded2d98483a644cc",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Framework documentation establishes feasibility, not the repository's shipped target set.",
+          "authority_or_condition": "When framework support is consulted for cross-platform target selection.",
+          "decision_owner": "cross-platform-client-extension Skill owner",
+          "mitigation": "Use repository and release evidence; never promote framework support alone.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Framework documentation establishes possible targets, not the repository's shipped target set.",
+          "authority_or_condition": "Target-scope discovery before loading a cross-platform Domain or claiming release support.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Use repository and published-artifact evidence for scope, then ask one bounded unresolved-target question.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At framework-target-evidence-contracts.md:14-15, never and every jointly prohibit turning framework feasibility into repository release scope. The audit classifies this as an evidence-pattern Reference loaded only while concrete target evidence is unresolved.",
+          "authority_or_condition": "Valid when framework documentation is consulted to decide whether a repository builds, tests, packages, publishes, or supports concrete targets.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Keep feasibility evidence separate from repository artifact evidence and return unknown or excluded targets as proof limits and residual risk.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:c5a694dddc1dd23f82c811b7b31c4270403dfcddeb7f1f077ae5156497e8b795",
+      "axis": "reference",
+      "candidate_id": "c5a694dddc1dd23f82c811b7b31c4270403dfcddeb7f1f077ae5156497e8b795",
+      "candidate_fingerprint": "becd471c628ddeab0088dd68f4c8810d20ae7c29a3918672a612ff9d1d7a6a53",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Registration changes require a complete inventory of affected keys, identities, classes, and removal rules.",
+          "authority_or_condition": "When Windows registry, association, protocol, or COM registration behavior changes.",
+          "decision_owner": "windows-platform-extension Skill owner",
+          "mitigation": "Scope the inventory to application-owned registrations and test migration and cleanup.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Windows registration cleanup and migration require a complete affected-surface inventory.",
+          "authority_or_condition": "Changed registry, file-association, protocol-handler, COM, installer, repair, or uninstall behavior.",
+          "decision_owner": "windows-platform-extension",
+          "mitigation": "Scope the inventory to affected registrations and prove version, bitness, ownership, and removal rules.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At os-integration-and-registration-contracts.md:10-11, every is bounded to registration surfaces in the affected Windows identity and removal contract. The audit excludes tasks with no registry, association, protocol, or COM surface change.",
+          "authority_or_condition": "Valid after the affected Windows registration, identity, install scope, architecture, and cleanup surfaces have been identified.",
+          "decision_owner": "windows-platform-extension",
+          "mitigation": "Inventory each affected registration surface, preserve user default-app choice, and include upgrade, rollback, repair, and uninstall cleanup evidence.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:d444ff149596a4bc9ca7f314f061a7ee7040374aa7855a6b4923c19e0e790c51",
+      "axis": "reference",
+      "candidate_id": "d444ff149596a4bc9ca7f314f061a7ee7040374aa7855a6b4923c19e0e790c51",
+      "candidate_fingerprint": "9cbe7145b235b9c36019911faf316b620a7ed60c0ac55ae1d7b1a45439b35dea",
+      "winning_disposition": "false-positive",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 3,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 0
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "false-positive",
+          "rationale": "The detected absolute wording is an example failure signal, not an instruction to mount components.",
+          "authority_or_condition": "Within the navigation row's failure-signal column only.",
+          "decision_owner": "web-platform-professional-usage Skill owner",
+          "mitigation": "Retain the anti-pattern example while excluding it from absolute-rule governance.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "false-positive",
+          "rationale": "The phrase names a failure signal, not a mandated browser entry mechanism.",
+          "authority_or_condition": "Navigation-and-history decision-matrix context where component-mount-only reasoning indicates insufficient lifecycle coverage.",
+          "decision_owner": "web-platform-professional-usage",
+          "mitigation": "Preserve the failure example with its matrix heading and test alternate entry paths.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "false-positive",
+          "rationale": "At navigation-network-background-contracts.md:11, the detected only phrase is in the Failure signal column for navigation and history. It describes an invalid implementation symptom and does not prescribe component mount as the sole entry mechanism.",
+          "authority_or_condition": "The complete Boundary Matrix context makes this a negative diagnostic signal for navigation and restoration, not a normative absolute.",
+          "decision_owner": "web-platform-professional-usage",
+          "mitigation": "Record the candidate as a detector false positive while preserving the table's Failure signal heading and navigation-row context.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:d8b56a1194c5559c7c4ec09f37f865f8b0967ed4c9b434993bfb6a5f3f32303c",
+      "axis": "reference",
+      "candidate_id": "d8b56a1194c5559c7c4ec09f37f865f8b0967ed4c9b434993bfb6a5f3f32303c",
+      "candidate_fingerprint": "230c18d1cb7df32704a50eeb5acf64df1609e4f2ba4f744d3f44881f4a758300",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 1,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-assurance"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Web Platform Tests cannot prove application journeys or every declared browser configuration.",
+          "authority_or_condition": "When interoperability results support a browser compatibility claim.",
+          "decision_owner": "web-platform-professional-usage Skill owner",
+          "mitigation": "Add product-journey and configuration evidence and state untested scope.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "false-positive",
+          "rationale": "This sentence limits WPT proof rather than imposing an unconditional coverage requirement.",
+          "authority_or_condition": "Cross-browser Web Platform Tests used as interoperability evidence for only exercised features and configurations.",
+          "decision_owner": "web-platform-professional-usage",
+          "mitigation": "Keep product-journey, browser-version, and untested-configuration limits beside any WPT claim.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At navigation-network-background-contracts.md:27, every occurs in a limitation on what cross-browser Web Platform Tests prove. The audit requires product validation and residual-risk output only when browser lifecycle, persistence, network, background, or compatibility behavior changes.",
+          "authority_or_condition": "Valid when Web Platform Test results are used as evidence for product journeys or supported browser configurations.",
+          "decision_owner": "web-platform-professional-usage",
+          "mitigation": "Retain interoperability evidence but separately validate affected product journeys and name untested supported configurations as residual risk.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:d938ac607b81a8a0b601519e3864cae204c8eb707fb7274af496f959ce06ccb1",
+      "axis": "reference",
+      "candidate_id": "d938ac607b81a8a0b601519e3864cae204c8eb707fb7274af496f959ce06ccb1",
+      "candidate_fingerprint": "6361d2325ecc7b23ba917a34082215e9f746cb11f106994308c7192044b83747",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Service-specific plane classification determines whether runtime recovery depends on impaired management operations.",
+          "authority_or_condition": "When cloud control-plane or data-plane behavior affects runtime or recovery.",
+          "decision_owner": "cloud-platform-extension Skill owner",
+          "mitigation": "Classify each in-scope operation and test unavailable-plane behavior.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Recovery design depends on service-specific control versus data-plane behavior for each operation.",
+          "authority_or_condition": "Affected cloud runtime, management, discovery, IAM, DNS, scaling, or recovery operations.",
+          "decision_owner": "cloud-platform-extension",
+          "mitigation": "Build an operation-by-plane matrix from exact service actions and name impaired-plane behavior.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At resource-control-and-data-plane-boundaries.md:19, every is bounded to operations in the affected cloud hierarchy or plane decision and classification must use service-specific semantics. The audit excludes cases where authority and plane ownership are already accepted.",
+          "authority_or_condition": "Valid when cloud control-plane or data-plane classification can change runtime, recovery, IAM, discovery, DNS, scaling, or billing behavior.",
+          "decision_owner": "cloud-platform-extension",
+          "mitigation": "Classify each affected operation from its exact service action, document mixed or unknown planes, and preserve a proof limit where service evidence is unavailable.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:dad9a3254f16f4c5a17736f4f3ca6adb844ced2a1a1847e0d520d2c263fb220c",
+      "axis": "reference",
+      "candidate_id": "dad9a3254f16f4c5a17736f4f3ca6adb844ced2a1a1847e0d520d2c263fb220c",
+      "candidate_fingerprint": "4eb2859d0951df9215f65109e0ed4a3c6c5a91909d8f6ce2045e9700360c560e",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Kotlin syntax alone provides no evidence that Jetpack Compose behavior is involved.",
+          "authority_or_condition": "When selecting whether the Compose reference should be loaded.",
+          "decision_owner": "android-platform-extension Skill owner",
+          "mitigation": "Require confirmed Compose state, navigation, lifecycle, effect, or rendering impact.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Kotlin syntax does not establish that Jetpack Compose behavior is in scope.",
+          "authority_or_condition": "Reference loading requires confirmed Android Jetpack Compose state, navigation, lifecycle, side-effect, or rendering behavior.",
+          "decision_owner": "android-platform-extension",
+          "mitigation": "Load the Reference only from repository-confirmed Compose behavior and version evidence.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At jetpack-compose-contracts.md:43-44, the must-not clause is a precise do-not-load boundary: Kotlin syntax alone does not establish Android Compose behavior. It agrees exactly with the audit's resolved do-not-load condition for this targeted Reference.",
+          "authority_or_condition": "Valid unless the task changes Jetpack Compose state, navigation, lifecycle, side-effect, or rendering behavior on Android.",
+          "decision_owner": "android-platform-extension",
+          "mitigation": "Keep the Reference unloaded for syntax-only or Views-only work and require Compose-specific behavior evidence before selecting it.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:ef879b3db4861387e10bc60dd92b3baf45ec5839d57b3411f7b3d4c2ecb967a3",
+      "axis": "reference",
+      "candidate_id": "ef879b3db4861387e10bc60dd92b3baf45ec5839d57b3411f7b3d4c2ecb967a3",
+      "candidate_fingerprint": "ba0f599f02d44342aa708ed54752af3f1cbe5281d7f976ecba8364aadd13e434",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Least-scope file authorization is correct across user-selected, container, bookmark, and privileged access.",
+          "authority_or_condition": "When macOS file, sandbox, bookmark, or entitlement authority changes.",
+          "decision_owner": "macos-platform-extension Skill owner",
+          "mitigation": "Request the minimum classified scope and test denial, revocation, and staleness.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Explicit macOS file-authority classification prevents broader access than the accepted task needs.",
+          "authority_or_condition": "Changed user-selected, container, temporary, bookmark-restored, or privileged macOS file access.",
+          "decision_owner": "macos-platform-extension",
+          "mitigation": "Record required read or write scope and exercise denial, revocation, staleness, and unavailable-volume recovery.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At file-sandbox-and-entitlement-contracts.md:10-11, only is the least-privilege selection rule after the affected macOS file authority is classified. The audit confines it to file authorization, bookmark, sandbox, container, or entitlement changes.",
+          "authority_or_condition": "Valid when selecting access scope for an affected macOS file, bookmark, sandbox, container, entitlement, or privileged operation.",
+          "decision_owner": "macos-platform-extension",
+          "mitigation": "Request the least scope that satisfies the accepted operation and prove denial, revocation, stale bookmark, and unavailable-volume paths.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:efbff5110d5b6bef6cfdabd85c9c3b557b3014cb90e9d72753f6660d91e693c3",
+      "axis": "reference",
+      "candidate_id": "efbff5110d5b6bef6cfdabd85c9c3b557b3014cb90e9d72753f6660d91e693c3",
+      "candidate_fingerprint": "f66c22125c06ca32ffd066943505cb5dfaf1a40caae2dafd1ba826d5bcc1c116",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The sentence correctly limits this reference to source validation without mutation authority.",
+          "authority_or_condition": "When Kubernetes API, controller, Helm, or Kustomize source surfaces are reviewed.",
+          "decision_owner": "platform-infrastructure-change-builder Skill owner",
+          "mitigation": "Keep cluster mutation and production deployment under their separate authority.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The Kubernetes Reference deliberately validates source surfaces without authorizing live cluster mutation.",
+          "authority_or_condition": "Kubernetes API, controller, Helm, or Kustomize source review under platform infrastructure ownership.",
+          "decision_owner": "platform-infrastructure-change-builder",
+          "mitigation": "Keep deployment authority separate and state admission, convergence, rollout, and live drift as unproven.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At kubernetes-source-contracts.md:2-4, only explicitly limits the Reference to source validation and denies cluster mutation or production deployment authority. This matches its task-agent-only required-by field and prevents a targeted source Reference from taking release ownership.",
+          "authority_or_condition": "Valid when Kubernetes objects, controllers, Helm, Kustomize, field ownership, hooks, CRDs, or final rendering affect a source change.",
+          "decision_owner": "platform-infrastructure-change-builder",
+          "mitigation": "Retain the non-deployment boundary and return live-state, admission, convergence, rollout, and drift gaps as proof limits rather than inferred success.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:f415d2e6d96235382049392036902ec65f2033f0c24014d3bfbd020bc84b304e",
+      "axis": "reference",
+      "candidate_id": "f415d2e6d96235382049392036902ec65f2033f0c24014d3bfbd020bc84b304e",
+      "candidate_fingerprint": "082218db2ea6beee1a2c9c1f04d07b06c5f2bace91b6e729d1afb1a24abd773e",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Bounded data transfer implements purpose limitation and prevents unnecessary recipient exposure.",
+          "authority_or_condition": "When personal or sensitive data is shared with a recipient.",
+          "decision_owner": "privacy-data-lifecycle Skill owner",
+          "mitigation": "Transfer only necessary fields and document purpose, region, and deletion obligations.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Recipient-bound minimization reduces unnecessary privacy exposure during a defined data transfer.",
+          "authority_or_condition": "A changed sharing stage with known recipient, purpose, fields, region, onward transfer, and deletion obligations.",
+          "decision_owner": "privacy-data-lifecycle",
+          "mitigation": "Document the bounded representation and reject fields or precision unnecessary for the accepted purpose.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At data-lifecycle-controls.md:16, only is the decision test for the Share stage after recipient, purpose, fields, region, onward transfer, and deletion are established. The audit limits loading to lifecycle decisions crossing several data stores.",
+          "authority_or_condition": "Valid when an affected data-sharing flow has a named recipient and accepted purpose from which the necessary representation can be bounded.",
+          "decision_owner": "privacy-data-lifecycle",
+          "mitigation": "Minimize transferred fields before emission and retain onward-transfer, return, deletion, region, and unavailable-copy risks in the decision record.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:f6ed0118c8df9be0b76ba59478e790253f00d87546326322dfb220d32cad2434",
+      "axis": "reference",
+      "candidate_id": "f6ed0118c8df9be0b76ba59478e790253f00d87546326322dfb220d32cad2434",
+      "candidate_fingerprint": "05be83ffd0f224efb6acf2d10afd48f44cb697cf802196590e66fdae8399ff54",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Android restoration guidance intentionally limits preserved UI state rather than durable domain data.",
+          "authority_or_condition": "When Android activity recreation or process-death restoration affects the task.",
+          "decision_owner": "client-lifecycle-state-restoration Skill owner",
+          "mitigation": "Keep durable authority elsewhere and test identity-bound restoration.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Android guidance distinguishes recreation from process death and bounds saved UI continuity.",
+          "authority_or_condition": "Android restoration decisions where saved state reconstructs the user task without becoming durable business truth.",
+          "decision_owner": "client-lifecycle-state-restoration",
+          "mitigation": "Bind restored UI state to identity and compatibility, and test true process-death relaunch.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At restoration-boundaries.md:22, only paraphrases Android's scoped UI-state preservation guidance and is immediately contrasted with process death and other platform models. The audit activates it only for unresolved restoration ownership or compatibility.",
+          "authority_or_condition": "Valid when Android recreation or process-death restoration needs a selected state boundary and repository authority has not already settled it.",
+          "decision_owner": "client-lifecycle-state-restoration",
+          "mitigation": "Preserve only resumable UI state under Android guidance and keep domain authority, compatibility, identity, and effect reconciliation independently evidenced.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:fca53a5bb38b383d3ea13f4293317ba7347355645c92ee91cda795bd8965403f",
+      "axis": "reference",
+      "candidate_id": "fca53a5bb38b383d3ea13f4293317ba7347355645c92ee91cda795bd8965403f",
+      "candidate_fingerprint": "ef9f52863cd6ef6f745036127eeeab283dbf58f69c669559e71260c6a67a908c",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "External iOS entry values cross trust boundaries and can request privileged account actions.",
+          "authority_or_condition": "When schemes, Universal Links, notifications, capabilities, or entitlements change.",
+          "decision_owner": "ios-ipados-platform-extension Skill owner",
+          "mitigation": "Validate syntax, replay, account, authorization, and requested action before privileged work.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Incoming iOS values cross an external trust boundary before privileged application work.",
+          "authority_or_condition": "Custom schemes, Universal Links, notifications, restored activities, or capability-driven external entry.",
+          "decision_owner": "ios-ipados-platform-extension",
+          "mitigation": "Validate syntax, authorization, replay, account, and action; test malformed and duplicate delivery.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At entry-capabilities-and-entitlements-contracts.md:12-13, every is bounded to incoming values at affected iOS or iPadOS external entries. The audit excludes work with no external entry, capability, entitlement, identity, or provisioning behavior change.",
+          "authority_or_condition": "Valid when a URL, Universal Link, notification, restored activity, entitlement, or provisioning surface supplies caller-controlled input.",
+          "decision_owner": "ios-ipados-platform-extension",
+          "mitigation": "Validate syntax, authorization, replay, current account, and requested action before privileged work and record unavailable device or provisioning evidence.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "reference:fed302948986af05ae6b0813b3a78eb2dcbfe99e38e24d91570d0c103ce19745",
+      "axis": "reference",
+      "candidate_id": "fed302948986af05ae6b0813b3a78eb2dcbfe99e38e24d91570d0c103ce19745",
+      "candidate_fingerprint": "4fd44e43bdff847ea6df2a50aeab9eb985a6aac97725b4bf115f4d3afd23dfe1",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Overlay rollback must preserve unrelated later edits and remove only rejected optimistic state.",
+          "authority_or_condition": "When an optimistic offline operation is rejected or conflicts.",
+          "decision_owner": "offline-sync-conflict-resolution Skill owner",
+          "mitigation": "Track overlay ownership and transform only the affected overlay.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Optimistic rollback must preserve unrelated later edits instead of replacing the whole visible state.",
+          "authority_or_condition": "Offline optimistic state with identifiable pending overlays, confirmed base state, and dependent edits.",
+          "decision_owner": "offline-sync-conflict-resolution",
+          "mitigation": "Track overlay identity and exercise rejection, conflict, abandonment, and later-edit preservation.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At sync-reconciliation-contracts.md:15, only is the Safe selection test for rejecting one affected optimistic overlay without erasing unrelated later edits. The audit loads this matrix only while authority, conflict, partial-sync, or resumable-transfer choices compete.",
+          "authority_or_condition": "Valid when an optimistic state layer is rejected or conflicts and later independent user edits may coexist.",
+          "decision_owner": "offline-sync-conflict-resolution",
+          "mitigation": "Identify overlay dependencies, remove or transform only the rejected effect, and preserve unrelated confirmed or later pending user changes.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:0560f7038ba9ca6c7b59e84f6a7ca98ec4b988b76ad90b8e75afcceb8c3803ab",
+      "axis": "root",
+      "candidate_id": "0560f7038ba9ca6c7b59e84f6a7ca98ec4b988b76ad90b8e75afcceb8c3803ab",
+      "candidate_fingerprint": "923c07171bff73f8cf4ce8aee975ca55ab15dea9455a3bc585d9ef2349f96de3",
+      "winning_disposition": "false-positive",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 3,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 0
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "false-positive",
+          "rationale": "Kubernetes appears in a do-not-use boundary, not as a fixed required vendor or tool.",
+          "authority_or_condition": "Within cloud modifier exclusion rules for local Kubernetes and generic backend work.",
+          "decision_owner": "cloud-platform-extension Skill owner",
+          "mitigation": "Retain the routing exclusion and ignore the vendor-tool lexical match.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "false-positive",
+          "rationale": "This is a cloud-scope exclusion list, not a fixed vendor or tool mandate.",
+          "authority_or_condition": "Domain routing requires confirmed cloud control-plane dependency and excludes provider-name-only or generic non-cloud work.",
+          "decision_owner": "cloud-platform-extension",
+          "mitigation": "Retain the negative routing conditions and continue resolving scope from repository and environment evidence.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "false-positive",
+          "rationale": "At cloud-platform-extension/SKILL.md:19, Kubernetes appears inside the Do Not Use section and explicitly excludes local Kubernetes from this Domain Skill. The fixed-vendor/tool detector therefore does not describe a positive routing prescription.",
+          "authority_or_condition": "The Domain anti-trigger keeps local Kubernetes and generic backend work with their actual Professional owners.",
+          "decision_owner": "cloud-platform-extension",
+          "mitigation": "Record this as a detector false positive and preserve the Do Not Use heading and local-Kubernetes exclusion that prevent owner conflict.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:0b1cbb72e52cf0ecb7d4c1d759c9b0ed88a64d258a85a31f004b0f53fb13c56d",
+      "axis": "root",
+      "candidate_id": "0b1cbb72e52cf0ecb7d4c1d759c9b0ed88a64d258a85a31f004b0f53fb13c56d",
+      "candidate_fingerprint": "8559c31f3d4f98c3aab66a372593a4425e3ef3ebb0f8e091bb0100fc61a71f67",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 1,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-assurance"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The two-platform limit is an explicit ChangeForge modifier and workspace-splitting boundary.",
+          "authority_or_condition": "When a shared installed-client change confirms more than two concrete platforms.",
+          "decision_owner": "cross-platform-client-extension Skill owner",
+          "mitigation": "Split analysis before implementation and preserve one integration owner.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "rewrite",
+          "rationale": "A fixed third-platform threshold does not establish that analysis splitting is necessary.",
+          "authority_or_condition": "Splitting should follow dependency, ownership, validation, and shared-write risk rather than platform count alone.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Rewrite the rule to require analysis-first decomposition when cross-target risk or collision evidence warrants it.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At cross-platform-client-extension/SKILL.md:31, the two-platform threshold is an explicit ChangeForge task-bounding and Domain-composition policy, not an empirical product-performance claim. It assigns analysis-first splitting before implementation when three or more concrete Domains would otherwise share one task.",
+          "authority_or_condition": "Valid after repository evidence confirms more than two concrete platform Domains for one cross-platform implementation task.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Retain deterministic analysis-first splitting for three or more platforms and re-review if the repository's Domain-composition or task-bounding contract changes.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:1af5f56a14fdd4e0844be1cdf446861e201eb5ca4e92ff95b40c78fc910e94af",
+      "axis": "root",
+      "candidate_id": "1af5f56a14fdd4e0844be1cdf446861e201eb5ca4e92ff95b40c78fc910e94af",
+      "candidate_fingerprint": "748554e9c38fb24d66347d9fce453ada76c5aae1a599b20cb0ba85fe580270c7",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 1,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-runtime"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "false-positive",
+          "rationale": "The Required Inputs list records existing artifact evidence rather than mandating creation of an artifact.",
+          "authority_or_condition": "When Android platform behavior is confirmed and the modifier is selected.",
+          "decision_owner": "android-platform-extension Skill owner",
+          "mitigation": "Keep the evidence inventory and exclude it from mandatory-artifact detection.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Android platform review needs an explicit evidence inventory to expose affected and unavailable dimensions.",
+          "authority_or_condition": "A confirmed Android target with changed platform behavior; listed dimensions are recorded as affected, unaffected, or unavailable.",
+          "decision_owner": "android-platform-extension",
+          "mitigation": "Scope proof to the change while naming device, artifact, signing-source, ANR, and startup evidence limits.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At android-platform-extension/SKILL.md:25, artifact and signing source are domain facts recorded alongside Android exposure, permissions, background, storage, device, ANR, and startup boundaries. The Required Inputs section does not require inventing a separate review artifact or authorizing release.",
+          "authority_or_condition": "Valid when the Android Domain modifier is selected and affected artifact, signing-source, component, lifecycle, storage, or device evidence scopes the task.",
+          "decision_owner": "android-platform-extension",
+          "mitigation": "Record affected Android inputs and unavailable evidence without secrets; keep release and signing authorization with delivery-release-gate.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:2139f1437973d935ab31633c3ab0746e924be74abed660f6c5a5656020b53855",
+      "axis": "root",
+      "candidate_id": "2139f1437973d935ab31633c3ab0746e924be74abed660f6c5a5656020b53855",
+      "candidate_fingerprint": "597e2d8e2473d8106e3cdd39b5be3027eee3bde2cd29d82d490867abc3c53e6c",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Native HTML semantics preserve browser defaults unless product interaction meaning requires replacement.",
+          "authority_or_condition": "When selecting elements for changed browser document semantics or interaction.",
+          "decision_owner": "web-platform-professional-usage Skill owner",
+          "mitigation": "Prefer native elements and verify any scripted replacement behavior.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Native HTML semantics provide browser behavior that scripted replacements must otherwise reproduce.",
+          "authority_or_condition": "Browser document changes where content and interaction meaning can be represented by supported native elements.",
+          "decision_owner": "web-platform-professional-usage",
+          "mitigation": "Select by meaning, then verify exposed semantics and interaction in supported target browsers.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At web-platform-professional-usage/SKILL.md:24, native semantics are preferred before roles or scripts that would recreate browser defaults; custom behavior remains available when meaning requires it. The Skill trigger limits this rule to web-platform semantic decisions.",
+          "authority_or_condition": "Valid when a browser or PWA change alters document semantics, interaction meaning, roles, scripted behavior, or the accessibility tree.",
+          "decision_owner": "web-platform-professional-usage",
+          "mitigation": "Choose native elements first, justify custom behavior from interaction meaning, and prove supported-engine and accessibility behavior when browser defaults are recreated.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:37ee0ef16d7169dfebcc297a4794f3f268241a7990d2f3f11a58651e21214716",
+      "axis": "root",
+      "candidate_id": "37ee0ef16d7169dfebcc297a4794f3f268241a7990d2f3f11a58651e21214716",
+      "candidate_fingerprint": "4e391c8bd77dd3a85a2204ba19df968548911e34523a815360a9b81bf12c822a",
+      "winning_disposition": "false-positive",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 3,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 0
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "false-positive",
+          "rationale": "The sentence describes the conditional registry trigger, not an unconditional lifecycle mechanism.",
+          "authority_or_condition": "When deciding whether lifecycle and restoration guidance should be selected.",
+          "decision_owner": "client-lifecycle-state-restoration Skill owner",
+          "mitigation": "Retain the trigger wording and exclude it from unconditional-mechanism governance.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "false-positive",
+          "rationale": "The sentence defines a conditional Registry Trigger, not an unconditional survival mechanism.",
+          "authority_or_condition": "Load the Foundation only when behavior must survive or intentionally reset across named lifecycle transitions.",
+          "decision_owner": "client-lifecycle-state-restoration",
+          "mitigation": "Preserve the Use-when heading and distinguish survival from an explicitly accepted reset.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "false-positive",
+          "rationale": "At client-lifecycle-state-restoration/SKILL.md:12, must occurs under the explicit Use when registry trigger and states the condition for selecting the Foundation Skill. It is not an unconditional mechanism imposed on unrelated clients.",
+          "authority_or_condition": "The rule applies only when client behavior must survive or intentionally reset across one of the listed lifecycle or identity transitions.",
+          "decision_owner": "client-lifecycle-state-restoration",
+          "mitigation": "Record this as a detector false positive and preserve the paired Do not use conditions that exclude unrelated lifecycle work.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:4e84f474724dae709f136d9f1ccb67e2ffb82d46256aba4cbf7761d03344442c",
+      "axis": "root",
+      "candidate_id": "4e84f474724dae709f136d9f1ccb67e2ffb82d46256aba4cbf7761d03344442c",
+      "candidate_fingerprint": "21c6edb4fee4e996ce1b4ae9c5e5d4c4cb1c2c5758f5c6e8f28696ae39c2c55f",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Shared logic can pass while affected native targets or release artifacts fail differently.",
+          "authority_or_condition": "When a confirmed cross-platform client changes shared or native behavior.",
+          "decision_owner": "cross-platform-client-extension Skill owner",
+          "mitigation": "Validate every affected target, boundary, artifact, and negative path.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Shared logic evidence alone cannot establish affected native-boundary or packaged-artifact behavior.",
+          "authority_or_condition": "Confirmed affected cross-platform targets, native boundaries, release artifacts, and platform-specific negative paths.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Validate each affected target and list excluded targets, artifacts, and failure paths as unverified.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At cross-platform-client-extension/SKILL.md:36, every is bounded to affected targets, native boundaries, release artifacts, and platform-specific negative paths after concrete targets are proven. Earlier rules keep platform authority with each selected Domain.",
+          "authority_or_condition": "Valid after repository evidence establishes the affected shared logic and concrete target, native, artifact, and negative-path set.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Validate each affected surface, record excluded targets and unavailable artifacts, and preserve concrete platform ownership rather than inferring parity.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:4ec396255b873c12fc53b6d4d14912dec75c54f9cefee79fdd6e885da989725c",
+      "axis": "root",
+      "candidate_id": "4ec396255b873c12fc53b6d4d14912dec75c54f9cefee79fdd6e885da989725c",
+      "candidate_fingerprint": "8b9cf796b90fd3c0a62737d80cecabc73a998913bd66a2bc4ccc7861cb168bbb",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The Windows domain is intentionally a modifier and cannot own Professional review acceptance.",
+          "authority_or_condition": "When confirmed Windows behavior modifies a selected Professional review.",
+          "decision_owner": "windows-platform-extension Skill owner",
+          "mitigation": "Keep Professional ownership explicit and load Windows only as a modifier.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The Windows Domain is a modifier and cannot replace the selected Professional owner.",
+          "authority_or_condition": "ChangeForge's Professional-plus-Domain ownership architecture for confirmed Windows behavior.",
+          "decision_owner": "windows-platform-extension",
+          "mitigation": "Name the actual Professional review owner and use Windows guidance only for platform-specific decisions.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At windows-platform-extension/SKILL.md:10, never protects the three-layer architecture by keeping this Layer 3 Domain Skill from replacing the selected Professional review owner. The same Role sentence routes desktop and service work to explicit Professionals.",
+          "authority_or_condition": "Valid whenever Windows behavior requires this Domain modifier alongside an already selected Professional review owner.",
+          "decision_owner": "windows-platform-extension",
+          "mitigation": "Keep the Domain modifier non-primary and route desktop source changes or Windows services to their actual Professional owner.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:521f12b077b7a9b5d49d0ad28bea807a65b7dabd678da3a6be3a3a53f0acc924",
+      "axis": "root",
+      "candidate_id": "521f12b077b7a9b5d49d0ad28bea807a65b7dabd678da3a6be3a3a53f0acc924",
+      "candidate_fingerprint": "73d83b378f2982d68ac2326c668deb21a706ff1bc24fafe5a557ba0344da1281",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The iOS and iPadOS domain is a platform modifier, not the Professional review owner.",
+          "authority_or_condition": "When iOS or iPadOS behavior affects a selected Professional review.",
+          "decision_owner": "ios-ipados-platform-extension Skill owner",
+          "mitigation": "Retain the Professional owner and add this domain only as a modifier.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The iOS Domain modifies installed-client review and does not own Professional acceptance.",
+          "authority_or_condition": "ChangeForge's Professional-plus-Domain ownership architecture for confirmed iOS or iPadOS behavior.",
+          "decision_owner": "ios-ipados-platform-extension",
+          "mitigation": "Keep the installed-client Professional as owner and apply this Domain only to platform deltas.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At ios-ipados-platform-extension/SKILL.md:10, never is the required Layer 3 ownership boundary: the Domain modifies installed-client-change-builder and cannot become the primary Professional review owner. Decision-owning client and Swift Foundations remain separate.",
+          "authority_or_condition": "Valid when the selected Professional review evaluates iOS or iPadOS behavior and loads this Domain as a modifier.",
+          "decision_owner": "ios-ipados-platform-extension",
+          "mitigation": "Retain the non-primary Domain role and keep client, Swift, release, and signing decisions with their named owners.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:5623833cdf11c5b5335638f6218c01e0100dd1d49d16ab6eac02a50c9ce75bc8",
+      "axis": "root",
+      "candidate_id": "5623833cdf11c5b5335638f6218c01e0100dd1d49d16ab6eac02a50c9ce75bc8",
+      "candidate_fingerprint": "35ce689fa0532e4add7031f122d20177468d3dabe1a226017ba9aca8bc2d9e73",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Linux desktop behavior needs its domain modifier while Professional ownership remains elsewhere.",
+          "authority_or_condition": "When a selected review evaluates confirmed Linux graphical desktop behavior.",
+          "decision_owner": "linux-desktop-platform-extension Skill owner",
+          "mitigation": "Load the domain modifier and keep server or service ownership separate.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Linux desktop behavior needs its platform modifier while retaining Professional ownership.",
+          "authority_or_condition": "A selected Professional review evaluating confirmed Linux graphical desktop behavior.",
+          "decision_owner": "linux-desktop-platform-extension",
+          "mitigation": "Load only this applicable Domain and its active decision-family References, then report untested environments.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At linux-desktop-platform-extension/SKILL.md:10, must load is bounded to a review of Linux desktop behavior after a Professional owner is selected. The same Role text excludes Linux server, daemon, kernel, and host-runtime ownership.",
+          "authority_or_condition": "Valid when the selected Professional review evaluates Linux desktop behavior rather than Linux server, service, daemon, kernel, or host-runtime behavior.",
+          "decision_owner": "linux-desktop-platform-extension",
+          "mitigation": "Load this Domain only for the desktop boundary and preserve server or systems ownership with the named Professional and Linux Foundation.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:582c19c2a623e847272f6fda41d4c6793edaff0b424396395538af79f81800dc",
+      "axis": "root",
+      "candidate_id": "582c19c2a623e847272f6fda41d4c6793edaff0b424396395538af79f81800dc",
+      "candidate_fingerprint": "5497d334088950cdb67f4a11f480c34d7c992640e56d089b21f11f18c8f7a7e6",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 1,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-runtime"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "false-positive",
+          "rationale": "The Required Inputs inventory requests artifact evidence, not a newly produced mandatory artifact.",
+          "authority_or_condition": "When the Linux desktop modifier is selected for confirmed platform behavior.",
+          "decision_owner": "linux-desktop-platform-extension Skill owner",
+          "mitigation": "Retain the evidence fields and exclude the row from mandatory-artifact detection.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Linux packaging and environment variants materially change installation, input, scaling, and accessibility evidence.",
+          "authority_or_condition": "A confirmed Linux desktop target; only supported package and environment dimensions need positive evidence.",
+          "decision_owner": "linux-desktop-platform-extension",
+          "mitigation": "Record applicable package owners and matrix coverage, marking unsupported or unavailable variants explicitly.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At linux-desktop-platform-extension/SKILL.md:25, artifact is one Required Input describing the affected package format, channel, environment, and unavailable evidence. It does not mandate creation of a new review artifact or authorize installation or release.",
+          "authority_or_condition": "Valid when the Linux desktop Domain is selected and package, install, update, locale, input, scaling, accessibility, or environment facts affect scope.",
+          "decision_owner": "linux-desktop-platform-extension",
+          "mitigation": "Record applicable package and environment facts, mark unavailable hosts explicitly, and keep delivery authorization outside this Domain modifier.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:5a841c20ab33ec7c321007d7699082415388df57b294ee29959bbfbb61be502a",
+      "axis": "root",
+      "candidate_id": "5a841c20ab33ec7c321007d7699082415388df57b294ee29959bbfbb61be502a",
+      "candidate_fingerprint": "4b5bbb43e0266b04bfa40149911cc0e6ea0ef4ef8be0863695c8c1301aba4f7a",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 1,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-runtime"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "false-positive",
+          "rationale": "Published artifacts are recorded as target evidence, not mandated as a separate deliverable.",
+          "authority_or_condition": "When selecting the cross-platform modifier from confirmed repository and release facts.",
+          "decision_owner": "cross-platform-client-extension Skill owner",
+          "mitigation": "Keep existing artifact evidence fields without requiring artifact creation.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Cross-platform scope and compatibility cannot be reviewed without framework, target, build, and artifact evidence.",
+          "authority_or_condition": "A repository-confirmed shared installed client with one or more concrete affected targets.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Record versions and target states separately, including unpublished or untested artifact limits.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At cross-platform-client-extension/SKILL.md:24, published artifacts are evidence inputs used to prove the target and release matrix. The Required Inputs section does not compel artifact production and the following ownership rules keep release authorization separate.",
+          "authority_or_condition": "Valid when the cross-platform Domain modifier is selected and repository evidence must establish framework, target, build-variant, release, or published-artifact scope.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Record existing artifact evidence and unknown targets without manufacturing support claims; route release approval and rollback authority to delivery-release-gate.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:647f77eab58c06733e9a212592bcb8587e19e5bc3d8e74dd721b7be931d70ef2",
+      "axis": "root",
+      "candidate_id": "647f77eab58c06733e9a212592bcb8587e19e5bc3d8e74dd721b7be931d70ef2",
+      "candidate_fingerprint": "f87723f18b98827a3f3b6d04d14546204ccc8709d5c737dfdabd3ffeeb36d92d",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 1,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-runtime"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "false-positive",
+          "rationale": "The Required Inputs row inventories channel and artifact facts rather than creating an artifact.",
+          "authority_or_condition": "When confirmed iOS or iPadOS behavior selects the platform modifier.",
+          "decision_owner": "ios-ipados-platform-extension Skill owner",
+          "mitigation": "Record available evidence and mark unavailable device or store proof explicitly.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "iOS platform decisions require a bounded device, lifecycle, entitlement, data, artifact, and API evidence record.",
+          "authority_or_condition": "A confirmed iOS or iPadOS behavior change, with listed dimensions recorded as affected, unaffected, or unavailable.",
+          "decision_owner": "ios-ipados-platform-extension",
+          "mitigation": "Scope the matrix to supported targets and name device, store, signing, and mixed-version proof gaps.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At ios-ipados-platform-extension/SKILL.md:24, artifact and channel are domain boundary facts recorded with OS, lifecycle, entry, entitlement, data, and app/API evidence. This required input does not grant signing, TestFlight, App Store, or release authority.",
+          "authority_or_condition": "Valid when this iOS or iPadOS Domain modifier is selected and the affected artifact, channel, entitlement, lifecycle, or compatibility matrix must be scoped.",
+          "decision_owner": "ios-ipados-platform-extension",
+          "mitigation": "Record applicable facts and unavailable device or store evidence, exclude secrets, and route signing and release authorization to delivery-release-gate.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:7f36ce3393245d11b04b54881db0f23b17e627967a29513c6482f4c5000a8e25",
+      "axis": "root",
+      "candidate_id": "7f36ce3393245d11b04b54881db0f23b17e627967a29513c6482f4c5000a8e25",
+      "candidate_fingerprint": "c59a0efaa0e0fc653bf49882155a7919a7f6b58d8656a0289f9b37d71f294664",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Android platform guidance modifies a Professional review and must not replace its ownership.",
+          "authority_or_condition": "When a selected Professional review evaluates confirmed Android behavior.",
+          "decision_owner": "android-platform-extension Skill owner",
+          "mitigation": "Keep the Professional owner and load Android only as its modifier.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The Android Domain supplies platform evidence but cannot own the Professional review.",
+          "authority_or_condition": "ChangeForge's Professional-plus-Domain architecture for confirmed Android platform behavior.",
+          "decision_owner": "android-platform-extension",
+          "mitigation": "Retain installed-client Professional ownership and use Android guidance only for platform-specific scope.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At android-platform-extension/SKILL.md:10, never keeps the Layer 3 Android Domain from becoming the primary Professional review owner. Its modifier role, required review load, and separate client/Kotlin Foundation ownership make the boundary explicit.",
+          "authority_or_condition": "Valid when an installed-client Professional review evaluates Android behavior and loads this Domain plus decision-owning client or Kotlin Foundations.",
+          "decision_owner": "android-platform-extension",
+          "mitigation": "Retain the non-primary Domain role and keep implementation, Kotlin, client-state, release, and signing authority with their actual owners.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:7f7d7e84a3185e11528c54dace429ba90a6a82050f9d7c78c3bff8f40974bfe3",
+      "axis": "root",
+      "candidate_id": "7f7d7e84a3185e11528c54dace429ba90a6a82050f9d7c78c3bff8f40974bfe3",
+      "candidate_fingerprint": "5be3c6c1464dcc9bd5cb85ae5969fee8867352bd113a0f1312ce74b218aeba33",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The macOS domain supplies platform deltas without becoming the Professional review owner.",
+          "authority_or_condition": "When confirmed macOS behavior affects a selected Professional review.",
+          "decision_owner": "macos-platform-extension Skill owner",
+          "mitigation": "Retain Professional ownership and load macOS as a bounded modifier.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The macOS Domain is a modifier and cannot replace Professional acceptance ownership.",
+          "authority_or_condition": "ChangeForge's Professional-plus-Domain architecture for confirmed macOS behavior.",
+          "decision_owner": "macos-platform-extension",
+          "mitigation": "Keep the installed-client Professional as owner and limit this Domain to macOS-specific decisions.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At macos-platform-extension/SKILL.md:10, never preserves the Layer 3 modifier boundary and prevents the macOS Domain from replacing installed-client-change-builder as Professional review owner. Client and Swift Foundations remain decision owners.",
+          "authority_or_condition": "Valid when an installed-client Professional review evaluates macOS behavior and loads this Domain as a focused modifier.",
+          "decision_owner": "macos-platform-extension",
+          "mitigation": "Keep this Domain non-primary and route client, Swift, release, signing, and rollout decisions to their named owners.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:7f9e0fcbc8c6d8ecb9c0ac1608dc0e7ce1ebc5031d4f63c403663294978c1e4d",
+      "axis": "root",
+      "candidate_id": "7f9e0fcbc8c6d8ecb9c0ac1608dc0e7ce1ebc5031d4f63c403663294978c1e4d",
+      "candidate_fingerprint": "5d384a3f1b3a8131b1f986066faf9962dd9af7dafee9962797739ad8c5834fd0",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Cold and warm entry exercise detects duplicate delivery, stale identity, and activation differences.",
+          "authority_or_condition": "When affected client flows accept deep links, notifications, or external activation.",
+          "decision_owner": "client-application-testing Skill owner",
+          "mitigation": "Test each in-scope external entry from both states and name exclusions.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Cold and warm activation exercise distinct installed-client entry and instance-state failures.",
+          "authority_or_condition": "Each changed or supported deep-link and notification entry affected by the installed-client change.",
+          "decision_owner": "client-application-testing",
+          "mitigation": "Test malformed, duplicate, wrong-account, unavailable-content, and existing-instance activation outcomes.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At client-application-testing/SKILL.md:28, every external entry is bounded by the section's leading rule to dimensions derived from changed client risk. Cold and warm state plus malformed, duplicate, wrong-account, unavailable-content, and existing-instance paths are the relevant entry failure mechanisms.",
+          "authority_or_condition": "Valid when the changed installed-client risk includes external activation through deep links, notifications, or another operating-system entry surface.",
+          "decision_owner": "client-application-testing",
+          "mitigation": "Apply the rule only to affected external entries, retain production-path validation, and name untested entry states as residual risk.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:80f3031718e341444348bf7c83a910d7135f1c88c340875ec151f1a9bcffaeaa",
+      "axis": "root",
+      "candidate_id": "80f3031718e341444348bf7c83a910d7135f1c88c340875ec151f1a9bcffaeaa",
+      "candidate_fingerprint": "f9d8705b76a7bda0b942e6a1c30193cbc4133001c3950c1b9646fc9c12a4bf82",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 1,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-runtime"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "false-positive",
+          "rationale": "The Windows Required Inputs list requests artifact and signing evidence, not artifact production.",
+          "authority_or_condition": "When confirmed Windows platform behavior selects this domain modifier.",
+          "decision_owner": "windows-platform-extension Skill owner",
+          "mitigation": "Retain evidence inventory and keep release authorization with the release owner.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Windows identity, integration, privilege, architecture, artifact, and accessibility boundaries need visible evidence or limits.",
+          "authority_or_condition": "A confirmed Windows behavior change; listed dimensions are classified as affected, unaffected, or unavailable.",
+          "decision_owner": "windows-platform-extension",
+          "mitigation": "Scope evidence to supported hosts and artifacts while naming signing, service, DPI, and accessibility gaps.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At windows-platform-extension/SKILL.md:26, artifact and signing are Windows boundary facts recorded with registration, activation, IPC, privilege, loading, service, DPI, and accessibility evidence. The Required Inputs section neither creates a review artifact nor authorizes release.",
+          "authority_or_condition": "Valid when this Windows Domain is selected and the affected executable, package, artifact, signing, registration, privilege, or host evidence scopes the task.",
+          "decision_owner": "windows-platform-extension",
+          "mitigation": "Record applicable Windows inputs and unavailable-host evidence without secrets, while keeping delivery and signing authorization with the release owner.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:84a62368be2634dc9ce9b1b84e8eefec080148c615a77825a7c0ec01c086dec3",
+      "axis": "root",
+      "candidate_id": "84a62368be2634dc9ce9b1b84e8eefec080148c615a77825a7c0ec01c086dec3",
+      "candidate_fingerprint": "83ca5260601b56eb51d604df9585421af2711bf26abb329afeedd2c639c1362e",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Hosted checks need explicit triggers, protected targets, retry, outcomes, and bypass authority.",
+          "authority_or_condition": "When CI or CD enforcement and promotion behavior changes.",
+          "decision_owner": "ci-cd Skill owner",
+          "mitigation": "Define each required check and verify provider enforcement separately from green status.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Required-check meaning is incomplete without triggers, protected scope, outcomes, retries, and bypass authority.",
+          "authority_or_condition": "Hosted pipeline enforcement changes affecting required checks or protected promotion targets.",
+          "decision_owner": "ci-cd",
+          "mitigation": "Record provider enforcement separately from green job output and test authorized bypass behavior.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At ci-cd/SKILL.md:24, required checks are first selected by trigger, changed scope, and protected target; the remaining fields define their behavior and bypass authority. The quantifier does not convert optional or unrelated checks into required gates.",
+          "authority_or_condition": "Valid after repository policy or accepted task risk identifies a CI/CD check as required for a named trigger, scope, and protected target.",
+          "decision_owner": "ci-cd",
+          "mitigation": "Keep required-check selection source-backed, define skip and retry outcomes explicitly, and avoid claiming provider enforcement from a green result alone.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:8a9e8eed175bd1c72106ca02cdf2ed1c98f3c96d6dd48429231bd7419f1e15d4",
+      "axis": "root",
+      "candidate_id": "8a9e8eed175bd1c72106ca02cdf2ed1c98f3c96d6dd48429231bd7419f1e15d4",
+      "candidate_fingerprint": "e0ef61f4bc01c9d1c80fe01734b2268075cced99cb5870a5fbf8a7a897250de1",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Every claimed mixed app and API version needs evidence from both compatibility sides.",
+          "authority_or_condition": "When iOS or iPadOS compatibility claims include installed-version combinations.",
+          "decision_owner": "ios-ipados-platform-extension Skill owner",
+          "mitigation": "Test each claimed combination and avoid inference from store mechanics.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Packaging or store evidence cannot establish compatibility for claimed mixed client and API versions.",
+          "authority_or_condition": "Every app/API combination explicitly claimed supported by the iOS or iPadOS change.",
+          "decision_owner": "ios-ipados-platform-extension",
+          "mitigation": "Exercise both sides of each claimed combination and mark untested installed populations unproven.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At ios-ipados-platform-extension/SKILL.md:36, every is bounded to claimed mixed installed-client versions and requires evidence from both app and API behavior. The adjacent rule explicitly rejects backend-compatibility inference from store mechanics.",
+          "authority_or_condition": "Valid when the task claims compatibility for one or more mixed iOS or iPadOS installed-client and API version combinations.",
+          "decision_owner": "ios-ipados-platform-extension",
+          "mitigation": "Require evidence for each claimed combination, leave untested combinations unclaimed, and keep store or packaging evidence separate from backend compatibility.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:96619f0d01902aaf07aa57414a82336f86a2ae3f47c33e3b82f6159f32d1be54",
+      "axis": "root",
+      "candidate_id": "96619f0d01902aaf07aa57414a82336f86a2ae3f47c33e3b82f6159f32d1be54",
+      "candidate_fingerprint": "c51cfe7751c119e8b09585f00726f13d929954682c39ea2330f211f98e982f6c",
+      "winning_disposition": "false-positive",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 3,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 0
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "false-positive",
+          "rationale": "The statement defines a conditional use trigger, not an unconditional synchronization mechanism.",
+          "authority_or_condition": "When deciding whether connectivity-loss reconciliation guidance applies.",
+          "decision_owner": "offline-sync-conflict-resolution Skill owner",
+          "mitigation": "Retain the trigger and exclude it from unconditional-mechanism governance.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "false-positive",
+          "rationale": "This sentence defines the conditional offline-sync Registry Trigger, not a universal client mechanism.",
+          "authority_or_condition": "Load only when an installed or browser client performs named work across connectivity loss and restoration.",
+          "decision_owner": "offline-sync-conflict-resolution",
+          "mitigation": "Preserve the Use-when context and exclude online-only or backend-wide consistency work.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "false-positive",
+          "rationale": "At offline-sync-conflict-resolution/SKILL.md:12, must appears under the explicit Use when registry trigger and describes the connectivity behavior that selects this Foundation Skill. It is not an unconditional mechanism for online-only clients.",
+          "authority_or_condition": "The trigger applies only when installed or browser client work crosses connectivity loss and restoration through read, write, queue, reconcile, delete, or resume behavior.",
+          "decision_owner": "offline-sync-conflict-resolution",
+          "mitigation": "Record this as a detector false positive and preserve the paired online-only and backend-policy anti-triggers that maintain ownership.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:bc7c9d606307c0090fb96a46de325f7a0b666b6659903cd137eddaedc74f0acd",
+      "axis": "root",
+      "candidate_id": "bc7c9d606307c0090fb96a46de325f7a0b666b6659903cd137eddaedc74f0acd",
+      "candidate_fingerprint": "a64b3277a32e6f9d7ba64ff536f75305c606c2698bafb1b2574e478e6edbd0ed",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Linux desktop is a bounded domain modifier and cannot own Professional review acceptance.",
+          "authority_or_condition": "When confirmed Linux graphical behavior affects a selected Professional review.",
+          "decision_owner": "linux-desktop-platform-extension Skill owner",
+          "mitigation": "Load it as a modifier and preserve the actual Professional owner.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The Linux desktop Domain modifies Professional review and cannot independently own it.",
+          "authority_or_condition": "ChangeForge's Professional-plus-Domain architecture for confirmed Linux graphical desktop behavior.",
+          "decision_owner": "linux-desktop-platform-extension",
+          "mitigation": "Name the Professional owner and keep server, service, daemon, and host-runtime ownership separate.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At linux-desktop-platform-extension/SKILL.md:10, never prevents the Linux desktop Domain from becoming the primary Professional review owner. The sentence simultaneously preserves Linux server, daemon, kernel, and host-runtime ownership elsewhere.",
+          "authority_or_condition": "Valid whenever a Professional review loads this focused Domain modifier for Linux desktop behavior.",
+          "decision_owner": "linux-desktop-platform-extension",
+          "mitigation": "Keep the Domain non-primary and route non-desktop Linux behavior to the actual Professional and linux-systems-professional-usage.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:c457479aa4d59d9b48bd531e06a1e4877e3978c063aa04cba7657c290bab2140",
+      "axis": "root",
+      "candidate_id": "c457479aa4d59d9b48bd531e06a1e4877e3978c063aa04cba7657c290bab2140",
+      "candidate_fingerprint": "1a1e053514ee1c45ff5e70fff1f9427e177a8d38b783edaee6db643479e08bb0",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Each claimed macOS app and API combination has distinct runtime compatibility risk.",
+          "authority_or_condition": "When mixed installed-client versions are included in macOS acceptance.",
+          "decision_owner": "macos-platform-extension Skill owner",
+          "mitigation": "Require client and API evidence for every claimed combination.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "macOS artifact or notarization evidence does not prove mixed app and API compatibility.",
+          "authority_or_condition": "Each mixed macOS client and API or provider combination explicitly claimed supported.",
+          "decision_owner": "macos-platform-extension",
+          "mitigation": "Exercise client and API behavior per claimed combination and record untested deployed versions.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At macos-platform-extension/SKILL.md:37, each is bounded to claimed mixed macOS app/API combinations and requires evidence from both sides. The following rule rejects backend-compatibility inference from packaging, notarization, or store behavior.",
+          "authority_or_condition": "Valid when a task claims compatibility for specific mixed macOS installed-client and API versions.",
+          "decision_owner": "macos-platform-extension",
+          "mitigation": "Evidence every claimed combination, leave untested combinations unclaimed, and keep packaging or notarization evidence separate from API compatibility.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:cd9d813a014e6ae974bbb628bb9ad5b0037b6d196c767092a237ae32c32cada1",
+      "axis": "root",
+      "candidate_id": "cd9d813a014e6ae974bbb628bb9ad5b0037b6d196c767092a237ae32c32cada1",
+      "candidate_fingerprint": "9b976fc87afb23e075ac9963c9049bcbc8746768a206981f1bc16f5c515555d1",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The shared-client domain is intentionally neither standalone nor a Professional review owner.",
+          "authority_or_condition": "When confirmed shared-client behavior modifies an installed-client Professional workflow.",
+          "decision_owner": "cross-platform-client-extension Skill owner",
+          "mitigation": "Compose it with concrete platform domains and retain Professional ownership.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "A shared framework is neither a concrete platform target nor a Professional owner.",
+          "authority_or_condition": "ChangeForge routing for repository-confirmed shared installed clients and their concrete platform Domains.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Select installed-client Professional ownership and load only confirmed concrete platform modifiers.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At cross-platform-client-extension/SKILL.md:10, never protects the three-layer architecture: this Domain is neither standalone nor the primary Professional review owner. Its load condition also requires shared-client behavior and one or two concrete platform Domains.",
+          "authority_or_condition": "Valid when the selected Professional review evaluates shared-client behavior across confirmed concrete platform targets.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Keep this Domain as a modifier, load only confirmed platform Domains, and preserve Professional and platform-specific decision ownership.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:ea2266c66efbfb90e89b34ccd07cdd2b41bba23082717dc832ab80736b7ce86e",
+      "axis": "root",
+      "candidate_id": "ea2266c66efbfb90e89b34ccd07cdd2b41bba23082717dc832ab80736b7ce86e",
+      "candidate_fingerprint": "ff95a9abcd5c3407f583edcb77a47e28c26b2de54d21a33aa7eb0ce40c6de1e2",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 1,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [
+        "r20-semantic-runtime"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "false-positive",
+          "rationale": "The macOS Required Inputs list records artifact and channel evidence without mandating creation.",
+          "authority_or_condition": "When confirmed macOS behavior selects the domain modifier.",
+          "decision_owner": "macos-platform-extension Skill owner",
+          "mitigation": "Retain the evidence inventory and keep release artifacts under release authority.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "macOS lifecycle, authority, helper, architecture, artifact, and compatibility decisions require a visible evidence record.",
+          "authority_or_condition": "A confirmed macOS behavior change, with each listed dimension classified as affected, unaffected, or unavailable.",
+          "decision_owner": "macos-platform-extension",
+          "mitigation": "Scope evidence to supported artifacts and hardware while naming updater, signing, and mixed-version limits.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At macos-platform-extension/SKILL.md:24, artifact and channel are Required Input facts recorded with framework, lifecycle, sandbox, helper, and architecture boundaries. The line does not require creation of a separate review artifact or authorize distribution.",
+          "authority_or_condition": "Valid when the macOS Domain is selected and affected artifact, channel, architecture, lifecycle, sandbox, or helper topology evidence scopes the task.",
+          "decision_owner": "macos-platform-extension",
+          "mitigation": "Record applicable source evidence and unavailable hardware or distribution scope, exclude secrets, and keep release authorization with delivery-release-gate.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:f3e260c66abb126a5e0b4ff3efe4449e58d91a69a8347891334c99e3ede62684",
+      "axis": "root",
+      "candidate_id": "f3e260c66abb126a5e0b4ff3efe4449e58d91a69a8347891334c99e3ede62684",
+      "candidate_fingerprint": "994b1f989dd0b357e0ae58de9658d92d49fc619c6803cb7485be1f11d3090fd7",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Cloud-specific review decisions need this modifier while the selected Professional remains owner.",
+          "authority_or_condition": "When confirmed cloud policy materially changes a Professional review decision.",
+          "decision_owner": "cloud-platform-extension Skill owner",
+          "mitigation": "Load the cloud modifier and preserve Professional and release authorities.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Confirmed cloud behavior requires its Domain modifier while the Professional retains ownership.",
+          "authority_or_condition": "A selected Professional review whose decision materially depends on confirmed cloud policy or behavior.",
+          "decision_owner": "cloud-platform-extension",
+          "mitigation": "Load the cloud Domain and only active decision-family References; report live-state proof limits.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At cloud-platform-extension/SKILL.md:10, must load is scoped by selection of the cloud Domain modifier and follows explicit Professional ownership for infrastructure, backend, security, or reliability work. It does not make the Domain a Professional owner.",
+          "authority_or_condition": "Valid when a selected Professional review has cloud behavior or policy that materially changes its decision.",
+          "decision_owner": "cloud-platform-extension",
+          "mitigation": "Load the Domain only after selecting the Professional owner, preserve provider and service specificity, and avoid release authorization or local-Kubernetes routing.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:fcfce45c19bb5754060c28481787b61fd8dc723d2c49455ffb20177a3c190d97",
+      "axis": "root",
+      "candidate_id": "fcfce45c19bb5754060c28481787b61fd8dc723d2c49455ffb20177a3c190d97",
+      "candidate_fingerprint": "920aa37404e689f7a0a02b507652b350cb7bae6f0fd4129cc1a1217f52fec8e1",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "r20-semantic-runtime",
+        "r20-semantic-assurance",
+        "r20-semantic-boundary"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "r20-semantic-runtime",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Confirmed Windows behavior needs the platform modifier without transferring Professional ownership.",
+          "authority_or_condition": "When a selected review evaluates Windows desktop or service behavior.",
+          "decision_owner": "windows-platform-extension Skill owner",
+          "mitigation": "Load Windows as a modifier and retain the actual service Professional owner.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-assurance",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Confirmed Windows behavior requires its platform modifier without displacing Professional ownership.",
+          "authority_or_condition": "A selected Professional review evaluating Windows desktop or service platform behavior.",
+          "decision_owner": "windows-platform-extension",
+          "mitigation": "Load the Windows Domain, preserve the actual Professional owner, and report unsupported host paths.",
+          "review_after": null
+        },
+        {
+          "voter_id": "r20-semantic-boundary",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At windows-platform-extension/SKILL.md:10, must load is explicitly conditioned on Windows behavior under a selected Professional review. The Role text keeps desktop source changes and Windows services with their respective Professional owners.",
+          "authority_or_condition": "Valid when the selected Professional review evaluates Windows behavior and this focused Domain supplies platform-specific boundaries.",
+          "decision_owner": "windows-platform-extension",
+          "mitigation": "Load the modifier only for Windows behavior and preserve installed-client or service ownership with the named Professional.",
+          "review_after": null
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "semantic_dispositions": {
+      "false-positive": 5,
+      "rewrite": 0,
+      "time-bounded-exception": 0,
+      "valid-contextual-rule": 60
+    }
+  },
+  "limitations": [
+    "This majority is authoring lifecycle evidence only.",
+    "It cannot satisfy readability or professional-completeness formal attestations.",
+    "The record contains no generated single-source-of-truth disposition entries.",
+    "A rewrite majority requires a source edit before any resolved governance entry can exist."
+  ]
+}

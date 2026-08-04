@@ -1,0 +1,22 @@
+{
+  "changed_files": ["calculator.py", "repair_evidence.json"],
+  "final_diff": "allocation repair candidate",
+  "plan_vs_actual": "planned cents-preserving allocation; starter still rounds each part independently",
+  "re_review": {
+    "finding_id": "ALLOC-1",
+    "status": "failed"
+  },
+  "repair": {
+    "finding_id": "ALLOC-1",
+    "summary": "repair remainder distribution is still required"
+  },
+  "residual_risk": "rounding drift remains",
+  "review_finding": {
+    "id": "ALLOC-1",
+    "summary": "independent rounding loses cents"
+  },
+  "validation_evidence": {
+    "cases": ["10.00/3"],
+    "status": "failed"
+  }
+}

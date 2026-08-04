@@ -1,7 +1,5 @@
 # Linux Systems Benchmarks And Patterns
 
-## Benchmarks
-
 - systemd service, unit, timer, socket activation, and sandboxing documentation.
 - Linux man-pages for signals, procfs, capabilities, namespaces, cgroups, limits, sockets, and permissions.
 - CIS Linux Benchmarks for host hardening.

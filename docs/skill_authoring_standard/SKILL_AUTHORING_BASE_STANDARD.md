@@ -1,774 +1,239 @@
 # ChangeForge Skill Authoring Base Standard
 
-Status: normative  
-Version: v2  
-Applies to: every ChangeForge skill-like unit, including professional skills, foundation capabilities, and domain extensions  
-Primary goal: precise activation, low-cost `SKILL.md` loading, precise reference loading, measurable skill-only quality improvement
+## Purpose
 
----
+ChangeForge Skills are concise execution contracts for AI agents. They must improve a concrete engineering decision without requiring private product protocols, complete catalog loading, or source-repository knowledge at task runtime.
 
-## Reader Path
+## Quick Use
 
-- Start with [Purpose](#1-purpose), [Skill Type Model](#3-skill-type-model), and [Package Structure](#4-package-structure) for the baseline authoring contract.
-- Use [Reference Architecture Standard](#11-reference-architecture-standard) and [Evaluation Standard](#17-evaluation-standard) when changing body/reference boundaries.
-- Use the type-specific overlays for professional skills, foundation capabilities, and domain extensions after this base standard.
+1. Select the Skill layer and ownership boundary in [Required
+   Sections](#required-sections) and [Boundaries](#boundaries).
+2. Write the discovery contract using [Frontmatter](#frontmatter), then keep the
+   root within the [AI Readability Contract](#ai-readability-contract) and
+   [Decision Density](#decision-density).
+3. Put conditional depth behind the registry-owned [References](#references)
+   contract; never hand-edit generated projections.
+4. Confirm task/evidence semantics in [Task, Evidence, and Completion
+   Contracts](#task-evidence-and-completion-contracts), then run
+   [Validation](#validation).
 
-## 1. Purpose
+## Frontmatter
 
-This standard defines the universal authoring contract for efficient ChangeForge skills.
-
-A ChangeForge skill is efficient only when:
-
-1. The agent can decide whether to load it from `name` and `description`.
-2. `SKILL.md` contains only always-needed activation-time guidance.
-3. Deeper materials are loaded through explicit `references/`, `assets/`, and `scripts/` rules.
-4. Adjacent skills have clear boundaries and do not steal context from each other.
-5. The skill improves real task outcomes compared with no skill or the previous version.
-6. The skill remains effective in skills-only mode; hooks may assist but must not be required for core behavior.
-7. The skill is not merely structurally standardized; each section must be semantically useful.
-
----
-
-## 2. Normative Basis
-
-This standard is aligned with the Agent Skills model:
-
-- A skill is a directory with a required `SKILL.md`.
-- `SKILL.md` has YAML frontmatter followed by Markdown instructions.
-- At discovery time, the system primarily sees `name` and `description`.
-- After activation, the full `SKILL.md` is loaded.
-- `references/`, `scripts/`, and `assets/` are optional resources loaded only when needed.
-- `description` is the primary activation surface and must be evaluated with positive and negative prompts.
-- Output quality must be evaluated by comparing without-skill and with-skill runs.
-- Scripts must be non-interactive, self-contained, predictable, safe by default, and structured enough for agent use.
-
-This standard is stricter than the generic format because rd-skills has many adjacent skills, compiled capability references, multiple runtime profiles, optional hooks, and professional engineering expectations.
-
----
-
-## 3. Skill Type Model
-
-The base standard applies to all skill types. A type-specific overlay must also apply.
-
-| Skill type | `changeforge_kind` | Runtime role | Output shape |
-|---|---|---|---|
-| Professional skill | `professional-skill` | top-level owner, reviewer, gate, or orchestrator | task-level output |
-| Foundation capability | `foundation-capability` | narrow support capability, usually compiled into professional references | output fragment |
-| Domain extension | `domain-extension` | optional domain risk/constraint overlay | domain addendum |
-
-Hard rule:
-
-```text
-Professional skills may own tasks.
-Foundation capabilities return fragments.
-Domain extensions return addenda.
-```
-
-A foundation capability must not silently become a mini professional skill. A domain extension must not replace the primary professional owner.
-
----
-
-## 4. Package Structure
-
-Every skill directory must follow this shape:
-
-```text
-skill-name/
-  SKILL.md
-  references/
-  scripts/
-  assets/
-  evals/
-```
-
-Only `SKILL.md` is format-required, but every non-trivial skill must govern the optional directories.
-
-### 4.1 `SKILL.md`
-
-`SKILL.md` is the activation-time execution contract. It is loaded in full after activation. It must be compact, task-relevant, and free of low-frequency depth.
-
-### 4.2 `references/`
-
-`references/` contains deeper materials loaded by explicit conditions. References are precision mechanisms, not dumping grounds.
-
-### 4.3 `scripts/`
-
-`scripts/` contains non-interactive helpers for validation, transformation, checking, or generation.
-
-### 4.4 `assets/`
-
-`assets/` contains templates, schemas, example files, static resources, and large output formats.
-
-### 4.5 `evals/`
-
-`evals/` contains activation, output, reference-loading, trace, and composition evaluations.
-
----
-
-## 5. Frontmatter Standard
-
-Minimum required frontmatter:
+Use YAML frontmatter with only:
 
 ```yaml
 ---
 name: skill-name
-description: Use this skill when ...
-license: MIT
-changeforge_kind: professional-skill
-changeforge_version: 0.1.0
+description: Use when ...; do not use when ...
 ---
 ```
 
-### 5.1 `name`
+Names are stable lowercase kebab-case identifiers. Descriptions carry enough positive and negative routing signal for selection.
+Control and Professional descriptions target 220 characters and fail above 300;
+Foundation and Domain descriptions target 180 characters and fail above 260.
+Keep only the trigger, anti-trigger, and consuming profile or owner-Skill
+boundary in discovery metadata. Put workflow and evidence detail in the body.
 
-Requirements:
+## AI Readability Contract
 
-- 1-64 characters.
-- Must match the directory name.
-- Lowercase letters, numbers, and hyphens only.
-- No spaces, underscores, uppercase letters, leading/trailing hyphens, or consecutive hyphens.
-- Must not be generic: avoid `general`, `helper`, `workflow`, `expert`, `misc`, `common`.
+Apply one readability contract to every AI-facing sentence:
 
-### 5.2 `description`
+- ordinary sentence target: at most 24 words;
+- complex professional sentence target: at most 32 words;
+- hard gate: at most 40 words;
+- one list item carries one primary decision.
 
-The description is the startup trigger. It must describe activation conditions, not summarize the entire skill body.
+The 24-word and 32-word bands are review signals. More than 40 words fails
+validation. Split a list item when it contains independent `must`, `never`,
+`stop`, `route`, or execution obligations. Wrapped Markdown lines form one
+logical sentence and cannot bypass the gate.
 
-Required pattern by type:
+Fenced code, standalone commands, schema fields, table cells, and pure term
+enumerations are exempt. Inline code counts as one atom. A Markdown link counts
+its visible label. The gate covers the Main Control Prompt, Agent Profile
+instructions, descriptions, Skill roots, References, and compiled Layer 3
+projections.
+
+## Required Sections
+
+Every Professional and Domain root contains:
+
+- `Role`
+- `When To Use`
+- `Do Not Use`
+- `Required Inputs`
+- `Professional Decision Rules`
+- `High-Value Gotchas`
+- `Execution Checklist`
+- `Stop / Escalation Conditions`
+- `Output Contract`
+- `Targeted References`
+
+Every Foundation root contains this ordered core:
+
+- `Registry Trigger`
+- `Skill Role`
+- `High-Value Rules`
+- `Anti-Patterns`
+- `Targeted References`
+
+Foundation roots may add `Inputs`, `Execution Checklist`, `Stop Conditions`,
+`Output Contract`, or `Standards` in the validated order only when the section
+contains decision-bearing capability content. Generic task inputs,
+inspect/apply/return steps, evidence handoff, and return-to-owner prose are
+forbidden scaffolding, not authoring completeness.
+
+The section names are a machine-validated contract. Keep each section action-oriented and avoid duplicating the same workflow language across Skills.
+
+## Registry Contract
+
+Every Skill registry entry declares:
 
 ```text
-Use this skill when ...
-Use this capability when ...
-Use this domain extension when ...
+name
+path
+required_expertise_tags (required for every non-Control Skill)
+role_support
+trigger_signals
+anti_trigger_signals
+required_inputs
+required_inputs_by_role (required for multi-role Professional Skills)
+output_contract
+output_contract_by_role (required for multi-role Professional Skills)
+escalation_signals
+reference_index
 ```
 
-A description must contain:
+`required_expertise_tags` uses the closed taxonomy in
+`scripts/validation_utils.py`. Foundation entries include their group tag;
+Domain entries include their Skill-specific domain tag. The field exists only
+to bind reviewer qualification coverage and is not projected into built Skill
+content.
 
-1. User/task intent.
-2. Owned surface or narrow decision.
-3. Key trigger signals.
-4. High-risk or non-obvious activation cases.
-5. Near-miss boundary where useful.
+`reference_index` is a list of mappings, never legacy path strings:
 
-Forbidden patterns:
-
-```text
-Helps with ...
-Useful for ...
-General ...
-All changes ...
-Any code ...
-Everything about ...
-Best practices for ...
-Catch-all ...
+```yaml
+reference_index:
+  - path: references/checklist.md
+    type: targeted
+    load_when: cache invalidation or freshness changes need failure coverage
+    do_not_load_when: no cache behavior or ownership changes
+    required_by: [analysis-agent, task-agent]
+    required_output: [decision-record, evidence-gap]
 ```
 
-### 5.3 Description Startup Budget
-
-Because descriptions are loaded before activation, they have a stricter budget than body text.
-
-| Type | Target | Warning | Fail unless exception |
-|---|---:|---:|---:|
-| Professional skill | 220-360 chars | >360 | >450 |
-| Foundation capability | 160-320 chars | >360 | >450 |
-| Domain extension | 260-420 chars | >420 | >500 |
-| Router/orchestrator | 260-420 chars | >420 | >520 |
-
-Rules:
-
-- Descriptions must be trigger conditions, not body summaries.
-- A description may be long only when false-positive rejection requires it.
-- Long descriptions require an exception with reason and `review_after`.
-- The catalog total description budget must be tracked per profile.
-- A release must not increase catalog startup token cost by more than 10% without activation precision/recall evidence.
-
-### 5.4 Optional `compatibility`
-
-Use only when environment assumptions materially affect use.
-
-### 5.5 Optional `metadata`
-
-Use namespaced metadata. Do not store secrets, raw prompts, private content, local absolute paths, personal archives, or hook state.
-
-### 5.6 Optional `allowed-tools`
-
-Use only when the target client supports it. Do not treat it as a universal security boundary.
-
----
-
-## 6. Section Ordering Contract
-
-Section order is a semantic dependency graph. It is not cosmetic.
-
-Universal order:
-
-```text
-0. Frontmatter
-1. Mission / Scope
-2. Activation Boundary
-3. Conflict Resolution
-4. Required Context / Missing Information Policy
-5. Critical Gotchas
-6. Non-Negotiable Rules
-7. Mode or Decision Selection
-8. Risk Escalation
-9. Reference Loading Policy
-10. Execution Procedure
-11. Output Contract
-12. Evidence / Validation / Quality Gate
-13. Handoff / Return / Escalation
-14. Completion Criteria
-```
-
-Rules:
-
-- Activation boundary must precede execution.
-- Conflict resolution must precede reference loading.
-- Required context must precede mode or decision selection.
-- Mode/decision selection must precede reference loading.
-- Reference loading must precede execution procedure.
-- Output contract must depend on skill type and complexity.
-- Quality gate must validate the output and evidence.
-- Handoff must not create unowned work.
-
-Type-specific standards may rename sections but must preserve the dependency order.
-
----
-
-## 7. Section Semantic Quality Standard
-
-A skill does not pass merely because required section headings exist. Each section must meet semantic minimums.
-
-### 7.1 Mission / Scope
-
-Must state:
-
-- what the skill guarantees;
-- the risk it prevents;
-- the output it produces;
-- what it does not replace.
-
-### 7.2 Activation Boundary
-
-Must state:
-
-- direct triggers;
-- implicit triggers;
-- high-risk triggers;
-- weak signals that are insufficient when relevant;
-- explicit no-use conditions.
-
-### 7.3 Conflict Resolution
-
-Must state:
-
-- when this skill is primary;
-- when it becomes reviewer/gate/addendum only;
-- at least the most likely adjacent false positives;
-- when to hand off;
-- when to skip this skill.
-
-### 7.4 Required Context / Missing Information
-
-Must state:
-
-- required input/context;
-- blocking unknowns;
-- non-blocking assumptions;
-- ask/block/proceed conditions.
-
-### 7.5 Critical Gotchas
-
-Must include 3-7 high-leverage, non-obvious gotchas that change first action or prevent material damage.
-
-### 7.6 Non-Negotiable Rules
-
-Must be specific, enforceable, and testable. Avoid slogans.
-
-### 7.7 Mode or Decision Selection
-
-Must choose a path before reference loading. Avoid large equal-option menus.
-
-### 7.8 Reference Loading Policy
-
-Must include:
-
-- L1-L5 or equivalent complexity budget;
-- selected references;
-- forbidden/skipped reference rationale;
-- trigger evidence requirement;
-- reference budget;
-- no “load all references” instruction.
-
-### 7.9 Output Contract
-
-Must match skill type:
-
-- professional skill: task-level output;
-- foundation capability: fragment;
-- domain extension: addendum.
-
-### 7.10 Quality Gate
-
-Must be pass/fail, evidence-aware, and proportional to risk.
-
-### 7.11 Handoff / Return / Escalation
-
-Must name next owner/gate/reviewer and the evidence being handed off.
-
-### 7.12 Completion Criteria
-
-Must define the exact condition under which the skill’s role is complete.
-
----
-
-## 8. SKILL.md Body Budget
-
-| Skill type | Recommended body | Review threshold | Mandatory split threshold |
-|---|---:|---:|---:|
-| Professional skill | 180-220 lines | >250 | >300 |
-| Foundation capability | 90-160 lines | >220 | >250 |
-| Domain extension | 140-220 lines | >260 | >300 |
-| Router/orchestrator | 180-240 lines | >260 | >300 |
-
-Exceeding review threshold requires a tighten decision or recorded exception. Exceeding mandatory split threshold blocks “standardized complete” status unless the exception is justified by decision-critical content that cannot move to references.
-
----
-
-## 9. Content Density Standard
-
-Each paragraph must pass:
-
-```text
-Would the agent be significantly more likely to make a wrong decision without this paragraph?
-```
-
-Keep:
-
-- project/domain-specific constraints;
-- non-obvious gotchas;
-- required ordering;
-- default decisions;
-- risk escalation;
-- validation and evidence rules;
-- reference loading triggers;
-- concrete failure modes;
-- handoff constraints.
-
-Move to references:
-
-- long tables;
-- complete matrices;
-- detailed checklists;
-- full output schemas;
-- long benchmark explanations;
-- example catalogs;
-- rare edge cases;
-- detailed technology notes.
-
-Delete:
-
-- beginner tutorials;
-- generic best practices;
-- repeated “be careful” text;
-- duplicated workflow text;
-- tool-name lists without decision content;
-- content already covered by a selected reference.
-
----
-
-## 10. Critical Gotcha Exception
-
-Critical gotchas must remain in `SKILL.md` when:
-
-- the agent is unlikely to recognize the trigger;
-- the error is common and high-impact;
-- the gotcha changes the first action;
-- missing it can cause security, data, release, compliance, financial, privacy, or irreversible damage.
-
-Move gotchas to references only when:
-
-- the trigger is obvious;
-- the gotcha applies only to a narrow mode;
-- `SKILL.md` explicitly says when to load that reference.
-
----
-
-## 11. Reference Architecture Standard
-
-### 11.1 Mandatory `references/index.md`
-
-Any non-trivial skill with a `references/` directory must have:
-
-```text
-references/index.md
-```
-
-Required columns or equivalent structured fields:
-
-```text
-Reference
-Load When
-Do Not Load When
-Depends On
-Conflicts With
-Max Level
-Output Fragment
-```
-
-### 11.2 Reference Header
-
-Every reference must start with:
+Each mapping contains exactly `path`, `type`, `load_when`, `do_not_load_when`,
+`required_by`, and `required_output`. Conditions stay short and name the
+Reference subject. Roles and outputs must use the control-model vocabulary.
+Generic phrases such as `when needed` are invalid.
+
+For a multi-role Professional Skill, keep only role-neutral inputs in
+`required_inputs` and map every supported profile exactly once in
+`required_inputs_by_role`. The root `Required Inputs` section must use matching
+mode labels and must not require an artifact that the role cannot possess.
+The shared `output_contract` is the true union across supported modes. Map every
+supported profile exactly once in `output_contract_by_role`, and use matching
+role-labelled blocks in the root `Output Contract`; swapped role outputs fail
+validation.
+Professional entries may name Foundation or Domain candidates. Candidate naming makes guidance available; the current task signal decides whether it is loaded.
+
+## Decision Density
+
+Retain content that does at least one of the following:
+
+- improves implementation or review accuracy;
+- prevents expensive rework or a material failure;
+- finds defects automatic tests are likely to miss;
+- shortens the critical path;
+- unblocks a downstream task;
+- supplies an independent professional perspective.
+
+Delete or relocate general background, tutorials, generic software advice, repeated process prose, and theory that cannot change the current task.
+
+## References
+
+Use a targeted reference for deep, conditional material. The Registry is the
+single authority for the six-field Reference Contract v2. Each source
+`Targeted References` section with one or more contracts is exactly this
+six-column compact table, with one Registry-ordered row per contract:
 
 ```markdown
-# Reference Title
-
-## Load When
-...
-
-## Do Not Load When
-...
-
-## Inputs Expected
-...
-
-## Output Fragment
-...
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [checklist](references/checklist.md) | decision-checklist | task-specific load condition | task-specific anti-condition | task-agent, review-agent | checklist-result, residual-risk |
 ```
 
-### 11.3 Chain Depth
+Column order, header and separator bytes, cell spacing, labels, row order, and
+comma-space list joins are canonical. A literal pipe is written as `\|`; no
+other backslash escape is accepted. An empty index keeps the exact
+`- No task-local Reference is indexed for this Skill.` sentinel instead of an
+empty table. The former five-line record, bare links, manual loading prose, and
+generic conditions such as `when needed` are forbidden.
+Every path matches `references/(<slug>/)*<slug>.md`; each slug uses lowercase
+letters, digits, and single hyphen-separated words only. Whitespace, brackets,
+parentheses, backslashes, pipes, dot segments, and non-Markdown suffixes are
+invalid. End a source-EOF projection with exactly one newline, or use exactly
+two newlines before a following H2.
 
-Default allowed chain:
+Run `python3 scripts/sync-targeted-references.py --write` after changing a
+Reference contract. The default command checks drift without writing.
+`validate-skill-body-links.py` independently enforces exact source projection.
+Reference links remain relative and repository-valid. Never require an agent to
+read an entire reference directory.
 
-```text
-SKILL.md -> references/index.md -> selected reference
+This exact projection is Registry metadata. It remains AI-readable and source
+fingerprinted, but root content budgets and semantic detectors evaluate the
+authored decision surface without it. Bare links or manual loading prose do not
+receive that exclusion.
+
+Compiled Foundation and Domain references are build outputs. Do not hand-edit generated copies or paste their full content into Professional roots.
+
+## Task, Evidence, and Completion Contracts
+
+Every executable task uses Task Contract v2 from `src/control-model/core-contracts.json`.
+It names Task ID, Status, Owner, inputs, read/write scope, non-goals, expected
+output, acceptance, verification, Evidence Requirements, workspace and
+integration ownership, review ownership, and stop conditions. DAG nodes also
+name Dependencies. A Direct Task omits Dependencies when they have no meaning.
+
+Status is exactly `in_progress`, `blocked`, `partial`, or `completed`.
+Validation failure or unavailability, stale evidence, missing required review,
+unreviewed changed scope, or unresolved blocking findings cannot become
+`completed`. New work after `completed` starts a new Task ID.
+
+Evidence is a visible task-local Markdown Ledger in the handoff. Use the
+control-model fields and freshness rules; never create private persistence,
+a daemon, a runtime task-state engine, or a hidden protocol record.
+
+## Boundaries
+
+- Source stays under `src/`; built output stays under `dist/`.
+- Installed Skill folders contain root `SKILL.md`.
+- Do not install source registries or user-specific content.
+- Do not add internal task identities, private state, prompt transcripts, secrets, environment variables, or full command output to Skills.
+- Do not create a new Agent Profile for a thinking dimension.
+- Do not make a task agent rerun global routing.
+- Do not claim host tool enforcement that the host configuration cannot express.
+
+## Output and Escalation
+
+An output contract names the artifact, evidence, unverified scope, and residual risk expected from the Skill. Escalation conditions name concrete facts that require a user decision, analysis, a different owner, or a more specialized review.
+
+## Validation
+
+```bash
+python3 scripts/validate-skills.py
+python3 scripts/validate-capabilities.py
+python3 scripts/validate-domain-extensions.py
+python3 scripts/validate-registry.py
+python3 scripts/validate-skill-body-links.py
+python3 scripts/validate-skill-content-size.py
+python3 scripts/audit-skill-content.py --gate authoring
+python3 scripts/eval-routing.py
+python3 scripts/eval-skill-professionalism.py
 ```
 
-Avoid:
-
-```text
-SKILL.md -> reference A -> reference B -> reference C
-```
-
-Reference chain depth must be <= 1 unless an exception is recorded.
-
-### 11.4 Reference Selection Record
-
-Every selected reference must have:
-
-```text
-reference_path
-trigger_evidence
-decision_supported
-output_fragment_expected
-why_adjacent_reference_skipped
-```
-
-### 11.5 Reference Budget
-
-| Complexity | Reference limit |
-|---|---:|
-| L1 | 0-1 |
-| L2 | 1-2 |
-| L3 | 3-5 |
-| L4 | 6-10 |
-| L5 | 10-16 |
-
-Exceeding budget requires explicit rationale.
-
----
-
-## 12. Script Standard
-
-Scripts must be:
-
-- non-interactive;
-- self-contained;
-- safe by default;
-- deterministic enough for agent use;
-- structured in output;
-- clear in error messages;
-- idempotent or explicit about side effects;
-- protected with `--dry-run` / `--confirm` for destructive operations.
-
-Use scripts when:
-
-- commands are fragile;
-- outputs need parsing;
-- validations are repeated;
-- natural-language checking is unreliable;
-- agents frequently make mistakes.
-
----
-
-## 13. Output Contract Standard
-
-Output contracts must be tiered and type-correct.
-
-### 13.1 Compact
-
-Default for L1/L2:
-
-```text
-mode/decision
-selected owner/capability/extension
-evidence required
-references loaded/skipped
-result or next action
-residual risk
-```
-
-### 13.2 Standard
-
-Default for L3:
-
-```text
-classification
-context/assumptions
-selected path
-reference rationale
-validation plan/result
-review/repair status
-residual risk
-```
-
-### 13.3 Full
-
-Default for L4/L5 or explicit user request. Full templates belong in `assets/` or `references/`, not always-loaded body.
-
----
-
-## 14. Bulk Skill Standardization Quality Standard
-
-Bulk standardization is high risk because it can produce mechanical, malformed, or over-generalized sections.
-
-After any batch update across multiple skills, inspect for:
-
-1. broken sentences or residual fragments;
-2. identical generic paragraphs across many skills;
-3. “this skill”, “this file’s”, or “selected owner skill” boilerplate that hides real boundaries;
-4. descriptions inflated into body summaries;
-5. foundation capabilities becoming mini professional skills;
-6. domain extensions becoming standalone task owners;
-7. new sections that do not mention the skill’s actual domain;
-8. duplicated old sections and new overlay sections;
-9. reference policies that are generic and not tied to actual references;
-10. examples or benchmarks retained in body without load rationale.
-
-Recommended text-smell scan terms:
-
-```text
-re owns
-this file's
-this skill's surface
-selected owner skill needs focused rules
-broader implementation, review, release, or documentation work
-Do not use it as a standalone owner
-nearby material because it exists
-```
-
-A match is not automatically wrong, but requires review.
-
----
-
-## 15. Legacy Section Migration Standard
-
-When a skill is migrated to a new standard, every old section must be classified:
-
-```text
-retain in SKILL.md
-merge into new section
-move to references
-delete
-keep with exception
-```
-
-Rules:
-
-- Foundation capabilities must migrate professional-style routing coverage into fragment-oriented rules or references.
-- Domain extensions must migrate industry catalogs, risk matrices, and anti-examples into references unless they are short and always needed.
-- Professional skills must not re-host full foundation capability bodies.
-- Old sections are not grandfathered merely because they existed before.
-- The migration PR or review must include an old-section-to-new-location map for broad migrations.
-
----
-
-## 16. Type Weight Boundaries
-
-### 16.1 Professional Skill
-
-May be broad enough to own a task, but must not contain complete copies of all supporting capabilities.
-
-### 16.2 Foundation Capability
-
-Must be a narrow decision fragment. It must not own closure, route whole tasks, or produce full task output.
-
-### 16.3 Domain Extension
-
-Must be a domain addendum. It must not replace primary owner skill or close ordinary engineering work alone.
-
----
-
-## 17. Evaluation Standard
-
-### 17.1 Activation Eval
-
-Datasets:
-
-```text
-train
-validation
-holdout
-```
-
-Each must include should-trigger and should-not-trigger prompts. At least 30% of negatives should be near-misses.
-
-Metrics:
-
-```text
-activation_recall
-activation_precision
-false_positive_rate
-false_negative_rate
-near_miss_rejection_rate
-confused_with_skill
-multi_run_trigger_rate
-```
-
-### 17.2 Output Eval
-
-Compare:
-
-```text
-without_skill
-with_skill
-with_skill_selected_references
-previous_version
-```
-
-Metrics:
-
-```text
-assertion_pass_rate
-pass_rate_delta
-token_delta
-duration_delta
-reference_load_count
-wrong_reference_load_count
-missed_required_reference_count
-```
-
-### 17.3 Reference Loading Eval
-
-Metrics:
-
-```text
-required_reference_hit_rate
-forbidden_reference_avoid_rate
-average_reference_count
-reference_token_overhead
-reference_confusion_pairs
-```
-
-### 17.4 Trace Review
-
-Trace review must check whether the agent:
-
-- activated the correct skill;
-- skipped near-miss skills;
-- loaded required references;
-- avoided forbidden references;
-- inspected source before planning when required;
-- avoided full templates for low-risk tasks;
-- validated or disclosed evidence limits;
-- avoided relying on hooks for core skill behavior.
-
----
-
-## 18. Skill Standard Completion Gate
-
-A skill is not “standardized complete” until all four layers pass:
-
-```text
-structure pass
-semantic pass
-activation/reference/output eval pass
-content efficiency pass
-```
-
-A skill cannot be marked complete when any of the following remain unresolved:
-
-- description long-risk without exception;
-- `TIGHTEN_BODY` finding without owner/plan;
-- repeated phrase increase without rationale;
-- generic reference loading policy;
-- output contract does not match skill type;
-- foundation capability returns full task output;
-- domain extension returns standalone task output;
-- no activation eval for high-use top-level skills;
-- no reference-loading eval for reference-heavy skills;
-- section contains broken text or template remnants.
-
----
-
-## 19. Hook Boundary Standard
-
-Hooks are runtime support, not skill capability.
-
-Hooks may:
-
-- inject concise context;
-- observe bounded evidence;
-- warn about stage/risk/closure;
-- support CI/strict mode.
-
-Hooks must not:
-
-- replace skill content;
-- require normal agents to inspect hook state;
-- require agents to author internal protocol fields;
-- make the skill ineffective without hooks.
-
-Every skill must retain skills-only value.
-
----
-
-## 20. Lifecycle Governance
-
-Every skill change must declare:
-
-```text
-additive
-tightening
-split
-merge
-rename
-deprecate
-delete
-reference-move
-standardization-migration
-```
-
-Split/merge/rename/deprecate require migration notes and eval comparison.
-
----
-
-## 21. Universal Checklist
-
-```text
-[ ] frontmatter valid
-[ ] description trigger-first and within budget
-[ ] section order valid
-[ ] each section meets semantic minimum
-[ ] no mechanical template remnants
-[ ] critical gotchas inline
-[ ] required context policy actionable
-[ ] conflict resolution names real adjacent boundaries
-[ ] references/index.md exists when references exist
-[ ] reference load/no-load rules explicit
-[ ] output contract matches skill type
-[ ] old sections migrated or justified
-[ ] activation/output/reference evals exist as required
-[ ] trace review checks actual behavior
-[ ] skill-only mode remains effective
-[ ] completion gate satisfied
-```
+Run affected behavior fixtures, builds, and simulated installation checks when
+routing, references, packaging, or Profile support changes. A passing
+structural fixture does not prove wall-clock performance, production accuracy,
+or real-host Profile behavior.

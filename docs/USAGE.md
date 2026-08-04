@@ -1,419 +1,131 @@
 # Usage
 
-This guide explains how to use the `rd-skills` repository as the source for ChangeForge runtime skills. The shortest local flow is:
+ChangeForge coordinates engineering work through one control prompt, four
+bounded Agent Profiles, one primary Professional Skill per task, and only the
+Layer 3 guidance triggered by concrete risk or technology.
 
-```bash
-python3 scripts/quickstart.py --agent codex --scope user
-```
+Slash Skill syntax is `/skill-name`. Start with
+`/engineering-control-plane`. Give observable acceptance, a bounded scope, and
+a repository-native verification command when you know them. The main control
+agent chooses exactly one path; task agents do not reroute themselves.
 
-The detailed manual flow is:
+Some hosts do not provide native Slash UI or autocomplete. Put the literal
+`/engineering-control-plane` in the request text in that case. It expresses
+routing intent; it does not prove native Slash support.
 
-1. Build a runtime profile into `dist/`.
-2. Install the built output into an agent runtime.
-3. Ask the agent to use ChangeForge skills while planning, implementing, reviewing, testing, or releasing product/code changes.
-4. Use `doctor`, `upgrade`, and `uninstall` to manage the installation.
+## Copyable Direct Task Request
 
-Do not install `src/` directly. Runtime consumers use generated artifacts from `dist/` only.
-
-For the one-command build/install/doctor path, start with [QUICKSTART.md](QUICKSTART.md). This file remains the detailed operating guide and should be treated as the authority for installer options and workflow depth.
-
-## Choose A Profile
-
-Use the smallest profile that fits the target runtime:
-
-| Profile | Use When | Top-Level Runtime Skills |
-| --- | --- | --- |
-| `recommended` | Default for global/user installs. | 22 professional skills |
-| `full` | Project installs where domain extensions should be visible as top-level skills. | 22 professional skills plus 7 domain extensions |
-| `dev` | ChangeForge authoring, validation, or debugging only. | 22 professional skills plus 136 foundation capabilities plus 7 domain extensions |
-
-In `recommended` and `full`, foundation capabilities are compiled into professional skill `references/` and loaded selectively by the selected skill route. They are not installed as top-level global skills.
-
-Runtime-governance capabilities such as executor adapter protocol, repository
-graph analysis, project memory governance, validation broker, and execution
-trajectory analysis follow the same profile rule. They are selected by route or
-stage signal and compiled into professional references for `recommended` and
-`full`; only `dev` exposes them as top-level authoring/debugging skills.
-
-## Build Runtime Artifacts
-
-`scripts/quickstart.py` runs the build, installer, and doctor commands for the
-common local path. Use the manual commands below when debugging a specific step
-or when you need a custom installer option.
-
-Build the profile before installing it:
-
-```bash
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
-```
-
-The build writes deterministic runtime outputs under `dist/`, including agent-specific layouts for Codex, Claude Code, GitHub Copilot, and OpenAI API zip bundles.
-
-The build also refreshes Codex, Claude, and Copilot hook artifacts, plus the
-advisory route-preflight bootstrap fragment. For supported project/user
-installs, executable hooks are installed by default unless `--without-hooks` or
-`--activation-level none` is requested. The default hook profile is compact:
-professional context is injected only when useful, SDD material-choice,
-pre-edit structure, and permission checks run before real mutation surfaces,
-and one post-tool collector records read/edit/command/review evidence for Stop
-closure.
-
-Default professional-process modes are warn/monitor:
-`sdd_material_choice=warn`, `pre_edit_structure=warn`,
-`process_phase=monitor`, and `stop_closure=warn`. Hard blocking requires
-explicit strict mode, `CHANGEFORGE_CI_MODE=ci`, benchmark, or explicit
-maintainer policy except for supported safety/permission boundaries.
-Unsupported adapters record degraded closure instead of claiming enforcement.
-Hook runtime failures still fail open unless explicitly configured fail-closed.
+Use Direct Task for explicit, reversible, local work with known ownership and
+verification and no material public-contract, migration, authorization,
+privacy, security, financial, production, or irreversible risk.
 
 ```text
-dist/codex/project/.codex
-dist/claude/project/.claude
-dist/copilot/project/.github
-dist/universal/bootstrap/changeforge-route-preflight.md
+/engineering-control-plane
+
+Goal: Add an empty-string guard to `src/example.py` without changing its public API.
+Acceptance: Empty input returns the existing validation error; current valid-input behavior stays unchanged.
+Allowed scope: `src/example.py` and `tests/test_example.py` only.
+Verify: Run `python3 -m unittest tests.test_example`.
+Stop if the owner, public contract, or verification command differs from this request.
 ```
 
-Hook-capable quickstart scopes default to `--activation-level
-professional-injection`. Use `--without-hooks` to install skills only, or
-`--activation-level bootstrap` to install only the non-executable route
-preflight fragment.
+Replace the paths and test command with repository facts. Expected interaction:
+`main-control-agent` assigns one bounded task to `task-agent`; after the final
+edit, targeted validation runs and `review-agent` reviews the actual diff and
+every changed file. Blocking findings return for repair, fresh validation, and
+re-review.
 
-## Install For GitHub Copilot
+## Copyable Analyzed Work Request
 
-Install to the current user's Copilot skills directory:
-
-```bash
-python3 scripts/build.py --profile full
-python3 installers/install.py --agent copilot --scope user --profile full --dry-run
-python3 installers/install.py --agent copilot --scope user --profile full
-python3 installers/doctor.py --agent copilot --scope user --profile full
-```
-
-Install into a project so the skills travel with that project workspace:
-
-```bash
-python3 scripts/build.py --profile full
-python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full --dry-run
-python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full
-python3 installers/doctor.py --agent copilot --scope project --target /path/to/project --profile full
-```
-
-For project scope, `--target` is the project root. The installer writes the agent-specific skills subdirectory inside that project.
-
-## Install For Codex Or Claude Code
-
-Codex project install:
-
-```bash
-python3 scripts/build.py --profile full
-python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full --dry-run
-python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full
-python3 installers/doctor.py --agent codex --scope project --target /path/to/project --profile full
-```
-
-Codex user install:
-
-```bash
-python3 scripts/build.py --profile recommended
-python3 installers/install.py --agent codex --scope user --profile recommended --dry-run
-python3 installers/install.py --agent codex --scope user --profile recommended
-python3 installers/doctor.py --agent codex --scope user --profile recommended
-```
-
-Claude Code project install:
-
-```bash
-python3 scripts/build.py --profile full
-python3 installers/install.py --agent claude --scope project --target /path/to/project --profile full --dry-run
-python3 installers/install.py --agent claude --scope project --target /path/to/project --profile full
-python3 installers/doctor.py --agent claude --scope project --target /path/to/project --profile full
-```
-
-Claude Code user install:
-
-```bash
-python3 scripts/build.py --profile recommended
-python3 installers/install.py --agent claude --scope user --profile recommended --dry-run
-python3 installers/install.py --agent claude --scope user --profile recommended
-python3 installers/doctor.py --agent claude --scope user --profile recommended
-```
-
-## Use The Skills In An Agent
-
-After installation, the target agent runtime discovers the installed skill folders. If the runtime was already open and does not immediately see new skills, reload or restart that runtime.
-
-Optional hook/runtime support can provide adapter events, repository graph
-context packs, project memory warnings, validation freshness facts, and
-trajectory review evidence. These signals support routing and closure, but they
-keep `change-forge-router` as the fixed entry skill, do not auto-learn into
-skills, and do not turn repository intelligence into a whole-repository context
-dump.
-
-Start engineering work with `change-forge-router` for classification, routing, or risk sizing:
+Use Analyzed Work when ownership, impact, or validation is unknown; multiple
+modules are involved; or contract, migration, architecture, security, privacy,
+financial, production, or irreversible risk may exist.
 
 ```text
-Use change-forge-router to classify this request, select the minimum sufficient ChangeForge skill path, and list the evidence gates before implementation.
+/engineering-control-plane
+
+Desired behavior: Rename the customer status field used by the API, background jobs, and analytics exports.
+Known scope: The API and worker are in this repository; downstream consumers and migration order are unknown.
+Acceptance: Produce a source-backed compatibility and rollout plan, identify the owning surfaces, and start only the earliest safe reversible implementation slice.
+Verify: Map each acceptance item to a current test, schema check, or explicit evidence gap.
+Stop for a breaking consumer decision, production data change, destructive migration, or scope outside this repository.
 ```
 
-For engineering prompts in the target project, the expected runtime flow is:
+Expected interaction: `analysis-agent` reads the bounded source and returns an
+Engineering Brief with ownership, invariants, consumer/failure impact,
+acceptance-to-validation mapping, and the First Executable Slice. A Task DAG is
+used only when real dependencies, owners, or useful parallel work exist.
+Implementation proceeds only within the accepted slice and receives independent
+diff review.
 
-1. Clarify requirements before action: current behavior, desired behavior,
-   non-goals, constraints, acceptance/TDD signal, blocking questions,
-   assumptions, and proceed/block status.
-2. Inspect relevant target-project code, tests, configs, docs, existing
-   implementation, conventions, and likely call chain before writing a plan.
-3. Produce a TDD-oriented plan naming the failing, new, or updated test, eval,
-   validation command, acceptance check, or explicit not-verified risk.
-4. Split the work into actions and assign each action the most specific owner
-   professional skill or selected capability.
-5. Review each completed action with a different review skill or capability.
-6. If review finds issues, route repair to the owner or specialist, then
-   re-review before handoff.
-7. Hand off with the clarification record, inspected boundaries, TDD evidence,
-   action-to-skill map, review and repair record, validation evidence, residual
-   risk, next gate, and route context.
+## Copyable Review-Only Request
 
-Pure explanation, translation, or question-answering with no engineering action
-may skip the full engineering flow after stating that no engineering action is
-being taken.
-
-## Superpowers-style development flow
-
-The ordinary agent workflow is:
-
-1. Clarify requirement.
-2. Confirm design.
-3. Produce executable implementation plan.
-4. Execute one reviewable task at a time.
-5. Validate each task.
-6. Review spec compliance and code quality.
-7. Repair and re-review important findings.
-8. Finalize with validation evidence and residual risk.
-
-This flow is expressed as normal engineering behavior. Ordinary agents should
-not generate internal task graphs, update execution ledgers, repair hook state,
-or satisfy hidden reducer fields.
-
-Action ownership should match the work being performed, and the review owner
-must be different from the action owner. Common mappings:
-
-| Action | Owner | Review |
-| --- | --- | --- |
-| Requirement clarification | `change-intake-compiler` | `acceptance-criteria-builder` or `quality-test-gate` |
-| Acceptance / TDD | `acceptance-criteria-builder` | `quality-test-gate` |
-| Impact analysis | `change-impact-analyzer` | `change-forge-router` or `quality-test-gate` |
-| Planning | `task-dag-planner` | `change-impact-analyzer` or `quality-test-gate` |
-| Frontend implementation | `frontend-change-builder` | `quality-test-gate` or `ai-code-review-refactor` |
-| Backend implementation | `backend-change-builder` | `quality-test-gate` or `ai-code-review-refactor` |
-| API/data contract | `data-api-contract-changer` | `quality-test-gate` or `architecture-impact-reviewer` |
-| Data middleware | `data-middleware-change-builder` | `reliability-observability-gate` or `quality-test-gate` |
-| External integration | `integration-change-builder` | `security-privacy-gate`, `reliability-observability-gate`, or `quality-test-gate` |
-| Documentation | `change-documentation-gate` | `change-forge-router` or `quality-test-gate` |
-| Final handoff | `agent-execution-discipline` | `quality-test-gate` |
-
-Use more specific skills after the router entry when the work is already scoped:
+Use review-only when you want a non-modifying assessment of an existing
+implementation diff:
 
 ```text
-Use frontend-change-builder and quality-test-gate for this React form change.
+/engineering-control-plane
+
+Mode: Review only. Do not edit or repair files.
+
+Review the current implementation diff and every changed file against:
+- the acceptance source at `<replace-with-real-repository-path-or-supplied-artifact>`;
+- repository architecture and compatibility rules;
+- validation results supplied with the diff.
+
+Return blocking findings first with file/line evidence, then unverified scope and residual risk. If an actual diff is unavailable, report that boundary instead of inferring from a changed-file summary.
 ```
 
-```text
-Use backend-change-builder, data-api-contract-changer, security-privacy-gate, and quality-test-gate for this API permission change.
-```
+Before pasting, replace the acceptance-source placeholder with the real path or
+supplied artifact. If no acceptance document exists, replace that bullet with
+`- Acceptance: <observable criteria for this change>;` so the reviewer has an
+explicit contract instead of an invented file.
 
-```text
-Use delivery-release-gate and reliability-observability-gate to review this deployment plan.
-```
+Depending on host capability, `review-agent` consumes the native diff or a
+supplied actual-diff artifact. If neither is available, review is blocked or
+the host may use the bounded no-edit diff-export utility. The reviewer does not
+repair its own findings.
 
-Common entry points:
+## What You Should See
 
-| Skill | Use For |
-| --- | --- |
-| `change-forge-router` | Fixed entry for classifying a change and selecting the minimum sufficient skill path. |
-| `change-intake-compiler` | Turning raw stakeholder input, issues, PR notes, or bug reports into a structured change request. |
-| `change-impact-analyzer` | Mapping blast radius across product, UX, API, data, security, testing, release, and observability. |
-| `task-dag-planner` | Breaking a change into ordered, reviewable, testable tasks. |
-| `frontend-change-builder` | Frontend implementation, state, accessibility, API error handling, and browser behavior. |
-| `backend-change-builder` | Backend validation, auth, authorization, transactions, idempotency, jobs, and error handling. |
-| `data-api-contract-changer` | Schemas, migrations, DTOs, validation, compatibility, and API contracts. |
-| `quality-test-gate` | Risk-based unit, integration, contract, E2E, migration, rollback, and regression testing strategy. |
-| `security-privacy-gate` | Auth, object authorization, injection, secrets, dependency, privacy, and abuse-risk review. |
-| `delivery-release-gate` | CI/CD, Docker, Kubernetes, environment configuration, rollout, rollback, and release checks. |
+For implementation work, expect these observable stages:
 
-Domain extensions are top-level skills in `full` and `dev`. Use them when the work clearly involves AI/ML, big data, IoT/embedded, low-level systems, mobile, payment/trading, or Web3 concerns.
+1. Path and Skill selection: Direct Task or Analyzed Work, one primary
+   Professional Skill, and only named Layer 3 guidance.
+2. A bounded task contract or Engineering Brief with scope, acceptance,
+   verification, non-goals, and stop conditions.
+3. Implementation evidence from the latest material edit, including the actual
+   changed files and targeted validation.
+4. Independent review of the actual latest diff and all changed files.
+5. Repair plus fresh validation/re-review when a blocking finding exists.
+6. A visible closure handoff whose status is supported by current evidence.
 
-### Plan Depth Scales With Complexity
+No-edit validation or diff export uses before/after workspace change-set checks.
+A changed or unavailable no-edit check invalidates that utility result.
 
-`task-dag-planner` and `task-dag-decomposition` scale plan depth to the change, so
-planning never inflates context for a small change:
+## Decisions That Stay With You
 
-- **L1 and L2**: a minimal Plan Handoff is enough — files touched, validation
-  command, and residual risk, usually as `Files`, `Verify`, and `Residual Risk`.
-  Do not force a long task DAG onto a small change.
-- **L3, L4, and L5**: every task is an independently reviewable, agent-executable
-  unit — exact files to inspect and change, reuse and placement decision,
-  validation command and expected output, rollback note, and required completion
-  evidence. A task may not span more than one independent subsystem; split it
-  further if it does. Code-change tasks bind `implementation-structure-design`;
-  test tasks bind `quality-test-gate`. Placeholders (TBD, TODO, "write tests",
-  "handle edge cases", "similar to above") are rejected as unplanned work.
+ChangeForge can dispatch bounded work without asking permission. It stops for a
+concrete user-owned decision when work needs scope expansion, destructive or
+production action, privilege elevation, data migration, replacement of
+unmanaged content, or a choice not supported by evidence. It should ask one
+specific question, not repeat the same preparation loop.
 
-## OpenAI API Zip Output
+If a request crosses a new material risk or owner boundary, the task returns a
+Scope / Risk Escalation before editing outside the accepted scope.
 
-OpenAI API output is zip-only. Build or package the desired profile, then consume the generated zip bundles through the hosted skill workflow that expects one skill per zip:
+## Final Handoff Contents
 
-```bash
-python3 scripts/build.py --profile recommended
-python3 scripts/package.py --profile recommended
-python3 installers/install.py --agent openai-api --profile recommended --dry-run
-```
+An implementation handoff records status, task and owner, result, expected
+output, changed files, actual diff or host-native diff reference, commands,
+validation results, and last-edit/validation ordering. Its visible task-local
+Evidence Ledger identifies current `latest-material-edit` and
+`validation-passed` claims. Closure also reports independent review findings,
+unverified scope, residual risk, and the next step.
 
-Zip bundles are written to:
-
-```text
-dist/openai-api/zips/<profile>
-```
-
-Each zip contains exactly one top-level skill folder and one root `SKILL.md`.
-
-## Upgrade An Existing Install
-
-After pulling repository changes or editing source skills, rebuild the intended profile and upgrade the managed install:
-
-```bash
-python3 scripts/build.py --profile full
-python3 installers/upgrade.py --agent copilot --scope user --profile full --dry-run
-python3 installers/upgrade.py --agent copilot --scope user --profile full
-python3 installers/doctor.py --agent copilot --scope user --profile full
-```
-
-For project installs, pass the same project root used during install:
-
-```bash
-python3 installers/upgrade.py --agent copilot --scope project --target /path/to/project --profile full --dry-run
-```
-
-Upgrade replaces only ChangeForge-managed skill directories recorded in `.changeforge-install-manifest.json` and preserves unrelated skills.
-
-## Uninstall Managed Skills
-
-Uninstall removes skill directories listed in the ChangeForge manifest. For
-Codex, Claude, and Copilot project/user installs, it also removes
-ChangeForge-managed hook runtime files and hook config entries while preserving
-unrelated user hooks. Project uninstall removes standalone `.changeforge`
-bootstrap fragments installed by `--with-bootstrap`. Add `--keep-hooks` or
-`--keep-bootstrap` when you want to retain those support artifacts:
-
-```bash
-python3 installers/uninstall.py --agent copilot --scope user --dry-run
-python3 installers/uninstall.py --agent copilot --scope user
-python3 installers/uninstall.py --agent copilot --scope user --keep-hooks
-```
-
-For project installs:
-
-```bash
-python3 installers/uninstall.py --agent copilot --scope project --target /path/to/project --dry-run
-python3 installers/uninstall.py --agent copilot --scope project --target /path/to/project
-```
-
-## Authoring Workflow
-
-When changing ChangeForge itself, edit source content under `src/`, then validate, build, and reinstall from `dist/`:
-
-```bash
-python3 scripts/validate-src-invariants.py
-python3 scripts/validate-skills.py
-python3 scripts/validate-validation-broker.py
-python3 scripts/validate-hooks.py
-python3 scripts/validate-project-memory.py
-python3 scripts/validate-skill-efficacy-benchmarks.py
-python3 -m unittest discover -s tests
-```
-
-The full tiered command set lives in [VALIDATION.md](VALIDATION.md). Use that
-document for focused governance tests, repository graph/context-pack validation,
-skill behavior evals, full local release checks, and the live benchmark boundary.
-
-`scripts/audit-skill-content.py` writes the advisory content audit to
-`reports/skill-content-audit.md` and `reports/skill-content-audit.json`; it never
-fails the workflow. `scripts/validate-skill-content-size.py` warns when a `SKILL.md`
-body, section, table, or duplicated block crosses a budget defined in
-[SKILL_CONTENT_GOVERNANCE.md](SKILL_CONTENT_GOVERNANCE.md) without a recorded
-exception in `config/skill-content-exceptions.yaml`; it is warning-only by default
-and only exits non-zero with `--strict`. Neither tool blocks the build.
-
-`scripts/validate-stage-routing-architecture.py` is a blocking structural check: it
-verifies that the engineering stage model, the `engineering-stage-professionalism`
-launcher, the router Stage Professionalism contract and stage manifest, and the
-stage routes are present and that no language-deep checklist or stage matrix is
-copied into the router or launcher body. `scripts/audit-professionalism-coverage.py`
-is review-only: it writes `reports/professionalism-coverage.md` and
-`reports/professionalism-coverage.json` to flag stage/surface ownership gaps,
-over-long bodies, duplicated rules, and broad triggers, and exits 0 unless run with
-`--strict`. It does not block the build.
-
-`scripts/validate-runtime-reference-links.py` runs after the three profile builds
-and checks built `dist/universal/skills/{recommended,full,dev}` Markdown local
-links. Source/dev-only deep references remain source-authoring aids and are not
-treated as runtime-loadable links.
-
-Then use `installers/upgrade.py` for an existing managed install, or `installers/install.py --backup` when replacing a managed install intentionally.
-
-## Telemetry Review Workflow
-
-When the default hook runtime is installed for a supported scope, hooks record a
-runtime fact log in the user cache. You can review it offline and promote
-findings into golden cases.
-Telemetry never edits skill rules; promotion is always a human decision.
-
-```bash
-# Review real agent behavior and write a report plus suggestions:
-python3 scripts/review-agent-telemetry.py
-
-# Inspect one execution trajectory as markdown or JSON:
-python3 scripts/inspect-trajectory.py --repo-hash <repo_hash> --session <session-id>
-python3 scripts/inspect-trajectory.py --repo-hash <repo_hash> --format json
-
-# Turn one reviewed suggestion into a candidate (dry run, then write):
-python3 scripts/promote-telemetry-suggestion.py --id <suggestion-id> --suggestions <path>
-python3 scripts/promote-telemetry-suggestion.py --id <suggestion-id> --suggestions <path> --write
-
-# Score captured, human-reviewed agent outputs against expected route context:
-python3 scripts/eval-agent-behavior.py
-
-# Summarize telemetry from doctor (advisory only):
-python3 installers/doctor.py --telemetry-root ~/.cache/changeforge/telemetry
-```
-
-See [TELEMETRY.md](TELEMETRY.md) for the full data flow, trajectory inspector,
-privacy guarantees, and the route context contract.
-
-## Troubleshooting
-
-Run doctor first when a runtime does not see expected skills or a target looks inconsistent:
-
-```bash
-python3 installers/doctor.py --agent copilot --scope user --profile full
-python3 installers/doctor.py --agent copilot --scope project --target /path/to/project --profile full
-```
-
-Common fixes:
-
-| Symptom | Fix |
-| --- | --- |
-| No skills were installed. | Build the selected profile first with `scripts/build.py`. |
-| Install refuses to overwrite a matching directory. | Review the unmanaged conflict, then move it, uninstall the managed copy, or rerun with `--force` only when replacement is intentional. |
-| Doctor reports an old source version. | Rebuild and run `installers/upgrade.py` for the same agent, scope, target, and profile. |
-| Doctor reports duplicate skill names. | Keep one active copy in the intended scope and remove or uninstall the duplicate. |
-| The agent does not see newly installed skills. | Reload or restart the target agent runtime after confirming doctor passes. |
-
-## Safety Boundaries
-
-- Install only from `dist/`, never directly from `src/`.
-- Do not install raw registry files or `src/registry` as runtime content.
-- Do not create or install personal asset mappings.
-- Do not expect ChangeForge to ingest, scan, index, summarize, or map a personal knowledge corpus.
-- Treat `references/` as selected support material. The selected professional skill reads only the references required by its route and L1/L2/L3/L4/L5 loading policy.
+Repository evidence does not prove real-host enforcement or production
+correctness. Review the larger routes in the generated [Scenario
+Showcase](SHOWCASE.md) and their source prompts in the [examples
+index](../examples/README.md). See [AI control boundaries](AI_CONTROL_BOUNDARIES.md)
+for enforcement limits and [Subagent model](SUBAGENT_MODEL.md) for detailed role
+contracts.

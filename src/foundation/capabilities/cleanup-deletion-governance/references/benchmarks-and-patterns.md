@@ -11,15 +11,15 @@ Use this reference when a cleanup decision needs benchmark-backed calibration fo
 | Feature flag lifecycle | Delete stale flag and branches after rollout completion rather than leaving permanent conditional architecture. | Flag owner, exposure telemetry, removal trigger, old/new branch tests, config/docs cleanup. |
 | Generated artifact provenance | Delete generated output only through its source generator and rebuild path. | Generator source, rebuild command, diff review, package/install validation. |
 | Incident and degraded-mode readiness | Remove fallback or kill switch only when replacement, runbook, telemetry, and re-enable/forward-fix path are known. | Incident state, safety analysis, alert/runbook owner, rollback/re-enable path. |
-| Shortcut debt governance | Convert or delete shortcuts before their ceiling expires. | `changeforge-shortcut` ledger, owner, review date, upgrade trigger, validation signal. |
+| Shortcut debt governance | Convert or delete shortcuts before their ceiling expires. | Bounded code note or cleanup issue, owner, review date, upgrade trigger, validation signal. |
 
 ## Decision Patterns
 
 - **Delete now:** current source and caller search are clean, runtime/consumer evidence is fresh or explicitly not applicable, validators are mapped, rollback is feasible, and docs/release impact is handled.
 - **Keep with owner:** usage is present, telemetry is inconclusive, fallback is still required, compatibility window is active, generated source is unclear, or rollback limits are unacceptable.
-- **Convert before delete:** shortcut, temporary scaffold, or compatibility bridge still encodes behavior that must move to a stable owner before removal.
+- **Convert before delete:** when a shortcut, temporary scaffold, or compatibility bridge still encodes required behavior, move that behavior to a stable owner before removal.
 - **Stage the cleanup:** public contracts, migrations, package releases, or config removals need announce/measure/remove phases with release gates.
-- **Downgrade evidence:** graph, memory, reports, or prior validation are stale, selector-only, or created before final edits; require current-source confirmation and fresh validation.
+- **Downgrade evidence:** repository inspection and prior task evidence, reports, or prior validation are stale, selector-only, or created before final edits; require current-source confirmation and fresh validation.
 
 ## Anti-Patterns
 

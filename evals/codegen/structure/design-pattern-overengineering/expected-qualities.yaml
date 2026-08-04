@@ -7,21 +7,14 @@ focus:
   - single implementation strategy rejection
   - file and object granularity
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
     - design-pattern-selection
+    - minimal-correct-implementation
     - implementation-structure-design
-    - code-clarity-maintainability
-    - refactoring
-    - unit-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - AI review gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - A single current rule is implemented directly or as a module-local helper.
   - Strategy, factory, public interface, and abstract base class are rejected without current variation.

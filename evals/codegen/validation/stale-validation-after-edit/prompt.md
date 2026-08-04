@@ -2,11 +2,11 @@
 
 ## Task
 
-Create evidence for a validation broker that marks old validation stale after material code changes.
+Create evidence that old validation is treated as stale after material code changes and is rerun before final handoff.
 
 ## Context
 
-The benchmark verifies that Stop closure and final handoff do not treat stale validation as fresh evidence. This is an assertion-backed Codex live benchmark fixture for rd-skills core capability coverage. It is not a runtime content corpus and must not depend on network access, hidden archives, or user-specific state.
+The benchmark verifies that final handoff does not treat stale validation as fresh evidence. This is an assertion-backed codegen benchmark fixture for rd-skills core capability coverage. It is not a runtime content corpus and must not depend on network access, hidden archives, or user-specific state.
 
 ## Requirements
 
@@ -30,4 +30,4 @@ The benchmark verifies that Stop closure and final handoff do not treat stale va
 
 ## Completion Evidence
 
-The case passes only when assertions can inspect concrete files such as `CAPABILITY_EVIDENCE.md`, `process-trace.json`, `final.md`, `diff.patch`, or grading metadata and find the required capability evidence.
+The case passes only when assertions can inspect actual source, focused tests, the final diff, or a natural-language `HANDOFF.md` and find the required evidence.

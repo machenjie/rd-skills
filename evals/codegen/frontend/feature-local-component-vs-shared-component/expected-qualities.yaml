@@ -7,18 +7,14 @@ focus:
   - shared UI pollution prevention
   - user-visible tests
 route_hints:
-  skills:
-    - frontend-change-builder
-    - quality-test-gate
-  capabilities:
-    - implementation-structure-design
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: frontend-change-builder
+  layer3_skills:
     - page-component-decomposition
     - state-management-design
     - frontend-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Billing-specific component and state stay inside the billing feature.
   - Existing design primitives are reused.

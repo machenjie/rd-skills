@@ -11,8 +11,10 @@ Source of Truth:
 - Index stores title, body_summary, tags, language, visibility, and updated_at.
 
 Freshness:
-- Target index freshness under 2 minutes.
-- UI can show stale results but article detail rechecks source visibility.
+- Freshness objective is derived from article-update and permission-change
+  consequences and measured from source change to query-visible state.
+- UI may show stale results, but article detail rechecks current visibility before
+  disclosure.
 
 Reindex:
 - Build new index version in parallel, compare counts by visibility, then switch alias.

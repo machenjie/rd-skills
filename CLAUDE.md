@@ -1,69 +1,18 @@
 # Claude Code Instructions
 
-Claude Code should treat this repository as a ChangeForge Skill authoring project.
+Treat this repository as a ChangeForge Skill-authoring project. Author, validate, build, package, install, upgrade, and uninstall standard Skills and Agent Profiles only. Build output belongs in `dist/`; never install `src/` or source registries directly.
 
-This repository is used only to author, validate, build, package, install, upgrade, and uninstall ChangeForge skills. Runtime output is built into `dist/` and installed from build artifacts.
+Do not ingest, index, summarize, map, package, or install personal technical archives. Do not create `src/toolbox` or `registry/toolbox.yaml`. Do not add executable interception, internal task-state machinery, private evidence storage, hidden Skill packaging, or another sandbox/workspace manager.
 
-Do not install `src/` directly. Do not install `src/registry` as runtime content.
+Use the four bounded profiles from `src/agent-profiles/role-agents.json` and the authoritative control prompt in `src/control-prompts/main-control-agent.md`. Route one primary Professional Skill per task and load Foundation or Domain references only for concrete signals.
 
-Do not create personal knowledge mappings. Do not ingest, scan, index, summarize, map, package, or install personal technical asset libraries. Do not create toolbox mappings for personal notes, language notes, framework notes, database notes, system notes, security notes, or historical documents.
+Validate every Skill-system change before handoff with the complete canonical command set in `AGENTS.md` and `docs/VALIDATION.md`. If a validator is replaced, update both files and CI in the same change.
 
-Do not create `src/toolbox` or `registry/toolbox.yaml`.
-
-Validate every change to the skill system before handoff:
-
-```bash
-python3 scripts/validate-skills.py
-python3 scripts/validate-capabilities.py
-python3 scripts/validate-domain-extensions.py
-python3 scripts/validate-registry.py
-python3 scripts/validate-skill-body-links.py
-python3 scripts/validate-skill-content-size.py
-python3 scripts/audit-skill-content.py
-python3 scripts/eval-routing.py
-python3 scripts/eval-agent-behavior.py
-python3 scripts/eval-skill-professionalism.py
-python3 scripts/eval-skill-professionalism.py --coverage-matrix
-python3 scripts/eval-professional-benchmarks.py
-python3 scripts/validate-professionalism-regression.py
-python3 scripts/validate-professional-routing-coverage.py
-python3 scripts/validate-stage-routing-architecture.py
-python3 scripts/validate-hooks.py
-python3 scripts/eval-pressure-behavior.py
-python3 -m unittest discover -s tests
-python3 scripts/validate-codegen-benchmarks.py
-python3 scripts/run-codegen-benchmarks.py --limit 3
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
-python3 scripts/validate-runtime-reference-links.py
-python3 scripts/validate-installation.py
-```
-
-Run extended routing fixture comparison when updating or verifying captured actual router outputs:
-
-```bash
-python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
-```
-
-## Agent Execution Discipline
-
-Every agent-assisted change must obey these execution rules:
+Execution discipline:
 
 1. No evidence, no completion.
 2. No verified cause, no diagnosis.
-3. No repeated same-path retry after two failures.
-4. No local fix without same-pattern scan.
-5. No new structure without reuse and placement rationale.
-6. No handoff without risk, boundary, and validation result.
-
-These rules are behavior constraints only. Do not add entertainment rhetoric, corporate-flavor narration, user-shaming language, or runtime-specific PUA state files.
-
-## Hook Runtime Professional Injection
-
-Optional hooks may inject action-aware ChangeForge context for planning, read,
-edit, review, repair, test, permission, release, compaction, and subagent
-stages. This is support runtime behavior only. Build hook artifacts into
-`dist/` before installation, keep state outside project source, and never
-persist raw prompts, secrets, environment variables, full command output,
-personal archives, or toolbox mappings.
+3. Stop repeating a failed path after two attempts.
+4. Scan for the same pattern before calling a local fix complete.
+5. Explain reuse and placement before adding structure.
+6. Hand off with scope, commands, results, unverified areas, and residual risk.

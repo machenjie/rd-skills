@@ -1,0 +1,97 @@
+schema_version: 2
+kind: changeforge.release_routing_scenarios
+scenarios:
+  - id: bugfix
+    router: {trigger: bounded local backend bug fix, expected: {profile: task-agent, primary: backend-change-builder, layer3: [], review: ai-code-review-refactor}}
+    light_case_id: single-file-bug-fix
+    codegen_case_id: devex/bugfix-same-pattern-scan
+    control_path: direct
+    analysis: null
+    tasks: [{task_id: fix-and-scan, primary: backend-change-builder, layer3: [], review: ai-code-review-refactor}]
+    review: {primary: ai-code-review-refactor, layer3: []}
+  - id: module-feature
+    router: {trigger: analyzed implementation or repair with unknown owner or impact (`implementation-preparation`), expected: {profile: analysis-agent, primary: engineering-change-analysis, layer3: [repository-context-map, consumer-impact-analysis], review: architecture-impact-reviewer}}
+    light_case_id: single-module-feature
+    codegen_case_id: structure/object-method-encapsulation-placement
+    codegen_layer3: [domain-object-identification, implementation-structure-design]
+    control_path: analyzed
+    analysis: {primary: engineering-change-analysis, layer3: [repository-context-map, consumer-impact-analysis]}
+    tasks: [{task_id: place-and-implement, primary: backend-change-builder, layer3: [], review: architecture-impact-reviewer}]
+    review: {primary: architecture-impact-reviewer, layer3: []}
+  - id: parallel
+    router: {trigger: accepted artifact-reviewed authoritative Task DAG downstream integration tasks, expected: {profile: task-agent, primary: integration-change-builder, layer3: [contract-testing], review: ai-code-review-refactor}}
+    light_case_id: isolated-write-parallel-contract
+    codegen_case_id: devex/monorepo-affected-tests
+    control_path: direct
+    analysis: null
+    tasks:
+      - {task_id: graph-selection, primary: integration-change-builder, layer3: [contract-testing], review: ai-code-review-refactor}
+      - {task_id: cache-and-explanations, primary: integration-change-builder, layer3: [contract-testing], review: ai-code-review-refactor}
+      - {task_id: integrate-parallel-slices, primary: integration-change-builder, layer3: [contract-testing], review: ai-code-review-refactor}
+    review: {primary: ai-code-review-refactor, layer3: []}
+  - id: diagnosis
+    router: {trigger: failure diagnosis (`diagnosis-only`), expected: {profile: analysis-agent, primary: engineering-change-analysis, layer3: [failure-diagnosis], review: reliability-observability-gate}}
+    light_case_id: diagnosis-only
+    codegen_case_id: devex/test-failure-no-env-blame
+    control_path: diagnosis
+    analysis: {primary: engineering-change-analysis, layer3: [failure-diagnosis]}
+    tasks: []
+    review: null
+    review_exemption: diagnosis-only
+  - id: review
+    router: {trigger: general diff review, expected: {profile: review-agent, primary: ai-code-review-refactor, layer3: [], review: ai-code-review-refactor}}
+    light_case_id: review-only
+    codegen_case_id: structure/complexity-delete-list-review
+    codegen_layer3: [minimal-correct-implementation]
+    control_path: review-only
+    analysis: null
+    tasks: []
+    review: {primary: ai-code-review-refactor, layer3: []}
+  - id: repair
+    router: {trigger: bounded local backend repair, expected: {profile: task-agent, primary: backend-change-builder, layer3: [], review: ai-code-review-refactor}}
+    light_case_id: repair-and-rereview
+    codegen_case_id: review/repair-rereview-required
+    control_path: direct
+    analysis: null
+    tasks: [{task_id: repair-and-prove, primary: backend-change-builder, layer3: [], review: ai-code-review-refactor}]
+    review: {primary: ai-code-review-refactor, layer3: []}
+  - id: api-contract
+    router: {trigger: analyzed public API or data-contract implementation (`implementation-preparation`), expected: {profile: analysis-agent, primary: engineering-change-analysis, layer3: [api-contract-design, version-compatibility], review: architecture-impact-reviewer}}
+    light_case_id: api-contract-change
+    codegen_case_id: data-api/backward-compatible-api-field
+    control_path: analyzed
+    analysis: {primary: engineering-change-analysis, layer3: [api-contract-design, version-compatibility]}
+    tasks: [{task_id: compatible-api-change, primary: data-api-contract-changer, layer3: [api-contract-design, dto-schema-design, version-compatibility], review: architecture-impact-reviewer}]
+    review: {primary: architecture-impact-reviewer, layer3: []}
+  - id: migration
+    router: {trigger: analyzed stateful database cache queue or migration implementation (`implementation-preparation`), expected: {profile: analysis-agent, primary: engineering-change-analysis, layer3: [data-migration-design, transaction-consistency, release-rollback], review: delivery-release-gate}}
+    light_case_id: data-migration
+    codegen_case_id: data-api/large-table-online-migration
+    control_path: analyzed
+    analysis: {primary: engineering-change-analysis, layer3: [data-migration-design, transaction-consistency, release-rollback]}
+    tasks: [{task_id: online-migration, primary: data-middleware-change-builder, layer3: [data-migration-design, transaction-consistency, release-rollback], review: delivery-release-gate}]
+    review: {primary: delivery-release-gate, layer3: []}
+  - id: security-ssrf-boundary
+    router: {trigger: analyzed SSRF or URL-fetch security implementation (`implementation-preparation`), expected: {profile: analysis-agent, primary: engineering-change-analysis, layer3: [threat-modeling, web-security], review: security-privacy-gate}}
+    light_case_id: security-ssrf-boundary
+    codegen_case_id: security/ssrf-url-allowlist
+    control_path: analyzed
+    analysis: {primary: engineering-change-analysis, layer3: [threat-modeling, web-security]}
+    tasks: [{task_id: ssrf-boundary-control, primary: security-privacy-gate, layer3: [threat-modeling, web-security], review: security-privacy-gate}]
+    review: {primary: security-privacy-gate, layer3: []}
+  - id: cache-stampede-reliability
+    router: {trigger: analyzed cache stampede or cache-contention reliability implementation (`implementation-preparation`), expected: {profile: analysis-agent, primary: engineering-change-analysis, layer3: [concurrency-control, degradation-circuit-breaking, observability], review: reliability-observability-gate}}
+    light_case_id: cache-stampede-reliability
+    codegen_case_id: reliability/redis-cache-stampede-protection
+    control_path: analyzed
+    analysis: {primary: engineering-change-analysis, layer3: [concurrency-control, degradation-circuit-breaking, observability]}
+    tasks: [{task_id: stampede-control, primary: reliability-observability-gate, layer3: [concurrency-control, degradation-circuit-breaking, observability], review: reliability-observability-gate}]
+    review: {primary: reliability-observability-gate, layer3: []}
+  - id: release
+    router: {trigger: analyzed release implementation, expected: {profile: analysis-agent, primary: engineering-change-analysis, layer3: [release-rollback, version-compatibility], review: delivery-release-gate}}
+    light_case_id: release-rollback
+    codegen_case_id: delivery/rollback-migration-compatibility
+    control_path: analyzed
+    analysis: {primary: engineering-change-analysis, layer3: [release-rollback, version-compatibility]}
+    tasks: [{task_id: rollback-compatible-release, primary: delivery-release-gate, layer3: [release-rollback, ci-cd, version-compatibility], review: delivery-release-gate}]
+    review: {primary: delivery-release-gate, layer3: []}

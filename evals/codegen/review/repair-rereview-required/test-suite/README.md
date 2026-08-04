@@ -2,7 +2,7 @@
 
 ## Required Checks
 
-The pytest assertions scan candidate artifacts for the capability-specific evidence required by Repair Re-review Required. They check final code or evidence files as well as handoff-oriented artifacts such as `process-trace.json`, `final.md`, and `diff.patch` when present.
+The pytest assertions scan candidate artifacts for the capability-specific evidence required by Repair Re-review Required. They check final code or evidence files as well as handoff-oriented artifacts such as actual source, focused tests, the final diff, and `HANDOFF.md` when present.
 
 ## Fixtures
 

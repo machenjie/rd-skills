@@ -7,20 +7,11 @@ focus:
   - deterministic external dependency tests
   - fixture ownership
 route_hints:
-  skills:
-    - quality-test-gate
-    - backend-change-builder
-    - ai-code-review-refactor
-  capabilities:
-    - testability-seam-design
-    - implementation-structure-design
-    - unit-testing
-    - contract-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
-    - AI review gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: quality-test-gate
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Private helpers remain private and behavior is tested through public APIs or module contracts.
   - External dependencies use explicit fake, stub, mock, spy, contract, or integration seams.

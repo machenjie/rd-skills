@@ -1,0 +1,7 @@
+{
+  "cleanup_gate": ["all writers dual-write", "backfill complete", "rollback window closed"],
+  "phases": ["expand", "backfill", "cutover", "cleanup"],
+  "rollback": "switch readers to legacy_status before disabling normalized writes",
+  "stop_conditions": ["status mismatch", "audit loss", "error rate regression"],
+  "verification": ["mixed reader health check", "backfill checkpoint", "audit count"]
+}

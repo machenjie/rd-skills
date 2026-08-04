@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: backend-change-builder.
-Selected capabilities: language-idiom-enforcement.
+Selected Layer 3 Skills: language-idiom-enforcement.
 
 Hidden risks: idiom mismatch copied from other language; invented abstraction ignores repository convention; framework-incorrect naming or file layout.
 

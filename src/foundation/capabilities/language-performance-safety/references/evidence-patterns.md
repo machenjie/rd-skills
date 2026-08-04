@@ -1,6 +1,6 @@
 # Language Performance Evidence Patterns
 
-Use this reference when closure depends on current repository graph, project memory, execution trajectory, validation freshness, benchmark scope, tool permission boundaries, or production-scale evidence limits. Keep it as an evidence map, not a tuning guide.
+Use this reference when closure depends on current repository inspection, prior task evidence, observable action sequence, validation freshness, benchmark scope, tool permission boundaries, or production-scale evidence limits. Keep it as an evidence map, not a tuning guide.
 
 ## Runtime Claim-To-Evidence Map
 
@@ -14,21 +14,17 @@ Use this reference when closure depends on current repository graph, project mem
 | Unsafe, FFI, native, or lock-free code is safe | Invariant contract, ownership/lifetime rules, ABI/platform matrix, reviewer requirement, sanitizer/race/stress command, and unresolved risk | The inspected boundary has explicit safety obligations | All undefined behavior or platform-specific failure modes are eliminated |
 | Pattern hides IO, allocation, locks, or fan-out safely | Pattern impact map, side-effect boundary, timeout/retry/cleanup proof, allocation estimate, and rejected simpler option | The inspected abstraction keeps runtime effects visible | Future implementers or unrelated pattern uses remain safe |
 
-## Graph, Memory, And Execution Reconciliation
+## Current Evidence And Freshness
 
-- Treat old benchmarks, incident notes, profiler artifacts, project memory, and prior handoffs as discovery inputs until current source, caller graph, and fresh validation confirm them.
+- Treat old benchmarks, incident notes, profiler artifacts, prior task evidence, and prior handoffs as discovery inputs until current source, caller graph, and fresh validation confirm them.
 - Mark runtime evidence stale after edits to caller paths, async boundaries, allocation shape, pooling, cleanup, unsafe/native code, generated artifacts, workload fixtures, benchmark harnesses, or validation commands.
 - Record inspected and skipped boundaries: language/runtime version, caller graph, input source, resource owner, async scheduler, thread or worker pool, unsafe boundary, generated output, benchmark workload, and release gate.
 - Map every final performance or safety claim to a command, artifact, source path, owner review, or explicit not-verified residual risk.
 
 ## Tool Permission Boundary
 
-| Action | Boundary record |
-| --- | --- |
-| Source reads, registry search, report inspection, and markdown validation | Read-only local shell action; cite searched paths and avoid full output dumps |
-| Local benchmark, profile, race, sanitizer, stress, leak, or load command | State-mutating only for caches, temp files, reports, benchmark outputs, or build artifacts; cite command, exit code, artifact path, sandbox, write scope, and cleanup |
-| Heap dump, trace, flame graph, telemetry export, or production profile | High-risk data-reading action; require owner, bounded scope, timestamp, redaction, retention, and not-production-equivalent residual risk |
-| Native, FFI, sanitizer, or kernel-level diagnostic command | Privileged or platform-sensitive action; record platform, flags, generated files, crash risk, rollback, and secret/output redaction |
+- Heap dumps, traces, flame graphs, and production profiles require an owner, timestamped workload scope, sensitive-data redaction, retention limit, and explicit representativeness limit.
+- For retained native, FFI, sanitizer, or kernel diagnostics, record the applicable platform and flags, generated inputs, crash or stall risk, cleanup boundary, secret-bearing output handling, and untested platforms or flags.
 
 ## Handoff Evidence Shape
 
@@ -51,4 +47,4 @@ language_performance_evidence_closure:
 
 ## Blocking Conditions
 
-Block completion when a hot-path claim lacks fresh measurement or not-verified ownership, async/blocking risk lacks lag/cancellation evidence, unbounded allocation or fan-out has no cap, lifecycle cleanup is only assumed, unsafe/native code lacks invariant and sanitizer/race review, project-memory evidence is reused without current-source confirmation, or artifact-writing commands lack write-scope and rollback disclosure.
+Block completion when hot-path claims lack fresh measurement, async or blocking risks lack lag and cancellation evidence, or allocation or fan-out is unbounded. Also block assumed cleanup, unreviewed unsafe code, stale prior evidence, and artifact-writing commands without write-scope and rollback disclosure.

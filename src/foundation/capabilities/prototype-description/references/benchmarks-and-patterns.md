@@ -1,111 +1,24 @@
-# Prototype Description Benchmarks And Patterns
+# Prototype Decision Traps
 
-Load this reference only when drafting or reviewing a concrete prototype brief that needs benchmark detail, a reusable template, state coverage support, or anti-pattern review. Keep routine routing and small wording edits in `SKILL.md`.
+This reference isolates prototype decisions about uncertainty, fidelity, hierarchy, interaction, failure, responsive behavior, accessibility, and handoff limits.
 
-## Benchmark Anchors
+## Decision Matrix
 
-- **WCAG 2.2:** use 1.3.1 Info and Relationships for structural grouping, 1.4.1 Use of Color for error/success feedback, 2.1.1 Keyboard and 2.4.3 Focus Order for interaction paths, 3.3.1 Error Identification, 3.3.2 Labels or Instructions, and 3.3.4 Error Prevention for forms and destructive actions.
-- **Nielsen Norman Group:** use visibility of system status, progressive disclosure, specific error messages, and recovery-oriented copy to decide loading, empty, and failure behavior.
-- **Form design research:** order fields by user decision flow, not database order; prefer inline field errors near the control; preserve input after validation failure.
-- **Atomic Design:** name component reuse at the right level: primitive control, field group, section, dialog, page region, or full organism.
-- **Platform HIG conventions:** use Apple HIG, Material Design 3, Fluent 2, or local product conventions when platform-specific behavior is part of the request.
-- **ARIA APG:** use dialog, disclosure, combobox, tabs, menu button, and grid patterns when a prototype names those interactive widgets.
+| Prototype facet | Facts to establish | Accident signal |
+| --- | --- | --- |
+| Uncertainty and fidelity | Decision question, possible outcome, evidence, owner, fidelity, and excluded claims | Detail accumulates while no decision or evidence need is named |
+| Surface boundary | Actor, goal, trigger, preconditions, exit, route and data assumptions, and exclusions | Reviewers infer a complete journey or production contract from a bounded surface |
+| Content and action hierarchy | Decision-relevant content, action priority, current source, placeholder assumptions, and disclosure | Invented copy, data, or permissions are mistaken for approved product behavior |
+| Interaction and validation | Trigger, preconditions, feedback, validation, persistence, cancel, retry, undo, destructive effect, and outcome | An action looks complete while its failure, cancellation, unknown result, or consequence is absent |
+| Reachable states | Trigger, user meaning, system meaning, available action, ownership, and transition handoff | A generic state catalog hides the few transitions the decision actually depends on |
+| Responsive behavior | Scoped viewport and content, reading order, reflow, overflow, input method, focus, and unsupported cases | A desktop screenshot is treated as evidence for small, large, zoomed, or translated layouts |
+| Accessibility behavior | Semantics, names, keyboard path, focus, announcement, error association, and color-independent meaning | Visual review is reported as accessibility validation or certification |
+| Reuse and handoff | Existing component semantics and state fit, extend/local/new choice, design-system gap, owner, and implementation or validation handoff | A prototype invents a component or implies production readiness without a bounded reuse and handoff decision |
 
-## State Coverage Aid
+## Decision Limits
 
-| Surface type | Required states | Loading treatment | Empty treatment | Error treatment | Success treatment |
-| --- | --- | --- | --- | --- | --- |
-| Data list/table | idle, loading, empty, filtered-empty, error | Skeleton rows or bounded spinner | Cause-specific copy + CTA/reset | Error region + retry scope | Results are success |
-| Form create/edit | idle, submitting, field error, system error, success | Submit progress + disabled duplicate submit | Usually not applicable | Inline field errors + system recovery | Confirmation, redirect, or next action |
-| Multi-step wizard | idle per step, validating, submitting, blocked, success | Step-level progress | Usually not applicable | Per-step errors with preserved progress | Confirmation summary |
-| Destructive action | enabled, disabled, confirming, loading, completed, failed | Action-level loading and duplicate-submit guard | Not applicable | Inline/dialog error without closing unexpectedly | Consequence confirmation |
-| Search/filter | idle, loading, no results, filtered-empty, error | Result-region skeleton/spinner | No matches + clear filter | Retry while preserving query | Results are success |
-| Modal/dialog | closed, open, loading, error, confirming | Content-area loading | Rare; explain missing data if present | Error stays inside modal | Close or confirmation with focus return |
-
-## Prototype Brief Template
-
-```markdown
-mode_selected: surface brief | form or data-entry | async list-table | new pattern candidate | flow handoff | accessibility-critical
-
-source_evidence:
-  product_intent: ...
-  current_surface_or_flow: ...
-  design_system_or_pattern_reuse: ...
-  graph_memory_trajectory_judgment: accepted | rejected | not verified
-  freshness_limits: ...
-
-surface:
-  name: ...
-  user_goal: ...
-  trigger: ...
-
-information_hierarchy:
-  1. ...
-  2. ...
-  3. ...
-
-layout_regions:
-  - region: ...
-    purpose: ...
-
-actions:
-  primary: label -> result
-  secondary: label -> result
-  destructive: label -> confirmation -> consequence
-
-interaction_contract:
-  submit_edit_confirm_cancel_retry_undo: ...
-  persistence_and_reversibility: ...
-
-validation:
-  timing: on-submit | on-blur | on-change
-  field_errors: field -> rule -> message -> placement
-  input_preservation: ...
-
-states:
-  idle: ...
-  loading: ...
-  empty: ...
-  error_field: ...
-  error_system: ...
-  disabled: ...
-  success: ...
-
-accessibility:
-  keyboard_order: ...
-  focus_management: ...
-  role_label_live_region: ...
-  color_independence: ...
-
-design_system_reuse:
-  component: existing | extend | new
-  reuse_evidence_or_gap: ...
-
-changed_prototype_to_validation_map:
-  - decision: ...
-    evidence_or_test: ...
-    residual_risk: ...
-
-handoff_boundaries:
-  flow_modeling: ...
-  state_modeling: ...
-  design_system_review: ...
-  frontend_implementation: ...
-  product_design_decision: ...
-
-evidence_limits:
-  not_inspected_or_not_run: ...
-
-open_decisions:
-  - owner: ...
-    blocks_implementation: yes | no
-```
-
-## Anti-Pattern Review
-
-- A brief that starts from colors, cards, or gradients usually lacks task hierarchy; rewrite it around the user's decision order.
-- A brief that says "handle loading and errors" lacks implementation-grade state obligations; split loading, empty, field error, system error, disabled, success, and retry behavior.
-- A brief that says "use the design system" without naming candidate components creates inconsistent implementation; name accepted and rejected patterns.
-- A brief that says "accessible" without focus, keyboard order, role/label, live-region, and color-independence behavior is not accessible evidence.
-- A brief that embeds multi-page navigation, permission branches, or re-entry behavior should hand off to `user-flow-modeling` or `routing-navigation-design`.
-- A brief that names backend error behavior without API/error evidence should mark the decision open or hand off to `error-code-design` / `frontend-api-integration`.
+- Current product, content, route, state, component, and accessibility evidence selects the prototype detail; a named pattern or tool does not settle it.
+- Placeholder content, sample data, implied roles, and route assumptions remain labeled until their owning contracts approve them.
+- A walkthrough or review covers the shown states, paths, viewport, assistive assumptions, and participants; unexercised behavior remains unknown.
+- Prototype evidence can support a design or implementation decision without proving production behavior, performance, rollout safety, or accessibility conformance.
+- Final claims cite current prototype artifacts and scoped evidence; otherwise record `not_run` and the remaining uncertainty.

@@ -7,20 +7,13 @@ focus:
   - pure policy extraction
   - public behavior tests
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
+    - domain-object-identification
     - implementation-structure-design
-    - code-clarity-maintainability
-    - refactoring
-    - unit-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - AI review gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - OrderService remains an orchestrator instead of absorbing more rule branches.
   - Cancellation and refund decisions move to cohesive policy, rule, value-object, or domain owners.

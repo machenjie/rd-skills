@@ -1,90 +1,34 @@
 # Repository Persistence Benchmarks And Patterns
 
-Use this reference when a repository-persistence output needs more detail than the `SKILL.md` body can carry efficiently. Keep the main skill body focused on routing, evidence, and quality gates.
+Load this reference when repository contract, persistence mapping, transaction participation, query bounds, tenancy/filtering, or real-store proof changes. Repository is a port around aggregate/data access, not a generic query bucket.
 
-## Benchmark Anchors
+## Repository Contract Matrix
 
-- Fowler, Patterns of Enterprise Application Architecture: Repository mediates between domain and data mapping layers; Data Mapper keeps persistent store details outside domain objects.
-- Domain-Driven Design: repositories expose aggregate roots and preserve aggregate boundaries.
-- Clean Architecture: domain/application layer owns the repository interface; infrastructure implements it.
-- Unit of Work: coordinates multiple repository operations under one transaction.
-- ORM session/lazy-loading guidance: persistence session lifetime must not leak into services, controllers, or serializers.
-- Testcontainers-style integration testing: repository persistence behavior is proved against a real or equivalent database, not mocks.
-
-## Repository Method Contract Matrix
-
-| Method type | Return contract | Not-found or filtered behavior | Transaction participation | Evidence required |
-| --- | --- | --- | --- | --- |
-| `findById(id)` | `Option<DomainObject>`, nullable domain object, or typed `NotFound` | Distinguish absent, soft-deleted, tenant-filtered, or permission-filtered where relevant | Read-only; ambient or explicit read session stated | Caller expectations, filter policy, and not-found tests. |
-| `findBy(criteria)` single | Optional domain object or typed result | No multiple-match ambiguity | Read-only; consistency source stated | Uniqueness expectation and query predicate. |
-| `listBy(criteria, page)` | Paged result; never unbounded list | Empty list for no matches | Read-only; replica/primary consistency stated | Limit, order, cursor/offset policy, max page size. |
-| `save(aggregate)` | Saved aggregate or command result | N/A | Ambient Unit of Work or explicit transaction required | Mapper round trip, constraint/error translation, rollback behavior. |
-| `saveAll(batch)` | Batch result with per-item semantics | N/A | Transaction/batch behavior stated | Batch size, partial failure policy, performance risk. |
-| `remove(id)` | Idempotent success or typed `NotFound` | Must state idempotent-vs-error semantics | Write transaction required | Soft-delete/hard-delete rule and audit/tenant filter. |
-| `exists(criteria)` | Boolean | False includes absent/filtered unless distinguished | Read-only | No existence leak for protected resources. |
-| `count(criteria)` | Exact or approximate count | Zero for no matches | Read-only; replica/primary stated | Exactness, cost, stale-read tolerance. |
-
-## Interface And Implementation Pattern
-
-```typescript
-// Interface: defined in domain/application layer, no ORM types.
-interface OrderRepository {
-  findById(id: OrderId): Promise<Order | null>;
-  listActiveByCustomerId(
-    customerId: CustomerId,
-    page: PageRequest
-  ): Promise<Page<Order>>;
-  save(order: Order, tx?: UnitOfWork): Promise<Order>;
-}
-
-// Implementation: infrastructure layer owns SQL/ORM/session details.
-class PostgresOrderRepository implements OrderRepository {
-  constructor(private readonly db: DatabaseConnection) {}
-
-  async findById(id: OrderId): Promise<Order | null> {
-    const row = await this.db.oneOrNone(
-      "SELECT * FROM orders WHERE id = $1 AND deleted_at IS NULL",
-      [id.value]
-    );
-    return row ? OrderMapper.toDomain(row) : null;
-  }
-
-  async save(order: Order, tx?: UnitOfWork): Promise<Order> {
-    try {
-      const row = OrderMapper.toRecord(order);
-      const saved = await (tx ?? this.db).upsert("orders", row);
-      return OrderMapper.toDomain(saved);
-    } catch (error) {
-      if (isUniqueConstraintViolation(error)) {
-        throw new DuplicateOrderIdError(order.id);
-      }
-      throw new PersistenceFailure("Failed to save order", { cause: error });
-    }
-  }
-}
-```
-
-## Boundary Review Checklist
-
-- Interface lives in domain/application layer; implementation lives in infrastructure.
-- Public contract uses domain IDs/value objects or stable DTOs, not ORM entities.
-- Mapper owns null/default/enum/status conversion and sensitive-field exclusion.
-- No query builder, session, entity manager, lazy proxy, or raw row escapes.
-- Each method names not-found/filtered behavior and max result size.
-- Write methods name transaction participation and rollback behavior.
-- Storage exceptions map to domain/application errors.
-- Tenant, permission, and soft-delete filters are stated where relevant.
-- Read models are called queries/projections, not aggregate repositories.
-- Integration proof uses real or equivalent database for persistence risks.
-
-## Anti-Patterns To Reject
-
-| Anti-pattern | Failure | Safer treatment |
+| Surface | Contract decision | Failure/proof |
 | --- | --- | --- |
-| Repository returns ORM entity or lazy collection | Callers trigger hidden queries and session errors. | Return domain object/DTO with required data loaded. |
-| Repository returns query builder | Query rules scatter across callers. | Expose named methods with explicit semantics. |
-| Interface defined in infrastructure | Domain depends on storage implementation. | Define port in domain/application; implement in infrastructure. |
-| `findAll()` without pagination | Dev works; production returns millions of rows. | Require page/cursor and stable order. |
-| Raw storage exception leaves repository | Controllers parse DB errors or leak internals. | Translate to domain/application failure. |
-| Repository starts hidden transaction | Service rollback does not cover all writes. | Participate in Unit of Work or explicit caller transaction. |
-| Mocked repository proves persistence behavior | Constraints, rollback, SQL, and filters are untested. | Use real/equivalent DB integration test for persistence seam. |
+| Single lookup | Distinguish absent, filtered, deleted, wrong-tenant, or permission-hidden only when callers need that distinction. | No existence leak; uniqueness/query predicate and caller behavior are tested. |
+| Collection/query | Bounded result, stable order/pagination, exactness/staleness and primary/replica source are explicit. | Reject unbounded `findAll`, hidden N+1/lazy loads, or unspecified count cost. |
+| Save/batch | Return/result and per-item/partial-failure semantics are named. | Mapper round trip, constraints, transaction, rollback, and batch/load behavior. |
+| Remove | Choose idempotent success vs typed absence plus soft/hard-delete, audit, tenant, retention and cascade behavior. | Retry/replay does not delete the wrong state or hide failure. |
+| Exists/count | State whether filtered/approximate/stale results are acceptable. | Protected-resource existence and expensive scans do not leak or overload. |
+
+## Boundary And Transaction Rules
+
+- Define the interface in the owning domain/application boundary when dependency inversion is real; infrastructure owns ORM/SQL/session/client details.
+- Keep ORM entities, lazy proxies, sessions, query builders, raw rows, and storage exceptions behind the selected public boundary. If a storage abstraction is intentionally public, name its accepted lifecycle, query, and compatibility effects.
+- When persistence and domain/query shapes differ, an owned mapper or assembler preserves identity, null/default/enum/status semantics and sensitive-field exclusion; document any intentional shared type.
+- Name Unit of Work and transaction ownership from the current architecture. Writes whose accepted use case requires joint rollback participate through its explicit or repository-standard convention and do not hide independent commits.
+- Tenant/permission/soft-delete predicates and consistency source are enforced in the query boundary where relevant; read projections are named as queries/projections rather than aggregate repositories.
+
+## Evidence And Routing
+
+| Risk | Required proof | Limit |
+| --- | --- | --- |
+| Mapping/constraint | Real or equivalent store round trip, not-found/filter, unique/FK/check and typed error translation. | Mocks do not prove ORM, SQL, serialization, or constraint behavior. |
+| Transaction | Commit/rollback across affected repositories, conflict/deadlock/error path, and outbox participation when present. | One happy save does not prove atomicity or retry safety. |
+| Query | Generated SQL/query plan or representative log, bounds/order/pagination, tenant/delete filters, and expected cardinality. | Local tiny data does not prove production cost or replica freshness. |
+| Freshness | Current interfaces, implementations, mappers, callers, migrations, tests and same-pattern repositories inspected after final edit. | Graph proximity and prior tests do not prove hidden/dynamic callers. |
+
+Route domain ownership to `domain-logic-implementation`, model translation to `model-boundary-mapping`, query/index depth to `indexing-query-optimization`, atomicity to `transaction-consistency`, and API-visible absence/errors to `data-api-contract-changer`.
+
+Reject repositories that return ORM/query builders, infrastructure-owned domain ports without rationale, unbounded lists, hidden transactions, raw storage failures, business rules in SQL/mapper code, mocked-only persistence proof, or tenant/delete filters left to callers.

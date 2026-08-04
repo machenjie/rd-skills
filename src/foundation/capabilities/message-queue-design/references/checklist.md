@@ -1,10 +1,16 @@
-# Message Queue Design Checklist
+# Message Queue Proof Checklist
 
-- Define producers, queues or topics, consumers, and message schema.
-- State delivery guarantee, acknowledgement point, and ordering scope.
-- Define idempotency keys and duplicate-message behavior.
-- Define retryable, non-retryable, delayed, and poison message handling.
-- Define retry backoff, max attempts, dead-letter routing, and replay criteria.
-- Define backpressure behavior for producers and consumers.
-- Define observability for lag, age, throughput, failures, retries, and dead letters.
-- Test duplicate, delayed, out-of-order, failed, dead-letter, and replay paths.
+- Prove producer, broker or queue, schema and version, consumer, delivery guarantee, ownership or visibility model, and ordering scope from actual configuration.
+- Prove acknowledgement, offset, or visibility timing relative to the durable business effect; consider manual commit when automatic behavior can lose required work, and record the broker's actual ownership semantics.
+- When handler duration can exceed delivery ownership or visibility, derive extension, renewal, cancellation, and shutdown behavior from broker and workload evidence.
+- Treat expiry or rebalance overlap as concurrent delivery.
+- Derive ownership checks, fencing, duplicate-safe effects, or reconciliation from the side-effect guarantees.
+- For duplicate delivery, redelivery, and replay, select natural idempotence, durable outcome reuse, conditional effects, or reconciliation from business identity, result reuse, and distinguished broker, caller, and handler retry ownership.
+- For schema evolution or replay, validate old messages against mixed deployed consumers and current business semantics. When replay can outlive broker or deduplication retention, define duplicate-safe effects and reconciliation without expired deduplication state.
+- Select retry or no-retry from classified transient, permanent, malformed, unauthorized, dependency-limited, and poison failures, with attempts, delay, backoff, and jitter derived from provider and workload evidence.
+- When failure is terminal or retry is exhausted, name an owned, observable disposition selected from broker semantics and policy.
+- Provide retention, repair, or replay evidence when the disposition depends on it.
+- When terminal records enter a DLQ or quarantine, derive minimization, redaction, encryption or isolation, access, retention, deletion, audit, inspection, repair, replay, and disposal controls from classified payload, metadata, policy, and authority.
+- Prove ordering impact and unblock behavior when a failed message can stall a partition, session, group, or workflow.
+- When lag or overload risk is triggered, determine whether partition-key skew or a hot partition contributes. Prove applicable producer or consumer backpressure, lag or age limits, overload or degradation behavior, and telemetry tied to an owned operational action.
+- Select tests from paths triggered by the actual broker, topology, and effects. Applicable paths include duplicate, delayed, out-of-order, concurrent-delivery, crash/acknowledgement, poison, terminal, lag, outage, old-schema, late-replay, and version-skew behavior. Name unverified production or provider limits.

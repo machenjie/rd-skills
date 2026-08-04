@@ -1,0 +1,89 @@
+name: Formal Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  professional-contract-portability:
+    name: Professional contract portability (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Verify portable Professional and detector contracts
+        run: >-
+          python3 -m unittest
+          tests.scripts.test_professional_completeness_carry_forward.ProfessionalReviewContractFingerprintTests.test_cross_version_portable_golden
+          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_v3_cross_version_portable_golden
+          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_fingerprint_binds_repository_source_operator_and_constant
+          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_fingerprint_follows_comprehension_and_cross_module_closure
+          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_source_catalog_fails_closed
+          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_payload_excludes_code_objects_and_external_source
+          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_loaded_names_respect_python_lexical_scope
+          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_skill_detector_excludes_shadowed_external_import_binding
+          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_skill_detector_includes_reachable_class_source
+          tests.scripts.test_audit_skill_content.AuditSkillContentDeterminismTests.test_skill_detector_contract_is_deterministic_and_covers_report_fields
+          tests.scripts.test_audit_skill_content.AuditSkillContentDeterminismTests.test_skill_detector_fingerprint_binds_repository_source
+
+  validate-release:
+    needs: professional-contract-portability
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install validation dependencies from isolated source
+        run: |
+          install_root="$(mktemp -d)"
+          git archive --format=tar HEAD | tar -xf - -C "$install_root"
+          python3 -m pip install --disable-pip-version-check "$install_root"
+
+      - name: Core Principles formal release outcome gate
+        run: python3 scripts/eval-core-principles.py --gate formal-release
+
+      - name: Independent expert review and Root lifecycle gate
+        run: python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review
+
+      - name: Documentation and productization release checks
+        run: |
+          python3 scripts/validate-examples.py
+          python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md --check
+          python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md --check
+          python3 scripts/validate-marketplace-index.py --profile recommended
+          python3 scripts/validate-marketplace-index.py --profile full
+          python3 scripts/validate-marketplace-index.py --profile dev
+          python3 scripts/validate-productization-assets.py
+          python3 scripts/validate-open-source-readiness.py --require-pass
+
+      - name: Unit tests and code-generation release checks
+        run: |
+          python3 -m unittest discover -s tests
+          python3 scripts/validate-codegen-benchmarks.py
+          python3 scripts/run-codegen-benchmarks.py --limit 3
+
+      - name: Quickstart dry runs
+        run: |
+          python3 scripts/quickstart.py --agent codex --scope user --dry-run
+          python3 scripts/quickstart.py --agent claude --scope project --target /tmp/changeforge-quickstart-claude --dry-run
+          python3 scripts/quickstart.py --agent copilot --scope project --target /tmp/changeforge-quickstart-copilot --dry-run
+          python3 scripts/quickstart.py --agent openai-api --dry-run
+
+      - name: Generated artifact freshness
+        run: git diff --exit-code

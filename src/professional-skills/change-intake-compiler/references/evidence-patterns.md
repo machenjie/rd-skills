@@ -8,7 +8,7 @@ Use this reference when intake closure depends on raw-input-to-field mapping, st
 - **Current behavior:** record observable evidence, repro command or condition, screenshot/log/report path when available, and what remains unverified.
 - **Desired behavior:** record outcome-first statement, implementation choices moved to constraints/options, non-goals preserved, and acceptance signal.
 - **Stakeholder conflict:** record conflicting sources, affected contract/risk, blocking status, owner, deadline, and safe assumption only when non-blocking.
-- **Scope boundary:** record affected product surfaces, skipped specialist gates with rationale, residual unknowns, and next gate.
+- **Scope boundary:** record affected product surfaces, skipped specialist gates with rationale, residual unknowns, and recommended next step.
 
 ## Intake Field Map
 

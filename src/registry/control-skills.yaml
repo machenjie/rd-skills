@@ -1,0 +1,76 @@
+---
+schema_version: 3
+kind: changeforge.control_skills
+description: One dispatch-only control skill for bounded engineering coordination.
+control_skills:
+  - name: engineering-control-plane
+    path: src/control-skills/engineering-control-plane
+    role_support: [main-control-agent]
+    trigger_signals:
+      - engineering question, analysis, diagnosis, implementation, repair, review, validation, or release request
+      - work benefits from bounded role separation or independent review
+    anti_trigger_signals:
+      - task already belongs to one dispatched analysis, task, or review agent
+      - request requires the current agent to implement or review directly
+    required_inputs:
+      - user request
+      - known scope and constraints
+      - host workspace isolation capability when parallel writes are considered
+      - host diff, validation, and utility no-edit enforcement modes
+    output_contract:
+      - selected Direct Task or Analyzed Work path
+      - bounded profile and Skill assignments
+      - progress, validation, review, repair, and closure summary
+    escalation_signals:
+      - user-visible behavior or scope choice
+      - destructive, production, privileged, or irreversible operation
+      - evidence gap that makes safe continuation impossible
+    reference_index:
+      - path: "references/execution-level-contract.md"
+        type: targeted
+        load_when: "check execution level before routing"
+        do_not_load_when: "no repo answer or completed legacy with no work"
+        required_by: ["main-control-agent"]
+        required_output: ["routing-decision"]
+      - path: "references/professional-skill-router.md"
+        type: targeted
+        load_when: "select one Professional Skill"
+        do_not_load_when: "capsule already fixes route"
+        required_by: ["main-control-agent"]
+        required_output: ["routing-decision"]
+      - path: "references/direct-task-template.md"
+        type: template
+        load_when: "Direct Task needs handoff"
+        do_not_load_when: "task uses Analyzed Work"
+        required_by: ["main-control-agent"]
+        required_output: ["task-contract"]
+      - path: "references/engineering-brief-template.md"
+        type: template
+        load_when: "analysis produces Engineering Brief"
+        do_not_load_when: "accepted Engineering Brief exists"
+        required_by: ["analysis-agent"]
+        required_output: ["engineering-brief"]
+      - path: "references/task-dag-template.md"
+        type: template
+        load_when: "Task DAG plans dependencies"
+        do_not_load_when: "bounded task skips DAG"
+        required_by: ["analysis-agent"]
+        required_output: ["task-dag"]
+      - path: "references/implementation-handoff-template.md"
+        type: template
+        load_when: "accepted handoff starts implementation"
+        do_not_load_when: "no implementation task exists"
+        required_by: ["task-agent"]
+        required_output: ["implementation-handoff"]
+      - path: "references/utility-capsule-template.md"
+        type: template
+        load_when: "utility needs no-edit capsule"
+        do_not_load_when: "no utility operation exists"
+        required_by: ["task-agent"]
+        required_output: ["utility-handoff"]
+      - path: "references/review-handoff-template.md"
+        type: template
+        load_when: "review requires independent handoff"
+        do_not_load_when: "no review task exists"
+        required_by: ["review-agent"]
+        required_output: ["review-handoff"]

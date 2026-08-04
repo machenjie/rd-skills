@@ -1,6 +1,6 @@
 Selected stage: implementation-planning.
 Selected professional skill: domain-impact-modeler.
-Selected capabilities: senior-programming-judgment-core, business-semantic-control-plane, business-rule-extraction, state-machine-modeling, validation-broker, implementation-structure-design.
+Selected Layer 3 Skills: business-rule-extraction, state-machine-modeling, domain-object-identification.
 
 Hidden risks: enum-only patch changes lifecycle behavior; forbidden transitions may become possible; serializer tests do not prove business invariants.
 Senior programming judgment required: purpose, source-backed facts, states, behaviors, rules, invariants, boundaries, validation map, and residual risk.

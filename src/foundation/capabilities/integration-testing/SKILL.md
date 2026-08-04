@@ -1,195 +1,51 @@
 ---
 name: integration-testing
-description: "Use this capability when a selected owner skill needs focused rules for real boundaries across modules, APIs, databases, services, and infrastructure seams, including failure and rollback paths where relevant. Do not use it as a standalone owner for broader implementation, review, release, or documentation work."
-license: MIT
-changeforge_kind: foundation-capability
-changeforge_capability_id: "60"
-changeforge_version: 0.1.0
-metadata:
-  changeforge.skill_type: foundation-capability
-  changeforge.capability_group: quality-testing
+description: "`analysis-agent`/`task-agent`/`review-agent`: use for database, broker, cache, HTTP, framework, process, or transaction seam proof; skip local, portfolio, and release-verdict work."
 ---
 
-# Mission
+# integration-testing
 
-Prove that connected components work correctly together across **real boundaries**: real database queries, real serialization, real auth context, real transaction behavior, real cache/queue semantics, and controlled external adapters. Keep dependencies deterministic through test containers, contract-calibrated fakes, local emulators, or controlled stubs, and verify success, rollback, timeout, retry, and partial-failure behavior when those failures can occur.
+## Registry Trigger
 
-# Capability Boundary
+**Use when**
 
-`integration-testing` returns a narrow `quality-testing` decision fragment to quality-test-gate, integration-change-builder. It does not replace the selected professional owner, expand the task, decide unrelated architecture or release scope, or close ordinary engineering work by itself.
+- test real module database service broker cache HTTP external adapter framework process or transaction boundary interaction
 
-# Load When
-Use this capability when a change crosses: a controller-service-repository path; a service-to-database boundary with real SQL, constraints, tenant filters, or transactions; a service-to-cache boundary with Redis key structure, TTL, or invalidation; a service-to-queue or consumer boundary with message serialization, acknowledgement, retry, or DLQ routing; a service-to-external-adapter boundary with WireMock, nock, MockServer, or equivalent; auth enforcement through a real filter or principal; or any seam where unit tests cannot validate the behavior that can fail in production.
+**Do not use when**
 
-# Do Not Load When
-Do not use this capability to replace fast unit tests for pure business logic. If a rule can be tested without a database, queue, cache, or external call, use `unit-testing`. Do not use it for complete browser journeys across deployed services; use `e2e-testing`. Do not use it as the primary compatibility gate for public API or event contracts; use `contract-testing`. Do not run integration suites against shared staging state that the test cannot isolate, reset, or own.
+- work is limited to local logic external compatibility full user journeys overall portfolio or release readiness
 
-# Used By / Owner Skill Compatibility
-- quality-test-gate
-- integration-change-builder
+## Skill Role
 
-# Required Input Fragment
+Select real-seam fidelity, failure injection, oracles, and verification. Consume fixture meaning, created-data namespace, sensitive-data policy, and cleanup from `test-data-management`; own disposable integration infrastructure outside test-data scope.
 
-For `integration-testing`, the owner skill must provide task intent, affected surface, current and desired behavior, relevant constraints, selected stage or mode, validation target, and material data/API/security/release boundaries. If that input is missing, return a missing-input fragment instead of guessing.
+## High-Value Rules
 
-# Stage Fit
+- **Exercise the seam carrying the risk.** Name the participating components and boundary semantics, then use a real disposable dependency or a contract-calibrated substitute. Record calibration source, versions, and fidelity limits.
+- **Assert the complete observable outcome.** Tie the named failure mechanism to caller response, durable state, emitted or queued effects, cache state, acknowledgements, and forbidden partial effects that matter. Status or mock-call assertions alone are insufficient.
+- **Inject reachable failures.** Exercise applicable constraint errors, denial, timeout/unknown outcomes, early-write exceptions, duplicate delivery, retry exhaustion, rollback, and cleanup failure. Expected terminal state and recovery ownership are asserted.
+- **Verify accepted isolation and cleanup.** Consume the `test-data-management` decision for fixture meaning, created-data namespace, sensitive-data policy, and asynchronous cleanup. State seam-specific requirements and own only disposable integration infrastructure outside test-data scope.
+- **Test concurrency and eventual consistency by outcomes.** Assert allowed terminal-result sets, forbidden durable states or duplicate effects, and observable readiness with a bounded deadline. Do not require one scheduler interleaving or use fixed sleeps as synchronization.
+- **Contain flake and stale evidence.** Preserve the first failure, reproduction inputs, dependency and schema versions, logs, owner, and remediation condition. Retry or quarantine does not become passing evidence, and material fixture, config, migration, or dependency edits require a fresh run.
 
-Use during implementation, bug-fix regression design, code review, and release readiness when the risky claim depends on real wiring rather than mocked behavior. In planning, it selects the narrowest real boundary that can fail for the named risk. In implementation/review, it rejects mock-only proof for SQL, transaction, cache, queue, auth, serialization, and adapter behavior. In release, it records validation freshness, CI infrastructure requirements, and residual untested seams. Repository graph, project memory, and execution trajectory may identify likely test locations or prior failures, but current source, fixtures, configuration, and command output must confirm the evidence before it is trusted.
+## Anti-Patterns
 
-# Non-Negotiable Rules
+- Reject a mocked primary seam, uncalibrated catch-all stub, shared mutable staging dependency, or container startup reported as interaction proof.
+- Reject success-only assertions, response-status-only oracles, rollback-only cleanup for separately committed work, fixed sleeps, and positive-only authorization cases.
+- Reject integration evidence promoted to full-journey, consumer-compatibility, production-capacity, managed-service, provider, or release proof.
 
-- **Test the real boundary that carries the risk.** If the risk is "does the SQL query return the right rows under the right conditions," test against a real database in a test container, not a mocked repository.
-- **External dependencies must be controlled.** Use Testcontainers or local emulators for real infrastructure, WireMock/nock/MockServer for HTTP, and in-process fakes only when they are checked against a contract or calibrated source. Shared staging dependencies are not deterministic integration evidence.
-- **Include failure, timeout, rollback, retry, and partial-write paths.** A transaction that fails midway must roll back completely. A consumer that throws must not commit the offset. A cache failure must not corrupt the canonical store.
-- **Isolate test data and side effects.** Each test owns setup and cleanup through transaction rollback, truncation, unique schema/namespace, queue topic isolation, cache key namespace, or container lifecycle. Mutable cross-test state is a flake source.
-- **Assert state and side effects, not only response status.** Assert response, database row fields, emitted event payload, queue acknowledgement, cache invalidation, retry job, and external request body where each matters to correctness.
-- **Auth context must be production-realistic.** Controller and service integration tests include caller identity, roles, tenant/object scope, and denied cases. A superadmin or disabled filter path proves a different behavior.
-- **Validation freshness is part of the test result.** If code, migrations, fixtures, config, generated schemas, container image versions, or test data changed after the run, the integration evidence is stale until rerun.
+## Stop Conditions
 
-# Industry Benchmarks
+Stop and return the unresolved integration decision when the risk-carrying seam cannot be exercised, or fixture, namespace, or cleanup ownership is absent. Also stop when cleanup could reach shared resources, unapproved production systems are required, or transaction, authorization, migration, irreversible-effect, or cross-team ownership is unresolved. Local integration evidence proves only exercised versions, data, timing, and boundaries. It does not prove production scale or release readiness.
 
-Anchor against real-boundary testing with Testcontainers/local emulators, HTTP adapter stubbing with WireMock/nock/MockServer, framework slice tests such as Spring Boot/Nest/Django/FastAPI, adapter testing from ports-and-adapters practice, contract-calibrated fakes, DORA stability pressure, and suite-level container reuse. Load [references/checklist.md](references/checklist.md) for quick planning, [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) for tool and boundary matrices. Use `examples/example-output.md` only in source-authoring context when the expected output shape is unclear.
+## Output Contract
 
-# Mode Matrix
+- Return an integration-proof decision: state seam fidelity, accepted fixture and data-lifecycle decision, failure mechanism, oracle, seam-specific isolation and cleanup evidence, concurrency, and proof limits
 
-| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
-| --- | --- | --- | --- | --- | --- |
-| Persistence slice | Repository, ORM, migration-adjacent query, tenant predicate, constraint, or transaction path. | Prove real SQL/constraint/transaction semantics and rollback. | DB image/version, fixture owner, query/row assertions, rollback or cleanup proof. | `repository-persistence`, `transaction-consistency` | Mocked repository proof. |
-| API/service slice | Controller/service/repository wiring, auth filter, validation, error response, or serialization. | Prove request-to-state behavior through real framework wiring. | HTTP/service call, realistic principal, response/body/header, persisted state, denied case. | `backend-change-builder`, `security-privacy-gate` when auth/data sensitive | Superadmin-only or filter-disabled tests. |
-| Queue/cache/event slice | Consumer, producer, Redis/cache, event bus, outbox, retry, offset, DLQ, or invalidation path. | Prove side-effect ordering, acknowledgement, retry, idempotency, and cleanup. | Broker/cache setup, message fixture, ack/commit point, side-effect assertion, failure injection. | `message-queue-design`, `data-side-effect-flow-tracing` | Publish/consume mocks only. |
-| External adapter slice | HTTP provider, SDK, webhook, file/object storage, payment/identity sandbox, or local emulator. | Prove adapter request/response mapping and failure translation without live uncontrolled calls. | Stub/emulator source, request-body verification, timeout/error case, redaction boundary. | `integration-change-builder`, `contract-testing` | Real third-party production calls. |
-| Regression and release proof | Prior integration defect, CI flake, environment mismatch, stale validation, or release gate. | Reproduce the risky seam, stabilize deterministic infrastructure, and map evidence to final changed paths. | Red/green or historical case, same-pattern scan, final command, freshness, residual risk. | `regression-testing`, `validation-broker`, `execution-trajectory-analysis` | One green happy-path smoke as full proof. |
+## Targeted References
 
-# Decision Rules
-Select this capability when **correctness at real component seams** is the primary risk. Adjacent routing:
-
-- Prefer `unit-testing` when logic has no dependency on real infrastructure or external I/O.
-- Prefer `contract-testing` when the primary concern is consumer/provider API compatibility across service boundaries.
-- Prefer `e2e-testing` when the primary concern is a complete user journey through the deployed application.
-- Prefer `test-data-management` when the primary concern is fixture strategy, test database seeding, synthetic data, or cleanup across a large suite.
-- Prefer `regression-testing` when the primary concern is preventing recurrence of a specific known bug; combine it with this capability when the bug depends on a real seam.
-
-# Risk Escalation Rules
-
-Escalate when the integration path involves financial writes, authorization across tenant/object boundaries, migration or rollback correctness, queue consumers that trigger irreversible actions, outbox/event ordering, cache as a derived state source, external payment/identity/provider sandboxes, partial transaction failures, or services owned by different teams. Add `contract-testing` when an external contract must remain compatible, `security-privacy-gate` when sensitive data/auth is involved, and `transaction-consistency` when rollback/isolation semantics are the main risk.
-
-# Proactive Professional Triggers
-
-- **Signal:** An "integration" test mocks the repository, ORM, cache, queue, auth filter, or HTTP adapter that carries the named risk. **Hidden risk:** the test validates a fake path while the real seam can fail on constraints, serialization, tenancy, offset, or request shape. **Required professional action:** replace or supplement with a real-boundary test and record what remains mocked. **Route to:** `integration-testing`, `testability-seam-design`. **Evidence required:** boundary map, real dependency or calibrated stub, assertion layers, and residual mocked seam.
-- **Signal:** A test uses shared staging data, shared queue topics, global cache keys, or uncontrolled sandbox state. **Hidden risk:** order-dependent flakes and false positives hide real failures. **Required professional action:** define owned fixture setup, namespace, cleanup, and parallel-safety rules. **Route to:** `test-data-management`, `agent-tool-permission-sandbox`. **Evidence required:** data/side-effect inventory, cleanup command, isolation mechanism, and CI parallelism note.
-- **Signal:** A service, consumer, or adapter test covers only success while rollback, timeout, retry, DLQ, partial write, or denied auth can occur. **Hidden risk:** the first production failure leaves durable inconsistent state. **Required professional action:** inject the failure at the seam and assert final durable state plus error contract. **Route to:** `transaction-consistency`, `failure-contract-design`, `message-queue-design`. **Evidence required:** failure injection, final DB/cache/queue/event state, retry/DLQ or no-partial-state assertion.
-- **Signal:** Project memory, repository graph, or an earlier trajectory says a boundary was tested before later migrations, fixtures, generated schemas, config, or adapter code changed. **Hidden risk:** stale evidence is reused for a different wiring graph. **Required professional action:** reconcile current changed paths with graph/memory/trajectory claims and rerun affected validators after the final edit. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `execution-trajectory-analysis`, `validation-broker`. **Evidence required:** accepted/rejected prior claim, changed-path-to-test map, command outcome, freshness after final edit.
-- **Signal:** An integration command needs Docker, network, cloud sandbox, local emulator, connector, secret-bearing config, or destructive cleanup. **Hidden risk:** test execution leaks credentials, mutates uncontrolled state, or is not reproducible by CI. **Required professional action:** record permission/sandbox boundary, dry-run or revert path, redaction rule, and CI requirement before running or accepting the evidence. **Route to:** `agent-tool-permission-sandbox`, `delivery-release-gate`, `security-privacy-gate` when sensitive. **Evidence required:** tool/action class, permission state, sandbox boundary, secret redaction, cleanup/revert path.
-- **Signal:** Recorded provider fixtures, generated schemas, fake implementations, or emulator behavior are reused after dependency, schema, auth, timeout, or serialization changes. **Hidden risk:** the integration test proves a stale substitute rather than the current real boundary. **Required professional action:** recalibrate the fixture/fake/emulator against current source or contract before treating it as integration proof. **Route to:** `contract-testing`, `test-data-management`, `validation-broker`. **Evidence required:** fixture/generated-artifact source, captured_at or version, recalibration command, changed inputs covered, and residual uncalibrated seam.
-
-# Critical Gotchas
-The most expensive integration test failure pattern is the "everything is mocked" suite: tests pass, production fails at the real database constraint. Second: shared staging state, where tests pass or fail depending on someone else's data. Third: success-only testing, where the rollback or retry path is first exercised during an incident.
-
-- **Container lifecycle.** PostgreSQL, Redis, Kafka, MongoDB, or LocalStack containers usually belong at suite/class/module scope, not per test method. Reuse containers only when test data isolation remains explicit.
-- **Transactional rollback versus truncation.** Transaction rollback is faster but does not cover code paths that commit independently. Truncation or unique schemas are slower but safer for out-of-band commits, queues, and caches.
-- **HTTP stub verification.** WireMock/nock/MockServer should verify request method, path, headers, auth, and body fields that affect correctness; a catch-all 200 stub is not adapter proof.
-- **Auth precision.** A test JWT, principal, or security context must pass through the same authorization path as production enough to prove roles, tenant/object scope, and denied cases.
-- **Event and queue proof.** "Published" is incomplete; assert payload contract, ordering where material, ack/commit point, retry or DLQ behavior, and idempotency for duplicate delivery.
-- **CI realism.** Record Docker socket/Docker-in-Docker, image versions, emulator ports, resource limits, parallelism, and environment variables so local evidence can be reproduced in CI.
-
-### Anti-examples
-
-| Anti-pattern | Failure |
-| --- | --- |
-| Repository is mocked in "integration" test | Real SQL, constraints, joins, isolation, and tenant predicates are untested. |
-| Test against shared staging DB | Order-dependent flakes and false positives from uncontrolled data. |
-| Only success path tested | Rollback, retry, DLQ, and compensation bugs surface only under incident pressure. |
-| Auth filter disabled in controller test | Authorization rules are absent from the evidence. |
-| Assert only HTTP status | 201 response can pass while no row, event, or cache state is correct. |
-| Container spun up per test method | CI runtime becomes too slow; developers skip the suite. |
-| Catch-all HTTP stub | Adapter sends wrong payload but test still passes. |
-
-# Reference Loading Policy
-
-The `SKILL.md` body carries L1/L2 routing, mode selection, output, and gate rules. Load [references/checklist.md](references/checklist.md) when drafting or reviewing a concrete plan for DB, cache, queue, auth, transaction, adapter, rollback, timeout, or fixture isolation. Load [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md) when choosing tooling, selecting a boundary pattern, designing container/emulator/stub setup, or comparing isolation and CI performance tradeoffs. Use `examples/example-output.md` only in source-authoring context when the required answer shape is unclear. Do not load references for pure unit tests or trivial routing decisions where no real seam is in scope.
-Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on graph/memory claims, stale validation, real-boundary proof, fixture/fake/emulator calibration, tool permission boundaries, or changed-integration-surface-to-validation mapping.
-
-# Failure Modes
-
-For `integration-testing`, state symptom, impact, and detection.
-State repair and evidence before closure.
-
-- **Mocked persistence:** repository mock returns success while real PostgreSQL rejects a NULL, unique, tenant, or foreign-key constraint.
-- **Shared state flake:** shared database, queue, cache, or sandbox data changes under the test and creates non-reproducible pass/fail results.
-- **Lost message:** consumer commits the offset before durable processing, then throws; retry and DLQ never happen.
-- **Partial write:** transaction rollback is untested and a payment, refund, outbox, or audit record is left inconsistent.
-- **Wrong adapter payload:** HTTP stub returns 200 for any body; production provider rejects the real request shape.
-- **Auth bypass:** filter or principal is replaced with a privileged shortcut, so denied tenant/object access is never tested.
-- **Cache divergence:** database write succeeds but invalidation fails; stale cache becomes the behavior users see.
-- **Slow suite spiral:** one container per test or uncontrolled sleeps make the integration suite too slow or flaky for routine CI use.
-
-# Output Fragment
-Return an integration test plan with:
-
-- `mode_selected` (persistence slice / API-service slice / queue-cache-event slice / external adapter slice / regression-release proof)
-- `boundary_under_test` (components included, real infrastructure involved, and what unit tests cannot cover)
-- `source_evidence` (current source, existing tests, fixtures, config, migrations, repository graph, project memory, execution trajectory, and freshness limits)
-- `infrastructure_dependencies` (Testcontainers/local emulator image + version, WireMock/nock/MockServer stubs, in-process fake, or controlled sandbox)
-- `isolation_strategy` (transactional rollback, truncation, unique schema/namespace, topic/cache key isolation, container lifecycle, and rationale)
-- `data_setup` (seed SQL, factories, repository fixtures, message fixtures, cache keys, per-test setup owner)
-- `auth_context` (principal, roles, tenant_id/object scope, scopes, denied-case identity, and how auth is injected)
-- `success_cases` (action -> response, DB/cache state, event/message payload, external call verification)
-- `failure_cases` (injected constraint, timeout, 4xx/5xx, retry, DLQ, rollback, partial-write, or denied-auth failure -> expected final state)
-- `side_effect_assertions` (persistent state, emitted events, queued jobs, ack/commit, cache invalidation, external request body)
-- `graph_memory_execution_coupling` (repository graph, project memory, prior summary, and trajectory claims accepted, rejected, stale, partial, or not verified)
-- `validation_freshness` (commands, exit codes, artifacts, changed inputs covered, last material edit, stale checks, and not-run status)
-- `tool_permission_boundary` (Docker/shell/network/sandbox/connector action class, permission state, cleanup or revert path, and sensitive output redaction rule)
-- `performance` (container reuse strategy, parallel safety, suite runtime estimate, resource limits, and CI requirements)
-- `what_evidence_proves` (the specific wiring, state transition, rollback, retry, or side effect covered by the real-boundary run)
-- `what_evidence_does_not_prove` (browser behavior, production scale, uncontrolled third-party behavior, unknown consumers, or unrelated release readiness)
-- `residual_risk` (untested external boundary, production-scale gap, flaky signal, unsupported environment, owner, and next gate)
-
-# Evidence Requirement
-For `integration-testing`, classify strong evidence, weak evidence, missing evidence, or invalid evidence. State what evidence proves, what it does not prove, residual risk, and next gate.
-
-An integration test is accepted only when the output includes:
-
-- **Integration boundary:** real components exercised together and the seam risk they prove.
-- **External boundaries mocked or controlled:** dependencies stubbed, faked, containerized, sandboxed, or explicitly not verified.
-- **Data and side-effect state:** fixture ownership, durable state, cleanup, queue/cache/event state, and isolation.
-- **Environment isolation:** ephemeral container, local emulator, namespace, transaction rollback, truncation, or cleanup command.
-- **Parallel safety:** whether concurrent tests can run without shared-state collisions and why.
-- **Failure path:** timeout, transaction rollback, retry, invalid state, denied auth, dependency error, or partial-write behavior when relevant.
-- **Boundaries inspected:** source, tests, fixtures, configs, migrations, graph, memory, trajectory, and CI settings used or skipped with reason.
-- **Validation evidence:** command, exit code, artifact/output, changed inputs covered, and freshness after final edits.
-- **What evidence proves:** wiring and behavior across the selected real boundary.
-- **What evidence does not prove:** full browser behavior, production scale, third-party production behavior, alternate services, unknown consumers, or unrelated release readiness.
-- **Residual risk and next gate:** untested boundary, owner, compensating control, and handoff target.
-
-# Quality Gate
-
-The integration test plan is complete only when:
-
-1. Real infrastructure or a contract-calibrated controlled substitute is used for the primary boundary under test.
-2. External HTTP/provider dependencies are controlled through stubs, local emulators, or approved sandbox paths; uncontrolled production calls are excluded.
-3. Test data and side effects are isolated per test or suite with explicit cleanup and parallel-safety rules.
-4. Auth context includes realistic principal, roles, tenant/object scope, and denied-case coverage where auth matters.
-5. Assertions cover response plus durable state plus emitted events/messages/cache/external request side effects where applicable.
-6. At least one failure-path test exists for each risky boundary that can fail through constraint violation, timeout, retry, rollback, partial write, DLQ, or denied auth.
-7. Rollback and no-partial-state correctness are asserted after injected failure.
-8. Container/emulator/stub lifecycle is suite-aware and efficient enough for CI.
-9. HTTP stubs verify request body, auth/header, and path values where those values affect correctness.
-10. CI infrastructure requirements are documented, including Docker/emulator availability, ports, resource limits, environment variables, and parallelism.
-11. Graph, memory, and execution-trajectory evidence is source-confirmed or marked stale/not verified before it affects the plan.
-12. Validation evidence names the command, exit code, inputs covered, final-edit freshness, and what the run does and does not prove.
-13. Tool permission/sandbox boundaries, cleanup/revert path, and redaction rules are recorded for shell, Docker, network, connector, sandbox, or secret-bearing actions.
-
-# Benchmark Coverage
-
-This capability covers real database/cache/queue/container testing, API-service slice tests, auth-aware controller tests, transaction rollback proof, event/consumer acknowledgement and DLQ behavior, HTTP adapter stubs, local emulators, contract-calibrated fakes, fixture isolation, CI reproducibility, and validation freshness. Detailed tool matrices and isolation patterns live in [references/benchmarks-and-patterns.md](references/benchmarks-and-patterns.md).
-
-# Routing Coverage
-
-Route here when the primary risk is provider-internal behavior across a real seam: persistence, cache, queue, auth, transaction, event, adapter, or service wiring. Route away when the main risk is pure logic (`unit-testing`), consumer-visible compatibility (`contract-testing`), complete browser/user journey (`e2e-testing`), fixture ownership (`test-data-management`), or historical defect recurrence without a real-seam design gap (`regression-testing`).
-
-# Return To Owner Skill
-Hand off to `contract-testing` for cross-service consumer/provider compatibility; `test-data-management` for shared fixture strategy and test database seeding; `transaction-consistency` for transaction isolation, rollback, and distributed write semantics; `message-queue-design` for ack/retry/DLQ policy; `security-privacy-gate` for auth, tenant, sensitive data, or sandbox risks; `validation-broker` for changed-path-to-validator mapping; and `e2e-testing` for full user journey tests.
-
-# Completion Criteria
-
-The capability is complete when **the real risky seam is exercised with deterministic, isolated infrastructure, both success and failure paths are asserted at the full state level, validation is fresh against the final changed inputs, and the suite can run reliably in CI without uncontrolled external dependencies**.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | an accepted test-data lifecycle leaves seam fidelity disposable non-data infrastructure failure injection oracle or eventual-consistency verification choices open | the test-data decision is absent or one owned setup proves the seam | analysis-agent, task-agent, review-agent | option-comparison, selected-approach |
+| [checklist](references/checklist.md) | decision-checklist | schema auth serialization side effects failures cleanup concurrency or parallel safety need verification against the accepted test-data lifecycle | no real integration boundary participates or test-data ownership is unresolved | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |
+| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | confidence depends on fresh proof that the seam honors accepted fixture namespace sensitive-data cleanup and parallel-safety decisions | no integration-confidence claim awaits proof or the test-data decision is absent | analysis-agent, task-agent, review-agent | evidence-record, proof-limit, residual-risk |

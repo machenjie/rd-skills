@@ -7,20 +7,13 @@ focus:
   - cache source of truth
   - idempotency and compensation
 route_hints:
-  skills:
-    - backend-change-builder
-    - data-middleware-change-builder
-    - reliability-observability-gate
-  capabilities:
-    - data-side-effect-flow-tracing
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
     - transaction-consistency
     - idempotency-retry-design
-    - cache-design
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - reliability gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Input, validation, mapping, policy, mutation, transaction, persistence, event, cache, external I/O, and response order are explicit.
   - Mappers, getters, policies, and domain objects do not hide external side effects.

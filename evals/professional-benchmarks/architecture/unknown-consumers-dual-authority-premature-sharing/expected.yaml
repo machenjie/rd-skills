@@ -1,0 +1,31 @@
+coverage_class: release-critical
+expected_stage: architecture-review
+expected_professional_skill: architecture-impact-reviewer
+expected_capabilities:
+  - module-boundary-design
+  - consumer-impact-analysis
+  - architecture-tradeoff-analysis
+expected_hidden_risks:
+  - configuration and reflection can hide indirect consumers
+  - dual authoritative stores create conflicting source of truth
+  - proposed dependency direction conflicts with the repository model
+  - shared abstraction has only one proven consumer
+  - cutover and rollback ownership are undefined
+expected_evidence:
+  - consumer search across code configuration reflection and runtime registration
+  - source-of-truth and write-owner invariant
+  - actual dependency graph and architecture-test output
+  - simpler local placement comparison
+  - cutover rollback and compatibility proof
+forbidden_behaviors:
+  - infer all consumers from direct imports
+  - keep two authoritative sources
+  - create a shared abstraction for one consumer
+  - enforce the proposed direction without repository evidence
+  - approve without a cutover and rollback contract
+expected_output_obligations:
+  - approve reject or revise verdict
+  - target owner and dependency direction
+  - consumer and compatibility impact
+  - migration rollback and unresolved evidence
+expected_with_skill_status: pass

@@ -1,0 +1,12 @@
+# Security Privacy Gate Reference Index
+
+Reference type: index
+Load when: choosing one local reference for a selected security or privacy risk; record why a plausible reference is skipped.
+Do not load when: the root contract or a named reference already identifies the needed material.
+
+| Reference | Load When | Do Not Load When | Depends On | Conflicts With | Max Level | Output Fragment |
+| --- | --- | --- | --- | --- | --- | --- |
+| `../examples/example-output.md` | A selected mode needs a tiny example before drafting a compact security result. | The root contract is enough or evidence must be boundary-specific. | Mode, affected boundary, validated severity, and required proof. | Treating example text as validation evidence or a substitute for task-specific proof. | L1 | Compact conditional decision with finding, risk, and evidence need. |
+| `references/checklist.md` | A bounded L2 mode needs compact checks for its triggered authorization, input/output, secret, dependency, privacy, cloud, AI, or tool risk. | The root gate is enough or mode-specific closure and targeted proof are required. | Changed surface, actor/object/data classification, deployment, and selected risk. | Checklist completion replacing denied tests, scanner output, policy diffs, or residual-risk closure. | L2 | Compact conditional security and privacy checklist. |
+| `references/evidence-patterns.md` | Closure depends on command/report artifacts, exit code, denied-case proof, scanner evidence, sandbox classification, freshness, or proof limits. | No selected security claim depends on runtime evidence or the root contract is sufficient. | Selected risk, control basis, artifact source, freshness window, and owner. | Treating an unvalidated severity label or compensating-control narrative as closure. | L4 | Evidence map with what each artifact proves, does not prove, and leaves as residual risk. |
+| `references/security-output-and-gates.md` | L3-L5 work needs mode-specific closure and targeted gates for a selected authorization, abuse, secret, dependency, privacy, cloud, AI, or tool-authority risk. | A compact L1/L2 result is sufficient and no selected risk needs the extended proof contract. | Assigned mode, affected boundary, validated severity/control basis, environment or data classification, and available evidence. | Combining mode ownership or treating candidate controls as universal requirements. | L5 | Conditional Analysis/Task/Review closure and risk-to-proof gates. |

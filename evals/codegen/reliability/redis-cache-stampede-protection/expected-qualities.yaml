@@ -7,20 +7,24 @@ focus:
   - hot-key observability
   - graceful degradation
 route_hints:
-  skills:
-    - data-middleware-change-builder
-    - reliability-observability-gate
-    - quality-test-gate
-  capabilities:
-    - cache-design
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: reliability-observability-gate
+  layer3_skills:
+    - concurrency-control
     - degradation-circuit-breaking
     - observability
-    - integration-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - reliability gate
-    - test gate
+  review_skill: reliability-observability-gate
+release_contract:
+  case_id: reliability/redis-cache-stampede-protection
+  control_path: analyzed
+  primary_skill: engineering-change-analysis
+  task_skill: reliability-observability-gate
+  review_skill: reliability-observability-gate
+  tasks:
+    - task_id: stampede-control
+      skill: reliability-observability-gate
+      review_skill: reliability-observability-gate
 expected_outcomes:
   - Hot key refresh is single-flight or lock-protected.
   - TTL uses jitter.

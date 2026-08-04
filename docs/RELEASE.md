@@ -1,36 +1,144 @@
 # Release
 
-This runbook covers ChangeForge skill system releases. Releases are cut from authored source, validated registries, generated `dist/` outputs, profile-scoped OpenAI API zips, and installer smoke evidence.
+Release only from authored source, current evidence, generated build output,
+package validation, simulated installation, and the remote `Formal Release`
+workflow for the same commit.
 
-## Versioning
+[Skill content governance](SKILL_CONTENT_GOVERNANCE.md#validation) owns Root,
+Semantic Disposition, Readability, and Professional Completeness evidence
+semantics. This page owns only operator order and stop conditions.
 
-- Update `pyproject.toml` `[project].version` for repository release identity.
-- Update `changeforge_version` in touched `SKILL.md` files when skill behavior changes.
-- Preserve backward compatibility for registry fields, runtime folder names, and installer CLI flags unless a migration note is included.
+## Build And Ordinary Validation
 
-## Build
+Build the final tree through [Installation](INSTALLATION.md#build).
+[Build profiles](BUILD_PROFILES.md) owns profile composition and the generated
+manifest contract.
 
-Build every profile:
+Run the complete ordinary authoring path in [Validation](VALIDATION.md) once,
+after the last material edit. Do not duplicate individual producers before a
+failure identifies them as the diagnostic owner.
+
+## Efficient Formal Release Flow
+
+1. **Freeze one candidate commit.** Batch known source, documentation, fixture,
+   and generated-output repairs first. Require a clean tree and current tracked
+   artifacts before formal validation.
+
+2. **Run the ordinary authoring path once.** A failure selects a targeted
+   diagnostic. Repair the verified cause, rerun its targeted check, then rerun
+   the complete ordinary path once after the final repair.
+
+3. **Check current formal evidence before creating anything.** Check the four
+   selected evidence surfaces before creating review artifacts. Run both formal
+   gates on the frozen commit:
 
 ```bash
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
+python3 scripts/eval-core-principles.py --gate formal-release
+python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review
 ```
 
-Expected top-level runtime counts:
+   If all four surfaces are current, create no expert panel. Continue only when
+   both commands pass. A failing command must name the stale or invalid surface;
+   do not infer that every surface needs replacement.
 
-- `recommended`: 22 professional skills.
-- `full`: 22 professional skills plus 7 domain extensions.
-- `dev`: 22 professional skills plus 136 foundation capabilities plus 7 domain extensions.
+4. **Refresh only diagnosed evidence.** Refresh only the stale surface. Batch
+   every diagnosed repair for that surface, complete its independent review,
+   and return to step 1. Do not run a second unchanged attempt after two
+   same-path failures.
 
-Foundation capability count is 136 in every profile: compiled into professional references for `recommended` and `full`, and also top-level in `dev`.
+5. **Run remote evidence once.** Trigger the `Formal Release` workflow for the
+   exact locally validated commit or release tag. Package and publish only when
+   that workflow passes for the same object ID.
 
-The profile top-level counts are 22 for `recommended`, 29 for `full`, and 165 for `dev`.
+This flow has one ordinary pass and one formal pass on a successful candidate.
+A repair invalidates only evidence affected by that repair. The final complete
+passes still run once after the last material edit.
+
+Current static evidence selectors are r21 Readability, r24 Semantic
+Disposition, r25 Root lifecycle, and r16 schema-3 Professional Completeness for
+all 189 non-Control packages. These static selectors do not prove that the
+final formal gates or same-commit remote workflow passed.
+
+## Conditional Evidence Refresh
+
+Use this section only after a formal diagnostic identifies a stale surface.
+The commands below are usage notation. Replace every placeholder before
+execution; they are not copy-paste shell blocks.
+
+### Root lifecycle
+
+When only an authoring bootstrap snapshot is stale:
+
+```text
+python3 scripts/audit-skill-content.py --gate authoring --refresh-root-disposition-bootstrap REVIEWER RATIONALE
+```
+
+This never satisfies formal release.
+
+When the formal Root lifecycle is stale or has an unclassified comparison:
+
+```text
+python3 scripts/audit-skill-content.py --gate formal-release --record-root-disposition-release RELEASE_ID --released-on YYYY-MM-DD [review arguments required by the diagnosed comparison]
+```
+
+The recorder derives fingerprints and lineage. Stop on rejected review,
+concurrent source/configuration drift, or an unclassified change. Never
+hand-edit the managed lifecycle block.
+
+### Semantic Disposition
+
+Create a Semantic Disposition review only when its application binding is stale
+or the formal diagnostic reopens a semantic target:
+
+```text
+python3 scripts/expert_panel_review.py build-packet --panel-kind semantic-disposition --audit FRESH_AUDIT.json --review-id REVIEW_ID --created-on YYYY-MM-DD --out evals/expert-panel/REVIEW_ID/packet.json
+```
+
+### Readability
+
+Create a Readability review only when source, detector, target, or selected
+panel currentness fails:
+
+```text
+python3 scripts/expert_panel_review.py prepare --panel-kind readability --review-id READABILITY_ID --created-on YYYY-MM-DD --out evals/expert-panel/READABILITY_ID/packet.json
+```
+
+### Professional Completeness
+
+Create a schema-3 round only when package, binding, review-contract, selected
+decision, lineage, or storage currentness fails:
+
+```text
+python3 scripts/expert_panel_review.py prepare --panel-kind professional-completeness --schema-version 3 --review-id COMPLETENESS_ID --created-on YYYY-MM-DD --baseline-decision evals/expert-panel/PRIOR_COMPLETENESS_ID/panel/decision.json --out evals/expert-panel/COMPLETENESS_ID/packet.json
+```
+
+Use the machine-derived plan. Changed packages and affected dependencies receive
+fresh assigned review. Unchanged packages may carry only from valid direct fresh
+origins. An all-carry Professional Completeness round creates no fresh reviewer
+artifacts: zero fresh reviewers, ballots, capsules, and input bytes. Maintainers
+do not select or override dispositions.
+
+Reviewer manifests and unfilled templates remain outside the repository.
+Materialize ballots only through the bounded command and transport contract in
+[Skill content governance](SKILL_CONTENT_GOVERNANCE.md#targeted-references).
+Never overwrite an accepted ballot or predecessor.
+
+## Stop And Recovery
+
+Stop on a failed command, dirty or stale required artifact, unexpected write,
+unclassified Root change, Readability blocker, professional correction,
+unresolved professional disagreement, invalid carry, or missing independent
+review.
+
+Do not weaken a validator, edit a generated readiness decision, or create
+replacement panels without a diagnosed stale surface. Correct the owning source
+or review input. Before publication, discard only verified new uncommitted
+release output; never remove unrelated files or accepted evidence. Installed
+artifact recovery is documented in [Installation](INSTALLATION.md#upgrade).
 
 ## Package
 
-OpenAI API zips are profile-scoped under `dist/openai-api/zips/<profile>`. Repackage a built profile when needed:
+After local and remote formal evidence passes for the same commit:
 
 ```bash
 python3 scripts/package.py --profile recommended
@@ -38,65 +146,40 @@ python3 scripts/package.py --profile full
 python3 scripts/package.py --profile dev
 ```
 
-Each zip must contain exactly one top-level skill folder and exactly one root `SKILL.md`.
+Package only generated profile content under `dist/`. Never package `src/`,
+source registries, reports, reviewer input manifests, personal mappings, or
+obsolete runtime artifacts. The build manifest is the package inventory
+authority.
 
-## Validation
+## Documentation And Scorecard
 
-Run **Release Gate** from [VALIDATION.md#release-gate](VALIDATION.md#release-gate).
-`docs/VALIDATION.md` is the canonical developer command set; do not copy the
-full suite into this runbook.
+Regenerate only artifacts with a named generator. The
+[Scorecard](SCORECARD.md) is a handwritten expectations table, not generated
+status and not a current-tree pass report. Release status comes from current
+producer output and tracked evidence. The handoff records commands, the source
+commit, freshness, skipped checks, Unverified scope, and Residual risk.
 
-Run extended routing fixture comparison when updating or verifying captured
-actual router outputs:
+## Evidence Scope
 
-```bash
-python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
-```
-
-Run installer dry runs and final smoke checks from
-[INSTALLATION.md#final-smoke-checks](INSTALLATION.md#final-smoke-checks). The
-expected top-level counts are 22 for `recommended`, 29 for `full`, and 165 for
-`dev`; smoke reports should cite the manifest-backed counts rather than
-hand-authored alternatives.
-
-Regenerate committed public evidence snapshots before a publication decision:
-
-```bash
-python3 scripts/generate-professional-scorecard.py --out reports/professional-scorecard.md --json-out reports/professional-scorecard.json
-python3 scripts/render-scorecard-dashboard.py --scorecard reports/professional-scorecard.json --out docs/SCORECARD_DASHBOARD.md --readme README.md
-python3 scripts/generate-public-benchmark-summary.py --out reports/public-benchmark-summary.md --json-out reports/public-benchmark-summary.json
-python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md
-python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md
-```
-
-The Codex recommended user smoke must install 22 top-level skills. Codex,
-Claude Code, and GitHub Copilot full project smoke installs must each install
-29 top-level skills. Uninstall dry-runs must list only manifest-managed names.
-Doctor must pass for every installed smoke target. OpenAI API zip validation
-must pass profile count and archive shape checks.
+Release evidence covers static contracts, deterministic routing and behavior
+fixtures, professional-quality checks, code-generation definitions and
+harness/negative controls, builds, package structure, and simulated
+installation. It does not prove real-host Profile startup, host enforcement,
+wall-clock performance, production accuracy, provider behavior, official
+marketplace publication, or installed user experience.
 
 ## Release Checklist
 
-- Source structure matches the registry counts.
-- README, quickstart, examples, benchmark docs, scorecard docs, and marketplace docs pass productization validation.
-- Open-source publication status has been checked with `python3 scripts/validate-open-source-readiness.py` and against [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md) when publishing publicly.
-- License metadata, root `LICENSE`, contribution licensing, and security contact path remain MIT-ready before describing a release as open source.
-- `config/open-source-release.yaml:selected_license` remains `MIT`, contribution and security readiness remain confirmed, and the release handoff includes current validation evidence.
-- Routing and code generation benchmark validators pass.
-- No banned `src/toolbox` or `registry/toolbox.yaml` path exists.
-- No personal asset mapping, raw `src/`, or raw registry content is installed.
-- All runtime skills contain root `SKILL.md`.
-- Foundation capabilities are compiled into professional skill references for `recommended` and `full`.
-- Professional skills load only selected references according to the L1/L2/L3/L4/L5 `Reference Loading Policy`; `references/` is not treated as automatic context.
-- Installer dry runs show 21 skills for recommended and 28 skills for full project installs.
-- Final smoke commands cover Codex user recommended install, Codex project full install, Codex project uninstall dry-run, Codex user/project doctor, Claude Code project full install/doctor/uninstall dry-run, GitHub Copilot project full install/doctor/uninstall dry-run, OpenAI API recommended zip dry-run, and installation artifact validation.
-- OpenAI API zips pass profile count and archive shape validation.
-- Professional scorecard is regenerated from current local evidence or explicitly marked as a sample snapshot.
-- Scorecard dashboard, README scorecard summary block, public benchmark summary, scenario showcase, and marketplace catalog are regenerated or validated fresh.
-- Marketplace index exports pass smoke checks for `recommended`, `full`, and `dev`.
-- Marketplace catalog means local/generated discovery catalog only; official marketplace publishing is intentionally not implemented.
-- Showcase examples pass `python3 scripts/validate-examples.py`.
-- Cloud component routing for Redis/Kafka/K8s/Helm/Spark remains covered by routing evals.
-- Helm chart changes include lint/template/schema/rendered-manifest validation and secret values review.
-- Docs reflect any CLI, packaging, profile, or installer behavior changes.
-- Unresolved assumptions and manual review points are listed in the release handoff.
+- [ ] The candidate is one clean commit with current generated artifacts.
+- [ ] The complete ordinary path passed after the final material edit.
+- [ ] Both local formal commands passed for that commit.
+- [ ] Root, Semantic Disposition, Readability, and Professional Completeness
+      selectors are current, tracked, byte-equal to `HEAD`, and clean.
+- [ ] Professional Completeness accepts all 189 packages with required fresh or
+      valid carried votes and no correction or unresolved disagreement.
+- [ ] Readability has no tracked tightening, unresolved detector false positive,
+      or rewrite requirement.
+- [ ] All three profiles build and package through their generated manifests.
+- [ ] The remote `Formal Release` workflow passed for the same object ID.
+- [ ] The handoff states evidence limits, skipped checks, Unverified scope, and
+      Residual risk.

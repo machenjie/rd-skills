@@ -1,6 +1,6 @@
 # Split, Merge, And Cleanup Patterns
 
-Use this reference when a refactor changes file/object/module shape, merges small files, removes code, expires compatibility branches, or claims complexity reduction. The goal is to prevent structural cleanup from hiding behavior change, dependency drift, or permanent compatibility debt.
+Use this reference when a refactor changes file/object/module shape, merges small files, sequences an accepted deletion decision, or claims complexity reduction. `cleanup-deletion-governance` owns deletion readiness, exit conditions, residue, absence proof, and irreversible recovery limits.
 
 ## Split Decision Matrix
 
@@ -20,7 +20,9 @@ Use this reference when a refactor changes file/object/module shape, merges smal
 | Generated or barrel file | The source-of-truth and consumers remain unchanged after merge. | Generated clients, public exports, reflection, plugin loading, or package entry points depend on it. |
 | Test fixture/helper | It is pure technical setup with one owner. | It carries business cases, golden data, tenant/security behavior, or cross-module contracts. |
 
-## Cleanup Exit Matrix
+## Accepted Cleanup Decision Verification
+
+These rows verify implementation of an accepted cleanup decision; they do not authorize deletion.
 
 | Cleanup target | Removal condition | Validation | Rollback limit |
 | --- | --- | --- | --- |
@@ -31,10 +33,10 @@ Use this reference when a refactor changes file/object/module shape, merges smal
 
 ## Review Sequence
 
-1. Define the split, merge, or cleanup target and rejected alternatives.
+1. Define the split or merge target, or consume the accepted cleanup target and rejected alternatives.
 2. Capture public behavior, import/export, side-effect, and dependency-direction evidence before movement.
 3. Separate formatting, movement, import/export cleanup, deletion, and behavior changes.
-4. Run the mapped validator after each material movement or deletion step.
+4. Run the mapped validator after each material movement or accepted deletion step.
 5. Record before/after complexity evidence: branch count, collaborator count, dependency count, public API surface, directory density, or test clarity.
 6. Stop pure-refactor closure when a schema, public API, config key, event, metric, generated client, or caller-visible error changes.
 

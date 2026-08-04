@@ -7,20 +7,11 @@ focus:
   - CI integration
   - generated code exceptions
 route_hints:
-  skills:
-    - architecture-impact-reviewer
-    - backend-change-builder
-    - ai-code-review-refactor
-  capabilities:
-    - architecture-enforcement-tooling
-    - module-boundary-design
-    - code-review
-    - code-clarity-maintainability
-  domain_extensions: []
-  quality_gates:
-    - architecture gate
-    - implementation gate
-    - test gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Architecture rules are converted into CI-enforced checks rather than documentation only.
   - Import boundaries, cycles, public/private exports, and forbidden dependencies are checked by language-appropriate tooling.

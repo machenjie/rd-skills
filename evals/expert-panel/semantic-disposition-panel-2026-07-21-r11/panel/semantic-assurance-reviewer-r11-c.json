@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-21-r11",
+  "created_on": "2026-07-22",
+  "packet_sha256": "32198913091329fce721cd66f0fce9ce792b05a3636898a4f068b861929ac9b3",
+  "source_fingerprints": {
+    "audit": "539520728fe5ef01c5c4773e9005b4a002277e8227892f285da35cc53ea3fd06",
+    "reference_candidates": "78f176f697995d8cf8a4217261e91dd73c4e203528854f479a566406119bcc51",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "29f9ca8994790e869778316258ade844675d84fe5a0a3677802eeae8e2a8dffe",
+    "root_candidates": "b19d427c8dda9847dd9e6ad530676d8ed3e233cc60b52d801f556a1b42e18c2c",
+    "root_context": "e3eaa647f26e984fc9604f57e4f7a2629ab627a0dd7d82496ef079a30141f46b",
+    "root_detector": "0b6168c2f3aaacfc611421aa8ef533171e4adf229986be73016c74154d402aef",
+    "root_source": "fa9ea30a2a98164925c28d3abf41a561e74785339f503f4972ee8f123c060965"
+  },
+  "voter": {
+    "voter_id": "semantic-assurance-reviewer-r11-c",
+    "agent_id": "/root/semantic_r10_review_c",
+    "role": "semantic-assurance-reviewer",
+    "expertise": [
+      "independent-assurance-review",
+      "loop-safety"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "root:9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "axis": "root",
+      "candidate_id": "9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The compressed context preserves the governing precondition: the execution-level reference must be fully loaded and schema-validated before this clause executes. Core enumerates exactly seven non-bypassable controls, and even L1 retains them, so universal application is a deliberate cross-level invariant rather than an unsupported mechanism.",
+      "authority_or_condition": "After the execution-level reference passes existence, JSON, closed-schema, and exact-identifier checks, every effective level must retain the seven Core-enumerated non-bypassable controls.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Reject partial computation when policy data is missing, invalid, or unknown; invoke the L4 integrity fallback, preserve historical maxima, and block editing.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "axis": "root",
+      "candidate_id": "ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "disposition": "valid-contextual-rule",
+      "rationale": "This threshold remains grounded in Core validation_loop rather than in an arbitrary time estimate. It caps completed paths per bound validation identity to prevent same-path retry loops, while the adjacent clause permits another path only for a documented gap or transition, making the limit conditional and actionable.",
+      "authority_or_condition": "For a validation identity bound to material tree, declared scope, effective level, and validation path identity, the complete path limit is one; another requires a bound gap or verifiable transition.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Bind canonical claim and gap manifests plus transition evidence; a completed same identity or invalid transition must stop as blocked or partial instead of retrying.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "axis": "root",
+      "candidate_id": "d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The compressed Direct Task context still defines separate native, supplied-artifact, and unsupported review branches. In the supplied-artifact branch, task-agent diff-export/no-edit supplies the actual diff without transferring implementation reasoning, and forbidding a workspace file prevents evidence generation from contaminating the change set being reviewed.",
+      "authority_or_condition": "Only supplied-artifact mode with no available actual diff uses task-agent diff-export/no-edit; native mode supplies the host-native diff directly and unsupported mode blocks review.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Return diff content or a host-native artifact, enforce before-and-after workspace change-set equality, and mark diff scope unverified if the export is absent, unavailable, or modifying.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "axis": "root",
+      "candidate_id": "ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Core treats formal-release-declared as an L4 trigger and independently records the validation-loop formal_scope_rule, so a declaration changes required rigor but cannot prove readiness. This sentence is the necessary guard against replacing final-tree formal evidence with a routing-level scope assertion.",
+      "authority_or_condition": "When formal release readiness is explicitly declared by user fact or accepted Task Contract goal, the L4 floor applies and the separate formal evidence requirement remains mandatory.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Require current formal-release evaluation and strict professionalism evidence on the final tree; otherwise report release-not-ready and withhold formal completion.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "This fresh ballot reviews only the four packet-selected Root targets whose current context evidence changed; all exact carry-forward targets are outside its decision scope.",
+    "Static review of the current prompt, role profiles, and Core contract does not prove real-host startup, runtime enforcement, or production behavior.",
+    "No r11 reviewer ballot or panel decision was consulted."
+  ]
+}

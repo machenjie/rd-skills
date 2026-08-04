@@ -1,95 +1,63 @@
 {
-  "failures": 0,
-  "generated_at": "2026-07-05T01:24:28.323009+00:00",
-  "mode": "promoted-only",
+  "schema_version": 2,
+  "architecture": "hookless-control-plane",
+  "evaluation_kind": "captured-human-reviewed-samples",
+  "evidence_limitations": [
+    "Samples are checked-in captures, not fresh agent executions.",
+    "Promotion proves fixture review status, not live model accuracy.",
+    "No efficiency or adoption threshold is evaluated."
+  ],
+  "strict": true,
+  "promoted_only": true,
+  "candidates_only": false,
+  "samples_checked": 2,
+  "promoted_checked": 2,
+  "candidate_checked": 0,
+  "errors": [],
   "results": [
     {
-      "findings": [],
-      "forbidden_behavior_hits": [],
-      "human_review_required": false,
-      "missing_actual_fields": [],
-      "notes": "Promoted as a regression guard for local IDOR fixes.",
-      "ok": true,
-      "path": "evals/agent-behavior/professional-samples/backend/backend-idor-fix.yaml",
-      "professional_obligations_missing": [],
-      "promotion_status": "promoted",
-      "required_quality_gates_missing": [],
-      "required_references_missing": [],
       "sample_id": "backend-idor-fix",
-      "schema_errors": [],
-      "selected_capabilities_missing": [],
-      "selected_skills_missing": []
+      "path": "evals/agent-behavior/professional-samples/backend/backend-idor-fix.yaml",
+      "promotion_status": "promoted",
+      "status": "pass",
+      "profile": "analysis-agent",
+      "primary_skill": "security-privacy-gate",
+      "layer3_skills": [
+        "permission-boundary-modeling",
+        "authentication-authorization",
+        "regression-testing"
+      ],
+      "review_skill": "security-privacy-gate",
+      "obligations_covered": [
+        "same-pattern scan for invoice queries",
+        "denied-case regression test",
+        "controller service repository permission boundaries inspected"
+      ],
+      "missing_obligations": [],
+      "forbidden_hits": [],
+      "errors": []
     },
     {
-      "findings": [],
-      "forbidden_behavior_hits": [],
-      "human_review_required": false,
-      "missing_actual_fields": [],
-      "notes": "Promoted as a regression guard for webhook security review.",
-      "ok": true,
-      "path": "evals/agent-behavior/professional-samples/integration/webhook-signature-replay.yaml",
-      "professional_obligations_missing": [],
-      "promotion_status": "promoted",
-      "required_quality_gates_missing": [],
-      "required_references_missing": [],
       "sample_id": "webhook-signature-replay",
-      "schema_errors": [],
-      "selected_capabilities_missing": [],
-      "selected_skills_missing": []
-    },
-    {
-      "findings": [],
-      "forbidden_behavior_hits": [],
-      "human_review_required": true,
-      "missing_actual_fields": [],
-      "notes": "Promoted raw-output sample with mild narrative text around the manifest.",
-      "ok": true,
-      "path": "evals/agent-behavior/professional-samples/raw/backend-idor-raw-output.yaml",
-      "professional_obligations_missing": [],
+      "path": "evals/agent-behavior/professional-samples/integration/webhook-signature-replay.yaml",
       "promotion_status": "promoted",
-      "required_quality_gates_missing": [],
-      "required_references_missing": [],
-      "sample_id": "backend-idor-raw-output",
-      "schema_errors": [],
-      "selected_capabilities_missing": [],
-      "selected_skills_missing": []
-    },
-    {
-      "findings": [],
-      "forbidden_behavior_hits": [],
-      "human_review_required": true,
-      "missing_actual_fields": [],
-      "notes": "Promoted raw-output release sample with prose before the manifest and residual risk owner.",
-      "ok": true,
-      "path": "evals/agent-behavior/professional-samples/raw/release-migration-raw-output.yaml",
-      "professional_obligations_missing": [],
-      "promotion_status": "promoted",
-      "required_quality_gates_missing": [],
-      "required_references_missing": [],
-      "sample_id": "release-migration-raw-output",
-      "schema_errors": [],
-      "selected_capabilities_missing": [],
-      "selected_skills_missing": []
-    },
-    {
-      "findings": [],
-      "forbidden_behavior_hits": [],
-      "human_review_required": true,
-      "missing_actual_fields": [],
-      "notes": "Promoted raw-output webhook sample with prose around the manifest and concrete evidence.",
-      "ok": true,
-      "path": "evals/agent-behavior/professional-samples/raw/webhook-signature-replay-raw-output.yaml",
-      "professional_obligations_missing": [],
-      "promotion_status": "promoted",
-      "required_quality_gates_missing": [],
-      "required_references_missing": [],
-      "sample_id": "webhook-signature-replay-raw-output",
-      "schema_errors": [],
-      "selected_capabilities_missing": [],
-      "selected_skills_missing": []
+      "status": "pass",
+      "profile": "review-agent",
+      "primary_skill": "security-privacy-gate",
+      "layer3_skills": [
+        "idempotency-retry-design",
+        "input-validation",
+        "web-security"
+      ],
+      "review_skill": "security-privacy-gate",
+      "obligations_covered": [
+        "raw body preservation for HMAC",
+        "timestamp replay window",
+        "duplicate event idempotency test"
+      ],
+      "missing_obligations": [],
+      "forbidden_hits": [],
+      "errors": []
     }
-  ],
-  "samples_checked": 5,
-  "strict": true,
-  "warnings": 0
+  ]
 }

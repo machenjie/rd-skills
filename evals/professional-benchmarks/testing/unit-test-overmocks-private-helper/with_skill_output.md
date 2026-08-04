@@ -1,6 +1,6 @@
 Selected stage: testing.
 Selected professional skill: quality-test-gate.
-Selected capabilities: unit-testing.
+Selected Layer 3 Skills: unit-testing, testability-seam-design, test-strategy.
 
 Hidden risks: over-mocked private helper hides behavior; private helper assertion freezes implementation; unit boundary not protected by observable assertions.
 

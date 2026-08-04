@@ -7,27 +7,13 @@ focus:
   - retrieval provenance
   - LLM context safety
 route_hints:
-  skills:
-    - backend-change-builder
-    - data-middleware-change-builder
-    - security-privacy-gate
-    - quality-test-gate
-    - change-documentation-gate
-  capabilities:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: security-privacy-gate
+  layer3_skills:
     - permission-boundary-modeling
-    - authentication-authorization
-    - indexing-query-optimization
-    - repository-persistence
-    - integration-testing
-    - regression-testing
-  domain_extensions:
     - ai-product-extension
-  quality_gates:
-    - implementation gate
-    - security gate
-    - test gate
-    - AI review gate
-    - documentation gate
+  review_skill: security-privacy-gate
 expected_outcomes:
   - Retrieval only returns chunks the actor can read at query time.
   - Tenant and object filters are applied before prompt context assembly.

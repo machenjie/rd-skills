@@ -1,6 +1,6 @@
 Selected stage: testing.
 Selected professional skill: quality-test-gate.
-Selected capabilities: integration-testing.
+Selected Layer 3 Skills: integration-testing, test-strategy.
 
 Hidden risks: integration test mocks away real boundary; mocked repository hides database constraint or transaction behavior; transaction failure path not tested against real database.
 

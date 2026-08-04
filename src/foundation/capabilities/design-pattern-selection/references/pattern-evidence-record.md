@@ -1,27 +1,23 @@
-# Pattern Evidence Record
+# Pattern Force And Coupling Record
 
-Load this reference when a pattern decision depends on repository graph, project memory, prior validation, generated code, benchmark output, or execution history. Treat those sources as selectors until they are reconciled with the current source.
+This record ties a proposed object relationship to a current repository force and to obligations that pattern use can obscure.
 
-## Evidence Freshness Gate
+## Decision Record
 
-Record these fields before approving a pattern:
+| Decision facet | Current repository facts | Rejection signal |
+| --- | --- | --- |
+| Force | Concrete variation, lifecycle, protocol, concurrency, or extension pressure after structure existence is accepted | The rationale starts from a pattern name, comment, or future possibility |
+| Nearer structure | Direct call, constructor, function, composition, or existing repository relationship considered | The proposal skips a simpler structure without naming its mismatch |
+| Variants and consumers | Reachable implementations, callers, generated consumers, and independent contract boundaries | One trivial local variant is presented as a substitution axis |
+| Relationship and authority | Creator, owner, dependency direction, invariant boundary, and method or effect placement | Callers still depend on hidden subtype, registry, or provider details |
+| Lifecycle | Initialization, synchronization, reset, unsubscribe or drain, shutdown, and failure owner | Global state, pool entries, subscriptions, or workers have no teardown path |
+| I/O and effects | Latency, timeout, retry, cancellation, cleanup, transaction, and partial-failure visibility | Adapter, proxy, repository, facade, or decorator makes a remote or durable effect look local |
+| Concurrency and overload | Work bounds, queue ownership, backpressure, fairness, cancellation, result observation, and saturation behavior | Fan-out, worker, pool, observer, or pipeline can grow or fail without an owner |
+| Contract evolution | Public, generated, serialized, and cross-module consumers plus compatibility and deletion path | A new interface or registry expands surface without current consumer evidence |
 
-- `current_source_boundary`: files, symbols, public APIs, tests, generated artifacts, and runtime entry points inspected after the final edit.
-- `same_pattern_scan`: repository search for the same pattern name, interface shape, lifecycle owner, adapter boundary, registry/provider usage, or direct-code alternative.
-- `graph_claims`: dependency or call graph facts accepted, rejected, or not verified; include command/report path and timestamp when available.
-- `memory_claims`: project-memory facts accepted or rejected; include source/date and why the current module shares or does not share the same force.
-- `execution_claims`: tests, validators, profiles, logs, traces, or benchmarks used; include working directory, command, exit code, and freshness after the final structure edit.
-- `contradictions`: graph-memory-execution disagreements, stale reports, missing consumers, or changed public contracts.
-- `decision`: selected pattern or direct-code rejection, rejected simpler alternative, deletion path, and owner for remaining risk.
+## Claim Limits
 
-## Stale Evidence Rules
-
-- A same-pattern scan before a final file move, public API edit, registry/provider change, or generated-client update is stale.
-- A memory note without source/date cannot approve a pattern; it can only suggest what to inspect.
-- A benchmark before the selected pattern changes allocation, dispatch, IO, queueing, or locking cannot prove runtime safety.
-- A passing unit test that mocks internal collaborators cannot prove pattern correctness when the contract is public behavior.
-- A graph report that omits generated files, plugin registration, dynamic imports, framework wiring, or runtime configuration must name those omissions.
-
-## Closure Wording
-
-Use this wording in handoff when evidence is partial: "Pattern decision is accepted only for the inspected boundary; graph/memory/execution evidence does not prove uninspected consumers, generated clients, runtime load, or stale reports named here."
+- Existing same-pattern usage establishes a repository convention, while current force, lifetime, and failure evidence determine fit for this boundary.
+- Focused tests establish exercised variants and lifecycle paths; production load, uninspected consumers, and provider behavior remain outside that claim.
+- Route placement, compatibility, language semantics, performance, concurrency, and reliability conclusions to their specialist owners.
+- Do not repeat minimality or placement workflow: consume the accepted existence decision, decide the relationship, then hand off the accepted relationship for placement.

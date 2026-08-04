@@ -12,6 +12,6 @@ Use this reference when a security or privacy gate needs evidence that can suppo
 
 ## Evidence Rules
 - Every accepted evidence item names command or validator, report artifact, exit code when runnable, severity/control basis, freshness, and the exact risk it proves or rules out.
-- Every evidence item also states what it does not prove: third-party environment posture, unknown tenants, undiscovered gadget chains, untested prompts, or production-only IAM inheritance.
+- For each security evidence item used by the gate, state its exact proof scope and any material unproven boundary. Examples include third-party environment posture, unknown tenants, undiscovered gadget chains, untested prompts, or production-only IAM inheritance.
 - Prefer existing SAST, dependency, secret, IaC, authz, and abuse-case tests before adding new scanners or broad manual checklists.
-- Do not close Critical or High risk on compensating control language alone; require fix evidence or explicit approved remediation with owner and release consequence.
+- Require fix evidence or explicit approved remediation with owner and release consequence before closing Critical or High risk supported only by compensating-control language.

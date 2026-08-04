@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-21-r12",
+  "created_on": "2026-07-22",
+  "packet_sha256": "d984aeb0bc795ed1300bb389aa63bcfb71e8e770085aeb2c8e4ffd12375b700a",
+  "source_fingerprints": {
+    "audit": "525054b1787bc1a2682a674b38ebe9509c78ee7686eacca787c84d278e71b407",
+    "reference_candidates": "981964da12d38e5c32eceb7bb2dbc4cbcf6f91226a1a998d508f1e75041f4763",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "21da29d34018eff13200facc49b1370b50c07ed2cc0106dc2b0ef6d0e637de23",
+    "root_candidates": "94a2a8301bc1670513e3850df7eea96154efc6241063171d6c74f0fa1dba2eaf",
+    "root_context": "07f4d1f21430903aa6cf5272c13679453d305b434b3f208c243a2e545d46875f",
+    "root_detector": "0b6168c2f3aaacfc611421aa8ef533171e4adf229986be73016c74154d402aef",
+    "root_source": "80bc453f72b25049e306211e915c6be2a989fd2708a7e972d75912719d27dd56"
+  },
+  "voter": {
+    "voter_id": "semantic-boundary-reviewer-r12-d",
+    "agent_id": "/root/semantic_r10_review_d",
+    "role": "semantic-boundary-reviewer",
+    "expertise": [
+      "control boundaries",
+      "fail-closed evidence"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "root:7d33c995b85f5a4cd709b2f71211cfa3d6f5f5001c6a9acb03c7f766de59bf34",
+      "axis": "root",
+      "candidate_id": "7d33c995b85f5a4cd709b2f71211cfa3d6f5f5001c6a9acb03c7f766de59bf34",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Within implementation closure, repair changes the reviewed material and therefore invalidates the prior validation and diff evidence; fresh validation and re-review are necessary before current evidence can support completion.",
+      "authority_or_condition": "src/control-model/core-contracts.json visible_evidence_contract.freshness_rules material-edit-invalidates-prior-evidence and repair-supersedes-old-diff; src/control-prompts/main-control-agent.md:83-87",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Keep closure fail closed after repair until both targeted validation and review are current against the repaired scope.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "axis": "root",
+      "candidate_id": "9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The current context applies an authoritative closed set rather than an arbitrary universal mechanism: Core enumerates exactly seven non-bypassable controls, including independent implementation review, after an explicit integrity fallback.",
+      "authority_or_condition": "src/control-model/core-contracts.json execution_level_contract.non_bypassable and src/control-prompts/main-control-agent.md:39-45",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Keep the prompt count coupled to the Core enumeration and update the authority and projection together if the closed set changes.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "axis": "root",
+      "candidate_id": "ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The numeric limit applies only to a completed validation path under one canonical identity, not to validation generally; the same sentence immediately permits another path for a bound gap or transition.",
+      "authority_or_condition": "src/control-model/core-contracts.json execution_level_contract.validation_loop.complete_path_limit, completed_same_identity, and different_path_requirements; src/control-prompts/main-control-agent.md:44",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Keep the identity and gap-or-transition conditions adjacent to the limit and block repeated completion under the same unchanged identity.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:b61da714f82520865615d8f43b04368d741da1b26010a59cb6a3982aba447284",
+      "axis": "root",
+      "candidate_id": "b61da714f82520865615d8f43b04368d741da1b26010a59cb6a3982aba447284",
+      "disposition": "valid-contextual-rule",
+      "rationale": "One primary Professional Skill establishes a single execution owner and prevents task-agent rerouting; the adjacent text still allows named Layer 3 guidance, while specialized secondary reviews remain a separate review concern.",
+      "authority_or_condition": "src/control-model/core-contracts.json profile_contract.capability_terms.task-normal-mode normal-primary-skill and task_contract singular Professional Skill field; src/control-prompts/main-control-agent.md:57-62",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Retain exactly one primary execution Skill per task while naming only task-relevant Layer 3 capsules and separate specialized review gates.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:bd3ed81c6404fcc6acbc82067ed81772b1e27fe6a15ea79f430ec87c65219184",
+      "axis": "root",
+      "candidate_id": "bd3ed81c6404fcc6acbc82067ed81772b1e27fe6a15ea79f430ec87c65219184",
+      "disposition": "valid-contextual-rule",
+      "rationale": "For implementation or repair review, the actual diff and every changed file define the complete changed scope; acceptance and validation results let the independent reviewer assess behavior without inheriting implementer reasoning.",
+      "authority_or_condition": "src/control-model/core-contracts.json profile_contract.capability_terms.review-target-modes implementation-review and no-summary-substitute; src/control-prompts/main-control-agent.md:64-71",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Keep the pre-implementation exception explicit and block implementation review when the actual diff or any changed file remains unverified.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "axis": "root",
+      "candidate_id": "d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The prohibition remains confined to supplied-artifact diff-export/no-edit. Returning diff content or a host-native artifact avoids changing a user-owned workspace while preserving the actual diff required for independent review.",
+      "authority_or_condition": "src/control-model/core-contracts.json profile_contract.capability_terms.task-utility-mode diff-utility-output and utility-enforcement; src/control-prompts/main-control-agent.md:20-30",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Retain before-and-after workspace change-set checks; changed or unavailable checks must invalidate the result and block downstream review or closure.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "axis": "root",
+      "candidate_id": "ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Merely declaring formal readiness cannot satisfy its release evidence obligation; Core independently makes formal evidence non-bypassable when formal readiness is declared and repeats the same formal-scope rule in validation control.",
+      "authority_or_condition": "src/control-model/core-contracts.json execution_level_contract.non_bypassable and execution_level_contract.validation_loop.formal_scope_rule; src/control-prompts/main-control-agent.md:44",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Retain the explicit formal-evidence condition and keep release closure blocked or partial whenever current formal evidence is unavailable.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:faf517472eb6c4de41f69645bafe95242ce2096188ee12b0a4742ade745f0360",
+      "axis": "root",
+      "candidate_id": "faf517472eb6c4de41f69645bafe95242ce2096188ee12b0a4742ade745f0360",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Repair supersedes the reviewed diff and any validation bound to the prior material state, so both fresh targeted validation and independent re-review are required before the evidence can be current.",
+      "authority_or_condition": "src/control-model/core-contracts.json visible_evidence_contract.freshness_rules material-edit-invalidates-prior-evidence and repair-supersedes-old-diff; src/control-prompts/main-control-agent.md:67-71",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Mark the previous diff and validation superseded or invalid, then require fresh validation and re-review against only the repaired diff.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "Static review of the current packet, current source context, and authoritative Core only; it does not prove real-host or production behavior.",
+    "This semantic authoring-lifecycle ballot does not replace readability or professional-completeness formal attestations."
+  ]
+}

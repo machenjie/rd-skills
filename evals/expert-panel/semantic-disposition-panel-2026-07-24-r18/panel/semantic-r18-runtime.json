@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-24-r18",
+  "created_on": "2026-07-24",
+  "packet_sha256": "93da11b647bc1244aa12da6abe49a748e39bead486d858a17a0e032a435a1046",
+  "source_fingerprints": {
+    "audit": "19db3035c7fe1dacc2605cf445e0b491efbbb8269d61cef0e1b5eb6cb6f6692f",
+    "reference_candidates": "75305b873890a005c142924e2e63ec32445f664bdb1ed944c1cd460cc9579a42",
+    "reference_detector": "4b04a9b693ac3079a1af6154425ed64408474d5027c0119ed6360c9288356112",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "5e911823eeab10e6492067101bbce82c0c5901f136a0521eb3499c9dc30fa821",
+    "root_candidates": "8f453e8f37eede380af81328f4abc8f837de1959c323980469dea89e22793a11",
+    "root_context": "21677f5ed1177acd0d70a5201310eba17a25843552ef86db8a8fa935a235d94f",
+    "root_detector": "0b6168c2f3aaacfc611421aa8ef533171e4adf229986be73016c74154d402aef",
+    "root_source": "09f83d36206ddc69c3cfee671d3b3a8bdf58c85d915e12ba39ffa8974e9ca72f"
+  },
+  "voter": {
+    "voter_id": "semantic-r18-runtime",
+    "agent_id": "semantic-runtime-reviewer-2026-07-24",
+    "role": "semantic-runtime-contract-reviewer",
+    "expertise": [
+      "semantic runtime contracts"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [],
+  "limitations": [
+    "Static semantic-disposition review only. It does not replace readability or professional-completeness attestations and does not prove real-host or production behavior. Any later audit, detector, source, or configuration change invalidates this evidence."
+  ]
+}

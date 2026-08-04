@@ -1,0 +1,2122 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.expert-panel-ballot",
+  "review_id": "readability-panel-2026-07-16-r6",
+  "created_on": "2026-07-16",
+  "packet_sha256": "4092f8242b33b4b2a839dca4ab6bbaff2f7a568bf1a7993d5396750151ba6f1f",
+  "source_fingerprints": {
+    "ai_readability": "a453c2849546ee5b1a72311f14f114aaa1789d4b9048560fcbd7fd3f992e0abc",
+    "reference_content": "188ca65701a8c6439b3734ebeccf7edddd815308eca5dd4973b3dc934a9ebc0b",
+    "root_content": "d444421386447f6eee4c08d707d3ebe5f8445132ba1812936a7eb9231757cf1b"
+  },
+  "voter": {
+    "voter_id": "reviewer-a",
+    "agent_id": "control-plane-semantics-agent-a",
+    "role": "Senior Control Plane & AI Instruction Semantics",
+    "expertise": [
+      "control-plane architecture and boundary semantics",
+      "AI instruction readability and professional completeness"
+    ],
+    "independent_review": true
+  },
+  "content_votes": [
+    {
+      "path": "src/foundation/capabilities/domain-logic-implementation/SKILL.md",
+      "classification": "REVIEW_DENSITY",
+      "decision": "accepted-current-density",
+      "reason_code": "bounded-density-preserves-professional-coverage",
+      "rationale": "The root keeps authority selection, reachable-writer scanning, typed outcomes, persistence boundaries, failure handling, and proof together as one domain-invariant decision; splitting it would fragment professional coverage."
+    },
+    {
+      "path": "src/foundation/capabilities/web-security/SKILL.md",
+      "classification": "REVIEW_DENSITY",
+      "decision": "accepted-current-density",
+      "reason_code": "split-would-fragment-one-decision-model",
+      "rationale": "The root keeps route-to-sink tracing, request integrity, fetch and upload boundaries, cross-origin behavior, bypass checks, and evidence together as one web trust-boundary model."
+    }
+  ],
+  "readability_votes": [
+    {
+      "document_id": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "single-indivisible-decision",
+      "rationale": "In Utility Return, the opening contract wording states one fail-closed utility contract; its 1 flagged sentence must keep mode, prohibition, and evidence obligation together."
+    },
+    {
+      "document_id": "src/foundation/capabilities/acceptance-standard-definition/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In acceptance-standard-definition, the High-Value Rules wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/agent-execution-discipline/references/execution-report-and-gates.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Execution Handoff And Review Checks, the Review Checks sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/algorithm-data-structure-selection/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Algorithm Data Structure Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/api-contract-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In api-contract-design, the Skill Role wording keeps 5 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/architecture-enforcement-tooling/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Architecture Enforcement Tooling Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/architecture-style-selection/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In architecture-style-selection, the High-Value Rules wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/architecture-style-selection/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Architecture Style Selection Benchmarks And Patterns, the Operability And Proof Limits sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/architecture-style-selection/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Architecture Style Evidence Patterns, the Evidence Rules sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In architecture-tradeoff-analysis, the Skill Role wording keeps 3 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/architecture-tradeoff-analysis/references/tradeoff-benchmarks.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Architecture Tradeoff Comparison Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/async-job-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In async-job-design, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/async-job-design/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Async Job Design Benchmarks And Patterns, the Idempotency, Enqueue, And Ack Boundary sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/async-job-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Async Job Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/authentication-authorization/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In authentication-authorization, the Skill Role wording keeps 4 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/authentication-authorization/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Authentication Authorization Benchmarks And Patterns, the Proof Limits sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/authentication-authorization/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Authentication Authorization Evidence Patterns, the Freshness And Closure sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/authentication-security/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In authentication-security, the Skill Role wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/authentication-security/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Authentication Risk Baselines And Patterns, the Decision Baselines sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/authentication-security/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Authentication Security Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/backup-recovery/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In backup-recovery, the Anti-Patterns wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/backup-recovery/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Backup Recovery Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/build-tool-professional-usage/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In build-tool-professional-usage, the Registry Trigger wording keeps 5 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/build-tool-professional-usage/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Build Tool Evidence Patterns, the Blocking Conditions sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/business-invariant-analysis/references/business-invariant-checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Business Invariant Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/business-rule-extraction/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In business-rule-extraction, the Skill Role wording keeps 7 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/business-rule-extraction/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Business Rule Extraction Benchmarks And Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/business-rule-extraction/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Business Rule Evidence Patterns, the Evidence Rules sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/cache-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In cache-design, the Skill Role wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/cache-design/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Cache Pattern Selection And Evidence, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/cache-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Cache Design Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/ci-cd/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In CI/CD Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/cleanup-deletion-governance/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In cleanup-deletion-governance, the Registry Trigger wording keeps 8 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/cleanup-deletion-governance/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Cleanup Deletion Benchmarks And Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/cleanup-deletion-governance/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Cleanup Deletion Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/cleanup-deletion-governance/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Cleanup Deletion Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/cli-daemon-interface-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In cli-daemon-interface-design, the High-Value Rules wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/cli-daemon-interface-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In CLI Daemon Interface Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 6 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/code-clarity-maintainability/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In code-clarity-maintainability, the High-Value Rules wording keeps 3 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/code-element-professionalism/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In code-element-professionalism, the Skill Role wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/code-element-professionalism/references/expressions.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Expression Semantics, the Proof And Routing sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/code-review/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In code-review, the Skill Role wording keeps 7 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/code-review/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Code Review Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/concurrency-control/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In concurrency-control, the High-Value Rules wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/concurrency-control/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Concurrency Control Benchmarks And Patterns, the Worker And Contention Evidence sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/concurrency-control/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Concurrency Control Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 6 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/concurrency-control/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Concurrency Control Evidence Patterns, the Evidence Rules sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/configuration-runtime-policy/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In configuration-runtime-policy, the Registry Trigger wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/configuration-runtime-policy/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Configuration Runtime Policy Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/consumer-impact-analysis/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In consumer-impact-analysis, the High-Value Rules wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/consumer-impact-analysis/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Consumer Impact Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/containerization/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In containerization, the High-Value Rules wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/containerization/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Containerization Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/containerization/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Containerization Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/contract-testing/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In contract-testing, the Skill Role wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/controller-api-implementation/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In controller-api-implementation, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/controller-api-implementation/references/boundary-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Controller Boundary Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/controller-api-implementation/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Controller API Implementation Checklist, the Scope And Boundaries sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/controller-api-implementation/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Controller Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/data-format-contract-usage/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In data-format-contract-usage, the Registry Trigger wording keeps 5 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/data-format-contract-usage/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Data Format Contract Usage Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/data-migration-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In data-migration-design, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/data-migration-design/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Data Migration Design Benchmarks And Patterns, the Freshness, Validation, And Routing sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/data-migration-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Data Migration Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/data-model-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In data-model-design, the Anti-Patterns wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/data-model-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Data Model Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/data-side-effect-flow-tracing/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In data-side-effect-flow-tracing, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/data-side-effect-flow-tracing/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Data Side-Effect Flow Tracing Benchmarks And Patterns, the Benchmark Anchors sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/data-side-effect-flow-tracing/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Data Side-Effect Flow Tracing Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/data-side-effect-flow-tracing/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Data Side-Effect Flow Tracing Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/degradation-circuit-breaking/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Degradation Circuit Breaking Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/dependency-vulnerability-scanning/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In dependency-vulnerability-scanning, the High-Value Rules wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/dependency-vulnerability-scanning/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Dependency Vulnerability Scanning Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/dependency-wiring-lifecycle/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In dependency-wiring-lifecycle, the Registry Trigger wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/dependency-wiring-lifecycle/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Dependency Wiring Lifecycle Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/dependency-wiring-lifecycle/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Dependency Wiring Lifecycle Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/design-pattern-selection/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In design-pattern-selection, the High-Value Rules wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/design-system-rules/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In design-system-rules, the Skill Role wording keeps 4 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/design-system-rules/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Design System Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/documentation-generation/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Documentation Generation Benchmarks And Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/documentation-generation/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Documentation Generation Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/domain-event-modeling/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In domain-event-modeling, the Skill Role wording keeps 7 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/domain-logic-implementation/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In domain-logic-implementation, the High-Value Rules wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/domain-object-identification/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Domain Object Identification Benchmarks And Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/domain-object-identification/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Domain Object Identification Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/dto-schema-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In dto-schema-design, the High-Value Rules wording keeps 3 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/dto-schema-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In DTO Schema Design Evidence Patterns, the Evidence Labels sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/e2e-testing/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In e2e-testing, the Skill Role wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/error-code-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In error-code-design, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/error-code-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Error Code Design Evidence Patterns, the Evidence Labels sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/event-driven-architecture/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In event-driven-architecture, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/event-driven-architecture/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Event-Driven Architecture Benchmarks And Patterns, the Operability, Limits, And Routing sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/event-driven-architecture/references/topology-evidence-freshness.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Topology Evidence Freshness, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/extensibility-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In extensibility-design, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/extensibility-design/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Extensibility Benchmarks And Patterns, the Boundary Patterns sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/extensibility-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Extensibility Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/failure-contract-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In failure-contract-design, the Skill Role wording keeps 4 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/failure-contract-design/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Failure Contract Design Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/failure-contract-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Failure Contract Design Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/failure-diagnosis/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In failure-diagnosis, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/file-storage-processing/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In file-storage-processing, the High-Value Rules wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/file-storage-processing/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In File Storage Processing Benchmarks And Patterns, the Resource And Provider Boundaries sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/file-storage-processing/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In File Storage Processing Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/file-storage-processing/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In File Storage Processing Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 6 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/form-validation-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In form-validation-design, the Skill Role wording keeps 8 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/form-validation-design/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Form Validation Design Benchmarks And Patterns, the Async And Submission Failure sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/form-validation-design/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Form Validation Design Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/form-validation-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Form Validation Design Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/frontend-api-integration/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In frontend-api-integration, the Skill Role wording keeps 5 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/frontend-api-integration/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Frontend API Integration Benchmarks And Patterns, the Boundary Mapping sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/frontend-api-integration/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Frontend API Integration Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/frontend-api-integration/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Frontend API Integration Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/frontend-testing/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Frontend Testing Benchmarks And Patterns, the Coverage And Fidelity sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/frontend-testing/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Frontend Testing Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/frontend-testing/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Frontend Testing Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/git-professional-usage/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In git-professional-usage, the Skill Role wording keeps 3 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/git-professional-usage/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Git Professional Usage Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/go-professional-usage/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In go-professional-usage, the High-Value Rules wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/i18n-timezone-money-safety/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In i18n-timezone-money-safety, the Skill Role wording keeps 7 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/i18n-timezone-money-safety/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In I18n Timezone Money Evidence Patterns, the Blocking Conditions sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/idempotency-retry-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In idempotency-retry-design, the High-Value Rules wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/idempotency-retry-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Idempotency Retry Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/implementation-structure-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In implementation-structure-design, the Anti-Patterns wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/indexing-query-optimization/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In indexing-query-optimization, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/indexing-query-optimization/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Indexing Query Optimization Benchmarks And Patterns, the Evidence Patterns sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/indexing-query-optimization/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Indexing Query Optimization Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 6 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/information-architecture/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In information-architecture, the Skill Role wording keeps 4 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/input-validation/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In input-validation, the Skill Role wording keeps 4 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/input-validation/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Input Validation Benchmarks And Patterns, the Boundary Guardrails sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/input-validation/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Input Validation Evidence Patterns, the Freshness And Closure sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/integration-testing/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In integration-testing, the Skill Role wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/integration-testing/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Integration Testing Benchmarks And Patterns, the Boundary And Fidelity sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/integration-testing/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Integration Testing Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/interaction-state-modeling/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In interaction-state-modeling, the Skill Role wording keeps 7 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/interaction-state-modeling/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Interaction State Modeling Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/java-jvm-professional-usage/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In JVM Execution And Boundary Contract, the Decision Limits sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/kubernetes-gateway/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In kubernetes-gateway, the High-Value Rules wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/kubernetes-gateway/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Kubernetes Runtime Decision Patterns, the Selection Notes sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/language-idiom-enforcement/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In language-idiom-enforcement, the Registry Trigger wording keeps 8 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/language-idiom-enforcement/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Language Idiom Enforcement Checklist, the Comment Quality Checklist sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/language-idiom-enforcement/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Language Idiom Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 7 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/language-performance-safety/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In language-performance-safety, the Skill Role wording keeps 8 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/language-performance-safety/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Language Performance Benchmarks And Patterns, the Calibration Anchors sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/language-performance-safety/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Language Performance Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/language-runtime-selection/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In language-runtime-selection, the Registry Trigger wording keeps 3 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/language-testing-strategy/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In language-testing-strategy, the Skill Role wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/layered-architecture-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In layered-architecture-design, the Skill Role wording keeps 5 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/layered-architecture-design/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Layered Architecture Design Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/linux-systems-professional-usage/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In linux-systems-professional-usage, the Registry Trigger wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/linux-systems-professional-usage/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Linux Systems Professional Usage Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/linux-systems-professional-usage/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Linux Systems Evidence Patterns, the Blocking Conditions sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/logging-error-handling/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In logging-error-handling, the Skill Role wording keeps 7 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/logging-error-handling/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Logging And Error Handling Benchmarks And Patterns, the Freshness And Validation sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/logging-error-handling/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Logging Error Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/message-queue-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In message-queue-design, the High-Value Rules wording keeps 3 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/message-queue-design/references/broker-benchmarks.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Broker Delivery And Recovery Evidence, the Broker Decision Questions sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/message-queue-design/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Message Queue Proof Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/message-queue-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Message Queue Design Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/microservice-splitting/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In microservice-splitting, the High-Value Rules wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/microservice-splitting/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Microservice Splitting Benchmarks And Patterns, the Benchmark Anchors sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/microservice-splitting/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Microservice Splitting Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 6 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/model-boundary-mapping/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In model-boundary-mapping, the Registry Trigger wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/model-boundary-mapping/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Model Boundary Mapping Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/module-boundary-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In module-boundary-design, the Skill Role wording keeps 4 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/network-protocol-gateway-usage/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Network Protocol Gateway Benchmarks And Patterns, the Header Trust Pattern sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/network-protocol-gateway-usage/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Network Protocol Gateway Evidence Patterns, the Tool Permission Boundary sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/non-goal-boundary-definition/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In non-goal-boundary-definition, the Skill Role wording keeps 4 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/non-goal-boundary-definition/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Non-Goal Boundary Definition Benchmarks And Patterns, the Failure And Proof Limits sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/non-goal-boundary-definition/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Non-Goal Boundary Definition Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/nosql-database/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In NoSQL Database Benchmarks And Patterns, the Evidence And Proof Limits sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/nosql-database/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In NoSQL Database Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/observability/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In observability, the High-Value Rules wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/observability/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Observability Benchmarks And Patterns, the SLI, Alert, Trace, And Runbook Contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/package-dependency-management/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In package-dependency-management, the Registry Trigger wording keeps 8 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/package-dependency-management/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Package Dependency Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 6 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/page-component-decomposition/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In page-component-decomposition, the Skill Role wording keeps 3 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/page-component-decomposition/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Page Component Decomposition Benchmarks And Patterns, the Failure And Proof sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/page-component-decomposition/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Page Component Decomposition Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/page-component-decomposition/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Page Component Decomposition Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/performance-budgeting/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In performance-budgeting, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/permission-boundary-modeling/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In permission-boundary-modeling, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/permission-boundary-modeling/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Permission Boundary Modeling Benchmarks And Patterns, the Enforcement, Denial, And Change sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/permission-boundary-modeling/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Permission Boundary Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/profiling/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In profiling, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/profiling/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Profiling Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/project-initialization/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In project-initialization, the High-Value Rules wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/project-initialization/references/clean-checkout.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Clean Checkout Evidence, the Evidence Record sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/python-professional-usage/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Python Runtime Boundary Traps, the Decision Limits sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/refactoring/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In refactoring, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/refactoring/references/behavior-preservation-evidence.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Behavior Preservation Evidence, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/regression-testing/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In regression-testing, the Skill Role wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/relational-database/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In relational-database, the High-Value Rules wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/relational-database/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Relational Database Decision Patterns, the Evidence Limits sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/relational-database/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Relational Database Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/release-rollback/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In release-rollback, the High-Value Rules wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/repeat-failure-analysis/SKILL.md#description",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "single-indivisible-decision",
+      "rationale": "The front-matter description states one routing decision by pairing its positive trigger with the exclusion boundary; separating that sentence would weaken selection precision."
+    },
+    {
+      "document_id": "src/foundation/capabilities/repeat-failure-analysis/references/repeat-failure-checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Repeat Failure Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/repository-context-map/references/validation-freshness-handoff.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Validation Freshness Handoff, the Closure Rules sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/repository-persistence/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Repository Persistence Benchmarks And Patterns, the Evidence And Routing sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/repository-persistence/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Repository Persistence Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/requirement-clarification/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In requirement-clarification, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/requirement-clarification/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Requirement Clarification Benchmarks And Patterns, the Partial Proceed Boundary sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/requirement-clarification/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Requirement Clarification Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/requirement-clarification/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Requirement Clarification Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/requirement-structuring/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In requirement-structuring, the Skill Role wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/requirement-structuring/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Requirement Structuring Benchmarks And Patterns, the Behavior-First Brief sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/requirement-structuring/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Requirement Structuring Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/routing-navigation-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In routing-navigation-design, the Skill Role wording keeps 5 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/routing-navigation-design/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Routing Navigation Design Benchmarks And Patterns, the URL, Redirect, And History sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/routing-navigation-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Routing Navigation Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/scenario-decomposition/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In scenario-decomposition, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/scenario-decomposition/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Scenario Decomposition Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 6 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/sdk-library-contract-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In sdk-library-contract-design, the Skill Role wording keeps 5 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/sdk-library-contract-design/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In SDK Library Contract Design Benchmarks And Patterns, the Benchmark Anchors sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/sdk-library-contract-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In SDK Library Contract Evidence Patterns, the Evidence Quality Labels sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/search-analytics-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Search Analytics Design Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/secret-configuration-security/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In secret-configuration-security, the Skill Role wording keeps 4 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/secret-configuration-security/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Secret Configuration Security Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 6 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/senior-programming-judgment-core/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In senior-programming-judgment-core, the High-Value Rules wording keeps 2 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/service-business-logic/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Service Orchestration Decision Patterns, the Crash And Partial-Completion Questions sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/shell-cli-professional-usage/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In shell-cli-professional-usage, the High-Value Rules wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/shell-cli-professional-usage/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Shell CLI Benchmarks And Patterns, the CLI Compatibility Patterns sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/skill-authoring-expert/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Skill Authoring Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/skill-authoring-expert/references/pressure-scenarios.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Pressure Scenarios Reference, the Required Coverage sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/skill-authoring-expert/references/tdd-for-skills.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In TDD for Skills Reference, the The Behavior-First Loop sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/skill-efficacy-benchmark/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Skill Efficacy Benchmark Decision Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/state-machine-modeling/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In state-machine-modeling, the Skill Role wording keeps 4 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/state-machine-modeling/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In State Machine Modeling Benchmarks And Patterns, the Transition Record sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/state-machine-modeling/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In State Machine Modeling Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/state-machine-modeling/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In State Machine Modeling Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/state-management-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In state-management-design, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/state-management-design/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In State Management Benchmarks And Patterns, the Decision Checklist sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/state-management-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In State Management Design Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/targeted-validation-selection/references/validation-selection-checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Validation Selection Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/task-dag-decomposition/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Task DAG Decomposition Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/task-dag-decomposition/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Task DAG Evidence And Freshness, the Final Plan Consistency sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/task-handoff-context/SKILL.md#description",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "single-indivisible-decision",
+      "rationale": "The front-matter description states one routing decision by pairing its positive trigger with the exclusion boundary; separating that sentence would weaken selection precision."
+    },
+    {
+      "document_id": "src/foundation/capabilities/task-handoff-context/references/task-context-checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Task Context Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/technology-stack-selection/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In technology-stack-selection, the Skill Role wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/test-data-management/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In test-data-management, the Skill Role wording keeps 7 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/test-data-management/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Test Data Management Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/test-strategy/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In test-strategy, the Skill Role wording keeps 3 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/test-strategy/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Test Strategy Benchmarks And Patterns, the Benchmark Anchors sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/test-strategy/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Test Strategy Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/testability-seam-design/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In testability-seam-design, the Registry Trigger wording keeps 7 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/testability-seam-design/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Testability Seam Benchmarks And Patterns, the Test Double Fidelity Ladder sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/testability-seam-design/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Testability Seam Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/threat-modeling/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In threat-modeling, the High-Value Rules wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/threat-modeling/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Threat Modeling Benchmarks And Patterns, the Control Selection Guardrails sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/threat-modeling/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Threat Modeling Evidence Patterns, the Freshness And Closure sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/transaction-consistency/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In transaction-consistency, the High-Value Rules wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/transaction-consistency/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Transaction Consistency Patterns And Evidence, the Remote Call And Commit Ordering sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/transaction-consistency/references/checklist.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Transaction Consistency Checklist, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/transaction-consistency/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Transaction Consistency Evidence Patterns, the Current Evidence And Freshness sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/typescript-professional-usage/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In typescript-professional-usage, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/unit-testing/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In unit-testing, the Skill Role wording keeps 5 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/unit-testing/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Unit Testing Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/use-case-modeling/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In use-case-modeling, the Skill Role wording keeps 5 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/use-case-modeling/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Use Case Modeling Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 6 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/use-case-modeling/references/fully-dressed-template.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Fully Dressed Use Case Template, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/user-flow-modeling/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In user-flow-modeling, the Anti-Patterns wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/user-role-identification/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In user-role-identification, the Anti-Patterns wording keeps 1 flagged sentence as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/user-role-identification/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In User Role Identification Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 5 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/version-compatibility/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In version-compatibility, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/version-compatibility/references/compatibility-benchmarks.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Compatibility Benchmarks, the Removal, Freshness, And Proof Limits sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/version-compatibility/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Version Compatibility Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/web-security/SKILL.md#body",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "bounded-enumeration-improves-precision",
+      "rationale": "In web-security, the Skill Role wording keeps 6 flagged sentences as bounded decision inputs, outcomes, or exclusions; the compact root still defers deeper mechanics through targeted references."
+    },
+    {
+      "document_id": "src/foundation/capabilities/web-security/references/benchmarks-and-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Web Security Benchmarks And Patterns, the Selection Guardrails sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/foundation/capabilities/web-security/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Web Security Evidence Patterns, the Freshness And Closure sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/acceptance-criteria-builder/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Acceptance Criteria Evidence Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/ai-code-review-refactor/references/ai-review-pattern-catalog.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In AI Review Pattern Catalog, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/ai-code-review-refactor/references/solution-optimality.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In AI-Generated Choice Check, the Decision Questions sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/architecture-impact-reviewer/references/architecture-output-and-gates.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Architecture Output And Gates, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 7 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/architecture-impact-reviewer/references/solution-optimality.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Architecture Option Check, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/backend-change-builder/references/backend-output-and-gates.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Backend Output And Gates, the Output Contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/backend-change-builder/references/professional-modes.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Backend Implementation Modes, the External Ownership Hints sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/backend-change-builder/references/solution-optimality.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Backend Runtime Choice Check, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/change-documentation-gate/references/documentation-output-and-gates.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Documentation Output And Gates, the Gate-Specific Checks sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/change-documentation-gate/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Documentation Evidence Patterns, the Freshness Rules sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/data-api-contract-changer/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Data API Contract Evidence Patterns, the Evidence Rules sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/data-api-contract-changer/references/solution-optimality.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Contract Evolution Choice Check, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/data-middleware-change-builder/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Data Middleware Evidence Patterns, the Evidence Map sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/data-middleware-change-builder/references/recovery-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Data Middleware Recovery Patterns, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/delivery-release-gate/references/release-evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Release Evidence Patterns, the Evidence Map sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/domain-impact-modeler/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Domain Impact Evidence Patterns, the Evidence Map sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 4 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/engineering-change-analysis/references/implementation-preparation.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Implementation Preparation, the Task DAG \u2014 Only When Needed sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/engineering-change-analysis/references/solution-optimality.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Performance Surface Triage, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/experience-impact-modeler/references/experience-output-and-gates.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Experience Output And Gates, the Accessibility And Recovery Gates sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 8 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/frontend-change-builder/references/frontend-output-and-gates.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Frontend Output And Gates, the Handoff Closure sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/frontend-change-builder/references/solution-optimality.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Frontend Experience Choice Check, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/integration-change-builder/references/solution-optimality.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Integration Failure-Path Choice Check, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/logging-design-gate/references/logging-output-and-gates.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Logging Output And Gates, the Quality Gate sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/reliability-observability-gate/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Reliability Observability Evidence Patterns, the Evidence Rules sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 2 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/reliability-observability-gate/references/solution-optimality.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Reliability Objective Choice Check, the opening contract sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 3 flagged sentences would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/security-privacy-gate/references/evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Security Privacy Evidence Patterns, the Evidence Rules sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/task-dag-planner/references/planning-evidence-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Planning Evidence Patterns, the Closure Rules sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    },
+    {
+      "document_id": "src/professional-skills/task-dag-planner/references/task-contract-patterns.md#reference",
+      "highest_band": "review-as-complex",
+      "decision": "accepted-current-readability",
+      "reason_code": "domain-terms-require-co-location",
+      "rationale": "In Task Contract Patterns, the Split, Dependency, And Workspace Rules sentence set co-locates domain-specific fields that define one evidence or decision record; separating its 1 flagged sentence would obscure scope, authority, or proof limits."
+    }
+  ],
+  "limitations": [
+    "Unfilled template: every decision, reason code, and rationale must be completed independently before validation."
+  ]
+}

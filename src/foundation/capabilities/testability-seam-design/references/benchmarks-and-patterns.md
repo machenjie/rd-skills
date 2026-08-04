@@ -10,7 +10,7 @@ Use this reference for L3+ seam decisions where the inline rules are not enough.
 | External provider double | Use fake/stub/mock/spy only at declared boundary and add contract or integration calibration when risk matters | Mock payloads can never occur in the real provider |
 | Nondeterministic source | Introduce clock/random/UUID/env/scheduler provider with production default and test override | Global patch, sleep, retry, or CI timing decides pass/fail |
 | Dependency graph override | Provide explicit test graph seam with reset/cleanup and production graph comparison | Tests build a graph production cannot construct |
-| Fixture/golden pressure | Localize owner, asserted fields, mutation policy, privacy boundary, and deletion path | Shared business fixture becomes an implicit cross-module contract |
+| Fixture/golden pressure | Consume the accepted `test-data-management` owner and expose only the required reset/observation seam | The seam redefines fixture meaning, privacy, namespace, mutation, or deletion policy |
 | Refactor before tests | Characterize observable behavior before movement, including preserved bugs when required | Structure changes land before current behavior is locked |
 
 ## Test Double Fidelity Ladder

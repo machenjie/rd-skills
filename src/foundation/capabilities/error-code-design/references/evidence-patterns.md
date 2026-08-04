@@ -1,6 +1,6 @@
 # Error Code Design Evidence Patterns
 
-Use this reference when closure depends on proving a client-visible error contract, safe diagnostic separation, compatibility, retryability, authorization posture, or graph/memory claim. Keep the main capability body for routing and output shape; load this file only for concrete evidence mapping.
+Use this reference when closure depends on proving a client-visible error contract, safe diagnostic separation, compatibility, retryability, authorization posture, or repository inspection/prior evidence claim. Keep the main capability body for routing and output shape; load this file only for concrete evidence mapping.
 
 ## Claim To Evidence Map
 
@@ -12,7 +12,7 @@ Use this reference when closure depends on proving a client-visible error contra
 | Authorization posture avoids enumeration | 401/403/404 resource-class decision plus denied-case proof | Single generic auth test | User, tenant, object, or account existence leak |
 | Validation errors are actionable | Field path, violation code, safe echo policy, and invalid-input fixture | One generic `invalid input` message | Forms, SDKs, and clients cannot repair input safely |
 | Retryability is safe | Retry matrix, `Retry-After` or backoff, idempotency requirement, duplicate-side-effect proof | Marking 503/429 as retryable with no idempotency review | Retry storm or duplicate payment/order/state change |
-| Generated clients and docs are fresh | OpenAPI/proto/docs generator command, diff, and compile/contract result | Generated artifact timestamp or memory claim | Public SDK/docs diverge from runtime behavior |
+| Generated clients and docs are fresh | OpenAPI/proto/docs generator command, diff, and compile/contract result | Generated artifact timestamp or prior claim | Public SDK/docs diverge from runtime behavior |
 | Diagnostics remain traceable | Response trace/request id plus log/metric linkage with bounded labels | Screenshot-only support workflow | Support cannot correlate failures or metrics explode |
 
 ## Evidence Labels
@@ -52,4 +52,4 @@ error_validation_map:
 - Reject closure if raw exception, SQL, provider, secret, token, PII, tenant, prompt, or internal policy detail can reach the client response.
 - Reject closure if 401/403/404 behavior can expose existence and no resource-class posture or denied proof exists.
 - Reject closure if retryable write errors lack idempotency or duplicate-side-effect evidence.
-- Downgrade memory, graph, trajectory, and stale report claims unless current source paths and fresh validation confirm them.
+- Downgrade prior task evidence and repository inspection, observable action sequence, and stale report claims unless current source paths and fresh validation confirm them.

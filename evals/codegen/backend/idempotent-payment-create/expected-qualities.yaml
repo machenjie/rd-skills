@@ -7,35 +7,14 @@ focus:
   - money precision
   - auditability
 route_hints:
-  skills:
-    - change-intake-compiler
-    - domain-impact-modeler
-    - data-api-contract-changer
-    - backend-change-builder
-    - security-privacy-gate
-    - reliability-observability-gate
-    - quality-test-gate
-    - change-documentation-gate
-  capabilities:
-    - state-machine-modeling
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
     - idempotency-retry-design
     - transaction-consistency
-    - repository-persistence
-    - input-validation
-    - observability
-    - integration-testing
-    - i18n-timezone-money-safety
-  domain_extensions:
     - payment-trading-extension
-  quality_gates:
-    - requirement gate
-    - domain gate
-    - API/data gate
-    - implementation gate
-    - security gate
-    - reliability gate
-    - test gate
-    - documentation gate
+  review_skill: security-privacy-gate
 expected_outcomes:
   - A repeated idempotency key with an identical payload returns the stored payment result.
   - A repeated idempotency key with a different payload returns a conflict without side effects.

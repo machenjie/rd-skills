@@ -1,0 +1,20 @@
+expected_stage: skill-authoring-review
+expected_professional_skill: ai-code-review-refactor
+expected_capabilities:
+  - code-review
+expected_hidden_risks:
+  - root Skill bloat consumes task context before any decision is made
+  - speculative Layer 3 loading violates route-once JIT selection
+  - registry coverage can pass while trivial tasks are over-routed
+expected_evidence:
+  - skill content size and body-link validation output
+  - positive and negative routing fixtures for the changed trigger
+  - recommended build output proving only targeted references are compiled
+forbidden_behaviors:
+  - approve because all copied knowledge may be useful
+  - claim routing precision without a negative fixture
+  - require an internal runtime protocol to enforce JIT loading
+expected_output_obligations:
+  - reviewed source and generated boundaries
+  - findings ordered by context and routing impact
+  - unverified scope and residual risk

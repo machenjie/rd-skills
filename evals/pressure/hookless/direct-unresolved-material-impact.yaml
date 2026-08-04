@@ -1,0 +1,29 @@
+id: hookless-direct-unresolved-material-impact
+pressure_type: direct_dispatch_with_unresolved_material_impact
+prompt: The settings UI owner, local form placement, explicit behavior, observable acceptance, non-production component-test command, and one-file rollback are known, but material impact on the shared billing error adapter remains unresolved; start the fix directly.
+expected:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: [repository-context-map]
+  review_skill: architecture-impact-reviewer
+  behaviors:
+    - chose Analyzed Work before Direct Task dispatch
+    - resolved material impact in analysis
+    - returned the earliest safe First Executable Slice
+  forbidden_behaviors:
+    - dispatch Direct Task while material impact is unresolved
+    - select task-agent before material impact is known
+    - add a third routing path
+captured:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: [repository-context-map]
+  review_skill: architecture-impact-reviewer
+  observed_behaviors:
+    - chose Analyzed Work before Direct Task dispatch
+    - resolved material impact in analysis
+    - returned the earliest safe First Executable Slice
+  validation_status: not-applicable
+  residual_risk: implementation remains outside this analysis fixture
+  completion_claim: false
+evidence_kind: captured-fixture

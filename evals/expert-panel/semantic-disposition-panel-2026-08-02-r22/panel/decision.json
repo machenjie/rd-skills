@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-decision",
+  "review_id": "semantic-disposition-panel-2026-08-02-r22",
+  "decided_on": "2026-08-02",
+  "decision_method": "three-independent-experts-majority",
+  "source_fingerprints": {
+    "audit": "681b35ed25e9e6f6423533056723983f998cb3bb6dc3ddf9f8c2f1701175eca6",
+    "reference_candidates": "1a8e5ed6e42995ae227233ef430ee7e75c28819f0fe580387266900f5e1bd886",
+    "reference_detector": "4b04a9b693ac3079a1af6154425ed64408474d5027c0119ed6360c9288356112",
+    "reference_groups": "aa063d66e92ded0513416306d5a118f5519e9205806d70477ded8417aabb5a79",
+    "reference_source": "48c3bd8f1827a470f021dee015da7b633a08841eff0ca72e45ce606206f48fba",
+    "root_candidates": "830cee98d158c76c5cb9e5d6eb5ffc73498c55deb3fdbd1eca9116512b2846a7",
+    "root_context": "ab95ca9c6fd442902502b28a4ebb22bf33024bfca9fc849995f085f0b9d3db80",
+    "root_detector": "998c2581653aac9c406208b35436660dfee1fd1862514c38264d2ad52a3f73ad",
+    "root_source": "1bd17827aa5a697d4a80e7682652fde46c5500050e97fed6a8709b894fa50025"
+  },
+  "panel_contract": {
+    "decision_method": "three-independent-experts-majority",
+    "required_voters": 3,
+    "abstentions_allowed": false,
+    "minimum_winning_votes": 2,
+    "independent_ballots": true,
+    "required_target_count": 2,
+    "required_axis_target_counts": {
+      "root": 2,
+      "reference": 0
+    },
+    "allowed_dispositions": [
+      "false-positive",
+      "rewrite",
+      "time-bounded-exception",
+      "valid-contextual-rule"
+    ]
+  },
+  "packet": {
+    "path": "evals/expert-panel/semantic-disposition-panel-2026-08-02-r22/packet.json",
+    "sha256": "0e078640f9f508b36043dac1f2574405c7c3177deaf58ec71967b4113b0793da"
+  },
+  "voters": [
+    {
+      "voter_id": "semantic-r22-actionability",
+      "agent_id": "/root/readability_r15_actionability",
+      "role": "senior AI instruction semantics reviewer",
+      "expertise": [
+        "AI instruction actionability",
+        "semantic disposition governance",
+        "cross-platform task-boundary semantics"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r22-actionability.json",
+      "ballot_sha256": "4c47341f3d70bfd5f0caeca74451f245db53b886c43866fbcebd224a6ef2c98d"
+    },
+    {
+      "voter_id": "semantic-r22-clarity",
+      "agent_id": "/root/readability_r15_clarity",
+      "role": "senior skill-language ambiguity reviewer",
+      "expertise": [
+        "skill-language ambiguity analysis",
+        "semantic disposition governance",
+        "cross-platform scope clarity"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r22-clarity.json",
+      "ballot_sha256": "22c5cc442b08bbde9f346abf783afdc2b42cc2063ed2729783066ef335012598"
+    },
+    {
+      "voter_id": "semantic-r22-architecture",
+      "agent_id": "/root/architecture_platform_domain_a",
+      "role": "senior skill-reference architecture reviewer",
+      "expertise": [
+        "skill-reference architecture",
+        "Domain extension ownership boundaries",
+        "semantic disposition governance"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r22-architecture.json",
+      "ballot_sha256": "d2b96e3c13b3344c4f6a44859e2485be93003a275afa92a8c71f3a43ae87b2cb"
+    }
+  ],
+  "semantic_decisions": [
+    {
+      "target_id": "root:4e84f474724dae709f136d9f1ccb67e2ffb82d46256aba4cbf7761d03344442c",
+      "axis": "root",
+      "candidate_id": "4e84f474724dae709f136d9f1ccb67e2ffb82d46256aba4cbf7761d03344442c",
+      "candidate_fingerprint": "de3594184de1c74ecd9e5450f002d65924e3559be2bd4a5243164175144af7d2",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "semantic-r22-actionability",
+        "semantic-r22-clarity",
+        "semantic-r22-architecture"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "semantic-r22-actionability",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The current Root first proves concrete targets, preserves a cohesive executable slice only while ownership, write, validation, release, rollback, and integration boundaries stay cohesive, and otherwise splits the work. Within that bounded slice, validating shared logic, every affected target, native boundary, release artifact, and platform-specific negative path is necessary to prevent shared tests from masking target-specific failure.",
+          "authority_or_condition": "The `cross-platform-client-extension` Domain owns this modifier rule only after repository, build, release, or published-artifact evidence confirms a shared installed client and its affected concrete targets. The selected Professional remains the task owner, and separately executable boundaries return to analysis-agent splitting.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Keep validation limited to the affected target matrix and the shared/native/artifact boundaries of the cohesive slice. Report untested targets and re-review if target evidence, slice cohesion, ownership, or the validation sentence changes.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r22-clarity",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The rule expresses one validation-coverage decision for the accepted cross-platform slice. Affected target and the surrounding per-target evidence, artifact, and failure-path clauses bound the listed proof surfaces to current scope.",
+          "authority_or_condition": "The current Root requires a proven target matrix, a cohesive executable slice, affected-target evidence, explicit untested scope, and per-target validation.",
+          "decision_owner": "installed-client-change-builder Professional owner, with each confirmed platform Domain owning target-specific constraints",
+          "mitigation": "Retain the rule and require the output to name the affected target matrix, untested targets, artifact scope, and proof limits.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r22-architecture",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The universal quantifier is bounded by the repository-proven affected-target matrix. Shared logic success cannot prove native adapters, platform-specific negative behavior, or the emitted artifact on another affected target.",
+          "authority_or_condition": "The selected installed-client Professional owns implementation and validation workflow; this Domain owns shared-versus-platform constraints, while each confirmed platform Domain owns its native behavior.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Retain the rule. Re-evaluate its finite target set whenever repository, build, release, or published-artifact evidence changes.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:cd9d813a014e6ae974bbb628bb9ad5b0037b6d196c767092a237ae32c32cada1",
+      "axis": "root",
+      "candidate_id": "cd9d813a014e6ae974bbb628bb9ad5b0037b6d196c767092a237ae32c32cada1",
+      "candidate_fingerprint": "88f23f750cf9ab2dd1a4059d88eeb5ee5e31a00b04d69ff091fa17be806e6bc2",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "semantic-r22-actionability",
+        "semantic-r22-clarity",
+        "semantic-r22-architecture"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "semantic-r22-actionability",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The current sentence is a three-layer ownership invariant rather than an arbitrary mechanism choice. The cross-platform Domain adds shared-client constraints to an already selected Professional Skill, so allowing it to become a standalone target or primary Professional review owner would create a second owner and bypass task-type routing.",
+          "authority_or_condition": "The repository three-layer Skill architecture and the `cross-platform-client-extension` Role section authorize this boundary whenever the modifier is loaded for confirmed shared-client behavior. The selected Professional Skill retains primary analysis, task, or review ownership.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Route the task to exactly one Professional owner before loading this Domain modifier, and load each affected registered platform Domain from current target evidence. Re-review if the role hierarchy, Professional owner contract, or sentence changes.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r22-clarity",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The two nouns state one non-ownership invariant for a modifier: it cannot be routed as the work target and cannot replace the selected Professional owner. The surrounding text identifies both required owners.",
+          "authority_or_condition": "The three-layer architecture assigns each task one Professional owner while Domain Skills only add constraints and compose with concrete registered platform Domains.",
+          "decision_owner": "Skill and Reference architecture owner",
+          "mitigation": "Retain the categorical boundary and keep the installed-client Professional owner plus each confirmed concrete platform Domain explicit in routing output.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r22-architecture",
+          "disposition": "valid-contextual-rule",
+          "rationale": "This sentence enforces the Domain modifier boundary. It prevents shared-client constraints from becoming a standalone task or displacing the single selected Professional owner.",
+          "authority_or_condition": "The preceding Role sentence binds this Domain to a selected installed-client Professional, and current task evidence separately selects each affected concrete platform Domain.",
+          "decision_owner": "cross-platform-client-extension",
+          "mitigation": "Retain the ownership prohibition. Re-review if routing metadata ever permits this Domain to activate without a selected Professional owner.",
+          "review_after": null
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "semantic_dispositions": {
+      "false-positive": 0,
+      "rewrite": 0,
+      "time-bounded-exception": 0,
+      "valid-contextual-rule": 2
+    }
+  },
+  "limitations": [
+    "This majority is authoring lifecycle evidence only.",
+    "It cannot satisfy readability or professional-completeness formal attestations.",
+    "The record contains no generated single-source-of-truth disposition entries.",
+    "A rewrite majority requires a source edit before any resolved governance entry can exist."
+  ]
+}

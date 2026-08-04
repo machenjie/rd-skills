@@ -1,6 +1,6 @@
 # Routing Navigation Evidence Patterns
 
-Use this reference when route closure depends on proving current route behavior, backend-authorization limits, generated-link/template freshness, public URL migration safety, graph or memory freshness, or route-change-to-validation mapping. Keep `SKILL.md` for route selection and output shape; load this file only for concrete evidence closure.
+Use this reference when route closure depends on proving current route behavior, backend-authorization limits, generated-link/template freshness, public URL migration safety, prior source or task evidence freshness, or route-change-to-validation mapping. Keep `SKILL.md` for route selection and output shape; load this file only for concrete evidence closure.
 
 ## Claim To Evidence Map
 
@@ -36,7 +36,7 @@ route_change_to_validation_map:
 
 ## Closure Checks
 
-- Treat repository graph, project memory, analytics, support reports, and generated docs as selectors until current route source confirms them.
+- Treat repository inspection, prior task evidence, analytics, support reports, and generated docs as selectors until current route source confirms them.
 - Name any uninspected backend auth, generated link, email, notification, partner, SEO, browser, or analytics surface as residual risk.
 - Separate dry-run/manual browser evidence from automated route tests and live production evidence.
 - Do not claim route migration safety unless old valid links, stale links, generated links, and rollback behavior are all mapped to evidence or explicit residual risk.

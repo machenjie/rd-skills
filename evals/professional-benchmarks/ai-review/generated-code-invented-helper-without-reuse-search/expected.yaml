@@ -3,7 +3,6 @@ expected_professional_skill: ai-code-review-refactor
 expected_capabilities:
   - implementation-structure-design
   - code-clarity-maintainability
-  - agent-execution-discipline
   - code-review
 expected_hidden_risks:
   - invented shared helper without reuse search

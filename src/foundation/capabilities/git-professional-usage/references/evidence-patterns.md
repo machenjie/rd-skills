@@ -1,7 +1,5 @@
 # Git Evidence Patterns
 
-## Required Evidence
-
 - Worktree state: branch, upstream, status, staged diff, unstaged diff, and untracked paths.
 - Ref state: merge base, source branch, target branch, relevant tag, or reflog ref when needed.
 - Conflict evidence: conflicted paths, ours/theirs/base inspection, source-of-truth decision, and generated policy.
@@ -29,4 +27,4 @@ Git Professional Usage Record
 
 ## Blocking Conditions
 
-Block completion when unrelated user changes would be staged or discarded, a generated artifact conflict lacks source authority, a destructive command lacks rollback notes, or remote history would be rewritten without branch ownership.
+Block completion when unrelated user changes would be staged or discarded, a generated-artifact conflict lacks source authority, or a destructive command lacks rollback notes. The same block applies when remote history would be rewritten without branch ownership.

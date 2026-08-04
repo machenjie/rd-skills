@@ -1,0 +1,2941 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.professional-completeness-panel-ballot",
+  "review_id": "professional-completeness-panel-2026-07-16-r3",
+  "created_on": "2026-07-16",
+  "packet_sha256": "18d0c20e4c63573bc2b54b5cce07c997f55b26acc02ba4c80ac4f6ab81e1607d",
+  "source_fingerprints": {
+    "professional_packages": "b02105fa68a333d17f42f50e0307dfbd3d46bbeda360dc2761c10b4643e371ea"
+  },
+  "voter": {
+    "voter_id": "reviewer-a",
+    "agent_id": "professional-completeness-agent-a",
+    "role": "senior-software-architecture-reviewer",
+    "expertise": [
+      "software architecture and domain boundaries",
+      "API and concurrency correctness"
+    ],
+    "independent_review": true
+  },
+  "professional_votes": [
+    {
+      "skill_id": "acceptance-criteria-builder",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "acceptance-criteria-builder defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/acceptance-criteria-builder/SKILL.md; its 3 indexed references cover checklist, evidence patterns, index, while adjacency to acceptance-standard-definition, scenario-decomposition, test-strategy keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "acceptance-standard-definition",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "acceptance-standard-definition defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/acceptance-standard-definition/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to acceptance-criteria-builder, engineering-change-analysis, non-goal-boundary-definition keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "agent-execution-discipline",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "agent-execution-discipline defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/agent-execution-discipline/SKILL.md; its 3 indexed references cover checklist, completion evidence, execution report and gates, while adjacency to agent-tool-permission-sandbox, cleanup-deletion-governance, code-clarity-maintainability keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "agent-tool-permission-sandbox",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "agent-tool-permission-sandbox defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/agent-tool-permission-sandbox/SKILL.md; its 1 indexed reference cover profile permission checklist, while adjacency to agent-execution-discipline, cleanup-deletion-governance, code-clarity-maintainability keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "ai-code-review-refactor",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "ai-code-review-refactor defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/ai-code-review-refactor/SKILL.md; its 5 indexed references cover ai review pattern catalog, checklist, index, while adjacency to cleanup-deletion-governance, code-clarity-maintainability, code-element-professionalism keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "ai-product-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "ai-product-extension defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/domain-extensions/ai-product-extension/SKILL.md; its 1 indexed reference cover checklist, while adjacency to security-privacy-gate keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "algorithm-data-structure-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "algorithm-data-structure-selection defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/algorithm-data-structure-selection/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to high-risk-design-review, language-idiom-enforcement, language-performance-safety keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "api-contract-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "api-contract-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/api-contract-design/SKILL.md; its 3 indexed references cover api style and semantics, checklist, evidence patterns, while adjacency to change-documentation-gate, consumer-impact-analysis, data-api-contract-changer keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "architecture-enforcement-tooling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "architecture-enforcement-tooling defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to architecture-impact-reviewer, architecture-style-selection, architecture-tradeoff-analysis keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "architecture-impact-reviewer",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "architecture-impact-reviewer defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/architecture-impact-reviewer/SKILL.md; its 4 indexed references cover architecture output and gates, checklist, index, while adjacency to architecture-enforcement-tooling, architecture-style-selection, architecture-tradeoff-analysis keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "architecture-style-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "architecture-style-selection defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/architecture-style-selection/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to architecture-enforcement-tooling, architecture-impact-reviewer, architecture-tradeoff-analysis keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "architecture-tradeoff-analysis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "architecture-tradeoff-analysis defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md; its 3 indexed references cover checklist, evidence patterns, tradeoff benchmarks, while adjacency to architecture-enforcement-tooling, architecture-impact-reviewer, architecture-style-selection keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "async-job-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "async-job-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/async-job-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to authentication-authorization, backend-change-builder, controller-api-implementation keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "authentication-authorization",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "authentication-authorization defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/authentication-authorization/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to async-job-design, backend-change-builder, controller-api-implementation keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "authentication-security",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "authentication-security defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/authentication-security/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to dependency-vulnerability-scanning, input-validation, secret-configuration-security keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "backend-change-builder",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "backend-change-builder defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/backend-change-builder/SKILL.md; its 6 indexed references cover backend output and gates, checklist, index, while adjacency to async-job-design, authentication-authorization, concurrency-control keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "backup-recovery",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "backup-recovery defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/backup-recovery/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to concurrency-control, degradation-circuit-breaking, linux-systems-professional-usage keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "bigdata-product-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "bigdata-product-extension defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/domain-extensions/bigdata-product-extension/SKILL.md; its 1 indexed reference cover checklist, while adjacency to data-middleware-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "build-tool-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "build-tool-professional-usage defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/build-tool-professional-usage/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to ci-cd, configuration-runtime-policy, containerization keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "business-invariant-analysis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "business-invariant-analysis defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/business-invariant-analysis/SKILL.md; its 1 indexed reference cover business invariant checklist, while adjacency to domain-impact-modeler keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "business-rule-extraction",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "business-rule-extraction defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/business-rule-extraction/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to domain-event-modeling, domain-impact-modeler, domain-object-identification keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "cache-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "cache-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/cache-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to data-middleware-change-builder, file-storage-processing, indexing-query-optimization keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "change-documentation-gate",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "change-documentation-gate defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/change-documentation-gate/SKILL.md; its 4 indexed references cover checklist, documentation output and gates, evidence patterns, while adjacency to api-contract-design, consumer-impact-analysis, documentation-generation keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "change-intake-compiler",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "change-intake-compiler defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/change-intake-compiler/SKILL.md; its 4 indexed references cover change request template, checklist, evidence patterns, while adjacency to non-goal-boundary-definition, requirement-clarification, requirement-structuring keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "ci-cd",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "ci-cd defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/ci-cd/SKILL.md; its 3 indexed references cover checklist, evidence patterns, pipeline benchmarks, while adjacency to build-tool-professional-usage, configuration-runtime-policy, containerization keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "cleanup-deletion-governance",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "cleanup-deletion-governance defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/cleanup-deletion-governance/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, ai-code-review-refactor keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "cli-daemon-interface-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "cli-daemon-interface-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/cli-daemon-interface-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to data-api-contract-changer, sdk-library-contract-design keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "code-clarity-maintainability",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "code-clarity-maintainability defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/code-clarity-maintainability/SKILL.md; its 2 indexed references cover benchmarks and patterns, checklist, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, ai-code-review-refactor keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "code-element-professionalism",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "code-element-professionalism defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/code-element-professionalism/SKILL.md; its 3 indexed references cover expressions, statements, variables, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, ai-code-review-refactor keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "code-review",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Current src/foundation/capabilities/code-review/references/finding-taxonomy.md calibrates severity by reachable consequence, exposure, reversibility, and current policy, and treats test status as confidence rather than severity. Together with the root, checklist, evidence patterns, and routing adjacency, the package covers boundaries, failure handling, proof, and distinct ownership; the prior taxonomy defect is closed."
+    },
+    {
+      "skill_id": "concurrency-control",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "concurrency-control defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/concurrency-control/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to backend-change-builder, backup-recovery, data-middleware-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "configuration-runtime-policy",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "configuration-runtime-policy defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/configuration-runtime-policy/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to build-tool-professional-usage, ci-cd, containerization keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "consumer-impact-analysis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "consumer-impact-analysis defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/consumer-impact-analysis/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to api-contract-design, architecture-impact-reviewer, change-documentation-gate keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "containerization",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "containerization defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/containerization/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to build-tool-professional-usage, ci-cd, configuration-runtime-policy keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "contract-testing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "contract-testing defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/contract-testing/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to data-api-contract-changer, e2e-testing, engineering-change-analysis keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "controller-api-implementation",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "controller-api-implementation defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/controller-api-implementation/SKILL.md; its 3 indexed references cover boundary patterns, checklist, evidence patterns, while adjacency to async-job-design, authentication-authorization, backend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "cpp-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "cpp-professional-usage defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/cpp-professional-usage/SKILL.md; its 1 indexed reference cover native safety evidence, while adjacency to ai-code-review-refactor, go-professional-usage, java-jvm-professional-usage keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "data-api-contract-changer",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "data-api-contract-changer defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/data-api-contract-changer/SKILL.md; its 4 indexed references cover checklist, evidence patterns, index, while adjacency to api-contract-design, cli-daemon-interface-design, contract-testing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "data-format-contract-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "data-format-contract-usage defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/data-format-contract-usage/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to api-contract-design, consumer-impact-analysis, data-api-contract-changer keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "data-middleware-change-builder",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "data-middleware-change-builder defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/data-middleware-change-builder/SKILL.md; its 4 indexed references cover checklist, evidence patterns, index, while adjacency to bigdata-product-extension, cache-design, concurrency-control keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "data-migration-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "data-migration-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/data-migration-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to api-contract-design, consumer-impact-analysis, data-api-contract-changer keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "data-model-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "data-model-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/data-model-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to api-contract-design, consumer-impact-analysis, data-api-contract-changer keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "data-side-effect-flow-tracing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "data-side-effect-flow-tracing defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/data-side-effect-flow-tracing/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, cleanup-deletion-governance keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "degradation-circuit-breaking",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "degradation-circuit-breaking defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/degradation-circuit-breaking/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to backup-recovery, concurrency-control, engineering-change-analysis keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "delivery-release-gate",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "delivery-release-gate defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/delivery-release-gate/SKILL.md; its 4 indexed references cover checklist, delivery output and gates, index, while adjacency to build-tool-professional-usage, ci-cd, configuration-runtime-policy keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "dependency-vulnerability-scanning",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "dependency-vulnerability-scanning defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/dependency-vulnerability-scanning/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to authentication-security, input-validation, secret-configuration-security keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "dependency-wiring-lifecycle",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "dependency-wiring-lifecycle defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/dependency-wiring-lifecycle/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, backend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "design-pattern-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "design-pattern-selection defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/design-pattern-selection/SKILL.md; its 1 indexed reference cover pattern evidence record, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, ai-code-review-refactor keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "design-system-rules",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "design-system-rules defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/design-system-rules/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to engineering-change-analysis, experience-impact-modeler, information-architecture keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "documentation-generation",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "documentation-generation defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/documentation-generation/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, change-documentation-gate keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "domain-event-modeling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "domain-event-modeling defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/domain-event-modeling/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, event evidence freshness, while adjacency to business-rule-extraction, domain-impact-modeler, domain-object-identification keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "domain-impact-modeler",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "domain-impact-modeler defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/domain-impact-modeler/SKILL.md; its 4 indexed references cover business invariant evidence, checklist, evidence patterns, while adjacency to business-invariant-analysis, business-rule-extraction, concurrency-control keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "domain-logic-implementation",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "domain-logic-implementation defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/domain-logic-implementation/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to async-job-design, authentication-authorization, backend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "domain-object-identification",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "domain-object-identification defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/domain-object-identification/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to business-rule-extraction, domain-event-modeling, domain-impact-modeler keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "dto-schema-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "dto-schema-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/dto-schema-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to api-contract-design, consumer-impact-analysis, data-api-contract-changer keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "e2e-testing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "e2e-testing defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/e2e-testing/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to contract-testing, integration-testing, quality-test-gate keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "engineering-artifact-review",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Current src/professional-skills/engineering-artifact-review/SKILL.md and references/review-checklist.md align the indexed reference with ordinary pre-implementation artifact review. The checklist covers artifact-specific authority, dependencies, mixed-version behavior, resumability, rollback or forward recovery, validation, and residual risk, while legacy migration is isolated as an optional case; the prior load-contract contradiction is closed."
+    },
+    {
+      "skill_id": "engineering-change-analysis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "engineering-change-analysis defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/engineering-change-analysis/SKILL.md; its 7 indexed references cover checklist, diagnosis only, evidence patterns, while adjacency to acceptance-standard-definition, api-contract-design, architecture-tradeoff-analysis keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "error-code-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "error-code-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/error-code-design/SKILL.md; its 3 indexed references cover checklist, evidence patterns, industry benchmarks, while adjacency to api-contract-design, consumer-impact-analysis, data-api-contract-changer keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "event-driven-architecture",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "event-driven-architecture defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/event-driven-architecture/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, topology evidence freshness, while adjacency to architecture-enforcement-tooling, architecture-impact-reviewer, architecture-style-selection keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "experience-impact-modeler",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "experience-impact-modeler defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/experience-impact-modeler/SKILL.md; its 4 indexed references cover checklist, experience output and gates, index, while adjacency to design-system-rules, information-architecture, interaction-state-modeling keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "extensibility-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "extensibility-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/extensibility-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to architecture-enforcement-tooling, architecture-impact-reviewer, architecture-style-selection keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "failure-contract-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "failure-contract-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/failure-contract-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to async-job-design, authentication-authorization, backend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "failure-diagnosis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "failure-diagnosis defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/failure-diagnosis/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence freshness, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, backend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "file-storage-processing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "file-storage-processing defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/file-storage-processing/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to cache-design, data-middleware-change-builder, indexing-query-optimization keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "form-validation-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "form-validation-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/form-validation-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to frontend-api-integration, frontend-change-builder, frontend-testing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "frontend-api-integration",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "frontend-api-integration defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/frontend-api-integration/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to form-validation-design, frontend-change-builder, frontend-testing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "frontend-change-builder",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "frontend-change-builder defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/frontend-change-builder/SKILL.md; its 4 indexed references cover checklist, frontend output and gates, index, while adjacency to form-validation-design, frontend-api-integration, frontend-testing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "frontend-testing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "frontend-testing defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/frontend-testing/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to form-validation-design, frontend-api-integration, frontend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "git-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "git-professional-usage defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/git-professional-usage/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, cleanup-deletion-governance keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "go-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "go-professional-usage defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/go-professional-usage/SKILL.md; its 1 indexed reference cover benchmarks and patterns, while adjacency to backend-change-builder, cpp-professional-usage, java-jvm-professional-usage keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "high-risk-design-review",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "high-risk-design-review defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/high-risk-design-review/SKILL.md; its 1 indexed reference cover design review checklist, while adjacency to algorithm-data-structure-selection, language-runtime-selection, package-dependency-management keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "i18n-timezone-money-safety",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "i18n-timezone-money-safety defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/i18n-timezone-money-safety/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to data-api-contract-changer keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "idempotency-retry-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "idempotency-retry-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/idempotency-retry-design/SKILL.md; its 3 indexed references cover checklist, evidence patterns, industry benchmarks, while adjacency to async-job-design, authentication-authorization, backend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "implementation-structure-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "implementation-structure-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/implementation-structure-design/SKILL.md; its 2 indexed references cover object module decomposition, reuse and placement, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, ai-code-review-refactor keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "indexing-query-optimization",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "indexing-query-optimization defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/indexing-query-optimization/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to cache-design, data-middleware-change-builder, file-storage-processing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "information-architecture",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "information-architecture defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/information-architecture/SKILL.md; its 1 indexed reference cover benchmarks and patterns, while adjacency to design-system-rules, experience-impact-modeler, interaction-state-modeling keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "input-validation",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "input-validation defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/input-validation/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to authentication-security, dependency-vulnerability-scanning, integration-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "integration-change-builder",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "integration-change-builder defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/integration-change-builder/SKILL.md; its 3 indexed references cover checklist, index, solution optimality, while adjacency to consumer-impact-analysis, contract-testing, failure-contract-design keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "integration-testing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "integration-testing defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/integration-testing/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to contract-testing, e2e-testing, quality-test-gate keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "interaction-state-modeling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Current src/foundation/capabilities/interaction-state-modeling/references/benchmarks-and-patterns.md labels its state rows as non-normative calibration examples and requires treatment, actions, recovery, disclosure, accessibility, and evidence to derive from product and operation semantics. The root, checklist, evidence patterns, and routing adjacency complete the boundary and proof contract; the prior universal-matrix defect is closed."
+    },
+    {
+      "skill_id": "iot-embedded-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "iot-embedded-extension defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/domain-extensions/iot-embedded-extension/SKILL.md; its 1 indexed reference cover checklist, while adjacency to delivery-release-gate keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "java-jvm-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "java-jvm-professional-usage defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/java-jvm-professional-usage/SKILL.md; its 1 indexed reference cover benchmarks and patterns, while adjacency to backend-change-builder, cpp-professional-usage, go-professional-usage keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "kubernetes-gateway",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "kubernetes-gateway defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/kubernetes-gateway/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to build-tool-professional-usage, ci-cd, configuration-runtime-policy keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "language-idiom-enforcement",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "language-idiom-enforcement defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/language-idiom-enforcement/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to algorithm-data-structure-selection, backend-change-builder, language-performance-safety keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "language-performance-safety",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "language-performance-safety defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/language-performance-safety/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to algorithm-data-structure-selection, backend-change-builder, language-idiom-enforcement keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "language-runtime-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "language-runtime-selection defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/language-runtime-selection/SKILL.md; its 1 indexed reference cover benchmarks and patterns, while adjacency to algorithm-data-structure-selection, high-risk-design-review, language-idiom-enforcement keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "language-testing-strategy",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "language-testing-strategy defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/language-testing-strategy/SKILL.md; its 1 indexed reference cover runtime tooling, while adjacency to algorithm-data-structure-selection, language-idiom-enforcement, language-performance-safety keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "layered-architecture-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "layered-architecture-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/layered-architecture-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to architecture-enforcement-tooling, architecture-impact-reviewer, architecture-style-selection keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "linux-systems-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "linux-systems-professional-usage defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/linux-systems-professional-usage/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to backup-recovery, concurrency-control, degradation-circuit-breaking keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "logging-design-gate",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "logging-design-gate defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/logging-design-gate/SKILL.md; its 4 indexed references cover checklist, index, logging output and gates, while adjacency to logging-error-handling, observability, secret-configuration-security keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "logging-error-handling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "logging-error-handling defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/logging-error-handling/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to async-job-design, authentication-authorization, backend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "low-level-systems-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "low-level-systems-extension defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/domain-extensions/low-level-systems-extension/SKILL.md; its 1 indexed reference cover checklist, while adjacency to backend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "message-queue-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "message-queue-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/message-queue-design/SKILL.md; its 3 indexed references cover broker benchmarks, checklist, evidence patterns, while adjacency to backend-change-builder, cache-design, file-storage-processing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "microservice-splitting",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "microservice-splitting defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/microservice-splitting/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to architecture-enforcement-tooling, architecture-impact-reviewer, architecture-style-selection keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "minimal-correct-implementation",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "minimal-correct-implementation defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/minimal-correct-implementation/SKILL.md; its 1 indexed reference cover simplicity ladder, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, ai-code-review-refactor keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "mobile-product-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "mobile-product-extension defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/domain-extensions/mobile-product-extension/SKILL.md; its 1 indexed reference cover checklist, while adjacency to frontend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "model-boundary-mapping",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "model-boundary-mapping defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/model-boundary-mapping/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to api-contract-design, consumer-impact-analysis, data-api-contract-changer keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "module-boundary-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "module-boundary-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/module-boundary-design/SKILL.md; its 2 indexed references cover benchmarks and enforcement, module decomposition, while adjacency to ai-code-review-refactor, architecture-enforcement-tooling, architecture-impact-reviewer keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "network-protocol-gateway-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "network-protocol-gateway-usage defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/network-protocol-gateway-usage/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to backup-recovery, concurrency-control, degradation-circuit-breaking keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "non-goal-boundary-definition",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "non-goal-boundary-definition defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/non-goal-boundary-definition/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to acceptance-standard-definition, change-intake-compiler, requirement-clarification keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "nosql-database",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "nosql-database defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/nosql-database/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to cache-design, data-middleware-change-builder, file-storage-processing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "observability",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "observability defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/observability/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to backend-change-builder, backup-recovery, concurrency-control keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "observable-action-sequence-analysis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "observable-action-sequence-analysis defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/observable-action-sequence-analysis/SKILL.md; its 1 indexed reference cover action sequence checklist, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, cleanup-deletion-governance keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "package-dependency-management",
+      "decision": "requires-professional-correction",
+      "reason_code": "erroneous-professional-rule",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "defect-found"
+      },
+      "rationale": "The Poetry 2.4 row in src/foundation/capabilities/package-dependency-management/references/ecosystem-command-map.md now closes the prior defect: `poetry check --lock` fails on missing or inconsistent lock state before `poetry sync` uses exact locked versions, and the invalid flag is gone. However, the same frozen-install column still prescribes `mix deps.get --only prod` with `mix.lock`. Current Mix documentation says `deps.get` fetches unavailable or out-of-date dependencies and provides `--check-locked` specifically to fail when the lockfile would change. Add that pinned-version fail-closed option or an equivalent precheck; without it the row can mutate lock state and contradicts the frozen-evidence rule."
+    },
+    {
+      "skill_id": "page-component-decomposition",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "page-component-decomposition defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/page-component-decomposition/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to form-validation-design, frontend-api-integration, frontend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "payment-trading-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "payment-trading-extension defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/domain-extensions/payment-trading-extension/SKILL.md; its 1 indexed reference cover checklist, while adjacency to backend-change-builder, engineering-change-analysis, security-privacy-gate keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "performance-budgeting",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "performance-budgeting defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/performance-budgeting/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to backup-recovery, concurrency-control, data-middleware-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "permission-boundary-modeling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "permission-boundary-modeling defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/permission-boundary-modeling/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to backend-change-builder, business-rule-extraction, data-middleware-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "plan-execution-consistency",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "plan-execution-consistency defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/plan-execution-consistency/SKILL.md; its 1 indexed reference cover consistency checklist, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, cleanup-deletion-governance keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "profiling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "profiling defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/profiling/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to backup-recovery, concurrency-control, degradation-circuit-breaking keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "project-initialization",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "project-initialization defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/project-initialization/SKILL.md; its 3 indexed references cover checklist, clean checkout, evidence patterns, while adjacency to build-tool-professional-usage, ci-cd, configuration-runtime-policy keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "prototype-description",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "prototype-description defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/prototype-description/SKILL.md; its 1 indexed reference cover benchmarks and patterns, while adjacency to design-system-rules, experience-impact-modeler, information-architecture keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "python-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "python-professional-usage defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/python-professional-usage/SKILL.md; its 1 indexed reference cover benchmarks and patterns, while adjacency to backend-change-builder, cpp-professional-usage, go-professional-usage keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "quality-test-gate",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "quality-test-gate defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/quality-test-gate/SKILL.md; its 4 indexed references cover checklist, index, test output and gates, while adjacency to contract-testing, e2e-testing, integration-testing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "refactoring",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "refactoring defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/refactoring/SKILL.md; its 3 indexed references cover behavior preservation evidence, checklist, split merge cleanup patterns, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, ai-code-review-refactor keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "regression-testing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "regression-testing defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/regression-testing/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to ai-code-review-refactor, backend-change-builder, contract-testing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "relational-database",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "relational-database defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/relational-database/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to cache-design, data-middleware-change-builder, file-storage-processing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "release-rollback",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "release-rollback defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/release-rollback/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to build-tool-professional-usage, ci-cd, configuration-runtime-policy keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "reliability-observability-gate",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "reliability-observability-gate defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/reliability-observability-gate/SKILL.md; its 5 indexed references cover checklist, evidence patterns, index, while adjacency to backup-recovery, concurrency-control, degradation-circuit-breaking keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "repeat-failure-analysis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "repeat-failure-analysis defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/repeat-failure-analysis/SKILL.md; its 1 indexed reference cover repeat failure checklist, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, ai-code-review-refactor keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "repository-context-map",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "repository-context-map defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/repository-context-map/SKILL.md; its 3 indexed references cover source generated boundary map, task context evidence map, validation freshness handoff, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, cleanup-deletion-governance keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "repository-impact-inspection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "repository-impact-inspection defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/repository-impact-inspection/SKILL.md; its 1 indexed reference cover repository impact checklist, while adjacency to engineering-change-analysis keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "repository-persistence",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "repository-persistence defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/repository-persistence/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to async-job-design, authentication-authorization, backend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "requirement-clarification",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "requirement-clarification defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/requirement-clarification/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to acceptance-standard-definition, change-intake-compiler, engineering-change-analysis keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "requirement-structuring",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "requirement-structuring defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/requirement-structuring/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to acceptance-standard-definition, change-intake-compiler, non-goal-boundary-definition keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "routing-navigation-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "routing-navigation-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/routing-navigation-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to form-validation-design, frontend-api-integration, frontend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "routing-quality-review",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "routing-quality-review defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/routing-quality-review/SKILL.md; its 1 indexed reference cover routing maintenance checklist, while adjacency to no competing routable owner keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "rust-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "rust-professional-usage defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/rust-professional-usage/SKILL.md; its 1 indexed reference cover benchmarks and patterns, while adjacency to ai-code-review-refactor, cpp-professional-usage, go-professional-usage keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "scenario-decomposition",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "scenario-decomposition defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/scenario-decomposition/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to acceptance-criteria-builder, acceptance-standard-definition, non-goal-boundary-definition keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "sdk-library-contract-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "sdk-library-contract-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/sdk-library-contract-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to cli-daemon-interface-design, data-api-contract-changer keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "search-analytics-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "search-analytics-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/search-analytics-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to cache-design, data-middleware-change-builder, file-storage-processing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "secret-configuration-security",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "secret-configuration-security defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/secret-configuration-security/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to authentication-security, dependency-vulnerability-scanning, input-validation keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "security-privacy-gate",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "security-privacy-gate defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/security-privacy-gate/SKILL.md; its 4 indexed references cover checklist, evidence patterns, index, while adjacency to ai-product-extension, authentication-authorization, authentication-security keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "senior-programming-judgment-core",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "senior-programming-judgment-core carries its bounded fallback judgment, failure handling, proof mapping, output, and specialist escalation in src/foundation/capabilities/senior-programming-judgment-core/SKILL.md; the explicit no-reference declaration avoids generic context while preserving verifiability and adjacent ownership."
+    },
+    {
+      "skill_id": "service-business-logic",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "service-business-logic defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/service-business-logic/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to async-job-design, authentication-authorization, backend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "shell-cli-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "shell-cli-professional-usage defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/shell-cli-professional-usage/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to cpp-professional-usage, delivery-release-gate, go-professional-usage keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "skill-authoring-expert",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "skill-authoring-expert defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/skill-authoring-expert/SKILL.md; its 3 indexed references cover evidence patterns, pressure scenarios, tdd for skills, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, cleanup-deletion-governance keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "skill-efficacy-benchmark",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "skill-efficacy-benchmark defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, cleanup-deletion-governance keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "solution-optimality-evaluation",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "solution-optimality-evaluation defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/solution-optimality-evaluation/SKILL.md; its 1 indexed reference cover benchmarks and patterns, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, cleanup-deletion-governance keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "sql-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "sql-professional-usage defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/sql-professional-usage/SKILL.md; its 1 indexed reference cover benchmarks and patterns, while adjacency to cpp-professional-usage, data-middleware-change-builder, go-professional-usage keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "state-machine-modeling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "state-machine-modeling defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/state-machine-modeling/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to business-rule-extraction, domain-event-modeling, domain-impact-modeler keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "state-management-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "state-management-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/state-management-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to form-validation-design, frontend-api-integration, frontend-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "targeted-validation-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "targeted-validation-selection defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/targeted-validation-selection/SKILL.md; its 1 indexed reference cover validation selection checklist, while adjacency to contract-testing, e2e-testing, integration-testing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "task-context-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "task-context-selection defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/task-context-selection/SKILL.md; its 1 indexed reference cover context selection checklist, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, cleanup-deletion-governance keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "task-dag-decomposition",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "task-dag-decomposition defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/task-dag-decomposition/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, cleanup-deletion-governance keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "task-dag-planner",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "task-dag-planner defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/professional-skills/task-dag-planner/SKILL.md; its 4 indexed references cover checklist, index, planning evidence patterns, while adjacency to implementation-structure-design, release-rollback, task-dag-decomposition keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "task-handoff-context",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "task-handoff-context defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/task-handoff-context/SKILL.md; its 1 indexed reference cover task context checklist, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, cleanup-deletion-governance keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "technology-stack-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "technology-stack-selection defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/technology-stack-selection/SKILL.md; its 1 indexed reference cover benchmarks and patterns, while adjacency to algorithm-data-structure-selection, high-risk-design-review, language-idiom-enforcement keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "test-data-management",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "test-data-management defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/test-data-management/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to contract-testing, e2e-testing, engineering-change-analysis keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "test-strategy",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "test-strategy defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/test-strategy/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to acceptance-criteria-builder, contract-testing, e2e-testing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "testability-seam-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "testability-seam-design defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/testability-seam-design/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to agent-execution-discipline, agent-tool-permission-sandbox, cleanup-deletion-governance keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "threat-modeling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "threat-modeling defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/threat-modeling/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to authentication-security, dependency-vulnerability-scanning, engineering-change-analysis keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "transaction-consistency",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "transaction-consistency defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/transaction-consistency/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to backend-change-builder, cache-design, data-middleware-change-builder keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "typescript-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "typescript-professional-usage defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/typescript-professional-usage/SKILL.md; its 1 indexed reference cover benchmarks and patterns, while adjacency to cpp-professional-usage, frontend-change-builder, go-professional-usage keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "unit-testing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "unit-testing defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/unit-testing/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to contract-testing, e2e-testing, integration-testing keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "use-case-modeling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "use-case-modeling defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/use-case-modeling/SKILL.md; its 3 indexed references cover checklist, evidence patterns, fully dressed template, while adjacency to business-rule-extraction, domain-event-modeling, domain-impact-modeler keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "user-flow-modeling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "user-flow-modeling defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/user-flow-modeling/SKILL.md; its 1 indexed reference cover benchmarks and patterns, while adjacency to design-system-rules, experience-impact-modeler, information-architecture keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "user-role-identification",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "user-role-identification defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/user-role-identification/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to acceptance-standard-definition, change-intake-compiler, non-goal-boundary-definition keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "version-compatibility",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "version-compatibility defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/version-compatibility/SKILL.md; its 3 indexed references cover checklist, compatibility benchmarks, evidence patterns, while adjacency to api-contract-design, consumer-impact-analysis, data-api-contract-changer keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "web-security",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "web-security defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/foundation/capabilities/web-security/SKILL.md; its 3 indexed references cover benchmarks and patterns, checklist, evidence patterns, while adjacency to authentication-security, dependency-vulnerability-scanning, engineering-change-analysis keeps neighboring responsibilities separated."
+    },
+    {
+      "skill_id": "web3-product-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "web3-product-extension defines explicit trigger and anti-trigger boundaries, owned decision rules, failure or stop handling, and verifiable output in src/domain-extensions/web3-product-extension/SKILL.md; its 1 indexed reference cover checklist, while adjacency to integration-change-builder keeps neighboring responsibilities separated."
+    }
+  ],
+  "limitations": [
+    "Unfilled template: every criterion, decision, reason code, and rationale must be completed independently before validation."
+  ]
+}

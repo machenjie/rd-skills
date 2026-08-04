@@ -12,6 +12,5 @@ Use this reference when a release plan needs concrete proof for approval, rollba
 
 ## Closure Rules
 - Every accepted release proof names command or pipeline, validator when available, output/report artifact, exit code or status, evidence freshness, and evidence limit.
-- A failed deploy, migration, canary, or rollback attempt must be logged with signature, hypothesis, changed route, next owner, and the reason another retry is safe.
+- For a material failed deploy, migration, canary, or rollback attempt, record failure signature, observed status, and containment. When another retry is proposed, add hypothesis, changed route, and why the retry is safe; add the next owner when recovery work crosses ownership.
 - A release can proceed only when unresolved evidence gaps are explicitly approved, owned, and tied to a rollback or stop condition.
-

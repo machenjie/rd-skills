@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export a source-derived ChangeForge marketplace/discovery index."""
+"""Export a source-derived hookless ChangeForge Skill discovery index."""
 
 from __future__ import annotations
 
@@ -9,210 +9,325 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from validation_utils import load_yaml_file, parse_frontmatter
+from validation_utils import (
+    FOUNDATION_DELIVERY_SCOPES,
+    MARKETPLACE_SCHEMA_VERSION,
+    REGISTRY_SCHEMA_VERSIONS,
+    ValidationProblem,
+    load_yaml_file,
+    parse_frontmatter,
+    reference_paths,
+    role_contract_map_errors,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILES = ("recommended", "full", "dev")
-ITEM_TYPES = {
-    "professional_skill": "professional_skill",
-    "foundation_capability": "foundation_capability",
-    "domain_extension": "domain_extension",
+REGISTRIES = (
+    ("control_skill", "control-skills.yaml", "control_skills"),
+    ("professional_skill", "professional-skills.yaml", "professional_skills"),
+    ("foundation_skill", "foundation-skills.yaml", "foundation_skills"),
+    ("domain_skill", "domain-skills.yaml", "domain_skills"),
+)
+REGISTRY_SCHEMA_BY_ITEM_TYPE = {
+    "control_skill": REGISTRY_SCHEMA_VERSIONS["control"],
+    "professional_skill": REGISTRY_SCHEMA_VERSIONS["professional"],
+    "foundation_skill": REGISTRY_SCHEMA_VERSIONS["foundation"],
+    "domain_skill": REGISTRY_SCHEMA_VERSIONS["domain"],
 }
+CONTRACT_FIELDS = (
+    "role_support",
+    "trigger_signals",
+    "anti_trigger_signals",
+    "required_inputs",
+    "output_contract",
+    "escalation_signals",
+    "reference_index",
+)
 
 
 class MarketplaceExportError(RuntimeError):
-    """Raised when source data cannot produce a trustworthy marketplace index."""
+    """Raised when source data cannot produce a trustworthy discovery index."""
 
 
-def _as_list(value: Any) -> list[Any]:
+def _string_list(value: Any, *, label: str) -> list[str]:
+    if not isinstance(value, list) or not value:
+        raise MarketplaceExportError(f"{label} must be a non-empty list")
+    result: list[str] = []
+    for item in value:
+        text = str(item).strip()
+        if not text:
+            raise MarketplaceExportError(f"{label} must contain non-empty strings")
+        result.append(text)
+    return result
+
+
+def _optional_string_list(value: Any, *, label: str) -> list[str]:
     if value is None:
         return []
-    if isinstance(value, list):
-        return value
-    return [value]
+    if not isinstance(value, list):
+        raise MarketplaceExportError(f"{label} must be a list")
+    result: list[str] = []
+    for item in value:
+        text = str(item).strip()
+        if not text:
+            raise MarketplaceExportError(f"{label} must contain non-empty strings")
+        result.append(text)
+    return result
+
+
+def _reference_path_list(value: Any, *, label: str, owner: str) -> list[str]:
+    """Project Registry JIT contracts to stable marketplace discovery paths."""
+
+    try:
+        return reference_paths(value, label, owner=owner)
+    except ValidationProblem as exc:
+        raise MarketplaceExportError(str(exc)) from exc
+
+
+def _required_inputs_by_role(value: Any, *, label: str) -> dict[str, list[str]]:
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise MarketplaceExportError(f"{label} must be a mapping")
+    result: dict[str, list[str]] = {}
+    for role, inputs in value.items():
+        role_name = str(role).strip()
+        if not role_name:
+            raise MarketplaceExportError(f"{label} must use non-empty role names")
+        result[role_name] = _string_list(
+            inputs, label=f"{label}.{role_name}"
+        )
+    return result
+
+
+def _validated_role_map(
+    entry: dict[str, Any], field: str, roles: list[str], *, label: str
+) -> dict[str, list[str]]:
+    value = entry.get(field)
+    errors = role_contract_map_errors(value, roles, label)
+    if errors:
+        raise MarketplaceExportError("; ".join(errors))
+    return _required_inputs_by_role(value, label=label)
 
 
 def _frontmatter_summary(root: Path, source_path: str) -> str:
     skill_path = root / source_path / "SKILL.md"
-    if not skill_path.exists():
+    if not skill_path.is_file():
         raise MarketplaceExportError(f"{skill_path.relative_to(root)} is missing")
     try:
         frontmatter, _, _ = parse_frontmatter(skill_path)
     except Exception as exc:
-        raise MarketplaceExportError(f"{skill_path.relative_to(root)} frontmatter is invalid: {exc}") from exc
-    description = frontmatter.get("description")
-    summary = str(description).strip() if description is not None else ""
+        raise MarketplaceExportError(
+            f"{skill_path.relative_to(root)} frontmatter is invalid: {exc}"
+        ) from exc
+    summary = str(frontmatter.get("description") or "").strip()
     if not summary:
-        raise MarketplaceExportError(f"{skill_path.relative_to(root)} frontmatter missing description")
+        raise MarketplaceExportError(
+            f"{skill_path.relative_to(root)} frontmatter missing description"
+        )
     return summary
 
 
-def _runtime_path(profile: str, item_type: str, name: str) -> str | None:
-    top_level = item_type == "professional_skill"
-    if item_type == "domain_extension":
-        top_level = profile in {"full", "dev"}
-    if item_type == "foundation_capability":
-        top_level = profile == "dev"
-    if not top_level:
-        return None
-    return f"dist/universal/skills/{profile}/{name}"
+def _load_registry_entries(
+    root: Path,
+) -> dict[str, list[dict[str, Any]]]:
+    result: dict[str, list[dict[str, Any]]] = {}
+    for item_type, filename, key in REGISTRIES:
+        path = root / "src" / "registry" / filename
+        registry = load_yaml_file(path)
+        expected_schema_version = REGISTRY_SCHEMA_BY_ITEM_TYPE[item_type]
+        if registry.get("schema_version") != expected_schema_version:
+            raise MarketplaceExportError(
+                f"src/registry/{filename} must use schema_version "
+                f"{expected_schema_version}"
+            )
+        entries = registry.get(key)
+        if not isinstance(entries, list):
+            raise MarketplaceExportError(f"src/registry/{filename}:{key} must be a list")
+        normalized: list[dict[str, Any]] = []
+        for index, entry in enumerate(entries):
+            if not isinstance(entry, dict):
+                raise MarketplaceExportError(
+                    f"src/registry/{filename}:{key}[{index}] must be a mapping"
+                )
+            normalized.append(entry)
+        result[item_type] = normalized
+    return result
 
 
-def _profile_visibility(profile: str, item_type: str) -> dict[str, bool]:
-    if item_type == "professional_skill":
-        return {
-            "top_level": True,
-            "compiled_reference": False,
-            "router_index": True,
-            "authoring_visibility": True,
-        }
-    if item_type == "domain_extension":
-        return {
-            "top_level": profile in {"full", "dev"},
-            "compiled_reference": False,
-            "router_index": True,
-            "authoring_visibility": profile == "dev",
-        }
+def _targeted_layer3_names(
+    profile: str,
+    entries: dict[str, list[dict[str, Any]]],
+) -> set[str]:
+    """Mirror build-time Layer 3 selection without creating a delivery engine."""
+
+    candidates = {
+        name
+        for skill in entries["professional_skill"]
+        for name in _optional_string_list(
+            skill.get("layer3_candidates"),
+            label=f"professional skill {skill.get('name')}.layer3_candidates",
+        )
+    }
+    product_foundation_names = {
+        str(entry.get("name"))
+        for entry in entries["foundation_skill"]
+        if entry.get("delivery_scope") == "product"
+    }
+    domain_names = {
+        str(entry.get("name")) for entry in entries["domain_skill"]
+    }
+    return candidates & (product_foundation_names | domain_names)
+
+
+def _delivery(
+    profile: str,
+    item_type: str,
+    name: str,
+    targeted_layer3: set[str],
+) -> dict[str, Any]:
+    top_level = (
+        item_type in {"control_skill", "professional_skill"}
+        or (item_type == "domain_skill" and profile in {"full", "dev"})
+        or (item_type == "foundation_skill" and profile == "dev")
+    )
+    targeted_reference = not top_level and name in targeted_layer3
+    if top_level:
+        mode = "top_level_skill"
+    elif targeted_reference:
+        mode = "targeted_reference"
+    else:
+        mode = "routing_index_only"
     return {
-        "top_level": profile == "dev",
-        "compiled_reference": True,
-        "router_index": True,
-        "authoring_visibility": profile == "dev",
+        "mode": mode,
+        "top_level": top_level,
+        "targeted_reference": targeted_reference,
+        "routing_index": True,
     }
 
 
-def _route_metadata(root: Path) -> dict[str, dict[str, set[str]]]:
-    routing_path = root / "src" / "registry" / "routing-rules.yaml"
-    routing = load_yaml_file(routing_path)
-    metadata: dict[str, dict[str, set[str]]] = {}
-
-    for rule in routing.get("risk_trigger_rules", []):
-        trigger = str(rule.get("trigger", "")).strip()
-        if not trigger:
-            continue
-        pairs = (
-            ("required_skills", "professional_skill"),
-            ("required_capabilities", "foundation_capability"),
-            ("required_domain_extensions", "domain_extension"),
+def _item(
+    root: Path,
+    profile: str,
+    item_type: str,
+    entry: dict[str, Any],
+    targeted_layer3: set[str],
+) -> dict[str, Any]:
+    name = str(entry.get("name") or "").strip()
+    source_path = str(entry.get("path") or "").strip()
+    if not name or not source_path:
+        raise MarketplaceExportError(f"{item_type} entry must define name and path")
+    contract = {
+        field: (
+            _reference_path_list(
+                entry.get(field), label=f"{name}.{field}", owner=name
+            )
+            if field == "reference_index"
+            else _string_list(entry.get(field), label=f"{name}.{field}")
         )
-        gates = {str(gate) for gate in _as_list(rule.get("required_quality_gates"))}
-        for field, _item_type in pairs:
-            for name in _as_list(rule.get(field)):
-                key = str(name)
-                entry = metadata.setdefault(key, {"triggers": set(), "required_quality_gates": set()})
-                entry["triggers"].add(trigger)
-                entry["required_quality_gates"].update(gates)
-
-    return metadata
-
-
-def _professional_items(root: Path, profile: str, route_metadata: dict[str, dict[str, set[str]]]) -> list[dict[str, Any]]:
-    registry = load_yaml_file(root / "src" / "registry" / "skills.yaml")
-    items: list[dict[str, Any]] = []
-    for skill in registry.get("skills", []):
-        name = skill["name"]
-        source_path = skill["path"]
-        route = route_metadata.get(name, {"triggers": set(), "required_quality_gates": set()})
-        items.append(
-            {
-                "name": name,
-                "type": ITEM_TYPES["professional_skill"],
-                "profile_visibility": _profile_visibility(profile, "professional_skill"),
-                "summary": _frontmatter_summary(root, source_path),
-                "triggers": sorted(route["triggers"]),
-                "risk_notes": [],
-                "expected_outputs": ["Professional output contract defined in source SKILL.md."],
-                "used_by": [],
-                "required_quality_gates": sorted(route["required_quality_gates"]),
-                "runtime_path": _runtime_path(profile, "professional_skill", name),
-                "source_path": source_path,
-            }
+        for field in CONTRACT_FIELDS
+    }
+    roles = contract["role_support"]
+    delivery_scope = entry.get("delivery_scope")
+    task_routable = entry.get("task_routable")
+    if item_type == "foundation_skill":
+        if delivery_scope not in FOUNDATION_DELIVERY_SCOPES:
+            raise MarketplaceExportError(
+                f"{name}.delivery_scope must be one of "
+                f"{sorted(FOUNDATION_DELIVERY_SCOPES)}"
+            )
+    elif delivery_scope is not None:
+        raise MarketplaceExportError(
+            f"{name}.delivery_scope is only valid for a Foundation Skill"
         )
-    return items
-
-
-def _capability_items(root: Path, profile: str, route_metadata: dict[str, dict[str, set[str]]]) -> list[dict[str, Any]]:
-    registry = load_yaml_file(root / "src" / "registry" / "capabilities.yaml")
-    items: list[dict[str, Any]] = []
-    for capability in registry.get("capabilities", []):
-        name = capability["name"]
-        source_path = capability["path"]
-        route = route_metadata.get(name, {"triggers": set(), "required_quality_gates": set()})
-        triggers = {str(trigger) for trigger in _as_list(capability.get("triggers"))}
-        triggers.update(route["triggers"])
-        items.append(
-            {
-                "name": name,
-                "type": ITEM_TYPES["foundation_capability"],
-                "profile_visibility": _profile_visibility(profile, "foundation_capability"),
-                "summary": _frontmatter_summary(root, source_path),
-                "triggers": sorted(triggers),
-                "risk_notes": [str(note) for note in _as_list(capability.get("risk_notes"))],
-                "expected_outputs": [str(output) for output in _as_list(capability.get("expected_outputs"))],
-                "used_by": [str(skill) for skill in _as_list(capability.get("used_by"))],
-                "required_quality_gates": sorted(route["required_quality_gates"]),
-                "runtime_path": _runtime_path(profile, "foundation_capability", name),
-                "source_path": source_path,
-            }
+    if item_type == "professional_skill":
+        if not isinstance(task_routable, bool):
+            raise MarketplaceExportError(
+                f"{name}.task_routable must be boolean for a Professional Skill"
+            )
+    elif task_routable is not None:
+        raise MarketplaceExportError(
+            f"{name}.task_routable is only valid for a Professional Skill"
         )
-    return items
-
-
-def _domain_items(root: Path, profile: str, route_metadata: dict[str, dict[str, set[str]]]) -> list[dict[str, Any]]:
-    registry = load_yaml_file(root / "src" / "registry" / "domain-extensions.yaml")
-    items: list[dict[str, Any]] = []
-    for extension in registry.get("domain_extensions", []):
-        name = extension["name"]
-        source_path = extension["path"]
-        route = route_metadata.get(name, {"triggers": set(), "required_quality_gates": set()})
-        items.append(
-            {
-                "name": name,
-                "type": ITEM_TYPES["domain_extension"],
-                "profile_visibility": _profile_visibility(profile, "domain_extension"),
-                "summary": _frontmatter_summary(root, source_path),
-                "triggers": sorted(route["triggers"]),
-                "risk_notes": [],
-                "expected_outputs": ["Domain-specific professional extension output contract defined in source SKILL.md."],
-                "used_by": [],
-                "required_quality_gates": sorted(route["required_quality_gates"]),
-                "runtime_path": _runtime_path(profile, "domain_extension", name),
-                "source_path": source_path,
-            }
-        )
-    return items
+    raw_used_by = _optional_string_list(
+        entry.get("used_by"),
+        label=f"{name}.used_by",
+    )
+    used_by = raw_used_by if item_type == "foundation_skill" else []
+    return {
+        "name": name,
+        "type": item_type,
+        "delivery_scope": delivery_scope,
+        "task_routable": task_routable,
+        "profile_delivery": _delivery(
+            profile,
+            item_type,
+            name,
+            targeted_layer3,
+        ),
+        "summary": _frontmatter_summary(root, source_path),
+        **contract,
+        "required_inputs_by_role": (
+            _validated_role_map(
+                entry,
+                "required_inputs_by_role",
+                roles,
+                label=f"{name}.required_inputs_by_role",
+            )
+            if item_type == "professional_skill"
+            else {}
+        ),
+        "output_contract_by_role": (
+            _validated_role_map(
+                entry,
+                "output_contract_by_role",
+                roles,
+                label=f"{name}.output_contract_by_role",
+            )
+            if item_type == "professional_skill"
+            else {}
+        ),
+        "related_layer3_skills": _optional_string_list(
+            entry.get("layer3_candidates"),
+            label=f"{name}.layer3_candidates",
+        ),
+        "used_by": used_by,
+        "group": str(entry.get("group") or "").strip() or None,
+        "source_path": source_path,
+    }
 
 
 def export_index(root: Path, profile: str) -> dict[str, Any]:
-    """Build the marketplace index payload for one runtime profile."""
+    """Build one profile's standard-Skill marketplace payload."""
+
     if profile not in PROFILES:
         raise ValueError(f"unsupported profile: {profile}")
-    route_metadata = _route_metadata(root)
+    entries = _load_registry_entries(root)
+    targeted_layer3 = _targeted_layer3_names(profile, entries)
     items = [
-        *_professional_items(root, profile, route_metadata),
-        *_capability_items(root, profile, route_metadata),
-        *_domain_items(root, profile, route_metadata),
+        _item(root, profile, item_type, entry, targeted_layer3)
+        for item_type, _filename, _key in REGISTRIES
+        for entry in entries[item_type]
     ]
     return {
-        "schema_version": 1,
+        "schema_version": MARKETPLACE_SCHEMA_VERSION,
         "profile": profile,
         "generated_by": "scripts/export-marketplace-index.py",
         "source_of_truth": [
-            "src/registry/skills.yaml",
-            "src/registry/capabilities.yaml",
-            "src/registry/domain-extensions.yaml",
-            "src/registry/routing-rules.yaml",
+            "src/registry/control-skills.yaml",
+            "src/registry/professional-skills.yaml",
+            "src/registry/foundation-skills.yaml",
+            "src/registry/domain-skills.yaml",
         ],
         "items": sorted(items, key=lambda item: (item["type"], item["name"])),
     }
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entrypoint for exporting the profile index."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile", choices=PROFILES, required=True)
-    parser.add_argument("--out", required=True, help="JSON output path.")
+    parser.add_argument("--out", required=True, help="JSON output path")
     args = parser.parse_args(argv)
 
     try:
@@ -222,7 +337,10 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    out_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     print(f"wrote {len(payload['items'])} marketplace index items to {out_path}")
     return 0
 

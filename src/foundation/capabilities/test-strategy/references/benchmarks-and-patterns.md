@@ -1,16 +1,12 @@
 # Test Strategy Benchmarks And Patterns
-
 Use this reference when `test-strategy` needs benchmark-backed layer selection, omission review, affected-test strategy, assertion quality, or anti-pattern detail beyond the compact `SKILL.md` body. Keep the main body focused on routing, output, evidence, and quality gates.
-
 ## Benchmark Anchors
-
-- Test Pyramid: keep most deterministic local logic in unit tests, use fewer integration tests, and reserve E2E for critical user journeys.
-- Testing Trophy: integration tests often give the best confidence-to-cost ratio for product behavior that crosses components or services.
-- Google Testing Blog test sizes: small tests avoid IO; medium tests use local process boundaries or data stores; large tests span systems and are expensive.
-- Consumer-Driven Contract Testing: use Pact or equivalent contract evidence when consumers depend on request/response, event, SDK, or generated-client shape.
-- Mutation testing: assertion quality is credible when a removed branch, inverted permission, wrong mapping, or swallowed failure would make a test fail.
-- OWASP ASVS/API Security: auth, object authorization, input validation, session, and abuse paths need negative and adversarial cases.
-- DORA change failure and MTTR: release-blocking validation should map to the failure consequence and rollback/recovery expectation.
+- Test Pyramid / Google test sizes: keep deterministic logic small/local, use fewer medium boundary/data-store tests, and reserve large cross-system E2E for critical journeys.
+- Testing Trophy: integration often gives the best confidence-to-cost ratio when product behavior crosses components or services.
+- Consumer-Driven Contracts: use Pact or equivalent when request/response, event, SDK, or generated-client consumers depend on shape.
+- When mutation or fault seeding is selected for a material failure mechanism, require the relevant assertion to fail when that mechanism is removed, inverted, wrongly mapped, or swallowed.
+- OWASP ASVS/API Security: auth, object authorization, input validation, session, and abuse risks need negative cases.
+- DORA: release gates map to the failure consequence and rollback/recovery expectation.
 
 ## Layer Selection Matrix
 
@@ -40,7 +36,7 @@ Use this reference when `test-strategy` needs benchmark-backed layer selection, 
 ## Assertion Quality
 
 - Prefer public behavior assertions over private helper calls, mock-call counts, snapshots, or existence checks.
-- Name the failure a test must catch: denied role, expired token, duplicate submit, rollback failure, stale cache, timeout, partial failure, bad mapping, or incompatible schema.
+- When selecting a test for changed behavior or named risk, name the task-specific failure mechanism. Demonstrate that its assertion fails when the mechanism regresses. Disclose material risks the selected test does not exercise.
 - For material behavior, state the mutation-style check: branch removed, permission inverted, mapper field omitted, retry disabled, transaction order changed, or error swallowed.
 - Avoid tests that can pass when the behavior is removed because they assert only setup, wiring, or mock interaction.
 - Record what each test proves and what it does not prove when using fakes, mocks, snapshots, manual checks, or partial CI commands.

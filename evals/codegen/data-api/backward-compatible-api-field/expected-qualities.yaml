@@ -7,29 +7,24 @@ focus:
   - backward compatibility
   - contract testing
 route_hints:
-  skills:
-    - change-intake-compiler
-    - change-impact-analyzer
-    - data-api-contract-changer
-    - backend-change-builder
-    - quality-test-gate
-    - change-documentation-gate
-  capabilities:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: data-api-contract-changer
+  layer3_skills:
     - api-contract-design
     - dto-schema-design
     - version-compatibility
-    - contract-testing
-    - controller-api-implementation
-    - repository-persistence
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - requirement gate
-    - impact gate
-    - API/data gate
-    - implementation gate
-    - test gate
-    - documentation gate
+  review_skill: architecture-impact-reviewer
+release_contract:
+  case_id: data-api/backward-compatible-api-field
+  control_path: analyzed
+  primary_skill: engineering-change-analysis
+  task_skill: data-api-contract-changer
+  review_skill: architecture-impact-reviewer
+  tasks:
+    - task_id: compatible-api-change
+      skill: data-api-contract-changer
+      review_skill: architecture-impact-reviewer
 expected_outcomes:
   - GET response includes preferred contact method as an additive nullable field.
   - PATCH accepts valid new values and rejects invalid values with stable error shape.

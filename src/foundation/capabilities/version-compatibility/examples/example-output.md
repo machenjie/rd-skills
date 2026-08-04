@@ -7,7 +7,7 @@ mode_selected: API/DTO compatibility + event/schema compatibility + rollout and 
 
 source_evidence:
 - OpenAPI `payments.yaml`, `PaymentUpdated.avsc`, generated TypeScript and Kotlin clients, payment web/mobile caller search, event consumer list, contract tests, production enum telemetry.
-- graph_memory_trajectory_judgment: prior note saying "internal consumers only" rejected because mobile client and partner webhook consumer are present; existing schema registry FULL mode accepted after source check.
+- current_evidence_judgment: prior note saying "internal consumers only" rejected because mobile client and partner webhook consumer are present; existing schema registry FULL mode accepted after source check.
 
 affected_contract:
 - `PaymentStatus` enum in REST API response and `PaymentUpdated` event.

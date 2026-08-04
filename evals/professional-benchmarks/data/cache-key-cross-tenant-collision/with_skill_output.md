@@ -1,6 +1,6 @@
 Selected stage: implementation-planning.
 Selected professional skill: data-middleware-change-builder.
-Selected capabilities: cache-design, permission-boundary-modeling, observability.
+Selected Layer 3 Skills: cache-design, permission-boundary-modeling, observability.
 
 Hidden risks: cross-tenant cache collision; stale authorization or entitlement state; unbounded cache cardinality or hot key.
 

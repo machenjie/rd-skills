@@ -59,9 +59,48 @@ reports/skill-content-audit.json
 
 `skill-professionalism-eval` remains a compatibility report for the current mixed
 static evaluation. `skill-professionalism-depth` is the professional-depth
-report. `professional-coverage-matrix` covers key foundation and routing
-coverage. `skill-content-audit` belongs to content-efficiency governance, not
-professional-depth scoring.
+report. `professional-coverage-matrix` schema version 3 separates static
+`authoring_status` from policy-derived `coverage_gate_status` and records exact
+positive route, negative route, behavior, pressure, release-critical, and
+adversarial-negative-control evidence. A row without a release requirement is
+`not-required`, not a generic pass. `skill-content-audit` belongs to content-efficiency governance, not
+professional-depth scoring. Release readiness consumes its aggregate tightening,
+front-loading, description-budget, and actionable-duplication counts as
+non-blocking advisories. Exact repeated execution or role boilerplate remains
+actionable; only Targeted Reference policy lines are excluded from that count.
+
+Release reports keep content readiness as separate evidence surfaces:
+
+| Surface | Report contract | Gate meaning |
+|---|---|---|
+| Reference structure | `reference_content_summary.structural_strict_ready` | inventory, effective preface, size, and decision-item contract |
+| Reference strict compatibility | `reference_content_summary.strict_ready`, basis `reference-strict-v4` | current Reference-only strict validator result |
+| Root structure | `root_content_summary.structural_strict_ready`, basis `root-strict-v5` | governed Foundation, Professional, and Domain root budgets plus Foundation decision density |
+| Semantic triage | scoped `semantic_triage_complete` fields | every candidate classified or dispositioned; rewrite may remain unresolved |
+| Readability review | `content_readiness.expert.readability` | three independent ballots, current Root/Reference/readability fingerprints, and zero tracked tightening |
+| Professional completeness | `content_readiness.expert.professional_completeness` | schema-3 exact carry; fresh Skills receive two qualified domain votes plus one architecture vote, carried Skills bind direct fresh origins, all 189 effective packages have zero corrections/disagreements, and contract/plan/chain/storage/cost are current |
+| Aggregate | `content_readiness.aggregate` | independent structural, triage, readability, and professional-completeness axes |
+
+Reference and Root structural or triage failure blocks the authoring gate.
+Either expert axis may be false without redefining the authoring gate, but each
+blocks formal release independently. Passing any of these static contracts does
+not prove real-host
+accuracy, wall-clock performance, provider behavior, or installed user
+experience.
+
+Current static evidence selectors are r21 Readability, r24 Semantic
+Disposition, r25 Root lifecycle, and r16 schema-3 Professional Completeness for
+all 189 non-Control packages. These static selectors do not prove that the
+final formal gates or same-commit remote workflow passed.
+
+`content_readiness` schema 9 requires productization to regenerate the strict
+reports from fresh Root, Reference, coverage, and default release-review inputs.
+One producer run must reproduce all four regression/readiness JSON and Markdown
+artifacts byte-for-byte; the JSON reports must also agree semantically. The
+release-review config uses two schema-5 attestations. Each points to a separate
+kind-specific packet, three unique no-abstention ballots, and a majority
+decision record. The default config and every declared artifact must match
+current bytes and the tracked `HEAD` blob.
 
 Do not cite target names such as `skill-professionalism-release-readiness.*` or
 `skill-professionalism-regression.*` as release evidence unless scripts generate
@@ -72,7 +111,7 @@ Recommended naming split:
 
 | Current mixed concern | Recommended report |
 |---|---|
-| trigger/mode/stage | activation or routing quality |
+| trigger/path/profile | activation or routing quality |
 | reference precision/body size | context efficiency |
 | judgment/failure/evidence/output | professionalism depth |
 | with-skill output delta | professional benchmark |
@@ -276,7 +315,9 @@ A failure-mode list without consequences should not receive full credit.
 
 ## 6. Professional Benchmark Evaluation
 
-Professional benchmarks prove whether the skill changes output quality, not just whether the file looks professional.
+Professional benchmarks compare checked-in fixture outputs for required-obligation
+and forbidden-behavior coverage; they do not prove model output quality,
+real-host accuracy, or installed behavior.
 
 ### 6.1 Case structure
 
@@ -294,14 +335,12 @@ with_skill_output.md
 `expected.yaml` must include:
 
 ```yaml
+coverage_class: standard | release-critical | adversarial-negative-control
 expected_stage: string
-expected_professional_skill:
-  - string
+expected_professional_skill: string
 expected_capabilities:
   - string
-expected_professional_axes:
-  - string
-expected_failure_modes:
+expected_hidden_risks:
   - string
 expected_evidence:
   - string
@@ -311,6 +350,10 @@ forbidden_behaviors:
   - string
 expected_with_skill_status: pass | fail
 ```
+
+`coverage_class` may be omitted for compatibility: positive cases default to
+`standard`, while expected-fail cases default to
+`adversarial-negative-control`. Release-critical cases declare it explicitly.
 
 ### 6.3 Benchmark assertions
 
@@ -341,7 +384,40 @@ load unrelated domain/capability content
 replace owner/reviewer separation with self-review
 ```
 
-### 6.4 Delta requirements
+Any forbidden-behavior hit fails a positive comparison. Expected-fail cases
+must expose a detectable comparison defect and are recorded only as adversarial
+negative controls; they never satisfy behavior coverage. A release-critical
+case must cover every declared hidden risk, evidence obligation, and output
+obligation, while its Baseline capture must contain at least one declared
+forbidden behavior.
+
+`expected_stage` must be non-blank. Obligation phrases must remain distinct
+after normalization within each list and across the hidden-risk, evidence, and
+output groups; a positive case also cannot reuse a required obligation as a
+forbidden behavior. This prevents repeated wording from inflating coverage.
+
+### 6.4 Coverage-state semantics
+
+```text
+registered                  Registry entry exists
+route_covered               passing deterministic route selects the Skill
+negative_route_covered      passing deterministic route explicitly excludes the Skill
+behavior_covered            passing positive captured benchmark selects the Skill
+pressure_covered            passing pressure capture executes the Skill as Primary or Layer 3
+release_critical_covered    passing release-critical benchmark selects the Skill
+```
+
+A Routing Review name is route evidence, but in the current Pressure schema it
+is only a future handoff declaration. It must not be counted as executed pressure
+behavior. Coverage policy is a typed decision inside
+`config/professionalism-release-review.yaml`; Regression recomputes the complete
+Matrix and Professional Benchmark report and rejects stale tracked output.
+
+Domain route coverage also proves boundary transitions. Each Domain needs one
+passing transition fixture and one unchanged-paraphrase exclusion. Only fresh
+actual selections and exclusions count.
+
+### 6.5 Delta requirements
 
 A comparison case passes only when:
 
@@ -376,7 +452,6 @@ Minimum baseline fields:
 
 ```yaml
 schema_version: 1
-generated_at: timestamp
 global_thresholds:
   no_new_weak_professional_skill: true
   no_score_regression_more_than: 1.0
@@ -500,11 +575,10 @@ Current scripts map the quality surfaces as follows:
 ```text
 scripts/eval-professional-benchmarks.py
 scripts/eval-skill-professionalism.py
-scripts/eval-skill-professionalism.py --coverage-matrix
-scripts/validate-professionalism-regression.py
-scripts/validate-professionalism-regression.py --strict
 scripts/validate-professional-routing-coverage.py
-scripts/audit-skill-content.py
+scripts/eval-professional-agent-samples.py --promoted-only --strict
+scripts/validate-professionalism-regression.py --strict
+scripts/audit-skill-content.py --gate authoring
 scripts/validate-skill-content-size.py
 ```
 
@@ -595,6 +669,8 @@ no release-blocking professional depth warnings exist
 release-review-required depth warnings have explicit accepted release review decisions
 professional benchmarks pass
 professionalism regression passes
+readability review is schema-2 panel-majority-current with zero tracked tightening, unresolved detector false positives, or actionability rewrite requirements
+professional completeness is schema-3 panel-majority-current for all 189 effective packages; fresh packages have source-bound two-domain-plus-one-architecture evidence, carried packages bind direct fresh origins, the contract/plan/bindings/provenance/round chain/storage/cost are current, and correction/unresolved counts are zero
 efficiency edits did not reduce professional depth
 release report separates professionalism, activation, context efficiency, and benchmark scores
 ```
@@ -638,9 +714,8 @@ depth reports are loaded by regression validation and release readiness.
 
 ### Phase 3: Make depth regression enforceable
 
-- Use `validate-professionalism-regression.py` and
-  `validate-professionalism-regression.py --strict` as the current strict
-  regression commands.
+- Generate the strict promoted-sample report, then use
+  `validate-professionalism-regression.py --strict` as the regression command.
 - Block release on core professionalism regressions.
 - Require benchmark evidence for major professional content changes.
 - Require explicit review for depth and skill-eval release-review-required warnings.
@@ -654,13 +729,12 @@ For professionalism governance, the current focused commands are:
 
 ```text
 python3 scripts/eval-skill-professionalism.py
-python3 scripts/eval-skill-professionalism.py --coverage-matrix
 python3 scripts/eval-professional-benchmarks.py
-python3 scripts/validate-professionalism-regression.py
-python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/eval-professional-agent-samples.py --promoted-only --strict
-python3 scripts/audit-skill-content.py
+python3 scripts/validate-professionalism-regression.py --strict
+python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review  # formal release umbrella: both panels plus Root lifecycle
+python3 scripts/audit-skill-content.py --gate authoring
 python3 scripts/validate-skill-content-size.py
 ```
 

@@ -1,14 +1,29 @@
-Selected stage: refactoring.
-Selected professional skill: ai-code-review-refactor.
-Selected capabilities: implementation-structure-design, module-boundary-design, code-clarity-maintainability, refactoring.
+Selected stage: implementation-preparation.
+Route: Analyzed Work.
+Start Profile: analysis-agent.
+Primary Professional Skill: engineering-change-analysis.
+Layer 3 Skills: repository-context-map.
+Review Skill: architecture-impact-reviewer.
+Execution Level: L4.
+Level Basis: the rule owners, current consumers, and module boundary are unresolved. No actual diff exists.
 
-Hidden risks: business logic pollution in shared/common/utils; unclear owner for tenant and invoice rules; hidden behavior change during refactor.
-Inspected boundaries: current callers, owning domain module, shared utility policy, public behavior tests, and deletion path for duplicated code.
-Reuse/placement rationale: tenant and invoice rules stay in an owning domain/service boundary; generic utilities are rejected because they would hide business ownership.
-Evidence required: reuse ladder and rejected placement alternatives; owning module or domain boundary decision; behavior-preserving regression tests and deletion path.
-Output obligations: severity-classified structure finding; reuse and placement rationale evidence; validation evidence for behavior preservation.
-Validation command: not verified; fixture describes expected agent output only.
-What evidence proves: placement is justified and behavior preservation is required.
-What evidence does not prove: all callers have been scanned in a real repository.
-Residual risk: one indirect caller may still need an integration test; owner: ai-code-review-refactor.
-Next gate: quality-test-gate.
+Required risks:
+- tenant permission authority may be hidden in a generic helper
+- invoice-status behavior may change across callers
+- subscription entitlement ownership may cross module boundaries
+
+Required evidence:
+- repository search for duplicate invoice calculations
+- verified tenant invoice and subscription rule owners
+- current consumers dependency edges and behavior tests
+
+Required outputs:
+- current-behavior and ownership map
+- boundary evidence and unresolved shared-utils placement handoff
+- analysis-only evidence-gathering step for owner discovery
+
+Evidence-gathering step for owner discovery: inspect duplicate calculations, callers, permission checks, status transitions, entitlement rules, imports, and tests before choosing an owner or placement.
+This step gathers analysis evidence only. It is not an authoritative or dispatchable implementation slice.
+Stop before implementation. Do not move code, select the final boundary, or claim behavior preservation until the evidence is current.
+`ai-code-review-refactor` is deferred until an actual diff exists.
+Proof limits: this is a captured fixture. It proves the required analysis contract, not repository inspection, owner resolution, placement, implementation, tests, an actual diff, or production behavior.

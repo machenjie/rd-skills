@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-21-r11",
+  "created_on": "2026-07-22",
+  "packet_sha256": "32198913091329fce721cd66f0fce9ce792b05a3636898a4f068b861929ac9b3",
+  "source_fingerprints": {
+    "audit": "539520728fe5ef01c5c4773e9005b4a002277e8227892f285da35cc53ea3fd06",
+    "reference_candidates": "78f176f697995d8cf8a4217261e91dd73c4e203528854f479a566406119bcc51",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "29f9ca8994790e869778316258ade844675d84fe5a0a3677802eeae8e2a8dffe",
+    "root_candidates": "b19d427c8dda9847dd9e6ad530676d8ed3e233cc60b52d801f556a1b42e18c2c",
+    "root_context": "e3eaa647f26e984fc9604f57e4f7a2629ab627a0dd7d82496ef079a30141f46b",
+    "root_detector": "0b6168c2f3aaacfc611421aa8ef533171e4adf229986be73016c74154d402aef",
+    "root_source": "fa9ea30a2a98164925c28d3abf41a561e74785339f503f4972ee8f123c060965"
+  },
+  "voter": {
+    "voter_id": "semantic-boundary-reviewer-r11-d",
+    "agent_id": "/root/semantic_r10_review_d",
+    "role": "semantic-boundary-reviewer",
+    "expertise": [
+      "control boundaries",
+      "fail-closed evidence"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "root:9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "axis": "root",
+      "candidate_id": "9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The current compressed context still applies an authoritative closed set rather than an arbitrary universal mechanism: Core enumerates exactly seven non-bypassable controls, including independent implementation review, and the surrounding lines fail closed before routing.",
+      "authority_or_condition": "src/control-model/core-contracts.json execution_level_contract.non_bypassable and src/control-prompts/main-control-agent.md:41-47",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Keep the prompt count coupled to the Core enumeration and update both authority and projection atomically if that closed set changes.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "axis": "root",
+      "candidate_id": "ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The numeric limit remains scoped to a completed validation path under one canonical identity, not to validation generally; the same current sentence immediately authorizes another path only for a bound gap or evidence transition.",
+      "authority_or_condition": "src/control-model/core-contracts.json execution_level_contract.validation_loop.complete_path_limit, completed_same_identity, and different_path_requirements; src/control-prompts/main-control-agent.md:46",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Keep the identity and gap-or-transition conditions adjacent to the limit and fail closed on a repeated completed path with unchanged identity.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "axis": "root",
+      "candidate_id": "d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The current prohibition remains confined to supplied-artifact diff-export/no-edit. Returning diff content or a host-native artifact avoids modifying a user-owned workspace while preserving the actual diff required for independent implementation review.",
+      "authority_or_condition": "src/control-model/core-contracts.json profile_contract.capability_terms.task-utility-mode rules diff-utility-output and utility-enforcement, plus review-target-modes; src/control-prompts/main-control-agent.md:22-32",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Retain before-and-after workspace change-set checks; changed or unavailable checks must invalidate the utility result and block downstream review or closure.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "axis": "root",
+      "candidate_id": "ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The current condensed context preserves a fail-closed release boundary: merely declaring formal readiness cannot satisfy its evidence obligation, and Core independently states both the formal-evidence non-bypassable and the matching formal-scope rule.",
+      "authority_or_condition": "src/control-model/core-contracts.json execution_level_contract.non_bypassable and execution_level_contract.validation_loop.formal_scope_rule; src/control-prompts/main-control-agent.md:46",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Retain the explicit formal-evidence condition and keep release closure blocked or partial whenever current formal evidence is unavailable.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "Static review of the current packet, current source context, and authoritative Core only; it does not prove real-host or production behavior.",
+    "This semantic authoring-lifecycle ballot does not replace readability or professional-completeness formal attestations."
+  ]
+}

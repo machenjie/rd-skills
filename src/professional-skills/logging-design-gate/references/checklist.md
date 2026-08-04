@@ -8,5 +8,5 @@
 - Distinguish expected validation/404, retryable intermediate failure, fallback/degradation, and terminal failure levels.
 - Prefer metrics, traces, sampling, aggregation, or DEBUG-only logs for hot paths.
 - Map required fields, redaction, denial category, retry/fallback distinction, and trace propagation to tests or validation commands.
-- Record graph, memory, and execution trajectory reuse only after current source confirms logger conventions.
-- State what validation proves, what it does not prove, residual sink/retention/traffic risk, and next gate.
+- Record current source, diff, and validation reuse only after current source confirms logger conventions.
+- State what validation proves, what it does not prove, residual sink/retention/traffic risk, and recommended next step.

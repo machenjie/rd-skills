@@ -1,0 +1,1 @@
+Review a trading order service where cancel acknowledgement marks an order terminal even if a late partial fill arrives, venue session sequence numbers reset on reconnect without a snapshot, and the pre-trade risk dependency may be stale when an operator activates the kill switch. Define quantity, sequence, reconciliation, fail-safe authority, and validation obligations.

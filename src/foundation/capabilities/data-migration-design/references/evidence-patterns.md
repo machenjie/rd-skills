@@ -1,8 +1,8 @@
 # Data Migration Evidence Patterns
 
-Use this reference when migration closure depends on graph, memory, execution output, validation freshness, tool permission boundaries, or production evidence limits. Keep it as an evidence map, not a second migration tutorial.
+Use this reference when migration closure depends on repository inspection and prior task evidence, execution output, validation freshness, tool permission boundaries, or production evidence limits. Keep it as an evidence map, not a second migration tutorial.
 
-# Migration-To-Validation Map
+## Migration-To-Validation Map
 
 | Migration claim | Minimum evidence | What it proves | What it does not prove |
 | --- | --- | --- | --- |
@@ -16,51 +16,14 @@ Use this reference when migration closure depends on graph, memory, execution ou
 | Cross-system cutover is bounded | Source-of-truth decision, CDC lag, reconciliation diff, replay/abort plan, and post-cutover validation | Source/target divergence is measured for the inspected cutover | Long-tail event order, all regions, or uninspected repair jobs |
 | Release watch can detect harm | Lag, lock wait, error, throughput, duration, and completeness metrics with owner and threshold | Operators can see expected migration failure signals | Thresholds are sufficient for every production seasonality pattern |
 
-# Graph, Memory, And Execution Reconciliation
+## Current Evidence And Freshness
 
-- Treat repository graph, project memory, previous migration notes, runbooks, dashboards, and old validation reports as discovery inputs until current source confirms them.
-- Accept a previous "no readers", "backfill done", "safe DDL", "rollback tested", or "ledger repaired" claim only when the schema, migration scripts, generated clients, reports/jobs, row volumes, deployment order, and validation command still match current state.
+- Treat repository inspection, prior task evidence, previous migration notes, runbooks, dashboards, and old validation reports as discovery inputs until current source confirms them.
+- Accept a prior claim only while the schema, migration scripts, generated clients, reports or jobs, row volumes, deployment order, and validation command match current state. Examples include "no readers", "backfill done", "safe DDL", "rollback tested", and "ledger repaired".
 - Mark evidence stale after edits to migration files, schema, generated clients, fixtures, release sequence, feature flags, validation queries, reports, or build/install outputs.
 - Record inspected and skipped consumers: application readers/writers, generated clients, reports, jobs, ETL, dashboards, external integrations, and manual query surfaces.
-- Map every final migration-safety claim to a command, test, validator, report, migration dry run, telemetry query, restore rehearsal, or explicit not-run residual risk.
+- When making a final migration-safety claim about the current migration, map it to a command, test, validator, report, migration dry run, telemetry query, restore rehearsal, or explicit not-run residual risk.
 
-# Tool Permission Boundary
-
-| Action | Boundary record |
-| --- | --- |
-| Local source reads, `rg`, parser scripts, report inspection | Read-only local shell action; cite searched paths and avoid full output dumps |
-| Local validators and builds | State-mutating only for reports/dist/build artifacts; cite log path and exit code |
-| Migration dry run against local or throwaway DB | State-mutating test action; record dataset, cleanup, reset, and absence of production credentials |
-| Production DB, CDC, backup, restore, cloud, or deploy command | High-risk state-mutating action; require permission, dry-run when available, rollback/forward-fix path, stop condition, and redaction rule |
-| Telemetry, dashboard, or audit export | Read-only or connector-scoped; redact tenant/user/secret-bearing values and state retention limits |
-
-# Handoff Evidence Shape
-
-```yaml
-migration_evidence_closure:
-  inspected_paths:
-    - path: ""
-      finding: ""
-  accepted_prior_claims:
-    - claim: ""
-      current_evidence: ""
-  rejected_or_stale_claims:
-    - claim: ""
-      reason: ""
-  changed_migration_to_validation_map:
-    - migration_decision: ""
-      validator_or_test: ""
-      exit_code: ""
-      artifact_or_report: ""
-      proves: ""
-      does_not_prove: ""
-  tool_permission_boundary:
-    action_class: ""
-    sandbox: ""
-    state_mutation: ""
-    redaction: ""
-  residual_risk:
-    - risk: ""
-      owner: ""
-      next_gate: ""
-```
+- If migration dry run against local or throwaway DB, record dataset, cleanup, reset, and absence of production credentials.
+- If production DB, CDC, backup, restore, cloud, or deploy command, require permission, dry-run when available, rollback/forward-fix path, stop condition, and redaction rule.
+- If telemetry, dashboard, or audit export, redact tenant/user/secret-bearing values and state retention limits.

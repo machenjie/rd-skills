@@ -1,18 +1,18 @@
 # Layered Architecture Evidence Patterns
 
-Use this reference when closure depends on proving dependency direction, business-rule placement, layer exceptions, import-graph freshness, architecture checks, or graph/memory claims. Keep the main capability body for routing and output shape; load this file only for concrete evidence mapping.
+Use this reference when closure depends on proving dependency direction, business-rule placement, layer exceptions, import-graph freshness, architecture checks, or repository inspection/prior evidence claims. Keep the main capability body for routing and output shape; load this file only for concrete evidence mapping.
 
 ## Claim To Evidence Map
 
 | Claim | Strong evidence | Weak or invalid evidence | Residual risk if absent |
 | --- | --- | --- | --- |
 | Controllers contain no business decisions | Current entry-point source plus use-case/domain tests for the moved rule | Folder naming or "thin controller" statement | Delivery mechanisms diverge and duplicate policy |
-| Domain has no infrastructure imports | Fresh import graph, architecture rule output, or source scan for domain package | Prior graph, package layout only, or memory claim | Domain becomes untestable without DB/framework/queue |
+| Domain has no infrastructure imports | Fresh import graph, architecture rule output, or source scan for domain package | Prior graph, package layout only, or prior claim | Domain becomes untestable without DB/framework/queue |
 | Application owns transaction boundary | Use-case source, unit-of-work owner, rollback rule, repository participant list | Repository method naming only | Partial commits or hidden cross-aggregate transaction drift |
 | Infrastructure exceptions are translated | Adapter source and negative test/review mapping provider error to domain/application error | Catch-all wrapper with no provider case | Provider/DB/framework types leak inward or outward |
-| Layer exception is bounded | Exception ledger with owner, reason, expiry/review trigger, containment test, and migration trigger | "Temporary" comment or undocumented local convention | Architecture debt becomes normalized |
+| Layer exception is bounded | Exception record with owner, reason, expiry/review trigger, containment test, and migration trigger | "Temporary" comment or undocumented local convention | Architecture debt becomes normalized |
 | Architecture check is enforceable | CI command, tool config, exit code, report path, changed import scope, and freshness | Manual review only or stale check before package move | Dependency direction erodes silently |
-| Graph/memory layering claim is current | Direct source paths confirm graph or memory claim after final edit | Compaction summary or prior report alone | Closure accepts stale architecture shape |
+| current evidence layering claim is current | Direct source paths confirm prior source or task evidence claim after final edit | Compaction summary or prior report alone | Closure accepts stale architecture shape |
 
 ## Changed Layer To Validation Map
 

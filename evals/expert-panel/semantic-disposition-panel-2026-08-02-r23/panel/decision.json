@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-decision",
+  "review_id": "semantic-disposition-panel-2026-08-02-r23",
+  "decided_on": "2026-08-02",
+  "decision_method": "three-independent-experts-majority",
+  "source_fingerprints": {
+    "audit": "0dad4fcd5a86c7621a8e0ce763bb6f93af2bd1a9fea7ffba0e98aaa35433b78e",
+    "reference_candidates": "bd2bc0a08b4ba5514b178ab3eb9f76faaa61184a5bed37b0ea6d787b86c4abed",
+    "reference_detector": "4b04a9b693ac3079a1af6154425ed64408474d5027c0119ed6360c9288356112",
+    "reference_groups": "aa063d66e92ded0513416306d5a118f5519e9205806d70477ded8417aabb5a79",
+    "reference_source": "835aa65b4dbbf80eb352beeff61d4f0604082dca8ad76bc3ff419268b6a0c4a7",
+    "root_candidates": "f358156437bc40fdc4067229eae4b92fa2a7a12d2826cbf59b22e2e0a348458d",
+    "root_context": "5a1604414a94a6b17a08125a82027fc33981f2752f939a2d25022b32577c750b",
+    "root_detector": "998c2581653aac9c406208b35436660dfee1fd1862514c38264d2ad52a3f73ad",
+    "root_source": "e0eed4245eede01ba2085bcbaaa4a270e6828f23da2914e791d43b90319c51c3"
+  },
+  "panel_contract": {
+    "decision_method": "three-independent-experts-majority",
+    "required_voters": 3,
+    "abstentions_allowed": false,
+    "minimum_winning_votes": 2,
+    "independent_ballots": true,
+    "required_target_count": 1,
+    "required_axis_target_counts": {
+      "root": 1,
+      "reference": 0
+    },
+    "allowed_dispositions": [
+      "false-positive",
+      "rewrite",
+      "time-bounded-exception",
+      "valid-contextual-rule"
+    ]
+  },
+  "packet": {
+    "path": "evals/expert-panel/semantic-disposition-panel-2026-08-02-r23/packet.json",
+    "sha256": "c688bf15c7f4b9e6a77616a4386578418e7f1f10447696287a6c8f39fd6ffbed"
+  },
+  "voters": [
+    {
+      "voter_id": "semantic-r23-actionability",
+      "agent_id": "semantic-r23-actionability-agent",
+      "role": "senior-ai-actionability-reviewer",
+      "expertise": [
+        "AI actionability and instruction clarity for Android engineering Skills"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r23-actionability.json",
+      "ballot_sha256": "d902c088f6f1a7d7fd2e50264c18a053f22386e0d91957363d53146520a9b688"
+    },
+    {
+      "voter_id": "semantic-r23-clarity",
+      "agent_id": "semantic-r23-clarity-agent",
+      "role": "senior-ai-language-clarity-reviewer",
+      "expertise": [
+        "language-clarity-and-one-rule-per-sentence"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r23-clarity.json",
+      "ballot_sha256": "bfc8c7a68c2e355d6531c59b10c1259a5763f83bedd4a8ad8cf7fed2633bb4a3"
+    },
+    {
+      "voter_id": "semantic-r23-architecture",
+      "agent_id": "semantic-r23-architecture-agent",
+      "role": "senior-skill-reference-architecture-reviewer",
+      "expertise": [
+        "Skill/Reference architecture, Root placement, and AI-first context economy"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r23-architecture.json",
+      "ballot_sha256": "690cfd1283b21fb599de5d264b8825dfab7515b906c56bf2c3eeecaed16789e3"
+    }
+  ],
+  "semantic_decisions": [
+    {
+      "target_id": "root:1af5f56a14fdd4e0844be1cdf446861e201eb5ca4e92ff95b40c78fc910e94af",
+      "axis": "root",
+      "candidate_id": "1af5f56a14fdd4e0844be1cdf446861e201eb5ca4e92ff95b40c78fc910e94af",
+      "candidate_fingerprint": "23c528cd5af194b46bb3de24d53932e32e8e06903436912da2eb67e943e96d08",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 3,
+      "vote_counts": {
+        "false-positive": 0,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 3
+      },
+      "supporting_voters": [
+        "semantic-r23-actionability",
+        "semantic-r23-clarity",
+        "semantic-r23-architecture"
+      ],
+      "dissenting_voters": [],
+      "ballot_rationales": [
+        {
+          "voter_id": "semantic-r23-actionability",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The detector correctly identifies a mandatory Root instruction containing the artifact signal, so this is not a detector false positive. In the complete android-platform-extension context, line 25 requires an agent to record the artifact and signing source alongside manifest, permission, storage, device, ANR, and startup evidence for a confirmed Android platform change. That evidence inventory is actionable: later rules use repository SDK, manifest, variant, package, signing, APK/AAB, and device facts to bound compatibility proof. It does not require creation of a separate artifact and does not grant signing, rollout, release, or rollback authority.",
+          "authority_or_condition": "android-platform-extension owns this Domain modifier. The rule is valid only after the Skill's When To Use gate confirms an Android target whose platform behavior changes; artifact and signing-source facts are recorded as Android compatibility evidence, while store rollout, signing authorization, and release or rollback approval remain excluded by the Do Not Use boundary.",
+          "decision_owner": "android-platform-extension",
+          "mitigation": "Keep execution scoped to evidence discovery: use repository and current build facts, stop or escalate when artifact or signing identity is unknown, disclose untested artifact and device paths, and never infer signing authorization or rollout approval from the recorded source.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r23-clarity",
+          "disposition": "valid-contextual-rule",
+          "rationale": "Line 25 contains one directive: record the Android evidence inventory. Its comma-separated terms are parallel inputs rather than independent actions. In the Required Inputs context, artifact/signing source identifies evidence provenance alongside manifest, permission, storage, device, ANR, and startup facts; it neither creates a separate artifact nor authorizes signing. The mandatory-artifact detector therefore reaches a real, intentionally mandatory recording rule, and the Android-only scope makes that rule professionally valid.",
+          "authority_or_condition": "android-platform-extension is selected only for a confirmed Android target whose platform behavior changes; lines 19-20 exclude non-Android work, rollout, signing authorization, and release/rollback approval.",
+          "decision_owner": "android-platform-extension",
+          "mitigation": "Keep the single Record action and treat every listed noun phrase as an evidence dimension for the affected Android scope; record unavailable evidence explicitly instead of inventing it, and route signing or rollout authorization to delivery-release-gate.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r23-architecture",
+          "disposition": "valid-contextual-rule",
+          "rationale": "At Android Root lines 22-26, artifact/signing source is one item in a platform evidence inventory alongside manifest, permissions, storage, device, ANR, and startup facts. It identifies affected build and signing evidence; it does not mandate creating a separate artifact. Keeping the boundary in Root is context-efficient because this Domain loads only for confirmed Android behavior, the input controls stop and routing decisions, and detailed packaging proof remains selectively loaded from its targeted Reference.",
+          "authority_or_condition": "Valid only when a confirmed Android target changes platform behavior and artifact/signing or adjacent required-input dimensions affect the task. Missing evidence is recorded as unavailable rather than invented, while store rollout, signing authorization, and release or rollback approval remain with delivery-release-gate.",
+          "decision_owner": "android-platform-extension",
+          "mitigation": "Preserve the concise Root inventory and load compatibility-packaging-and-performance-contracts only when artifact, packaging, signing, performance, or device proof affects the decision. Report unavailable evidence and proof limits without authorizing release.",
+          "review_after": null
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "semantic_dispositions": {
+      "false-positive": 0,
+      "rewrite": 0,
+      "time-bounded-exception": 0,
+      "valid-contextual-rule": 1
+    }
+  },
+  "limitations": [
+    "This majority is authoring lifecycle evidence only.",
+    "It cannot satisfy readability or professional-completeness formal attestations.",
+    "The record contains no generated single-source-of-truth disposition entries.",
+    "A rewrite majority requires a source edit before any resolved governance entry can exist."
+  ]
+}

@@ -1,84 +1,32 @@
 # Frontend Testing Benchmarks And Patterns
 
-Load this reference when a frontend test plan needs detailed benchmark anchors, test-level selection, state coverage detail, or API mock alignment examples. Do not load it for pure routing decisions or minor wording changes where the `SKILL.md` body and checklist are sufficient.
+Load this reference when selecting frontend test level, dynamic state coverage, network fixture fidelity, browser behavior, visual risk, or accessibility evidence. Do not load it for a pure non-UI rule already owned by unit testing.
 
-## Benchmark Anchors
+## Test Boundary Fit
 
-- Testing Library (`@testing-library/react`, Vue, Svelte): accessible query priority; user-visible behavior over implementation details.
-- user-event: realistic pointer, keyboard, clipboard, and focus interactions; prefer over low-level event firing for user flows.
-- Vitest and Jest: deterministic component/unit runners with mock/spying support.
-- MSW: network-level API mocking for `fetch`/`XMLHttpRequest`; preferred over mocking the HTTP client module.
-- Storybook interaction tests and Chromatic/Percy: story-level behavior and visual regression when layout or visual state is the risk.
-- axe-core / jest-axe / Playwright accessibility checks: automated WCAG 2.2 signal for labels, roles, ARIA, and common violations.
-- Testing Trophy: component/integration tests carry most frontend confidence; unit tests cover pure logic; E2E stays narrow for critical journeys.
-- WCAG 2.2 Level AA: focus order, focus visible, name/role/value, status messages, and keyboard access.
+| Risk | Candidate evidence | Escalate when |
+| --- | --- | --- |
+| Pure formatter/selector/rule | Unit/property test through its public API. | Browser, framework, locale runtime, or network behavior carries the risk. |
+| Component/form/data state | Behavior test rendering the real component subtree with user-level events. | Routing, focus across documents, layout engine, or real browser APIs matter. |
+| API-backed workflow | Component/integration test through a contract-aligned network boundary. | Provider/server deployment semantics or cross-page journey is the claim. |
+| Routing/history/storage | Browser test for direct entry, refresh, back/forward, cancellation, and cleanup. | Backend authorization or external consumer compatibility is being inferred. |
+| Visual/responsive change | Owned story plus visual comparison at relevant states/viewports. | Meaning, keyboard behavior, or assistive output is the risk. |
+| Critical end-to-end journey | Narrow browser journey through real application boundaries. | Broad E2E setup would duplicate lower-level cases without new confidence. |
 
-## Test Level Decision Matrix
+## Coverage And Fidelity
 
-| Behavior to test | Recommended level | Tool | Why |
-| --- | --- | --- | --- |
-| Single component rendering | Component integration test | Testing Library + Vitest/Jest | Fast; tests DOM output; not implementation |
-| Form validation UX | Component integration test | Testing Library + MSW | Verifies field messages, submit state, and recovery |
-| Permission-differentiated rendering | Component integration test | Testing Library + role fixtures | Exhaustive across roles without browser overhead |
-| Multi-component data flow | Component integration test | Testing Library rendering parent subtree | Proves real prop/context wiring |
-| Async data loading states | Component integration test | Testing Library + MSW | Mock network; assert loading/success/error |
-| Core single-page user flow | Integration test | Testing Library + MSW | Tests realistic path without full browser |
-| Cross-page navigation flow | E2E test | Playwright / Cypress | Requires real browser routing |
-| Pure utility function | Unit test | Vitest / Jest | No DOM; pure logic |
-| Visual regression | Visual snapshot | Storybook + Chromatic/Percy | Catches layout and visual state breaks |
-| WCAG accessibility rules | Accessibility test | jest-axe / axe-core | Catches common ARIA/label/role issues |
+Select applicable loading, success, true/filtered empty, stale, error/retry, conflict, partial, permission/unauthenticated, disabled/in-progress, validation, confirmation, optimistic rollback, and cancellation states from the actual state model. Cover each role or scope only when rendered behavior differs, while backend denial remains a separate proof.
 
-## State Coverage Checklist
+Drive interactions through accessible names/roles and realistic keyboard/pointer input. Assert caller-visible DOM, focus, announcements, navigation, cache/state changes, and outbound requests—not private helpers, hook call order, CSS class trivia, or snapshots as the sole semantic oracle.
 
-Every component or view with dynamic behavior should cover applicable states:
+Network mocks intercept the transport or generated client boundary and use schema/contract-owned factories. Include malformed/old-version/error fixtures when those are risks; a hand-written happy-path object can make production-impossible data look valid.
 
-```text
-Rendering states:
-  - Loading: skeleton, spinner, progress indicator visible
-  - Success: data rendered correctly
-  - Empty: no data, empty message, create/reset action where applicable
-  - Error: error message, recovery action present and functional
-  - Stale: stale data indicator if applicable
+Automated accessibility checks catch a subset of structural defects. Manual or browser evidence is still needed for keyboard order, focus movement/restoration, screen-reader announcements and meaning, zoom/reflow, motion, and platform-specific behavior when applicable.
 
-Permission states:
-  - Each role variant that changes visible elements or actions
-  - Unauthenticated: redirect/login prompt and no protected content
-  - Permission-denied: denied state and correct recovery/request-access action
+## Proof Limits And Routes
 
-Interaction states:
-  - Disabled: reason communicated and reachable
-  - In-progress: no double-submit
-  - Validation error: field-level and form-level recovery
-  - Confirmation required: destructive action confirmation path
+A component test does not prove browser layout or history. A browser test does not prove complete backend-policy coverage. A visual diff does not prove semantics. A mocked API does not prove deployed compatibility or provider behavior. Record browsers/viewports, roles, locales, assistive checks, mocked boundaries, and states not exercised.
 
-Accessibility states:
-  - Focus moves to the expected element after action
-  - Keyboard navigation follows expected order
-  - Interactive elements have accessible names
-  - axe-core or equivalent has no violations for the rendered state
-```
+Reject implementation-detail mocks, low-level events when user behavior matters, happy-path-only dynamic views, stale fixtures, snapshots without semantic assertions, automation-only accessibility claims, and large E2E suites used to avoid choosing narrower proof.
 
-## API Mock Alignment Pattern
-
-```typescript
-// BAD: hand-crafted mock may diverge from contract.
-jest.mock('../api/users', () => ({
-  fetchUser: jest.fn().mockResolvedValue({ id: '1', name: 'Alice' })
-}));
-// Risk: API adds required field 'email'; mock silently misses it; test passes; production fails.
-
-// GOOD: MSW with contract-aligned fixture.
-import { http, HttpResponse } from 'msw';
-import { server } from '../mocks/server';
-import { userFactory } from '../test-factories/user';
-
-it('renders user email', async () => {
-  server.use(
-    http.get('/api/users/:id', () => {
-      return HttpResponse.json(userFactory.build({ email: 'alice@example.com' }));
-    })
-  );
-  render(<UserProfile userId="1" />);
-  expect(await screen.findByText('alice@example.com')).toBeInTheDocument();
-});
-```
+Route test-level sufficiency to `test-strategy`, form rules to `form-validation-design`, API lifecycle to `frontend-api-integration`, route behavior to `routing-navigation-design`, design-system state/accessibility to `design-system-rules`, and final command/freshness selection to `quality-test-gate`.

@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-24-r19",
+  "created_on": "2026-07-24",
+  "packet_sha256": "29d7506bb3d5a3b74bac5e992929d0c1e6f56e625d9eadb6b7bb21ad2852652c",
+  "source_fingerprints": {
+    "audit": "96c36bdbb91ebd08b3e37c94b3a904a36afb598b2d5b88d6ca86c23db1e29a88",
+    "reference_candidates": "1eedbe1be723cfe12c96c32e3e5614a20164fc12f8001d28569095037a9f66e4",
+    "reference_detector": "4b04a9b693ac3079a1af6154425ed64408474d5027c0119ed6360c9288356112",
+    "reference_groups": "aa063d66e92ded0513416306d5a118f5519e9205806d70477ded8417aabb5a79",
+    "reference_source": "213495df9e73f680df8a3af75016d1f3378d514c6efebb7bf6b745449a703368",
+    "root_candidates": "b7d76a3fcee18b5047a77e00d637991903f8752eb09999c77bcf19dee13ee301",
+    "root_context": "05cce40a520010bd8a25ade86f311113755d30a9d4757821684cada5d88615ca",
+    "root_detector": "0b6168c2f3aaacfc611421aa8ef533171e4adf229986be73016c74154d402aef",
+    "root_source": "ddfc5a583c73b0b7062a021ba82cdf2d0c1177affe5e0c58100eb457fd3c1d65"
+  },
+  "voter": {
+    "voter_id": "semantic-r19-assurance",
+    "agent_id": "semantic-assurance-reviewer-2026-07-24-r19",
+    "role": "semantic-assurance-reviewer",
+    "expertise": [
+      "semantic-assurance"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "reference:132b2a93cf5f9234fb8863a1811734109aceb9ee67118da7ea84d7dd6239a442",
+      "axis": "reference",
+      "candidate_id": "132b2a93cf5f9234fb8863a1811734109aceb9ee67118da7ea84d7dd6239a442",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The packet anchors the shared labels `Strong evidence`, `Weak evidence`, `Missing evidence`, and `Invalid evidence` at backup-recovery/references/evidence-patterns.md:19-22 and ten other listed evidence-pattern references. All eleven occurrences have distinct content fingerprints, so the common four-label structure standardizes evidence grading while each Skill retains domain-specific evidence rules.",
+      "authority_or_condition": "Valid only as an evidence-quality classification inside the eleven packet-listed evidence-pattern references whose domain rows remain independently authored.",
+      "decision_owner": "The eleven packet-listed Skill owners",
+      "mitigation": "Retain distinct domain evidence beneath the shared labels; reopen if rows converge into source-free boilerplate or lose owner-specific proof limits.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:36fc8ec51b5723500356155ce13eb38cd2c25ac3530fd6a6c14fb7ee629ea746",
+      "axis": "reference",
+      "candidate_id": "36fc8ec51b5723500356155ce13eb38cd2c25ac3530fd6a6c14fb7ee629ea746",
+      "disposition": "valid-contextual-rule",
+      "rationale": "language-idiom-enforcement/references/checklist.md:14 says to apply `only repository-required public contract fields and examples` and immediately rejects invented universal comment coverage. The `only` clause is bounded by current repository authority and prevents a generic style guide from creating unsupported obligations.",
+      "authority_or_condition": "Applies when current repository contracts define the public fields or examples; it does not authorize inventing requirements from a generic style guide.",
+      "decision_owner": "language-idiom-enforcement Skill owner",
+      "mitigation": "Keep repository contract evidence attached to the rule and rewrite if the repository authority or public-contract scope becomes ambiguous.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:5b3b78d581c88a7ebb6fdc94b91a920f2cef871e351085a6633306f0444b806b",
+      "axis": "reference",
+      "candidate_id": "5b3b78d581c88a7ebb6fdc94b91a920f2cef871e351085a6633306f0444b806b",
+      "disposition": "valid-contextual-rule",
+      "rationale": "form-validation-design/references/checklist.md:7 keeps consequential policy at the backend or trusted enforcement authority and lets frontend validation expose `only disclosure-safe constraints or responses`. This is a necessary trust-boundary restriction, not an unsupported universal implementation preference.",
+      "authority_or_condition": "Applies when frontend validation represents policy owned by a backend schema or other trusted enforcement authority and disclosure safety constrains client-visible detail.",
+      "decision_owner": "form-validation-design Skill owner",
+      "mitigation": "Preserve the trusted enforcement owner and disclosure analysis; reopen if frontend logic becomes authoritative or hides required user-actionable feedback.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:782e7be59887663a954a323e13d4ba0581a160ceb922bb98d95a9bb56872552f",
+      "axis": "reference",
+      "candidate_id": "782e7be59887663a954a323e13d4ba0581a160ceb922bb98d95a9bb56872552f",
+      "disposition": "valid-contextual-rule",
+      "rationale": "testability-seam-design/references/checklist.md:12 requires defining `only the seam-specific reset and observation obligations needed to honor that decision`. The phrase is explicitly conditioned on an already selected seam decision and prevents the testability Skill from expanding into unrelated lifecycle design.",
+      "authority_or_condition": "Applies after a concrete seam decision exists and only to reset or observation duties necessary to preserve that decision.",
+      "decision_owner": "testability-seam-design Skill owner",
+      "mitigation": "Name the accepted seam decision and required obligations; reopen if hidden state or cleanup needs make the narrowed reset boundary incomplete.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:8a2567f074a2b4e45734bca759363eb17ac8d97f241510978f962511d1b8ba1d",
+      "axis": "reference",
+      "candidate_id": "8a2567f074a2b4e45734bca759363eb17ac8d97f241510978f962511d1b8ba1d",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The packet anchors the `Claim | Strong evidence | Weak or invalid evidence | Residual risk if absent` structure at dto-schema-design/references/evidence-patterns.md:7-16, error-code-design:7-16, layered-architecture-design:7-15, and project-initialization:7-15. Their four distinct content fingerprints show that only the comparison schema is shared; each table expresses different domain claims and risks.",
+      "authority_or_condition": "Valid as a comparison schema in the four packet-listed evidence-pattern references while the claim, evidence, and residual-risk rows remain domain-specific.",
+      "decision_owner": "The four packet-listed Skill owners",
+      "mitigation": "Preserve domain-specific rows and proof limits; reopen if the tables become interchangeable boilerplate or repeat identical decisions.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:b1244a8537aa0323270872fe419ad06b0906002e9344c64d9e2504dc2d12e942",
+      "axis": "reference",
+      "candidate_id": "b1244a8537aa0323270872fe419ad06b0906002e9344c64d9e2504dc2d12e942",
+      "disposition": "valid-contextual-rule",
+      "rationale": "logging-error-handling/references/benchmarks-and-patterns.md:28 states that accepted policy and its owner define protected actor/action/resource/outcome evidence, while this Skill verifies `only the diagnostic boundary and dependency`. That restriction preserves the policy owner's authority and prevents diagnostic logging review from claiming protected-record closure.",
+      "authority_or_condition": "Applies when an accepted policy and accountable owner already define protected-record evidence, integrity, retention, access, sink, and durability.",
+      "decision_owner": "logging-error-handling Skill owner with the accepted protected-record policy owner",
+      "mitigation": "Keep the upstream policy and owner explicit; escalate rather than close when protected-record obligations are absent or disputed.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:cc4f1b6588aa6dec05dfae764c293df76674953fe799841faec9cdf6e517b9a6",
+      "axis": "reference",
+      "candidate_id": "cc4f1b6588aa6dec05dfae764c293df76674953fe799841faec9cdf6e517b9a6",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The packet anchors a shared `claim | minimum evidence | what it proves | what it does not prove` table schema at cleanup-deletion-governance/references/evidence-patterns.md:7-15 and ten other listed references. Every occurrence has a distinct content fingerprint and domain-specific claim rows, so the common schema makes proof limits explicit without duplicating the underlying professional rules.",
+      "authority_or_condition": "Valid only for the eleven packet-listed evidence-pattern references whose claim, evidence, proof, and non-proof rows remain specific to the owning Skill.",
+      "decision_owner": "The eleven packet-listed Skill owners",
+      "mitigation": "Retain owner-specific claims and non-proof boundaries; reopen if the structural template masks duplicated or generic content.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:ffa3ce5605019400d1d015e81659920464bdf3f1c95bbb4d031027f6e7830aa0",
+      "axis": "reference",
+      "candidate_id": "ffa3ce5605019400d1d015e81659920464bdf3f1c95bbb4d031027f6e7830aa0",
+      "disposition": "valid-contextual-rule",
+      "rationale": "testability-seam-design/references/benchmarks-and-patterns.md:13 says to consume the accepted `test-data-management` owner and expose `only the required reset/observation seam`. The accepted owner and required seam are explicit conditions that preserve data ownership and minimize test-only surface expansion.",
+      "authority_or_condition": "Applies after test-data-management ownership is accepted and a specific reset or observation seam is required by the selected testability decision.",
+      "decision_owner": "testability-seam-design Skill owner with the accepted test-data-management owner",
+      "mitigation": "Name the accepted owner and required seam; reopen if cleanup, isolation, or observation cannot be satisfied through the narrow surface.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:0f4c0d261a605390d0c26d48bdddef0abb1d03b06e398e0719815c95342e6647",
+      "axis": "root",
+      "candidate_id": "0f4c0d261a605390d0c26d48bdddef0abb1d03b06e398e0719815c95342e6647",
+      "disposition": "valid-contextual-rule",
+      "rationale": "ci-cd/SKILL.md:25 requires tying source revision and behavior-affecting inputs to build identity, provenance, registry artifact, and promoted artifact. For an artifact that is built, registered, and promoted, this linkage is the mechanism that prevents an untraceable or substituted artifact from being released.",
+      "authority_or_condition": "Applies to CI/CD flows that build, register, or promote an artifact and therefore need identity and provenance across those stages.",
+      "decision_owner": "ci-cd Skill owner",
+      "mitigation": "Scope the linkage to artifacts and behavior-affecting inputs actually used by the pipeline; retain explicit proof limits for external registry or promotion systems.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:2a54ae2ec0bb75d10eac23a54c8e52507e766d17c8e192ca3c0a3cc23e91ea20",
+      "axis": "root",
+      "candidate_id": "2a54ae2ec0bb75d10eac23a54c8e52507e766d17c8e192ca3c0a3cc23e91ea20",
+      "disposition": "valid-contextual-rule",
+      "rationale": "ci-cd/SKILL.md:24 requires defining `each required check` by trigger, changed scope, protected target, terminal behavior, and retry semantics. The universal quantifier is limited to checks already classified as required, and these fields are necessary to make their enforcement and failure behavior auditable.",
+      "authority_or_condition": "Applies only to checks designated required by the current CI/CD policy or protected target; optional diagnostics are outside the rule.",
+      "decision_owner": "ci-cd Skill owner",
+      "mitigation": "Keep the required-check designation and protected target explicit; reopen if a check lacks an accountable policy source or terminal behavior.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:45030033706eceaef63f523be6dca6d944523e15ff14bef0ee176a9acd585d42",
+      "axis": "root",
+      "candidate_id": "45030033706eceaef63f523be6dca6d944523e15ff14bef0ee176a9acd585d42",
+      "disposition": "valid-contextual-rule",
+      "rationale": "solution-optimality-evaluation/SKILL.md:13 states that claims of being `more future-proof` require comparison with the strongest feasible alternative. The requirement is conditioned on making a comparative optimality claim; without a feasible-alternative comparison, that claim would be unsupported.",
+      "authority_or_condition": "Applies when a decision claims relative optimality such as being more future-proof and at least one feasible alternative exists.",
+      "decision_owner": "solution-optimality-evaluation Skill owner",
+      "mitigation": "Name the strongest feasible alternative and evidence limits; avoid the claim when constraints prevent a meaningful comparison.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:73d2dbebf2bdfd4dfa9dcce31007c3da0a9356b6bba6977145650e7c0b33be8d",
+      "axis": "root",
+      "candidate_id": "73d2dbebf2bdfd4dfa9dcce31007c3da0a9356b6bba6977145650e7c0b33be8d",
+      "disposition": "valid-contextual-rule",
+      "rationale": "routing-quality-review/SKILL.md:37 requires validating that `every selected Skill and reference` exists in built output. Selection is the controlling condition: omission of any selected artifact would make the built routing package incomplete and break the declared load path.",
+      "authority_or_condition": "Applies to Skills and references selected by the accepted routing and build inputs for the artifact under review.",
+      "decision_owner": "routing-quality-review Skill owner",
+      "mitigation": "Bind the selected set to current routing/build evidence and report any intentionally unavailable artifact as a blocking or scoped omission.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:e3417af7023a54eadebe84064cad566d7167ea2f157c86f84f93ceb1ddd37cd4",
+      "axis": "root",
+      "candidate_id": "e3417af7023a54eadebe84064cad566d7167ea2f157c86f84f93ceb1ddd37cd4",
+      "disposition": "valid-contextual-rule",
+      "rationale": "e2e-testing/SKILL.md:28 states that cleanup must cover success, assertion failure, and timeout. These are the terminal paths that can leave run-owned identities, records, sessions, or external sandbox state behind; cleanup coverage is therefore a necessary isolation rule for an admitted E2E journey.",
+      "authority_or_condition": "Applies when the E2E journey creates or mutates run-owned data, session, identity, namespace, or external-sandbox state.",
+      "decision_owner": "e2e-testing Skill owner",
+      "mitigation": "Keep cleanup scoped to the run owner and include all reachable terminal paths; stop when cleanup could affect shared or independently owned state.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "Static semantic review covers only the current packet-bound candidates and audit fingerprints; it does not prove runtime behavior, reviewer credentials, or future source changes.",
+    "Group dispositions validate shared evidence schemas only while their domain rows retain distinct source content and proof limits."
+  ]
+}

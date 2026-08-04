@@ -1,142 +1,39 @@
 # Architecture Style Selection Benchmarks And Patterns
 
-Use this reference when `architecture-style-selection` needs more than routing-level guidance. Keep the main `SKILL.md` focused on mode selection, evidence, output, and gates; use this file for style comparison, force scoring, migration and reversibility, operational readiness, graph/memory/trajectory coupling, and anti-pattern review.
+Load this reference when a system-wide style, runtime boundary, migration path or reversibility decision is genuinely open. Select the least-complex style that survives current product, data, ownership, failure and operational forces.
 
-## Benchmark Anchors
+## Style Fit
 
-- **ADRs and C4 model:** record the style decision and show context/container/component consequences.
-- **Modular monolith practice:** enforce internal boundaries before paying distributed-system costs.
-- **Domain-Driven Design:** align deployable or module boundaries with bounded contexts and data ownership.
-- **Team Topologies and Conway's Law:** architecture must fit ownership, cognitive load, and communication paths.
-- **Evolutionary Architecture:** define fitness functions that keep chosen constraints from decaying.
-- **DORA/Accelerate:** use deployment frequency, lead time, change failure rate, and MTTR as evidence for delivery forces.
-- **Google SRE ORR:** every new runtime unit needs SLO, alerting, runbook, capacity, and owner readiness.
-- **Cell-based and multi-region architecture:** use for explicit blast-radius, sovereignty, or regional latency needs.
-- **12-Factor and CNCF maturity:** require deployability, config, logs, process model, and platform support before service proliferation.
-- **Microservices premium / monolith-first heuristic:** split only when independent deployability, scaling, failure isolation, compliance, or ownership outweighs operational cost.
+| Style | Strong fit | Reject/defer when | Required proof |
+| --- | --- | --- | --- |
+| Plain monolith | One cohesive owner/process and rapid change matter more than internal boundary formality. | Cross-cutting edits, release contention or tangled ownership are current problems. | Change locality, owner, deploy/rollback and a trigger for modularization. |
+| Modular monolith | One deploy/owner, strong local transactions and repairable module boundaries meet needs. | Independent scale/deploy/fault/compliance force is current and material. | Module contracts, dependency enforcement and future extraction seam. |
+| Layered/clean/hexagonal | Dependency direction and separation of policy from delivery/infrastructure are the main force. | Extra abstractions have no enforcement or owner. | Selected layer contract, import rules and domain/use-case tests. |
+| Coarse SOA | Enterprise/coarse capability ownership or shared integration governance is an actual constraint. | Central governance, shared platform/data or “smart pipes” preserve tight coupling. | Service contract/owner, deployment/data independence and governance cost. |
+| Microservices | Bounded capabilities need independent ownership/deploy/scale/fault/compliance perimeters. | Shared database/releases/on-call remain coupled or platform cost is unowned. | Service/data/contract/operability and extraction plan. |
+| Event-driven | Asynchronous decoupling, replay, fan-out or temporal facts are primary. | Ordering, idempotency, lag, schema and recovery ownership are absent. | Producer/consumer, delivery/ordering, replay and consistency contract. |
+| CQRS/read models | Write invariants and read/query/scale shapes differ materially. | One model is sufficient or projection rebuild/staleness is unowned. | Source authority, projection update/rebuild and consumer lag behavior. |
+| Serverless/managed runtime | Bounded/spiky workload benefits from platform operations. | Runtime/latency/state/concurrency/portability/unit-cost constraints fail. | Provider limits, cost/load and failure/exit evidence. |
+| Multi-tenant/region isolation shape | Tenant/region perimeter is driven by residency, noisy-neighbor, blast-radius or availability requirements. | Added duplication/routing/consistency cost lacks ownership. | Placement, identity/data isolation, failover and cost model. |
 
-## Style Comparison Matrix
+## Forces, Migration, And Reversibility
 
-| Style | Deploy unit | Strongest force | Cost driver | Failure mode if mis-selected |
-| --- | --- | --- | --- | --- |
-| Monolith | One process. | Speed of change at small scale. | Internal structure can tangle. | Cross-cutting edits and release contention. |
-| Modular monolith | One process with enforced modules. | Clear boundaries with low ops cost. | Boundary discipline and architecture checks. | Modules drift without fitness tests. |
-| Layered / hexagonal | Usually one process. | Testability and domain isolation. | Indirection and adapter overhead. | Anemic domain or leaky adapters. |
-| SOA | Several coarse services. | Enterprise reuse or coarse ownership. | Governance and shared platform overhead. | Smart pipes and tightly governed endpoints. |
-| Microservices | Many independently deployed services. | Independent deploy, scale, own, or isolate. | Platform, observability, on-call, and data consistency. | Distributed monolith. |
-| Event-driven choreography | Producers and consumers. | Decoupling, fan-out, audit, latency decoupling. | Replay, ordering, and observability complexity. | Lost events, replay storms, stale projections. |
-| Event-driven orchestration | Workflow engine plus participants. | Visible long-running flow. | Engine governance and operational ownership. | Workflow bloat or engine coupling. |
-| Serverless / FaaS | Function. | Spiky traffic and low baseline operations. | Cold starts, vendor lock-in, and cost at scale. | Hidden distributed monolith over shared data. |
-| Cell-based | Replicated cell. | Blast-radius isolation at scale. | Routing, placement, and multi-cell ops. | Premature operational overhead. |
-| Edge / active-active | Per region or edge runtime. | Latency, sovereignty, or locality. | Conflict resolution and deployment consistency. | Split-brain on mutable shared data. |
+- Classify deploy cadence, scale/cost divergence, failure isolation, data consistency/authority, team ownership, compliance/residency, latency, portability and operating maturity. A style name without ranked forces is not a decision.
+- Synchronous calls keep simple request semantics but couple latency/availability; events trade immediate consistency for durable delivery, ordering, idempotency, replay and reconciliation obligations.
+- Migration uses an owned seam such as module repair, strangler routing, branch by abstraction, contract bridge, parallel run or expand-contract. Name mixed states, traffic/data move, rollback and legacy retirement.
+- Classify the change as readily reversible, conditionally reversible, or effectively irreversible from data, client, runtime, and exit cost. The evidence records the rejected simpler style and a measurable re-evaluation trigger.
 
-## Force Scorecard
+## Operability And Proof Limits
 
-Score each candidate style against the current and credible 12-24 month forces. Hard constraints disqualify options; soft forces only rank surviving options.
-
-| Force | Evidence to inspect | Disqualifies simpler option when |
-| --- | --- | --- |
-| Independent deployment | Release cadence, freeze windows, deploy ownership, rollback evidence. | One deploy unit blocks a team, regulation boundary, or critical release cadence. |
-| Independent scaling | Traffic shape, CPU/memory/IO profiles, autoscaling limits, cost model. | One component differs by orders of magnitude and cannot be isolated inside one deploy. |
-| Failure isolation | Incident history, blast-radius requirement, SLO and error budget. | Shared runtime failure violates user, tenant, or regulatory isolation. |
-| Data ownership | Schema ownership, transaction boundaries, shared DB coupling, migration path. | Data owner or regulated scope must change independently. |
-| Latency | p50/p95/p99 budget, network hop count, region/edge needs. | Local call cannot satisfy locality or latency, or network split would violate budget. |
-| Team topology | CODEOWNERS, team map, cognitive load, coordination cost. | One team cannot safely own the whole deployable boundary. |
-| Compliance | PCI/HIPAA/GDPR/data residency classification. | Regulated data must be isolated to reduce scope or residency exposure. |
-| Operational maturity | CI/CD, observability, SLOs, on-call, runbooks, incident process. | The organization can run the added topology before go-live. |
-| Cost | 12-month infra, tracing, platform, on-call, opportunity, migration cost. | Added topology has approved budget and cheaper style cannot satisfy hard forces. |
-
-## Decision Tree
-
-```text
-1. Does one team own the code and runtime today?
-   - Yes: prefer monolith or modular monolith unless a hard force disqualifies it.
-   - No: evaluate ownership-aligned boundaries, then validate platform and on-call maturity.
-
-2. Is independent deployment required by release cadence, regulatory freeze, or blast radius?
-   - No: keep one deploy unit and strengthen module boundaries.
-   - Yes: evaluate service split or cell boundary.
-
-3. Is independent runtime scaling required by measured CPU, memory, I/O, latency, or cost profile?
-   - No: avoid service split for scale claims.
-   - Yes: confirm the team can operate the new runtime unit.
-
-4. Is the dominant interaction synchronous or eventful?
-   - Synchronous: minimize hops and co-locate data with the owner.
-   - Eventful: require eventual-consistency product decision, replay safety, and event observability.
-
-5. Is per-tenant, per-region, or regulated blast-radius isolation required?
-   - Yes: evaluate cell, region, or bounded service perimeter.
-   - No: do not add cell or active-active topology early.
-
-6. Can the migration be phased and reversed or contained?
-   - No: classify as Type 1 and raise review bar.
-   - Yes: define phases, rollback triggers, and retirement criteria.
-```
-
-## Migration And Reversibility
-
-| Pattern | Fit | Required evidence |
-| --- | --- | --- |
-| Strangler fig | Gradual replacement of a legacy capability. | Routing seam, old/new parity checks, cutover window, old path retirement trigger. |
-| Branch by abstraction | Internal structure changes before runtime split. | Stable public contract, feature flag or adapter seam, rollback behavior. |
-| Expand-contract | Data/API compatibility during migration. | Old/new schema support, backfill, dual-read/write decision, cleanup owner. |
-| Parallel run / shadow traffic | Compare new style without serving users. | Comparison metrics, divergence threshold, cost owner, rollback trigger. |
-| Cell introduction | Introduce bounded blast radius by tenant/region. | Cell routing key, placement rules, failover behavior, data ownership, operational owner. |
-
-Reversibility classes:
-
-- **Type 2:** reversible with config, routing, or deploy rollback. Evidence can be lighter but still current.
-- **Type 1:** hard to reverse because it affects data ownership, public contracts, partition keys, compliance scope, or team ownership. Requires ADR, migration plan, rollback/containment, and leadership/architecture review.
-
-## Operational Readiness Questions
-
-Before approving new runtime units, answer:
-
-- Who owns the service/function/cell/region during business hours and on-call?
-- What SLI/SLO detects user-visible failure?
-- Which dashboard shows rate, errors, duration, saturation, queue lag, or regional health?
-- What alert pages or tickets, and what runbook action follows?
-- How is config/secrets/deploy/rollback handled independently?
-- What is the capacity model and 12-month cost projection?
-- What trace context crosses boundaries?
-- What failure mode is intentionally degraded rather than hard failed?
-
-## Graph, Memory, And Trajectory Coupling
-
-Treat repository graph, project memory, and execution trajectory as leads, not proof.
-
-- Repository graph can suggest current modules, services, imports, deployment artifacts, generated clients, tests, and owners. Confirm with current files.
-- Project memory can explain why a style was chosen or why a prior migration failed. Confirm that the constraints still exist.
-- Execution trajectory can reveal edit-before-read, repeated failed service splits, skipped validation, or stale ADR assumptions. Use it to raise review depth, not to skip evidence.
-- If current source contradicts graph or memory, current source wins and the discrepancy becomes a residual-risk note or follow-up.
-
-## Validation Evidence Patterns
-
-A strong architecture-style handoff includes:
-
-- current architecture and deploy topology inspected;
-- candidate style list and force scorecard;
-- least-complex selected style with rejected simpler alternative;
-- data ownership and transaction-boundary impact;
-- operational readiness gap list for every added runtime unit;
-- migration pattern, phases, rollback, dual-run, and retirement trigger;
-- fitness functions such as import rules, deploy independence checks, latency budget checks, or SLO/alert existence checks;
-- security/privacy/compliance review when style changes data perimeter or trust boundary;
-- reliability review when style changes runtime components, latency, queueing, capacity, or on-call;
-- evidence limits and next gate.
-
-## Anti-Patterns To Reject
-
-| Anti-pattern | Why it fails |
+| Added surface | Evidence needed |
 | --- | --- |
-| Microservices because the codebase feels large. | Size is not a deploy, scale, ownership, or failure-isolation force. |
-| Service split with shared database and coordinated releases. | Keeps coupling while adding network, deploy, and observability cost. |
-| Event-driven style to hide unclear transaction ownership. | Moves the ambiguity into replay, ordering, and debugging failures. |
-| Serverless for sustained high-throughput low-latency path without cost/latency proof. | Cold starts and per-invocation cost can violate both budget and SLO. |
-| Cell architecture before tenant/region blast-radius need. | Adds routing and data-placement overhead with no resilience return. |
-| Active-active mutable data without conflict strategy. | Creates split-brain and silent data divergence. |
-| ADR copied from project memory without source confirmation. | Stale context can preserve an obsolete decision. |
-| Strangler migration without retirement trigger. | Legacy and replacement run forever. |
-| No fitness functions. | Architecture decays silently after the decision. |
-| Operational readiness deferred until after go-live. | New topology fails before it can be diagnosed or rolled back. |
+| Runtime/deployable | Code/release/on-call owner, health/degradation/rollback, telemetry/runbook, capacity and cost. |
+| Data boundary | Single writer, migration/coexistence, consistency/reconciliation, backup/restore and privacy classification. |
+| Public/event contract | Consumer inventory, compatibility/versioning, schema/generated evidence and deprecation owner. |
+| Network/dependency | Latency/timeout/failure budget, identity/authorization, retry/idempotency and blast-radius behavior where required. |
+
+ADRs, diagrams, repository graphs and prior incidents are discovery evidence; they do not prove live topology, traffic, ownership, provider limits, production cost or incident readiness. Validate the forces and new runtime obligations after the final architecture edit.
+
+Route module shape to `module-boundary-design`, extraction to `microservice-splitting`, events to `event-driven-architecture`, layer rules to `layered-architecture-design`, operability to `reliability-observability-gate`, and regulated perimeters to `security-privacy-gate`.
+
+Reject style-by-fashion, one-team/one-file-count heuristics as gates, distributed monoliths, and shared data with multiple writers. Also reject events without consumers/replay ownership, added runtimes without operators, migration without retirement, and “cloud agnostic” abstractions without a plausible exit force.

@@ -1,58 +1,35 @@
 # Architecture Output And Gates
 
-Load this reference when `architecture-impact-reviewer` needs the full output field list, exhaustive quality gate, or detailed handoff table. The skill body keeps default runtime context compact.
+Load only when assigned L3-L5 analysis or independent review needs mode-specific closure plus targeted proof for a proposed structure, public/indirect consumer impact, data ownership, runtime topology, or dependency-direction risk.
+
+## Do Not Load
+
+Do not load for an owner-internal edit without structural impact or when the root contract or compact checklist is sufficient. Named Layer 3 Skills own specialized module, tradeoff, and consumer mechanisms.
 
 ## Output Contract
-Return a structured architecture review with:
-- **Mode selected**: architecture mode and trigger signal that selected it.
-- **Decision**: Approved / Approved with conditions / Returned for redesign.
-- **Alternatives considered**: at least one simpler alternative with explicit reason for rejection.
-- **Boundary impact**: new or changed module and service boundaries with ownership declarations.
-- **Module graph**: monorepo package/module graph, owners, public interfaces, allowed dependency directions, and generated-file ownership when applicable.
-- **Dependency impact**: new dependencies with direction, coupling level, and availability analysis.
-- **Dependency wiring and lifecycle**: composition root, dependency graph, lifecycle scope, service locator decision, singleton/global-state ownership, startup validation, and shutdown cleanup when architecture changes wiring.
-- **Architecture enforcement plan**: import/cycle/export/forbidden-dependency rules, tool choice, CI command, generated-code exceptions, migration path, and residual unenforced rule.
-- **Consumer impact report**: changed public contract, known/unknown consumers, compatibility, migration/deprecation, telemetry, and rollout/rollback when public boundaries change.
-- **Data ownership impact**: any changes to authoritative data ownership with contract requirements.
-- **Tradeoff analysis**: explicit tradeoffs accepted (performance vs. consistency, simplicity vs. extensibility, etc.).
-- **Failure blast radius**: operational impact if the new component fails.
-- **Observability requirements**: metrics, traces, and alerts required for the new component.
-- **Build and test impact**: affected tests, incremental build approach, build cache key inputs, generated file policy, and full-suite fallback when applicable.
-- **ADR requirement**: yes/no, whether a written ADR is required before implementation.
-- **Open risks**: unresolved design risks with proposed owners and review dates.
-- **Boundaries inspected**: modules, packages, services, public APIs, data owners, generated files, dependency edges, release topology, and tests inspected.
-- **Professional judgment**: over-engineering vs under-design decision, reversibility, hidden coupling ruled out, and owner accountability.
-- **Reuse and placement rationale**: existing module/service/API/contract reused or new boundary justified, with public/private decision.
-- **Behavior preservation statement**: existing contract, dependency direction, ownership, rollout, and operational behavior preserved or intentionally changed.
-- **Validation evidence**: dependency-graph, affected-test, build-cache, ADR, or not-verified disclosure with outcome.
-- **Evidence limits**: what architecture evidence proves and does not prove about scale, org ownership, production traffic, and future requirements.
-- **Residual risk and next gate**: accepted tradeoff, deferred ADR, rollout/reliability/docs handoff, and owner.
+
+Return exactly one mode closure, followed only by fields triggered by the selected architecture risk:
+
+1. **Analysis closure:**
+   - Return the source-backed placement decision, material alternatives, dependency impact, unknowns, evidence limits, residual risk, and recommended next step.
+   - Make no claim of edits or approval.
+2. **Review closure:**
+   - Return `Approved`, `Returned`, or `Blocked` with severity-ranked findings, reviewed and unreviewed scope, and proof limits.
+   - Use `Blocked` for inaccessible required evidence, naming the missing evidence, unblock condition, repair owner, and handoff.
+   - Make no repair to the artifact.
+3. **Placement and ownership:** Only when structure or responsibility moves, state the owning module/service and public/private surface. Also state changed dependency edges and current reuse candidates. Name the selected local/reuse/new placement and why the strongest smaller alternative fails current constraints.
+4. **Consumer and data impact:** Only when public or indirect consumers or authoritative data ownership can change, state known/unknown consumers. Also state the contract or data-owner delta, any compatibility/versioning or migration need, rollout boundary, and evidence for preserved behavior.
+5. **Dependency, topology, and enforcement:** When dependency direction changes, state the effective source edge and evidence against the repository's ownership or model. A topology change includes its failure, capacity, or availability boundary and operational owner. A durable rule carries selected enforcement and proof supported by current repository or platform controls.
+6. **Reversibility and evolution:** state the deletion or reversal boundary, coexistence, rollback or forward-migration outcome, accepted tradeoff, and revisit trigger supported by current policy and impact evidence.
+7. **Evidence limits and next owner:** Tie source graph, consumer search, contract/data evidence, build/test result, topology artifact, or policy check to the decision it supports. Name unverified production traffic, organizational ownership, indirect consumers, future scale, and residual risk, then identify the next decision owner.
 
 ## Quality Gate
-1. The chosen design is demonstrably simpler than at least one alternative that was explicitly considered.
-2. Every new boundary has a named owner and a failure handling strategy.
-3. Dependency direction is correct; no dependencies point from stable to volatile layers.
-4. Data ownership is unambiguous; no entity has two authoritative owners.
-5. All tradeoffs are explicitly documented, not assumed.
-6. No speculative extensibility abstractions without existing concrete use cases.
-7. Availability implications of new synchronous dependencies are quantified.
-8. Irreversible decisions are explicitly acknowledged and approved.
-9. Rollback path exists or the absence is explicitly documented and accepted.
-10. Observability requirements for the new component are stated.
-11. Monorepo changes include module graph, affected tests, cache key inputs, generated-file policy, and ownership boundaries.
 
-## Handoff
-- **data-api-contract-changer**: new or changed data models, schemas, or API contracts require design.
-- **backend-change-builder**: implementation direction is confirmed and coding can begin.
-- **integration-change-builder**: new external service dependencies are introduced.
-- **reliability-observability-gate**: new components require SLI/SLO definition and observability design.
-- **delivery-release-gate**: architectural changes affect deployment topology, migration sequencing, or rollback safety.
-- **change-documentation-gate**: an ADR, runbook, or developer guide update is required.
-- **ci-cd**: module graph decisions must be enforced through affected tests, incremental builds, or cache policy.
-- **package-dependency-management**: workspace dependencies, lockfiles, generated packages, or hoisting affect architecture boundaries.
-- **architecture-enforcement-tooling**: architecture rules need import, cycle, export, forbidden dependency, lint, type, dead-code, or CI enforcement.
-- **dependency-wiring-lifecycle**: dependency graphs, composition roots, service locators, singleton lifecycle, or shutdown ownership affect architecture boundaries.
-- **consumer-impact-analysis**: public exports, SDKs, APIs, schemas, or events can affect downstream consumers.
-- **algorithm-data-structure-selection**: architecture-level caches, registries, batch flows, rankings, or graph/routing structures need scale and memory proof.
-- **data-side-effect-flow-tracing**: architecture decisions hide persistence, cache, event, external IO, or telemetry side effects across boundaries.
-- **cleanup-deletion-governance**: architecture cleanup removes stale modules, flags, compatibility branches, deprecated APIs, or dead code.
+1. When new structure, responsibility, or a boundary is proposed, require current owner and placement evidence plus a materially smaller alternative. Direct local placement, reuse, extension, composition, extraction, or a new boundary are candidates; choose from current contract, ownership, and change-locality evidence.
+2. When dependency direction changes, require an effective source-level edge and ownership rationale that protects the repository's enforced stability model rather than a generic layered rule.
+3. When public or indirect consumers may be affected, require bounded discovery and compatibility evidence with an additive change, adapter, version, migration, deprecation, or coordinated cutover selected from current contracts.
+4. When authoritative data ownership can move or split, require one source-of-truth decision, transition behavior, consistency boundary, and recovery evidence scoped to the actual ownership impact.
+5. When runtime or deployment topology changes, require failure-boundary, capacity/availability consequence, operational ownership, and containment evidence. Isolation, async decoupling, redundancy, or unchanged topology are candidates justified by the actual platform and traffic assumptions.
+6. When an architecture rule must survive future edits, require enforcement evidence supported by the repository or platform. Tests, lint/import rules, policy-as-code, build graph checks, code ownership, or review policy are candidates; documentation alone may be sufficient when automation cost exceeds current risk and policy permits it.
+7. When a structural decision is difficult or costly to reverse, require a credible reversal, coexistence, migration, or accepted-irreversibility outcome with owner and decision evidence rather than mandatory rollback.
+8. Scope the decision to inspected source graphs, tests, consumer searches, topology documents, and policy checks. Such evidence does not prove production traffic, unknown external consumers, organizational agreement, or future scale. Name residual risk and the required next owner.

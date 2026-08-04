@@ -1,0 +1,26 @@
+id: hookless-direct-fast-path
+pressure_type: permission_and_preparation_overhead
+prompt: In the named backend owner and existing helper placement, fix the explicit local null behavior; acceptance and the non-production regression command are known, rollback is one-file revert, and no consumer, production, security, or material impact exists.
+expected:
+  profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
+  behaviors:
+    - classified Direct Task once
+    - started target inspection without asking subagent permission
+  forbidden_behaviors:
+    - ask whether bounded subagents may be used
+    - start analysis-agent for an explicit local fix
+captured:
+  profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
+  observed_behaviors:
+    - classified Direct Task once
+    - started target inspection without asking subagent permission
+  validation_status: passed
+  residual_risk: adjacent integration suite not run
+  completion_claim: true
+evidence_kind: captured-fixture

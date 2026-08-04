@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: backend-change-builder.
-Selected capabilities: python-professional-usage.
+Selected Layer 3 Skills: python-professional-usage.
 
 Hidden risks: Python async blocking call without timeout; blocking IO inside event loop; cancellation behavior untested.
 

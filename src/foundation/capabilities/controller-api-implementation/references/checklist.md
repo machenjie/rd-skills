@@ -1,9 +1,10 @@
 # Controller API Implementation Checklist
 
+Before applying this checklist, derive checks from the current route's transport boundary and owning service contract. Exclude adjacent mechanisms whose trigger is absent; route triggered business, authorization, persistence, or domain decisions to their owners.
+
 ## Scope And Boundaries
 
-- Identify route, method, operation owner, API contract source, and generated artifact source when present.
-- Record middleware/auth chain, request context source, correlation id source, validator/schema path, service boundary, mapper boundary, and error catalog.
+- Identify route, method, operation owner, API contract and generated-artifact sources, including the middleware/auth chain, request-context and correlation-id sources, validator/schema path, service and mapper boundaries, and error catalog.
 - Parse transport inputs without embedding business decisions, persistence calls, transaction control, or provider calls.
 - Delegate workflow, transactions, domain decisions, object authorization, and idempotency execution outside the controller.
 - Reject raw request binding, controller-owned ownership decisions, repository calls, domain-object responses, and raw exception responses.
@@ -19,8 +20,8 @@
 
 ## Evidence And Tests
 
-- Confirm repository graph shows controller delegates business logic, persistence, authorization decisions, transactions, and provider calls.
-- Reconcile project memory, old API docs, generated controllers, copied handlers, and prior validation against current contract and route wiring.
+- Confirm repository inspection shows controller delegates business logic, persistence, authorization decisions, transactions, and provider calls.
+- Reconcile prior task evidence, old API docs, generated controllers, copied handlers, and prior validation against current contract and route wiring.
 - Add controller unit tests with mocked service for success, validation failure, auth context extraction, status code mapping, error body format, headers, and service-not-called invalid cases.
 - Add or reference contract/security/integration evidence for API shape, object authorization, idempotency behavior, content negotiation, and large payload behavior when those risks are selected.
-- Map each controller responsibility to validation evidence, what the evidence proves, what it does not prove, residual risk, owner, and next gate.
+- Map each controller responsibility to validation evidence, what the evidence proves, what it does not prove, residual risk, owner, and recommended next step.

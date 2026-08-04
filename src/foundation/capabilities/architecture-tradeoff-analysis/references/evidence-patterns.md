@@ -1,58 +1,28 @@
 # Architecture Tradeoff Evidence Patterns
 
-Load this reference only when a decision depends on current repository graph, project memory, execution trajectory, validation freshness, or a decision-to-validation map. Do not load it for quick routing or low-risk local choices.
+Load this reference when graph edges, boundary claims, decisive option evidence, or decision-to-validation freshness must be closed. Keep it as an evidence map, not a second comparison framework.
 
-## Evidence Surfaces
-
-| Surface | Accept as evidence when | Reject or downgrade when |
+| Decision claim | Minimum fresh evidence | Proof limit |
 | --- | --- | --- |
-| Repository graph | Source paths, imports, callers, tests, generated artifacts, owners, and deploy/config edges are current for the decision boundary. | Graph output is old, generated-only, missing owners, or not tied to affected source paths. |
-| Project memory | Prior ADRs, incidents, benchmark notes, and team decisions have date, scope, owner, and unchanged constraints. | Memory is undated, copied from a summary, conflicts with current source, or substitutes for inspection. |
-| Execution trajectory | Commands, probes, prototypes, failed attempts, and repair steps explain why assumptions were accepted or rejected. | Only final success is reported, repeated failures are hidden, or validation predates the final decision. |
-| Validation broker | Changed boundaries map to narrow, module, or full validators with parsed outcome, exit code, and freshness. | Validation is partial, stale, lacks exit code, or proves a different boundary than the decision affects. |
-| Telemetry or operations | Metrics, traces, logs, alerts, incident data, or cost reports match the environment and scale named in the forces. | Production-only claims lack source, metric definition, time window, owner, or environment match. |
+| Boundary is accurate | Affected owners, modules/services/deploy units, data/contracts/configuration, included and excluded decisions | Uninspected consumers and runtime topology remain unknown |
+| Option is feasible | Hard constraint, authority source, current option behavior, rejecting check and result | Future policy, scale, or dependency change can reopen feasibility |
+| Option is disqualified | Failed hard constraint, evidence, affected boundary, condition that would remove disqualification | Other options are not thereby preferred |
+| Consequence is material | Changed behavior/ownership/edge, affected consumer/operator, impact and owner | Generic untouched areas are not implied safe |
+| Exit is credible | Migration/unwind steps, data and contract portability, dependencies, authority, validation and retained obligation | Execution time and external cooperation remain estimates until exercised |
+| Decisive evidence is fresh | Source/contract/policy/prototype/measurement, falsifying check, result, final-change ordering | A successful unrelated validator provides no decision proof |
+| Review trigger is actionable | Assumption or constraint, owned source, measurable event, review owner, reopen consequence | Unowned or unobservable changes remain residual risk |
 
-## Graph Coupling
+## Graph Edge Evidence
 
-Use graph evidence to keep architecture choices tied to the current system shape:
+Record added, removed, or redirected imports, calls, events, queues, data ownership, generated contracts, deploy/config dependencies, and their producer/consumer/test/release owners. Treat generated artifacts as consumer evidence unless the generator contract is the decision target. State graph command/artifact freshness and uninspected boundaries.
 
-- Record affected modules, services, deploy units, data owners, generated contracts, and test owners.
-- Identify new or removed edges: imports, API calls, events, queues, schema ownership, config ownership, and operational dependencies.
-- Mark generated artifacts as evidence of consumers, not as source of truth, unless the generator contract is the decision target.
-- State graph freshness: command, graph artifact, source date, or not-inspected boundary.
-- Reject boundary moves that create cycles, private-surface dependencies, duplicate ownership, or unowned release/test blast radius.
+## Decision-To-Validation Map
 
-## Memory Freshness
-
-Project memory is a lead, not proof. Use it this way:
-
-- Accept memory only when date, scope, owner, and unchanged constraints are stated.
-- Compare old ADR assumptions with current scale, team ownership, vendor risk, compliance scope, and incident history.
-- Keep accepted memory in the decision context; keep rejected memory in evidence limits with the reason it no longer closes the decision.
-- Set an expiry condition when the memory depends on scale, team size, spend, vendor posture, or regulatory context.
-- Keep decision evidence bounded to reviewed source paths, artifacts, metrics, and owner-approved records; exclude private content and credentials.
-
-## Execution And Validation Coupling
-
-Architecture decisions must connect to execution evidence before release:
-
-- Map every decisive force to a proof type: prototype, benchmark, test, contract check, migration rehearsal, cost model, threat review, or operational metric.
-- Map every high or medium residual risk to an owner, mitigation, validator, monitoring signal, and review date.
-- Record failed probes and rejected options when they changed the matrix; do not hide them as noise.
-- Re-run or downgrade validation when source, config, generated artifacts, migrations, or test fixtures change after the evidence was captured.
-- Use `validation-broker` when changed paths or generated consumers make validator selection non-obvious.
-
-## Decision-To-Validation Map Pattern
-
-Use this compact shape inside the ADR-ready output:
-
-| Decision element | Proof artifact | Freshness rule | Release consequence |
+| Decisive element | Falsifying check | Fresh artifact | Failure consequence and owner |
 | --- | --- | --- | --- |
-| Heaviest force | Benchmark, prototype, test suite, cost model, or owner-approved constraint. | Fresh after final source/config/schema change. | Blocks acceptance if missing for Type 1 decisions. |
-| Rejected alternative | Disqualifying constraint, spike result, consumer impact, or exit-cost estimate. | Valid until the rejected constraint changes. | Reopen decision if constraint no longer applies. |
-| Residual risk | Mitigation task, monitor, alert, runbook, specialist gate, or review owner. | Review at trigger or expiry date. | Cannot close without named owner. |
-| Reassessment trigger | Metric threshold, date, vendor event, team scale, incident, or cost ceiling. | Must be measurable from an owned source. | Supersede or renew ADR when triggered. |
+| Hard constraint or feasibility claim | Check capable of rejecting the claim | Current result after material source/config/schema change | Disqualify, block, or reopen with owner |
+| Selection-changing preference or consequence | Comparable probe or owned authority review | Evidence covering each feasible option | Re-rank or retain uncertainty with owner |
+| Exit or residual-risk claim | Migration/unwind rehearsal, contract/consumer check, or containment proof | Result scoped to current boundary | Block commitment or accept named residual risk |
+| Assumption-change trigger | Owned metric, event, policy, dependency, or incident signal | Source and review condition | Reopen, supersede, or reaffirm the decision |
 
-## Efficiency Guardrail
-
-Keep the main `SKILL.md` concise. Put only durable routing rules, non-negotiables, output fields, and quality gates there. Put detailed matrices, benchmark catalogs, example wording, and edge-case evidence patterns in references. If a reference does not change a decision, validation map, risk owner, or loading choice, do not load it.
+Treat historical decisions and prior task evidence as leads until scope, owner, constraints, graph, and validation still match. Downgrade or rerun evidence after relevant source, configuration, schema, consumer, workload, ownership, policy, or generated-artifact change.

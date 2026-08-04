@@ -1,6 +1,6 @@
 Selected stage: coding.
 Selected professional skill: frontend-change-builder.
-Selected capabilities: form-validation-design, frontend-testing, interaction-state-modeling, code-clarity-maintainability.
+Selected Layer 3 Skills: form-validation-design, frontend-testing, interaction-state-modeling.
 
 Hidden risks: inaccessible validation feedback; lossy form state after API failure; test coverage only verifies visual red text.
 Inspected boundaries: field validation state, submit disabled state, loading state, API error state, success state, focus management, and test queries.

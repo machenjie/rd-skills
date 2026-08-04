@@ -1,6 +1,6 @@
 Selected stage: testing.
 Selected professional skill: quality-test-gate.
-Selected capabilities: e2e-testing, unit-testing.
+Selected Layer 3 Skills: e2e-testing, unit-testing, test-strategy.
 
 Hidden risks: E2E test used for unit-level bug; slow browser test hides cheaper unit coverage; test layer selection inverted for local logic.
 

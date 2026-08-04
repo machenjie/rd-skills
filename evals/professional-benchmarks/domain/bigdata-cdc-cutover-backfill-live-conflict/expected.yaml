@@ -1,0 +1,22 @@
+coverage_class: standard
+expected_stage: implementation-review
+expected_professional_skill: data-middleware-change-builder
+expected_capabilities:
+  - bigdata-product-extension
+expected_hidden_risks:
+  - snapshot-to-CDC cutover can omit or duplicate transactions
+  - resumed backfill can overwrite a newer live correction
+  - late corrections can publish inconsistent downstream totals
+expected_evidence:
+  - cutover position and transaction-order fixture
+  - overlapping backfill and live-writer conflict test
+  - authoritative-total reconciliation after late correction
+forbidden_behaviors:
+  - start CDC from wall-clock time after the snapshot
+  - let backfill and live processing write without precedence
+  - declare success from row-count parity alone
+expected_output_obligations:
+  - source of truth and writer ownership
+  - cutover checkpoint resume and replay contract
+  - reconciliation results proof limits and residual owner
+expected_with_skill_status: pass

@@ -1,91 +1,73 @@
 # Routing Examples
 
-These examples show minimal sufficient routing. Add skills only when the change surface, risk, or missing information requires them.
+Each task has one path, one primary Professional Skill, zero to a few triggered Layer 3 Skills, and one Review Skill.
 
-## 1. Small Local Bug Fix
+## Local Frontend Bug
 
-Request: "Fix a null label in one settings component."
+Request: fix a null label in one known settings component, with an existing component test.
 
-- Level: L1.
-- Professional path: `change-forge-router` only if classification is unclear, then `frontend-change-builder` or `ai-code-review-refactor`.
-- Foundation capabilities: `regression-testing`, `frontend-testing` when the component has behavior worth covering.
-- Domain extension: none.
-- Gates: focused unit/component test or manual reproduction; no release gate unless deployment is requested.
-- Evidence: changed file list, failing/passing reproduction, skipped checks.
+- Path: Direct Task.
+- Primary: `frontend-change-builder`.
+- Optional Layer 3: `frontend-testing` if behavior changes.
+- Review: `ai-code-review-refactor`.
+- Stop: owner, scope, or verification is not actually known.
 
-## 2. Login API Change
+## Login API Field
 
-Request: "Add a new login response field for MFA enrollment status."
+Request: add MFA enrollment status to a login response.
 
-- Level: L3, or L4 if clients are external or backwards compatibility is uncertain.
-- Professional path: `change-intake-compiler`, `change-impact-analyzer`, `data-api-contract-changer`, `backend-change-builder`, `security-privacy-gate`, `quality-test-gate`, `change-documentation-gate`.
-- Foundation capabilities: `api-contract-design`, `authentication-authorization`, `authentication-security`, `dto-schema-design`, `contract-testing`, `version-compatibility`.
-- Domain extension: none unless the product domain adds extra constraints.
-- Gates: backward-compatible schema, auth review, contract tests, client migration note.
-- Evidence: API diff, tests, compatibility decision, docs update.
+- Path: Analyzed Work because authentication and a public contract are involved.
+- Analysis primary: `engineering-change-analysis`; select `api-contract-design` or `version-compatibility` only as triggered Layer 3 guidance. Use `data-api-contract-changer` as an analysis primary only for an explicit narrow artifact whose accepted Brief already supplies prerequisites.
+- First slice: characterize the existing response and compatibility tests.
+- Task primary: `backend-change-builder`.
+- Triggered Layer 3: API contract, authentication/authorization, contract testing, version compatibility.
+- Review: security-oriented review plus combined diff review when risk warrants it.
 
-## 3. Frontend Form Change
+## Checkout Form States
 
-Request: "Add validation and error states to a checkout address form."
+Request: add validation, submitting, and failed-save states to an address form.
 
-- Level: L2 or L3 depending on checkout criticality.
-- Professional path: `change-intake-compiler`, `experience-impact-modeler`, `frontend-change-builder`, `quality-test-gate`.
-- Foundation capabilities: `form-validation-design`, `interaction-state-modeling`, `design-system-rules`, `frontend-api-integration`, `frontend-testing`.
-- Domain extension: `payment-trading-extension` if payment authorization or settlement can be affected.
-- Gates: accessible labels and errors, validation parity with API, regression coverage for edge cases.
-- Evidence: screenshots or UI observations, tests, changed validation rules.
+- Path: Direct only if the component owner, state acceptance, and targeted test are explicit; otherwise Analysis.
+- Primary: `frontend-change-builder`.
+- Triggered Layer 3: form validation, interaction state, accessibility/design-system rules as applicable.
+- Review: `ai-code-review-refactor` or an experience-focused review assignment.
 
-## 4. Database Migration With API Compatibility
+## Database Migration and API Compatibility
 
-Request: "Split `customer_name` into first and last name without breaking existing API clients."
+Request: split a field without breaking existing clients.
 
-- Level: L4, or L5 when production data volume, rollback, or compliance risk is high.
-- Professional path: `change-intake-compiler`, `change-impact-analyzer`, `architecture-impact-reviewer`, `data-api-contract-changer`, `data-middleware-change-builder`, `backend-change-builder`, `quality-test-gate`, `reliability-observability-gate`, `delivery-release-gate`, `change-documentation-gate`.
-- Foundation capabilities: `data-migration-design`, `relational-database`, `transaction-consistency`, `repository-persistence`, `api-contract-design`, `version-compatibility`, `integration-testing`, `release-rollback`.
-- Domain extension: none unless product domain signals apply.
-- Gates: expand-contract migration, backfill plan, read/write compatibility, rollback plan, monitoring.
-- Evidence: migration script review, compatibility tests, deployment sequence, rollback note.
+- Path: Analyzed Work.
+- Analysis primary: `data-api-contract-changer`.
+- First slice: map readers/writers and prove an expand/contract compatibility seam.
+- Task DAG: schema expansion, dual read/write application change, backfill, contract cleanup, release sequencing when these are genuinely separate.
+- Write policy: serialize shared migration and schema surfaces.
+- Review: data, reliability, and release perspectives on the combined diff.
 
-## 5. Web3, Payment, Or AI High-Risk Change
+## High-Risk Payment Authorization
 
-Request: "Use an AI agent to approve wallet-based subscription payments."
+Request: authorize wallet-based subscription payments through an AI-assisted flow.
 
-- Level: L5.
-- Professional path: `change-intake-compiler`, `domain-impact-modeler`, `architecture-impact-reviewer`, `data-api-contract-changer`, `integration-change-builder`, `backend-change-builder`, `security-privacy-gate`, `reliability-observability-gate`, `quality-test-gate`, `delivery-release-gate`, `change-documentation-gate`, `ai-code-review-refactor`.
-- Foundation capabilities: `threat-modeling`, `permission-boundary-modeling`, `secret-configuration-security`, `idempotency-retry-design`, `transaction-consistency`, `observability`, `contract-testing`, `release-rollback`.
-- Domain extension: `web3-product-extension`, `payment-trading-extension`, and `ai-product-extension` when all three signals are real.
-- Gates: explicit risk escalation, human approval, threat model, deterministic payment state machine, wallet/key boundary review, AI side-effect controls, rollback and audit trail.
-- Evidence: approval record, threat model summary, test matrix, auditability notes, release blockers.
+- Path: Analyzed Work with an explicit user-owned approval/authority boundary.
+- Analysis primary: `security-privacy-gate` or `domain-impact-modeler`, based on the dominant decision.
+- Triggered Layer 3: threat modeling, permission boundaries, idempotency, transaction consistency, payment and wallet domain rules.
+- Review: separate security, payment, reliability, and release review assignments as justified by concrete risk.
+- Stop: unclear human authorization, key custody, irreversible transfer, reconciliation, or production authority.
 
-## 6. Agent Claims Completion Without Evidence
+## Completion Claim Without Evidence
 
-Request: "修复已经提交，但没有测试输出。"
+Request: a fix is reported done, but no current validation result exists.
 
-- Level: L2.
-- Professional path: `quality-test-gate`, `ai-code-review-refactor`.
-- Foundation capabilities: `agent-execution-discipline`, `regression-testing`, `code-review`.
-- Domain extension: none unless the changed product surface adds domain-specific risk.
-- Gates: test gate, AI review gate, execution discipline gate.
-- Evidence: command output, exit code, skipped checks, residual risks.
+- Path: Validation or Repair.
+- Primary: `quality-test-gate`.
+- Action: inspect the current diff, select targeted validation, and run it after the latest material edit.
+- Review: actual changed files and proof limits.
+- Output: commands, results, unverified scope, residual risk, and next step.
 
-## 7. Repeated Same-Path Failure
+## Repeated Failure
 
-Request: "又失败了，不要继续改同一个参数，换方法找根因。"
+Request: the same attempted fix failed twice.
 
-- Level: L2 or L3 depending on blast radius.
-- Professional path: `change-forge-router`, `quality-test-gate`.
-- Foundation capabilities: `agent-execution-discipline`, `failure-diagnosis`, `solution-optimality-evaluation`.
-- Domain extension: none unless the failing path is domain-specific.
-- Gates: execution discipline gate, test gate.
-- Evidence: route repair ledger, rejected hypotheses, next validation command.
-
-## 8. Local Fix Without Same-Pattern Scan
-
-Request: "这个 bug 只改了一处，请检查同模块是否还有同类问题。"
-
-- Level: L3.
-- Professional path: `change-impact-analyzer`, `quality-test-gate`, `ai-code-review-refactor`.
-- Foundation capabilities: `agent-execution-discipline`, `implementation-structure-design`, `regression-testing`.
-- Domain extension: none unless same-pattern matches cross a domain-specific boundary.
-- Gates: impact gate, test gate, AI review gate, execution discipline gate.
-- Evidence: same-pattern scan record, affected files, regression tests, residual risk.
+- Path: Diagnosis through analysis.
+- Primary: `engineering-change-analysis`.
+- Required output: verified cause or explicitly eliminated hypotheses, same-pattern scan, and a new evidence-driven executable slice.
+- Stop: do not repeat the same path without new evidence.

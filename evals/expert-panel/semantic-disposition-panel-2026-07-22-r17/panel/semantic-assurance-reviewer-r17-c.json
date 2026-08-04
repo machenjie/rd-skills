@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-22-r17",
+  "created_on": "2026-07-22",
+  "packet_sha256": "2d1730fbd92c50bf81fc31ac53799285b4282de2585eb7b66853485a12808b92",
+  "source_fingerprints": {
+    "audit": "33898840af2f90d861cd4dbe297a5e34534830dac7ef8bf081ae357105cd7f88",
+    "reference_candidates": "981964da12d38e5c32eceb7bb2dbc4cbcf6f91226a1a998d508f1e75041f4763",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "21da29d34018eff13200facc49b1370b50c07ed2cc0106dc2b0ef6d0e637de23",
+    "root_candidates": "eb2808118a8536a8adf728434f8a1ee9c288b3268e92d86c0e8c6d1956eff13e",
+    "root_context": "14d1ddb7efaaa015666d53951aa7167085fcb7c31e07a624c0a98f4ffd0b3caa",
+    "root_detector": "0b6168c2f3aaacfc611421aa8ef533171e4adf229986be73016c74154d402aef",
+    "root_source": "e42c3221a69656eee13cd3996b6bdf1c0e992d20fccdd6cb0d7607ab38f1c1c1"
+  },
+  "voter": {
+    "voter_id": "semantic-assurance-reviewer-r17-c",
+    "agent_id": "/root/semantic_r17_review_c",
+    "role": "semantic-assurance-reviewer",
+    "expertise": [
+      "independent-assurance-review",
+      "loop-safety"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "root:7d33c995b85f5a4cd709b2f71211cfa3d6f5f5001c6a9acb03c7f766de59bf34",
+      "axis": "root",
+      "candidate_id": "7d33c995b85f5a4cd709b2f71211cfa3d6f5f5001c6a9acb03c7f766de59bf34",
+      "disposition": "valid-contextual-rule",
+      "rationale": "A repair produces a new material state, so validation and review evidence bound to the superseded diff cannot support closure for the repaired result.",
+      "authority_or_condition": "Implementation closure after a material repair, as bounded by Review and Repair and the current visible evidence freshness contract.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Mark prior validation and diff-review evidence superseded or invalid; run targeted validation and re-review only for the latest repaired diff.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "axis": "root",
+      "candidate_id": "9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The seven controls are explicitly enumerated in the authoritative execution-level contract and protect authority, repository safety, evidence freshness, independent review, and scoped completion at every execution level.",
+      "authority_or_condition": "Any routed task governed by the current Core execution_level_contract; the set is the contract's complete non_bypassable array, not a free-standing universal mechanism.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Keep the projected count synchronized with core-contracts; fail authoring validation if its count or content drifts, and re-review after an execution-level contract change.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "axis": "root",
+      "candidate_id": "ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The limit applies to completed paths for one canonical validation identity, while a declared uncovered gap or verified transition permits another path; it prevents redundant same-identity validation loops rather than capping all validation.",
+      "authority_or_condition": "A completed validation path with unchanged material, scope lineage, effective level, and validation-path identity under the Core validation_loop contract.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Permit a further path only for a bound predeclared uncovered gap or a bound material or external-state transition; otherwise report blocked or partial.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:b61da714f82520865615d8f43b04368d741da1b26010a59cb6a3982aba447284",
+      "axis": "root",
+      "candidate_id": "b61da714f82520865615d8f43b04368d741da1b26010a59cb6a3982aba447284",
+      "disposition": "valid-contextual-rule",
+      "rationale": "A single primary Professional Skill gives a task one authoritative workflow, while named Layer 3 skills supply bounded specialization; this prevents overlapping Professional workflows and task-agent rerouting.",
+      "authority_or_condition": "Normal repository task assignment routed once per task under professional-skill-router; utility no-edit modes load no primary Professional Skill.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Select the primary Skill before dispatch, name only capsule-approved Layer 3 additions, and return to the main agent for any route change.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "axis": "root",
+      "candidate_id": "d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The rule is limited to supplied-artifact review when the actual diff is absent: a no-edit task agent may export the diff as returned content without creating hidden workspace evidence.",
+      "authority_or_condition": "diff_input_mode=supplied-artifact, no actual diff or accessible host-native reference is supplied, and host-enforced utility_no_edit supports task-agent diff export.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Require permitted no-edit diff commands plus unchanged workspace checks; block review with diff scope unverified if export or enforcement is unavailable.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "axis": "root",
+      "candidate_id": "ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Declaring formal readiness changes required rigor but is not evidence that the formal gates passed on the final material tree, so separate formal evidence remains necessary.",
+      "authority_or_condition": "Formal release readiness is explicitly in scope under the Core execution_level_contract and the repository's formal-release policy.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Require current formal-release and strict professionalism evidence on the final tree; otherwise withhold formal completion and report the proof limit.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "This ballot decides semantic disposition for the six assigned current Root candidates only; it does not establish runtime behavior, formal readiness, readability attestation, or professional-completeness evidence."
+  ]
+}

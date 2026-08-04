@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-16-r1",
+  "created_on": "2026-07-16",
+  "packet_sha256": "f8dfeba183cfa552712544569ff9d251daa963640b991a336428d8a68bdf8820",
+  "source_fingerprints": {
+    "audit": "092ecce1eabb4ec5436233a621ae17de2868e0b88c2f64296681f8abb2892cda",
+    "reference_candidates": "b55dcdfac9ba6715cdd0c7b14776f072946ac72067c63390da65e6d43f4a96b6",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "dcb41aeb8e1495bf4d92414aec55e93c730688d019f1b2fae8370911677f1d25",
+    "reference_source": "cf9df5a417ca3b618b494e6a338967e46da9a0a61312c3a6a988a6a79906468f",
+    "root_candidates": "bc0571484d4fe991c429c9b5093027ff9c46f5b2ab65f77f46c1836d642bd9e8",
+    "root_context": "27d143b9eec70d6794583c3079da2a69365a9e4d70d2402bdc59d607d25cc5d6",
+    "root_detector": "202345ab554edb03d9db8adc5ed93cba667703969a08bc0e235417b5d30b13da",
+    "root_source": "d444421386447f6eee4c08d707d3ebe5f8445132ba1812936a7eb9231757cf1b"
+  },
+  "voter": {
+    "voter_id": "reviewer-a",
+    "agent_id": "control-plane-semantic-reviewer-a",
+    "role": "senior-control-plane-ai-instruction-semantics-reviewer",
+    "expertise": [
+      "control-plane instruction semantics",
+      "AI executability and scope calibration",
+      "semantic detector false-positive analysis"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "reference:101228f69fbb7eee2d763880862b52fe8a04de44d1401f91c4a6c12f79fd167c",
+      "axis": "reference",
+      "candidate_id": "101228f69fbb7eee2d763880862b52fe8a04de44d1401f91c4a6c12f79fd167c",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Within diagnostic evidence-freshness work, remembered claims are selectors rather than proof; letting them overrule current source or fresh operations would make an agent preserve stale causality.",
+      "authority_or_condition": "The failure-diagnosis evidence-freshness contract when a remembered claim conflicts with current repository evidence or fresh operational evidence.",
+      "decision_owner": "failure-diagnosis",
+      "mitigation": "Treat memory as a hypothesis, record conflicts, distinguish current source from deployed state, and prefer fresh operational evidence for runtime facts.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:132b2a93cf5f9234fb8863a1811734109aceb9ee67118da7ea84d7dd6239a442",
+      "axis": "reference",
+      "candidate_id": "132b2a93cf5f9234fb8863a1811734109aceb9ee67118da7ea84d7dd6239a442",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The detector matched four shared label names, while all eleven blocks provide owner-specific strong, weak, missing, and invalid evidence. The stable taxonomy improves interpretation without duplicating one decision procedure.",
+      "authority_or_condition": "Foundation evidence-pattern References that share evidence-quality vocabulary while keeping domain-specific examples, invalid states, and proof limits local to each owner.",
+      "decision_owner": "foundation-reference-governance",
+      "mitigation": "Keep the four labels stable, require domain-specific bodies, and re-review if the bodies converge into generic boilerplate or a selectively loadable shared contract replaces them.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:1d02bd2efcb58e0fdd5c0060217dbb4d5bc60edabd2fa8e4f610e1ab575c5fee",
+      "axis": "reference",
+      "candidate_id": "1d02bd2efcb58e0fdd5c0060217dbb4d5bc60edabd2fa8e4f610e1ab575c5fee",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Repair closure against the latest diff and fresh validation prevents an agent from approving a superseded patch or reusing evidence invalidated by later edits.",
+      "authority_or_condition": "An L5 repair or re-review in which an existing finding is being closed as repaired rather than withdrawn, accepted, or reclassified.",
+      "decision_owner": "ai-code-review-refactor",
+      "mitigation": "Apply this only to repair closure; record withdrawn, accepted, or reclassified findings through their distinct decision path and evidence.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:4f0d35c3b492953612bf356f2b99a6a399695f4fe080ccd787d65f2bff6effa2",
+      "axis": "reference",
+      "candidate_id": "4f0d35c3b492953612bf356f2b99a6a399695f4fe080ccd787d65f2bff6effa2",
+      "disposition": "false-positive",
+      "rationale": "The word only occurs inside quoted dependency-claim labels. The sentence classifies those claims as scoped assertions; it does not impose an unconditional only-rule on agent behavior.",
+      "authority_or_condition": "Dependency evidence classification where quoted phrases such as dev only and not reachable are claim text awaiting scope and freshness proof.",
+      "decision_owner": "dependency-vulnerability-scanning",
+      "mitigation": "Retain the quotation and scope language, and calibrate future detection to ignore absolute tokens that occur only inside quoted claim labels.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:5c755a4193739951b93ec3827be911390454392d13c10008b2b63cf9c8a86eae",
+      "axis": "reference",
+      "candidate_id": "5c755a4193739951b93ec3827be911390454392d13c10008b2b63cf9c8a86eae",
+      "disposition": "false-positive",
+      "rationale": "All is embedded in the quoted, unscoped label all users that the rule rejects. It is not a quantifier commanding behavior across every user or task.",
+      "authority_or_condition": "User-role identification anti-pattern guidance where an unqualified all-users label is rejected until actor authority and data scope are made explicit.",
+      "decision_owner": "user-role-identification",
+      "mitigation": "Preserve the actor-scope context and, on a future edit, say unqualified all users explicitly so the rejected shorthand cannot be mistaken for a universal prohibition.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:7e437985427177037221ee2df2173f328e41e92d8f592347b9efb68af54d557a",
+      "axis": "reference",
+      "candidate_id": "7e437985427177037221ee2df2173f328e41e92d8f592347b9efb68af54d557a",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Limiting the decision portion of the handoff to triggered catalog entries prevents checklist dumping and invented work while preserving task-local implementation evidence.",
+      "authority_or_condition": "Backend-change-builder task mode after one or more proactive trigger rows have been activated by the actual changed path.",
+      "decision_owner": "backend-change-builder",
+      "mitigation": "Still include the required diff, mapped validation, unverified scope, and residual risk; do not omit non-catalog evidence required by the task contract.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:b8e5e864c12bff0f7f60ed18133122f4f7407319e06bb3061ed1ef2751c3eb13",
+      "axis": "reference",
+      "candidate_id": "b8e5e864c12bff0f7f60ed18133122f4f7407319e06bb3061ed1ef2751c3eb13",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Each selected security risk needs accountable ownership and a containment or rollback outcome; otherwise the output can enumerate exposure without assigning an executable response boundary.",
+      "authority_or_condition": "The selected secret, supply-chain, or cloud risk fields in the security-privacy-gate output contract after a mode closure has been chosen.",
+      "decision_owner": "security-privacy-gate",
+      "mitigation": "Apply the rule only to risks actually selected from evidence, and state unknown or unavailable containment honestly rather than inventing a control.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:db3257bdbbe8be2d0d2d6cb5031ef6065c3f1cffc8fb2c5176a7041244bc6e9e",
+      "axis": "reference",
+      "candidate_id": "db3257bdbbe8be2d0d2d6cb5031ef6065c3f1cffc8fb2c5176a7041244bc6e9e",
+      "disposition": "false-positive",
+      "rationale": "The sentence negates exhaustive per-occurrence logging and explicitly qualifies the guidance as a default. Every is the rejected object, not an unconditional coverage command.",
+      "authority_or_condition": "Logging selection after frequency, cardinality, operational purpose, and platform policy have been evaluated for the affected signal.",
+      "decision_owner": "logging-design-gate",
+      "mitigation": "Keep evidence-based exceptions for audit or domain events, and calibrate detection for negated every-statements that also carry a by-default qualifier.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:ef9ba7ad4531f05a44c21b198f964367437532d5f6b53c4c299481cba6c123ac",
+      "axis": "reference",
+      "candidate_id": "ef9ba7ad4531f05a44c21b198f964367437532d5f6b53c4c299481cba6c123ac",
+      "disposition": "valid-contextual-rule",
+      "rationale": "A cache key that omits an input capable of changing the cached result can return behavior from an incompatible build context, so completeness is a correctness invariant here.",
+      "authority_or_condition": "CI or build caching where current source evidence shows that an input can change the behavior or artifact represented by the cached entry.",
+      "decision_owner": "ci-cd",
+      "mitigation": "Derive key material from proven behavior-affecting inputs, exclude volatile irrelevant values, and retain a full-suite or cache-bypass fallback.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:f489f5aae096091fbff8fedd00691cea492e677ebe6c809cd8a3aebb4a0170f3",
+      "axis": "reference",
+      "candidate_id": "f489f5aae096091fbff8fedd00691cea492e677ebe6c809cd8a3aebb4a0170f3",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The required re-review stage is derived from the stage that raised the finding, so the rule preserves independent ownership without imposing one fixed review pipeline.",
+      "authority_or_condition": "Repair and re-review of a blocking finding where the originating review stage and its evidence boundary are known.",
+      "decision_owner": "ai-code-review-refactor",
+      "mitigation": "Name the exact originating stage and affected scope, and avoid rerunning unrelated gates that the failure mechanism did not invalidate.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:f777159315da9a4950ec4978078f08464b7df5ff4265f3be226c57db657acfc3",
+      "axis": "reference",
+      "candidate_id": "f777159315da9a4950ec4978078f08464b7df5ff4265f3be226c57db657acfc3",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Risk-selected field emission keeps the security closure bounded to evidence and prevents an agent from fabricating secret, dependency, or cloud analysis that was never triggered.",
+      "authority_or_condition": "The security-privacy-gate output contract after secret, supply-chain, or cloud risks have been selected from the actual affected boundary.",
+      "decision_owner": "security-privacy-gate",
+      "mitigation": "Always retain the chosen mode closure and shared proof limits, while omitting only risk-specific fields whose triggering boundary is absent.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:00200eb3785c29d06be353c299fd6a0c4ab66c47747974a005ba0e9445834a03",
+      "axis": "root",
+      "candidate_id": "00200eb3785c29d06be353c299fd6a0c4ab66c47747974a005ba0e9445834a03",
+      "disposition": "false-positive",
+      "rationale": "The HTTP codes are routing vocabulary in the Skill's Use when selector list. They neither prescribe returned statuses nor establish a fixed operational threshold.",
+      "authority_or_condition": "The network-protocol-gateway-usage Registry Trigger where 502, 503, and 504 identify gateway-failure tasks that may require this Skill.",
+      "decision_owner": "network-protocol-gateway-usage",
+      "mitigation": "Keep the codes as selector examples and exclude routing-trigger lists from fixed-status policy findings unless a clause actually commands a response status.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:54af05b938e641a607217739b679e0b05095c6d5c1ccdb398226aa5b80745ba3",
+      "axis": "root",
+      "candidate_id": "54af05b938e641a607217739b679e0b05095c6d5c1ccdb398226aa5b80745ba3",
+      "disposition": "false-positive",
+      "rationale": "Kubernetes names the owning Skill's runtime domain and the subject of its output contract. The sentence does not select Kubernetes as a vendor for otherwise platform-neutral work.",
+      "authority_or_condition": "The kubernetes-gateway output contract, and only after the task has crossed a Kubernetes workload, route, identity, health, capacity, or rollout boundary.",
+      "decision_owner": "kubernetes-gateway",
+      "mitigation": "Do not route this Skill outside its cluster boundary, and continue deriving subordinate mechanisms from current platform policy rather than from the Kubernetes name alone.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:b4a8d69ef5c7ff557d0e4e0762fe7da54d355c979c8c2c93e90fde121717ec57",
+      "axis": "root",
+      "candidate_id": "b4a8d69ef5c7ff557d0e4e0762fe7da54d355c979c8c2c93e90fde121717ec57",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The dispatch-only control plane must pass task-local routed guidance instead of ingesting a full Skill or Reference catalog; preloading would blur role boundaries and consume context without task evidence.",
+      "authority_or_condition": "Main Control Agent scheduling and Skill routing, immediately after selection through the named professional-skill router and before bounded task dispatch.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Interpret index and catalog as Skill or Reference routing collections; the explicitly named router remains allowed, and task-local References remain available through dispatch.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:c6ba0afb9a9fd7bf73a4247493c652a1987da6078dcecf08bba4ece1249dd320",
+      "axis": "root",
+      "candidate_id": "c6ba0afb9a9fd7bf73a4247493c652a1987da6078dcecf08bba4ece1249dd320",
+      "disposition": "valid-contextual-rule",
+      "rationale": "One primary Professional Skill establishes unambiguous task ownership; the router still permits targeted Layer 3 guidance and a separate Review Skill, so the count does not erase supporting expertise.",
+      "authority_or_condition": "Per-task Main Control Agent routing through the professional-skill router after the work has been classified or decomposed into bounded tasks.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Decompose composite work into bounded tasks, then allow the router's targeted Layer 3 and Review Skills without assigning competing primary owners to one task.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "This static review covers only the packet fingerprints, cited current source contexts, occurrences, and detector contracts; it does not prove runtime agent behavior.",
+    "These dispositions do not alter source and do not establish release readiness without majority aggregation and the remaining formal gates.",
+    "No other reviewer ballot was consulted."
+  ]
+}

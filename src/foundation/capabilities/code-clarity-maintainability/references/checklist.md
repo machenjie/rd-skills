@@ -1,16 +1,12 @@
-# Code Clarity Maintainability Checklist
+# Changed Flow Checklist
 
-Use this checklist for concrete clarity reviews, split/merge decisions, comment cleanup, and test readability checks. Keep the answer bounded to the changed paths and load heavier references only when the risk signals require them.
+This checklist applies the root traceability contract to the changed path without expanding into placement, architecture, or generic evidence governance.
 
-- Name the public entry point, the normal path, and the first branch that obscures it.
-- Separate validation, denial, retry, fallback, logging, mapping, mutation, and external I/O only when the separation makes side effects easier to see.
-- Prefer guard clauses, named policy predicates, or direct extraction before introducing strategy, registry, inheritance, or configuration structures.
-- For every repeated condition, boolean flag, `mode`, `kind`, magic string, or magic number, name the policy owner or route to signature review.
-- For a long function, state whether it is a real orchestration boundary or a mixed-responsibility block that needs extraction.
-- For every file split or merge, record owner boundary, files a maintainer must open, import/export impact, public/test boundary, and next-change location.
-- Reject one-function files, trivial helper files, pass-through glue, and micro-file sprawl unless they protect a real independent boundary.
-- Reject broad file merges that hide side effects, public behavior, dependency direction, or test ownership.
-- Keep comments only for contract, invariant, compatibility, security, performance, fallback, external-system quirk, or regression context.
-- Prefer behavior-named tests with public assertions; reject private helper assertions or mock-call-only proof unless the seam limitation is explicit.
-- State the deletion path for temporary flags, compatibility branches, obsolete fallback code, wrappers, or deprecated APIs.
-- Close with command/review evidence, what it proves, what it does not prove, freshness, and residual risk.
+- Start at the affected public entry point and list the material terminal outcomes.
+- Mark branches that can deny, retry, fall back, cancel, clean up, mutate, emit, or respond.
+- Compare evaluation order, short-circuit behavior, resource release, and externally visible effects before and after the clarity move.
+- Name the authority, state, unit, and failure meaning behind conditions, modes, defaults, and magic values.
+- For extraction, inline, split, or merge work, record owner, inspected paths, import/export impact, public/test seam, next-change location, and deletion path. Keep it in the current diff or review unless repository policy requires a separate artifact.
+- Retain comments that explain a non-obvious contract, invariant, compatibility rule, operational reason, or regression mechanism.
+- Use tests that assert public outcomes and the affected failure mechanism rather than private helper shape or mock-call order.
+- State limits from dynamic callers, generated code, reflection, unexercised exits, or external behavior that the inspected path does not establish.

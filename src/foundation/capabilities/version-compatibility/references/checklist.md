@@ -1,12 +1,11 @@
 # Version Compatibility Checklist
 
 - Select the mode: API/DTO, event/schema, stored data/config, SDK/package/export, mobile/partner/public client lag, or rollout/rollback compatibility.
-- Identify every affected API, schema, event, config, SDK, package export, CLI output, generated client, stored data, and behavior surface.
-- Record current source evidence, repository graph search, project-memory assumptions, execution-trajectory validation, and freshness limits.
+- For the current compatibility change, inventory discovered API, schema, event, config, SDK, package export, CLI output, and generated client surfaces. The same inventory covers stored data and behavior surfaces. It identifies old/new coexistence or rollback participation and unknown consumers or surfaces.
+- Record current source evidence, repository inspection search, prior-task evidence assumptions, execution-observable action sequence validation, and freshness limits.
 - Inventory known consumers: services, web/mobile apps, SDKs, partners, event subscribers, jobs, dashboards, reports, scripts, and generated clients.
 - Record unknown-consumer risk instead of treating "not found" as proof.
-- Build old-producer to new-consumer and new-producer to old-consumer matrix.
-- Build old-code reading new-data, new-code reading old-data, and immediate rollback-after-new-writes matrix.
+- Build one compatibility matrix covering old-producer/new-consumer, new-producer/old-consumer, old-code/new-data, new-code/old-data, and immediate rollback after new writes.
 - Check structure, meaning, validation, defaults, timing, ordering, error behavior, and persistence semantics.
 - Check field additions, removals, renames, type changes, enum values, nullability, pagination, sort/filter behavior, and error code changes.
 - Check generated client, SDK, package semver, public export, and mobile/partner compatibility impact.

@@ -6,10 +6,14 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import tomllib
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - exercised on Python < 3.11.
+    import toml_compat as tomllib
 
 from validation_utils import load_yaml_file
 

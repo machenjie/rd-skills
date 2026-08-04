@@ -15,7 +15,7 @@ source_evidence:
 - Current controller maps domain conflict to problem detail.
 - Current error catalog has ORDER_REFUND_NOT_ALLOWED namespace.
 
-graph_memory_trajectory_judgment:
+current_evidence_judgment:
 - Accepted: existing catalog namespace `ORDER_*`.
 - Rejected: prior note that all refund errors are retryable; current service marks this terminal.
 - Not verified: mobile SDK behavior outside this repository.

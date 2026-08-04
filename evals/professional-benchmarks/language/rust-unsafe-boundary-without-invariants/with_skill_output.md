@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: ai-code-review-refactor.
-Selected capabilities: rust-professional-usage.
+Selected Layer 3 Skills: rust-professional-usage.
 
 Hidden risks: Rust unsafe boundary without invariants; unsafe block lacks safety contract; FFI ownership can cause use-after-free.
 

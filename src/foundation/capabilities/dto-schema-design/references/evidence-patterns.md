@@ -20,7 +20,7 @@ Use this reference when closure depends on proving a DTO contract, mapper, gener
 - **Strong**: current source path, schema/generator command, contract or validator result, exit code, and fresh artifact after the final edit.
 - **Weak**: human statement, stale report, partial fixture, graph-only consumer list, or a test that does not exercise the changed field.
 - **Missing**: no current source, no validation command, no consumer search, no generated-client proof, or no privacy decision.
-- **Invalid**: evidence from a different DTO, stale generated output after source edit, test that accepts impossible real-world data, or memory claim contradicted by current files.
+- **Invalid**: evidence from a different DTO, stale generated output after source edit, test that accepts impossible real-world data, or prior claim contradicted by current files.
 
 ## Changed DTO To Validation Map
 
@@ -51,4 +51,4 @@ dto_validation_map:
 - Reject closure if a request DTO changed and unknown-field or allowlisted mapping behavior is not proven.
 - Reject closure if a public/generated/mobile/partner/event DTO changed without consumer, generated-artifact, or contract evidence.
 - Reject closure if sensitive fields are added or exposed without data classification and denied/filtering proof or an explicit security handoff.
-- Downgrade memory, graph, trajectory, and stale report claims unless current source paths and fresh validation confirm them.
+- Downgrade prior task evidence and repository inspection, observable action sequence, and stale report claims unless current source paths and fresh validation confirm them.

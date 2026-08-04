@@ -1,21 +1,16 @@
 #!/usr/bin/env python3
-"""Generate a human-readable local marketplace catalog from source indexes."""
+"""Generate a human-readable catalog from the four Skill registries."""
 
 from __future__ import annotations
 
 import argparse
 import importlib.util
 import sys
+import textwrap
 from pathlib import Path
 from typing import Any
 
-from validation_utils import (
-    EXPECTED_DOMAIN_EXTENSION_COUNT,
-    EXPECTED_FOUNDATION_CAPABILITY_COUNT,
-    EXPECTED_PROFESSIONAL_SKILL_COUNT,
-    EXPECTED_PROFILE_TOP_LEVEL_COUNTS,
-    load_yaml_file,
-)
+from validation_utils import EXPECTED_PROFILE_TOP_LEVEL_COUNTS
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,15 +33,10 @@ def _load_exporter():
 EXPORTER = _load_exporter()
 
 
-def _capability_groups(root: Path) -> dict[str, str]:
-    registry = load_yaml_file(root / "src" / "registry" / "capabilities.yaml")
-    return {
-        str(item["name"]): str(item.get("group", "ungrouped"))
-        for item in registry.get("capabilities", [])
-    }
-
-
-def _items_by_name(indexes: dict[str, dict[str, Any]], reference_profile: str) -> dict[str, dict[str, Any]]:
+def _items_by_name(
+    indexes: dict[str, dict[str, Any]],
+    reference_profile: str,
+) -> dict[str, dict[str, Any]]:
     return {
         str(item["name"]): item
         for item in indexes[reference_profile]["items"]
@@ -54,23 +44,15 @@ def _items_by_name(indexes: dict[str, dict[str, Any]], reference_profile: str) -
     }
 
 
-def _exposure(indexes: dict[str, dict[str, Any]], name: str) -> str:
-    parts: list[str] = []
-    for profile in PROFILES:
-        item = next(
+def _items(payload: dict[str, Any], item_type: str) -> list[dict[str, Any]]:
+    return sorted(
+        [
             item
-            for item in indexes[profile]["items"]
-            if isinstance(item, dict) and item.get("name") == name
-        )
-        visibility = item["profile_visibility"]
-        if visibility["top_level"]:
-            status = "top-level"
-        elif visibility["compiled_reference"]:
-            status = "compiled-reference"
-        else:
-            status = "router-index"
-        parts.append(f"{profile}: {status}")
-    return "; ".join(parts)
+            for item in payload["items"].values()
+            if item["type"] == item_type
+        ],
+        key=lambda item: item["name"],
+    )
 
 
 def _csv(values: list[Any]) -> str:
@@ -82,41 +64,10 @@ def _line(text: str) -> str:
     return text.replace("|", "\\|").replace("\n", " ")
 
 
-def generate_catalog(root: Path, reference_profile: str) -> dict[str, Any]:
-    """Generate the catalog payload from the marketplace index exporter."""
-    indexes = {profile: EXPORTER.export_index(root, profile) for profile in PROFILES}
-    items = _items_by_name(indexes, reference_profile)
-    capability_groups = _capability_groups(root)
-    return {
-        "reference_profile": reference_profile,
-        "indexes": indexes,
-        "items": items,
-        "capability_groups": capability_groups,
-    }
-
-
-def _professional_items(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    return sorted(
-        [item for item in payload["items"].values() if item["type"] == "professional_skill"],
-        key=lambda item: item["name"],
-    )
-
-
-def _capability_items(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    return sorted(
-        [item for item in payload["items"].values() if item["type"] == "foundation_capability"],
-        key=lambda item: item["name"],
-    )
-
-
-def _domain_items(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    return sorted(
-        [item for item in payload["items"].values() if item["type"] == "domain_extension"],
-        key=lambda item: item["name"],
-    )
-
-
-def _browse_by(items: list[dict[str, Any]], field: str) -> dict[str, list[str]]:
+def _browse_by(
+    items: list[dict[str, Any]],
+    field: str,
+) -> dict[str, list[str]]:
     grouped: dict[str, list[str]] = {}
     for item in items:
         for value in item.get(field, []):
@@ -124,91 +75,260 @@ def _browse_by(items: list[dict[str, Any]], field: str) -> dict[str, list[str]]:
     return {key: sorted(values) for key, values in sorted(grouped.items())}
 
 
+def _name_chunks(values: list[str], size: int = 3) -> list[list[str]]:
+    """Split discovery names into short, stable Markdown-list chunks."""
+
+    return [values[index : index + size] for index in range(0, len(values), size)]
+
+
+def _render_name_group(lines: list[str], label: str, names: list[str]) -> None:
+    lines.extend([f"### {label}", ""])
+    for chunk in _name_chunks(sorted(names)):
+        lines.append(f"- {_csv(chunk)}")
+    if not names:
+        lines.append("- `none`")
+    lines.append("")
+
+
+def _append_paragraph(lines: list[str], value: str) -> None:
+    lines.extend(
+        textwrap.wrap(
+            value,
+            width=100,
+            break_long_words=False,
+            break_on_hyphens=False,
+        )
+    )
+
+
+def _append_text_field(lines: list[str], label: str, value: Any) -> None:
+    wrapped = textwrap.wrap(
+        _line(str(value)),
+        width=92,
+        break_long_words=False,
+        break_on_hyphens=False,
+    ) or ["Not supplied."]
+    lines.append(f"- {label}: {wrapped[0]}")
+    lines.extend(f"  {part}" for part in wrapped[1:])
+
+
+def _append_name_field(lines: list[str], label: str, values: list[Any]) -> None:
+    names = sorted(str(value) for value in values if str(value).strip())
+    if not names:
+        lines.append(f"- {label}: `none`")
+        return
+    lines.append(f"- {label}:")
+    lines.extend(f"  - {_csv(chunk)}" for chunk in _name_chunks(names))
+
+
+def _append_text_values(lines: list[str], label: str, values: list[Any]) -> None:
+    phrases = sorted(str(value) for value in values if str(value).strip())
+    if not phrases:
+        lines.append(f"- {label}: none")
+        return
+    lines.append(f"- {label}:")
+    for phrase in phrases:
+        wrapped = textwrap.wrap(
+            _line(phrase),
+            width=88,
+            break_long_words=False,
+            break_on_hyphens=False,
+        ) or ["Not supplied."]
+        lines.append(f"  - {wrapped[0]}")
+        lines.extend(f"    {part}" for part in wrapped[1:])
+
+
+def _append_delivery_field(
+    lines: list[str], indexes: dict[str, dict[str, Any]], name: str
+) -> None:
+    labels = {
+        "top_level_skill": "top-level Skill",
+        "targeted_reference": "targeted reference",
+        "routing_index_only": "routing index only",
+    }
+    lines.append("- Profile delivery:")
+    for profile in PROFILES:
+        item = next(
+            item
+            for item in indexes[profile]["items"]
+            if isinstance(item, dict) and item.get("name") == name
+        )
+        mode = str(item["profile_delivery"]["mode"])
+        lines.append(f"  - `{profile}`: {labels[mode]}")
+
+
+def generate_catalog(root: Path, reference_profile: str) -> dict[str, Any]:
+    """Generate one catalog payload from exporter-backed profile indexes."""
+
+    indexes = {
+        profile: EXPORTER.export_index(root, profile)
+        for profile in PROFILES
+    }
+    return {
+        "reference_profile": reference_profile,
+        "indexes": indexes,
+        "items": _items_by_name(indexes, reference_profile),
+    }
+
+
 def render_catalog(payload: dict[str, Any]) -> str:
-    """Render the local marketplace catalog as Markdown."""
+    """Render a concise local discovery catalog."""
+
     indexes = payload["indexes"]
     all_items = list(payload["items"].values())
-    capability_groups = payload["capability_groups"]
-    lines = [
-        "# Marketplace Catalog",
+    lines = ["# Marketplace Catalog", ""]
+    _append_paragraph(
+        lines,
+        "This generated catalog is a local Marketplace schema v3 discovery view over the "
+        "Control, Professional, Foundation, and Domain Skill registries. Every top-level "
+        "entry is a standard Skill with `SKILL.md` at its root. Foundation and Domain "
+        "Skills are exposed only as top-level Skills or task-targeted references; this "
+        "catalog does not define an execution protocol.",
+    )
+    lines.append("")
+    _append_paragraph(
+        lines,
+        "Official marketplace publishing is intentionally not implemented. This catalog "
+        "must not be used to claim official marketplace availability.",
+    )
+    lines.extend([
         "",
-        "This generated catalog is a local discovery view over ChangeForge skills, foundation capabilities, and domain extensions. Official Codex and Claude marketplace publishing is intentionally not implemented, and this catalog must not be used to claim official marketplace availability.",
+        "_Generated by `python3 scripts/generate-marketplace-catalog.py --profile recommended --out <path>`. Do not edit by hand._",
         "",
-        "_Generated by `python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md`. Do not edit by hand._",
+        "## How To Use This Catalog",
         "",
-        "Business semantic fixture evidence is deterministic and local. Actual outputs are generated or checked with `python3 scripts/validate-business-semantic-generator.py` and `python3 scripts/generate-business-semantic-actuals.py --check`; the generator reads input signals, bounded `input_route_hint`, resolver/routing rules, and source/diff context, not `expected_*` oracle fields. Routing evals compare skills, capabilities, gates, BSP scope, BSP sections, triggers, references, forbidden selections, and max selection limits; review evals check `expected_evidence` against actual evidence derived from source/diff snippets, prompt, and routing triggers; rule `reason_codes` and `entry_points` must be non-empty. These fixtures prove deterministic local structure, not live agent behavior, live LLM behavior, or live business correctness.",
+        "1. Choose a build profile in Profile Summary; Build Profiles remains the composition authority.",
+        "2. Start with Professional Skills when selecting a complete engineering judgment.",
+        "   Use Foundation and Domain sections only for concrete Layer 3 signals.",
+        "3. Search by exact Skill name, Agent Profile, trigger signal, or delivery mode.",
+        "   Discovery does not authorize loading a full catalog into one task.",
+        "4. Confirm routing and install behavior in the source registries and generated manifest.",
+        "   Use the owning documentation before making a product claim.",
+        "",
+        "## Quick Navigation",
+        "",
+        "- [Profile Summary](#profile-summary)",
+        "- [Control Skills](#control-skills)",
+        "- [Professional Skills](#professional-skills)",
+        "- [Foundation Skills By Group](#foundation-skills-by-group)",
+        "- [Domain Skills](#domain-skills)",
+        "- [Browse By Agent Profile](#browse-by-agent-profile)",
+        "- [Browse By Trigger Signal](#browse-by-trigger-signal)",
+        "- [Browse By Profile Delivery](#browse-by-profile-delivery)",
         "",
         "## Profile Summary",
         "",
-        "| Profile | Top-Level Count | Exposure Rule |",
-        "| --- | ---: | --- |",
-        f"| `recommended` | {EXPECTED_PROFILE_TOP_LEVEL_COUNTS['recommended']} | {EXPECTED_PROFESSIONAL_SKILL_COUNT} professional skills top-level; foundation capabilities compiled into references; domain extensions indexed for routing. |",
-        f"| `full` | {EXPECTED_PROFILE_TOP_LEVEL_COUNTS['full']} | {EXPECTED_PROFESSIONAL_SKILL_COUNT} professional skills plus {EXPECTED_DOMAIN_EXTENSION_COUNT} domain extensions top-level; foundation capabilities compiled into references. |",
-        f"| `dev` | {EXPECTED_PROFILE_TOP_LEVEL_COUNTS['dev']} | {EXPECTED_PROFESSIONAL_SKILL_COUNT} professional skills plus {EXPECTED_FOUNDATION_CAPABILITY_COUNT} foundation capabilities plus {EXPECTED_DOMAIN_EXTENSION_COUNT} domain extensions top-level. |",
-        "",
-        "## Professional Skills",
-        "",
-        "| Name | Summary | Triggers | Required Quality Gates |",
-        "| --- | --- | --- | --- |",
-    ]
-    for item in _professional_items(payload):
-        lines.append(
-            f"| `{item['name']}` | {_line(item['summary'])} | {_csv(item['triggers'])} | {_csv(item['required_quality_gates'])} |"
-        )
-
-    lines.extend(["", "## Foundation Capabilities By Group", ""])
-    grouped_capabilities: dict[str, list[dict[str, Any]]] = {}
-    for item in _capability_items(payload):
-        grouped_capabilities.setdefault(capability_groups.get(item["name"], "ungrouped"), []).append(item)
-    for group, capabilities in sorted(grouped_capabilities.items()):
-        lines.extend(
-            [
-                f"### {group}",
-                "",
-                "| Name | Used By | Triggers | Expected Outputs |",
-                "| --- | --- | --- | --- |",
-            ]
-        )
-        for item in capabilities:
-            lines.append(
-                f"| `{item['name']}` | {_csv(item['used_by'])} | {_csv(item['triggers'])} | {_csv(item['expected_outputs'])} |"
+        "| Profile | Top-Level Skills | Targeted References | Routing Index Only |",
+        "| --- | ---: | ---: | ---: |",
+    ])
+    for profile in PROFILES:
+        profile_items = indexes[profile]["items"]
+        counts = {
+            mode: sum(
+                item["profile_delivery"]["mode"] == mode
+                for item in profile_items
             )
+            for mode in (
+                "top_level_skill",
+                "targeted_reference",
+                "routing_index_only",
+            )
+        }
+        lines.append(
+            f"| `{profile}` | {counts['top_level_skill']} | "
+            f"{counts['targeted_reference']} | {counts['routing_index_only']} |"
+        )
+        if counts["top_level_skill"] != EXPECTED_PROFILE_TOP_LEVEL_COUNTS[profile]:
+            raise RuntimeError(f"{profile} top-level Skill count drift")
+
+    lines.extend(
+        [
+            "",
+            "## Control Skills",
+            "",
+        ]
+    )
+    for item in _items(payload, "control_skill"):
+        lines.extend([f"### `{item['name']}`", ""])
+        _append_text_field(lines, "Summary", item["summary"])
+        _append_name_field(lines, "Agent Profiles", item["role_support"])
+        _append_delivery_field(lines, indexes, str(item["name"]))
         lines.append("")
 
     lines.extend(
         [
-            "## Domain Extensions",
             "",
-            "| Name | Summary | Profile Exposure |",
-            "| --- | --- | --- |",
+            "## Professional Skills",
+            "",
         ]
     )
-    for item in _domain_items(payload):
-        lines.append(f"| `{item['name']}` | {_line(item['summary'])} | {_exposure(indexes, item['name'])} |")
+    for item in _items(payload, "professional_skill"):
+        lines.extend([f"### `{item['name']}`", ""])
+        _append_text_field(lines, "Summary", item["summary"])
+        _append_name_field(lines, "Agent Profiles", item["role_support"])
+        lines.append(f"- Task routable: `{str(item['task_routable']).lower()}`")
+        _append_text_values(lines, "Trigger signals", item["trigger_signals"])
+        _append_name_field(
+            lines, "Related Layer 3 Skills", item["related_layer3_skills"]
+        )
+        lines.append("")
 
-    lines.extend(["", "## Browse By Quality Gate", ""])
-    for gate, names in _browse_by(all_items, "required_quality_gates").items():
-        lines.append(f"- `{gate}`: {_csv(names)}")
+    lines.extend(["", "## Foundation Skills By Group", ""])
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for item in _items(payload, "foundation_skill"):
+        grouped.setdefault(str(item.get("group") or "ungrouped"), []).append(item)
+    for group, skills in sorted(grouped.items()):
+        lines.extend(
+            [
+                f"### {group}",
+                "",
+            ]
+        )
+        for item in skills:
+            lines.extend([f"#### `{item['name']}`", ""])
+            lines.append(f"- Delivery scope: `{item['delivery_scope']}`")
+            _append_name_field(lines, "Agent Profiles", item["role_support"])
+            _append_name_field(lines, "Used by", item["used_by"])
+            _append_text_values(lines, "Trigger signals", item["trigger_signals"])
+            lines.append("")
 
-    lines.extend(["", "## Browse By Risk Trigger", ""])
-    for trigger, names in _browse_by(all_items, "triggers").items():
-        lines.append(f"- `{trigger}`: {_csv(names)}")
+    lines.extend(
+        [
+            "## Domain Skills",
+            "",
+        ]
+    )
+    for item in _items(payload, "domain_skill"):
+        lines.extend([f"### `{item['name']}`", ""])
+        _append_text_field(lines, "Summary", item["summary"])
+        _append_name_field(lines, "Agent Profiles", item["role_support"])
+        _append_delivery_field(lines, indexes, str(item["name"]))
+        lines.append("")
 
-    lines.extend(["", "## Browse By Profile Exposure", ""])
+    lines.extend(["", "## Browse By Agent Profile", ""])
+    for role, names in _browse_by(all_items, "role_support").items():
+        _render_name_group(lines, f"`{role}`", names)
+
+    lines.extend(["", "## Browse By Trigger Signal", ""])
+    for index, (trigger, names) in enumerate(
+        _browse_by(all_items, "trigger_signals").items(), start=1
+    ):
+        lines.extend([f"### Signal {index:03d}", ""])
+        _append_text_field(lines, "Trigger signal", trigger)
+        _append_name_field(lines, "Matching Skills", names)
+        lines.append("")
+
+    lines.extend(["", "## Browse By Profile Delivery", ""])
     for profile in PROFILES:
-        top_level = [
-            str(item["name"])
-            for item in indexes[profile]["items"]
-            if item["profile_visibility"]["top_level"]
-        ]
-        compiled = [
-            str(item["name"])
-            for item in indexes[profile]["items"]
-            if item["profile_visibility"]["compiled_reference"]
-        ]
-        lines.append(f"- `{profile}` top-level: {_csv(sorted(top_level))}")
-        lines.append(f"- `{profile}` compiled references: {_csv(sorted(compiled))}")
-    lines.append("")
+        grouped_delivery: dict[str, list[str]] = {
+            "top_level_skill": [],
+            "targeted_reference": [],
+            "routing_index_only": [],
+        }
+        for item in indexes[profile]["items"]:
+            grouped_delivery[item["profile_delivery"]["mode"]].append(item["name"])
+        for mode, names in grouped_delivery.items():
+            _render_name_group(lines, f"`{profile}` — `{mode}`", names)
     return "\n".join(lines)
 
 
@@ -221,7 +341,6 @@ def _check_file(path: Path, expected: str) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entrypoint for writing or checking the generated catalog."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile", choices=PROFILES, default="recommended")
     parser.add_argument("--out", required=True)

@@ -9,9 +9,9 @@ source_evidence:
 - Inspected: appointment API schema, scheduling service, invoice amount model, translation catalog, locale display tests.
 - Not inspected: production tzdata image version, live payment provider minor-unit table, and historical timestamp backfill sample.
 
-graph_memory_trajectory_judgment:
-- Accepted: repository graph links appointment API to scheduling service and display component.
-- Rejected: old project memory saying all customers use `America/New_York`; current tenant settings include multiple IANA zones.
+current_evidence_judgment:
+- Accepted: repository inspection links appointment API to scheduling service and display component.
+- Rejected: old prior task evidence saying all customers use `America/New_York`; current tenant settings include multiple IANA zones.
 - Unknown: last production CLDR/tzdata rollout date.
 
 locale_model:

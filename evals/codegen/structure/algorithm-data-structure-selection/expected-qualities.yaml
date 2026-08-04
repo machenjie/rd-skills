@@ -7,20 +7,11 @@ focus:
   - access-pattern data structure fit
   - streaming and chunking
 route_hints:
-  skills:
-    - backend-change-builder
-    - reliability-observability-gate
-    - ai-code-review-refactor
-  capabilities:
-    - algorithm-data-structure-selection
-    - solution-optimality-evaluation
-    - language-performance-safety
-    - profiling
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - reliability gate
-    - test gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Expected input size, distribution, and worst-case behavior are stated before implementation.
   - Data structure matches access pattern for dedupe, grouping, sorting, top-K, graph, prefix, or range query.

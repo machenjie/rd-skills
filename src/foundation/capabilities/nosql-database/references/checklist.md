@@ -1,11 +1,11 @@
 # NoSQL Database Checklist
 
-- Confirm NoSQL is justified by access patterns, schema flexibility, scale model, or consistency boundaries.
-- Name the store type and the workload it is optimized for.
-- Define reads, writes, keys, partitions, document or item shape, and secondary indexes.
-- Define consistency guarantees and invariants that cannot be relaxed.
-- Define denormalization ownership, update fan-out, drift detection, and repair.
-- Review hot partition, unbounded item, index, quota, and cost risks.
-- Define schema versioning, migration, and backfill behavior.
-- Define observability and tests for access patterns and consistency limits.
-- Map every changed key, index, schemaVersion, TTL, consistency, denormalization, migration, and retention decision to validation evidence, command/manual review result, owner, freshness, rollback behavior, or residual risk.
+- Justify the store model from named access paths, invariants, shape, distribution, and rejected relational/cache/search alternatives.
+- Map reads, writes, deletes, ranges, scans, keys, item/document boundaries, and secondary indexes; expose fan-out and unsupported paths.
+- Test peak tenant/time/status/key skew, collection growth, hot-key behavior, split/bucket/repartition choices, and deployed limits.
+- Define strong or stale reads, read-your-writes, conflicts, and partial effects from invariants classified by item, document, partition, or cross-boundary scope.
+- Define duplicate/reordered/unknown write outcomes, version or condition ownership, retry idempotency, reconciliation, and adjacent consistency handoffs.
+- Name denormalized source writers, propagation/delete order, staleness, drift detection, replay, repair, and rebuild.
+- Prove stored-shape compatibility across old/new readers and writers, versions/defaults, unknown fields, indexes, backfills, and rollback.
+- Derive TTL, tombstone, retention, capacity, quota, and recovery behavior from current policy, replay windows, workload, and deployed configuration.
+- Map each changed claim to current queries, configuration, data samples, tests, telemetry, proof limits, and owners.

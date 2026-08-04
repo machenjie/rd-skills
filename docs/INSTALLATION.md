@@ -1,20 +1,15 @@
 # Installation
 
-ChangeForge installs only built runtime artifacts from `dist/`. Source folders under `src/`, raw registries, and source foundation capability trees are authoring inputs and are never installed directly.
+Install only generated artifacts under `dist/`. Never copy `src/`, source
+registries, reports, or personal content into an agent configuration. Run all
+commands from the repository root with Python 3.11 or newer after
+`python3 -m pip install .`.
 
-## Profiles
+For the shortest build/install/doctor path, start with [Quickstart](QUICKSTART.md).
 
-- `recommended`: 22 professional skills as top-level runtime skills. 136 foundation capabilities are compiled into professional skill references.
-- `full`: 22 professional skills plus 7 domain extensions as top-level runtime skills. 136 foundation capabilities remain compiled references.
-- `dev`: 22 professional skills plus 136 foundation capabilities plus 7 domain extensions as top-level skills. Use only for ChangeForge authoring/debugging.
+## Build
 
-Top-level runtime counts are `recommended` = 22, `full` = 29, and `dev` = 165.
-
-`SKILL.md` is loaded when a skill is selected. Compiled `references/` are not fully loaded automatically; the router selects capabilities and professional skills read only selected references according to L1/L2/L3/L4/L5 policy.
-
-Language capabilities are professional engineering rules, not language tutorials or personal technical asset mappings.
-
-Build the profile before installing it:
+Build the profile you intend to install:
 
 ```bash
 python3 scripts/build.py --profile recommended
@@ -22,221 +17,170 @@ python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
 ```
 
-## Supported Targets
+You normally need only one command. The `recommended`, `full`, and `dev`
+profiles contain 27, 40, and 190 top-level Skills respectively. [Build
+profiles](BUILD_PROFILES.md) owns composition, compiled Layer 3 behavior,
+supported-host Agent Profile output, and manifest fields. Every runtime
+installer validates the built manifest before changing its target.
 
-- Codex project: `<target>/.agents/skills`
-- Codex user: `~/.agents/skills`
-- Codex admin: `/etc/codex/skills`
-- Claude Code project: `<target>/.claude/skills`
-- Claude Code user: `~/.claude/skills`
-- GitHub Copilot project: `<target>/.github/skills`
-- GitHub Copilot user: `~/.copilot/skills`
-- Cline project: `<target>/.cline/skills`
-- Cline user: `~/.cline/skills`
-- OpenAI API: profile-scoped zip bundles under `dist/openai-api/zips/<profile>`
+## Host, Scope, And Default Targets
 
-For project installs, `--target` is the project root. For user and admin installs, omitting `--target` uses the default skills directory; supplying `--target` treats it as an explicit skills directory override.
+| Host | Supported scope | Default/project Skill target | Agent Profile target |
+| --- | --- | --- | --- |
+| Codex | `project` | `<project>/.agents/skills` | `<project>/.codex/agents` |
+| Codex | `user` | `~/.agents/skills` | `~/.codex/agents` |
+| Codex | `admin` | `/etc/codex/skills` | `/etc/codex/agents` |
+| Claude | `project` | `<project>/.claude/skills` | `<project>/.claude/agents` |
+| Claude | `user` | `~/.claude/skills` | `~/.claude/agents` |
+| Copilot | `project` | `<project>/.github/skills` | `<project>/.github/agents` |
+| Copilot | `user` | `~/.copilot/skills` | `~/.copilot/agents` |
+| Cline | `project` | `<project>/.cline/skills` | none |
+| Cline | `user` | `~/.cline/skills` | none |
+| OpenAI API | zip output only | `dist/openai-api/zips/<profile>/` | none |
 
-## Hook Runtime Defaults
+Codex, Claude, and Copilot install the four static Agent Profiles. Cline
+installs Skills without native Agent Profile files. OpenAI API produces zip
+files only and has no runtime target.
 
-Builds also emit hook artifacts for Codex, Claude, and Copilot, project and
-user scope:
+For `project`, `--target` means the project root and is required. For `user` or
+Codex `admin`, `--target` means an explicit Skill directory, not a project root.
+An explicit user/admin Skill target does not relocate the host's default Agent
+Profile target. Omit `--target` to use the defaults above.
 
-- Codex project hook runtime: `dist/codex/project/.codex`
-- Codex user hook runtime: `dist/codex/user/.codex`
-- Claude project hook fragment and scripts: `dist/claude/project/.claude`
-- Claude user hook fragment and scripts: `dist/claude/user/.claude`
-- Copilot project hook config and scripts: `dist/copilot/project/.github`
-- Copilot user hook config and scripts: `dist/copilot/user/.copilot`
+Codex `admin` writes below `/etc/codex`; preview it first and use only an
+approved privilege boundary. Claude, Copilot, and Cline reject `admin` scope.
 
-The hook runtime is not a skill and keeps `change-forge-router` as the fixed
-entry skill for engineering classification.
-For supported Codex, Claude, and Copilot project/user installs, hooks install
-by default with the `default_compact` profile: a small set of high-value
-professional gates, not a fully hard-blocking lifecycle. User-authored hook
-entries are preserved, while existing ChangeForge-managed hook entries are
-deleted and rewritten from the current built template so install is
-one-to-one with the shipped profile. Pass `--without-hooks` to opt out of
-executable hooks and professional injection runtime. `--with-hooks` remains
-accepted for backward compatibility, but it is no longer required.
+## Install
 
-Codex and Claude wire ordinary `SessionStart` only to session bootstrap,
-`UserPromptSubmit` only to action-aware professional injection, `PreToolUse` to
-SDD material choice, pre-edit structure, and permission policy checks, and
-`PostToolUse` to the single `changeforge_post_tool_collector.py` evidence
-collector. `Stop` runs only the Stop closure gate. Compaction snapshot/reinject
-logic runs only on real compaction lifecycle events through
-`changeforge_compaction.py`, not ordinary session start. Codex uses
-`PreCompact` and `PostCompact` with `manual|auto` trigger matchers. Claude uses
-the same pre/post compaction split. Copilot wires only `PreCompact`, because its
-documented local hook surface does not expose a `PostCompact` event.
-
-Default professional-process modes remain warn/monitor:
-`sdd_material_choice=warn`, `pre_edit_structure=warn`,
-`process_phase=monitor`, and `stop_closure=warn`. Process phase hooks, hard
-Stop blocking, and subagent review hard mode require explicit strict mode,
-`CHANGEFORGE_CI_MODE=ci`, benchmark, or maintainer-policy options, not ordinary
-default hooks. Unsupported adapters record degraded closure instead of claiming
-enforcement. Hook runtime failures still fail open unless explicitly configured
-fail-closed. Claude commands
-explicitly set `CHANGEFORGE_AGENT=claude` and use 10-second `timeout` values
-because Claude Code measures timeout in seconds.
-
-Copilot local hooks are trimmed to supported flat events: session bootstrap,
-supported `PreToolUse` decisions, the post-tool collector,
-`PostToolUseFailure` collector reuse, review-capsule subagent checks,
-`PreCompact` compaction, and Stop closure. Copilot does not wire
-`UserPromptSubmit`, does not rely on unsupported advisory context events, and
-degrades quietly when an event can consume only a decision. The shared scripts
-recognize Codex, Claude, and VS Code Copilot tool names.
-
-Cline, Roo, and OpenHands support is staged adapter support, not executable
-hook support. Cline can install skills into `.cline/skills`; Roo mode-policy
-and OpenHands backend-protocol adapters report unsupported lifecycle checks as
-degraded residual risk until deterministic runtime templates or backend wiring
-are added.
-
-Project hooks install under the project root and resolve their command path from
-the git root. User hooks install under the agent home (`~/.codex`, `~/.claude`,
-`~/.copilot`), apply to every project, and resolve their command path from
-`${CODEX_HOME:-$HOME/.codex}` / `${CLAUDE_CONFIG_DIR:-$HOME/.claude}` /
-`${HOME}/.copilot`; for user scope `--target` does not relocate the hooks. VS
-Code Copilot loads every `*.json` in its hook folder, so the managed config is a
-dedicated `changeforge-hooks.json` and the scripts live in a `changeforge/`
-subfolder.
+Replace `/absolute/path/to/project` with an existing project root. Always
+preview the same command first:
 
 ```bash
-# Codex user hooks apply to every Codex project by default:
-python3 installers/install.py --agent codex --scope user --profile full
-# Claude user hooks:
-python3 installers/install.py --agent claude --scope user --profile full
-# Copilot project hooks (.github/hooks) and user hooks (~/.copilot/hooks):
-python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full
-python3 installers/install.py --agent copilot --scope user --profile full
-# Explicit opt-out:
-python3 installers/install.py --agent codex --scope user --profile full --without-hooks
+python3 installers/install.py \
+  --agent codex --scope project --target /absolute/path/to/project \
+  --profile recommended --dry-run
+python3 installers/install.py \
+  --agent codex --scope project --target /absolute/path/to/project \
+  --profile recommended
 ```
 
-The route-judgment guidance also ships as an advisory fragment for users who
-prefer not to trust an executable hook. The fragment still names
-`change-forge-router` as the fixed entry. Install only that fragment for any
-project with `installers/install.py --with-bootstrap`, and inspect it with
-`installers/doctor.py --check-bootstrap`.
-
-`scripts/quickstart.py` exposes this choice through
-`--activation-level none|bootstrap|hooks|professional-injection` and
-`--without-hooks`. Hook-capable project/user scopes default to
-`professional-injection`. `--activation-level none` and `--without-hooks` opt
-out. `--activation-level bootstrap` installs only the non-executable
-route-judgment fragment and skips hooks.
-
-To downgrade runtime enforcement without uninstalling hooks:
-
-```text
-CHANGEFORGE_SDD_CHOICE_MODE=warn
-CHANGEFORGE_SDD_CHOICE_MODE=off
-CHANGEFORGE_PRE_EDIT_MODE=warn
-CHANGEFORGE_STOP_MODE=warn
-CHANGEFORGE_HOOK_MODE=warn
-```
-
-See [HOOKS.md](HOOKS.md) for hook modes, the session bootstrap, validation,
-enablement, and troubleshooting.
-
-## Codex
+User installation needs no target when the default is correct:
 
 ```bash
-python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full --dry-run
-python3 installers/install.py --agent codex --scope user --profile recommended --dry-run
-python3 installers/install.py --agent codex --scope admin --target /etc/codex/skills --profile recommended --dry-run
+python3 installers/install.py \
+  --agent claude --scope user --profile recommended --dry-run
+python3 installers/install.py \
+  --agent claude --scope user --profile recommended
 ```
 
-Remove `--dry-run` after reviewing the target path and skill count. Use `--backup` when replacing an existing managed install.
+The installer rejects unmanaged artifacts whose names collide with incoming
+ChangeForge artifacts. Inspect every reported path before considering
+`--force`. Use `--force` only when you have confirmed that replacing those
+specific unmanaged same-name artifacts is intended and have a separate
+recovery copy. It does not bypass source validation, path-overlap protection,
+unsupported scopes, or unsafe names.
 
-## Claude Code
+Optional install `--backup` copies only the ChangeForge-named incoming/previously
+managed paths, the install manifest, and bounded known legacy paths that already
+exist. It is stored under the Skill target's `.changeforge-backups/` directory.
+It is not a snapshot of the full host configuration.
+
+## Doctor
 
 ```bash
-python3 installers/install.py --agent claude --scope project --target /path/to/project --profile full --dry-run
-python3 installers/install.py --agent claude --scope user --profile recommended --dry-run
+python3 installers/doctor.py \
+  --agent codex --scope user --profile recommended
 ```
 
-## GitHub Copilot
+Doctor checks the installed manifest, expected top-level Skill count, root
+`SKILL.md` files, current build/core/source bindings, legacy residue, and the
+host-specific Agent Profile contract. Codex, Claude, and Copilot must have the
+exact four-profile set; Cline correctly has no native profiles. Doctor also
+prints declared host enforcement and its limitations. This is repository-level
+artifact evidence, not proof of real-host startup.
+
+## Upgrade
+
+Build the target profile first, then preview and run upgrade:
 
 ```bash
-python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full --dry-run
-python3 installers/install.py --agent copilot --scope user --profile recommended --dry-run
+python3 scripts/build.py --profile recommended
+python3 installers/upgrade.py \
+  --agent codex --scope user --profile recommended --dry-run
+python3 installers/upgrade.py \
+  --agent codex --scope user --profile recommended
 ```
 
-## Cline
+Upgrade requires an existing ChangeForge install manifest. It automatically
+backs up the currently managed Skills, managed Profile files, manifest, and
+bounded known legacy paths before replacement when any exist. It removes only
+manifest-owned or bounded legacy artifacts and preserves unrelated content.
+
+ChangeForge has no automatic restore CLI. Install creates a backup only when
+`--backup` was requested and matching content already exists; upgrade creates
+one when matching managed or legacy content exists. If a successful command
+prints a backup path, use it; the new manifest records the same path. If an
+operation was interrupted before that output or manifest write, stop further
+writes and inspect the Skill target's `.changeforge-backups/` directory for a
+newly created `install-*` or `upgrade-*` backup instead of assuming none exists.
+
+Compare any candidate backup's `skills/`, `profiles/`, and optional `legacy/`
+contents with the target, then restore only verified files through your normal
+filesystem or configuration-management process. Do not copy the backup root
+wholesale over unrelated host content. If no usable backup exists, resolve the
+failure cause, rebuild the intended profile, preview the install or upgrade
+appropriate to the remaining manifest, and run it only when safe; otherwise
+restore from your own verified backup.
+
+## Uninstall
 
 ```bash
-python3 installers/install.py --agent cline --scope project --target /path/to/project --profile full --dry-run
-python3 installers/install.py --agent cline --scope user --profile recommended --dry-run
-```
-
-## OpenAI API Zip Packaging
-
-`scripts/build.py` refreshes OpenAI API zips for the profile being built. `scripts/package.py` can package a previously built profile again:
-
-```bash
-python3 scripts/package.py --profile recommended
-python3 installers/install.py --agent openai-api --profile recommended --dry-run
-```
-
-OpenAI API is zip-only; it does not install runtime skill folders into a project, user, or admin directory. Each zip contains exactly one top-level skill folder and exactly one root `SKILL.md`.
-
-## Uninstall, Upgrade, And Doctor
-
-Install writes `.changeforge-install-manifest.json` into the target skills directory. The manifest records `installed_professional_skills`, `installed_foundation_capabilities`, `installed_domain_extensions`, and `installed_skills` as the complete managed union. Uninstall removes only names listed in this manifest and then removes the manifest. For supported Codex, Claude, and Copilot project/user installs, uninstall also removes ChangeForge-managed hook runtime files, hook manifests, and ChangeForge hook config entries while preserving unrelated user hooks. For project installs, uninstall removes standalone `.changeforge` bootstrap fragments installed by `--with-bootstrap`. Use `--keep-hooks` or `--keep-bootstrap` to retain those runtime support artifacts. For user and admin scopes, omit `--target` to use the same default skills directory as install; pass `--target` only to override the exact skills directory:
-
-```bash
-python3 installers/uninstall.py --agent codex --scope project --target /path/to/project --dry-run
-python3 installers/uninstall.py --agent codex --scope project --target /path/to/project
 python3 installers/uninstall.py --agent codex --scope user --dry-run
 python3 installers/uninstall.py --agent codex --scope user
-python3 installers/uninstall.py --agent codex --scope user --keep-hooks
 ```
 
-Upgrade backs up the existing ChangeForge-managed directories, replaces managed names from the selected built profile, preserves unrelated skills, and reports source/profile/skill version changes:
+Uninstall removes only files declared by the ChangeForge manifest plus bounded
+known legacy artifacts. It does not remove unrelated user content or restore a
+backup automatically.
+
+## OpenAI API Zip Output
+
+Generate and then validate the `recommended` zip set exactly as follows:
 
 ```bash
-python3 installers/upgrade.py --agent codex --scope project --target /path/to/project --profile full --dry-run
+python3 scripts/build.py --profile recommended
+python3 installers/install.py --agent openai-api --profile recommended
 ```
 
-Doctor checks supported directories, missing `SKILL.md`, duplicate skill names across scopes, old source versions, manifest drift, and profile mismatches:
+The build writes 27 zip files under `dist/openai-api/zips/recommended/`. Use
+`full` or `dev` in both commands for their 40 or 190 files. The three profiles
+therefore contain 257 zip files in total. Each zip is named
+for one top-level Skill and contains exactly one matching top-level Skill folder
+with a root `SKILL.md`. The second command validates the local bundles; it does
+not upload or install them. These files are not evidence of official marketplace
+publication.
 
-```bash
-python3 installers/doctor.py --agent codex --scope project --target /path/to/project --profile full
-```
+The obsolete mobile Domain and compatibility mode have been removed. Removed
+legacy Skill ids are unsupported and are not redirected. See [Build
+profiles](BUILD_PROFILES.md) for current platform routing.
 
-Doctor also prints source governance status for the skill and capability
-registries, source/dist boundary, hook adapter matrix, Validation Broker,
-Project Memory, repository graph freshness support, and skill-efficacy fixtures.
-It is structural and does not run expensive test suites. See
-[VALIDATION.md](VALIDATION.md) for the canonical validation tiers.
+Builds, zip validation, quickstart, installer, and doctor results prove only
+the declared local artifact contracts. They do not prove real-host Profile
+startup, wall-clock performance, production accuracy, provider behavior, or
+the installed user experience.
 
-## Duplicate Skill Conflicts
+## Troubleshooting And Recovery
 
-Install refuses to overwrite an unmanaged skill directory whose name matches a ChangeForge skill. Review the conflict first, then either move the unmanaged directory, uninstall the managed copy, or rerun install with `--force` when replacing that directory is intentional.
+| Symptom | Safe recovery |
+| --- | --- |
+| `missing built profile ...` | Run `python3 scripts/build.py --profile <profile>` with `<profile>` replaced by `recommended`, `full`, or `dev`, then repeat the dry run. |
+| Build directory is missing `.changeforge-build-manifest.json` or fails validation | Delete no target content. Re-run the build for the same profile so the generator recreates the directory and manifest; never hand-author the manifest. |
+| `no ChangeForge manifest found ...; run install first` during upgrade | Inspect the target. If this is a new target, use install. If artifacts predate the manifest, back them up, preview install, and resolve any named unmanaged conflicts explicitly. |
+| Permission denied | Stop. Choose `user`/`project`, correct ownership through the host's approved process, or obtain authorization for Codex `admin`; do not use `--force` as a permission workaround. |
+| Unsupported scope | Use the host/scope matrix above. Only Codex supports `admin`; project installs require a project-root `--target`; OpenAI API uses zip output. |
+| Doctor reports missing/stale files or bindings | Preserve its output, rebuild the same profile, preview upgrade, run upgrade only if the manifest is present, then rerun doctor. If the manifest is absent, follow the missing-manifest row. |
+| Unmanaged-name conflict | Inspect the exact paths and ownership. Move or back up user-owned content, or use `--force` only after confirming replacement of those exact names is intended. |
 
-## Final Smoke Checks
-
-Before release handoff, run these smoke checks against disposable targets:
-
-```bash
-python3 installers/install.py --agent codex --scope user --target /tmp/changeforge-recommended-user-smoke --profile recommended
-python3 installers/install.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --profile full
-python3 installers/uninstall.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --dry-run
-python3 installers/doctor.py --agent codex --scope user --target /tmp/changeforge-recommended-user-smoke --profile recommended
-python3 installers/doctor.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --profile full
-python3 installers/install.py --agent claude --scope project --target /tmp/changeforge-claude-full-smoke --profile full
-python3 installers/doctor.py --agent claude --scope project --target /tmp/changeforge-claude-full-smoke --profile full
-python3 installers/uninstall.py --agent claude --scope project --target /tmp/changeforge-claude-full-smoke --dry-run
-python3 installers/install.py --agent copilot --scope project --target /tmp/changeforge-copilot-full-smoke --profile full
-python3 installers/doctor.py --agent copilot --scope project --target /tmp/changeforge-copilot-full-smoke --profile full
-python3 installers/uninstall.py --agent copilot --scope project --target /tmp/changeforge-copilot-full-smoke --dry-run
-python3 installers/install.py --agent openai-api --profile recommended --dry-run
-python3 scripts/validate-installation.py
-```
-
-The Codex recommended user install smoke should report 22 top-level skills. The Codex, Claude Code, and GitHub Copilot full project install smokes should each report 29 top-level skills. Uninstall dry-runs should operate only on manifest-managed names, doctor should report no issues for every installed smoke target, and OpenAI API zip validation should pass profile count and archive-shape checks.
+For migration-specific legacy behavior and rollback, see [Migration to the
+hookless architecture](MIGRATING_TO_HOOKLESS.md#rollback). For task requests
+after a healthy install, continue to [Usage](USAGE.md).

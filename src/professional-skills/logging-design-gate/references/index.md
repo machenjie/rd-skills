@@ -1,0 +1,9 @@
+# Logging Design Gate Reference Index
+
+Use this index to load only the local reference needed for the selected logging risk. Record skipped-reference rationale when a plausible reference is not loaded.
+
+| Reference | Load When | Do Not Load When | Depends On | Conflicts With | Max Level | Output Fragment |
+| --- | --- | --- | --- | --- | --- | --- |
+| `references/logging-selection-criteria.md` | A concrete purpose, level, field, redaction, correlation, placement, or signal choice needs more detail than the root contract. | The root contract determines the no-log or bounded logging decision. | Selected purpose, owner boundary, current conventions/policy, candidate fields, and validation path. | Loading the full taxonomy without a decision that needs it. | L3 | Conditional selection guidance for the named logging decision. |
+| `references/logging-output-and-gates.md` | L3-L5 implementation or review needs mode-specific closure and targeted gates for selected purpose, placement, schema safety, correlation, volume, sink, or failure-visibility risk. | The root result is sufficient and no selected risk needs the extended proof contract. | Assigned mode, logging purpose, changed boundary, data classification, platform policy, and available evidence. | Combining mode ownership or treating candidate fields/signals/sinks as universal requirements. | L5 | Conditional Task/Review closure and risk-to-proof gates. |
+| `references/checklist.md` | A bounded L2 mode needs compact checks for its triggered purpose, placement, fields, redaction, level, signal split, or validation risk. | The root contract is enough or targeted proof fields are required. | Changed logging surface, owner module, current conventions, and validation signal. | Checklist completion replacing redaction, failure-visibility, correlation, sink, or volume proof. | L2 | Compact conditional logging checklist. |

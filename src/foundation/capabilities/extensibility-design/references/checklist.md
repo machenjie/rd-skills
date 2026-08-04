@@ -9,6 +9,8 @@
 - Define compatibility and deprecation policy.
 - Limit configuration combinations and test the supported matrix.
 - Reject speculative abstraction when current variation is insufficient.
-- Record current source, graph, generated artifact, project-memory, and execution evidence freshness.
-- Map every extension point to variation proof, compatibility test, invariant/security test, failure/performance test, owner, and next gate.
+- Record current source, graph, generated artifact, prior-task evidence, and execution evidence freshness.
+- For each extension point, map variation proof, owner, and compatibility validation.
+- Add invariant, security, failure, or performance tests only when those risks are triggered.
+- State unverified risk and the recommended next step.
 - State what the extensibility plan does not prove, including uninspected implementers, stale roadmap claims, production traffic, and unavailable sandbox evidence.

@@ -7,28 +7,13 @@ focus:
   - device health confirmation
   - staged rollout
 route_hints:
-  skills:
-    - delivery-release-gate
-    - reliability-observability-gate
-    - security-privacy-gate
-    - quality-test-gate
-    - change-documentation-gate
-  capabilities:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: delivery-release-gate
+  layer3_skills:
     - release-rollback
-    - observability
-    - backup-recovery
-    - secret-configuration-security
-    - integration-testing
-    - regression-testing
-  domain_extensions:
     - iot-embedded-extension
-  quality_gates:
-    - implementation gate
-    - security gate
-    - reliability gate
-    - delivery gate
-    - test gate
-    - documentation gate
+  review_skill: security-privacy-gate
 expected_outcomes:
   - Update success is recorded only after boot health confirmation.
   - Failed boot or missing heartbeat rolls back to the previous slot.

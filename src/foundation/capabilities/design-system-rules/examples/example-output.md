@@ -8,7 +8,7 @@ Mode selected:
 
 Source evidence:
 - Current design-system stories inspected: ReportForm, StatusBadge, InlineAlert, Button.
-- Repository graph memory: prior export job status pattern accepted after current Storybook confirmation.
+- repository inspection memory: prior export job status pattern accepted after current Storybook confirmation.
 - No live browser, axe, Lighthouse, or screen-reader run in this planning pass.
 
 Reuse:

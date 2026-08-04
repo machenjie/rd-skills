@@ -6,4 +6,5 @@
 - independent review: `architecture-impact-reviewer` reviews ownership, over-abstraction, and placement; `quality-test-gate` reviews coverage.
 - repair/re-review: if the extraction lands in a generic shared utility without ownership rationale, repair routes to `architecture-impact-reviewer`, then re-review repeats.
 - residual risk: hidden fourth calculation path not found by text search.
-- handoff: include route manifest, reuse ladder, rejected placements, inspected files, validation output, residual risk, and next gate.
+- handoff: include actual changed files, reuse ladder, rejected placements,
+  inspected files, validation output, unverified scope, residual risk, and next step.

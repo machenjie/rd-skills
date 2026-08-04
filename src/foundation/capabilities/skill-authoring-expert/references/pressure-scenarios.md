@@ -9,14 +9,16 @@ routing trigger, not on every change.
 ## What A Pressure Scenario Is
 
 A pressure scenario pairs a realistic excuse to skip the rule with the behavior
-the rule must still enforce. A rule that only works when the agent cooperates is
+and evidence that close that bypass under the selected rule. A rule that only works when the agent cooperates is
 not enforced. Each scenario names the rationalization to reject, so the rule and
 its eval can close it.
 
 ## Required Coverage
 
-A skill change that adds or strengthens a discipline rule or a routing trigger
-must defend at least the relevant scenarios below.
+When a skill change adds or strengthens a discipline rule or routing trigger,
+map the changed rule to an existing or new pressure scenario that can fail when
+the rule is bypassed. Reuse current scenario evidence when it already exercises
+that bypass; add a scenario when the regression is otherwise uncovered.
 
 1. **Edit without baseline.** Pressure: "the change is obviously right, it needs
    no test." Required: a baseline failure scenario, or a stated reason the
@@ -24,15 +26,15 @@ must defend at least the relevant scenarios below.
 2. **New trigger without over-routing guard.** Pressure: "add the trigger so we
    never miss it." Required: a guard case proving a trivial L1 change does not
    pull in the new trigger.
-3. **Strong rule bypassed as a small change.** Pressure: "it is just a tiny
-   change, the discipline does not apply." Required: the rule fires regardless of
-   change size, and a pressure case proves it.
-4. **Reference bloat into the body.** Pressure: "keep it in the body so it is
-   always visible." Required: deep content moves to a reference with a loading
-   policy; the body stays within the context budget.
+3. **Strong rule bypassed as a small change.** Pressure: "this is tiny, so
+   the discipline does not apply." Required: the rule fires regardless of size. A
+   pressure case proves that behavior.
+4. **Reference bloat into the body.** Pressure: "keep it in the body for
+   visibility." Required: deep content uses a reference with a loading policy.
+   The body stays within its context budget.
 5. **Description as a workflow shortcut.** Pressure: "summarize the whole process
    in the description so the agent can act from it." Required: the description
-   states only when to use the skill; the workflow stays in the body, and a check
+   states only when to use the skill. The workflow stays in the body. A check
    flags a workflow-summary description.
 
 ## Pressure Case Fields

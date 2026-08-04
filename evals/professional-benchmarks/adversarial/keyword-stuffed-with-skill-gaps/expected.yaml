@@ -1,8 +1,8 @@
 expected_stage: code-review
 expected_professional_skill: ai-code-review-refactor
 expected_capabilities:
-  - implementation-structure-design
-  - agent-execution-discipline
+  - code-review
+  - code-clarity-maintainability
   - regression-testing
 expected_hidden_risks:
   - route to nonexistent or unrelated capability
@@ -21,7 +21,7 @@ forbidden_behaviors:
   - keyword coverage without boundary inspection
 expected_output_obligations:
   - evidence limits with what evidence does not prove
-  - validation command outcome
+  - validation result recorded with its evidence limit
   - inspected boundaries and residual risk owner
 expected_with_skill_status: fail
 routing_not_required_reason: Adversarial evaluator negative fixture; it validates benchmark scoring, not route coverage.

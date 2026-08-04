@@ -1,91 +1,38 @@
 # Logging Selection Criteria
 
-Load this reference when a logging design needs detailed taxonomy, level-by-level policy, structured field candidates, redaction allow/deny lists, or layer placement guidance. Do not load it for simple no-log decisions or one local log where the main `SKILL.md` output contract is sufficient.
+Owner: `logging-design-gate`. In task mode, `task-agent` implements an accepted logging decision; in review mode, `review-agent` independently inspects the actual diff and runs only non-modifying checks. Load this reference only when purpose, placement, level, fields, redaction, correlation, or signal choice is unresolved.
 
-## Log Taxonomy
+## Purpose Before Signal
 
-- **Diagnostic log**: used for troubleshooting and execution reconstruction. Focus on operation, error_code, duration_ms, dependency, attempt, retryable, fallback_used, and correlation identifiers.
-- **Audit log**: used for compliance or security audit. Focus on actor, action, resource, decision, timestamp, result, and integrity controls. It must not be casually deleted or mixed with transient diagnostics.
-- **Business event log**: used for key domain state changes such as order_cancelled or payment_failed. Focus on domain_event, entity_type, entity_id_hash, state_from, state_to, result, and business-safe context.
-- **Security log**: used for denials, authorization failures, abnormal access, and policy matches. Focus on policy, reason, category, actor_hash, resource_type, and result. Never log raw secret-bearing input.
-- **Access log**: used at request entry. Focus on method, route_template, status_class, latency_ms, request_id, and user_or_tenant hash where allowed. Never log raw query, raw body, or authorization material.
-- **Integration/dependency log**: used for external dependency calls. Focus on dependency, operation, latency_ms, status, retryable, attempt, timeout, circuit_state, and correlation identifiers.
-- **Lifecycle log**: used for startup, shutdown, configuration loading, migration, and job scheduling. Focus on version, environment, config fingerprint, migration id, scheduler state, and readiness result.
+| Question to answer | Candidate signal and fields | Reject or escalate when |
+| --- | --- | --- |
+| Why did one operation fail or degrade? | Diagnostic log or trace with operation, safe error category/code, dependency, attempt, duration, fallback, and correlation. | The event cannot distinguish failure stages or would expose payloads/identifiers. |
+| Who performed a governed action and what was decided? | Audit record with actor, scoped subject/resource, action, decision/reason, policy/version, purpose, and integrity/retention owner. | It is mixed into disposable diagnostics or the privileged actor is obscured. |
+| Did a security boundary deny or detect abuse? | Security/audit signal with policy/category, actor/resource scope, result, request/run context, and safe investigation link. | Raw hostile input, secrets, or sensitive identity would be retained. |
+| Which business lifecycle fact changed? | Domain event or business-safe record with fact, entity type/scoped identifier, state transition, result, and owner. | A diagnostic log is being used as the authoritative business ledger. |
+| Is an external dependency or worker healthy and recoverable? | Dependency/worker signal with operation, latency, timeout/failure class, retry/terminal state, queue age/attempt, and correlation. | Per-item volume, unbounded IDs, or duplicate signals overwhelm the diagnostic value. |
+| Did process/config/migration/readiness lifecycle change? | Lifecycle event with version/config fingerprint or migration ID, readiness/result, environment, and safe cause. | Startup success is logged before the actual readiness boundary. |
 
-## Level Policy
+Use access logs only when request entry, latency, or status is an owned diagnostic or operational need.
+Use route templates and bounded classes.
+Do not log raw URLs, queries, bodies, credentials, or personal data.
 
-- **DEBUG**: low-frequency deep diagnostics; production default off or sampled; never the only signal needed for incident diagnosis.
-- **INFO**: key lifecycle events, important business state changes, and important successful transitions; not every function entry or cache miss.
-- **WARN**: recoverable anomaly, retry, fallback, degradation, stale dependency state, or unexpected condition that did not make the operation fail; include retryable when relevant.
-- **ERROR**: request, job, command, or operation finally failed with user impact, data impact, lost side effect, or required investigation. Expected validation errors and ordinary 404s are not ERROR.
-- **CRITICAL/FATAL**: process cannot continue, startup is unrecoverable, data may be corrupted, or a required dependency is unavailable with no degradation path.
+## Placement, Level, And Data Safety
 
-## Structured Fields
+- Place request identity at entry, workflow/final outcome in the application owner, dependency details in the adapter, and job delivery state in the worker. Pure domain code returns decisions/events rather than importing infrastructure logging.
+- Choose severity from final operation consequence and current platform policy. Expected validation/not-found behavior is not automatically an error; retries/fallbacks are not automatically warnings; fatal/critical is reserved for an actually unrecoverable process or integrity condition.
+- Allowlist stable fields. Omit or transform passwords, tokens, authorization/cookies, keys, signatures, session material, raw URLs/queries/bodies/webhooks/provider payloads, regulated data, and unnecessary PII according to classification and retention policy.
+- Preserve approved trace/request/correlation context across the actual boundary, but keep request, trace, actor, entity, tenant, free-text, and other unbounded values out of metric labels.
+- When frequency or value space is material, estimate volume and cardinality.
+- Choose aggregation, sampling, rate control, shorter retention, a metric, a trace, a test, or no new signal from that evidence.
+- Do not log every occurrence by default.
 
-Prefer structured fields with stable names:
+## Mode-Specific Proof Limits
 
-- timestamp
-- level
-- service
-- environment
-- version
-- trace_id
-- span_id
-- request_id
-- correlation_id
-- operation
-- domain_event
-- entity_type
-- entity_id_hash
-- tenant_id_hash
-- status
-- error_code
-- error_category
-- retryable
-- attempt
-- duration_ms
-- dependency
-- fallback_used
-- degradation_reason
+Task mode proves the final diff emits the intended safe event through mapped tests or runtime capture available in scope. Review mode returns a verdict and reviewed/unreviewed scope without repair. Static source review does not prove runtime emission, sink redaction, sampling, retention, access control, production cardinality, or audit immutability; name the residual owner.
 
-Fields suitable for logs may be too high-cardinality for metric labels. Use route_template, status_class, dependency, error_category, retryable, and operation as metric labels; avoid raw IDs, raw URL, raw query, raw payload, request_id, trace_id, entity_id_hash, tenant_id_hash, and arbitrary user input as metric labels.
-
-## Redaction And Forbidden Inputs
-
-Forbidden in production logs:
-
-- password
-- token
-- access_token
-- refresh_token
-- authorization header
-- cookie
-- api key
-- secret
-- private key
-- full credit card
-- raw request body
-- raw webhook body
-- raw URL query
-- signature, code, or session identifiers
-- PII unless hashed, explicitly allowed, and retention-reviewed
-
-Allowed with care:
-
-- hashed user, entity, or tenant id
-- route template
-- status class
-- error code or category
-- dependency name
-- duration
-- attempt count
-- policy or denial category
-
-## Placement Policy
-
-- **Entry/controller**: access logs, request identity, route template, status_class, latency_ms, request_id, and validation boundary outcomes.
-- **Domain**: avoid infrastructure logging in pure domain objects. Emit domain events or return decisions that application services can log.
-- **Application service**: workflow decisions, domain event publication, transaction boundary results, fallback decisions, and final operation result.
-- **Adapter/infrastructure**: dependency latency, timeout, retryable status, circuit state, translated error categories, and safe provider metadata.
-- **Queue/worker**: job id hash, attempt, idempotency key hash, lag bucket, retry/final failure, DLQ decision, and correlation propagation.
-- **Security boundary**: denial category, policy, actor/resource hash, result, and audit handoff without raw secret-bearing input.
+Route implementation mechanics to `logging-error-handling` and cross-signal telemetry to `observability`.
+Route secret classification or configuration to `secret-configuration-security`.
+Route release-blocking evidence to the selected Professional owner.
+Reject function-entry INFO spam and default ERROR logs for validation or ordinary absence.
+Reject audit mixed with transient diagnostics, raw payload logging, high-cardinality labels, and logs in pure domain objects.
