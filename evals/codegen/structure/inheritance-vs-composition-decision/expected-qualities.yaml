@@ -7,23 +7,11 @@ focus:
   - delegation
   - contract tests
 route_hints:
-  skills:
-    - backend-change-builder
-    - architecture-impact-reviewer
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
-    - implementation-structure-design
-    - code-clarity-maintainability
-    - refactoring
-    - unit-testing
-    - contract-testing
-  domain_extensions: []
-  quality_gates:
-    - architecture gate
-    - implementation gate
-    - AI review gate
-    - test gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Inheritance is rejected when two payment processors share code but are not a substitutable taxonomy.
   - Shared behavior uses composition, delegation, or a private technical helper instead of an abstract base class for reuse only.

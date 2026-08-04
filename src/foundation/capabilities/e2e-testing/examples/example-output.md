@@ -1,34 +1,26 @@
 # Example Output
 
 ```markdown
-## E2E Test Plan
+## E2E Journey Decision
 
-Journey: Admin disables a project member.
+Journey: organization admin disables an active project member.
+Why E2E: the risk crosses browser permission state, service authorization, persistence, session revocation, and audit delivery.
 
-Role: Organization admin.
+Owned setup:
+- Create a run-scoped organization, admin, member, and project.
+- Observe setup completion through the authoritative API before opening the journey.
 
-Source evidence:
-- Current member-management route and existing E2E folder inspected.
-- Prior flaky member test rejected because CI artifact is stale after route rename.
+Oracles:
+- The admin sees the member become disabled.
+- The disabled member loses project access after session refresh.
+- The member record remains disabled and the audit entry names the admin actor.
+- No unrelated member or project state changes.
 
-Steps:
-- Sign in as admin.
-- Open project settings from the project detail page.
-- Disable one active member.
-- Confirm destructive action in modal.
+Readiness and cleanup:
+- Wait on the authoritative disabled state with bounded polling derived from the revocation behavior.
+- Revoke sessions and delete run-owned records after pass, failure, timeout, or cancellation.
 
-Assertions:
-- Member status changes to disabled.
-- Disabled member cannot access the project after refresh.
-- Audit entry appears with admin actor.
-
-Flake controls:
-- Unique project per run.
-- Stable data-testid selectors.
-- Trace and screenshot on failure.
-
-Validation evidence:
-- Command: `npx playwright test tests/e2e/member-disable.spec.ts`
-- Exit code: not run yet; owner must run before release.
-- Evidence limit: does not prove all roles, browsers, or production email delivery.
+Evidence boundary:
+- The accepted scoped journey is not yet run; the task owner must record the selected environment/browser result before the release verdict.
+- Other roles, browser/device combinations, and production notification delivery remain outside this proof.
 ```

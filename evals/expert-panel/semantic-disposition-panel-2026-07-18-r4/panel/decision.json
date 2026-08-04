@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-decision",
+  "review_id": "semantic-disposition-panel-2026-07-18-r4",
+  "decided_on": "2026-07-18",
+  "decision_method": "three-independent-experts-majority",
+  "source_fingerprints": {
+    "audit": "e8bb8a1b735009804e7a23f6bf714a5ae091ffaf9c8f459bab6d29e9fc19c22e",
+    "reference_candidates": "64e8e891cdaf7404edd8458b5481d12ef976c3595ff22b4f9a981c1f5ac88cdf",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "67d81a815b4f960a9a11087d77a8ed7b4b1417a474659d1658741e6497eed53b",
+    "root_candidates": "72f6dc5d3eb878357da9f82b180f4f1f02c86178002aaf83445958e5547c6221",
+    "root_context": "4093dbe295b7b09469eb7760ed31332dadc6df93349dfb3e29eb7b5e998b7ad6",
+    "root_detector": "0d8c01715fb11258126a474356e03b944ddb720f358163915e6ecf912498c33c",
+    "root_source": "638ae7cd116378ef94c329299a51375bd912f0a9e1cacf1a4eb20bd55bf42926"
+  },
+  "panel_contract": {
+    "decision_method": "three-independent-experts-majority",
+    "required_voters": 3,
+    "abstentions_allowed": false,
+    "minimum_winning_votes": 2,
+    "independent_ballots": true,
+    "required_target_count": 2,
+    "required_axis_target_counts": {
+      "root": 2,
+      "reference": 0
+    },
+    "allowed_dispositions": [
+      "false-positive",
+      "rewrite",
+      "time-bounded-exception",
+      "valid-contextual-rule"
+    ]
+  },
+  "packet": {
+    "path": "evals/expert-panel/semantic-disposition-panel-2026-07-18-r4/packet.json",
+    "sha256": "46c08601aa2b2c32d374d46681087b6d4ce7584ce4b4ea12205aa4850db25938"
+  },
+  "voters": [
+    {
+      "voter_id": "semantic-r4-professional-reviewer",
+      "agent_id": "semantic-r4-professional-agent",
+      "role": "senior-professional-semantic-reviewer",
+      "expertise": [
+        "professional decision semantics and boundary precision"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r4-professional-reviewer.json",
+      "ballot_sha256": "04a99ef7ba1c7fccf50ea475220aee7dd86ecdd077095e6b62d3ca2242ad52b3"
+    },
+    {
+      "voter_id": "semantic-r4-readability-reviewer",
+      "agent_id": "semantic-r4-readability-agent",
+      "role": "senior-ai-readability-reviewer",
+      "expertise": [
+        "AI readability and front-loaded actionability review"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r4-readability-reviewer.json",
+      "ballot_sha256": "35dc1dae09a50bed5b9e014379c83785132cb895676ee585148eea915297ea00"
+    },
+    {
+      "voter_id": "semantic-r4-verification-reviewer",
+      "agent_id": "semantic-r4-verification-agent",
+      "role": "senior-verification-semantic-reviewer",
+      "expertise": [
+        "verification evidence and implementation boundary semantics"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r4-verification-reviewer.json",
+      "ballot_sha256": "12110a97d54abc834d3e9a180dd5cc867da101f30f60dd931eb7950432263bad"
+    }
+  ],
+  "semantic_decisions": [
+    {
+      "target_id": "root:45030033706eceaef63f523be6dca6d944523e15ff14bef0ee176a9acd585d42",
+      "axis": "root",
+      "candidate_id": "45030033706eceaef63f523be6dca6d944523e15ff14bef0ee176a9acd585d42",
+      "candidate_fingerprint": "2ab1f7ed61623e6f3282a3e9f09c2b723d837ad8d1232d7cfa253b3ce660dbe4",
+      "winning_disposition": "valid-contextual-rule",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 1,
+        "rewrite": 0,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 2
+      },
+      "supporting_voters": [
+        "semantic-r4-professional-reviewer",
+        "semantic-r4-readability-reviewer"
+      ],
+      "dissenting_voters": [
+        "semantic-r4-verification-reviewer"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "semantic-r4-professional-reviewer",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The requirement governs only comparative claims inside a Skill whose trigger requires materially different feasible options. Comparing the selected approach with the strongest feasible alternative is minimum evidence for relative claims; it does not prescribe an implementation mechanism, and the Root excludes cases where no material alternative remains.",
+          "authority_or_condition": "Applies only when materially different feasible solutions remain and a comparative claim could affect selection; Registry triggers, hard-constraint screening, and Stop Conditions remain authoritative.",
+          "decision_owner": "foundation-skill-maintainers",
+          "mitigation": "Retain the feasible-alternative qualifier, hard-constraint veto, specialist-routing boundaries, evidence-limit recording, and reopening conditions; re-review if the rule becomes unconditional or mechanism-specific.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r4-readability-reviewer",
+          "disposition": "valid-contextual-rule",
+          "rationale": "The sentence genuinely requires comparative evidence, but it is bounded by the Registry Trigger to claims of relative superiority among feasible solutions. The Skill and its Reference reject manufactured alternatives for trivial choices and require only a strongest feasible alternative capable of changing the decision, so the rule is readable, necessary, and professionally scoped.",
+          "authority_or_condition": "Applies when solution-optimality-evaluation is routed for a simpler, faster, cheaper, safer, or more future-proof claim and a material feasible alternative can change the decision.",
+          "decision_owner": "changeforge-maintainers",
+          "mitigation": "Keep the comparison limited to decision-changing feasible alternatives, do not manufacture candidates when constraints leave no material choice, and record any comparative proof limit.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r4-verification-reviewer",
+          "disposition": "false-positive",
+          "rationale": "The detector family does not apply: this sentence is a conditional evidentiary comparison trigger, not an unconditional implementation mechanism. The surrounding Use when boundary activates only for comparative optimality claims, while specialist routing and hard-constraint screening prevent mechanism lock-in.",
+          "authority_or_condition": "Registry Trigger Use when: feasible options materially differ or an optimality claim requires comparison; specialist-owned selection questions remain routed out.",
+          "decision_owner": "solution-optimality-evaluation skill owner",
+          "mitigation": "Keep the trigger scoped to feasible alternatives, preserve specialist anti-routes, and retain strongest-alternative regression checks; no source rewrite is required.",
+          "review_after": null
+        }
+      ]
+    },
+    {
+      "target_id": "root:c31523a7e17fb3768e10440eb161e231f1e5a322a1671972bf68033dbf1d9dbb",
+      "axis": "root",
+      "candidate_id": "c31523a7e17fb3768e10440eb161e231f1e5a322a1671972bf68033dbf1d9dbb",
+      "candidate_fingerprint": "479ef79250c6e6bb59e0b6cc8c624e15268c11aea62af8463abb81606bf95744",
+      "winning_disposition": "false-positive",
+      "winning_votes": 2,
+      "vote_counts": {
+        "false-positive": 2,
+        "rewrite": 1,
+        "time-bounded-exception": 0,
+        "valid-contextual-rule": 0
+      },
+      "supporting_voters": [
+        "semantic-r4-readability-reviewer",
+        "semantic-r4-verification-reviewer"
+      ],
+      "dissenting_voters": [
+        "semantic-r4-professional-reviewer"
+      ],
+      "ballot_rationales": [
+        {
+          "voter_id": "semantic-r4-professional-reviewer",
+          "disposition": "rewrite",
+          "rationale": "One or more known effects imposes a minimum known-category cardinality even though the next rule and indexed Reference admit an unknown effect. A candidate whose behavior is wholly unknown must remain classifiable as unknown and blocked, rather than being forced into an unsupported known class; the taxonomy is sound, but this boundary wording must change.",
+          "authority_or_condition": "The active Profile, workspace scope, Task Contract, command behavior, repository guidance, and adjacent unknown-effect rule jointly determine execution; an unknown-only classification must remain representable and fail closed.",
+          "decision_owner": "foundation-skill-maintainers",
+          "mitigation": "Rewrite the rule to classify every known effect while recording unknown separately, then preserve planned, blocked, or unrun handling whenever capability, authority, or effects remain unresolved.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r4-readability-reviewer",
+          "disposition": "false-positive",
+          "rationale": "One or more describes a multi-label effect taxonomy rather than a fixed duration, operational threshold, retry count, response status, or pass gate. The neighboring rule keeps unknown effects separate, and subsequent rules derive capability and authority from the actual classification, so the detector family does not apply to the complete context.",
+          "authority_or_condition": "Within targeted-validation-selection, after candidate checks are identified and before each check is compared with active-Profile capability and Task Contract authority; unknown effects remain a separate state.",
+          "decision_owner": "changeforge-maintainers",
+          "mitigation": "Retain the multi-label taxonomy and explicit unknown state; re-triage if a future edit introduces a hard-coded duration, retry limit, pass threshold, response status, or quota.",
+          "review_after": null
+        },
+        {
+          "voter_id": "semantic-r4-verification-reviewer",
+          "disposition": "false-positive",
+          "rationale": "The detector family does not apply: one or more describes a non-exclusive effect-label set, not a fixed duration, pass threshold, or status boundary. Unknown remains separate, and execution still depends on Profile capability, workspace scope, and Task Contract authority.",
+          "authority_or_condition": "Targeted validation classifies each candidate from behavior and task context; known effects may co-occur, unknown is separate, and execution requires current Profile and Task Contract authority.",
+          "decision_owner": "targeted-validation-selection skill owner",
+          "mitigation": "Retain multi-label effect classification and the explicit unknown, authority, and no-execution safeguards; keep regression tests for the full taxonomy and Profile boundaries.",
+          "review_after": null
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "semantic_dispositions": {
+      "false-positive": 1,
+      "rewrite": 0,
+      "time-bounded-exception": 0,
+      "valid-contextual-rule": 1
+    }
+  },
+  "limitations": [
+    "This majority is authoring lifecycle evidence only.",
+    "It cannot satisfy readability or professional-completeness formal attestations.",
+    "The record contains no generated single-source-of-truth disposition entries.",
+    "A rewrite majority requires a source edit before any resolved governance entry can exist."
+  ]
+}

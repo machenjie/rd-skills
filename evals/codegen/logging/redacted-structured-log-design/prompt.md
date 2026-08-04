@@ -6,7 +6,7 @@ Design bounded structured logging for sensitive request handling with redaction 
 
 ## Context
 
-The benchmark verifies that logging-design and security-privacy gates trigger for raw request, token, cookie, auth header, and audit-log surfaces. This is an assertion-backed Codex live benchmark fixture for rd-skills core capability coverage. It is not a runtime content corpus and must not depend on network access, hidden archives, or user-specific state.
+The benchmark verifies that logging-design and security-privacy gates trigger for raw request, token, cookie, auth header, and audit-log surfaces. This is an assertion-backed codegen benchmark fixture for rd-skills core capability coverage. It is not a runtime content corpus and must not depend on network access, hidden archives, or user-specific state.
 
 ## Requirements
 
@@ -33,4 +33,4 @@ The benchmark verifies that logging-design and security-privacy gates trigger fo
 
 ## Completion Evidence
 
-The case passes only when assertions can inspect concrete files such as `CAPABILITY_EVIDENCE.md`, `process-trace.json`, `final.md`, `diff.patch`, or grading metadata and find the required capability evidence.
+The case passes only when assertions can inspect concrete files such as actual source, focused tests, the final diff, or a natural-language `HANDOFF.md` and find the required capability evidence.

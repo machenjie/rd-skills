@@ -1,45 +1,18 @@
 # Clean Checkout Evidence
 
-Use this reference when a project initialization plan needs exact first-checkout proof rather than general scaffold guidance.
+Load this reference when initialization closure depends on proving that bootstrap, build, or tests do not rely on ambient workstation state.
 
-## Required Evidence
+## Evidence Record
 
-- Repository state: branch or commit, package manager, toolchain file, OS/container assumptions, and whether generated artifacts were present before setup.
-- Setup command: one command or ordered commands an engineer can run from a fresh clone.
-- Validation commands: build, lint, format check, tests, secret scan, dependency audit, generated drift check, and docs link check when relevant.
-- Environment placeholders: `.env.example` or equivalent with non-secret placeholders and startup validation for required variables.
-- Proof limits: what local setup does not prove, such as production deployability, cloud permissions, provider credentials, or organization-wide compliance.
-
-## Clean Checkout Ledger
-
-```yaml
-clean_checkout_evidence:
-  workspace_source: fresh clone | temporary copy | existing checkout
-  toolchain:
-    runtime_versions: []
-    package_manager: ""
-    lockfiles: []
-  setup:
-    command: ""
-    exit_code: null
-    duration_or_onboarding_target: ""
-  validation:
-    - command: ""
-      exit_code: null
-      artifact_or_log: ""
-      proves: ""
-      does_not_prove: ""
-  environment:
-    placeholder_files: []
-    startup_config_validation: ""
-    secret_scan: ""
-  residual_risk:
-    owner: ""
-    reason: ""
-```
+- Identify source revision, supported platform or container, toolchain file, package manager, lockfiles, workspace roots, and generated-artifact starting state.
+- Run the documented bootstrap path in a fresh clone or declared clean environment with command, exit status, produced files, external services, and network or credential requirements recorded.
+- Run the task-relevant build, test, lint, format-check, generated-drift, dependency, secret, and documentation checks after the final scaffold change.
+- Verify required config fails clearly when absent and examples contain non-secret placeholders.
+- Name cache, global tool, home-directory, platform, private-registry, provider, and production assumptions that the clean environment did not exercise.
+- Record artifact or concise result paths, not full logs or raw sensitive output.
 
 ## Closure Rules
 
-- Use `not run` rather than `pass` when the command is proposed but not executed.
-- Name artifact or result paths instead of pasting full command output.
-- Re-run setup-relevant validation after changing lockfiles, toolchain files, bootstrap scripts, generated policy, `.env.example`, CI config, or README setup commands.
+- Mark proposed but unexecuted commands as not run.
+- Re-run affected proof after changing toolchains, lockfiles, bootstrap scripts, generated policy, example config, source-of-truth commands, or setup documentation.
+- Treat local clean-checkout success as repository bootstrap evidence, not production deployability, cloud permission, provider availability, organization-wide compliance, or future developer-platform parity.

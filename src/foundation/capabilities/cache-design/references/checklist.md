@@ -1,10 +1,10 @@
-# Cache Design Checklist
+# Cache Design Proof Checklist
 
-- Identify source of truth and confirm cache is only an acceleration or fallback layer.
-- Define cache keys, tenant or permission scope, value shape, and ownership.
-- Define TTL, jitter, invalidation triggers, and stale tolerance.
-- Define stampede protection for hot keys and refresh paths.
-- Define penetration protection for missing or attacker-controlled keys.
-- Define fallback when cache read, cache write, refresh, or source lookup fails.
-- Define observability for hit rate, miss rate, stale serves, evictions, and source load.
-- Test invalidation, permission changes, cache outage, and source overload behavior.
+- Prove the source of truth, cache owner, loss behavior, and accepted stale/fallback outcome.
+- Prove key/value scope covers only dimensions that change representation, including tenant or permission context when applicable.
+- Prove the selected read/write pattern fits actual ownership, atomicity, platform, and failure behavior; cache-aside is one candidate, not the default.
+- When hot-key, synchronized-expiry, restart, or multi-pod load threatens the origin, select and test a topology-appropriate coalescing, lease, refresh, staggering/jitter, stale, warm-up, or rate-control outcome.
+- When attacker-controlled or unbounded misses threaten the origin, select a tested normalization, admission or rate control, bounded negative-cache, or existence-filter control with false-absence recovery.
+- Prove freshness and invalidation against the least-tolerant consumer and actual commit/write path; TTL, purge, versioning, revalidation, or event invalidation are candidates.
+- For reachable failures under the selected cache pattern or topology, test applicable read, write, refresh, eviction, cold-start, stale-serving, source-overload, and regional paths. Record untested triggers and the limits of non-production load evidence.
+- Select hit/miss/stale/eviction/hot-key/cardinality/source-load signals only when they answer an owned operational decision.

@@ -1,0 +1,3 @@
+# Release review scenario
+
+Review an entitlement service rollout. The client retries three times, the gateway retries twice, and the service retries its datastore call three times. On datastore timeout the service returns a day-old cached entitlement, including access that may since have been revoked. The recovery endpoint reads from the same datastore that triggers the outage. Metrics label every series with user and request identifiers, while the alert only says that error rate is high and names no owner, runbook, or operator action. Decide whether the rollout is safe and identify the required proof.

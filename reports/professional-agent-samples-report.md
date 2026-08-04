@@ -1,20 +1,12 @@
-# Professional Agent Samples Evaluation
+# Hookless Professional Agent Samples
 
-- Generated: 2026-07-05T01:24:28.323009+00:00
-- Mode: promoted-only
-- Strict: true
-- Samples checked: 5
-- Warnings: 0
-- Failures: 0
+> Checked-in captured samples only; no fresh agent execution or adoption claim.
 
-| Sample | Promotion | OK | Findings |
-| --- | --- | --- | ---: |
-| `evals/agent-behavior/professional-samples/backend/backend-idor-fix.yaml` | promoted | true | 0 |
-| `evals/agent-behavior/professional-samples/integration/webhook-signature-replay.yaml` | promoted | true | 0 |
-| `evals/agent-behavior/professional-samples/raw/backend-idor-raw-output.yaml` | promoted | true | 0 |
-| `evals/agent-behavior/professional-samples/raw/release-migration-raw-output.yaml` | promoted | true | 0 |
-| `evals/agent-behavior/professional-samples/raw/webhook-signature-replay-raw-output.yaml` | promoted | true | 0 |
+- Samples checked: 2
+- Promoted checked: 2
+- Errors: 0
 
-## Findings
-
-- None
+| Sample | Status | Profile | Primary | Layer 3 | Review |
+|---|---|---|---|---:|---|
+| `backend-idor-fix` | pass | `analysis-agent` | `security-privacy-gate` | 3 | `security-privacy-gate` |
+| `webhook-signature-replay` | pass | `review-agent` | `security-privacy-gate` | 3 | `security-privacy-gate` |

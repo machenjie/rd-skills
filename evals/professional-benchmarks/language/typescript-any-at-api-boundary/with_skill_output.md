@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: frontend-change-builder.
-Selected capabilities: typescript-professional-usage.
+Selected Layer 3 Skills: typescript-professional-usage.
 
 Hidden risks: TypeScript any at API boundary; runtime validation missing for external data; nullable state hidden by cast.
 

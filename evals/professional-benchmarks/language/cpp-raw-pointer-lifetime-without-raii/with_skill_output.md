@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: ai-code-review-refactor.
-Selected capabilities: cpp-professional-usage.
+Selected Layer 3 Skills: cpp-professional-usage.
 
 Hidden risks: C++ raw pointer lifetime without RAII; dangling pointer ownership unclear; sanitizer evidence missing.
 

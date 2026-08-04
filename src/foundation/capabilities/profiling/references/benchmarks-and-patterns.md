@@ -1,48 +1,19 @@
-# Profiling Benchmarks And Patterns
+# Profiling Decision Patterns
 
-Use this reference when `profiling` needs more detail than the main `SKILL.md` can carry efficiently. Keep the body focused on routing, evidence, and gates; use this file for tool selection, benchmark anchors, privacy-safe capture, cost attribution, and graph/memory/execution coupling.
+Load this reference when a symptom and hypothesis leave competing measurement, workload, or bottleneck interpretations. Measurement methods are candidates, not a tool whitelist.
 
-## Tool Selection Matrix
-
-| Bottleneck signal | Preferred evidence | Avoid |
+| Suspected cause | Evidence properties to select | Reject when |
 | --- | --- | --- |
-| CPU-bound service path | CPU flame graph, `perf`, async-profiler, JFR, `pprof`, `py-spy`, or runtime profiler. | Microbenchmark-only proof when request frequency is unknown. |
-| Off-CPU wait or lock contention | Off-CPU flame graph, thread dump, lock-wait profile, queue wait metric, or trace span wait time. | Rewriting CPU code when CPU is idle and p99 is wait-bound. |
-| Allocation or GC pressure | Allocation profile, heap diff, GC log, retained-size report, RSS soak trend. | Tuning heap or GC without reducing allocation or retention. |
-| Query or warehouse cost | `EXPLAIN ANALYZE`, `pg_stat_statements`, slow-query plus span count, scan bytes, partition read, warehouse dry-run. | Dev-data timing or a single slow-query threshold. |
-| Network fan-out | Distributed trace span count, dependency p95/p99, retry count, timeout and circuit metrics. | Aggregated endpoint latency without dependency breakdown. |
-| Frontend rendering | Chrome DevTools performance trace, Lighthouse/field CWV, long-task report, React/Vue profiler. | Fast developer-machine run as proof for median devices. |
-| Cloud unit cost | Billing export joined to route, tenant, job, query, egress, storage, autoscaling, and retry metrics. | Monthly spend total without a runtime driver. |
+| Compute saturation | Samples attribute consumed compute to an owned path under representative work | Idle or wait time dominates the symptom |
+| Wait or contention | Blocking, queue, lock, pool, or scheduler wait is separated from compute | The measurement cannot distinguish waiting from execution |
+| Allocation or retention | Allocation rate, retained growth, lifetime, and owner path are distinguished | A runtime setting change is proposed without locating retained or created work |
+| I/O or query work | Call count, wait, bytes/rows touched, plan/path, cache state, and caller frequency are correlated | One slow-call threshold hides repeated or aggregate work |
+| Network or dependency | Fan-out, payload, retry, timeout, remote wait, and failure/rejection behavior are attributable | Endpoint aggregates hide the responsible dependency |
+| Rendering or interaction | Main-thread, frame, layout/render, device/runtime/network, and content state are comparable | A developer-machine trace is generalized to target users |
+| Unit cost | Runtime driver is joined to the owned request, job, tenant, data, model, storage, or egress unit | Aggregate spend has no changed-path attribution |
 
-## Benchmark Anchors
+The W3C Long Tasks API defines a main-thread task over 50 ms as a long-task signal. Treat this as an external signal definition for profiler interpretation, not a product performance budget, release threshold, or evidence that shorter tasks are acceptable.
 
-- **USE method:** utilization, saturation, and errors decide whether the bottleneck is CPU, disk, network, memory, lock, or pool pressure.
-- **RED method:** rate, errors, and duration keep service-level symptoms tied to user-facing paths.
-- **Amdahl's Law:** optimizing a small fraction of elapsed time cannot materially improve end-to-end latency.
-- **Little's Law:** queue depth and pool size must be consistent with throughput and service time.
-- **Core Web Vitals and Long Tasks:** LCP, INP, CLS, and main-thread tasks over 50ms guide browser profiling.
-- **FinOps unit economics:** cost attribution must reduce spend to request, tenant, job, query scan, storage, egress, or autoscaling unit.
+Choose sampling, tracing, instrumentation, snapshots, plans, or billing attribution according to signal resolution, overhead, authority, and artifact risk. Compare matched workloads and re-profile after the change; a model or benchmark remains a hypothesis until measured.
 
-## Privacy-Safe Capture Pattern
-
-1. State the artifact type: flame graph, heap dump, trace, query plan, billing export, browser trace, or profiler report.
-2. Classify sensitive fields: request body, SQL parameters, user/tenant identifiers, token, cookie, payment data, free text, and secret-like values.
-3. Choose capture boundary: staging mirror, shadow traffic, off-peak production sample, standby replica, or sanitized export.
-4. Redact or normalize before sharing: normalized query text, request ID instead of body, aggregated spans, hashed tenant identifiers, stripped query strings.
-5. Record owner, storage path, retention window, and deletion path for every artifact.
-
-## Graph Memory Execution Coupling
-
-- **Repository graph:** identify route, job, query, rendering path, dependency fan-out, caller frequency, ownership, and sibling hot paths before selecting a profiler.
-- **Project memory:** treat old benchmarks, incident notes, and prior profiling artifacts as leads; accept them only with source date, unchanged graph, and comparable workload.
-- **Execution trajectory:** compare command history, previous validation, generated reports, and final edit time; stale runs cannot close profiling evidence.
-- **Validation broker:** map changed paths to correctness tests, performance reruns, privacy checks, and release gates before handoff.
-
-## Handoff Boundaries
-
-- Use `performance-budgeting` when the measured improvement should become a threshold or release gate.
-- Use `indexing-query-optimization` when the confirmed bottleneck is a SQL/ORM query plan, index, pagination, or scan issue.
-- Use `language-performance-safety` when allocation, GC, event loop, pool lifecycle, unsafe/native, or runtime cleanup owns the fix.
-- Use `concurrency-control` when the confirmed bottleneck is lock contention, hot row, race, worker saturation, or queue ordering.
-- Use `security-privacy-gate` when profiling artifacts can expose sensitive data or tool execution can leak command output.
-- Use `delivery-release-gate` when the fix needs canary, capacity change, rollback trigger, or production restart coordination.
+Proof scope: these patterns do not establish product budgets, production capacity, correctness, security, query or runtime ownership, release safety, or sensitive-artifact compliance. Require fresh evidence from the owning boundary before making those claims.

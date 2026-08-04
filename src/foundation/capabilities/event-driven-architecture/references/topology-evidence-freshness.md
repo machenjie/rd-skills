@@ -1,6 +1,6 @@
 # Topology Evidence Freshness
 
-Load this reference when an event-driven architecture decision depends on repository graph, project memory, generated contracts, execution logs, previous incident notes, or prior validation. Treat those inputs as selectors until they are checked against current source after the final topology edit.
+Load this reference when an event-driven architecture decision depends on repository inspection, prior task evidence, generated contracts, execution logs, previous incident notes, or prior validation. Treat those inputs as selectors until they are checked against current source after the final topology edit.
 
 ## Freshness Record
 
@@ -16,7 +16,7 @@ Record these fields before approving an event flow:
 ## Reconciliation Rules
 
 - A topology graph before a consumer registration, topic binding, schema change, partition-key change, generated contract update, or outbox relay edit cannot prove final architecture safety.
-- Project memory without source/date can suggest a flow candidate, but it cannot approve current consumers, product consistency, or operational ownership.
+- prior task evidence without source/date can suggest a flow candidate, but it cannot approve current consumers, product consistency, or operational ownership.
 - A dashboard or alert check that predates metric name, label, topic, consumer group, or runbook changes cannot prove release readiness.
 - A replay or lag drill proves only the consumers, fixtures, broker configuration, and load level it exercised; name untested production scale and partition skew.
-- Validation must be fresh after the final event architecture edit before handoff claims readiness.
+- Before claiming an event-architecture boundary ready, rerun checks affected by the final producer, consumer, topic or binding, schema, partition key, outbox or relay, delivery policy, or observability edit. Absent a rerun, the claim narrows and evidence remains stale or unrun.

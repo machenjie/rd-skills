@@ -1,0 +1,1 @@
+"""Executable affected-test selector."""

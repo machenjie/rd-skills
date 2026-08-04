@@ -7,24 +7,11 @@ focus:
   - file granularity
   - dependency direction
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
-    - implementation-structure-design
-    - code-clarity-maintainability
-    - refactoring
-    - module-boundary-design
-    - unit-testing
-    - regression-testing
-    - contract-testing
-  domain_extensions: []
-  quality_gates:
-    - architecture gate
-    - implementation gate
-    - AI review gate
-    - test gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Only the tiny private helper with no independent boundary is merged into the owning service.
   - The external adapter/client file remains separate because it owns a side-effect and protocol boundary.

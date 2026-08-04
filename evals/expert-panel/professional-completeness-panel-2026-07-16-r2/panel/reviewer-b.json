@@ -1,0 +1,2944 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.professional-completeness-panel-ballot",
+  "review_id": "professional-completeness-panel-2026-07-16-r2",
+  "created_on": "2026-07-16",
+  "packet_sha256": "3e21417ab616de85bf58c73d58cf79d26811f54786c25ff51cefef16a3d2c322",
+  "source_fingerprints": {
+    "professional_packages": "b3b351239756133a7bbde39d5ca21ba318701fec513de50d3cf94884742c3f53"
+  },
+  "voter": {
+    "voter_id": "reviewer-b",
+    "agent_id": "final-security-reliability-reviewer-b",
+    "role": "senior-security-reliability-professional-rules-reviewer",
+    "expertise": [
+      "security authorization privacy and trust boundaries",
+      "reliability failure recovery transactions concurrency migrations messaging and testing",
+      "professional rules responsibility boundaries and verification evidence"
+    ],
+    "independent_review": true
+  },
+  "professional_votes": [
+    {
+      "skill_id": "acceptance-criteria-builder",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the acceptance-criteria-builder root and 3 indexed references found its registered output—measurable acceptance; non-goals; proof expectations—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "acceptance-standard-definition",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the acceptance-standard-definition root and 3 indexed references found its registered output—acceptance criteria with measurable outcomes evidence and owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "agent-execution-discipline",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the agent-execution-discipline root and 3 indexed references found its registered output—evidence validity decision with invalidated artifacts, surviving proof, proof limits, contradictions, and escalation reason—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "agent-tool-permission-sandbox",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the agent-tool-permission-sandbox root and 1 indexed reference found its registered output—Return a profile and tool-boundary decision: state command risk, authority, side effects, safety controls, host limits, residual risk, and next action—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "ai-code-review-refactor",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the ai-code-review-refactor root and 5 indexed references found its registered output—reviewed files; unreviewed files; findings; residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "ai-product-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the ai-product-extension root and 1 indexed reference found its registered output—AI-specific risks, evaluation, fallback, and observability obligations—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "algorithm-data-structure-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the algorithm-data-structure-selection root and 3 indexed references found its registered output—Algorithm Decision: problem shape, input scale, selected structure, time/space bounds, memory budget, streaming/chunking choice, alternatives, benchmarks, and scale risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "api-contract-design",
+      "decision": "requires-professional-correction",
+      "reason_code": "erroneous-professional-rule",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "defect-found",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "src/foundation/capabilities/api-contract-design/references/api-style-and-semantics.md:32-44 presents context-dependent HTTP choices as mandates—such as always returning Location with 201, using 422 for business rules, and always adding Retry-After to 429—so the package can prescribe a contract unsupported by current consumer or protocol evidence."
+    },
+    {
+      "skill_id": "architecture-enforcement-tooling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the architecture-enforcement-tooling root and 3 indexed references found its registered output—Return an Architecture Enforcement Plan: list rules, tool and CI choices, failure examples, generated-code exceptions, migration, ownership, and residual gaps—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "architecture-impact-reviewer",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the architecture-impact-reviewer root and 4 indexed references found its registered output—placement decision; architecture verdict; structural risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "architecture-style-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the architecture-style-selection root and 3 indexed references found its registered output—architecture style decision with forces tradeoffs and constraints—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "architecture-tradeoff-analysis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the architecture-tradeoff-analysis root and 3 indexed references found its registered output—architecture decision comparison with bounded scope, hard constraints, feasible options, material consequences, reversibility and exit path, falsifiable decisive evidence, and owned assumption-change review trigger—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "async-job-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the async-job-design root and 3 indexed references found its registered output—async-job decision with identity and authority, durable acceptance, lifecycle, concurrency, retry and cancellation, progress, overload and terminal recovery, failure evidence, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "authentication-authorization",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the authentication-authorization root and 3 indexed references found its registered output—authenticated-subject authority and handoff contract with trusted derivation, actor provenance, propagation boundaries, downstream freshness, authorization context, negative proof, unverified paths, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "authentication-security",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the authentication-security root and 3 indexed references found its registered output—authentication security review with controls failure cases and audits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "backend-change-builder",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the backend-change-builder root and 6 indexed references found its registered output—changed backend invariants and boundaries; authorization consistency delivery and recovery decisions; post-edit validation result and proof limits; residual operational risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "backup-recovery",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the backup-recovery root and 3 indexed references found its registered output—Return a recoverable-state decision: state objectives, artifact lineage, dependency order, restore validation, evidence limits, and residual owner—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "bigdata-product-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the bigdata-product-extension root and 1 indexed reference found its registered output—big-data correctness, performance, replay, and operability obligations—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "build-tool-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the build-tool-professional-usage root and 3 indexed references found its registered output—build decision with graph edges, source and generated authority, input and toolchain identity, cache and parallel correctness, artifact comparison, failure evidence, and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "business-invariant-analysis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the business-invariant-analysis root and 1 indexed reference found its registered output—vocabulary, owners, invariants, transitions, enforcement points, bypass paths, golden cases, source evidence, open questions, validation map, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "business-rule-extraction",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the business-rule-extraction root and 3 indexed references found its registered output—normalized business-rule set with source and authority, conditions, outcomes, invariants, precedence, precision, exceptions, enforcement map, falsifying cases, and unresolved terms—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "cache-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the cache-design root and 3 indexed references found its registered output—cache strategy with keys freshness invalidation and fallback behavior—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "change-documentation-gate",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the change-documentation-gate root and 4 indexed references found its registered output—documentation changes; documentation verdict; residual documentation debt—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "change-intake-compiler",
+      "decision": "requires-professional-correction",
+      "reason_code": "erroneous-professional-rule",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "src/professional-skills/change-intake-compiler/references/change-request-template.md:30 says every assumption must be validated before implementation, contradicting SKILL.md:32, which explicitly permits bounded reversible assumptions that cannot alter public behavior, data, authorization, or domain meaning."
+    },
+    {
+      "skill_id": "ci-cd",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the ci-cd root and 3 indexed references found its registered output—State enforcement, artifact identity, runner trust, affected work, mutation and rollback boundaries, provider proof, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "cleanup-deletion-governance",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the cleanup-deletion-governance root and 3 indexed references found its registered output—deletion decision with bounded unit, consumer and state evidence, exit condition, ordered cleanup, rollback or forward-repair limits, post-mutation proof, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "cli-daemon-interface-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the cli-daemon-interface-design root and 3 indexed references found its registered output—Return a CLI or daemon decision: define command model, config precedence, output, exits, dry-run, signals, lifecycle, daemon behavior, and tests—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "code-clarity-maintainability",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the code-clarity-maintainability root and 2 indexed references found its registered output—code-clarity decision with obscured path preserved obligations selected move rejected simplification public-behavior proof evidence limits and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "code-element-professionalism",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the code-element-professionalism root and 3 indexed references found its registered output—local code-element decision with affected variable expression or statement semantic risk fix direction focused proof routed boundary evidence limits and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "code-review",
+      "decision": "requires-professional-correction",
+      "reason_code": "erroneous-professional-rule",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full root, all three indexed References, and registry-adjacency review found the prior fixed-severity rule repaired, but finding-taxonomy.md:7-8 still directs reviewers to obsolete OWASP ASVS v4, OWASP Top 10 2021, and CWE Top 25 2024 baselines even though the current official editions are ASVS 5.0.0, Top 10 2025, and CWE Top 25 2025; the package therefore retains misleading current security-review rules."
+    },
+    {
+      "skill_id": "concurrency-control",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the concurrency-control root and 3 indexed references found its registered output—concurrency plan with critical sections locks conflicts and tests, evidence, and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "configuration-runtime-policy",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the configuration-runtime-policy root and 3 indexed references found its registered output—Return a Configuration Policy: define scope, schema, defaults, fail-fast validation, flag lifecycle, kill/runtime-switch rationale, test matrix, cleanup owner, rollout, rollback, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "consumer-impact-analysis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the consumer-impact-analysis root and 3 indexed references found its registered output—Return a Consumer Impact Report: changed contracts, consumers, compatibility, migration, deprecation, telemetry, rollout, rollback, tests, docs, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "containerization",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the containerization root and 3 indexed references found its registered output—Return a container decision: define build/runtime boundary, artifact identity, privilege, filesystem, process, probes, validation, rollback, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "contract-testing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the contract-testing root and 3 indexed references found its registered output—provider-consumer compatibility decision with covered versions, semantic expectations, executable proof, freshness, and explicit non-proof boundaries—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "controller-api-implementation",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the controller-api-implementation root and 3 indexed references found its registered output—controller implementation decision with transport parsing, validation handoff, identity provenance, application boundary, contract response and error mapping, resource bounds, and focused evidence—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "cpp-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the cpp-professional-usage root and 1 indexed reference found its registered output—C C++ safety decision with ownership lifetime undefined behavior exception concurrency ABI FFI target-build risks and specialist routes—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "data-api-contract-changer",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the data-api-contract-changer root and 4 indexed references found its registered output—contract transition; consumer impact; compatibility evidence—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "data-format-contract-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the data-format-contract-usage root and 3 indexed references found its registered output—data-format decision with effective dialect, semantic states, evolution constraints, mixed-version evidence, resource bounds, canonicalization, generated lineage, proof limits, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "data-middleware-change-builder",
+      "decision": "requires-professional-correction",
+      "reason_code": "generic-knowledge-pollution",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "defect-found",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "src/professional-skills/data-middleware-change-builder/SKILL.md:36 and :58, reinforced by references/checklist.md:7-13, require cache invalidation, queue replay and DLQ, search cutover, migration batching, and observability together instead of selecting only mechanisms triggered by the actual database, cache, queue, or search boundary."
+    },
+    {
+      "skill_id": "data-migration-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the data-migration-design root and 3 indexed references found its registered output—migration decision with source and target state, compatibility sequence, writer and backfill coordination, resumability, validation evidence, rollback limits, completion condition, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "data-model-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the data-model-design root and 3 indexed references found its registered output—Return an authoritative data-model decision: define identity, relationships, ownership, lifecycle, invariants, enforcement, evolution constraints, evidence, and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "data-side-effect-flow-tracing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the data-side-effect-flow-tracing root and 3 indexed references found its registered output—side-effect flow with authoritative inputs, mutations and effects, order and commit boundaries, repeat and unknown outcomes, failure and cleanup paths, evidence limits, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "degradation-circuit-breaking",
+      "decision": "requires-professional-correction",
+      "reason_code": "generic-knowledge-pollution",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "defect-found",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "src/foundation/capabilities/degradation-circuit-breaking/SKILL.md:27 and :37-39 require bulkhead, retry, fallback, breaker, probes, and recovery together even though the Skill is selected for any one timeout, fallback, bulkhead, or circuit decision; the package therefore stacks unrelated resilience mechanisms without dependency-specific evidence."
+    },
+    {
+      "skill_id": "delivery-release-gate",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the delivery-release-gate root and 4 indexed references found its registered output—release plan; release artifact; go/no-go verdict—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "dependency-vulnerability-scanning",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the dependency-vulnerability-scanning root and 3 indexed references found its registered output—Return a dependency-risk decision: state graph delta, reachability, execution origin, license evidence, remediation, bounded exceptions, and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "dependency-wiring-lifecycle",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the dependency-wiring-lifecycle root and 3 indexed references found its registered output—dependency-wiring decision with composition authority, graph direction, lifetime and context scope, reusable-resource ownership, startup and shutdown behavior, override fidelity, evidence limits, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "design-pattern-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the design-pattern-selection root and 1 indexed reference found its registered output—pattern decision with current force selected or rejected relationship simpler alternative lifecycle effect and contract obligations specialist routes proof limits and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "design-system-rules",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the design-system-rules root and 3 indexed references found its registered output—design-system decision with semantic intent, token and component mapping, variant and state contract, responsive and accessibility behavior, bounded exceptions, validation evidence, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "documentation-generation",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the documentation-generation root and 3 indexed references found its registered output—documentation update plan with affected docs audience and verification—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "domain-event-modeling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the domain-event-modeling root and 3 indexed references found its registered output—domain-event decision with fact meaning, producer and commit boundary, subject and payload contract, identity and ordering, compatibility, consumer responsibilities, failure evidence, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "domain-impact-modeler",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the domain-impact-modeler root and 4 indexed references found its registered output—owning module; domain invariants; rejected locations—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "domain-logic-implementation",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the domain-logic-implementation root and 3 indexed references found its registered output—Return a domain-rule contract: state authority, invariants, transitions, calculations, typed outcomes, bypasses, evolution defenses, evidence limits, and consistency owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "domain-object-identification",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the domain-object-identification root and 3 indexed references found its registered output—domain object inventory with ownership identity lifecycle and relationships—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "dto-schema-design",
+      "decision": "requires-professional-correction",
+      "reason_code": "erroneous-professional-rule",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "src/foundation/capabilities/dto-schema-design/SKILL.md:25 unconditionally rejects unknown request fields and :28 assigns naming conventions by serialization technology; both are contract-specific compatibility choices, so applying them without consumer and evolution evidence can break intentionally tolerant schemas."
+    },
+    {
+      "skill_id": "e2e-testing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the e2e-testing root and 3 indexed references found its registered output—assembled-journey proof plan with selected paths, owned data, semantic oracles, cleanup, flake handling, environment coverage, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "engineering-artifact-review",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full root, the indexed review checklist, and registry-adjacency review found the prior omission repaired: the checklist now covers every delegated Engineering Brief, Task Plan, acceptance, contract, migration, and release-artifact decision, keeps implementation-diff review outside scope, and requires owner, failure-boundary, validation, rollback, and residual-risk evidence."
+    },
+    {
+      "skill_id": "engineering-change-analysis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the engineering-change-analysis root and 7 indexed references found its registered output—implementation-preparation result defined by references/implementation-preparation.md; diagnosis-only result defined by references/diagnosis-only.md; source-backed-answer result defined by references/source-backed-answer.md—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "error-code-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the error-code-design root and 3 indexed references found its registered output—error contract decision with stable identity, classification, safe detail, retry and remediation meaning, boundary mapping, compatibility, consumer evidence, proof limits, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "event-driven-architecture",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the event-driven-architecture root and 3 indexed references found its registered output—event architecture decision with event meaning, topology, consistency boundary, delivery identity and ordering, replay and backpressure, compatibility, failure evidence, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "experience-impact-modeler",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the experience-impact-modeler root and 4 indexed references found its registered output—flow evidence; affected states; experience constraints—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "extensibility-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the extensibility-design root and 3 indexed references found its registered output—extensibility decision with variation evidence, narrow contract, authority and isolation, lifecycle and compatibility, failure containment, observability, retirement condition, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "failure-contract-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the failure-contract-design root and 3 indexed references found its registered output—Failure Contract with stable taxonomy, boundary translation, retryable or terminal meaning, partial or degraded outcomes, safe external and internal representations, preserved cause, negative-path evidence, specialist routes, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "failure-diagnosis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the failure-diagnosis root and 3 indexed references found its registered output—bounded diagnosis with symptoms, timeline, evidence provenance, causal hypotheses, discriminating observations, verified or provisional cause, reproduction or equivalent proof, corrective rationale, proof limits, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "file-storage-processing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the file-storage-processing root and 3 indexed references found its registered output—Return a file-storage decision: define classes, states, layout, access, scanning, transfer, processing, lifecycle, cleanup, observability, and tests—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "form-validation-design",
+      "decision": "requires-professional-correction",
+      "reason_code": "erroneous-professional-rule",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "src/foundation/capabilities/form-validation-design/references/checklist.md:11 mandates CSRF or session protection for every browser mutation form, contradicting SKILL.md:28's correct ambient-credential condition and misdirecting token-bound or otherwise non-ambient request-integrity designs."
+    },
+    {
+      "skill_id": "frontend-api-integration",
+      "decision": "requires-professional-correction",
+      "reason_code": "generic-knowledge-pollution",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "defect-found",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "src/foundation/capabilities/frontend-api-integration/references/checklist.md:8-10 imposes an exhaustive HTTP status matrix and library-shaped staleTime and gcTime controls even when the current frontend contract, transport, or cache implementation does not expose those concepts."
+    },
+    {
+      "skill_id": "frontend-change-builder",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the frontend-change-builder root and 4 indexed references found its registered output—changed interaction and state boundaries; accessibility and failure-state evidence; post-edit validation result; residual UX risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "frontend-testing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the frontend-testing root and 3 indexed references found its registered output—Return a frontend-test decision: state behaviors, interactions, oracles, boundaries, fixtures, cleanup, accessibility, flake controls, evidence, and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "git-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the git-professional-usage root and 3 indexed references found its registered output—version-control decision with repository state, ownership boundary, semantic conflict resolution, bounded history mutation, coherent change grouping, generated and nested handling, recovery evidence, and residual risks—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "go-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the go-professional-usage root and 1 indexed reference found its registered output—Go semantic decision with context lineage goroutine and channel ownership memory-model boundary error identity interface and zero-value behavior resource lifecycle version assumptions proof limits and specialist routes—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "high-risk-design-review",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the high-risk-design-review root and 1 indexed reference found its registered output—design findings; reviewed scope; residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "i18n-timezone-money-safety",
+      "decision": "requires-professional-correction",
+      "reason_code": "erroneous-professional-rule",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "src/foundation/capabilities/i18n-timezone-money-safety/references/checklist.md:9 requires ISO 4217 currency for every money representation, excluding legitimate contract-owned non-ISO monetary units; this overrides SKILL.md:27's instruction to derive currency identity and precision from the current business contract."
+    },
+    {
+      "skill_id": "idempotency-retry-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the idempotency-retry-design root and 3 indexed references found its registered output—operation identity and retry contract with record/effect coordination, crash boundaries, concurrent states, unknown and late replay behavior, aggregate budget, and owned terminal resolution—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "implementation-structure-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the implementation-structure-design root and 2 indexed references found its registered output—Implementation placement decision with inspected reuse candidates, chosen owner and location, change reason and lifecycle, visibility, co-location/extraction or split/merge rationale, imports and public surface, tests/fixtures, generated-source handling, and residual unknowns.—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "indexing-query-optimization",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the indexing-query-optimization root and 3 indexed references found its registered output—query optimization decision with beneficiary query, plan and distribution evidence, index or query rationale, pagination semantics, write and lifecycle cost, rollout comparison, proof limits, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "information-architecture",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the information-architecture root and 1 indexed reference found its registered output—information-architecture decision with task grouping labels canonical ownership findability visibility lifecycle handoffs proof limits and specialist routes—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "input-validation",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the input-validation root and 3 indexed references found its registered output—input-validation decision with source authority, canonical representation, structural and resource bounds, state constraints, writable fields, rejection semantics, external-response checks, and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "integration-change-builder",
+      "decision": "requires-professional-correction",
+      "reason_code": "erroneous-professional-rule",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "defect-found",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "src/professional-skills/integration-change-builder/SKILL.md:59 universally requires raw-body webhook verification, although provider signature contracts may sign canonical fields or other representations; references/checklist.md:4-11 likewise imposes every retry, breaker, webhook, replay, sandbox, backfill, and monitoring mechanism without task-trigger selection."
+    },
+    {
+      "skill_id": "integration-testing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the integration-testing root and 3 indexed references found its registered output—Return an integration-proof decision: state seam fidelity, fixtures, failure mechanism, oracle, isolation, cleanup, concurrency, evidence, and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "interaction-state-modeling",
+      "decision": "requires-professional-correction",
+      "reason_code": "erroneous-professional-rule",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "defect-found",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "defect-found",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full root, all three indexed References, and registry-adjacency review found the benchmark matrix corrected to non-normative examples, but checklist.md:3-10 still unconditionally requires queued, refreshing, dependency-error, timeout, partial-completion, permission-denied, cancellation, and navigation states. That fixed catalog contradicts SKILL.md:24 and :29, which require states to be derived from product and operation semantics and asynchronous states only where exposed."
+    },
+    {
+      "skill_id": "iot-embedded-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the iot-embedded-extension root and 1 indexed reference found its registered output—embedded safety, timing, compatibility, recovery, and validation obligations—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "java-jvm-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the java-jvm-professional-usage root and 1 indexed reference found its registered output—JVM semantic decision with advice reachability interruption executor lifecycle classloader and scoped state null/type boundary serialization exception/resource behavior proof limits and specialist routes—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "kubernetes-gateway",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the kubernetes-gateway root and 3 indexed references found its registered output—Return a Kubernetes runtime decision: define workload, route, identity, health, capacity, scheduling, rollout, effective-state proof, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "language-idiom-enforcement",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the language-idiom-enforcement root and 3 indexed references found its registered output—language-idiom decision with current authority, affected semantic boundary, chosen pattern, justified deviations, compatibility effects, and validation evidence—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "language-performance-safety",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the language-performance-safety root and 3 indexed references found its registered output—runtime performance and safety decision with workload evidence, allocation and scheduler boundaries, growth limits, lifecycle ownership, concurrency proof, unsafe contract, and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "language-runtime-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the language-runtime-selection root and 1 indexed reference found its registered output—language-runtime decision with workload and semantic fit concurrency memory lifecycle ecosystem deployment FFI migration exit specialist routes proof limits and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "language-testing-strategy",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the language-testing-strategy root and 1 indexed reference found its registered output—language-test execution decision with runner discovery scheduling deadline cancellation async completion isolation cache instrumentation failure artifact proof limits and specialist routes—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "layered-architecture-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the layered-architecture-design root and 3 indexed references found its registered output—layered-architecture decision with responsibilities, dependency direction, domain and orchestration boundary, adapters, cross-cutting placement, evidence, proof limits, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "linux-systems-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the linux-systems-professional-usage root and 3 indexed references found its registered output—Return a Linux Systems Record: runtime/environment evidence; service, process, filesystem, permission, resource, and observability contracts; decisions, validation, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "logging-design-gate",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the logging-design-gate root and 4 indexed references found its registered output—logging changes; logging verdict; signal risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "logging-error-handling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the logging-error-handling root and 3 indexed references found its registered output—logging and error decision with ownership, external meaning, diagnostic events, correlation, outcome classification, redaction, volume bounds, and reconstruction evidence—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "low-level-systems-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the low-level-systems-extension root and 1 indexed reference found its registered output—systems safety, performance, compatibility, and validation obligations—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "message-queue-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the message-queue-design root and 3 indexed references found its registered output—message queue plan with topology, ordering, and acknowledgement; selected retry or no-retry policy; terminal disposition and owner; replay and triggered-metrics evidence with proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "microservice-splitting",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the microservice-splitting root and 3 indexed references found its registered output—service split assessment with boundaries data ownership and rejection reasons—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "minimal-correct-implementation",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the minimal-correct-implementation root and 1 indexed reference found its registered output—minimality decision with retained or removed structure candidate comparison current force rejected nearer alternatives behavior-preservation proof specialist routes evidence limits and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "mobile-product-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the mobile-product-extension root and 1 indexed reference found its registered output—mobile-specific behavior, compatibility, validation, and release obligations—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "model-boundary-mapping",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the model-boundary-mapping root and 3 indexed references found its registered output—Return a Model Boundary Map: identify source, target, mapping and validation owners, null/default semantics, compatibility, generated/handwritten boundary, tests, and rejected leakage—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "module-boundary-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the module-boundary-design root and 2 indexed references found its registered output—Module boundary decision with responsibility and owner, state authority, public/private surface, consumers, allowed/forbidden edges, cycle result, split/merge rationale, migration/enforcement, and residual unknowns.—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "network-protocol-gateway-usage",
+      "decision": "requires-professional-correction",
+      "reason_code": "generic-knowledge-pollution",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "defect-found",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "src/foundation/capabilities/network-protocol-gateway-usage/references/checklist.md:3-11 requires DNS, CDN/WAF, load balancer, ingress, mesh, TLS, cache, and origin controls together, contradicting SKILL.md:30's explicit instruction to map only affected hops and exclude proven-irrelevant infrastructure."
+    },
+    {
+      "skill_id": "non-goal-boundary-definition",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the non-goal-boundary-definition root and 3 indexed references found its registered output—non-goal boundary with observable exclusions, reasons and authority, unchanged and deferred items, dependencies, assumptions and version limits, exclusion oracles, reopen conditions, and owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "nosql-database",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the nosql-database root and 3 indexed references found its registered output—NoSQL decision naming access paths, keys/partitions, invariant consistency, evolution and retention semantics, repair, limits, and adjacent handoffs.—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "observability",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the observability root and 3 indexed references found its registered output—observability plan with signals dashboards alerts and investigation paths, evidence, and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "observable-action-sequence-analysis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the observable-action-sequence-analysis root and 1 indexed reference found its registered output—Return action-sequence metrics: ordered actions, first productive action, duplicate work, validation freshness, review/repair findings, caveats, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "package-dependency-management",
+      "decision": "requires-professional-correction",
+      "reason_code": "erroneous-professional-rule",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "defect-found",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "defect-found"
+      },
+      "rationale": "Full root, all three indexed References, registry adjacency, and current official package-manager documentation review found the Gradle and Bundler corrections valid, but ecosystem-command-map.md:14 still presents unsupported `poetry install --no-update` as frozen-resolution evidence. Current Poetry 2.4 install options do not define `--no-update` and recommend `poetry sync` for reproducible locked environments, so the command cannot supply the promised verification evidence."
+    },
+    {
+      "skill_id": "page-component-decomposition",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the page-component-decomposition root and 3 indexed references found its registered output—component decomposition decision with responsibility boundaries, state and effect owners, semantic contracts, reuse rationale, rendering consequences, integration evidence, and residual risks—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "payment-trading-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the payment-trading-extension root and 1 indexed reference found its registered output—financial invariants, failure handling, reconciliation, rollback, and audit obligations—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "performance-budgeting",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the performance-budgeting root and 3 indexed references found its registered output—authorized performance and unit-cost budget with representative workload, changed-surface metrics, measurement-integrity evidence, risk-based enforcement, correctness guard, and explicit removable exception path—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "permission-boundary-modeling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the permission-boundary-modeling root and 3 indexed references found its registered output—permission contract with authoritative decision inputs, subject-resource-action conditions, object and tenant scope, reachable enforcement, collection and bulk semantics, denial disclosure, delegated entitlement, negative proof, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "plan-execution-consistency",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the plan-execution-consistency root and 1 indexed reference found its registered output—Return a plan-to-actual diff: state changed-file variance, behavior mapping, post-edit validation, review coverage, unverified scope, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "profiling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the profiling root and 3 indexed references found its registered output—profiling evidence with symptom and hypothesis, representative comparable workload, measured bottleneck and re-profile, resource/cost transfer, overhead boundary, correctness guard, and owned sensitive-artifact lifecycle—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "project-initialization",
+      "decision": "requires-professional-correction",
+      "reason_code": "adjacent-responsibility-gap",
+      "criteria": {
+        "adjacent-overlap-or-gap": "defect-found",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "defect-found",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "src/foundation/capabilities/project-initialization/references/evidence-patterns.md:3, :13, and :19 make dependency policy, license policy, vulnerability scanning, and dependency ownership part of initialization closure even though SKILL.md:20 explicitly assigns dependency policy to an adjacent owner."
+    },
+    {
+      "skill_id": "prototype-description",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the prototype-description root and 1 indexed reference found its registered output—prototype decision brief with uncertainty fidelity hierarchy interaction failure responsive accessibility reuse handoffs and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "python-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the python-professional-usage root and 1 indexed reference found its registered output—Python boundary decision with import initialization async cancellation resource lifetime typing mutability serialization exception risks and specialist routes—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "quality-test-gate",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the quality-test-gate root and 4 indexed references found its registered output—validation strategy; covered behavior; coverage verdict—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "refactoring",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the refactoring root and 3 indexed references found its registered output—refactoring decision with preserved-behavior boundary, characterization evidence, reversible structural steps, dependency and ownership effects, deletion and compatibility proof, rollback limits, and residual risks—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "regression-testing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the regression-testing root and 3 indexed references found its registered output—recurrence map with failure mechanism, guard boundary, counterfactual evidence, fixture fidelity, same-pattern coverage, freshness, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "relational-database",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the relational-database root and 3 indexed references found its registered output—Physical relational decision naming tables and keys, enforceable constraints, conflict and replica semantics, query beneficiaries, and transaction/index/migration handoffs.—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "release-rollback",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the release-rollback root and 3 indexed references found its registered output—Return a release-recovery decision: define identity, ordering, compatibility, exposure, stop signals, per-surface recovery, evidence limits, and residual owner—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "reliability-observability-gate",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the reliability-observability-gate root and 5 indexed references found its registered output—failure model; resilience changes; reliability verdict—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "repeat-failure-analysis",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the repeat-failure-analysis root and 1 indexed reference found its registered output—observed facts, rejected hypotheses, same-pattern impact, next hypothesis, changed execution path, validation method, proof limits, and blocker if any—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "repository-context-map",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the repository-context-map root and 3 indexed references found its registered output—Return a Repository Context Map: list inspected files/searches, ownership, callers, callees, dependents, tests, docs, configs, conventions, SSOT boundaries, evidence limits, and next step—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "repository-impact-inspection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the repository-impact-inspection root and 1 indexed reference found its registered output—owner and placement evidence, affected consumers and tests, generated source boundaries, rejected locations, uninspected scope, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "repository-persistence",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the repository-persistence root and 3 indexed references found its registered output—Return a repository-persistence contract: define methods, query semantics, mapping, visibility, transaction participation, error outcomes, validation, evidence, and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "requirement-clarification",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the requirement-clarification root and 3 indexed references found its registered output—clarification decision with material ambiguity, inspected evidence, blocking classification, bounded assumptions or options, proceed and wait boundary, owner questions, reopen signals, and downstream updates—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "requirement-structuring",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the requirement-structuring root and 3 indexed references found its registered output—structured requirement with sourced current behavior, desired outcomes, actors, scope and exclusions, constraints and assumptions, dependencies, risks, deliverables, acceptance trace, unresolved decisions, and owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "routing-navigation-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the routing-navigation-design root and 3 indexed references found its registered output—routing and navigation decision with canonical identity, state and parameter contract, guard and redirect semantics, intent recovery, history behavior, compatibility evidence, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "routing-quality-review",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the routing-quality-review root and 1 indexed reference found its registered output—routing findings; trigger and anti-trigger conflicts; coverage gaps; validation results—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "rust-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the rust-professional-usage root and 1 indexed reference found its registered output—Rust safety decision with ownership lifetime unsafe panic cancellation Send Sync FFI risks proof limits and specialist routes—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "scenario-decomposition",
+      "decision": "requires-professional-correction",
+      "reason_code": "generic-knowledge-pollution",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "defect-found",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "src/foundation/capabilities/scenario-decomposition/references/checklist.md:3-8 mandates every failure, edge, abuse, recovery, and operational category, and references/evidence-patterns.md:9 calls a seven-category matrix complete, contradicting SKILL.md:25-26 and benchmarks-and-patterns.md:3,16, which prohibit filler for untriggered categories."
+    },
+    {
+      "skill_id": "sdk-library-contract-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the sdk-library-contract-design root and 3 indexed references found its registered output—library contract decision with consumed surface, compatibility classification, generated lineage, mixed-version adoption, consumer proof, release handoffs, proof limits, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "search-analytics-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the search-analytics-design root and 3 indexed references found its registered output—Search/analytics decision naming authority, ingestion, visibility, freshness, relevance or metric semantics, rebuild/fallback, evidence limits.—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "secret-configuration-security",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the secret-configuration-security root and 3 indexed references found its registered output—Return a secret-configuration decision: map exposure, access scope, rotation, revocation, redaction, recovery, owner, and residual exposure—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "security-privacy-gate",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the security-privacy-gate root and 4 indexed references found its registered output—abuse-path model; trust-boundary changes; security verdict—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "senior-programming-judgment-core",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the senior-programming-judgment-core root and 0 indexed references found its registered output—bounded engineering judgment with purpose and facts, objects and invariants, boundaries and side effects, reuse and placement, minimal complete change, validation evidence, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "service-business-logic",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the service-business-logic root and 3 indexed references found its registered output—Return an application-orchestration contract: state actor intent, domain authority, transaction/effect order, typed outcomes, recovery, evidence limits, and consistency owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "shell-cli-professional-usage",
+      "decision": "requires-professional-correction",
+      "reason_code": "erroneous-professional-rule",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "defect-found",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "defect-found",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "defect-found",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "src/foundation/capabilities/shell-cli-professional-usage/references/checklist.md:3 and :7 prescribe set -euo pipefail and machine-readable stdout across shells and CLI audiences, conflicting with SKILL.md:24's dialect-and-caller-specific rule and its warning that strict mode is only a partial control."
+    },
+    {
+      "skill_id": "skill-authoring-expert",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the skill-authoring-expert root and 3 indexed references found its registered output—layer and ownership decision; trigger, anti-trigger, reference split, and routing impact; source and generated files changed; validation results, proof limits, compatibility risk, and next action—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "skill-efficacy-benchmark",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the skill-efficacy-benchmark root and 3 indexed references found its registered output—Return a Skill Efficacy Benchmark: baseline/treatment comparison, metrics, token/turn overhead, routing errors, verdict, caveats, and regression command—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "solution-optimality-evaluation",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the solution-optimality-evaluation root and 1 indexed reference found its registered output—solution decision with hard-constraint screen selected and rejected alternatives total-change cost reversibility option value comparative proof reopening condition and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "sql-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the sql-professional-usage root and 1 indexed reference found its registered output—SQL semantic decision with NULL cardinality constraints transactions locks precision parameter dialect migration risks and specialist routes—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "state-machine-modeling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the state-machine-modeling root and 3 indexed references found its registered output—state-machine decision with state invariants, transition authority and guards, concurrency, side-effect boundaries, time and recovery semantics, forbidden-path evidence, legacy handling, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "state-management-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the state-management-design root and 3 indexed references found its registered output—state-management decision with classification, authority and scope, identity and freshness, async and optimistic behavior, persistence policy, cleanup evidence, proof limits, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "targeted-validation-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the targeted-validation-selection root and 1 indexed reference found its registered output—exact commands, real outcomes, covered acceptance and paths, freshness, unverified scope, residual risk, and next check—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "task-context-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the task-context-selection root and 1 indexed reference found its registered output—Return a task-context selection: name required source facts, primary Skill, targeted Layer 3 references, excluded context, proof limits, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "task-dag-decomposition",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the task-dag-decomposition root and 3 indexed references found its registered output—Task DAG rendered with authoritative Task Contract v2 nodes, parallel-group ownership, Status, and a visible task-local Evidence Ledger; unverified scheduling scope, rollback constraints, and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "task-dag-planner",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the task-dag-planner root and 4 indexed references found its registered output—Task Capsules; dependency edges; integration order; per-task and combined review contracts—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "task-handoff-context",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the task-handoff-context root and 1 indexed reference found its registered output—bounded Markdown Task Contract v2 or review handoff with Status and visible task-local Evidence Ledger—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "technology-stack-selection",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the technology-stack-selection root and 1 indexed reference found its registered output—technology-stack decision with hard-constraint fit existing-stack comparison ownership lifecycle supply chain total-change cost migration coexistence exit proof limits and residual risk—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "test-data-management",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the test-data-management root and 3 indexed references found its registered output—test-data decision with failure-focused fixtures, deterministic generation, isolation and ownership, relationship integrity, sensitive-data controls, cleanup behavior, freshness evidence, and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "test-strategy",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the test-strategy root and 3 indexed references found its registered output—risk based test strategy decision with failure mechanisms oracles proof levels commands omissions admissibility limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "testability-seam-design",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the testability-seam-design root and 3 indexed references found its registered output—testability-seam decision with behavior and failure mechanism, stable placement, controlled inputs, substitute fidelity, production-default preservation, fixture lifecycle, evidence gain, and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "threat-modeling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the threat-modeling root and 3 indexed references found its registered output—changed threat model with protected outcomes, actor capabilities, reachable abuse paths, impact and blast radius, control placement and bypass analysis, fresh validation and detection evidence, proof limits, and residual-risk owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "transaction-consistency",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the transaction-consistency root and 3 indexed references found its registered output—consistency plan with transaction scope isolation conflicts and tests—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "typescript-professional-usage",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the typescript-professional-usage root and 1 indexed reference found its registered output—TypeScript semantic decision with runtime boundary structural-type limit bounded escape async cancellation numeric behavior module emission public/generated compatibility proof limits and specialist routes—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "unit-testing",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the unit-testing root and 3 indexed references found its registered output—unit behavior proof with regression mechanism, observable and denied outcomes, deterministic seams, double-fidelity limits, assertion challenge, cleanup evidence, and explicit proof boundary—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "use-case-modeling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the use-case-modeling root and 3 indexed references found its registered output—bounded use-case model with actors and authority, trigger and preconditions, decision paths, state and side effects, termination guarantees, acceptance trace, unknowns, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "user-flow-modeling",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the user-flow-modeling root and 1 indexed reference found its registered output—user-flow decision with actor goal preconditions entries predicates exits interruptions recovery authority side effects proof limits and specialist routes—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "user-role-identification",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the user-role-identification root and 3 indexed references found its registered output—role inventory with responsibilities permissions and affected journeys—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "version-compatibility",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the version-compatibility root and 3 indexed references found its registered output—compatibility decision with consumer inventory, compatibility dimensions, mixed-version matrix, migration mechanism, retirement evidence, rollback limits, proof gaps, and residual owners—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "web-security",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the web-security root and 3 indexed references found its registered output—web-security decision with reachable sources and sinks, contextual controls, state-change integrity, fetch and upload boundaries, cross-origin behavior, denial and bypass evidence, and proof limits—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    },
+    {
+      "skill_id": "web3-product-extension",
+      "decision": "accepted-current-professional-completeness",
+      "reason_code": "all-professional-criteria-satisfied",
+      "criteria": {
+        "adjacent-overlap-or-gap": "satisfied",
+        "boundary-conditions": "satisfied",
+        "erroneous-rules": "satisfied",
+        "failure-modes": "satisfied",
+        "generic-knowledge-pollution": "satisfied",
+        "material-omissions": "satisfied",
+        "output-verifiability": "satisfied",
+        "professional-correctness": "satisfied",
+        "reference-high-risk-coverage": "satisfied",
+        "verification-methods": "satisfied"
+      },
+      "rationale": "Full review of the web3-product-extension root and 1 indexed reference found its registered output—domain risks, invariants, failure modes, and validation obligations—bounded by the named triggers and adjacent owners, with triggered failure conditions and proportionate verification evidence covered."
+    }
+  ],
+  "limitations": [
+    "This ballot assesses complete static root and indexed Reference content plus registry adjacency; it does not prove live-host behavior, runtime effectiveness, production accuracy, or installed-user experience.",
+    "Carry-forward was limited to package targets whose identifiers and package fingerprints were exactly unchanged; four changed packages were independently re-reviewed in full.",
+    "Current official command and benchmark facts were checked as of 2026-07-16; later provider or tool releases may invalidate those external facts."
+  ]
+}

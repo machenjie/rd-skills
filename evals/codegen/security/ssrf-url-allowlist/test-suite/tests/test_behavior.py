@@ -95,6 +95,28 @@ class SSRFBehaviorTests(unittest.TestCase):
         self.assertEqual(http.calls, [])
         self.assertNotIn("secret-token", result_text(result))
 
+    def test_allowed_redirect_is_revalidated_and_refetched_with_bounds(self) -> None:
+        first = "https://preview.example.com/start"
+        second = "https://preview.example.com/final"
+        http = RecordingHTTP(
+            {
+                first: Response(status_code=302, headers={"Location": "/final"}),
+                second: Response(text="<title>Redirected</title>"),
+            }
+        )
+        resolver_calls: list[str] = []
+
+        def resolver(host: str) -> list[str]:
+            resolver_calls.append(host)
+            return ["93.184.216.34"]
+
+        result = app.fetch_preview(first, http_get=http, resolver=resolver)
+
+        self.assertTrue(result_ok(result))
+        self.assertEqual(http.calls, [first, second])
+        self.assertEqual(resolver_calls, ["preview.example.com", "preview.example.com"])
+        self.assertIn("Redirected", result_text(result))
+
 
 if __name__ == "__main__":
     unittest.main()

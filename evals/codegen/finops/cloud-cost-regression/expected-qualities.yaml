@@ -7,24 +7,13 @@ focus:
   - budget thresholds
   - release evidence
 route_hints:
-  skills:
-    - reliability-observability-gate
-    - delivery-release-gate
-    - quality-test-gate
-    - change-documentation-gate
-  capabilities:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: reliability-observability-gate
+  layer3_skills:
     - performance-budgeting
     - observability
-    - ci-cd
-    - regression-testing
-    - logging-error-handling
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - reliability gate
-    - delivery gate
-    - test gate
-    - documentation gate
+  review_skill: reliability-observability-gate
 expected_outcomes:
   - Planned resource changes are compared against declared monthly cost thresholds.
   - Unexpected storage, egress, or compute increases fail the check.

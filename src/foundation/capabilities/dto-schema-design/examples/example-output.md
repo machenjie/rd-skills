@@ -10,15 +10,15 @@ boundaries_inspected:
 - DTO class: `src/refunds/dto.py`
 - Mapper: `src/refunds/mapper.py`
 - Generated client: `clients/typescript/refunds.ts`
-- Prior memory: refund request mentioned in migration notes; accepted only as a naming hint
+- Prior note: refund request mentioned in migration notes; accepted only as a naming hint
 
 source_evidence:
 - Refund request is a public API request body.
 - Mapper currently allowlists `amount`, `currency`, `reason`, `note`, and `idempotencyKey`.
 
-graph_memory_trajectory_judgment:
-- Repository graph confirms one request DTO and one TypeScript generated client.
-- Project memory does not prove all consumers; unknown-consumer risk remains.
+current_evidence_judgment:
+- repository inspection confirms one request DTO and one TypeScript generated client.
+- prior task evidence does not prove all consumers; unknown-consumer risk remains.
 
 dto_name: RefundRequest
 direction: request

@@ -1,0 +1,55 @@
+# AI Control Boundaries
+
+This document defines the authority, permission, evidence, and context boundaries
+between the hookless concept and the detailed execution model.
+
+## Control Authority
+
+The `main-control-agent` classifies, dispatches, schedules, reports progress,
+routes repair or re-review, and closes. It does not inspect target code, define
+source-backed acceptance or placement, edit, execute, or review. Analysis owns
+read-only engineering preparation; task execution owns bounded writes and fresh
+validation; review owns independent findings without repair authority.
+
+A user request authorizes only the bounded internal work needed for that request.
+Material scope or behavior choices, destructive or production operations,
+permission elevation, irreversible data change, and otherwise unknowable
+requirements remain user decisions. Detailed role capabilities and handoffs are
+canonical in the [Subagent model](SUBAGENT_MODEL.md).
+
+## Permission and Host Enforcement
+
+Host tool configuration is authoritative where supported. The source matrix is
+`src/agent-profiles/host-enforcement.json`; its closed statuses are
+`native-enforced`, `sandbox-enforced`, `prompt-enforced`, and `unsupported`.
+Build and install manifests bind that matrix and its digest, while doctor reports
+the resulting configuration. Configuration is not proof of observed host
+behavior.
+
+When a host cannot express a fine-grained restriction, the generated Profile
+states the limit as prompt-enforced. ChangeForge does not add an executable
+interceptor or second sandbox. Current supported hosts declare isolated
+workspaces unsupported, so read-only work may be parallel but writes are serial.
+No-edit utilities are prompt-enforced and fail if their before/after workspace
+change sets differ or are unavailable.
+
+## Evidence Boundary
+
+Task evidence is visible in scoped Markdown contracts and handoffs. Validation
+must follow the latest material edit, and implementation review uses the actual
+diff and every changed file. Older-scope evidence cannot authorize closure.
+ChangeForge does not persist private runtime ledgers, prompt transcripts, or an
+internal task-state database. The exact artifact and completion flow is owned by
+the [Operating model](OPERATING_MODEL.md).
+
+## Skill and Context Boundary
+
+Each task receives one primary Professional Skill, only concretely triggered
+Layer 3 guidance, and its review route. Normal builds open a named compiled
+Layer 3 item directly; `dev` may expose that item as a top-level Skill. Profiles
+do not preload catalogs, scan Layer 3 directories, or gain target-repository
+authority merely because a host-native Skill loader is available.
+
+Use the [Operating model](OPERATING_MODEL.md) for runtime artifact, state, and
+evidence flow. Use the [Subagent model](SUBAGENT_MODEL.md) for the four Profiles,
+context isolation, parallelism, completion, and review separation.

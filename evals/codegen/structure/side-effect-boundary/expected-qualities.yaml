@@ -7,20 +7,11 @@ focus:
   - structured return contract
   - service orchestration clarity
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
-    - implementation-structure-design
-    - code-clarity-maintainability
-    - refactoring
-    - unit-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - AI review gate
-    - test gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Business decisions are pure and testable without infrastructure mocks.
   - Persistence, external API calls, cache, events, and logging live in orchestration or adapters.

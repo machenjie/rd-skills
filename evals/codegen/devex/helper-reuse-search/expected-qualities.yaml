@@ -7,22 +7,11 @@ focus:
   - shared utility pollution prevention
   - execution evidence for agent-assisted changes
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
-    - agent-execution-discipline
-    - implementation-structure-design
-    - code-review
-    - unit-testing
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
-    - AI review gate
-    - execution discipline gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Existing order and customer formatter helpers are searched before new code is accepted.
   - New display-name behavior is placed in the order owner module or explicitly justified.
@@ -42,4 +31,4 @@ evidence:
   - Search record naming inspected formatter files.
   - Unit test for normal order display name.
   - Regression test for archived or missing-customer display behavior.
-  - Execution Discipline Report with validation result and closure boundary.
+  - Final handoff with validation result, unverified scope, and residual risk.

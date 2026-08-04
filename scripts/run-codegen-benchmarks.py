@@ -8,8 +8,10 @@ import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 from codegen_benchmark_manifest import EXPECTED_BENCHMARKS
@@ -18,6 +20,28 @@ from validation_utils import relpath
 
 ROOT = Path(__file__).resolve().parents[1]
 CODEGEN_DIR = ROOT / "evals" / "codegen"
+ASSERTION_RUNNER = ROOT / "scripts" / "run-codegen-assertion.py"
+EVIDENCE_EXCLUDED_TOP_LEVEL = {
+    ".agents",
+    ".codex",
+    ".git",
+    ".changeforge",
+    "__pycache__",
+}
+EVIDENCE_EXCLUDED_FILES = {"final.md", ".changeforge-install-manifest.json"}
+SUBPROCESS_TIMEOUT_SECONDS = 120
+CANDIDATE_EXECUTION_GATE = "CHANGEFORGE_RUN_CODEGEN_CANDIDATE"
+SAFE_HARNESS_ENV_KEYS = {
+    "PATH",
+    "LANG",
+    "LC_ALL",
+    "LC_CTYPE",
+    "TERM",
+    "SSL_CERT_FILE",
+    "SSL_CERT_DIR",
+    "SYSTEMROOT",
+    "WINDIR",
+}
 
 
 def _expected_case_dirs() -> list[tuple[str, str, Path]]:
@@ -117,29 +141,64 @@ def _run_assertion_files(
     """Execute real assertion files against a generated candidate."""
     errors: list[str] = []
     assertion_files = _real_assertion_files(case_dir)
-    env = os.environ.copy()
-    env["CHANGEFORGE_CODEGEN_CANDIDATE_DIR"] = str(candidate_dir)
-    python_path = str(candidate_dir)
-    if env.get("PYTHONPATH"):
-        python_path = python_path + os.pathsep + env["PYTHONPATH"]
-    env["PYTHONPATH"] = python_path
-    for assertion_file in assertion_files:
-        completed = subprocess.run(
-            [sys.executable, str(assertion_file.resolve())],
-            cwd=candidate_dir,
-            env=env,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=False,
-        )
-        if completed.returncode != 0:
-            output = completed.stdout.rstrip()
-            errors.append(
-                f"{category}/{case_id}: assertion {_display_path(assertion_file)} "
-                f"exited {completed.returncode}\n{output}"
+    with tempfile.TemporaryDirectory(prefix="changeforge-codegen-evidence-") as temporary:
+        temporary_root = Path(temporary)
+        evidence_root = temporary_root / "candidate"
+        _copy_candidate_evidence(candidate_dir, evidence_root)
+        assertion_home = temporary_root / "home"
+        assertion_home.mkdir()
+        env = {
+            key: value
+            for key, value in os.environ.items()
+            if key in {"PATH", "LANG", "LC_ALL", "SYSTEMROOT", "WINDIR"}
+        }
+        env["CHANGEFORGE_CODEGEN_CANDIDATE_DIR"] = str(evidence_root)
+        env["HOME"] = str(assertion_home)
+        env["TMPDIR"] = str(temporary_root)
+        env["PYTHONDONTWRITEBYTECODE"] = "1"
+        python_path = str(evidence_root)
+        env["PYTHONPATH"] = python_path
+        assertion_root = temporary_root / "assertions"
+        assertion_root.mkdir()
+        for index, assertion_file in enumerate(assertion_files, start=1):
+            assertion_copy = assertion_root / f"{index:03d}-{assertion_file.name}"
+            shutil.copy2(assertion_file, assertion_copy)
+            returncode, output = _run_bounded_command(
+                [
+                    sys.executable,
+                    str(ASSERTION_RUNNER),
+                    str(assertion_copy),
+                ],
+                cwd=evidence_root,
+                env=env,
             )
+            if returncode != 0:
+                errors.append(
+                    f"{category}/{case_id}: assertion {_display_path(assertion_file)} "
+                    f"exited {returncode}\n{output.rstrip()}"
+                )
     return errors
+
+
+def _copy_candidate_evidence(source: Path, destination: Path) -> None:
+    """Copy product evidence without host control artifacts or symlink targets."""
+    destination.mkdir(parents=True, exist_ok=True)
+    for path in sorted(source.rglob("*")):
+        relative = path.relative_to(source)
+        if not relative.parts:
+            continue
+        if relative.parts[0] in EVIDENCE_EXCLUDED_TOP_LEVEL:
+            continue
+        if path.name in EVIDENCE_EXCLUDED_FILES or path.is_symlink():
+            continue
+        target = destination / relative
+        if path.is_dir():
+            target.mkdir(parents=True, exist_ok=True)
+        elif path.is_file():
+            if path.stat().st_nlink > 1:
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path, target)
 
 
 def _display_path(path: Path) -> str:
@@ -170,20 +229,52 @@ def _run_script(
     cwd: Path,
     env_overrides: dict[str, str],
 ) -> tuple[bool, str, int]:
-    env = os.environ.copy()
-    env.update(env_overrides)
-    completed = subprocess.run(
-        ["bash", _bash_script_path(script)],
+    with tempfile.TemporaryDirectory(prefix="changeforge-codegen-harness-") as temporary:
+        env = {
+            key: value
+            for key, value in os.environ.items()
+            if key in SAFE_HARNESS_ENV_KEYS
+        }
+        env.update(env_overrides)
+        env["HOME"] = temporary
+        env["TMPDIR"] = temporary
+        env["TMP"] = temporary
+        env["TEMP"] = temporary
+        returncode, output = _run_bounded_command(
+            ["bash", _bash_script_path(script)],
+            cwd=cwd,
+            env=env,
+        )
+    if returncode == 0:
+        return True, output, returncode
+    return False, f"{label} exited {returncode}\n{output}", returncode
+
+
+def _run_bounded_command(
+    command: list[str],
+    *,
+    cwd: Path,
+    env: dict[str, str],
+) -> tuple[int, str]:
+    process = subprocess.Popen(
+        command,
         cwd=cwd,
         env=env,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        check=False,
+        start_new_session=os.name != "nt",
     )
-    if completed.returncode == 0:
-        return True, completed.stdout, completed.returncode
-    return False, f"{label} exited {completed.returncode}\n{completed.stdout}", completed.returncode
+    try:
+        output, _stderr = process.communicate(timeout=SUBPROCESS_TIMEOUT_SECONDS)
+        return process.returncode, output
+    except subprocess.TimeoutExpired:
+        if os.name != "nt":
+            os.killpg(process.pid, signal.SIGKILL)
+        else:
+            process.kill()
+        output, _stderr = process.communicate()
+        return 124, f"timed out after {SUBPROCESS_TIMEOUT_SECONDS}s\n{output}"
 
 
 def _write_stage_artifact(stage_log_dir: Path | None, stage: str, text: str) -> None:
@@ -234,15 +325,11 @@ def _run_case(
             f"{category}/{case_id}: implementation directory {implementation_dir} is missing"
         ]
 
-    setup_script = (
-        implementation_dir / "setup.sh" if candidate_dir else starter_dir / "setup.sh"
-    )
+    # Candidate content is untrusted benchmark output. Never execute a candidate-
+    # supplied setup or test script; only the checked-in harness and assertions run.
+    setup_script = starter_dir / "setup.sh"
     if not setup_script.is_file():
-        message = (
-            f"{category}/{case_id}: candidate/setup.sh missing"
-            if candidate_dir
-            else f"{category}/{case_id}: starter-repo/setup.sh is missing"
-        )
+        message = f"{category}/{case_id}: starter-repo/setup.sh is missing"
         record("setup", False, message)
         if stage_log_dir is not None:
             (stage_log_dir / "stage-results.json").write_text(
@@ -298,6 +385,17 @@ def _run_case(
         assertion_errors = _run_assertion_files(category, case_id, case_dir, implementation_dir)
         record("assertion-files", not assertion_errors, "\n".join(assertion_errors))
         errors.extend(assertion_errors)
+    elif _real_assertion_files(case_dir):
+        negative_control = _run_assertion_files(category, case_id, case_dir, starter_dir)
+        passed = bool(negative_control)
+        output = (
+            "starter negative control rejected by executable assertions"
+            if passed
+            else "starter negative control unexpectedly passed every executable assertion"
+        )
+        record("assertion-negative-control", passed, output)
+        if not passed:
+            errors.append(f"{category}/{case_id}: {output}")
     if stage_log_dir is not None:
         (stage_log_dir / "stage-results.json").write_text(
             json.dumps(stage_records, indent=2, sort_keys=True) + "\n",
@@ -317,6 +415,8 @@ def _select_cases(args: argparse.Namespace) -> list[tuple[str, str, Path]]:
             for case in cases
             if case[1] in requested or f"{case[0]}/{case[1]}" in requested
         ]
+    if args.limit is not None and not args.category and not args.benchmark:
+        cases = [case for case in cases if _real_assertion_files(case[2])]
     if args.limit is not None:
         cases = cases[: args.limit]
     return cases
@@ -378,6 +478,12 @@ def main(argv: list[str] | None = None) -> int:
         for category, case_id, _case_dir in cases:
             print(f"{category}/{case_id}")
         return 0
+    if candidates and os.environ.get(CANDIDATE_EXECUTION_GATE) != "1":
+        parser.error(
+            "candidate evaluation executes candidate code; run it only in a "
+            "disposable sandbox with no credentials and set "
+            f"{CANDIDATE_EXECUTION_GATE}=1"
+        )
     if not cases:
         print("run-codegen-benchmarks: no benchmarks selected.", file=sys.stderr)
         return 1
@@ -401,7 +507,11 @@ def main(argv: list[str] | None = None) -> int:
         for message in errors:
             print(f"run-codegen-benchmarks: ERROR: {message}", file=sys.stderr)
         return 1
-    verb = "evaluated" if candidates else "executed smoke checks for"
+    verb = (
+        "evaluated"
+        if candidates
+        else "executed harness and assertion negative-control checks for"
+    )
     print(f"run-codegen-benchmarks: {verb} {len(cases)} benchmark(s).")
     return 0
 

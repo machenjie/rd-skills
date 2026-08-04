@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-21-r10",
+  "created_on": "2026-07-22",
+  "packet_sha256": "5879d0ee0a0991e4a40ee87bf2b130a0a75ad9644278660ff923303660298236",
+  "source_fingerprints": {
+    "audit": "e23da33c93fe688afab3be0e9ed0dffa965ea51e414bd0c9cb4bfff4d38800c4",
+    "reference_candidates": "78f176f697995d8cf8a4217261e91dd73c4e203528854f479a566406119bcc51",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "29f9ca8994790e869778316258ade844675d84fe5a0a3677802eeae8e2a8dffe",
+    "root_candidates": "4dfabd1b8974386dd210f1246424f7c83ed9b52eb7f4824fee7022cab0c6e19f",
+    "root_context": "5e59b6de1449a1a4a4d9caaf0e95983b24ce0308ac3a7bbbc2ea68af392ec884",
+    "root_detector": "0b6168c2f3aaacfc611421aa8ef533171e4adf229986be73016c74154d402aef",
+    "root_source": "3b56ed2006129d0bdc4cf1d731d4c850ece39dc0f23d6dea84cd61b81dc1dee4"
+  },
+  "voter": {
+    "voter_id": "semantic-boundary-reviewer-r10-d",
+    "agent_id": "/root/semantic_r10_review_d",
+    "role": "semantic-boundary-reviewer",
+    "expertise": [
+      "control boundaries",
+      "fail-closed evidence"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "reference:46c5c30b85043d8b80e7554974a1b8592b2a116d6b85c120319f47b136bce5e5",
+      "axis": "reference",
+      "candidate_id": "46c5c30b85043d8b80e7554974a1b8592b2a116d6b85c120319f47b136bce5e5",
+      "disposition": "valid-contextual-rule",
+      "rationale": "This directive is confined to a generated JSON policy reference and prevents the embedded data payload from being treated as executable prompt instructions; the surrounding provenance sentence and fenced JSON make the boundary explicit.",
+      "authority_or_condition": "src/control-skills/engineering-control-plane/references/execution-level-contract.md:3 and src/control-model/core-contracts.json execution_level_contract.projection.runtime_reference",
+      "decision_owner": "engineering-control-plane",
+      "mitigation": "Retain the data-versus-instruction boundary and keep generated-reference parity checks against the authoritative Core contract.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "axis": "root",
+      "candidate_id": "9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The absolute count is not an arbitrary operational shortcut: the authoritative Core contract enumerates exactly seven non-bypassable controls, and the prompt applies that closed set before carrying level evidence through dispatch.",
+      "authority_or_condition": "src/control-model/core-contracts.json execution_level_contract.non_bypassable and src/control-prompts/main-control-agent.md:43-49",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Retain exact enumeration-to-count coupling; any contract count change must update the Core authority and prompt projection together.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "axis": "root",
+      "candidate_id": "ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The numeric limit applies to a completed validation path under one bound identity, not to all validation activity; the same sentence permits another path only through a predeclared gap or evidence transition, matching Core.",
+      "authority_or_condition": "src/control-model/core-contracts.json execution_level_contract.validation_loop.complete_path_limit and different_path_requirements; src/control-prompts/main-control-agent.md:48",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Keep the identity and gap-or-transition qualifiers adjacent, and fail closed when a completed path is repeated under the same identity.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "axis": "root",
+      "candidate_id": "d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The prohibition is scoped to diff-export/no-edit. Returning supplied content or a host-native artifact avoids creating evidence files in a user-owned workspace while preserving the actual diff required by independent review.",
+      "authority_or_condition": "src/control-model/core-contracts.json profile_contract.capability_terms.task-utility-mode rules diff-utility-output and utility-enforcement; src/control-prompts/main-control-agent.md:28-32",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Retain the before-and-after workspace diff comparison; invalidate the utility result and block downstream review if the check changes or is unavailable.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "axis": "root",
+      "candidate_id": "ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Formal readiness is an explicit release claim whose evidence obligation cannot be satisfied by merely declaring scope; Core lists formal evidence as a non-bypassable control and repeats the formal-scope rule.",
+      "authority_or_condition": "src/control-model/core-contracts.json execution_level_contract.non_bypassable and execution_level_contract.validation_loop.formal_scope_rule; src/control-prompts/main-control-agent.md:48",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Retain the fail-closed formal-evidence gate and report blocked or partial whenever current formal evidence is missing.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "Static source and contract review only; this ballot does not prove real-host or production behavior.",
+    "This authoring-lifecycle disposition review does not replace readability or professional-completeness formal attestations."
+  ]
+}

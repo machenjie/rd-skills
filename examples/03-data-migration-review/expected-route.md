@@ -1,40 +1,25 @@
 # Expected Route
 
-```yaml
-scenario_id: l4-db-migration-api-compat
-selected_skills:
-  - change-intake-compiler
-  - change-impact-analyzer
-  - architecture-impact-reviewer
-  - data-api-contract-changer
-  - data-middleware-change-builder
-  - backend-change-builder
-  - quality-test-gate
-  - delivery-release-gate
-  - reliability-observability-gate
-  - change-documentation-gate
-selected_capabilities:
-  - implementation-structure-design
-  - data-migration-design
-  - relational-database
-  - transaction-consistency
-  - repository-persistence
-  - api-contract-design
-  - version-compatibility
-  - integration-testing
-  - release-rollback
-  - observability
-required_quality_gates:
-  - requirement gate
-  - impact gate
-  - architecture gate
-  - API/data gate
-  - implementation gate
-  - reliability gate
-  - test gate
-  - delivery gate
-  - documentation gate
-review_owner: delivery-release-gate
-```
+## Path
 
-The expected decision is to challenge the same-release removal and require expand-contract sequencing unless existing evidence proves mixed-version and rollback safety.
+Analyzed Work, because the proposed same-release removal affects
+stored data, mixed-version compatibility, rollback, and unknown consumers.
+
+## Analysis Assignment
+
+- Profile: `analysis-agent`
+- Primary Professional Skill: `delivery-release-gate`
+- Layer 3 Skills: `release-rollback`, `version-compatibility`
+- Required output: compatibility and rollback boundaries for the actual
+  migration, plus the review scope; no implementation task is implied.
+
+## Review Assignment
+
+- Profile: `review-agent`
+- Primary Professional Skill: `delivery-release-gate`
+- Layer 3 Skills: `ci-cd`
+- Review boundary: actual migration and application diff, old/new readers and
+  writers, rollout order, rollback behavior, reconciliation, and validation
+
+The expected finding is to require expand-contract sequencing unless current
+source and executable mixed-version evidence prove same-release removal safe.

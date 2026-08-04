@@ -1,0 +1,12 @@
+# Delivery Release Gate Reference Index
+
+Reference type: index
+Load when: choosing one local reference for a selected release risk; record why a plausible reference is skipped.
+Do not load when: the root contract or a named reference already identifies the needed material.
+
+| Reference | Load When | Do Not Load When | Depends On | Conflicts With | Max Level | Output Fragment |
+| --- | --- | --- | --- | --- | --- | --- |
+| `../examples/example-output.md` | A selected mode needs a tiny example before drafting a compact delivery result. | The root contract is enough or evidence must be release-specific. | Mode, affected boundary, selected rollout/recovery outcome, and residual risk. | Treating example text as validation evidence or a substitute for release proof. | L1 | Compact conditional delivery result. |
+| `references/checklist.md` | A bounded L2 mode needs compact checks for its triggered artifact, configuration, migration, rollout, recovery, or watch risk. | The root gate is enough or mode-specific closure and targeted proof are required. | Changed release surface, target environment, owner, selected mode, and validation signal. | Checklist completion replacing pipeline output, rendered diff, selected recovery proof, or residual-risk closure. | L2 | Compact conditional delivery checklist. |
+| `references/release-evidence-patterns.md` | Closure depends on pipeline/report artifacts, command status, failed-attempt record, canary proof, rollback/audit evidence, freshness, or proof limits. | No release claim depends on runtime evidence or the body evidence contract is sufficient. | Selected claim, artifact source, command/pipeline, freshness window, and owner. | Copying full command output or approving release without evidence limits. | L4 | Evidence map with what each release artifact proves, does not prove, and leaves as residual risk. |
+| `references/delivery-output-and-gates.md` | L3-L5 work needs mode-specific closure and targeted gates for selected provenance, rollout, migration/skew, recovery, IaC, hotfix, or regulated-release risk. | A compact L1/L2 result is sufficient and no selected risk needs the extended proof contract. | Assigned mode, affected release boundary, blast radius, reversibility, current delivery system/policy, and available evidence. | Combining mode ownership or treating candidate tools and processes as universal requirements. | L5 | Conditional Analysis/Task/Review closure and risk-to-proof gates. |

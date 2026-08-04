@@ -1,0 +1,12 @@
+{
+  "decision": "cover both public and notification dereferences; keep strict export strict",
+  "matches": [
+    "public_profile",
+    "notification_preview",
+    "strict_export"
+  ],
+  "pattern_signature": "profile name dereference after profile lookup",
+  "scope": [
+    "profile_paths.py"
+  ]
+}

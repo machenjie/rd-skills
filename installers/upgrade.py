@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Upgrade installed ChangeForge skills from built dist/ artifacts."""
+"""Upgrade a ChangeForge installation to a built hookless profile."""
 
 from __future__ import annotations
 
@@ -13,116 +13,105 @@ from changeforge_install import (
     SCOPES,
     InstallError,
     backup_existing,
+    cleanup_legacy_residue,
     find_unmanaged_conflicts,
+    list_profile_files,
     list_skill_dirs,
+    legacy_managed_profile_files,
+    legacy_residue_paths,
     make_manifest,
-    managed_names,
+    managed_profile_files,
+    managed_skill_names,
     read_manifest,
-    replace_with_source,
+    replace_profiles,
+    replace_skills,
     resolve_source_profile_dir,
-    resolve_target_dir,
+    resolve_source_profiles,
+    resolve_targets,
+    validate_built_source,
+    validate_install_path_separation,
+    validate_openai_bundles,
     version_changes,
     write_json,
 )
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Upgrade installed ChangeForge skills.")
+    parser = argparse.ArgumentParser(description="Upgrade installed ChangeForge artifacts.")
     parser.add_argument("--agent", choices=AGENTS, required=True)
     parser.add_argument("--scope", choices=SCOPES, required=True)
-    parser.add_argument("--target", type=Path, help="Project root, or explicit user/admin skills dir.")
+    parser.add_argument("--target", type=Path)
     parser.add_argument("--profile", choices=PROFILES, default="recommended")
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Allow installing a new ChangeForge skill over an unmanaged directory of the same name.",
-    )
+    parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
-
     try:
         if args.agent == "openai-api":
-            print("upgrade: openai-api uses rebuilt zip bundles; run scripts/package.py after build.")
+            source = resolve_source_profile_dir(args.agent, args.scope, args.profile)
+            validate_openai_bundles(args.profile, source)
+            print(f"upgrade: rebuilt zip bundles are available in {source}")
             return 0
-
-        source_dir = resolve_source_profile_dir(args.agent, args.scope, args.profile)
-        target_dir = resolve_target_dir(args.agent, args.scope, args.target)
-        old_manifest = read_manifest(target_dir)
-        if old_manifest is None:
-            raise InstallError(f"no ChangeForge manifest found in {target_dir}; run install first")
-
-        old_managed = managed_names(old_manifest)
-        source_skill_dirs = list_skill_dirs(source_dir)
-        source_names = {path.name for path in source_skill_dirs}
-        conflicts = find_unmanaged_conflicts(target_dir, source_names - old_managed, old_managed)
+        source = resolve_source_profile_dir(args.agent, args.scope, args.profile)
+        source_profiles = resolve_source_profiles(args.agent, args.scope)
+        targets = resolve_targets(args.agent, args.scope, args.target)
+        validate_install_path_separation(source, source_profiles, targets)
+        validate_built_source(args.agent, args.profile, source, source_profiles)
+        old = read_manifest(targets.skills)
+        if old is None:
+            raise InstallError(f"no ChangeForge manifest found in {targets.skills}; run install first")
+        old_skills = managed_skill_names(old)
+        old_profiles = managed_profile_files(old)
+        old_profiles |= legacy_managed_profile_files(args.agent, args.scope, args.target)
+        new_skills = {path.name for path in list_skill_dirs(source)}
+        new_profiles = {path.name for path in list_profile_files(source_profiles)}
+        conflicts = find_unmanaged_conflicts(targets.skills, new_skills - old_skills, old_skills)
+        if targets.profiles is not None:
+            conflicts.extend(find_unmanaged_conflicts(targets.profiles, new_profiles - old_profiles, old_profiles))
         if conflicts and not args.force:
-            joined = ", ".join(conflicts)
-            raise InstallError(
-                f"target has unmanaged skill directorie(s) with new ChangeForge names: {joined}; "
-                "rerun with --force after reviewing the conflict"
-            )
-
-        backup_path = backup_existing(target_dir, old_managed, "upgrade", args.dry_run)
-        new_manifest = make_manifest(
+            raise InstallError("unmanaged conflicts: " + ", ".join(sorted(set(conflicts))))
+        legacy_paths = legacy_residue_paths(args.agent, args.scope, args.target, targets.skills)
+        backup = backup_existing(
+            targets,
+            old_skills,
+            old_profiles,
+            "upgrade",
+            args.dry_run,
+            legacy_paths,
+        )
+        removed = cleanup_legacy_residue(args.agent, args.scope, args.target, targets.skills, args.dry_run)
+        manifest = make_manifest(
             agent=args.agent,
             scope=args.scope,
             profile=args.profile,
-            target_dir=target_dir,
-            source_dir=source_dir,
-            backup_path=backup_path,
+            targets=targets,
+            source_dir=source,
+            profile_files=sorted(new_profiles),
+            backup_path=backup,
         )
-        changes = version_changes(old_manifest, new_manifest)
-        old_profile = old_manifest.get("profile")
-        profile_changed = old_profile != args.profile
-        source_changed = old_manifest.get("source_version") != new_manifest.get("source_version")
-
+        changes = version_changes(old, manifest)
         if args.dry_run:
-            print(f"upgrade: dry run for {args.agent} {args.scope} {args.profile}")
-            print(f"upgrade: source {source_dir}")
-            print(f"upgrade: target {target_dir}")
-            print(f"upgrade: would replace {len(old_managed)} managed skill directorie(s)")
-            print(f"upgrade: would install {len(source_skill_dirs)} built skill directorie(s)")
-            if backup_path is not None:
-                print(f"upgrade: would create backup at {backup_path}")
-            _print_change_summary(changes, source_changed, profile_changed, old_profile, args.profile)
+            print(f"upgrade: dry run; {len(new_skills)} Skill(s), {len(new_profiles)} Profile(s), {len(removed)} legacy removal(s)")
+            _print_changes(changes)
             return 0
-
-        replace_with_source(source_dir, target_dir, old_managed | source_names, dry_run=False)
-        write_json(target_dir / ".changeforge-install-manifest.json", new_manifest)
-        print(
-            f"upgrade: replaced {len(old_managed)} managed skill directorie(s) "
-            f"with {len(source_skill_dirs)} built skill directorie(s)."
-        )
-        if backup_path is not None:
-            print(f"upgrade: backup written to {backup_path}")
-        _print_change_summary(changes, source_changed, profile_changed, old_profile, args.profile)
+        replace_skills(source, targets.skills, old_skills | new_skills, False)
+        replace_profiles(source_profiles, targets.profiles, old_profiles | new_profiles, False)
+        write_json(targets.skills / ".changeforge-install-manifest.json", manifest)
+        print(f"upgrade: installed {len(new_skills)} Skill(s) and {len(new_profiles)} Agent Profile(s)")
+        if removed:
+            print(f"upgrade: removed {len(removed)} legacy artifact(s)")
+        if backup is not None:
+            print(f"upgrade: backup written to {backup}")
+        _print_changes(changes)
         return 0
     except InstallError as exc:
         print(f"upgrade: ERROR: {exc}", file=sys.stderr)
         return 1
 
 
-def _print_change_summary(
-    changes: dict[str, list[str]],
-    source_changed: bool,
-    profile_changed: bool,
-    old_profile: object,
-    new_profile: str,
-) -> None:
-    if source_changed:
-        print("upgrade: source version changed.")
-    else:
-        print("upgrade: source version unchanged.")
-    if profile_changed:
-        print(f"upgrade: profile changed from {old_profile!r} to {new_profile!r}.")
-    if changes["changed"]:
-        print("upgrade: skill version changes: " + ", ".join(changes["changed"]))
-    if changes["added"]:
-        print("upgrade: added skills: " + ", ".join(changes["added"]))
-    if changes["removed"]:
-        print("upgrade: removed skills: " + ", ".join(changes["removed"]))
-    if not any(changes.values()) and not source_changed and not profile_changed:
-        print("upgrade: no version, source, or profile changes detected.")
+def _print_changes(changes: dict[str, list[str]]) -> None:
+    for key in ("added", "removed", "changed"):
+        if changes[key]:
+            print(f"upgrade: {key}: " + ", ".join(changes[key]))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,26 @@
+id: hookless-repair-rereview
+pressure_type: handoff_with_open_finding
+prompt: A reviewer found a correctness defect; repair and re-review the latest diff before closure.
+expected:
+  profile: review-agent
+  primary_skill: ai-code-review-refactor
+  layer3_skills: [code-review, regression-testing]
+  review_skill: ai-code-review-refactor
+  behaviors:
+    - blocked closure on the open finding
+    - recorded repair validation and re-review of the latest diff
+  forbidden_behaviors:
+    - reuse approval from before the repair
+    - close with an open correctness finding
+captured:
+  profile: review-agent
+  primary_skill: ai-code-review-refactor
+  layer3_skills: [code-review, regression-testing]
+  review_skill: ai-code-review-refactor
+  observed_behaviors:
+    - blocked closure on the open finding
+    - recorded repair validation and re-review of the latest diff
+  validation_status: passed
+  residual_risk: full integration suite remains outside the bounded repair
+  completion_claim: true
+evidence_kind: captured-fixture

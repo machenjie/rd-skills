@@ -1,51 +1,35 @@
 # Logging Output And Gates
 
-Load this reference when `logging-design-gate` needs the full output field list, closure gate, or handoff routing table. Keep the main skill body compact.
+Load only when assigned L3-L5 logging implementation or independent review needs mode-specific closure plus targeted proof for purpose, placement, fields/redaction/correlation, volume/sinks, or failure visibility.
+
+## Do Not Load
+
+Do not load when no logging behavior changes or when the root contract or compact checklist is sufficient. Use the selection-criteria reference only when a concrete decision needs its additional detail.
 
 ## Output Contract
 
-Return a logging design decision with:
+Return exactly one mode closure, followed only by fields triggered by the selected logging risk:
 
-- **Mode selected**: no-log decision, diagnostic/error logging, security/access/audit logging, or hot-path signal design, with trigger signal.
-- **Boundaries inspected**: entry/controller, domain, application service, adapter, queue/worker, security boundary, existing logger helpers, config sinks, tests, and skipped areas with reason.
-- **Current-source reuse map**: accepted/rejected logger helper, field naming, trace context, redaction utility, sink, and test convention, including graph/memory/trajectory freshness.
-- **Decision status**: `needed=true` with complete design, or `needed=false` with concrete metric, trace, test, public-behavior, or no-log alternative.
-- **Log type and purpose**: diagnostic, audit, business event, security, access, integration/dependency, lifecycle, or no-log rationale.
-- **Placement rationale**: owner layer, event boundary, and why the log belongs there instead of caller, domain object, adapter, or sink processor.
-- **Level decision**: DEBUG/INFO/WARN/ERROR/CRITICAL policy for expected validation, 404, retry, fallback, degradation, and terminal failure.
-- **Structured field schema**: field names, field source, allowed values, hashed identifiers, correlation identifiers, and compatibility with current conventions.
-- **Forbidden field exclusions**: raw body, raw webhook body, raw URL query, authorization header, cookie, token, password, signature, secret, session id, and unapproved PII.
-- **Redaction and hashing policy**: utility used, values transformed, values omitted, and test or review evidence.
-- **Correlation and trace propagation**: trace_id, span_id, request_id, correlation_id, job id hash, or explicit no-correlation rationale.
-- **Cardinality and volume controls**: sampling, rate limit, aggregation, DEBUG-only policy, metric-label limits, and hot-path performance assumption.
-- **Signal split**: which operational question is answered by logs, metrics, traces, alerts, dashboards, or tests.
-- **Audit and retention split**: audit sink, retention, actor/action/resource/result fields, diagnostic sink, and compliance owner when relevant.
-- **Validation evidence**: command, test, validator, review artifact, exit code or not-run status, freshness, what evidence proves, and what it does not prove.
-- **Tool permission/sandbox record**: shell, connector, log export, telemetry query, or secret-bearing action class, permission state, sandbox boundary, rollback/revert path, and redaction rule.
-- **Behavior preservation**: existing API behavior, error contract, retry/fallback semantics, audit retention, privacy promises, and performance preserved or intentionally changed.
-- **Residual risk**: sink configuration, retention policy, downstream processor, real traffic volume, unusual logger framework, or unverified production environment with owner.
-- **Next gate/handoff**: security, reliability, quality, backend, data middleware, integration, documentation, delivery, or no-next-gate rationale.
+1. **Task closure:**
+   - Return the actual logging diff, post-edit validation, preserved behavior, proof limits, residual risk, and next independent-review owner.
+   - Leave approval to an independent reviewer.
+2. **Review closure:**
+   - Return `Approved`, `Returned`, or `Blocked` with findings, reviewed and unreviewed changed files, and evidence limits.
+   - Use `Blocked` for inaccessible required evidence, naming missing evidence, unblock condition, repair owner, and handoff.
+   - Make no repair to the target.
+3. **Purpose and signal choice:** State the operator, audit, security, or diagnostic question and whether a log is needed. A better existing signal leaves the selected metric, trace, test, alert, or no-new-signal outcome and current platform evidence explicit.
+4. **Placement, level, and failure visibility:** When a log is selected, state the owning event boundary and the level chosen under current policy. From the changed lifecycle, name the reachable failure states the diagnostic or audit purpose needs to distinguish, and omit unobserved states from the claim. For operational response, state the operator action; for audit evidence, state its consumer and meaning instead.
+5. **Fields, redaction, and correlation:** When a log is selected, state its purpose-required fields, their source, and allowed shape. Classified data carries omission or transformation evidence, while cross-boundary linkage carries the selected correlation outcome.
+6. **Volume, cardinality, retention, and sinks:** When event rate or value space creates material volume/cardinality risk, state assumptions, cost/noise impact, and the selected sampling/aggregation/rate control. Separately, when classification or platform policy changes retention, access, or sink handling, state the selected boundary and owner.
+7. **Evidence limits and next owner:** Tie tests, captured events, schema/redaction checks, logger configuration, sink evidence, or volume measurements to the decision they support. Name unverified production configuration/traffic, downstream processors, unusual framework behavior, and residual leakage or diagnosability risk.
 
 ## Quality Gate
 
-1. Logging need or no-log rationale is explicit and tied to an operational, audit, security, or test evidence question.
-2. Log type, placement, level, event, fields, redaction, correlation, and cardinality controls are concrete when logging is needed.
-3. Audit, security, access, diagnostic, business event, integration, and lifecycle purposes are not conflated.
-4. Forbidden raw or secret-bearing fields are excluded by design and tested or manually reviewed when relevant.
-5. Expected validation/404, retryable intermediate failure, fallback/degradation, and terminal failure levels are distinguishable.
-6. Hot paths use metrics, traces, sampling, aggregation, rate limits, or DEBUG-only logs unless bounded lifecycle/business evidence justifies INFO.
-7. Required logging behavior maps to tests, validators, or explicit not-run residual risk with owner.
-8. Graph, memory, and prior trajectory reuse is accepted only after current logger source confirms it.
-9. Validation evidence states what it proves, what it does not prove, freshness, and evidence limits.
-10. Sensitive log, audit, production telemetry, connector, and shell actions include tool permission/sandbox evidence.
-
-## Handoff
-
-- **security-privacy-gate**: sensitive fields, audit/access/security logs, denial category, retention, or forbidden raw input risk remains.
-- **reliability-observability-gate**: metrics/traces/alerts, SLO signal, hot-path volume, cardinality, dashboard, or incident diagnosis needs broader observability design.
-- **quality-test-gate**: required fields, redaction, retry/fallback distinction, denial category, or trace propagation lack tests.
-- **backend-change-builder**: entry, service, adapter, worker, transaction, or error-boundary placement needs implementation.
-- **data-middleware-change-builder**: queue, consumer, retry, DLQ, lag, cache, source-of-truth, or fallback diagnostics need middleware ownership.
-- **integration-change-builder**: provider latency, translated error, retry, timeout, circuit state, reconciliation, or sandbox logs need adapter ownership.
-- **change-documentation-gate**: audit evidence, retention, runbook, or operational note must be documented.
-- **delivery-release-gate**: sink, retention, config, rollout, or post-release watch must be validated before release.
+1. Require a log only for a named event-record question that existing metrics, traces, tests, alerts, or signals cannot answer, excluding generic-visibility rationale.
+2. When logging is selected, require one level and operator meaning supported by current policy and failure lifecycle. Additional levels and lifecycle events remain conditional on reachable, decision-relevant validation, retry, fallback, degradation, and terminal states.
+3. After a diagnostic or audit purpose is selected for a log, include the stable fields needed to answer it and omit unneeded fields. Operation, outcome, actor/resource, duration, error category, version, or environment are candidates selected from current schemas and operator questions, not a universal template.
+4. When a candidate field contains secret, credential, sensitive payload, or classified personal data, require omission or tested transformation consistent with policy. Allowlisting, redaction, hashing, tokenization, or access-controlled audit storage are candidates selected from data use and re-identification risk.
+5. When events cross a boundary and linkage is needed, require a stable correlation outcome through a boundary-supported identifier without requiring every identifier or exposing raw identity values.
+6. When frequency or field value-space can create material cost, noise, performance, or cardinality risk, require bounded evidence and a control outcome. Sampling, aggregation, rate limiting, lower level, metric conversion, retention change, or no log are candidates selected from measured/platform constraints.
+7. When current policy assigns different retention, access, integrity, or sink requirements to audit, security, diagnostic, or access logs, state the selected separation and owner. Any mandate for every sink or fixed retention requires classification or policy evidence.
+8. Scope completion to fresh evidence: task validation follows the final material edit, while review remains read-only. Tests and local capture do not prove production sink configuration, real traffic volume, retention enforcement, or downstream redaction; name residual risk and next owner.

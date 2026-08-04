@@ -1,12 +1,10 @@
 # Containerization Checklist
 
-- Map every Dockerfile/Containerfile, build context, entrypoint, compose/orchestrator reference, CI image build, registry tag, and deploy manifest image reference in scope.
-- Separate build dependencies from runtime dependencies; copy only explicit artifacts into the runtime stage.
-- Use a digest-pinned base image and dependency version policy; record rejected base alternatives and CVE/compatibility tradeoffs.
-- Exclude credentials, caches, local files, test output, and source control metadata from the build context through `.dockerignore` and secret scanning.
-- Run as a named non-root user, validate file ownership, read-only rootfs behavior, and writable volume paths.
-- Keep runtime configuration out of image layers; use platform config and managed secret sources.
-- Verify ports, health/readiness/liveness behavior, startup semantics, shutdown/SIGTERM handling, and init needs.
-- Generate SBOM, run image and dependency vulnerability scans, and record exceptions with owner and expiry.
-- Attach or verify signing/provenance when release policy requires it; prove deploy manifests reference the expected digest.
-- Close with graph/memory/execution judgment, artifact-to-runtime validation map, validation commands/output/exit codes, rollback-to-prior-digest path, residual risks, and next gate.
+- Map the changed build definition, context, base and dependency inputs, entrypoint, produced image, registry identity, deploy reference, and rollback artifact.
+- Separate build-only capability from required runtime content; account for copied artifacts, native libraries, certificates, diagnostics, generated assets, and provenance.
+- Check retained layers, metadata, cache exports, logs, and copied config for secret material; identify the approved ephemeral build or runtime injection path.
+- Derive user, group, capability, device, namespace, ownership, writable-path, root-filesystem, and bounded-exception policy with an accountable owner from actual runtime behavior.
+- Define the container-side process and health contract for PID 1, signals, child processes where present, drain, termination, exit codes, and each health state consumed by the target platform.
+- Resolve mutable bases, package indexes, downloads, and toolchains under current update and provenance policy; verify ABI and runtime compatibility after relevant changes.
+- Produce vulnerability, SBOM, signing, or provenance evidence when changed risk or release policy requires it, and tie that evidence to the image digest it describes.
+- Validate each changed claim against the built image with applicable inspection, smoke, writable-path, health, termination, scan, artifact-to-deploy, proof-limit, and rollback-artifact evidence.

@@ -1,6 +1,6 @@
 # Microservice Splitting Evidence Patterns
 
-Use this reference when closure depends on current repository graph, project memory, execution trajectory, validation freshness, source-to-validation mapping, tool permission boundaries, or residual-risk wording. Keep it as an evidence map, not a second checklist.
+Use this reference when closure depends on current repository inspection, prior task evidence, observable action sequence, validation freshness, source-to-validation mapping, tool permission boundaries, or residual-risk wording. Keep it as an evidence map, not a second checklist.
 
 ## Split Claim-To-Evidence Map
 
@@ -15,21 +15,17 @@ Use this reference when closure depends on current repository graph, project mem
 | Migration and rollback are credible | Strangler/parallel-run/branch-by-abstraction phases, traffic switch, mixed-version window, rollback trigger, forward-fix path, and retirement criteria | The extraction can proceed incrementally | Data rollback or business reversal is guaranteed |
 | Operability is ready | Service owner, on-call, runbook, SLO, dashboard, alert, capacity/cost model, secrets/config owner, and incident escalation | The team can operate the service in the declared scope | Real incident response, future staffing, or cost drift is solved |
 
-## Graph, Memory, And Execution Reconciliation
+## Current Evidence And Freshness
 
-- Treat prior ADRs, project memory, diagrams, incident notes, and platform assumptions as leads until current source, deploy files, contracts, owners, and validation confirm them.
+- Treat prior ADRs, prior task evidence, diagrams, incident notes, and platform assumptions as leads until current source, deploy files, contracts, owners, and validation confirm them.
 - Mark evidence stale after edits to module ownership, data schema, API/event contracts, generated clients, deploy pipelines, feature flags, migration scripts, test fixtures, observability config, or validation commands.
 - Record inspected and skipped boundaries: modules, services, deploy units, data stores, contracts, consumers, transactions, queues/events, observability, ownership docs, release path, and generated artifacts.
 - Map every approval, deferral, rejection, or merge recommendation to a source path, command/report, owner review, or explicit not-verified residual risk.
 
 ## Tool Permission Boundary
 
-| Action | Boundary record |
-| --- | --- |
-| Source reads, registry search, ADR/doc inspection, and report review | Read-only local shell action; cite searched paths and avoid full output dumps |
-| Local graph, contract, compatibility, test, benchmark, build, or migration rehearsal | State-mutating only for caches, reports, temp files, generated clients, build artifacts, or test fixtures; cite command, exit code, artifact path, sandbox, write scope, and rollback |
-| Database, queue, telemetry, incident, or cost inspection | Data-reading action; record environment, bounded scope, owner, timestamp, redaction, and what production behavior remains unproved |
-| Production traffic switch, dual-write, backfill, or service deployment | Release-changing action; require owner approval, dry-run or staged rollout, rollback/forward-fix path, monitoring signal, and stop condition |
+- Production traffic switches, dual writes, backfills, and service deployments require accepted ownership, staged proof, a stop signal, and rollback or forward-fix paths for both sides of the split.
+- When database, queue, incident, telemetry, or cost evidence supports a candidate split, record its environment and observation window and qualify the conclusion with unobserved coupling or mixed-version behavior.
 
 ## Handoff Evidence Shape
 
@@ -52,4 +48,4 @@ microservice_split_evidence_closure:
 
 ## Blocking Conditions
 
-Block completion when the split is justified only by code size or preference, shared data ownership is unresolved, public contracts lack compatibility evidence, cross-service consistency lacks compensation or reconciliation, release relies on lockstep or big-bang cutover, production ownership is missing, project-memory evidence is reused without current-source confirmation, or artifact-writing commands lack write-scope and rollback disclosure.
+Block completion when the split relies only on code size, shared data ownership is unresolved, public contracts lack compatibility evidence, or cross-service consistency lacks recovery. Also block lockstep release, missing production ownership, stale prior evidence, and artifact-writing commands without write-scope and rollback disclosure.

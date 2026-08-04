@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-"""Evaluate professional agent-output samples without calling an LLM.
+"""Evaluate captured Hookless professional-agent handoff samples.
 
-Samples under evals/agent-behavior/professional-samples/ capture real or
-realistic agent outputs and the professional obligations they should satisfy.
-The evaluator treats raw output as untrusted text: it only performs deterministic
-coverage checks against the sample expectation and writes advisory reports by
-default. Use --strict to fail on missing obligations.
+Samples are checked-in, human-reviewed fixtures.  They are never represented as
+fresh live-agent evidence.
 """
 
 from __future__ import annotations
@@ -15,403 +12,262 @@ import json
 import re
 import sys
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from telemetry_utils import extract_route_manifest, manifest_string_list
 from validation_utils import ValidationProblem, load_yaml_file
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SAMPLES_DIR = ROOT / "evals" / "agent-behavior" / "professional-samples"
-DEFAULT_REPORTS_DIR = ROOT / "reports"
-MARKDOWN_REPORT = "professional-agent-samples-report.md"
-JSON_REPORT = "professional-agent-samples-report.json"
-PROMOTION_STATUSES = {"candidate", "promoted", "rejected"}
+HANDOFF_FIELDS = (
+    "result",
+    "changed_files",
+    "commands_run",
+    "validation_results",
+    "findings",
+    "unverified_scope",
+    "residual_risk",
+    "recommended_next_step",
+)
+DISPATCHED_PROFILES = {"analysis-agent", "task-agent", "review-agent"}
 
 
 @dataclass
 class SampleResult:
     sample_id: str
     path: str
-    promotion_status: str = ""
-    human_review_required: bool | None = None
-    selected_skills_missing: list[str] = field(default_factory=list)
-    selected_capabilities_missing: list[str] = field(default_factory=list)
-    required_references_missing: list[str] = field(default_factory=list)
-    required_quality_gates_missing: list[str] = field(default_factory=list)
-    professional_obligations_missing: list[str] = field(default_factory=list)
-    forbidden_behavior_hits: list[str] = field(default_factory=list)
-    missing_actual_fields: list[str] = field(default_factory=list)
-    schema_errors: list[str] = field(default_factory=list)
-    notes: str = ""
-
-    @property
-    def ok(self) -> bool:
-        return not (
-            self.selected_skills_missing
-            or self.selected_capabilities_missing
-            or self.required_references_missing
-            or self.required_quality_gates_missing
-            or self.professional_obligations_missing
-            or self.forbidden_behavior_hits
-            or self.missing_actual_fields
-            or self.schema_errors
-        )
-
-
-@dataclass
-class AgentSampleReport:
-    generated_at: str
-    samples_checked: int
-    mode: str
-    strict: bool
-    warnings: int
-    failures: int
-    results: list[SampleResult]
+    promotion_status: str
+    status: str = "fail"
+    profile: str = ""
+    primary_skill: str = ""
+    layer3_skills: list[str] = field(default_factory=list)
+    review_skill: str = ""
+    obligations_covered: list[str] = field(default_factory=list)
+    missing_obligations: list[str] = field(default_factory=list)
+    forbidden_hits: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = _parse_args(sys.argv[1:] if argv is None else argv)
-    sample_files = _collect_sample_files(args.samples_dir)
-    results: list[SampleResult] = []
-    for path in sample_files:
-        try:
-            data = load_yaml_file(path)
-        except (OSError, ValidationProblem) as exc:
-            results.append(
-                SampleResult(
-                    sample_id=_rel(path),
-                    path=_rel(path),
-                    schema_errors=[f"failed to load sample: {exc}"],
-                )
-            )
-            continue
-        result = _evaluate_sample(path, data)
-        if _matches_filter(result, args):
-            results.append(result)
-
-    failures = sum(1 for result in results if not result.ok)
-    report = AgentSampleReport(
-        generated_at=datetime.now(timezone.utc).isoformat(),
-        samples_checked=len(results),
-        mode=_mode(args),
-        strict=bool(args.strict),
-        warnings=failures,
-        failures=failures if args.strict else 0,
-        results=results,
-    )
-    written = _write_reports(report, args.reports_dir, args.format)
-    print(
-        f"eval-professional-agent-samples: checked {report.samples_checked} sample(s); "
-        f"warnings={report.warnings}; strict={str(report.strict).lower()}"
-    )
-    for path in written:
-        print(f"- report: {path}")
-    if args.strict and failures:
-        for result in results:
-            if not result.ok:
-                print(
-                    f"eval-professional-agent-samples: ERROR: {result.path}: "
-                    + "; ".join(_result_findings(result)),
-                    file=sys.stderr,
-                )
+    args = _args(sys.argv[1:] if argv is None else argv)
+    try:
+        professional, layer3 = _registries()
+    except ValidationProblem as exc:
+        print(f"eval-professional-agent-samples: ERROR: {exc}", file=sys.stderr)
         return 1
-    return 0
+    paths = sorted(
+        path for path in args.samples_dir.rglob("*.yaml") if "raw" not in path.parts
+    )
+    results: list[SampleResult] = []
+    for path in paths:
+        data = load_yaml_file(path)
+        if not isinstance(data, dict):
+            continue
+        promotion = str(_mapping(data.get("review")).get("promotion_status", "candidate"))
+        if args.promoted_only and promotion != "promoted":
+            continue
+        if args.candidates_only and promotion != "candidate":
+            continue
+        results.append(_sample(path, data, professional, layer3))
+    errors = [f"{row.path}: {message}" for row in results for message in row.errors]
+    if args.strict:
+        if args.promoted_only and len(results) < 2:
+            errors.append("strict promoted evaluation requires at least two promoted samples")
+        if not results:
+            errors.append("strict evaluation selected no samples")
+    payload = {
+        "schema_version": 2,
+        "architecture": "hookless-control-plane",
+        "evaluation_kind": "captured-human-reviewed-samples",
+        "evidence_limitations": [
+            "Samples are checked-in captures, not fresh agent executions.",
+            "Promotion proves fixture review status, not live model accuracy.",
+            "No efficiency or adoption threshold is evaluated.",
+        ],
+        "strict": args.strict,
+        "promoted_only": args.promoted_only,
+        "candidates_only": args.candidates_only,
+        "samples_checked": len(results),
+        "promoted_checked": sum(row.promotion_status == "promoted" for row in results),
+        "candidate_checked": sum(row.promotion_status == "candidate" for row in results),
+        "errors": errors,
+        "results": [asdict(row) for row in results],
+    }
+    _write(args.reports_dir, payload, args.format)
+    print(
+        "eval-professional-agent-samples: "
+        f"checked={len(results)}; promoted={payload['promoted_checked']}; "
+        f"errors={len(errors)}; evidence=captured"
+    )
+    for error in errors:
+        print(f"eval-professional-agent-samples: ERROR: {error}", file=sys.stderr)
+    return 1 if errors else 0
 
 
-def _parse_args(argv: list[str]) -> argparse.Namespace:
+def _args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--samples-dir", type=Path, default=DEFAULT_SAMPLES_DIR)
-    parser.add_argument("--reports-dir", type=Path, default=DEFAULT_REPORTS_DIR)
+    parser.add_argument(
+        "--samples-dir",
+        type=Path,
+        default=ROOT / "evals/agent-behavior/professional-samples",
+    )
+    parser.add_argument("--reports-dir", type=Path, default=ROOT / "reports")
     parser.add_argument("--promoted-only", action="store_true")
     parser.add_argument("--candidates-only", action="store_true")
     parser.add_argument("--strict", action="store_true")
-    parser.add_argument(
-        "--format",
-        choices=("all", "markdown", "json"),
-        default="all",
-        help="report format to write; default writes Markdown and JSON",
+    parser.add_argument("--format", choices=("all", "markdown", "json"), default="all")
+    return parser.parse_args(argv)
+
+
+def _registries() -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+    pro_data = load_yaml_file(ROOT / "src/registry/professional-skills.yaml")
+    foundation_data = load_yaml_file(ROOT / "src/registry/foundation-skills.yaml")
+    domain_data = load_yaml_file(ROOT / "src/registry/domain-skills.yaml")
+    if not all(isinstance(item, dict) for item in (pro_data, foundation_data, domain_data)):
+        raise ValidationProblem("three-layer Skill registries must be mappings")
+    professional = {
+        str(row.get("name", "")): row
+        for row in pro_data.get("professional_skills", [])
+        if isinstance(row, dict)
+    }
+    layer3 = {
+        str(row.get("name", "")): row
+        for row in foundation_data.get("foundation_skills", [])
+        if isinstance(row, dict)
+    }
+    layer3.update(
+        {
+            str(row.get("name", "")): row
+            for row in domain_data.get("domain_skills", [])
+            if isinstance(row, dict)
+        }
     )
-    args = parser.parse_args(argv)
-    if args.promoted_only and args.candidates_only:
-        parser.error("--promoted-only and --candidates-only are mutually exclusive")
-    return args
+    return professional, layer3
 
 
-def _collect_sample_files(samples_dir: Path) -> list[Path]:
-    if not samples_dir.is_dir():
-        return []
-    return sorted(
-        path
-        for path in samples_dir.rglob("*.yaml")
-        if path.is_file() and not path.name.startswith(".")
+def _sample(
+    path: Path,
+    data: dict[str, Any],
+    professional: dict[str, dict[str, Any]],
+    layer3: dict[str, dict[str, Any]],
+) -> SampleResult:
+    expected = _mapping(data.get("expected"))
+    actual = _mapping(data.get("actual"))
+    review = _mapping(data.get("review"))
+    result = SampleResult(
+        sample_id=str(data.get("id", "")).strip() or _rel(path),
+        path=_rel(path),
+        promotion_status=str(review.get("promotion_status", "candidate")).strip(),
+        profile=str(actual.get("profile", "")).strip(),
+        primary_skill=str(actual.get("primary_skill", "")).strip(),
+        layer3_skills=_strings(actual.get("layer3_skills")),
+        review_skill=str(actual.get("review_skill", "")).strip(),
     )
-
-
-def _matches_filter(result: SampleResult, args: argparse.Namespace) -> bool:
-    if args.promoted_only:
-        return result.promotion_status == "promoted"
-    if args.candidates_only:
-        return result.promotion_status == "candidate"
-    return True
-
-
-def _evaluate_sample(path: Path, data: Any) -> SampleResult:
-    result = SampleResult(sample_id=_rel(path), path=_rel(path))
-    if not isinstance(data, dict):
-        result.schema_errors.append("sample must be a mapping")
-        return result
-
-    sample_id = _string(data.get("id"))
-    result.sample_id = sample_id or _rel(path)
-    for field_name in ("id", "description", "prompt"):
-        if not _string(data.get(field_name)):
-            result.schema_errors.append(f"missing string '{field_name}'")
-
-    expected = data.get("expected")
-    actual = data.get("actual")
-    review = data.get("review")
-    if not isinstance(expected, dict):
-        result.schema_errors.append("missing 'expected' mapping")
-        expected = {}
-    if not isinstance(actual, dict):
-        result.schema_errors.append("missing 'actual' mapping")
-        actual = {}
-    if not isinstance(review, dict):
-        result.schema_errors.append("missing 'review' mapping")
-        review = {}
-
-    result.promotion_status = _string(review.get("promotion_status"))
-    if result.promotion_status not in PROMOTION_STATUSES:
-        result.schema_errors.append(
-            "review.promotion_status must be candidate, promoted, or rejected"
+    if not str(data.get("prompt", "")).strip():
+        result.errors.append("prompt is required")
+    for field in ("profile", "primary_skill", "layer3_skills", "review_skill"):
+        expected_value = expected.get(field)
+        actual_value = actual.get(field)
+        if expected_value != actual_value:
+            result.errors.append(f"actual.{field} does not match expected.{field}")
+    if result.profile not in DISPATCHED_PROFILES:
+        result.errors.append(f"invalid dispatched profile '{result.profile}'")
+    primary = professional.get(result.primary_skill)
+    if primary is None:
+        result.errors.append(f"unknown primary Professional Skill '{result.primary_skill}'")
+    elif result.profile not in _strings(primary.get("role_support")):
+        result.errors.append(
+            f"profile '{result.profile}' is not supported by primary Skill '{result.primary_skill}'"
         )
-    human_review = review.get("human_review_required")
-    if isinstance(human_review, bool):
-        result.human_review_required = human_review
-    else:
-        result.schema_errors.append("review.human_review_required must be true or false")
-    result.notes = _string(review.get("notes"))
+    if len(result.layer3_skills) > 3:
+        result.errors.append("captured task loads more than three Layer 3 Skills")
+    if len(result.layer3_skills) != len(set(result.layer3_skills)):
+        result.errors.append("captured task repeats a Layer 3 Skill")
+    primary_candidates = set(_strings(_mapping(primary).get("layer3_candidates")))
+    for name in result.layer3_skills:
+        if name not in layer3:
+            result.errors.append(f"unknown Layer 3 Skill '{name}'")
+        elif name not in primary_candidates:
+            result.errors.append(
+                f"Layer 3 Skill '{name}' is not a candidate of primary Skill "
+                f"'{result.primary_skill}'"
+            )
+        elif result.profile not in _strings(layer3[name].get("role_support")):
+            result.errors.append(
+                f"Layer 3 Skill '{name}' does not support profile '{result.profile}'"
+            )
+    review_entry = professional.get(result.review_skill)
+    if review_entry is None:
+        result.errors.append(f"unknown Review Skill '{result.review_skill}'")
+    elif "review-agent" not in _strings(review_entry.get("role_support")):
+        result.errors.append(f"Review Skill '{result.review_skill}' does not support review-agent")
 
-    manifest = _actual_manifest(actual)
-    if manifest is None:
-        result.schema_errors.append("actual must include route_manifest or raw_output with changeforge_route")
-        manifest = {}
-
-    actual_text = _actual_text(actual, manifest)
-    result.selected_skills_missing = _missing(
-        _string_list(expected.get("selected_skills")),
-        manifest_string_list(manifest, "selected_skills"),
-    )
-    result.selected_capabilities_missing = _missing(
-        _string_list(expected.get("selected_capabilities")),
-        manifest_string_list(manifest, "selected_capabilities"),
-    )
-    result.required_references_missing = _missing(
-        _string_list(expected.get("required_references")),
-        manifest_string_list(manifest, "required_references"),
-    )
-    result.required_quality_gates_missing = _missing(
-        _string_list(expected.get("required_quality_gates")),
-        manifest_string_list(manifest, "required_quality_gates"),
-    )
-    result.professional_obligations_missing = [
-        obligation
-        for obligation in _string_list(expected.get("required_professional_obligations"))
-        if not _meaning_present(actual_text, obligation)
+    handoff = _mapping(actual.get("handoff"))
+    for field in HANDOFF_FIELDS:
+        if field not in handoff or handoff[field] is None or handoff[field] == "":
+            result.errors.append(f"actual.handoff.{field} is required")
+    handoff_text = _fold(json.dumps(handoff, ensure_ascii=False))
+    obligations = _strings(expected.get("required_professional_obligations"))
+    result.obligations_covered = [item for item in obligations if _fold(item) in handoff_text]
+    result.missing_obligations = [item for item in obligations if item not in result.obligations_covered]
+    if result.missing_obligations:
+        result.errors.append("missing captured obligation(s): " + ", ".join(result.missing_obligations))
+    result.forbidden_hits = [
+        item
+        for item in _strings(expected.get("forbidden_behaviors"))
+        if _fold(item) in handoff_text
     ]
-    result.forbidden_behavior_hits = [
-        behavior
-        for behavior in _string_list(expected.get("forbidden_behaviors"))
-        if _forbidden_present(actual_text, behavior)
-    ]
-    result.missing_actual_fields = _missing_actual_fields(actual_text, actual)
+    if result.forbidden_hits:
+        result.errors.append("captured handoff contains forbidden behavior(s): " + ", ".join(result.forbidden_hits))
+    if result.promotion_status not in {"candidate", "promoted"}:
+        result.errors.append("review.promotion_status must be candidate or promoted")
+    if result.promotion_status == "promoted" and bool(review.get("human_review_required")):
+        result.errors.append("promoted fixture cannot still require human review")
+    result.status = "pass" if not result.errors else "fail"
     return result
 
 
-def _actual_manifest(actual: dict[str, Any]) -> dict[str, Any] | None:
-    manifest = actual.get("route_manifest")
-    if isinstance(manifest, dict):
-        return manifest
-    raw_output = actual.get("raw_output")
-    if isinstance(raw_output, str):
-        return extract_route_manifest(raw_output)
-    return None
-
-
-def _actual_text(actual: dict[str, Any], manifest: dict[str, Any]) -> str:
-    parts: list[str] = []
-    for key in ("raw_output", "validation_evidence", "residual_risk", "inspected_boundaries", "next_gate"):
-        value = actual.get(key)
-        if isinstance(value, str):
-            parts.append(value)
-        elif isinstance(value, list):
-            parts.extend(str(item) for item in value)
-        elif isinstance(value, dict):
-            parts.append(json.dumps(value, sort_keys=True))
-        elif value is True:
-            parts.append(key.replace("_", " "))
-    if manifest:
-        parts.append(json.dumps(manifest, sort_keys=True))
-    return "\n".join(parts)
-
-
-def _missing_actual_fields(actual_text: str, actual: dict[str, Any]) -> list[str]:
-    required = {
-        "validation_evidence": ("validation evidence", "validation command", "not verified", "not-verified"),
-        "residual_risk": ("residual risk",),
-        "inspected_boundaries": ("inspected boundaries", "boundaries inspected"),
-        "next_gate": ("next gate", "handoff"),
-    }
-    missing: list[str] = []
-    for field_name, fallback_terms in required.items():
-        if _field_present(actual.get(field_name)):
-            continue
-        if _mentions(actual_text, fallback_terms):
-            continue
-        missing.append(field_name)
-    return missing
-
-
-def _field_present(value: Any) -> bool:
-    if value is True:
-        return True
-    if isinstance(value, str):
-        return bool(value.strip())
-    if isinstance(value, (list, dict)):
-        return bool(value)
-    return False
-
-
-def _missing(expected: list[str], actual: list[str]) -> list[str]:
-    actual_set = set(actual)
-    return [item for item in expected if item not in actual_set]
-
-
-def _meaning_present(text: str, phrase: str) -> bool:
-    folded_text = _fold(text)
-    folded_phrase = _fold(phrase)
-    if not folded_phrase:
-        return True
-    if folded_phrase in folded_text:
-        return True
-    tokens = [token for token in folded_phrase.split() if len(token) >= 4]
-    if len(tokens) < 2:
-        return False
-    hits = sum(1 for token in tokens if re.search(rf"\b{re.escape(token)}\b", folded_text))
-    return hits >= max(2, len(tokens) - 1)
-
-
-def _forbidden_present(text: str, phrase: str) -> bool:
-    folded_phrase = _fold(phrase)
-    return bool(folded_phrase and folded_phrase in _fold(text))
-
-
-def _mentions(text: str, terms: tuple[str, ...]) -> bool:
-    folded = _fold(text)
-    return any(_fold(term) in folded for term in terms)
-
-
-def _fold(text: str) -> str:
-    return re.sub(r"[^a-z0-9_-]+", " ", str(text).casefold()).strip()
-
-
-def _string(value: Any) -> str:
-    return value.strip() if isinstance(value, str) else ""
-
-
-def _string_list(value: Any) -> list[str]:
-    if isinstance(value, str):
-        return [value.strip()] if value.strip() else []
-    if isinstance(value, list):
-        return [str(item).strip() for item in value if str(item).strip()]
-    return []
-
-
-def _write_reports(report: AgentSampleReport, reports_dir: Path, report_format: str) -> list[Path]:
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    written: list[Path] = []
-    if report_format in {"all", "markdown"}:
-        path = reports_dir / MARKDOWN_REPORT
-        path.write_text(_render_markdown(report), encoding="utf-8")
-        written.append(path)
+def _write(directory: Path, payload: dict[str, Any], report_format: str) -> None:
+    directory.mkdir(parents=True, exist_ok=True)
     if report_format in {"all", "json"}:
-        path = reports_dir / JSON_REPORT
-        path.write_text(json.dumps(_payload(report), indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        written.append(path)
-    return written
-
-
-def _payload(report: AgentSampleReport) -> dict[str, Any]:
-    payload = asdict(report)
-    payload["results"] = [
-        {
-            **asdict(result),
-            "ok": result.ok,
-            "findings": _result_findings(result),
-        }
-        for result in report.results
-    ]
-    return payload
-
-
-def _render_markdown(report: AgentSampleReport) -> str:
-    lines = [
-        "# Professional Agent Samples Evaluation",
-        "",
-        f"- Generated: {report.generated_at}",
-        f"- Mode: {report.mode}",
-        f"- Strict: {str(report.strict).lower()}",
-        f"- Samples checked: {report.samples_checked}",
-        f"- Warnings: {report.warnings}",
-        f"- Failures: {report.failures}",
-        "",
-        "| Sample | Promotion | OK | Findings |",
-        "| --- | --- | --- | ---: |",
-    ]
-    for result in report.results:
-        lines.append(
-            f"| `{result.path}` | {result.promotion_status or '-'} | "
-            f"{str(result.ok).lower()} | {len(_result_findings(result))} |"
+        (directory / "professional-agent-samples-report.json").write_text(
+            json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
         )
-    lines.extend(["", "## Findings", ""])
-    failing = [result for result in report.results if not result.ok]
-    if not failing:
-        lines.append("- None")
-    for result in failing:
-        lines.append(f"### `{result.path}`")
-        for finding in _result_findings(result):
-            lines.append(f"- {finding}")
-        lines.append("")
-    return "\n".join(lines).rstrip() + "\n"
+    if report_format in {"all", "markdown"}:
+        lines = [
+            "# Hookless Professional Agent Samples",
+            "",
+            "> Checked-in captured samples only; no fresh agent execution or adoption claim.",
+            "",
+            f"- Samples checked: {payload['samples_checked']}",
+            f"- Promoted checked: {payload['promoted_checked']}",
+            f"- Errors: {len(payload['errors'])}",
+            "",
+            "| Sample | Status | Profile | Primary | Layer 3 | Review |",
+            "|---|---|---|---|---:|---|",
+        ]
+        for row in payload["results"]:
+            lines.append(
+                f"| `{row['sample_id']}` | {row['status']} | `{row['profile']}` | "
+                f"`{row['primary_skill']}` | {len(row['layer3_skills'])} | `{row['review_skill']}` |"
+            )
+        if payload["errors"]:
+            lines.extend(["", "## Errors", ""] + [f"- {item}" for item in payload["errors"]])
+        (directory / "professional-agent-samples-report.md").write_text(
+            "\n".join(lines) + "\n", encoding="utf-8"
+        )
 
 
-def _result_findings(result: SampleResult) -> list[str]:
-    findings: list[str] = []
-    groups = (
-        ("missing selected skills", result.selected_skills_missing),
-        ("missing selected capabilities", result.selected_capabilities_missing),
-        ("missing required references", result.required_references_missing),
-        ("missing required quality gates", result.required_quality_gates_missing),
-        ("missing professional obligations", result.professional_obligations_missing),
-        ("forbidden behavior hits", result.forbidden_behavior_hits),
-        ("missing actual fields", result.missing_actual_fields),
-        ("schema errors", result.schema_errors),
-    )
-    for label, values in groups:
-        if values:
-            findings.append(f"{label}: {', '.join(values)}")
-    return findings
+def _strings(value: Any) -> list[str]:
+    return [str(item).strip() for item in value if str(item).strip()] if isinstance(value, list) else []
 
 
-def _mode(args: argparse.Namespace) -> str:
-    if args.promoted_only:
-        return "promoted-only"
-    if args.candidates_only:
-        return "candidates-only"
-    return "all"
+def _mapping(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _fold(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", value.casefold()).strip()
 
 
 def _rel(path: Path) -> str:

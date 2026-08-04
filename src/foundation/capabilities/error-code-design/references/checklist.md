@@ -2,7 +2,7 @@
 
 - Select the mode and name the client-visible error surface.
 - Inspect current catalog/spec/controller/adapter/provider/generated-client paths or state that none exist.
-- Record graph, memory, and execution-trajectory claims accepted, rejected, or not verified.
+- Record current source, diff, and validation-observable action sequence claims accepted, rejected, or not verified.
 - Define stable code or RFC 7807/9457 `type` URI, category, and transport status.
 - Define user-safe message key, client action, and localization/support behavior.
 - Separate response detail from operator diagnostics and trace/request id linkage.

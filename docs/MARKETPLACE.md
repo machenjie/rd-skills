@@ -1,102 +1,70 @@
 # Marketplace Index
 
-The marketplace index is a machine-readable discovery export. The marketplace catalog is a generated human-readable discovery view over the same source data. These are local discovery assets only: official Codex and Claude marketplace publishing is intentionally not implemented.
+The marketplace index and catalog are local, source-derived discovery views. They are not a separate package format, duplicated registry, or user-specific toolbox. Official marketplace publishing is not implemented.
 
-The index and catalog are not a new runtime package format, not a duplicated registry, not an official marketplace listing, and not a user-specific toolbox. Do not use these files to claim Codex/Claude marketplace availability.
+## Choose And Find Skills
 
-## Asset Types
+1. Choose `recommended` for normal use, `full` when eligible Domain Skills must
+   be top-level, or `dev` for authoring visibility. Confirm composition in
+   [Build profiles](BUILD_PROFILES.md).
+2. Open the generated [Marketplace Catalog](MARKETPLACE_CATALOG.md) and use its
+   quick navigation to browse Control, Professional, Foundation, or Domain
+   Skills.
+3. Start with a Professional Skill when looking for a complete engineering
+   judgment. Trigger and profile-delivery views help confirm discoverability;
+   they do not instruct an agent to load the entire catalog.
+4. Use the catalog name to locate the registry-owned entry and built artifact.
+   The catalog is a discovery projection, not the source of routing or install
+   truth.
 
-| Type | Meaning | Profile Exposure |
-| --- | --- | --- |
-| `professional_skill` | Top-level skill that owns a product/code change action. | Top-level in `recommended`, `full`, and `dev`. |
-| `foundation_capability` | Reusable engineering rule/reference selected by a professional route. | Compiled reference in `recommended` and `full`; top-level only in `dev`. |
-| `domain_extension` | Optional domain-specific professional extension. | Router index in `recommended`; top-level in `full` and `dev`. |
+Marketplace schema v3 is fail-closed. Every item carries explicit
+`task_routable` metadata: a boolean for Professional Skills and `null` for all
+other layers. Consumers must reject legacy v2 payloads rather than infer this
+field from local source state.
 
-## Export
+## Layers
 
-```bash
-python3 scripts/export-marketplace-index.py --profile recommended --out dist/indexes/recommended-marketplace-index.json
-python3 scripts/export-marketplace-index.py --profile full --out dist/indexes/full-marketplace-index.json
-python3 scripts/export-marketplace-index.py --profile dev --out dist/indexes/dev-marketplace-index.json
-```
+| Type | Profile exposure |
+| --- | --- |
+| Control Skill | top-level in recommended, full, and dev |
+| Professional Skill | top-level in recommended, full, and dev |
+| `product` Foundation Skill | targeted compiled reference in normal builds; top-level in dev |
+| `authoring-only` / `dev-only` Foundation Skill | routing index only in normal builds; top-level in dev |
+| Domain Skill | targeted compiled reference; top-level in full and dev |
 
-`dist/` is ignored as generated output. For local review or CI smoke checks, write to `/tmp`:
+## Source Fields
+
+Every registry entry provides:
+
+- `name` and source `path`;
+- Foundation `delivery_scope` (`product`, `authoring-only`, or `dev-only`);
+- Professional `task_routable` as an explicit boolean;
+- `role_support`;
+- `trigger_signals`, Domain `boundary_signals`, and `anti_trigger_signals`;
+- `required_inputs`;
+- `required_inputs_by_role` for every multi-role Professional Skill;
+- `output_contract`;
+- `output_contract_by_role` for every multi-role Professional Skill;
+- `escalation_signals`;
+- structured Reference Contract v2 entries (`path`, `type`, `load_when`,
+  `do_not_load_when`, `required_by`, and `required_output`).
+
+The exported marketplace index projects these contracts to their stable path
+list for discovery compatibility; built root `SKILL.md` files render the link
+plus load, skip, required-role, and required-output projection.
+
+Professional entries may name Layer 3 candidates, but a task loads them only for a concrete signal.
+Only `product` Foundation Skills may appear in those candidate lists, and their
+`used_by` declarations exactly mirror the Professional owners.
+For multi-role Professional entries, `output_contract` is the shared union and
+`output_contract_by_role` preserves the exact Analysis, Task, or Review handoff.
+
+## Export and Validate
 
 ```bash
 python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json
-```
-
-Validate the generated contract after the corresponding runtime profile has been built:
-
-```bash
-python3 scripts/validate-marketplace-index.py --profile recommended
-python3 scripts/validate-marketplace-index.py --profile full
-python3 scripts/validate-marketplace-index.py --profile dev
-```
-
-## Catalog
-
-Generate the combined human-readable catalog:
-
-```bash
 python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md
+python3 scripts/validate-marketplace-index.py --profile recommended
 ```
 
-Validate the committed catalog snapshot:
-
-```bash
-python3 scripts/generate-marketplace-catalog.py --profile recommended --check --out docs/MARKETPLACE_CATALOG.md
-```
-
-`docs/MARKETPLACE_CATALOG.md` is generated from the same exporter-backed source as the machine index. Do not hand-author a separate catalog.
-
-## Fields
-
-The schema lives at [../schemas/marketplace-index.schema.json](../schemas/marketplace-index.schema.json). Each item includes:
-
-- `name`
-- `type`
-- `profile_visibility`
-- `summary`
-- `triggers`
-- `risk_notes`
-- `expected_outputs`
-- `used_by`
-- `required_quality_gates`
-- `runtime_path`
-- `source_path`
-
-## Discovery Rules
-
-Use the index to filter by:
-
-- change type or risk trigger through `triggers`
-- domain through `type=domain_extension`
-- quality gate through `required_quality_gates`
-- reuse owner through `used_by`
-- runtime exposure through `profile_visibility.top_level`
-
-The exporter reads source registries and frontmatter. Do not hand-author a second marketplace catalog.
-The validator checks schema shape, profile visibility, runtime paths, and foundation capability exposure rules against built `dist/` artifacts.
-Business semantic capability discovery comes from the same source-derived index and generated catalog as every other capability; do not hand-author a separate business catalog or runtime content package.
-The canonical business semantic triggers are business context missing, business
-vocabulary ambiguous, business object ownership unclear, business rule authority
-unknown, business workflow state unclear, business invariant changed, business
-rule hidden in SQL/controller/UI/test, DTO used as business object, business
-memory affects decision, business golden case missing, technical refactor may
-change business semantics, business semantic review required, graph used as
-business fact, and memory used as business fact. Marketplace discovery should
-surface those names while retaining legacy aliases for compatibility; BSP
-references require structured rationale and memory/graph remain selectors until
-confirmed by current source or validation. Business semantic fixture evidence is
-deterministic and local: generated actual outputs must pass
-`validate-business-semantic-generator.py` and
-`generate-business-semantic-actuals.py --check`. Actual generation reads input
-signals, bounded `input_route_hint`, resolver/routing rules, and source/diff
-context, not `expected_*` oracle fields. Routing evals compare skills,
-capabilities, gates, BSP scope, sections, triggers, references, forbidden
-selections, and max selection limits; review evals check `expected_evidence`
-against actual evidence derived from source/diff snippets, prompt, and routing
-triggers; rule `reason_codes` / `entry_points` must be non-empty. This proves
-deterministic local structure, not live agent behavior, live LLM behavior, or
-live business correctness.
+The exporter must read the four source registries and match built artifacts. Do not hand-author a conflicting inventory or use a generated catalog to claim external availability.

@@ -7,20 +7,12 @@ focus:
   - null default optional semantics
   - version compatibility
 route_hints:
-  skills:
-    - data-api-contract-changer
-    - backend-change-builder
-    - quality-test-gate
-  capabilities:
-    - model-boundary-mapping
-    - data-model-design
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: data-api-contract-changer
+  layer3_skills:
     - version-compatibility
-    - contract-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - API/data gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - API DTO, command, query, domain object, value object, persistence model, event payload, and view model boundaries are explicit.
   - Persistence models do not leak to API responses and DTOs are not used as domain objects.

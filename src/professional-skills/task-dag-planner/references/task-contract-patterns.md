@@ -1,106 +1,33 @@
 # Task Contract Patterns
 
-Use this reference when a task node must be executable by a fresh agent without hidden context. Keep each task contract concise and scoped to one owner surface and one reviewable artifact.
+Owner: `task-dag-planner` in read/search-only `analysis-agent` mode after an accepted source-backed Engineering Brief. Load this reference only for two or more real tasks; return a Direct Task Capsule for one bounded task. It does not authorize file edits, dispatch, or machine-managed task state.
 
-## Node Contract
-- **Scope:** one goal, one owner surface, one risk domain, and one expected artifact.
-- **Inputs:** exact files, configs, docs, generated artifacts, callers, tests, or previous node outputs to inspect.
-- **Mutation boundary:** exact files to create, modify, or delete, plus public/internal/private visibility and compatibility impact.
-- **Reuse and placement:** existing pattern or helper considered first, rejected locations, dependency direction, and why new structure is or is not needed.
-- **Validation:** literal command or validator, expected output, evidence artifact, freshness rule, and what the check does not prove.
-- **Rollback:** revert command, rollback node, forward-fix decision, or manual owner when rollback is not immediate.
-- **Review and handoff:** independent review gate, completion evidence, downstream unblock condition, and residual risk owner.
+## Executable Node Contract
 
-## Visible Markdown Plan Shape
+| Field | Required content |
+| --- | --- |
+| Identity, goal, and owner | One Task ID, observable goal, accountable Owner, and reviewable Expected Output. |
+| Inputs | For a fresh-agent task, list the exact applicable source, configs, contracts, generated artifacts, callers, tests, and predecessor outputs whose current state can change execution or verification; omit categories that do not exist or cannot affect the task. |
+| Scope and non-goals | Exact read/write paths or resources, public/internal visibility, shared-write risk, and forbidden scope. |
+| Reuse and placement | Existing pattern/candidate, rejected locations, dependency direction, and why new structure is or is not needed. |
+| Acceptance | Falsifiable behavior, invariant, compatibility, and rejection condition owned by the accepted Brief. |
+| Verification and evidence | Literal safe command/check, Evidence Requirements, result, artifact, freshness, scope, and proof limit. |
+| Rollback and stop | Revert/forward-fix/manual owner, irreversible limit, and facts that stop execution. |
+| Scheduling and review | Dependencies, Parallel Safety, Workspace Requirement, Integration Owner, Review Owner, Skills, and stop conditions. |
 
-Use normal Markdown for AI-visible L3+ full plans:
+## Split, Dependency, And Workspace Rules
 
-```markdown
-# Implementation Plan
+- Split when migration, public contract, authorization, UI behavior, data backfill, release, documentation, ownership, validation, rollback, or specialized review has a distinct blocking boundary. Keep together only when a split creates artificial handoff and one owner/reviewer can verify the same artifact.
+- Each DAG edge requires a concrete downstream blocker. Blockers may arise from required artifacts, accepted contracts, schema or data availability, shared resources, validation results, or release order. Exclude nonblocking sequence preferences.
+- Return the First Executable Slice as soon as it is safe, reversible, verifiable, and cannot be invalidated by unresolved analysis. Name critical path and parallel value.
+- With shared or unknown workspace isolation, serialize the write tasks in that workspace. Even with isolation, do not parallelize tasks that share files, schemas, public contracts, migrations, generated outputs, fixtures, lockfiles, external systems, or later integration assumptions.
+- Name an integration/validation boundary and a combined Review Boundary when multiple nodes produce one changed surface; identify covered tasks, final paths, primary Review Skill, and only triggered specialist reviews.
 
-## Goal
+## Natural-Language Shape And Proof Limits
 
-...
+Use the authoritative control-plane Task Contract v2 without adding private
+state or JSON graphs. Record visible Evidence Ledger entries for graph claims.
+Replace placeholders such as TBD, “write tests,” “handle edge cases,” “similar
+above,” and “validate it works” with exact behavior, path, evidence, and owner.
 
-## Design Summary
-
-...
-
-## Global Constraints
-
-- ...
-
-## Task 1: <reviewable task title>
-
-Goal:
-...
-
-Files:
-- Inspect: `<path>`
-- Modify: `<path>`
-- Test: `<path>`
-
-Acceptance Criteria:
-- ...
-
-Verify:
-- Command: `<literal command>`
-
-Expected:
-- ...
-
-Review:
-- ...
-
-Stop Conditions:
-- ...
-
-Rollback:
-- ...
-```
-
-For L1/L2 work, a minimal Plan Handoff is enough:
-
-```markdown
-# Plan Handoff
-
-Files:
-- Inspect: `<path>`
-- Modify: `<path>`
-- Test: `<path>`
-
-Verify:
-- Command: `<literal command>`
-
-Residual Risk:
-- ...
-```
-
-Maintainer tooling canonicalizes `Inspect:`, `Modify:`, `Create:`, `Delete:`, and
-`Test:` file entries by stripping the role prefix, Markdown backticks, and
-trailing explanations before comparing accepted plan files with changed files.
-`Inspect:` and `Test:` entries count as inspection/test files; `Modify:`,
-`Create:`, and `Delete:` entries count as changed-file intent.
-
-Do not require ordinary agents to emit JSON metadata, task graph schemas,
-ledger keys, hook event ids, internal node ids, or digest values. Maintainer,
-CI, benchmark, doctor, or advisory hook tooling may derive those artifacts from
-the visible plan, but the agent-facing task contract remains natural language.
-
-## Placeholder Replacement Rules
-
-Do not write tasks such as "TBD", "TODO", "handle edge cases", "write tests",
-"add proper error handling", "validate it works", "similar to above",
-"refactor as needed", or "update docs if necessary".
-
-Replace vague text with exact behavior:
-
-- "handle edge cases" -> list the exact edge cases.
-- "write tests" -> name the test file, test case, behavior, and expected result.
-- "proper error handling" -> name the error condition, error contract, and command that proves it.
-- "similar to above" -> repeat the exact files, behavior, and validation for the task.
-
-## Splitting Rules
-- Split a node when it mixes migration, API contract, authorization, UI behavior, data backfill, release, or documentation evidence.
-- Split a node when two owners, two mutable shared resources, or two validation commands are required to prove completion.
-- Keep nodes together only when splitting would create artificial handoff overhead and the same reviewer can validate the full artifact in one pass.
+A complete plan proves only that the supplied facts form an executable contract. It does not prove source facts, host isolation, commands, implementation, external dependencies, or acceptance are correct. Cycles, unknown owners, overlapping writes, vague verification, or production/destructive decisions without user authority block the DAG rather than creating more planning nodes.

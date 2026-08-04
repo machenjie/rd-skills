@@ -7,37 +7,24 @@ focus:
   - backfill resumability
   - rollback safety
 route_hints:
-  skills:
-    - change-intake-compiler
-    - change-impact-analyzer
-    - architecture-impact-reviewer
-    - data-api-contract-changer
-    - data-middleware-change-builder
-    - backend-change-builder
-    - reliability-observability-gate
-    - delivery-release-gate
-    - quality-test-gate
-    - change-documentation-gate
-  capabilities:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: data-middleware-change-builder
+  layer3_skills:
     - data-migration-design
-    - relational-database
-    - indexing-query-optimization
     - transaction-consistency
-    - sql-professional-usage
     - release-rollback
-    - observability
-    - performance-budgeting
-  domain_extensions: []
-  quality_gates:
-    - requirement gate
-    - impact gate
-    - architecture gate
-    - API/data gate
-    - implementation gate
-    - reliability gate
-    - delivery gate
-    - test gate
-    - documentation gate
+  review_skill: delivery-release-gate
+release_contract:
+  case_id: data-api/large-table-online-migration
+  control_path: analyzed
+  primary_skill: engineering-change-analysis
+  task_skill: data-middleware-change-builder
+  review_skill: delivery-release-gate
+  tasks:
+    - task_id: online-migration
+      skill: data-middleware-change-builder
+      review_skill: delivery-release-gate
 expected_outcomes:
   - Migration expands schema without blocking full table writes.
   - API supports old full name clients and new split field clients during transition.

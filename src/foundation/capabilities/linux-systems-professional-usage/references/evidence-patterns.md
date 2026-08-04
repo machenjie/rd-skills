@@ -1,7 +1,5 @@
 # Linux Systems Evidence Patterns
 
-## Required Evidence
-
 - Environment: distro, kernel, architecture, init, cgroup version, container/runtime, filesystem, and user.
 - Service: unit file or supervisor config, restart policy, timeouts, env files, limits, and hardening.
 - Process: PID tree, signal handling, child reaping, readiness, sockets, and fd limits.

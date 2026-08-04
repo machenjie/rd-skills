@@ -7,19 +7,14 @@ focus:
   - feature versus shared classification
   - language naming convention
 route_hints:
-  skills:
-    - frontend-change-builder
-    - quality-test-gate
-  capabilities:
-    - implementation-structure-design
-    - language-idiom-enforcement
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: frontend-change-builder
+  layer3_skills:
     - page-component-decomposition
     - state-management-design
     - frontend-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Security-settings specific UI stays in the owning feature unless a reusable design-system contract exists.
   - Hook names express behavior and state scope instead of generic useFeature or useData buckets.

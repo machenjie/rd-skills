@@ -7,23 +7,23 @@ focus:
   - network allowlist
   - safe denial responses
 route_hints:
-  skills:
-    - change-intake-compiler
-    - backend-change-builder
-    - security-privacy-gate
-    - quality-test-gate
-  capabilities:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: security-privacy-gate
+  layer3_skills:
     - threat-modeling
-    - input-validation
     - web-security
-    - integration-testing
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - requirement gate
-    - implementation gate
-    - security gate
-    - test gate
+  review_skill: security-privacy-gate
+release_contract:
+  case_id: security/ssrf-url-allowlist
+  control_path: analyzed
+  primary_skill: engineering-change-analysis
+  task_skill: security-privacy-gate
+  review_skill: security-privacy-gate
+  tasks:
+    - task_id: ssrf-boundary-control
+      skill: security-privacy-gate
+      review_skill: security-privacy-gate
 expected_outcomes:
   - Allowed HTTPS hosts can be fetched with bounded timeout and response size.
   - Loopback, link local, private ranges, and metadata service addresses are rejected.

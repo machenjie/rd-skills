@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: integration-change-builder.
-Selected capabilities: web-security, idempotency-retry-design, message-queue-design, input-validation.
+Selected Layer 3 Skills: web-security, idempotency-retry-design, input-validation.
 
 Hidden risks: forged webhook event mutates subscription state; replayed event duplicates side effects; parsed body invalidates HMAC verification.
 

@@ -3,7 +3,6 @@ expected_professional_skill: backend-change-builder
 expected_capabilities:
   - idempotency-retry-design
   - message-queue-design
-  - async-job-design
   - observability
 expected_hidden_risks:
   - duplicate fulfillment from retry or redelivery

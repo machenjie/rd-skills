@@ -1,34 +1,18 @@
 # Idempotency Retry Evidence Patterns
 
-## Required Evidence
+Load this reference when closing duplicate-safety, unknown-outcome, tenant-isolation, crash-recovery, or terminal-resolution claims. Do not use it as a mechanism catalog.
 
-- Source boundary: handlers, services, consumers, external-write adapters, retry wrappers, idempotency stores, queue/job config, tests, runbooks, dashboards, and owner.
-- Operation evidence: side effect, tenant/user/resource scope, key source, operation type, payload hash, caller binding, retention window, and collision behavior.
-- Dedupe/atomicity evidence: unique index or inbox/outbox record, in-flight behavior, commit ordering, stored response, expired-key behavior, and partial-success recovery.
-- Retry evidence: retryable and non-retryable error classes, max attempts, total deadline, full-jitter formula, retry budget, circuit breaker state, and terminal state.
-- Replay/reconciliation evidence: provider reference lookup, timeout unknown-outcome decision, DLQ destination, replay runbook, alert owner, and compensation boundary.
-- Graph/memory/execution evidence: inspected paths, same-pattern side-effect scan, accepted/rejected prior claims, final validation order, and what remains unknown.
+| Claim | Minimum fresh evidence | Proof limit |
+| --- | --- | --- |
+| Operation identity is stable | Entry points, principal/tenant/subject binding, canonical request/version rule, collision/conflict behavior | Does not prove the effect is coordinated with the record |
+| Concurrent duplicates produce one effect | Same-identity overlap result, ownership transition, uniqueness/coordination evidence, caller-visible pending/result behavior | Does not cover crashes or externally owned effects |
+| Record and effect survive crashes | Forced failures around acceptance, effect, result, publication, and acknowledgement; recovery result after restart | Cannot infer provider commit state without provider evidence |
+| Unknown outcomes reconcile safely | Timeout/cancellation/transport-loss result when commit status is not proven, authoritative lookup, replay decision, reused or recovered result | Lookup freshness and authority remain explicit |
+| Late replay remains bounded | Replay-source inventory, retention derivation, expiry/tombstone behavior, recovery/backfill result | Future replay sources are not covered |
+| Layered retries do not amplify failure | Per-layer attempt/deadline/concurrency map, forced downstream degradation, cancellation and recovery result | Production spike shapes remain unproved unless measured |
+| Terminal work has an owner | Observable terminal state, owner authority, reconciliation/compensation/manual action, audit trail | Owner response time and external recovery success are not guaranteed |
+| Isolation is preserved | Cross-principal/tenant reuse and result-observation denial, log/artifact redaction | Does not prove callers or storage paths outside the inspected scope |
 
-## Tool Permission Boundary
+Treat old tests, runbooks, dashboards, prior task claims, and provider documentation as selectors until current source, configuration, failure injection, and owner evidence match the final change. Record inspected and skipped retry layers, stores, effects, replay sources, and external authorities.
 
-Classify actions as read-only inspection, local validation/report write, replay dry run, queue/database/cache test-data write, provider/network lookup, migration/backfill action, or live replay/reconciliation. State sandbox/approval state, write scope (`HOME`, source tree, report artifacts, `dist/`, local DB/queue, provider sandbox, production), rollback path, and secret/PII redaction rule.
-
-## Handoff Shape
-
-```markdown
-Idempotency Retry Evidence Record
-- Source boundary:
-- Operation identity proof:
-- Dedupe and atomicity proof:
-- Retry/circuit proof:
-- Replay/reconciliation proof:
-- Graph/memory/execution freshness:
-- Tool permission boundary:
-- Validation:
-- What remains unproved:
-- Residual duplicate-effect risk:
-```
-
-## Blocking Conditions
-
-Block completion when a mutation can retry without an operation-level key, same-key payload mismatch behavior is undefined, dedupe and side effect ordering is not mapped, retry exhaustion lacks an owned terminal state, stale memory is reused without same-pattern source confirmation, or replay/provider/database actions lack write-scope and rollback disclosure.
+Block closure when mutation replay lacks stable identity, record and effect ordering is unknown, or same-identity concurrency can produce conflicting business effects. Also block unreconciled unknown outcomes, late replay beyond protection, unowned terminal work, and reachable cross-tenant result reuse.

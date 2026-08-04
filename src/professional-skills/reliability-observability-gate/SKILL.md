@@ -1,261 +1,79 @@
 ---
 name: reliability-observability-gate
-description: "Use this skill when implementing, reviewing, planning, or validating product or code changes that need reliability and observability expectations across SLI/SLO impact, performance and cost budgets, capacity, profiling, concurrency, rate limits, circuit breakers, fallback, telemetry, incident readiness, backup, and recovery."
-license: MIT
-changeforge_kind: professional-skill
-changeforge_version: 0.1.0
-metadata:
-  changeforge.profile: recommended
-  changeforge.skill_type: professional
+description: "Use `analysis-agent` to analyze recovery, SLO, capacity, degradation, and observability; `task-agent` to change resilience or telemetry; and `review-agent` to assess evidence. Skip self-review and no-runtime-impact work."
 ---
 
-# Reliability Observability Gate
+# reliability-observability-gate
 
-## Mission
-Ensure every production-bound change has explicit reliability expectations, observable behavior, bounded failure modes, proportional alerting, and tested recovery paths — so that degradation is detected before users report it, incidents are diagnosed in minutes not hours, and rollback is executable without guesswork.
+## Role
 
-## Stage Ownership
-Own observability and recovery beyond code logs: logs, metrics, traces, alerts, dashboards, SLOs, fallback, degradation, capacity, and incident diagnosis. Use `logging-design-gate` for concrete code logging design, field selection, log levels, redaction, correlation, and log tests.
+- **Analysis mode (`analysis-agent`):** Model failure, objective, and recovery behavior.
+- **Task mode (`task-agent`):** Apply accepted resilience or observability controls.
+- **Review mode (`review-agent`):** Judge controls against failure and recovery criteria.
 
 ## When To Use
-- Any change that modifies a production service's latency, throughput, error rate, or resource consumption.
-- Async processing changes: background jobs, queues, event processing, scheduled tasks.
-- Changes that depend on external services, caches, queues, or databases on the critical user path.
-- New or modified SLI/SLO targets, error budgets, or availability commitments.
-- Infrastructure and configuration changes that affect service capacity or resource limits.
-- Cloud cost, FinOps, autoscaling, reservation, egress, storage growth, or capacity forecast changes.
-- Database migrations, reindexing, or data processing that affects production query performance.
-- Incident response tooling, runbook, alerting rule, or on-call routing changes.
-- Changes that introduce or modify circuit breakers, rate limiters, throttling, or fallback behavior.
-- Agent-assisted reliability investigation or incident closure that needs verified cause, metric evidence, and residual-risk statement.
 
-## Do Not Use When
-- The change is a static documentation edit or cosmetic UI change with zero runtime behavior impact.
-- The change is a test-only addition with no production deployment.
+- reliability or recovery risk; observability contract change
 
-## Adjacent Skill Conflict Resolution
+## Do Not Use
 
-For `reliability-observability-gate`, keep this skill primary only when SLI/SLO impact, performance or cost budgets, capacity, profiling, alerting, tracing, fallback, or production diagnosis decisions decide the next action. Hand API/schema compatibility to `data-api-contract-changer`, storage/query/migration concerns to `data-middleware-change-builder`, security/privacy decisions to `security-privacy-gate`, reliability/observability decisions to `reliability-observability-gate`, release/rollback readiness to `delivery-release-gate`, and documentation contract updates to `change-documentation-gate`. Domain extensions add risk-specific addenda after the primary owner is selected; record skipped plausible owners when the routing choice affects handoff or validation.
+- no runtime behavior impact
+- self review request
+- unit test or local performance change with no runtime objective
+- logging field-only change with no reliability decision
+- release ordering only
+- data correctness only
 
-## Required Context / Missing Information Policy
+## Required Inputs
 
-Before `reliability-observability-gate` plans or closes work, collect current behavior, desired behavior, non-goals, affected surface, owner module, validation signal, existing conventions, and material data/API/security/release boundaries. Ask or block only when the missing fact can change public contract, data model, authorization, tenant behavior, migration/rollback, irreversible operation, or domain semantics; otherwise proceed with explicit reversible assumptions.
+- acceptance; failure behavior
+- **Analysis mode (`analysis-agent`):** affected runtime path, objective, telemetry, and recovery evidence.
+- **Task mode (`task-agent`):** accepted control decision with failure, capacity, and recovery checks.
+- **Review mode (`review-agent`):** changed runtime path with recovery and telemetry evidence.
 
-## Critical Gotchas
+## Professional Decision Rules
 
-- `reliability-observability-gate` must inspect the owning source, tests, configs, docs, and generated-artifact boundaries before planning material engineering work.
-- `reliability-observability-gate` must select only risk-changing references, capabilities, gates, or domain extensions; do not load nearby material because it exists.
-- `reliability-observability-gate` must close with fresh validation evidence, evidence limits, residual risk, and next owner or gate when work remains.
+- Define affected failure modes, user impact, recovery owner, and any decision-relevant operating objective.
+- Require an SLI or SLO only when an owned objective has a decision consequence.
+- Apply timeouts, backpressure, retry budgets, circuit breaking, and degradation only where latency or load risk triggers them.
+- Select only actionable signals, alerts, and runbook links justified by current risk.
+- Validate triggered restart, failover, replay, rollback, and capacity assumptions proportionally.
 
-## Stage Fit
-Launched for debugging-diagnosis and release-delivery production-risk review. Per-stage focus:
-- **debugging-diagnosis**: SLI/SLO signals, logs/metrics/traces, and error-budget burn to locate degradation.
-- **release-delivery**: performance and capacity budgets, alerts, rollback signals, and recovery readiness.
+## High-Value Gotchas
 
-## Non-Negotiable Rules
-- **Direct use still runs the runtime prompt flow.** When `reliability-observability-gate` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
-- **Every user-facing path must have an SLI**: if there is no measurable signal, there is no way to detect degradation before users report it.
-- **SLOs must be defined before the feature ships**: an SLO added after an incident is a post-hoc measurement, not a reliability commitment.
-- **Error budgets must be tracked and acted on**: when the error budget is exhausted, feature development stops until reliability is restored — this is the SRE error budget policy.
-- **Unbounded queues are a reliability anti-pattern**: every queue must have a defined capacity limit, DLQ routing, and backpressure mechanism — an unbounded queue will OOM the consumer.
-- **Alerts must page on user-impacting signals, not on noisy technical metrics**: alert on SLO burn rate (multi-window, multi-burn-rate), not on CPU percentage or error count thresholds that fire during non-impacting spikes.
-- **Structured logging is required for production services**: unstructured log lines are unsearchable at scale; every log event must have `timestamp`, `level`, `service`, `trace_id`, and a consistent JSON schema.
-- **Trace context must propagate across service boundaries**: a trace that terminates at the first service boundary cannot diagnose cross-service latency issues.
-- **Recovery plans must be tested before they are needed**: a runbook that has never been executed will fail under incident pressure — conduct game days or chaos engineering exercises.
-- **Cardinality limits on metric labels**: high-cardinality labels (user_id, request_id, URL path with IDs) destroy time-series databases — use aggregated label values (endpoint name, status class) instead.
-- **Cost and capacity budgets are reliability budgets**: an autoscaling rule, storage growth pattern, query scan, or egress path that can exceed budget without alerting is an operational risk, not only a finance concern.
-- **Reliability closure requires verified cause**: do not accept environment blame, intermittent flakiness claims, or incident closure without evidence tied to metrics, logs, traces, configuration, dependency version, or input.
-- **Production tools require permission and sandbox evidence**: before running incident, diagnostic, cloud, deploy, rollback, migration, load, profiling, connector/MCP, or network-write actions, record the tool, permission state, sandbox boundary, dry-run/read-only scope, rollback/revert path, and output redaction rule.
+- Retries can worsen overload.
+- An alert without an operator action is noise.
+- Average latency hides tail failure.
 
-## Industry Benchmarks
-- **Google SRE Book (Beyer et al.) — Chapters 3, 4, 6**: SLIs, SLOs, error budgets, toil reduction. The canonical reference for production reliability engineering. SLO = reliability commitment; error budget = innovation vs. stability balance.
-- **DORA Metrics (Accelerate)**: Deployment frequency, lead time, MTTR, change failure rate. MTTR < 1 hour for elite teams. Change failure rate < 5%. Measure these to know if reliability investments are working.
-- **RED Method (Tom Wilkie — Weave Works)**: Rate, Errors, Duration — the three golden signals for every service. Start with RED before adding USE or custom metrics.
-- **USE Method (Brendan Gregg)**: Utilization, Saturation, Errors — for every resource (CPU, memory, disk, network). Diagnoses resource exhaustion and capacity issues.
-- **OpenTelemetry (CNCF)**: Unified specification for traces, metrics, and logs. The industry standard for vendor-neutral observability instrumentation. Use OpenTelemetry SDK, not vendor-specific SDKs.
-- **Multi-Window Multi-Burn-Rate Alerting (Google SRE Workbook Chapter 5)**: Alert on fast burn (critical page: 1h window, 14x burn rate) and slow burn (warning page: 6h window, 6x burn rate) simultaneously — reduces both false positives and missed incidents.
-- **Chaos Engineering (Principles of Chaos)**: Inject failures in controlled environments (Chaos Monkey, Gremlin) to verify that resilience controls (circuit breakers, fallback, retry) work as designed.
-- **Distributed Systems Observability (Cindy Sridharan)**: The three pillars — logs, metrics, traces — are insufficient alone; correlation (trace_id across all three) is what enables incident diagnosis.
+## Execution Checklist
 
-### SLI/SLO Selection Matrix
+1. Trace the failure mode through user impact, dependency pressure, telemetry, and recovery ownership.
+2. Choose objectives, timeouts, retry budgets, degradation, and alerts only when current risk triggers them.
+3. Verify restart, failover, replay, rollback, capacity, and operator-action assumptions where material.
+4. **Analysis mode:** select objectives and recovery controls from failure evidence.
+5. **Task mode:** apply accepted controls at the affected runtime boundary.
+6. **Review mode:** judge restart, failover, capacity, and operator-action evidence.
+7. Stop when a material objective or recovery action lacks evidence and ownership.
 
-| User Expectation | SLI | SLO Target (Starting Point) |
-|---|---|---|
-| API response time | p99 latency of successful requests | < 300ms p99 over 28-day rolling window |
-| API availability | Proportion of successful requests (2xx+3xx / total) | 99.9% (43m downtime/month) |
-| Data processing freshness | Event-to-processed latency (p95) | < 30s p95 over 1-hour window |
-| Search result quality | Proportion of queries with relevance score ≥ threshold | 95% over 24-hour window |
-| Job success rate | Proportion of scheduled jobs completing successfully | 99.5% over 7-day rolling window |
-| Payment success rate | Proportion of payment attempts succeeding | 99.0% (gateway + app combined) |
+## Stop / Escalation Conditions
 
-## Technical Selection Criteria
-Evaluate every production change against:
-- **SLI/SLO impact**: Does this change affect any SLI? Does it require a new SLI? Is the current SLO budget sufficient to absorb the rollout risk?
-- **Latency budget**: What is the expected p50/p95/p99 latency for the changed path? Is it within budget? Has it been profiled under realistic load?
-- **Throughput and capacity**: What is the expected request rate? What are the resource limits (CPU, memory, connections, file descriptors)? Is there headroom?
-- **Concurrency design**: Are there shared resources (connection pools, locks, semaphores)? What is the maximum concurrency? Is there backpressure?
-- **Queue and async safety**: Are queue depths bounded? Are DLQs configured? Is consumer scaling proportional to queue depth?
-- **Circuit breaker configuration**: Is the circuit breaker failure threshold calibrated? Is the half-open probe configured? Is fallback behavior defined?
-- **Structured logging**: Are log events structured (JSON schema)? Is PII excluded from logs? Are trace_id and span_id included?
-- **Metrics cardinality**: Are label values bounded (no user_id, no raw URL paths with IDs)? Is the cardinality increase estimated before deployment?
-- **Alert quality**: Are alerts firing on SLO burn rate, not on raw metric thresholds? Are alert thresholds calibrated to avoid false positives?
-- **Recovery readiness**: Is there a runbook for the most likely failure mode? Has it been tested? Who is on-call when this change is deployed?
-- **Cost and capacity guardrails**: What is the unit cost per request, tenant, and batch job? What is the storage growth rate, egress exposure, autoscaling cost impact, reservation risk, and cost anomaly alert?
-- **Incident response readiness**: If this change causes a SEV0/SEV1/SEV2 incident, are severity, roles, mitigation criteria, communication cadence, and postmortem ownership defined?
-
-## Mode Selection
-Select the reliability mode before approving production behavior, performance work, observability, or incident closure.
-
-| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
-|---|---|---|---|---|---|
-| New production path | New endpoint, job, dependency, queue, dashboard, SLO path, or resource. | SLI/SLO, RED/USE telemetry, capacity, fallback, alert, runbook. | Traffic estimate, latency/error/saturation budget, dashboard/alert owner. | `observability`, `performance-budgeting`, `delivery-release-gate` | Chaos/load testing unless high-risk. |
-| Modify existing path | Query, dependency, retry, queue, metric, log, or resource limit changes. | Preserve SLO and prevent cardinality, retry, fallback, or saturation regressions. | Before/after metrics, dependency/resource boundaries, rollback signal. | `profiling`, `concurrency-control`, `quality-test-gate` | New SLO unless user impact changes. |
-| Performance/reliability bug fix | Latency spike, error-rate increase, queue lag, OOM, retry storm, pool exhaustion. | Verify cause, mitigation vs resolution, regression proof. | Baseline, cause, false hypotheses, fix evidence, watch signal. | `failure-diagnosis`, `agent-execution-discipline`, `regression-testing` | Optimization unrelated to measured bottleneck. |
-| Observability/alerting change | Logs, metrics, traces, labels, dashboards, alerts, runbooks. | Symptom-based alerts, bounded cardinality, dashboard usefulness, on-call actionability. | Metric schema, label budget, alert query, dashboard screenshot/query, runbook. | `observability`, `code-clarity-maintainability` | Paging on raw counts without burn rate. |
-| Release readiness | Canary, rollout monitoring, rollback threshold, capacity/cost guardrail. | Watch windows, rollback triggers, owner handoff, error budget. | Error budget, canary thresholds, dashboard, rollback signal, owner. | `delivery-release-gate`, `performance-budgeting` | Release approval without live watch owner. |
-| Incident closure | SEV, mitigation, root cause, customer impact, postmortem, corrective action. | Verified cause, timeline, mitigation evidence, residual risk, follow-up ownership. | Incident timeline, metrics/logs, action items, runbook/doc updates. | `failure-diagnosis`, `change-documentation-gate`, `agent-execution-discipline` | Closure before customer impact and residual risk are named. |
-
-## Proactive Professional Triggers
-
-- **Signal:** new endpoint/job/dependency lacks SLI, SLO target, RED/USE metrics, or dashboard owner. **Hidden risk:** production degradation is invisible. **Required professional action:** add observability before release. **Route to:** `observability`, `delivery-release-gate`. **Evidence required:** metric names, dashboard, owner, alert/runbook.
-- **Signal:** retry count/backoff/circuit breaker changes without traffic budget or idempotency proof. **Hidden risk:** retry storm and cascading failure. **Required professional action:** model retry amplification and fallback. **Route to:** `idempotency-retry-design`, `degradation-circuit-breaking`. **Evidence required:** retry budget, backoff, fallback test, metric.
-- **Signal:** metric labels include user/session/raw path/error message/tenant without cardinality budget. **Hidden risk:** telemetry cost/OOM and lost observability. **Required professional action:** bound labels or aggregate. **Route to:** `observability`, `performance-budgeting`. **Evidence required:** label set, cardinality estimate, query sample.
-- **Signal:** alert fires on fixed count or low-level symptom with no user impact/runbook. **Hidden risk:** noisy or silent alert. **Required professional action:** convert to SLO burn or actionable symptom. **Route to:** `observability`, `change-documentation-gate`. **Evidence required:** alert query, threshold rationale, runbook action.
-- **Signal:** queue/async path lacks DLQ depth, lag, retry, or poison-message alert. **Hidden risk:** invisible backlog or lost work. **Required professional action:** instrument worker failure modes. **Route to:** `message-queue-design`, `data-middleware-change-builder`. **Evidence required:** lag/DLQ metrics and failure test.
-- **Signal:** fallback returns empty/default data without user/metric distinction. **Hidden risk:** degraded mode looks like correctness. **Required professional action:** design explicit degradation semantics and observability. **Route to:** `degradation-circuit-breaking`, `frontend-change-builder` when UI affected. **Evidence required:** fallback contract, log/metric, UX state.
-- **Signal:** Redis/cache-backed read path can stampede on hot-key expiry or cache outage. **Hidden risk:** coordinated cache misses overload the source of truth while telemetry shows only downstream timeouts. **Required professional action:** require per-key single-flight or bounded lease, TTL jitter, origin backpressure, cache-down fallback, and bounded metric labels for hot key, miss storm, fallback, and lock contention. **Route to:** `cache-design`, `data-middleware-change-builder`, `quality-test-gate`. **Evidence required:** deterministic local concurrent test with fake cache plus FakeBackend/source-of-truth proving one refresh and backend calls equal to one, Redis-unavailable fallback test, and metric assertions without live Redis, network client, or URL dependency.
-- **Signal:** HTTP, DB, Redis, Kafka, SDK, pool, timer, subscription, file, or socket lifecycle is unclear. **Hidden risk:** per-operation clients, leaked handles, pool exhaustion, or shutdown failures degrade production. **Required professional action:** define dependency wiring, lifecycle scope, startup validation, and cleanup owner. **Route to:** `dependency-wiring-lifecycle`, `backend-change-builder`. **Evidence required:** dependency graph, lifecycle scope, construction owner, shutdown owner, and pool/client metrics.
-- **Signal:** retry, fallback, timeout, cancellation, or partial failure is observable only as a generic error. **Hidden risk:** incidents cannot distinguish dependency failure, validation error, conflict, degraded response, or terminal failure. **Required professional action:** define the failure contract and telemetry fields. **Route to:** `failure-contract-design`, `observability`. **Evidence required:** error taxonomy, retryability, fallback/degradation, log/metric/trace fields, and cause preservation.
-- **Signal:** hot path processes unbounded inputs, nested scans, top-K, grouping, sorting, or load-all batches with no scale budget. **Hidden risk:** latency, memory, queue lag, or cost regression under real input distribution. **Required professional action:** require an algorithm/data-structure decision and performance evidence. **Route to:** `algorithm-data-structure-selection`, `performance-budgeting`. **Evidence required:** input size, worst case, memory budget, streaming/chunking decision, benchmark/profile output.
-- **Signal:** mapper/getter/policy/domain logic writes DB/cache/events/external I/O or publishes events before commit. **Hidden risk:** hidden side effects bypass telemetry, transaction ordering, idempotency, and compensation. **Required professional action:** trace side-effect flow and attach observability at the visible boundary. **Route to:** `data-side-effect-flow-tracing`, `data-middleware-change-builder`. **Evidence required:** ordering, transaction boundary, publish-after-commit decision, idempotency/compensation, and metrics/logs.
-- **Signal:** feature flag, kill switch, runtime mode, or config default changes reliability behavior without typed validation, owner, or rollout/rollback evidence. **Hidden risk:** production mitigation or degradation policy depends on ungoverned config. **Required professional action:** apply runtime configuration policy before accepting reliability readiness. **Route to:** `configuration-runtime-policy`, `delivery-release-gate`. **Evidence required:** config schema, default, validation, owner, kill-switch behavior, rollout/rollback, and cleanup path.
-- **Signal:** incident closure lacks verified cause, false hypotheses, customer impact, or corrective action owner. **Hidden risk:** missing verified cause repeats the incident and weakens the postmortem. **Required professional action:** keep the incident open or route diagnosis/docs until cause and owner are proven. **Route to:** `failure-diagnosis`, `change-documentation-gate`. **Evidence required:** incident timeline, metric/log proof, false-hypothesis notes, and corrective-action owner.
-- **Signal:** autoscaling, storage, egress, full scan, or batch retry can exceed budget without anomaly alert. **Hidden risk:** unbounded spend, cost leak, or budget incident as a reliability failure. **Required professional action:** add cost/capacity guardrail with alertable threshold and owner. **Route to:** `performance-budgeting`, `delivery-release-gate`. **Evidence required:** unit-cost report, capacity forecast, anomaly alert query, and alert owner.
-- **Signal:** reliability diagnosis, load/profile, cloud, deploy, rollback, migration, or incident command can mutate state, stress production, call a connector, or expose sensitive output without permission/sandbox classification. **Hidden risk:** the investigation or fix becomes a production incident. **Required professional action:** classify tool permission/sandbox before execution. **Route to:** `agent-tool-permission-sandbox`, `security-privacy-gate`. **Evidence required:** tool/action class, permission state, sandbox/read-only boundary, rollback/revert path, and output redaction rule.
-- **Signal:** bounded production log/metric/trace collection is treated as deployment or mutation solely because it uses `kubectl` or SSH. **Hidden risk:** agents skip needed evidence or over-route read-only diagnosis into release work. **Required professional action:** classify bounded reads as diagnostic evidence, keep output redacted, and still track hypothesis elimination and residual risk. **Route to:** `failure-diagnosis`, `agent-tool-permission-sandbox`, `security-privacy-gate`. **Evidence required:** command class, bounds, redaction rule, what the evidence proves, and what remains unproven.
-
-## Cost And Capacity Guardrails
-
-Every production-facing change with material resource impact must define cost and capacity guardrails:
-
-- **Cost per request**: expected steady-state and peak unit cost for the changed request path.
-- **Cost per tenant**: tenant-level cost attribution for multi-tenant or high-variance workloads.
-- **Cost per batch job**: compute, warehouse, queue, and retry cost per run and per schedule window.
-- **Storage growth rate**: daily and monthly growth, retention policy, lifecycle tiering, and deletion pressure.
-- **Egress cost**: cross-region, internet, CDN, third-party, and data export cost exposure.
-- **Autoscaling trigger cost impact**: how HPA/KEDA/serverless scaling thresholds translate into spend at peak and during runaway input.
-- **Resource reservation / commitment risk**: reserved instances, savings plans, committed use discounts, or spot capacity exposure, including lock-in and underutilization risk.
-- **2x peak headroom vs cost cap**: whether the service can absorb 2x expected peak without violating the approved cost cap.
-- **Cost anomaly alert**: alert owner, threshold, burn-rate window, and response path for unexpected spend or usage growth.
-
-### Decision Tree: Observability Coverage Level
-
-```
-Does the change add a new user-facing endpoint or modify response latency?
-├── Yes → RED metrics required (rate, errors, duration) + SLO impact assessment
-Does the change add async processing (queue consumer, background job)?
-├── Yes → Queue depth metric + DLQ depth alert + consumer lag metric
-Does the change depend on an external service?
-├── Yes → Circuit breaker metric + per-provider error rate + timeout metric
-Does the change affect a database query on the critical path?
-├── Yes → Query latency metric + slow query log + connection pool saturation
-Does the change emit new log lines in production?
-├── Yes → Structured log schema review + cardinality check + PII exclusion
-Change is infrastructure-only with no behavior change?
-└── USE method metrics for affected resources + capacity headroom check
-```
-
-## Solution Optimality Self-Check
-Apply when designing SLI/SLO targets, alert strategies, capacity budgets, and instrumentation — these are reliability contracts. Answer the **Three-Challenge Rule**: (1) why this SLI/SLO/alert design (state the user impact), (2) is it the simplest sufficient observability (Rate/Errors/Duration cover most services; more alerts need justification), (3) what is the strongest alternative and why is it rejected (burn-rate over fixed-count). Define the per-dimension budgets (CPU saturation, memory headroom, metric cardinality, connection-pool, RED, consumer lag, multi-burn-rate latency) — a missing budget is an unenforceable SLO.
-
-Load [references/solution-optimality.md](references/solution-optimality.md) for the full performance-dimension budget matrix and additional considerations (error-budget policy, symptom-based alerting, cardinality budget, chaos game days) when the change affects a production service. Method compiled from `solution-optimality-evaluation`.
-
-## Risk Escalation
-- Escalate when a change is deployed to a critical path with no existing SLI — the deployment is unobservable.
-- Escalate when the error budget for an affected SLO is already exhausted — feature deployment is blocked per error budget policy.
-- Escalate when a new metric label value has unbounded cardinality (user_id, session_id, raw URL path) — will cause time-series database OOM or cost explosion.
-- Escalate when an alert threshold is defined as a fixed count (e.g. "500 errors/minute") rather than a burn rate — fixed-count alerts are unreliable under variable traffic.
-- Escalate when a circuit breaker does not have a tested fallback behavior — a tripped circuit breaker with no fallback causes a hard dependency failure cascade.
-- Escalate when a queue consumer has no DLQ and no depth monitoring — poison messages cause consumer loops; depth spikes are invisible.
-- Escalate when a change introduces unbounded memory growth (unlimited cache, unbounded list accumulation, session state with no TTL) — will cause OOM in production.
-- Escalate when recovery procedures (runbook, rollback, manual remediation) have never been tested and the change affects a P1-eligible service.
-- Escalate when a cloud resource, autoscaling policy, query scan, storage lifecycle, or egress path can exceed budget without a cost anomaly alert and owner.
-- Escalate when capacity forecast shows less than 2x peak headroom or when the only path to headroom requires unapproved spend.
-- Escalate when incident severity, incident commander, technical lead, communications lead, or customer communication cadence is undefined for a production-critical path.
-- Escalate to `agent-execution-discipline` when an agent repeats the same diagnosis path twice, skips evidence collection, or hands off an incident without boundary and validation results.
-
-## Critical Details
-- **Multi-window multi-burn-rate alerting math**: a 1% error rate on an SLO of 99.9% burns the 28-day error budget in 28 hours. Fast-burn alert: if burn rate > 14x over 1 hour, page immediately. Slow-burn alert: if burn rate > 6x over 6 hours, page with lower urgency.
-- **Trace sampling strategy**: 100% sampling is too expensive at high throughput; head-based sampling loses all information about sampled-out requests; use tail-based sampling (Jaeger tail-based, OpenTelemetry tail sampling processor) to retain high-latency and error traces at 100% and sample normal traces at 1%.
-- **Log level discipline**: ERROR = requires action; WARN = anomaly, self-recovers; INFO = significant business events; DEBUG = development only (disabled in production). Logging at ERROR for expected conditions creates alert noise that masks real errors.
-- **PII in logs is a compliance violation**: user IDs, email addresses, IP addresses (in some jurisdictions), and session tokens must be excluded from log lines or tokenized — GDPR Article 5 (data minimization).
-- **Connection pool exhaustion is the most common production cause of latency spikes**: monitor `pool_size`, `pool_waiting`, `pool_checkout_timeout` as first-class metrics alongside request latency.
-- **Graceful degradation requires explicit fallback design**: a fallback of "return empty response" is often indistinguishable from "feature not working" to the user. Design fallback states with appropriate UX and observability.
-- **Capacity planning at 2× peak**: design for 2× the expected peak traffic. Anything less means a viral moment or a DDoS causes an availability incident.
-- **Unit economics as a production signal**: cost per request, tenant, and job should be tracked like latency and error rate. Sudden cost-per-unit growth often indicates a reliability issue such as retry storms, cache misses, full table scans, or runaway fan-out.
-- **Mitigation vs. resolution**: during an incident, mitigation reduces customer impact now; resolution removes the underlying defect. A rollback, traffic shift, feature flag disable, or capacity increase may be mitigation even when root cause remains open.
-
-## Failure Modes
-For `reliability-observability-gate`, state symptom, impact, and detection.
-State repair and evidence before closure.
-
-- **No SLI hides degradation**: p99 latency climbs from 200ms to 4000ms — no alert fires; users report slowness 2 hours later.
-- **Unbounded retries create retry storms**: a downstream service returns 503; the upstream retries 100x/second per instance; 50 instances × 100 retries = 5000 RPS to an already-failing service.
-- **Missing traces obscure failure root cause**: a request fails; it involved 4 services; without trace propagation, each service's logs show a failure in isolation — diagnosis takes hours.
-- **High-cardinality metric label destroys telemetry**: a `user_id` label added to a high-frequency metric creates 10M unique time series — Prometheus runs out of memory; the entire metrics pipeline fails.
-- **Alert threshold not calibrated to traffic**: an error count alert set to 1000/minute fires during normal traffic growth and is silenced; it never fires during a real 5% error rate incident because absolute count is below threshold.
-- **No recovery plan extends incidents**: a database runs out of connections; the on-call engineer has never seen this failure mode; they spend 45 minutes diagnosing what a 5-minute runbook would resolve.
-- **Connection pool exhaustion starves all requests**: a slow external call holds connections; the pool fills; all requests wait; the service appears to be down.
-
-### Anti-Patterns
-- **Anti-pattern:** adding retries without a failure budget or breaker; hidden risk is retry amplification; detection signal is no cap, jitter, or saturation metric; replacement is bounded retry and load-shedding evidence.
-- **Anti-pattern:** accepting fallback as reliability without user-visible semantics; consequence is stale or partial data treated as truth; detection signal is no degraded-state metric or label; replacement is explicit fallback contract and alert.
-- **Anti-pattern:** instrumenting every dimension because it is available; hidden risk is cardinality cost and dropped samples; detection signal is user/request labels on hot paths; replacement is bounded metrics with exemplar or sampling plan.
-
-## Reference Loading Policy
-Do not load every reference by default. For L1 `reliability-observability-gate` work, use this body unless selected risk requires more detail.
-For L2, L3, L4, and L5 `reliability-observability-gate` work, read `references/capabilities/index.md` only to locate selected capability references; load selected files at `references/capabilities/<capability-id>-<capability-name>.md`, then add [references/checklist.md](references/checklist.md), [references/solution-optimality.md](references/solution-optimality.md), [references/reliability-output-and-gates.md](references/reliability-output-and-gates.md), [references/evidence-patterns.md](references/evidence-patterns.md), or domain references only when route risk requires them. Load `references/checklist.md` for concrete SLI/telemetry review, `references/solution-optimality.md` for SLO/capacity/alert tradeoffs, `references/reliability-output-and-gates.md` for the exhaustive output and gate table, and `references/evidence-patterns.md` when closure depends on command/report artifacts, exit code, dashboard/alert proof, incident evidence, or stale reliability validation.
-
-## Execution Procedure
-
-For `reliability-observability-gate`: confirm activation and role; classify missing context; inspect relevant source/test/config/doc evidence; select mode, complexity, risk, and minimal references; execute or review only the owned surface; validate with concrete commands, diffs, tests, evals, or not-run limits; route repair through the owner; hand off with residual risk and next gate.
+- Block an owned objective when required indicator, target, budget, rollback, or watch evidence lacks an owner.
+- Block required observability lacking current evidence, an owner and action, safe data handling, or bounded cardinality.
+- Block incident closure with unverified cause, missing customer impact, or unowned corrective action.
+- Refuse diagnostic, load, profile, cloud, deploy, rollback, migration, connector, or network-write tools without permission, sandbox, rollback, and redaction evidence.
 
 ## Output Contract
-Return a reliability and observability plan with actionable evidence:
-- **Mode selected:** new production path, modified path, reliability bug fix, observability change, release readiness, or incident closure, with trigger.
-- **Boundaries inspected:** request path, dependencies, queues, pools, resource limits, dashboards, alerts, runbooks, release watch, incident timeline, and cost/capacity boundaries.
-- **SLI/SLO and budget judgment:** affected SLIs, SLO target, error-budget headroom, latency/throughput/resource budgets, capacity headroom, and cost guardrails.
-- **Resilience controls:** circuit breaker, rate limit, timeout, retry, fallback, dependency lifecycle, and failure-contract telemetry decisions.
-- **Telemetry and alerting:** structured log schema, metric names and label cardinality, trace propagation, burn-rate alerts, dashboard owner, on-call routing, and runbook.
-- **Reuse / placement rationale:** why each metric, log field, span, alert, dashboard, runbook, fallback, or capacity guardrail belongs at the selected boundary.
-- `reliability_signal_to_validation_map`: each changed SLI, alert, dashboard, fallback, queue, pool, capacity, cost, runbook, or incident claim mapped to command, validator/report artifact, exit code, freshness, what it proves, what it does not prove, residual risk, and owner.
-- `rollout_watch_plan`: canary or watch window, rollback threshold, dashboard/report link, on-call owner, stale or not-run validation, and next gate.
-- **Validation evidence:** load/profile/query/dashboard/alert/incident artifacts, chaos or game-day obligations, behavior preservation, what evidence proves, and what evidence does not prove.
-- **Residual risk and next gate:** accepted capacity, cost, recovery, dashboard, alert, fallback, or corrective-action gaps with owner and handoff.
 
-For the full enumerated output fields, quality gates, and handoff table, load `references/reliability-output-and-gates.md`.
+- **Analysis mode (`analysis-agent`):** failure model; objective and recovery decisions; telemetry gaps; current evidence and freshness; proof limits; residual risk.
+- **Task mode (`task-agent`):** resilience changes; rollout-watch signals; current post-edit evidence and freshness; proof limits; residual risk.
+- **Review mode (`review-agent`):** reliability verdict; failure findings; current reviewed evidence and freshness; proof limits; unproven recovery behavior; residual risk.
 
-## Evidence Contract
-Close a reliability and observability plan only when the canonical answers from `agent-execution-discipline` are concrete:
-- **Basis:** selected mode, SLI/SLO target, error-budget headroom, RED/USE signal set, or incident severity model.
-- **Files and boundaries inspected:** request paths, dependencies, queues, pools, resource limits, dashboards, alerts, runbooks, release watch, cost/capacity guardrails, incident timeline, and saturation point.
-- **Reuse / placement rationale:** where each log field, metric, span, burn-rate alert, dashboard, runbook, fallback, and cost guardrail attaches and who owns it.
-- **Validation evidence:** load test, profile, chaos/game-day scenario, burn-rate query, dashboard/alert query, or incident evidence check with outcome, what evidence proves, and what evidence does not prove.
-- **Reliability judgment, residual risk, and next gate:** behavior preservation, evidence limits, unverified capacity/cost/recovery/fallback/corrective-action risk, scaling or rollback trigger, owner, and handoff.
+## Targeted References
 
-## Quality Gate
-- User-facing paths have SLIs, SLO targets, error-budget headroom, burn-rate alerts, and rollback thresholds.
-- Structured logs, metric labels, traces, dashboards, and alerts have bounded cardinality, correlation, owner, and runbook action.
-- Circuit breakers, queues, retries, fallbacks, pools, lifecycle controls, and resource saturation have tested signals.
-- Cost/capacity guardrails cover unit cost, storage, egress, autoscaling, reservation risk, headroom, anomaly alert, and owner.
-- Incident roles, severity, customer communication cadence, postmortem ownership, verified cause, false hypotheses, and residual risks are explicit.
-- Hot paths, side effects, and failure contracts have scale, ordering, idempotency, compensation, benchmark/profile, or telemetry evidence.
-- Reliability-affecting tools have permission/sandbox evidence, read-only or dry-run scope when available, rollback/revert path, and redaction rule.
-
-## Handoff
-- Hand release monitoring and rollback signals to `delivery-release-gate`; circuit breaker, timeout, structured logging, pool, query, DLQ, and integration metrics to the matching builder.
-- Hand chaos/load/SLO regression obligations to `quality-test-gate`; PII/audit log concerns to `security-privacy-gate`; incident evidence and postmortem work to `failure-diagnosis` and `change-documentation-gate`.
-- Hand lifecycle, failure contract, scale, side-effect ordering, runtime config, or closure evidence gaps to the matching capability owner or `agent-execution-discipline`.
-
-## Completion Criteria
-The change is production-ready from a reliability and observability perspective when every user-facing path has an SLI, error budget headroom is confirmed, multi-burn-rate alerts are configured, structured logging with trace propagation is implemented, cardinality of new metrics is bounded, circuit breakers have tested fallback behavior, queue consumers have DLQ and depth alerts, cost and capacity guardrails are owned and alertable, incident handoff is defined, a tested recovery runbook exists, and rollback decision criteria are explicit.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [checklist](references/checklist.md) | decision-checklist | A bounded L2 mode needs compact checks for the triggered objective, telemetry, alert, dashboard, recovery, or runbook risk | The root contract is enough or mode-specific closure and targeted proof are required | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |
+| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Closure depends on command/report artifacts, exit code, dashboard/alert proof, incident evidence, freshness, or proof limits | No reliability claim depends on runtime evidence or the body evidence contract is sufficient | analysis-agent, task-agent, review-agent | evidence-record, proof-limit, residual-risk |
+| [index](references/index.md) | index | competing reliability observability gate references require dependency, conflict, or output-fragment selection | the reliability observability gate root or a task-named reference already resolves selection | analysis-agent, task-agent, review-agent | reference-selection |
+| [reliability output and gates](references/reliability-output-and-gates.md) | targeted | L3-L5 work needs mode-specific closure and targeted gates for a selected objective, alert, resilience, telemetry, capacity/cost, recovery, or incident risk | A compact L1/L2 result is sufficient and no selected risk needs the extended proof contract | analysis-agent, task-agent, review-agent | gate-decision, residual-risk |
+| [solution optimality](references/solution-optimality.md) | targeted | An owned reliability objective, alert strategy, capacity bound, telemetry design, or failure-control choice has a material alternative | No owned objective or operational decision is affected, or current platform policy and evidence already determine the bounded control | analysis-agent, task-agent, review-agent | failure-decision, residual-risk |

@@ -7,20 +7,12 @@ focus:
   - telemetry for old and new usage
   - rollout and rollback
 route_hints:
-  skills:
-    - data-api-contract-changer
-    - integration-change-builder
-    - change-documentation-gate
-  capabilities:
-    - consumer-impact-analysis
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: data-api-contract-changer
+  layer3_skills:
     - version-compatibility
-    - contract-testing
-    - data-model-design
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - API/data gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Changed API, SDK, schema, event, or public export contract has known and unknown consumer risk analysis.
   - Generated clients, mobile, web, backend, SDK, and package consumers are considered.

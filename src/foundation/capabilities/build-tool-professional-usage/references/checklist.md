@@ -9,4 +9,4 @@
 - Classify validation commands as read-only analysis, generated-output write, cache write, artifact write, package download, release publish, or source/HOME/global-cache mutation.
 - Record artifact reproducibility when output ships: command, path, checksum or digest, source ref, dependency lock, toolchain, provenance/signing status, and rebuild limit.
 - Validate with the smallest command or artifact that can fail for the changed build boundary, then state what it proves and does not prove.
-- Treat repository graph, project memory, old CI logs, and prior artifacts as selectors only until current source/config/build evidence confirms them.
+- Treat repository inspection, prior task evidence, old CI logs, and prior artifacts as selectors only until current source/config/build evidence confirms them.

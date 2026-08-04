@@ -2,24 +2,24 @@
 
 ## Stack
 
-Node.js backend integration test harness using a local database fixture and a
-small configuration loader.
+Python integration-test reproduction using only stdlib-readable configuration,
+fixture, harness, and log files.
 
 ## Initial State
 
-The integration test fails with a database connection refusal. The repo has a
-test database config, setup script, and fixture loader, but one configuration
-path is wrong or missing. The failure can be diagnosed without guessing about
-the user's machine.
+The supplied log records a connection refusal before the test body. The
+repository-owned configured and expected ports disagree, so the cause can be
+verified without guessing about the user's machine.
 
 ## Files
 
-- `src/config/testDatabase.ts` loads integration-test database settings.
-- `test/setupIntegrationDb.ts` starts or validates the fixture database.
-- `test/orders.integration.test.ts` exercises the real repository path.
-- `package.json` defines the integration test command.
+- `db_config.py` declares the database host, port, and name.
+- `fixtures.py` declares the fixture's expected postgres port.
+- `integration_harness.py` compares the config and fixture before the test body.
+- `integration.log` records the exact observed setup values and refusal.
 
 ## Constraints
 
-Keep the test as an integration test. Do not replace the repository or database
-path with mocks. Diagnose from files, command output, and fixture behavior.
+Keep the workspace unchanged. Diagnose from the supplied files, cite their
+existing lines and values, and describe only a future repair plus validation
+plan. Do not apply a fix, invent execution evidence, or include raw command output.

@@ -7,23 +7,21 @@ focus:
   - regression testing
   - execution discipline closure
 route_hints:
-  skills:
-    - change-impact-analyzer
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
-    - agent-execution-discipline
-    - implementation-structure-design
-    - regression-testing
-    - unit-testing
-  domain_extensions: []
-  quality_gates:
-    - impact gate
-    - implementation gate
-    - test gate
-    - AI review gate
-    - execution discipline gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
+release_contract:
+  case_id: devex/bugfix-same-pattern-scan
+  control_path: direct
+  primary_skill: backend-change-builder
+  task_skill: backend-change-builder
+  review_skill: ai-code-review-refactor
+  tasks:
+    - task_id: fix-and-scan
+      skill: backend-change-builder
+      review_skill: ai-code-review-refactor
 expected_outcomes:
   - The defect pattern is defined before code is edited.
   - Relevant controllers, services, serializers, and tests are scanned for the pattern.
@@ -43,4 +41,4 @@ evidence:
   - Pattern search output or inspected-file list.
   - Regression test for missing profile on the reported endpoint.
   - Coverage or rationale for sibling matches.
-  - Execution Discipline Report with closure package.
+  - Final handoff with changed files, validation results, unverified scope, and residual risk.

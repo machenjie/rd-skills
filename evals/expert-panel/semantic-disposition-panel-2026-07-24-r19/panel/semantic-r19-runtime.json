@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-24-r19",
+  "created_on": "2026-07-24",
+  "packet_sha256": "29d7506bb3d5a3b74bac5e992929d0c1e6f56e625d9eadb6b7bb21ad2852652c",
+  "source_fingerprints": {
+    "audit": "96c36bdbb91ebd08b3e37c94b3a904a36afb598b2d5b88d6ca86c23db1e29a88",
+    "reference_candidates": "1eedbe1be723cfe12c96c32e3e5614a20164fc12f8001d28569095037a9f66e4",
+    "reference_detector": "4b04a9b693ac3079a1af6154425ed64408474d5027c0119ed6360c9288356112",
+    "reference_groups": "aa063d66e92ded0513416306d5a118f5519e9205806d70477ded8417aabb5a79",
+    "reference_source": "213495df9e73f680df8a3af75016d1f3378d514c6efebb7bf6b745449a703368",
+    "root_candidates": "b7d76a3fcee18b5047a77e00d637991903f8752eb09999c77bcf19dee13ee301",
+    "root_context": "05cce40a520010bd8a25ade86f311113755d30a9d4757821684cada5d88615ca",
+    "root_detector": "0b6168c2f3aaacfc611421aa8ef533171e4adf229986be73016c74154d402aef",
+    "root_source": "ddfc5a583c73b0b7062a021ba82cdf2d0c1177affe5e0c58100eb457fd3c1d65"
+  },
+  "voter": {
+    "voter_id": "semantic-r19-runtime",
+    "agent_id": "semantic-runtime-reviewer-2026-07-24-r19",
+    "role": "semantic-runtime-contract-reviewer",
+    "expertise": [
+      "semantic runtime contracts"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "reference:132b2a93cf5f9234fb8863a1811734109aceb9ee67118da7ea84d7dd6239a442",
+      "axis": "reference",
+      "candidate_id": "132b2a93cf5f9234fb8863a1811734109aceb9ee67118da7ea84d7dd6239a442",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The packet anchors eleven evidence-patterns.md occurrences that repeat the classification labels Strong evidence, Weak evidence, Missing evidence, and Invalid evidence, while the anchored bodies belong to distinct owners such as backup-recovery, code-review, integration-testing, secret-configuration-security, and state-machine-modeling. This is a shared evidence-quality vocabulary, not a duplicated operational rule.",
+      "authority_or_condition": "Indexed evidence-pattern references may use this four-state vocabulary when every occurrence retains owner-specific claims, evidence, and proof limits.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Keep the owner-specific bodies and non-proof boundaries distinct; reopen review if the repeated block becomes a generic operational checklist or its bodies converge.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:36fc8ec51b5723500356155ce13eb38cd2c25ac3530fd6a6c14fb7ee629ea746",
+      "axis": "reference",
+      "candidate_id": "36fc8ec51b5723500356155ce13eb38cd2c25ac3530fd6a6c14fb7ee629ea746",
+      "disposition": "false-positive",
+      "rationale": "language-idiom-enforcement/references/checklist.md:14 uses only to narrow public comment fields to current repository requirements and explicitly rejects universal comment coverage from a generic style guide. The unconditional-absolute detector family does not describe this anti-overreach qualification.",
+      "authority_or_condition": "The changed public contract is governed by repository and toolchain documentation requirements, with clarity ownership handed off explicitly.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Preserve the repository-required qualifier and the rejection of universal coverage; reopen review if the sentence becomes an unconditional comment mandate.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:5b3b78d581c88a7ebb6fdc94b91a920f2cef871e351085a6633306f0444b806b",
+      "axis": "reference",
+      "candidate_id": "5b3b78d581c88a7ebb6fdc94b91a920f2cef871e351085a6633306f0444b806b",
+      "disposition": "valid-contextual-rule",
+      "rationale": "form-validation-design/references/checklist.md:7 assigns consequential policy to the backend schema or trusted enforcement authority and limits the client to disclosure-safe constraints. The restriction is valid because it prevents frontend validation from duplicating authorization, security, business-rule, or backend correctness authority.",
+      "authority_or_condition": "A consequential rule has a backend schema or other trusted enforcement authority, and the client may expose only constraints and responses safe for disclosure.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Allow local structural and usability feedback, but keep authorization, sensitive policy, and final correctness at the trusted authority; route unclear disclosure boundaries to security/privacy review.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:782e7be59887663a954a323e13d4ba0581a160ceb922bb98d95a9bb56872552f",
+      "axis": "reference",
+      "candidate_id": "782e7be59887663a954a323e13d4ba0581a160ceb922bb98d95a9bb56872552f",
+      "disposition": "valid-contextual-rule",
+      "rationale": "testability-seam-design/references/checklist.md:12 limits the handoff to seam-specific reset and observation obligations after consuming the accepted test-data-management decision. That boundary prevents the testability Skill from redefining fixture, privacy, retention, or lifecycle ownership.",
+      "authority_or_condition": "An accepted test-data-management owner decision exists and the current work needs reset or observation seams to honor it.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Define only the minimum reset and observation contract; return unresolved data lifecycle, privacy, deletion, and fixture policy to test-data-management.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:8a2567f074a2b4e45734bca759363eb17ac8d97f241510978f962511d1b8ba1d",
+      "axis": "reference",
+      "candidate_id": "8a2567f074a2b4e45734bca759363eb17ac8d97f241510978f962511d1b8ba1d",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The packet anchors the same Claim, Strong evidence, Weak or invalid evidence, and Residual risk if absent columns in dto-schema-design, error-code-design, layered-architecture-design, and project-initialization evidence-patterns.md. Their rows address different domain claims, so the shared table is an evidence-assessment schema rather than copied implementation guidance.",
+      "authority_or_condition": "Evidence-pattern references may share this comparison schema when every row remains specific to its owning Skill and states a domain-specific residual risk.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Retain domain-specific claims and risks in all four references; reopen review if row content becomes interchangeable or the table starts prescribing one cross-domain mechanism.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:b1244a8537aa0323270872fe419ad06b0906002e9344c64d9e2504dc2d12e942",
+      "axis": "reference",
+      "candidate_id": "b1244a8537aa0323270872fe419ad06b0906002e9344c64d9e2504dc2d12e942",
+      "disposition": "valid-contextual-rule",
+      "rationale": "logging-error-handling/references/benchmarks.md:28 explicitly depends on an accepted policy and owner for actor, action, resource, outcome, integrity, retention, access, sink, and durability, then limits this Skill to verifying the diagnostic boundary and dependency. The restriction correctly separates diagnostic logging from protected audit-record closure.",
+      "authority_or_condition": "Current accepted audit policy and ownership define protected-record obligations independently of diagnostic logging.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Verify the diagnostic boundary and dependency here, and route protected-record integrity, retention, access, sink, and durability closure to the accepted policy owner.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:cc4f1b6588aa6dec05dfae764c293df76674953fe799841faec9cdf6e517b9a6",
+      "axis": "reference",
+      "candidate_id": "cc4f1b6588aa6dec05dfae764c293df76674953fe799841faec9cdf6e517b9a6",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The packet anchors eleven evidence-patterns.md files sharing the columns owner claim, Minimum evidence, What it proves, and What it does not prove, while the rows concern distinct domains including deletion, CLI/daemon boundaries, code review, controllers, documentation, dependencies, decomposition, requirements, transactions, roles, and change documentation. The repetition is a proof-limit schema, not a repeated domain rule.",
+      "authority_or_condition": "Owner-specific evidence maps may share this four-column schema when their claims, minimum evidence, and non-proof statements remain independently grounded in the owning reference.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Keep every row owner-specific and preserve explicit non-proof limits; reopen review if the maps collapse into a generic checklist or lose their domain distinctions.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:ffa3ce5605019400d1d015e81659920464bdf3f1c95bbb4d031027f6e7830aa0",
+      "axis": "reference",
+      "candidate_id": "ffa3ce5605019400d1d015e81659920464bdf3f1c95bbb4d031027f6e7830aa0",
+      "disposition": "valid-contextual-rule",
+      "rationale": "testability-seam-design/references/benchmarks.md:13 places the phrase in the seam decision rubric for fixture or golden pressure: consume the accepted test-data-management owner and expose only the required reset or observation seam. The restriction protects the ownership boundary while still requiring the seam needed by the caller.",
+      "authority_or_condition": "An accepted test-data-management decision governs the data lifecycle and the selected design needs a reset or observation seam.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Expose the required seam without redefining fixture source, privacy, retention, or cleanup policy; return unresolved data ownership questions to test-data-management.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:0f4c0d261a605390d0c26d48bdddef0abb1d03b06e398e0719815c95342e6647",
+      "axis": "root",
+      "candidate_id": "0f4c0d261a605390d0c26d48bdddef0abb1d03b06e398e0719815c95342e6647",
+      "disposition": "valid-contextual-rule",
+      "rationale": "ci-cd/SKILL.md:25 ties source revision and behavior-affecting inputs to build identity, provenance, registry artifact, and promoted artifact. For a selected build and promotion path, those identity links are necessary to establish what was built, promoted, rolled back, and investigated without prescribing a vendor-specific implementation.",
+      "authority_or_condition": "A CI/CD change builds, publishes, promotes, rolls back, or investigates an artifact whose identity and provenance affect release correctness.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Use the repository and provider provenance mechanism, bind only behavior-affecting inputs, and document proof limits rather than implying real-host or production verification.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:2a54ae2ec0bb75d10eac23a54c8e52507e766d17c8e192ca3c0a3cc23e91ea20",
+      "axis": "root",
+      "candidate_id": "2a54ae2ec0bb75d10eac23a54c8e52507e766d17c8e192ca3c0a3cc23e91ea20",
+      "disposition": "valid-contextual-rule",
+      "rationale": "ci-cd/SKILL.md:24 says to define each required check by trigger, changed scope, protected target, terminal behavior, and retry semantics. Each is scoped to checks already selected as required; the rule defines their observable contract rather than requiring every possible check or one particular CI mechanism.",
+      "authority_or_condition": "A repository or delivery policy has selected a check as required for a protected target or changed scope.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Derive the required-check set from current policy, state skip and bypass authority explicitly, and avoid inventing checks outside the changed scope.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:45030033706eceaef63f523be6dca6d944523e15ff14bef0ee176a9acd585d42",
+      "axis": "root",
+      "candidate_id": "45030033706eceaef63f523be6dca6d944523e15ff14bef0ee176a9acd585d42",
+      "disposition": "valid-contextual-rule",
+      "rationale": "solution-optimality-evaluation/SKILL.md:13 requires comparison with the strongest feasible alternative when making a relative claim such as more future-proof. A comparative superiority claim needs a credible comparator; the rule does not force an alternative implementation when no feasible alternative exists.",
+      "authority_or_condition": "The evaluation makes a material relative-optimality claim and at least one feasible alternative could change the decision.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Rank only feasible alternatives under the same hard constraints, record proof limits, and do not manufacture a comparator or override a hard-constraint veto.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:73d2dbebf2bdfd4dfa9dcce31007c3da0a9356b6bba6977145650e7c0b33be8d",
+      "axis": "root",
+      "candidate_id": "73d2dbebf2bdfd4dfa9dcce31007c3da0a9356b6bba6977145650e7c0b33be8d",
+      "disposition": "valid-contextual-rule",
+      "rationale": "routing-quality-review/SKILL.md:37 requires validating that every selected Skill and reference is present in built output. Every is bounded to the routes selected by the reviewed routing change; absence of any selected artifact would make that route non-executable.",
+      "authority_or_condition": "An independent routing review has a closed set of selected Skills and references for one or more supported build profiles.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Validate only the selected paths against their intended build profiles and load contracts; do not expand the check into preloading an entire reference catalog.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:e3417af7023a54eadebe84064cad566d7167ea2f157c86f84f93ceb1ddd37cd4",
+      "axis": "root",
+      "candidate_id": "e3417af7023a54eadebe84064cad566d7167ea2f157c86f84f93ceb1ddd37cd4",
+      "disposition": "valid-contextual-rule",
+      "rationale": "e2e-testing/SKILL.md:28 requires cleanup across success, assertion failure, timeout, and the other named terminal paths for run-owned state. Covering failure paths is necessary to keep repeatable E2E execution from leaking data or contaminating later runs, subject to the same rule against deleting another run’s state.",
+      "authority_or_condition": "The selected E2E path creates uniquely attributable test, session, sandbox, or other disposable state that the run is authorized to clean up.",
+      "decision_owner": "changeforge-maintainers",
+      "mitigation": "Use unique run ownership and bounded deletion authority; if state cannot be attributed or safely removed, stop cleanup, preserve evidence, and escalate rather than deleting shared state.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "Review is limited to the thirteen packet-selected candidates and the packet-bound current audit; no other reviewer templates, results, or prior ballots were consulted.",
+    "This static semantic review does not prove real-host execution, production behavior, runtime performance, or the installed user experience."
+  ]
+}

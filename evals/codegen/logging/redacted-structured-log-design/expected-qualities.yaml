@@ -7,22 +7,13 @@ focus:
   - redaction tests
   - no-log rationale
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
-    - agent-execution-discipline
-    - implementation-structure-design
-    - code-review
-    - unit-testing
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
-    - AI review gate
-    - execution discipline gate
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: logging-design-gate
+  layer3_skills:
+    - logging-error-handling
+    - secret-configuration-security
+  review_skill: logging-design-gate
 expected_outcomes:
   - Sensitive values are redacted or excluded.
   - Correlation and cardinality choices are explicit.

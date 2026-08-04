@@ -1,29 +1,26 @@
 # Example Output
 
 ```markdown
-## Domain Implementation Contract
+## Domain Rule Contract
 
-Domain owner:
-- Subscription aggregate.
+Rule: a subscription cancellation changes active or past-due state to canceled and records the effective rule version.
 
-Invariant authority:
-- A subscription can be canceled only when status is active or past_due.
-- A canceled subscription cannot be reactivated through the cancel operation.
-- Cancellation reason is required for administrator-initiated cancellation.
+Authority:
+- The subscription aggregate owns the transition because it has current lifecycle state and can reject mutation before persistence.
+- The application service owns actor authorization, transaction scope, persistence, and provider-reversal handoff.
 
-Operation:
-- Subscription.cancel(actorType, reason, requestedAt)
+Outcomes:
+- Canceled with effective time and rule version.
+- Denied for terminal state.
+- Denied for missing administrator reason.
 
-Failure outcomes:
-- AlreadyCanceled
-- InvalidCancellationReason
-- TerminalStateTransitionDenied
+Bypass and evolution:
+- API, admin, import, job, ORM mutation, migration, and fixture paths are scanned for direct status writes.
+- Existing canceled records remain readable under their recorded rule version; a backfill is not implied.
 
-Layer rule:
-- Controller and service may precheck status for UX, but Subscription.cancel enforces the invariant.
+Defenses:
+- A storage version check protects a competing update; domain denial remains the readable rule authority.
 
-Tests:
-- Active subscription cancels.
-- Canceled subscription is rejected.
-- Administrator cancel without reason is rejected.
+Evidence limit:
+- Current domain and storage fixtures cover named transitions and one competing-write case; uninspected support tools and production schedules remain residual scope.
 ```

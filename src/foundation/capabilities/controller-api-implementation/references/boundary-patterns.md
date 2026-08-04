@@ -27,20 +27,11 @@ controller_boundary_decision:
   handler_file: ""
   middleware_auth_path: ""
   request_schema_or_validator: ""
-  context_forwarded:
-    subject: ""
-    tenant: ""
-    scopes_or_roles: ""
-    correlation_id: ""
+  context_forwarded: {subject: "", tenant: "", scopes_or_roles: "", correlation_id: ""}
   service_boundary:
     service_method: ""
     command_or_query_dto: ""
-    forbidden_controller_calls:
-      - repository
-      - transaction
-      - domain mutation
-      - provider call
-      - object authorization decision
+    forbidden_controller_calls: ["repository", "transaction", "domain mutation", "provider call", "object authorization decision"]
   response_boundary:
     success_statuses: []
     dto_mapper: ""

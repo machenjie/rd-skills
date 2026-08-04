@@ -25,7 +25,7 @@ Reason: Too broad and would allow extensions to bypass pricing invariants.
 
 Graph / Memory / Execution Validation:
 - Graph evidence: checkout tax call site, tax provider interface, generated contract docs, and provider tests inspected.
-- Memory evidence: old "future pricing hooks" note rejected because it has no current implementer or dated roadmap commitment.
+- Prior evidence: old "future pricing hooks" note rejected because it has no current implementer or dated roadmap commitment.
 - Execution evidence: compatibility test for both providers, invariant-bypass test, malformed evidence test, and provider outage isolation test required before handoff.
 
 Extension To Validation Map:

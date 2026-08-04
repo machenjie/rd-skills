@@ -8,7 +8,7 @@ Mode selected:
 
 Source evidence:
 - Current route component, API client wrapper, generated activity DTO, MSW handlers, and activity-feed tests inspected.
-- Repository graph and project memory were used only as selectors; current source confirmed the cache key and handler pattern.
+- repository inspection and prior task evidence were used only as selectors; current source confirmed the cache key and handler pattern.
 
 Operation:
 - Load project activity feed with cursor pagination: `GET /api/projects/{projectId}/activity?cursor=...`.

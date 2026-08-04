@@ -7,22 +7,14 @@ focus:
   - contract tests
   - client lifecycle and retry mapping
 route_hints:
-  skills:
-    - backend-change-builder
-    - integration-change-builder
-    - quality-test-gate
-  capabilities:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
     - design-pattern-selection
     - implementation-structure-design
-    - contract-testing
-    - idempotency-retry-design
-    - language-performance-safety
-  domain_extensions:
     - payment-trading-extension
-  quality_gates:
-    - implementation gate
-    - test gate
-    - reliability gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Current payment providers use a stable provider contract through strategy, adapter, or provider pattern.
   - Provider-specific retry and error mapping stays inside each adapter or strategy implementation.

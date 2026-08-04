@@ -1,10 +1,10 @@
 # E2E Testing Checklist
 
-- Select only critical journeys or high-risk branches.
-- Include affected auth, permission denial, failure, and recovery paths.
-- Use deterministic isolated test data and stable selectors.
-- Avoid arbitrary sleeps and shared environment assumptions.
-- Assert user-visible outcomes plus durable side effects where relevant.
-- Capture trace, screenshot, video, logs, or network evidence for failures.
-- Confirm repository graph, project memory, prior CI output, or agent claims against current source before reuse.
-- Record validation command, exit code, artifact path, freshness, and what the E2E evidence does not prove.
+- State the critical journey, role, tenant, starting state, deployed boundaries, and why lower-level proof is insufficient.
+- Include triggered negative, recovery, version-skew, and permission branches rather than a universal journey catalog.
+- Assert the user/business outcome, authoritative durable state, and forbidden side effects.
+- Use semantic selectors and readiness signals with a bounded consequence-derived observation window.
+- Own data, sessions, sandbox use, setup, and cleanup for success, failure, timeout, and cancellation.
+- Diagnose flakes by signature; keep rerun and quarantine evidence separate from a passing result.
+- Select environment and browser/device coverage from changed behavior, usage, support policy, and risk.
+- Record the fresh command/result or planned proof, artifacts actually used, uncovered combinations, and residual owner.

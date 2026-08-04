@@ -12,4 +12,4 @@
 - Map each requirement to test or review evidence.
 - Record repository evidence, graph surfaces, accepted/rejected memory, and execution evidence freshness.
 - Map each requirement, non-goal, constraint, and dependency to downstream owner, validation artifact, or residual risk.
-- State what the brief does not authorize: implementation choices, scope expansion, unresolved authority decisions, and unverified assumptions.
+- State what the structured requirement does not authorize: implementation choices, scope expansion, unresolved authority decisions, and unverified assumptions.

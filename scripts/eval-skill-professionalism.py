@@ -1,3032 +1,673 @@
 #!/usr/bin/env python3
-"""Evaluate ChangeForge skill professionalism signals.
+"""Statically evaluate Hookless ChangeForge skills for AI execution quality.
 
-This is an offline, warning-only authoring evaluation. It scans professional
-skills and foundation capabilities, scores them across the professionalism
-dimensions defined in docs/PROFESSIONALISM_ENHANCEMENT_STANDARD.md, and writes
-Markdown and JSON reports. It never calls a model, never reaches the network,
-and never edits skill sources.
+The evaluator checks source and registry contracts only.  It does not run an
+agent and therefore must not be cited as product-accuracy, latency, or adoption
+evidence.
 """
 
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import re
 import sys
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
+from types import ModuleType
 from typing import Any
 
-from validation_utils import ValidationProblem, extract_section_body, load_yaml_file, parse_frontmatter
+from validation_utils import (
+    CORE_CONTRACTS,
+    ValidationProblem,
+    empty_markdown_headings,
+    load_yaml_file,
+    load_professional_coverage_policy,
+    parse_frontmatter,
+    professional_review_skill_ids,
+    reference_paths,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFESSIONAL_SKILLS_DIR = ROOT / "src" / "professional-skills"
-CAPABILITIES_DIR = ROOT / "src" / "foundation" / "capabilities"
-DOMAIN_EXTENSIONS_DIR = ROOT / "src" / "domain-extensions"
-REGISTRY_DIR = ROOT / "src" / "registry"
-DEFAULT_REPORTS_DIR = ROOT / "reports"
-PROFESSIONALISM_STANDARD_DIR = ROOT / "docs" / "skill_professionalism_standard"
-PROFESSIONAL_DEPTH_SCORE_MODEL_PATH = PROFESSIONALISM_STANDARD_DIR / "SKILL_PROFESSIONALISM_DIMENSION_RUBRIC.md"
-PROFESSIONALISM_AXES_PATH = PROFESSIONALISM_STANDARD_DIR / "professionalism-axes.yaml"
-MARKDOWN_REPORT = "skill-professionalism-eval.md"
-JSON_REPORT = "skill-professionalism-eval.json"
-DEPTH_MARKDOWN_REPORT = "skill-professionalism-depth.md"
-DEPTH_JSON_REPORT = "skill-professionalism-depth.json"
-COVERAGE_MARKDOWN_REPORT = "professional-coverage-matrix.md"
-COVERAGE_JSON_REPORT = "professional-coverage-matrix.json"
-ROUTING_EVALS_DIR = ROOT / "evals" / "routing"
-PROFESSIONAL_BENCHMARKS_DIR = ROOT / "evals" / "professional-benchmarks"
-CODEGEN_BENCHMARKS_DIR = ROOT / "evals" / "codegen"
-
-DIMENSIONS = (
-    "trigger_accuracy",
-    "mode_coverage",
-    "stage_fit",
-    "professional_depth",
-    "proactive_trigger_quality",
-    "failure_mode_coverage",
-    "evidence_contract_strength",
-    "output_actionability",
-    "boundary_clarity",
-    "reference_precision",
-    "validation_obligation",
-    "anti_bloat_control",
+REPORTS = ROOT / "reports"
+DEFAULT_RELEASE_REVIEW_CONFIG = ROOT / "config/professionalism-release-review.yaml"
+ROUTING_EVALUATOR = ROOT / "scripts/eval-routing.py"
+BENCHMARK_EVALUATOR = ROOT / "scripts/eval-professional-benchmarks.py"
+PRESSURE_EVALUATOR = ROOT / "scripts/eval-pressure-behavior.py"
+CAPABILITY_ROUTING_FIXTURES = (
+    ROOT / "evals/routing/capability-coverage-cases.yaml"
 )
 
-DEPTH_DIMENSION_WEIGHTS = {
-    "professional_responsibility_clarity": 8,
-    "domain_judgment_depth": 15,
-    "decision_criteria_completeness": 12,
-    "failure_mode_specificity": 12,
-    "evidence_contract_completeness": 12,
-    "output_contract_actionability": 10,
-    "boundary_and_ownership_precision": 9,
-    "tradeoff_priority_quality": 7,
-    "anti_pattern_quality": 7,
-    "validation_semantics": 5,
-    "residual_risk_handling": 3,
-}
+REGISTRIES = (
+    ("control", ROOT / "src/registry/control-skills.yaml", "control_skills"),
+    ("professional", ROOT / "src/registry/professional-skills.yaml", "professional_skills"),
+    ("foundation", ROOT / "src/registry/foundation-skills.yaml", "foundation_skills"),
+    ("domain", ROOT / "src/registry/domain-skills.yaml", "domain_skills"),
+)
 
-DEPTH_CORE_DIMENSIONS = {
-    "domain_judgment_depth",
-    "decision_criteria_completeness",
-    "failure_mode_specificity",
-    "evidence_contract_completeness",
-    "output_contract_actionability",
-    "boundary_and_ownership_precision",
-}
-
-PROFESSIONAL_BODY_REVIEW_LIMIT = 300
-CAPABILITY_BODY_REVIEW_LIMIT = 250
-TOTAL_WARNING_THRESHOLD = 42
-DIMENSION_WARNING_THRESHOLD = 2
-
-ENHANCED_FOUNDATION_CAPABILITIES = {
-    "engineering-stage-professionalism",
-    "agent-execution-discipline",
-    "implementation-structure-design",
-    "code-clarity-maintainability",
-    "skill-authoring-expert",
-    "senior-programming-judgment-core",
-}
-
-KEY_FOUNDATION_CAPABILITIES = {
-    "failure-diagnosis",
-    "refactoring",
-    "code-review",
-    "test-strategy",
-    "unit-testing",
-    "integration-testing",
-    "contract-testing",
-    "e2e-testing",
-    "regression-testing",
-    "logging-error-handling",
-    "idempotency-retry-design",
-    "async-job-design",
-    "transaction-consistency",
-    "cache-design",
-    "message-queue-design",
-    "relational-database",
-    "observability",
-    "release-rollback",
-    "language-idiom-enforcement",
-    "language-testing-strategy",
-    "language-performance-safety",
-    "go-professional-usage",
-    "python-professional-usage",
-    "typescript-professional-usage",
-    "java-jvm-professional-usage",
-    "rust-professional-usage",
-    "cpp-professional-usage",
-    "sql-professional-usage",
-    "shell-cli-professional-usage",
-    "testability-seam-design",
-    "dependency-wiring-lifecycle",
-    "algorithm-data-structure-selection",
-    "failure-contract-design",
-    "configuration-runtime-policy",
-    "model-boundary-mapping",
-    "data-side-effect-flow-tracing",
-    "architecture-enforcement-tooling",
-    "consumer-impact-analysis",
-    "cleanup-deletion-governance",
-    "minimal-correct-implementation",
-    "code-element-professionalism",
-    "senior-programming-judgment-core",
-}
-
-SECTION_ALIASES = {
-    "When To Use": ("When To Use", "Load When", "Strong Domain Signals"),
-    "Do Not Use When": ("Do Not Use When", "Do Not Load When"),
-    "Stage Ownership": ("Stage Ownership", "Capability Boundary", "Domain Scope"),
-    "Adjacent Skill Conflict Resolution": (
-        "Adjacent Skill Conflict Resolution",
-        "Capability Boundary",
-        "Used By / Owner Skill Compatibility",
-        "Required Professional Owner Skill",
-    ),
-    "Required Context / Missing Information Policy": (
-        "Required Context / Missing Information Policy",
-        "Required Input Fragment",
-    ),
-    "Selection Rules": ("Selection Rules", "Decision Rules"),
-    "Mode Matrix": ("Mode Matrix", "Mode Selection"),
-    "Risk Escalation Rules": (
-        "Risk Escalation Rules",
-        "Risk Escalation",
-        "Domain Risk Escalation",
-    ),
-    "Critical Details": ("Critical Details", "Critical Gotchas"),
-    "Anti-Patterns": ("Anti-Patterns", "Anti-Rationalization Table"),
-    "Reference Loading Policy": (
-        "Reference Loading Policy",
-        "Domain Reference Loading Policy",
-    ),
-    "Output Contract": (
-        "Output Contract",
-        "Output Fragment",
-        "Domain Output Addendum",
-    ),
-    "Evidence Contract": (
-        "Evidence Contract",
-        "Evidence Contract Answer Set",
-        "Evidence Requirement",
-    ),
-    "Quality Gate": ("Quality Gate", "Domain Quality Gate"),
-    "Handoff": ("Handoff", "Return To Owner Skill", "Return / Escalate"),
-}
-
-REQUIRED_SECTIONS = (
-    "Mission",
+PROFESSIONAL_DOMAIN_SECTIONS = (
+    "Role",
     "When To Use",
-    "Do Not Use When",
-    "Mode Matrix",
-    "Proactive Professional Triggers",
-    "Evidence Contract",
+    "Do Not Use",
+    "Required Inputs",
+    "Professional Decision Rules",
+    "High-Value Gotchas",
+    "Execution Checklist",
+    "Stop / Escalation Conditions",
     "Output Contract",
-    "Failure Modes",
-    "Quality Gate",
-    "Reference Loading Policy",
-    "Handoff",
-    "Completion Criteria",
+    "Targeted References",
 )
-
-TRIGGER_FIELDS = (
-    "Signal:",
-    "Hidden risk:",
-    "Required professional action:",
-    "Route to:",
-    "Evidence required:",
+FOUNDATION_SECTIONS = (
+    "Registry Trigger",
+    "Skill Role",
+    "High-Value Rules",
+    "Anti-Patterns",
+    "Targeted References",
 )
-
-MODE_REQUIRED_FIELDS = {
-    "trigger signals": ("trigger signals", "trigger signal"),
-    "professional focus": ("professional focus",),
-    "required evidence": ("required evidence", "evidence required"),
-    "companion capabilities / gates": (
-        "companion capabilities / gates",
-        "companion capabilities",
-        "companion gates",
-    ),
-    "skip guidance": ("skip guidance", "skip by default"),
-}
-
-EVIDENCE_OBLIGATIONS = {
-    "boundaries inspected": (
-        "boundaries inspected",
-        "boundaries_inspected",
-        "files and boundaries inspected",
-    ),
-    "validation evidence": (
-        "validation evidence",
-        "validation_evidence",
-        "validation command",
-        "validation commands",
-    ),
-    "what evidence proves": ("what evidence proves", "what the evidence proves"),
-    "what evidence does not prove": (
-        "what evidence does not prove",
-        "what the evidence does not prove",
-        "does not prove",
-    ),
-    "residual risk": ("residual risk", "residual_risk"),
-    "next gate": ("next gate", "next_gate", "next professional gate"),
-    "reuse / placement rationale": (
-        "reuse / placement rationale",
-        "reuse and placement rationale",
-        "placement rationale",
-    ),
-    "behavior preservation": ("behavior preservation", "behavior-preserving"),
-}
-
-BOUNDARY_TERMS = (
-    "boundary",
-    "boundaries",
-    "trust",
-    "tenant",
-    "object",
-    "permission",
-    "owner",
-    "ownership",
-    "public/private",
-    "rollback",
-    "contract",
-    "anti-fragmentation",
-    "file granularity",
-    "micro-file sprawl",
-    "one-function file",
-    "tiny helper file",
-    "navigation cost",
-    "keep in existing file",
-    "small file merge",
-    "merge restraint",
-    "reckless file merge",
-    "lost small-file boundary",
-    "split merge decision",
-    "object-method encapsulation",
-    "method placement",
-    "object relationship map",
-    "parent-child object",
-    "sibling object",
-    "inheritance vs composition",
-    "delegation",
-    "anemic object",
-    "helper-bag object",
-    "god object",
-    "module internal composition",
-    "module object graph",
-    "module public facade",
-    "module private internals",
-    "internal dependency direction",
-    "object boundary lost during file merge",
-    "object boundary missing during file split",
-    "testability seam",
-    "dependency wiring",
-    "composition root",
-    "lifecycle scope",
-    "algorithm data structure",
-    "failure contract",
-    "configuration runtime policy",
-    "model boundary mapping",
-    "side-effect flow",
-    "architecture enforcement",
-    "consumer impact",
-    "cleanup deletion",
+CONTROL_SECTIONS = (
+    "Role",
+    "Decision Rules",
+    "Targeted References",
+    "Stop and Escalate",
+    "Output Contract",
 )
-
-VALIDATION_TERMS = (
-    "command",
-    "test",
-    "validator",
-    "evidence",
-    "output",
-    "exit code",
-    "artifact",
-    "screenshot",
-    "report",
-)
-
-REFERENCE_HINT_TERMS = (
-    "Reference Loading Policy",
-    "Load [",
-    "load [",
-    "references/",
-    "read `references/",
-)
-
-GENERIC_PHRASES = (
-    "best practices",
-    "robust solution",
-    "proper handling",
-    "as needed",
-    "where appropriate",
-    "ensure quality",
-    "industry standard",
-    "check security",
-    "add tests",
-    "run tests",
-    "skip if not needed",
-    "do validation",
-    "handle errors",
-    "make it professional",
-)
-
-CONCRETE_ANCHOR_TERMS = (
-    "accessibility",
-    "acknowledgement",
-    "api",
-    "auth",
-    "authorization",
-    "backfill",
-    "cache",
-    "caller",
-    "compatibility",
-    "contract",
-    "controller",
-    "dashboard",
-    "dedupe",
-    "denied",
-    "deployment",
-    "duplicate",
-    "event",
-    "experiment",
-    "fixture",
-    "focus",
-    "idempotency",
-    "invalidation",
-    "keyboard",
-    "migration",
-    "permission",
-    "query",
-    "queue",
-    "race",
-    "repository",
-    "rollback",
-    "schema",
-    "service",
-    "state",
-    "tenant",
-    "transaction",
-    "validation command",
-    "webhook",
-    "wcag",
-)
-
-DIMENSION_SECTIONS = {
-    "trigger_accuracy": "When To Use / Technical Selection Criteria",
-    "mode_coverage": "Mode Matrix",
-    "stage_fit": "Stage Fit / Mode Matrix",
-    "professional_depth": "Professional rules",
-    "proactive_trigger_quality": "Proactive Professional Triggers",
-    "failure_mode_coverage": "Failure Modes",
-    "evidence_contract_strength": "Evidence Contract",
-    "output_actionability": "Output Contract",
-    "boundary_clarity": "Boundary language",
-    "reference_precision": "Reference Loading Policy",
-    "validation_obligation": "Output/Evidence/Quality Gate",
-    "anti_bloat_control": "Anti-bloat",
-}
-
-DUPLICATE_IGNORE_FRAGMENTS = (
-    "do not load every reference by default",
-    "selected capability reference path format",
-    "pinned versions are review baselines, not permanent recommendations",
-    "all five canonical answers are concrete",
-    "answer schema: `agent-execution-discipline`",
-    "`42 idempotency-retry-design`",
-    "`82 solution-optimality-evaluation`",
-    "| mode | trigger signals | professional focus | required evidence | companion capabilities",
-)
-
-MINIMAL_CORRECTNESS_TERMS = (
-    "existence",
-    "simplicity ladder",
-    "standard library",
-    "native",
-    "existing repository",
-    "installed dependency",
-    "local direct",
-    "new dependency",
-    "one implementation",
-    "delete",
-    "shrink",
-    "yagni",
-    "shortcut",
-    "ceiling",
-    "upgrade trigger",
-    "validation evidence",
-    "residual risk",
-)
-
-SENIOR_PROGRAMMING_JUDGMENT_TERMS = (
-    "purpose",
-    "facts",
-    "objects",
-    "states",
-    "behaviors",
-    "rules",
-    "invariants",
-    "boundaries",
-    "failure contract",
-    "side effects",
-    "reuse and placement",
-    "minimality",
-    "validation map",
-    "observability map",
-    "residual risk",
-)
-
-PROFESSIONAL_AXIS_TERMS = (
-    "authorization",
-    "boundary",
-    "compatibility",
-    "consistency",
-    "contract",
-    "diagnosability",
-    "evidence",
-    "failure",
-    "handoff",
-    "idempotency",
-    "ownership",
-    "permission",
-    "placement",
-    "release",
-    "residual risk",
-    "retry",
-    "rollback",
-    "side effect",
-    "state",
-    "testability",
-    "trade-off",
-    "validation",
-)
-
-OUTPUT_OBLIGATION_TERMS = (
-    "selected mode",
-    "mode selected",
-    "selected_mode",
-    "mode_selected",
-    "professional decision",
-    "professional_decision",
-    "inspected boundaries",
-    "boundaries inspected",
-    "inspected_boundaries",
-    "boundaries_inspected",
-    "evidence collected",
-    "validation evidence",
-    "evidence_collected",
-    "evidence limits",
-    "evidence_limits",
-    "validation status",
-    "validation_status",
-    "residual risk",
-    "residual_risk",
-    "next gate",
-    "next_gate",
-    "next owner",
-    "next_owner",
+REGISTRY_FIELDS = (
+    "name",
+    "path",
+    "role_support",
+    "trigger_signals",
+    "anti_trigger_signals",
+    "required_inputs",
+    "output_contract",
+    "escalation_signals",
+    "reference_index",
 )
 
 
 @dataclass
-class WarningRecord:
-    message: str
-    type: str
-    item: str
-    item_kind: str
-    scope: str
-    release_relevance: str
-    reason: str
-
-    def __contains__(self, text: object) -> bool:
-        return str(text) in self.message
-
-    def __str__(self) -> str:
-        return self.message
-
-
-@dataclass
-class SkillScore:
-    path: str
+class SkillResult:
     name: str
     kind: str
-    total: int
-    dimensions: dict[str, int]
-    warnings: list[WarningRecord] = field(default_factory=list)
-    likely_missing_sections: list[str] = field(default_factory=list)
-    recommended_fixes: list[str] = field(default_factory=list)
-    status: str = "weak"
-    body_lines: int = 0
-
-
-@dataclass
-class EvalReport:
-    generated_at: str
-    skills_checked: int
-    warning_count: int
-    average_score: float
-    items: list[SkillScore]
-    duplicate_template_warnings: list[str] = field(default_factory=list)
-
-
-@dataclass
-class ProfessionalDepthWarning:
-    type: str
-    severity: str
-    message: str
-    dimension: str
-
-
-@dataclass
-class ProfessionalDepthScore:
     path: str
-    name: str
-    kind: str
-    professionalism_score: int
     status: str
-    dimensions: dict[str, int]
-    judgment_axes: list[str] = field(default_factory=list)
-    judgment_axis_source: str = ""
-    warnings: list[ProfessionalDepthWarning] = field(default_factory=list)
-    recommended_fixes: list[str] = field(default_factory=list)
-
-
-@dataclass
-class ProfessionalDepthReport:
-    generated_at: str
-    items_checked: int
-    warning_count: int
-    average_professionalism_score: float
-    score_model: str
-    score_model_path: str
-    judgment_axis_registry: str
-    items: list[ProfessionalDepthScore]
-    metadata_warnings: list[str] = field(default_factory=list)
-
-
-@dataclass
-class CoverageRow:
-    name: str
-    path: str
-    kind: str
-    mode_matrix: str
-    proactive_triggers: str
-    evidence_contract: str
-    output_contract: str
-    failure_modes: str
-    quality_gate: str
-    reference_loading_hint: str
-    senior_programming_judgment_coverage: str
-    routing_coverage: str
-    benchmark_coverage: str
-    anti_bloat_status: str
-    status: str
-    score: int
-    warnings: list[WarningRecord] = field(default_factory=list)
-
-
-@dataclass
-class CoverageMatrixReport:
-    generated_at: str
-    rows_checked: int
-    rows: list[CoverageRow]
+    authoring_score: int
+    required_sections: list[str]
+    missing_sections: list[str] = field(default_factory=list)
+    missing_registry_fields: list[str] = field(default_factory=list)
+    broken_references: list[str] = field(default_factory=list)
+    unlinked_references: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    role_support: list[str] = field(default_factory=list)
+    trigger_signals: list[str] = field(default_factory=list)
+    anti_trigger_signals: list[str] = field(default_factory=list)
+    layer3_candidates: list[str] = field(default_factory=list)
+    line_count: int = 0
+    decision_rule_count: int = 0
+    gotcha_count: int = 0
+    reference_count: int = 0
+    routing_coverage_count: int = 0
+    benchmark_coverage_count: int = 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = _parse_args(sys.argv[1:] if argv is None else argv)
-    reports_dir = args.reports_dir or DEFAULT_REPORTS_DIR
-    registry_names = _load_registry_names()
-    items = _evaluate_all(registry_names)
-    duplicate_warnings = _duplicate_template_warnings(items)
-    for item in items:
-        matched_duplicate_warnings = [
-            warning for warning in duplicate_warnings if warning.startswith(item.path + ":")
-        ]
-        item.warnings.extend(
-            _warning_records(
-                matched_duplicate_warnings,
-                item.kind,
-                ROOT / item.path,
-            )
+    args = _args(sys.argv[1:] if argv is None else argv)
+    try:
+        entries = _load_entries()
+    except ValidationProblem as exc:
+        print(f"eval-skill-professionalism: ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    results = [_evaluate(kind, entry) for kind, entry in entries]
+    professional_entries = [entry for kind, entry in entries if kind == "professional"]
+    try:
+        review_skill_ids = professional_review_skill_ids(
+            professional_entries,
+            CORE_CONTRACTS["review_discipline_contract"]["professional_risk_matrix"],
         )
-        if matched_duplicate_warnings:
-            item.dimensions["anti_bloat_control"] = max(
-                0,
-                item.dimensions.get("anti_bloat_control", 0) - 1,
-            )
-            item.dimensions["professional_depth"] = max(
-                0,
-                item.dimensions.get("professional_depth", 0) - 1,
-            )
-            item.total = sum(item.dimensions.values())
-            item.recommended_fixes = _recommended_fixes(
-                item.warnings,
-                item.dimensions,
-                item.kind,
-                item.name,
-            )
-            item.status = _status(item.total, item.warnings, item.dimensions, item.kind, item.name)
+    except ValidationProblem as exc:
+        print(f"eval-skill-professionalism: ERROR: {exc}", file=sys.stderr)
+        return 1
+    try:
+        coverage = build_coverage_matrix(
+            args.release_review_config,
+            results=results,
+        )
+    except ValidationProblem as exc:
+        print(f"eval-skill-professionalism: ERROR: {exc}", file=sys.stderr)
+        return 1
+    errors = [f"{row.path}: {message}" for row in results for message in row.errors]
+    warnings = [f"{row.path}: {message}" for row in results for message in row.warnings]
+    payload = {
+        "schema_version": 2,
+        "architecture": "hookless-control-plane",
+        "evaluation_kind": "static-authoring-structure",
+        "evidence_limitations": [
+            "No model or agent was executed.",
+            "Scores measure source and registry completeness, not engineering accuracy.",
+            "Efficiency and adoption thresholds are not evaluated by this command.",
+        ],
+        "skills_checked": len(results),
+        "counts_by_kind": {
+            kind: sum(row.kind == kind for row in results)
+            for kind in ("control", "professional", "foundation", "domain")
+        },
+        "error_count": len(errors),
+        "warning_count": len(warnings),
+        "professional_review_risk_matrix": {
+            "selector": "professional-skills.yaml role_support contains review-agent",
+            "covered_skill_count": len(review_skill_ids),
+            "covered_skill_ids": list(review_skill_ids),
+        },
+        "errors": errors,
+        "warnings": warnings,
+        "results": [asdict(row) for row in results],
+    }
 
-    report = EvalReport(
-        generated_at=datetime.now(timezone.utc).isoformat(),
-        skills_checked=len(items),
-        warning_count=sum(len(item.warnings) for item in items),
-        average_score=round(sum(item.total for item in items) / max(len(items), 1), 2),
-        items=items,
-        duplicate_template_warnings=duplicate_warnings,
+    reports_dir = args.reports_dir or REPORTS
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    if args.coverage_matrix:
+        _write_coverage(reports_dir, coverage)
+    else:
+        _write_primary(reports_dir, payload)
+        _write_depth(reports_dir, payload)
+        _write_coverage(reports_dir, coverage)
+
+    print(
+        "eval-skill-professionalism: "
+        f"checked {len(results)} skills; errors={len(errors)}; "
+        f"coverage_errors={len(coverage['errors'])}; warnings={len(warnings)}; "
+        "evidence=static-only"
     )
-    coverage_matrix = _build_coverage_matrix(items)
-    written: list[Path] = []
-    depth_report: ProfessionalDepthReport | None = None
-    if not args.coverage_matrix:
-        depth_report = _build_professional_depth_report()
-        written.extend(_write_reports(report, reports_dir, args.format))
-        written.extend(_write_depth_reports(depth_report, reports_dir, args.format))
-    written.extend(_write_coverage_matrix(coverage_matrix, reports_dir, args.format))
-    summary = (
-        f"eval-skill-professionalism: checked {report.skills_checked} item(s); "
-        f"warnings={report.warning_count}; average_score={report.average_score:.2f}"
-    )
-    if depth_report is not None:
-        summary += f"; depth_average={depth_report.average_professionalism_score:.2f}"
-    print(summary)
-    for path in written:
-        print(f"- report: {path}")
-    return 0
+    for error in errors:
+        print(f"eval-skill-professionalism: ERROR: {error}", file=sys.stderr)
+    for error in coverage["errors"]:
+        print(f"eval-skill-professionalism: ERROR: {error}", file=sys.stderr)
+    return 1 if errors or coverage["errors"] else 0
 
 
-def _parse_args(argv: list[str]) -> argparse.Namespace:
+def _args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--reports-dir", type=Path)
     parser.add_argument(
-        "--format",
-        choices=("all", "markdown", "json"),
-        default="all",
-        help="report format to write; default writes both Markdown and JSON",
-    )
-    parser.add_argument(
-        "--reports-dir",
+        "--release-review-config",
         type=Path,
-        default=None,
-        help="directory for generated reports; defaults to reports/",
+        default=DEFAULT_RELEASE_REVIEW_CONFIG,
     )
     parser.add_argument(
         "--coverage-matrix",
         action="store_true",
-        help=(
-            "write only coverage matrix reports; default writes both the main eval "
-            "and coverage matrix reports"
-        ),
+        help="write only the Layer 1/2/3 coverage matrix reports",
     )
+    # Kept for release scripts that previously selected report formats.
+    parser.add_argument("--format", choices=("all", "markdown", "json"), default="all")
     return parser.parse_args(argv)
 
 
-def _evaluate_all(registry_names: set[str]) -> list[SkillScore]:
-    items: list[SkillScore] = []
-    roots = (
-        (PROFESSIONAL_SKILLS_DIR, "professional-skill"),
-        (CAPABILITIES_DIR, "foundation-capability"),
-    )
-    for root, kind in roots:
-        for skill_path in sorted(root.glob("*/SKILL.md")):
-            if _is_authoring_template_path(skill_path):
-                continue
-            items.append(_evaluate_skill(skill_path, kind, registry_names))
-    return items
-
-
-def _is_authoring_template_path(path: Path) -> bool:
-    """Exclude authoring templates and fixtures from runtime professionalism scores."""
-    try:
-        relative = path.relative_to(ROOT)
-    except ValueError:
-        relative = path
-    return any(part.startswith("_") for part in relative.parts)
-
-
-def _evaluate_skill(path: Path, kind: str, registry_names: set[str]) -> SkillScore:
-    try:
-        metadata, _raw, body = parse_frontmatter(path)
-    except ValidationProblem as exc:
-        warnings = _warning_records([f"frontmatter parse failed: {exc}"], kind, path)
-        dimensions = {name: 0 for name in DIMENSIONS}
-        return SkillScore(_rel(path), path.parent.name, kind, 0, dimensions, warnings)
-
-    name = str(metadata.get("name") or path.parent.name)
-    sections = {
-        title: _extract_section(body, title)
-        for title in (
-            "Mission",
-            "When To Use",
-            "Do Not Use When",
-            "Stage Fit",
-            "Selection Rules",
-            "Technical Selection Criteria",
-            "Mode Matrix",
-            "Proactive Professional Triggers",
-            "Risk Escalation Rules",
-            "Critical Details",
-            "Failure Modes",
-            "Reference Loading Policy",
-            "Output Contract",
-            "Evidence Contract",
-            "Quality Gate",
-            "Handoff",
-            "Completion Criteria",
-        )
-    }
-    likely_missing_sections = _likely_missing_sections(sections, kind, path)
-    dimensions = _score_dimensions(body, sections, kind, path)
-    warnings = _warnings(body, sections, kind, path, dimensions, registry_names)
-    total = sum(dimensions.values())
-    body_lines = len(body.splitlines())
-    recommended_fixes = _recommended_fixes(warnings, dimensions, kind, name)
-    status = _status(total, warnings, dimensions, kind, name)
-    return SkillScore(
-        _rel(path),
-        name,
-        kind,
-        total,
-        dimensions,
-        warnings,
-        likely_missing_sections,
-        recommended_fixes,
-        status,
-        body_lines,
-    )
-
-
-def _score_dimensions(
-    body: str,
-    sections: dict[str, str],
-    kind: str,
-    path: Path,
-) -> dict[str, int]:
-    trigger_text = "\n".join(
-        [sections["When To Use"], sections["Technical Selection Criteria"], sections["Risk Escalation Rules"]]
-    )
-    mode_text = sections["Mode Matrix"]
-    proactive_text = sections["Proactive Professional Triggers"]
-    failure_text = sections["Failure Modes"]
-    output_text = sections["Output Contract"]
-    evidence_text = sections["Evidence Contract"]
-    quality_text = sections["Quality Gate"]
-    reference_text = sections["Reference Loading Policy"]
-    all_output = "\n".join([output_text, evidence_text, quality_text])
-
-    scores = {
-        "trigger_accuracy": _score_trigger_accuracy(trigger_text, proactive_text),
-        "mode_coverage": _score_mode_coverage(mode_text, sections, kind, path),
-        "stage_fit": _score_stage_fit(body, sections, kind),
-        "professional_depth": _score_professional_depth(body, sections),
-        "proactive_trigger_quality": _score_proactive_trigger_quality(proactive_text, kind),
-        "failure_mode_coverage": _score_failure_modes(failure_text, kind),
-        "evidence_contract_strength": _score_evidence_contract_strength(all_output, kind, path),
-        "output_actionability": _score_output_actionability(output_text, all_output),
-        "boundary_clarity": _score_keyword_coverage(body, BOUNDARY_TERMS),
-        "reference_precision": _score_reference_precision(body, reference_text, path),
-        "validation_obligation": _score_keyword_coverage(all_output, VALIDATION_TERMS),
-        "anti_bloat_control": _score_anti_bloat(body, kind, reference_text, sections, path),
-    }
-    return scores
-
-
-def _score_trigger_accuracy(trigger_text: str, proactive_text: str) -> int:
-    text = f"{trigger_text}\n{proactive_text}".casefold()
-    concrete_terms = sum(
-        1
-        for term in (
-            "when",
-            "escalate",
-            "signal",
-            "trigger",
-            "route",
-            "evidence",
-            "boundary",
-            "risk",
-        )
-        if term in text
-    )
-    broad_penalty = 1 if re.search(r"\b(any|everything|all capabilities|every relevant)\b", text) else 0
-    return _clamp(concrete_terms - broad_penalty, 0, 5)
-
-
-def _score_mode_coverage(
-    mode_text: str,
-    sections: dict[str, str],
-    kind: str,
-    path: Path,
-) -> int:
-    if kind != "professional-skill":
-        if path.parent.name in ENHANCED_FOUNDATION_CAPABILITIES:
-            text = f"{mode_text}\n{sections['Stage Fit']}\n{sections['Selection Rules']}".casefold()
-            return _clamp(
-                ("stage" in text)
-                + ("selection" in text or "launch" in text)
-                + ("skip" in text)
-                + ("handoff" in text)
-                + ("evidence" in text),
-                0,
-                5,
-            )
-        return 4
-    if not mode_text:
-        return 0
-    analysis = _mode_matrix_analysis(mode_text)
-    return _clamp(
-        (analysis["required_fields_present"] == len(MODE_REQUIRED_FIELDS))
-        + (analysis["row_count"] >= 4)
-        + (analysis["quality_rows"] >= 2)
-        + (analysis["quality_rows"] >= 4)
-        + (analysis["evidence_rows"] >= 3 and analysis["route_rows"] >= 3 and analysis["skip_rows"] >= 3),
-        0,
-        5,
-    )
-
-
-def _score_evidence_contract_strength(text: str, kind: str, path: Path) -> int:
-    if kind != "professional-skill" and path.parent.name not in ENHANCED_FOUNDATION_CAPABILITIES:
-        folded = text.casefold()
-        capability_terms = (
-            "evidence",
-            "validation",
-            "boundaries inspected",
-            "what evidence proves",
-            "does not prove",
-            "residual risk",
-            "handoff",
-        )
-        return _clamp(sum(1 for term in capability_terms if term in folded), 0, 5)
-    hits = _evidence_obligation_hits(text)
-    score = _clamp(
-        (len(hits) >= 2)
-        + (len(hits) >= 4)
-        + (len(hits) >= 6)
-        + (len(hits) >= 7)
-        + (len(hits) == len(EVIDENCE_OBLIGATIONS)),
-        0,
-        5,
-    )
-    if score >= 4 and _concrete_anchor_count(text) < 3:
-        score = 3
-    if _generic_best_practice_warning(text):
-        score -= 1
-    return _clamp(score, 0, 5)
-
-
-def _score_stage_fit(body: str, sections: dict[str, str], kind: str) -> int:
-    text = f"{sections['Stage Fit']}\n{sections['Mode Matrix']}\n{body}".casefold()
-    terms = (
-        "coding",
-        "bug-fix",
-        "debugging",
-        "code-review",
-        "refactoring",
-        "testing",
-        "release",
-        "stage",
-        "handoff",
-    )
-    score = min(sum(1 for term in terms if term in text), 5)
-    if kind == "foundation-capability" and sections["Stage Fit"]:
-        score = max(score, 4)
-    return score
-
-
-def _score_professional_depth(body: str, sections: dict[str, str]) -> int:
-    text = body.casefold()
-    signals = (
-        "non-negotiable",
-        "risk escalation",
-        "critical details",
-        "anti-examples",
-        "failure modes",
-        "quality gate",
-        "evidence",
-        "residual risk",
-        "validation",
-        "compatibility",
-    )
-    signal_hits = sum(1 for signal in signals if signal in text)
-    concrete_hits = _concrete_anchor_count(body)
-    score = _clamp(
-        (signal_hits >= 3)
-        + (signal_hits >= 6)
-        + (concrete_hits >= 4)
-        + (concrete_hits >= 8)
-        + bool(sections.get("Failure Modes") and sections.get("Quality Gate")),
-        0,
-        5,
-    )
-    if _generic_best_practice_warning(body) and concrete_hits < 6:
-        score -= 1
-    return _clamp(score, 0, 5)
-
-
-def _score_proactive_trigger_quality(proactive_text: str, kind: str) -> int:
-    if not proactive_text:
-        return 0 if kind == "professional-skill" else 1
-    analysis = _trigger_quality_analysis(proactive_text)
-    return _clamp(
-        (analysis["complete_items"] >= 1)
-        + (analysis["complete_items"] >= 3)
-        + (analysis["concrete_items"] >= 1)
-        + (analysis["concrete_items"] >= 3)
-        + (analysis["concrete_items"] >= 5 or (analysis["item_count"] >= 2 and analysis["concrete_items"] == analysis["item_count"])),
-        0,
-        5,
-    )
-
-
-def _score_failure_modes(failure_text: str, kind: str) -> int:
-    if not failure_text:
-        return 0
-    bullets = len(re.findall(r"^\s*[-*]\s+", failure_text, re.MULTILINE))
-    table_rows = len(_table_data_rows(failure_text))
-    count = bullets + table_rows
-    return _clamp((count >= 3) + (count >= 6) + (count >= 8) + ("**" in failure_text) + (len(failure_text) > 300), 0, 5)
-
-
-def _score_keyword_coverage(text: str, terms: tuple[str, ...]) -> int:
-    folded = text.casefold()
-    return _clamp(sum(1 for term in terms if term.casefold() in folded), 0, 5)
-
-
-def _score_output_actionability(output_text: str, all_output: str) -> int:
-    bullets = len(
-        re.findall(
-            r"^\s*[-*]\s+(?:-?\s*\*\*|`[a-z0-9_-]+`|[a-z0-9_ -]+:)",
-            output_text,
-            re.IGNORECASE | re.MULTILINE,
-        )
-    )
-    verbs = sum(
-        1
-        for term in ("return", "decision", "approved", "blocked", "required", "evidence", "residual", "handoff")
-        if term in all_output.casefold()
-    )
-    return _clamp((bullets >= 5) + (bullets >= 8) + (bullets >= 10) + min(verbs, 2), 0, 5)
-
-
-def _score_reference_precision(body: str, reference_text: str, path: Path) -> int:
-    ref_files = _reference_files(path)
-    if not ref_files:
-        return 4 if reference_text or "references/" not in body else 2
-    linked = sum(1 for ref in ref_files if ref.name in body or f"references/{ref.name}" in body)
-    policy = 1 if reference_text else 0
-    targeted = 1 if any(term.casefold() in body.casefold() for term in REFERENCE_HINT_TERMS) else 0
-    return _clamp(policy + targeted + min(linked, 3), 0, 5)
-
-
-def _score_anti_bloat(
-    body: str,
-    kind: str,
-    reference_text: str,
-    sections: dict[str, str],
-    path: Path,
-) -> int:
-    line_count = len(body.splitlines())
-    limit = PROFESSIONAL_BODY_REVIEW_LIMIT if kind == "professional-skill" else CAPABILITY_BODY_REVIEW_LIMIT
-    has_hint = bool(reference_text) or any(term.casefold() in body.casefold() for term in REFERENCE_HINT_TERMS)
-    score = 5
-    if line_count > limit:
-        score -= 1
-    if line_count > limit + 75:
-        score -= 1
-    if line_count > limit and not has_hint:
-        score -= 1
-    if _long_table_warning(body):
-        score -= 1
-    if _long_section_warning(sections):
-        score -= 1
-    if _paragraph_duplicate_warnings(body):
-        score -= 1
-    if _generic_best_practice_warning(body):
-        score -= 1
-    if _reference_files(path) and not has_hint:
-        score -= 1
-    if path.parent.name == "minimal-correct-implementation":
-        term_hits = _minimal_correctness_term_hits(f"{body}\n{reference_text}")
-        if term_hits < 10:
-            score -= 1
-        if term_hits < 7:
-            score -= 1
-    return _clamp(score, 0, 5)
-
-
-def _minimal_correctness_term_hits(text: str) -> int:
-    folded = text.casefold()
-    return sum(1 for term in MINIMAL_CORRECTNESS_TERMS if term.casefold() in folded)
-
-
-def _warnings(
-    body: str,
-    sections: dict[str, str],
-    kind: str,
-    path: Path,
-    dimensions: dict[str, int],
-    registry_names: set[str],
-) -> list[WarningRecord]:
-    warnings: list[str] = []
-    name = path.parent.name
-    total = sum(dimensions.values())
-    if kind == "professional-skill" and total < TOTAL_WARNING_THRESHOLD:
-        warnings.append(f"total score {total}/60 is below warning threshold {TOTAL_WARNING_THRESHOLD}")
-    elif name in ENHANCED_FOUNDATION_CAPABILITIES and total < TOTAL_WARNING_THRESHOLD - 6:
-        warnings.append(f"enhanced capability score {total}/60 is below warning threshold {TOTAL_WARNING_THRESHOLD - 6}")
-
-    for dimension, score in dimensions.items():
-        if dimension not in _applicable_warning_dimensions(kind, name):
-            continue
-        if score <= DIMENSION_WARNING_THRESHOLD:
-            section = DIMENSION_SECTIONS.get(dimension, dimension)
-            warnings.append(
-                f"{section} weak: {dimension} score {score}/5 needs review"
-            )
-
-    if kind == "professional-skill":
-        if not sections["Mode Matrix"]:
-            warnings.append("professional skill is missing Mode Matrix")
-        else:
-            mode_warning = _mode_matrix_warning(sections["Mode Matrix"])
-            if mode_warning:
-                warnings.append(mode_warning)
-        if not sections["Proactive Professional Triggers"]:
-            warnings.append("professional skill is missing Proactive Professional Triggers")
-        combined_output = f"{sections['Output Contract']}\n{sections['Evidence Contract']}".casefold()
-        missing_evidence = sorted(set(EVIDENCE_OBLIGATIONS) - _evidence_obligation_hits(combined_output))
-        for term in missing_evidence:
-            warnings.append(f"Evidence Contract is missing '{term}'")
-        warnings.extend(
-            _trigger_quality_warnings(
-                sections["Proactive Professional Triggers"],
-                registry_names,
-            )
-        )
-        if not sections["Failure Modes"]:
-            warnings.append("professional skill is missing Failure Modes")
-        if not sections["Quality Gate"]:
-            warnings.append("professional skill is missing Quality Gate")
-    else:
-        if not sections["Failure Modes"]:
-            warnings.append("capability is missing Failure Modes")
-        if not sections["Quality Gate"]:
-            warnings.append("capability is missing Quality Gate")
-
-    limit = PROFESSIONAL_BODY_REVIEW_LIMIT if kind == "professional-skill" else CAPABILITY_BODY_REVIEW_LIMIT
-    has_ref_hint = sections["Reference Loading Policy"] or any(
-        term.casefold() in body.casefold() for term in REFERENCE_HINT_TERMS
-    )
-    if len(body.splitlines()) > limit and not has_ref_hint:
-        warnings.append("SKILL.md body is over governance review limit and lacks a reference loading hint")
-
-    long_table = _long_table_warning(body)
-    if long_table:
-        warnings.append(long_table)
-    long_section = _long_section_warning(sections)
-    if long_section:
-        warnings.append(long_section)
-
-    warnings.extend(_paragraph_duplicate_warnings(body))
-    generic_warning = _generic_best_practice_warning(body)
-    if generic_warning:
-        warnings.append(generic_warning)
-    warnings.extend(_reference_warnings(body, sections, path, kind))
-    return _warning_records(warnings, kind, path)
-
-
-def _warning_records(messages: list[str], kind: str, path: Path) -> list[WarningRecord]:
-    return [_warning_record(message, kind, path) for message in messages if message.strip()]
-
-
-def _warning_record(message: str, kind: str, path: Path) -> WarningRecord:
-    warning_type = _warning_type(message)
-    scope = _warning_scope(kind, path)
-    release_relevance = _release_relevance(warning_type, message, scope)
-    return WarningRecord(
-        message=message,
-        type=warning_type,
-        item=path.parent.name,
-        item_kind=kind,
-        scope=scope,
-        release_relevance=release_relevance,
-        reason=_release_reason(scope, release_relevance, warning_type),
-    )
-
-
-def _warning_scope(kind: str, path: Path) -> str:
-    if _is_authoring_template_path(path):
-        return "authoring-template"
-    if kind == "professional-skill":
-        return "professional-skill"
-    name = path.parent.name
-    if name in ENHANCED_FOUNDATION_CAPABILITIES:
-        return "enhanced-foundation-capability"
-    if name in KEY_FOUNDATION_CAPABILITIES:
-        return "key-foundation-capability"
-    return "non-key-foundation-capability"
-
-
-def _release_relevance(warning_type: str, message: str, scope: str) -> str:
-    if scope == "professional-skill":
-        return "release-blocking"
-    if scope == "enhanced-foundation-capability":
-        if warning_type in {"missing_failure_modes", "missing_quality_gate"}:
-            return "release-blocking"
-        return "release-review-required"
-    if scope == "key-foundation-capability":
-        if _is_evidence_or_reference_precision_warning(message, warning_type):
-            return "release-review-required"
-        return "non-blocking-follow-up"
-    return "advisory-only"
-
-
-def _release_reason(scope: str, release_relevance: str, warning_type: str) -> str:
-    if release_relevance == "release-blocking":
-        if scope == "professional-skill":
-            return "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior."
-        return "This foundation capability warning removes a required quality or failure-mode guard from a reused release surface."
-    if release_relevance == "release-review-required":
-        if scope == "enhanced-foundation-capability":
-            return "Enhanced foundation capabilities amplify into multiple professional skills; the warning needs release review but is not automatically blocking unless a required gate is missing."
-        return "Key foundation evidence or reference precision affects downstream quality and needs explicit release review."
-    if release_relevance == "non-blocking-follow-up":
-        return "Key foundation capability advisory warning is tracked for follow-up because it does not weaken evidence or reference precision."
-    return "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release."
-
-
-def _warning_type(message: str) -> str:
-    folded = message.casefold()
-    if "frontmatter parse failed" in folded:
-        return "frontmatter_parse_failed"
-    if "total score" in folded and "below warning threshold" in folded:
-        return "total_score_below_threshold"
-    if "enhanced capability score" in folded and "below warning threshold" in folded:
-        return "enhanced_capability_score_below_threshold"
-    if " weak: " in folded and " score " in folded:
-        if "evidence_contract_strength" in folded:
-            return "weak_evidence_contract_strength"
-        if "reference_precision" in folded:
-            return "weak_reference_precision"
-        return "weak_dimension_score"
-    if "missing mode matrix" in folded:
-        return "missing_mode_matrix"
-    if "mode matrix" in folded:
-        return "mode_matrix_quality"
-    if "missing proactive professional triggers" in folded:
-        return "missing_proactive_professional_triggers"
-    if "proactive professional trigger" in folded:
-        return "proactive_trigger_quality"
-    if "evidence contract is missing" in folded:
-        return "evidence_contract_missing_term"
-    if "missing failure modes" in folded:
-        return "missing_failure_modes"
-    if "missing quality gate" in folded:
-        return "missing_quality_gate"
-    if _is_body_bloat_warning(message):
-        return "body_bloat_exception"
-    if "reference" in folded and ("hint" in folded or "linked" in folded or "governed" in folded):
-        return "reference_loading_hint"
-    if "generic best-practices" in folded:
-        return "generic_best_practices"
-    return "other"
-
-
-def _is_body_bloat_warning(message: str) -> bool:
-    folded = message.casefold()
-    return any(
-        token in folded
-        for token in (
-            "governance review limit",
-            "long markdown table",
-            "long section",
-            "repeated template",
-            "duplicate",
-            "moving deep table",
-        )
-    )
-
-
-def _is_evidence_or_reference_precision_warning(message: str, warning_type: str) -> bool:
-    if warning_type in {
-        "weak_evidence_contract_strength",
-        "weak_reference_precision",
-        "evidence_contract_missing_term",
-        "reference_loading_hint",
-    }:
-        return True
-    folded = message.casefold()
-    return "evidence_contract_strength score" in folded or "reference_precision score" in folded
-
-
-def _status(
-    total: int,
-    warnings: list[str],
-    dimensions: dict[str, int],
-    kind: str,
-    name: str,
-) -> str:
-    if kind == "foundation-capability" and name not in KEY_FOUNDATION_CAPABILITIES | ENHANCED_FOUNDATION_CAPABILITIES:
-        return "acceptable" if total >= 30 else "weak"
-    low_required = any(
-        dimensions.get(dimension, 0) <= 2
-        for dimension in (
-            "mode_coverage",
-            "proactive_trigger_quality",
-            "evidence_contract_strength",
-            "output_actionability",
-            "reference_precision",
-            "anti_bloat_control",
-        )
-        if kind == "professional-skill" or dimension not in {"mode_coverage", "proactive_trigger_quality"}
-    )
-    if total >= 54 and not warnings:
-        return "sample-grade"
-    if total >= 42 and not low_required:
-        return "acceptable"
-    if total >= 34 or warnings:
-        return "needs-review"
-    return "weak"
-
-
-def _recommended_fixes(
-    warnings: list[WarningRecord],
-    dimensions: dict[str, int],
-    kind: str,
-    name: str,
-) -> list[str]:
-    fixes: list[str] = []
-    joined = "\n".join(warning.message for warning in warnings).casefold()
-    warning_types = {warning.type for warning in warnings}
-    applicable_dimensions = _applicable_warning_dimensions(kind, name)
-    if "mode matrix" in joined or (
-        "mode_coverage" in applicable_dimensions
-        and dimensions.get("mode_coverage", 0) <= 2
-    ):
-        fixes.append("Add or tighten a domain-specific Mode Matrix with evidence and skip guidance.")
-    if "proactive professional triggers" in joined or (
-        "proactive_trigger_quality" in applicable_dimensions
-        and dimensions.get("proactive_trigger_quality", 0) <= 2
-    ):
-        fixes.append("Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.")
-    if "output/evidence contract" in joined or (
-        "evidence_contract_strength" in applicable_dimensions
-        and dimensions.get("evidence_contract_strength", 0) <= 2
-    ):
-        fixes.append("Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.")
-    if "reference_loading_hint" in warning_types or (
-        "body_bloat_exception" not in warning_types
-        and "reference" in joined
-    ) or (
-        "reference_precision" in applicable_dimensions
-        and dimensions.get("reference_precision", 0) <= 2
-    ):
-        fixes.append("Add targeted reference loading hints or link unreferenced skill references.")
-    if (
-        "body_bloat_exception" in warning_types
-        or "bloat" in joined
-        or "duplicated" in joined
-        or dimensions.get("anti_bloat_control", 0) <= 2
-    ):
-        fixes.append("Move low-frequency tables/examples into owned references and remove duplicated template prose.")
-    if not fixes and warnings:
-        fixes.append("Review listed warnings and add concrete evidence, owner, or skip rationale.")
-    return fixes[:5]
-
-
-def _applicable_warning_dimensions(kind: str, name: str) -> set[str]:
-    if kind == "professional-skill":
-        return set(DIMENSIONS)
-    if name not in ENHANCED_FOUNDATION_CAPABILITIES:
-        return set()
-    dimensions = {
-        "professional_depth",
-        "failure_mode_coverage",
-        "output_actionability",
-        "boundary_clarity",
-        "reference_precision",
-        "validation_obligation",
-        "anti_bloat_control",
-        "evidence_contract_strength",
-    }
-    if name == "engineering-stage-professionalism":
-        dimensions |= {"mode_coverage", "stage_fit"}
-    return dimensions
-
-
-def _mode_matrix_warning(mode_text: str) -> str | None:
-    analysis = _mode_matrix_analysis(mode_text)
-    missing = sorted(set(MODE_REQUIRED_FIELDS) - set(analysis["fields"]))
-    if missing:
-        return "Mode Matrix lacks required professional columns: " + ", ".join(missing)
-    if analysis["row_count"] < 4:
-        return "Mode Matrix has too few mode rows to distinguish engineering contexts"
-    if analysis["quality_rows"] < 3:
-        return "Mode Matrix rows are too generic; trigger, focus, evidence, companion route, and skip guidance must be concrete"
-    if min(analysis["evidence_rows"], analysis["route_rows"], analysis["skip_rows"]) < 3:
-        return "Mode Matrix lacks concrete evidence, companion capability/gate, or skip-guidance cells"
-    return None
-
-
-def _trigger_quality_warnings(proactive_text: str, registry_names: set[str]) -> list[str]:
-    if not proactive_text:
-        return []
-    warnings: list[str] = []
-    triggers = _trigger_items(proactive_text)
-    analysis = _trigger_quality_analysis(proactive_text)
-    if len(triggers) < 3:
-        warnings.append(f"Proactive Professional Triggers has too few trigger items: {len(triggers)}")
-    if analysis["concrete_items"] < max(1, min(3, len(triggers))):
-        warnings.append(
-            "Proactive Professional Triggers are too generic; each trigger needs concrete hidden risk, route, and evidence"
-        )
-    for index, trigger in enumerate(triggers, start=1):
-        folded = trigger.casefold()
-        missing = [
-            label
-            for label in (
-                "signal",
-                "hidden risk",
-                "required professional action",
-                "route to",
-                "evidence required",
-            )
-            if label not in folded
-        ]
-        if missing:
-            warnings.append(
-                f"Proactive Professional Trigger {index} missing fields: " + ", ".join(missing)
-            )
-        route = _route_field(trigger)
-        if route and "`" not in route:
-            warnings.append(f"Proactive Professional Trigger {index} route lacks explicit backticked names")
-        if not _trigger_item_is_concrete(trigger):
-            warnings.append(
-                f"Proactive Professional Trigger {index} lacks concrete hidden risk, action, route, or evidence"
-            )
-        for route_name in re.findall(r"`([^`]+)`", route):
-            if route_name not in registry_names:
-                warnings.append(
-                    f"Proactive Professional Trigger {index} routes to unknown skill/capability '{route_name}'"
-                )
-    folded = proactive_text.casefold()
-    if "checklist" in folded and "hidden risk" not in folded:
-        warnings.append("Proactive Professional Triggers reads like a checklist instead of hidden-risk escalation")
-    return warnings
-
-
-def _duplicate_template_warnings(items: list[SkillScore]) -> list[str]:
-    line_to_paths: dict[str, set[str]] = {}
-    evidence_to_paths: dict[str, set[str]] = {}
-    for item in items:
-        path = ROOT / item.path
-        try:
-            _meta, _raw, body = parse_frontmatter(path)
-        except ValidationProblem:
-            continue
-        evidence_contract = _normalize_duplicate_section(_extract_section(body, "Evidence Contract"))
-        if evidence_contract:
-            evidence_to_paths.setdefault(evidence_contract, set()).add(item.path)
-        for line in body.splitlines():
-            normalized = _normalize_duplicate_line(line)
-            if not normalized:
-                continue
-            line_to_paths.setdefault(normalized, set()).add(item.path)
-    warnings: list[str] = []
-    for normalized, paths in line_to_paths.items():
-        if len(paths) < 7:
-            continue
-        if any(fragment in normalized for fragment in DUPLICATE_IGNORE_FRAGMENTS):
-            continue
-        for path in sorted(paths):
-            warnings.append(f"{path}: large repeated template-like line appears in {len(paths)} files: {normalized[:90]}")
-    for normalized, paths in evidence_to_paths.items():
-        if len(paths) < 4:
-            continue
-        for path in sorted(paths):
-            warnings.append(
-                f"{path}: Evidence Contract appears mechanically duplicated across {len(paths)} files"
-            )
-    return warnings
-
-
-def _trigger_items(proactive_text: str) -> list[str]:
-    items: list[str] = []
-    current: list[str] = []
-    for line in proactive_text.splitlines():
-        if line.lstrip().startswith("- **Signal:**"):
-            if current:
-                items.append("\n".join(current).strip())
-            current = [line]
-        elif current:
-            if re.match(r"^\s{0,3}#{1,6}\s+", line):
-                break
-            current.append(line)
-    if current:
-        items.append("\n".join(current).strip())
-    return items
-
-
-def _trigger_quality_analysis(proactive_text: str) -> dict[str, int]:
-    items = _trigger_items(proactive_text)
-    complete_items = 0
-    concrete_items = 0
-    for item in items:
-        fields = {
-            field_name.rstrip(":").casefold(): _trigger_field_value(item, field_name.rstrip(":"))
-            for field_name in TRIGGER_FIELDS
-        }
-        if all(fields.values()):
-            complete_items += 1
-        if _trigger_item_is_concrete(item):
-            concrete_items += 1
-    return {
-        "item_count": len(items),
-        "complete_items": complete_items,
-        "concrete_items": concrete_items,
-    }
-
-
-def _trigger_item_is_concrete(trigger: str) -> bool:
-    signal = _trigger_field_value(trigger, "Signal")
-    hidden_risk = _trigger_field_value(trigger, "Hidden risk")
-    action = _trigger_field_value(trigger, "Required professional action")
-    route = _trigger_field_value(trigger, "Route to")
-    evidence = _trigger_field_value(trigger, "Evidence required")
-    return all(
-        (
-            _is_concrete_signal(signal),
-            _is_concrete_risk(hidden_risk),
-            _is_concrete_action(action),
-            bool(re.search(r"`[^`]+`", route)),
-            _is_concrete_evidence(evidence),
-        )
-    )
-
-
-def _trigger_field_value(trigger: str, field_name: str) -> str:
-    next_fields = "|".join(
-        re.escape(field.rstrip(":")) for field in TRIGGER_FIELDS if field.rstrip(":") != field_name
-    )
-    pattern = rf"\*\*{re.escape(field_name)}:\*\*(.*?)(?:\n\s*\*\*(?:{next_fields}):\*\*|\Z)"
-    match = re.search(pattern, trigger, flags=re.IGNORECASE | re.DOTALL)
-    return re.sub(r"\s+", " ", match.group(1)).strip() if match else ""
-
-
-def _route_field(trigger: str) -> str:
-    match = re.search(
-        r"\*\*Route to:\*\*(.*?)(?:\*\*Evidence required:\*\*|$)",
-        trigger,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-    return match.group(1).strip() if match else ""
-
-
-def _mode_matrix_analysis(mode_text: str) -> dict[str, Any]:
-    headers, rows = _table_parts(mode_text)
-    folded_headers = [header.casefold() for header in headers]
-    fields = {
-        field_name
-        for field_name, aliases in MODE_REQUIRED_FIELDS.items()
-        if any(alias in header for alias in aliases for header in folded_headers)
-    }
-    indices = {
-        field_name: _header_index(folded_headers, aliases)
-        for field_name, aliases in MODE_REQUIRED_FIELDS.items()
-    }
-    quality_rows = 0
-    evidence_rows = 0
-    route_rows = 0
-    skip_rows = 0
-    for row in rows:
-        values = {name: _cell_value(row, index) for name, index in indices.items()}
-        evidence_ok = _is_concrete_evidence(values["required evidence"])
-        route_ok = _is_concrete_route(values["companion capabilities / gates"])
-        skip_ok = _is_concrete_skip(values["skip guidance"])
-        if evidence_ok:
-            evidence_rows += 1
-        if route_ok:
-            route_rows += 1
-        if skip_ok:
-            skip_rows += 1
-        if all(
-            (
-                _is_concrete_signal(values["trigger signals"]),
-                _is_concrete_focus(values["professional focus"]),
-                evidence_ok,
-                route_ok,
-                skip_ok,
-            )
-        ):
-            quality_rows += 1
-    return {
-        "fields": fields,
-        "required_fields_present": len(fields),
-        "row_count": len(rows),
-        "quality_rows": quality_rows,
-        "evidence_rows": evidence_rows,
-        "route_rows": route_rows,
-        "skip_rows": skip_rows,
-    }
-
-
-def _table_parts(text: str) -> tuple[list[str], list[list[str]]]:
-    table_lines = [
-        line.strip()
-        for line in text.splitlines()
-        if line.strip().startswith("|") and line.strip().endswith("|")
-    ]
-    headers: list[str] = []
-    rows: list[list[str]] = []
-    for line in table_lines:
-        cells = [cell.strip() for cell in line.strip("|").split("|")]
-        if not headers:
-            headers = cells
-            continue
-        if set("".join(cells).strip()) <= {"-", ":", " "}:
-            continue
-        rows.append(cells)
-    return headers, rows
-
-
-def _header_index(headers: list[str], aliases: tuple[str, ...]) -> int | None:
-    for index, header in enumerate(headers):
-        if any(alias in header for alias in aliases):
-            return index
-    return None
-
-
-def _cell_value(row: list[str], index: int | None) -> str:
-    if index is None or index >= len(row):
-        return ""
-    return row[index].strip()
-
-
-def _evidence_obligation_hits(text: str) -> set[str]:
-    folded = text.casefold()
-    hits = {
-        obligation
-        for obligation, aliases in EVIDENCE_OBLIGATIONS.items()
-        if any(alias in folded for alias in aliases)
-    }
-    if re.search(r"\bresidual\s+[a-z0-9 /_-]{1,40}\s+risk\b", folded):
-        hits.add("residual risk")
-    return hits
-
-
-def _is_generic_text(text: str) -> bool:
-    folded = re.sub(r"\s+", " ", text.casefold()).strip()
-    if not folded:
-        return True
-    if folded in {"n/a", "none", "todo", "tbd", "same", "yes", "no"}:
-        return True
-    if len(folded) < 10:
-        return True
-    return any(phrase in folded for phrase in GENERIC_PHRASES)
-
-
-def _is_concrete_signal(text: str) -> bool:
-    return bool(text) and not _is_generic_text(text) and (len(text) >= 16 or _concrete_anchor_count(text) >= 1)
-
-
-def _is_concrete_focus(text: str) -> bool:
-    return bool(text) and not _is_generic_text(text) and (len(text) >= 18 or _concrete_anchor_count(text) >= 1)
-
-
-def _is_concrete_risk(text: str) -> bool:
-    folded = text.casefold()
-    risk_terms = (
-        "break",
-        "collision",
-        "corrupt",
-        "duplicate",
-        "forged",
-        "hidden",
-        "inconsistent",
-        "leak",
-        "loss",
-        "missing",
-        "pollution",
-        "replay",
-        "rollback",
-        "silent",
-        "stale",
-        "unverified",
-        "wrong",
-    )
-    return bool(text) and not _is_generic_text(text) and (
-        _concrete_anchor_count(text) >= 1 or any(term in folded for term in risk_terms)
-    )
-
-
-def _is_concrete_action(text: str) -> bool:
-    folded = text.casefold()
-    action_terms = (
-        "block",
-        "classify",
-        "compare",
-        "document",
-        "evaluate",
-        "inspect",
-        "model",
-        "preserve",
-        "prove",
-        "require",
-        "rewrite",
-        "route",
-        "scan",
-        "split",
-        "triage",
-        "verify",
-    )
-    return bool(text) and not _is_generic_text(text) and any(term in folded for term in action_terms)
-
-
-def _is_concrete_evidence(text: str) -> bool:
-    folded = text.casefold()
-    evidence_terms = (
-        "command",
-        "contract",
-        "cve",
-        "denied",
-        "diff",
-        "exit code",
-        "fixture",
-        "log",
-        "map",
-        "matrix",
-        "metric",
-        "owner",
-        "output",
-        "plan",
-        "procedure",
-        "report",
-        "rollback",
-        "scan",
-        "schema",
-        "screenshot",
-        "test",
-        "threshold",
-        "trace",
-        "typecheck",
-        "validation",
-        "walkthrough",
-    )
-    return bool(text) and not _is_generic_text(text) and (
-        _concrete_anchor_count(text) >= 1 or any(term in folded for term in evidence_terms)
-    )
-
-
-def _is_concrete_route(text: str) -> bool:
-    folded = text.casefold()
-    return bool(text) and not _is_generic_text(text) and (
-        bool(re.search(r"`[^`]+`", text))
-        or "-gate" in folded
-        or "-design" in folded
-        or "-builder" in folded
-        or "-reviewer" in folded
-    )
-
-
-def _is_concrete_skip(text: str) -> bool:
-    folded = text.casefold()
-    return bool(text) and not _is_generic_text(text) and (
-        len(text.strip()) >= 18
-        or any(
-        term in folded
-        for term in (
-            "before",
-            "defer",
-            "do not",
-            "only when",
-            "not needed",
-            "skip",
-            "unless",
-            "until",
-        )
-    )
-    )
-
-
-def _concrete_anchor_count(text: str) -> int:
-    folded = text.casefold()
-    return sum(1 for term in CONCRETE_ANCHOR_TERMS if term in folded)
-
-
-def _reference_warnings(
-    body: str,
-    sections: dict[str, str],
-    path: Path,
-    kind: str,
-) -> list[str]:
-    refs = _reference_files(path)
-    if not refs:
-        return []
-    warnings: list[str] = []
-    has_loading_hint = bool(sections["Reference Loading Policy"]) or any(
-        term.casefold() in body.casefold() for term in REFERENCE_HINT_TERMS
-    )
-    if kind == "professional-skill" and not has_loading_hint:
-        warnings.append("skill has references but lacks a reference loading hint")
-    for ref in refs:
-        if (
-            path.parent.name == "change-forge-router"
-            and ref.name == "route-manifest.md"
-        ):
-            # Internal route schemas are maintained for rd-skills tests, replay,
-            # telemetry review, and doctor tooling. They are intentionally not
-            # linked from the AI-visible router body as ordinary agent protocol.
-            continue
-        # Generic generated checklists exist across the mesh; warn only when the
-        # skill has no loading hint at all. Non-checklist references must always
-        # be cited from the body so they stay targeted.
-        if ref.name == "checklist.md":
-            if kind == "professional-skill" and not has_loading_hint:
-                warnings.append(f"reference '{ref.relative_to(path.parent)}' is not governed by a loading hint")
-            continue
-        if ref.name not in body and f"references/{ref.name}" not in body:
-            warnings.append(f"reference '{ref.relative_to(path.parent)}' is not linked from SKILL.md body")
-    return warnings
-
-
-def _long_table_warning(body: str) -> str | None:
-    longest = 0
-    current = 0
-    for line in body.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("|") and stripped.endswith("|"):
-            current += 1
-            longest = max(longest, current)
-        else:
-            current = 0
-    if longest >= 16:
-        return f"long Markdown table in SKILL.md body ({longest} rows); consider moving deep table to references"
-    return None
-
-
-def _long_section_warning(sections: dict[str, str]) -> str | None:
-    for title, text in sections.items():
-        if not text:
-            continue
-        line_count = len(text.splitlines())
-        if line_count >= 120:
-            return f"long section '{title}' in SKILL.md body ({line_count} lines); move deep material to references"
-    return None
-
-
-def _paragraph_duplicate_warnings(body: str) -> list[str]:
-    paragraphs = [
-        _normalize_duplicate_section(paragraph)
-        for paragraph in re.split(r"\n\s*\n", body)
-    ]
-    counts: dict[str, int] = {}
-    for paragraph in paragraphs:
-        if not paragraph:
-            continue
-        counts[paragraph] = counts.get(paragraph, 0) + 1
-    return [
-        "repeated paragraph-like content detected inside SKILL.md body"
-        for count in counts.values()
-        if count >= 2
-    ][:1]
-
-
-def _generic_best_practice_warning(body: str) -> str | None:
-    folded = body.casefold()
-    generic_hits = sum(
-        1
-        for phrase in (
-            "best practices",
-            "robust solution",
-            "proper handling",
-            "as needed",
-            "where appropriate",
-            "ensure quality",
-            "industry standard",
-        )
-        if phrase in folded
-    )
-    evidence_hits = sum(1 for term in ("evidence", "risk", "boundary", "validation") if term in folded)
-    if generic_hits >= 4 and evidence_hits < 3:
-        return "generic best-practices wording dominates without enough evidence or boundary anchors"
-    return None
-
-
-def _extract_section(body: str, title: str) -> str:
-    for candidate in SECTION_ALIASES.get(title, (title,)):
-        text = extract_section_body(body, candidate)
-        if text is not None:
-            return text
-    return ""
-
-
-def _likely_missing_sections(sections: dict[str, str], kind: str, path: Path) -> list[str]:
-    return [section for section in _required_sections_for_item(kind, path, sections) if not sections.get(section)]
-
-
-def _required_sections_for_item(kind: str, path: Path, sections: dict[str, str]) -> tuple[str, ...]:
-    if kind == "professional-skill":
-        return REQUIRED_SECTIONS
-    name = path.parent.name
-    if name in ENHANCED_FOUNDATION_CAPABILITIES:
-        return (
-            "Mission",
-            "When To Use",
-            "Do Not Use When",
-            "Stage Fit",
-            "Selection Rules",
-            "Evidence Contract",
-            "Output Contract",
-            "Failure Modes",
-            "Quality Gate",
-            "Handoff",
-        )
-    required = ["Mission", "When To Use", "Do Not Use When", "Output Contract", "Failure Modes", "Quality Gate"]
-    combined_output = f"{sections.get('Output Contract', '')}\n{sections.get('Quality Gate', '')}".casefold()
-    if name in KEY_FOUNDATION_CAPABILITIES and not sections.get("Evidence Contract") and "evidence" not in combined_output:
-        required.append("Evidence Contract")
-    if name in KEY_FOUNDATION_CAPABILITIES and _reference_files(path) and not sections.get("Reference Loading Policy"):
-        required.append("Reference Loading Policy")
-    return tuple(required)
-
-
-def _load_registry_names() -> set[str]:
+def _load_entries() -> list[tuple[str, dict[str, Any]]]:
+    rows: list[tuple[str, dict[str, Any]]] = []
     names: set[str] = set()
-    for file_name, key in (
-        ("skills.yaml", "skills"),
-        ("capabilities.yaml", "capabilities"),
-        ("domain-extensions.yaml", "domain_extensions"),
-    ):
-        path = REGISTRY_DIR / file_name
-        if not path.is_file():
-            continue
-        try:
-            data = load_yaml_file(path)
-        except ValidationProblem:
-            continue
-        entries = data.get(key) if isinstance(data, dict) else None
-        if not isinstance(entries, list):
-            continue
-        for entry in entries:
-            if isinstance(entry, dict) and isinstance(entry.get("name"), str):
-                names.add(entry["name"].strip())
-    return names
-
-
-def _build_professional_depth_report() -> ProfessionalDepthReport:
-    axis_registry, metadata_warnings = _load_professionalism_axis_registry()
-    metadata_warnings.extend(_depth_report_metadata_warnings(axis_registry))
-    items: list[ProfessionalDepthScore] = []
-    for root, kind in (
-        (PROFESSIONAL_SKILLS_DIR, "professional-skill"),
-        (CAPABILITIES_DIR, "foundation-capability"),
-        (DOMAIN_EXTENSIONS_DIR, "domain-extension"),
-    ):
-        for skill_path in sorted(root.glob("*/SKILL.md")):
-            if _is_authoring_template_path(skill_path):
-                continue
-            items.append(_evaluate_professional_depth(skill_path, kind, axis_registry))
-    return ProfessionalDepthReport(
-        generated_at=datetime.now(timezone.utc).isoformat(),
-        items_checked=len(items),
-        warning_count=sum(len(item.warnings) for item in items) + len(metadata_warnings),
-        average_professionalism_score=round(
-            sum(item.professionalism_score for item in items) / max(len(items), 1),
-            2,
-        ),
-        score_model=(
-            "100-point professional-depth rubric from "
-            "docs/skill_professionalism_standard/SKILL_PROFESSIONALISM_DIMENSION_RUBRIC.md"
-        ),
-        score_model_path=_rel(PROFESSIONAL_DEPTH_SCORE_MODEL_PATH),
-        judgment_axis_registry=_rel(PROFESSIONALISM_AXES_PATH),
-        items=items,
-        metadata_warnings=metadata_warnings,
-    )
-
-
-def _evaluate_professional_depth(
-    path: Path,
-    kind: str,
-    axis_registry: dict[str, Any] | None = None,
-) -> ProfessionalDepthScore:
-    try:
-        metadata, _raw, body = parse_frontmatter(path)
-    except ValidationProblem as exc:
-        dimensions = {name: 0 for name in DEPTH_DIMENSION_WEIGHTS}
-        warning = ProfessionalDepthWarning(
-            type="frontmatter_parse_failed",
-            severity="release-blocking",
-            message=f"frontmatter parse failed: {exc}",
-            dimension="professional_responsibility_clarity",
-        )
-        return ProfessionalDepthScore(
-            path=_rel(path),
-            name=path.parent.name,
-            kind=kind,
-            professionalism_score=0,
-            status="failing",
-            dimensions=dimensions,
-            warnings=[warning],
-            recommended_fixes=["Repair frontmatter before evaluating professional depth."],
-        )
-
-    name = str(metadata.get("name") or path.parent.name)
-    sections = _depth_sections(body)
-    axis_spec = _professional_axes_for(name, kind, axis_registry or {})
-    dimensions = {
-        "professional_responsibility_clarity": _score_depth_responsibility(sections, kind),
-        "domain_judgment_depth": _score_depth_judgment(body, sections, kind, axis_spec["axes"]),
-        "decision_criteria_completeness": _score_depth_decisions(sections),
-        "failure_mode_specificity": _score_depth_failure_modes(sections),
-        "evidence_contract_completeness": _score_depth_evidence(sections, kind, path),
-        "output_contract_actionability": _score_depth_output(sections),
-        "boundary_and_ownership_precision": _score_depth_boundary(sections, kind),
-        "tradeoff_priority_quality": _score_depth_tradeoffs(body, sections),
-        "anti_pattern_quality": _score_depth_anti_patterns(sections),
-        "validation_semantics": _score_depth_validation(sections),
-        "residual_risk_handling": _score_depth_residual_risk(sections),
-    }
-    total = sum(dimensions.values())
-    warnings = _professional_depth_warnings(total, dimensions, sections, body, kind, name, axis_spec)
-    return ProfessionalDepthScore(
-        path=_rel(path),
-        name=name,
-        kind=kind,
-        professionalism_score=total,
-        status=_professional_depth_status(total),
-        dimensions=dimensions,
-        judgment_axes=axis_spec["axes"],
-        judgment_axis_source=axis_spec["source"],
-        warnings=warnings,
-        recommended_fixes=_professional_depth_recommended_fixes(warnings),
-    )
-
-
-def _depth_sections(body: str) -> dict[str, str]:
-    titles = (
-        "Mission",
-        "Stage Ownership",
-        "When To Use",
-        "Do Not Use When",
-        "Adjacent Skill Conflict Resolution",
-        "Required Context / Missing Information Policy",
-        "Non-Negotiable Rules",
-        "Technical Selection Criteria",
-        "Selection Rules",
-        "Mode Matrix",
-        "Risk Escalation Rules",
-        "Proactive Professional Triggers",
-        "Critical Details",
-        "Failure Modes",
-        "Output Contract",
-        "Evidence Contract",
-        "Quality Gate",
-        "Handoff",
-        "Completion Criteria",
-        "Anti-Patterns",
-        "Anti-Examples",
-        "Trade-Offs",
-        "Tradeoff Priorities",
-    )
-    return {title: _extract_any_section(body, title) for title in titles}
-
-
-def _extract_any_section(body: str, title: str) -> str:
-    text = _extract_section(body, title)
-    if text:
-        return text
-    for candidate in (title.replace("-", " "), title.replace("Tradeoff", "Trade-Off")):
-        extracted = extract_section_body(body, candidate)
-        if extracted is not None:
-            return extracted
-    return ""
-
-
-def _load_professionalism_axis_registry() -> tuple[dict[str, Any], list[str]]:
-    if not PROFESSIONALISM_AXES_PATH.is_file():
-        return {}, [f"missing professional axis registry: {_rel(PROFESSIONALISM_AXES_PATH)}"]
-    try:
-        data = load_yaml_file(PROFESSIONALISM_AXES_PATH)
-    except ValidationProblem as exc:
-        return {}, [f"professional axis registry failed to load: {exc}"]
-    if not isinstance(data, dict):
-        return {}, [f"professional axis registry is not a YAML mapping: {_rel(PROFESSIONALISM_AXES_PATH)}"]
-    return data, []
-
-
-def _depth_report_metadata_warnings(axis_registry: dict[str, Any]) -> list[str]:
-    warnings: list[str] = []
-    for path in (PROFESSIONAL_DEPTH_SCORE_MODEL_PATH, PROFESSIONALISM_AXES_PATH):
-        if not path.is_file():
-            warnings.append(f"referenced professional depth metadata path does not exist: {_rel(path)}")
-    registry_model_path = str(axis_registry.get("score_model_path") or "").strip()
-    if registry_model_path and not (ROOT / registry_model_path).is_file():
-        warnings.append(f"axis registry score_model_path does not exist: {registry_model_path}")
-    return warnings
-
-
-def _professional_axes_for(name: str, kind: str, axis_registry: dict[str, Any]) -> dict[str, Any]:
-    item, source = _professional_axis_item(name, kind, axis_registry)
-    axes = _axis_list(_as_mapping(item).get("axes"))
-    if axes:
-        return {
-            "axes": axes,
-            "source": source,
-            "missing_specific_axes": False,
-        }
-    default_axes = _axis_list(_as_mapping(axis_registry.get("default_axes")).get(kind))
-    if not default_axes:
-        default_axes = list(PROFESSIONAL_AXIS_TERMS)
-    return {
-        "axes": default_axes,
-        "source": f"default_axes.{kind}",
-        "missing_specific_axes": _requires_specific_professional_axes(name, kind),
-    }
-
-
-def _requires_specific_professional_axes(name: str, kind: str) -> bool:
-    if kind in {"professional-skill", "domain-extension"}:
-        return True
-    return kind == "foundation-capability" and name in KEY_FOUNDATION_CAPABILITIES
-
-
-def _professional_axis_item(
-    name: str,
-    kind: str,
-    axis_registry: dict[str, Any],
-) -> tuple[dict[str, Any], str]:
-    items = _as_mapping(axis_registry.get("items"))
-    if name in items:
-        return _as_mapping(items.get(name)), f"items.{name}"
-
-    legacy_buckets = {
-        "professional-skill": ("skills",),
-        "foundation-capability": ("capabilities",),
-        "domain-extension": ("domain_extensions", "extensions"),
-    }.get(kind, ())
-    for bucket in legacy_buckets:
-        legacy_item = _as_mapping(axis_registry.get(bucket)).get(name)
-        if legacy_item is not None:
-            return _as_mapping(legacy_item), f"{bucket}.{name}"
-    return {}, ""
-
-
-def _axis_list(value: Any) -> list[str]:
-    if isinstance(value, str):
-        return [value.strip()] if value.strip() else []
-    if isinstance(value, list):
-        return [str(item).strip() for item in value if str(item).strip()]
-    return []
-
-
-def _as_mapping(value: Any) -> dict[str, Any]:
-    return value if isinstance(value, dict) else {}
-
-
-def _score_depth_responsibility(sections: dict[str, str], kind: str) -> int:
-    text = "\n".join(
-        [
-            sections["Mission"],
-            sections["Stage Ownership"],
-            sections["When To Use"],
-            sections["Do Not Use When"],
-            sections["Adjacent Skill Conflict Resolution"],
-            sections["Output Contract"],
-            sections["Handoff"],
-        ]
-    ).casefold()
-    score = 0
-    score += 2 if any(term in text for term in ("own", "owner", "reviewer", "gate", "orchestrator")) else 0
-    score += 2 if any(term in text for term in ("do not", "non-owned", "hand off", "handoff", "return to")) else 0
-    score += 2 if any(term in text for term in ("surface", "decision", "scope", "boundary")) else 0
-    score += 1 if any(term in text for term in ("output", "fragment", "addendum")) else 0
-    score += 1 if any(term in text for term in ("risk", "failure", "prevents")) else 0
-    if kind == "foundation-capability" and "fragment" in text:
-        score = min(8, score + 1)
-    if kind == "domain-extension" and "addendum" in text:
-        score = min(8, score + 1)
-    return _clamp(score, 0, DEPTH_DIMENSION_WEIGHTS["professional_responsibility_clarity"])
-
-
-def _score_depth_judgment(
-    body: str,
-    sections: dict[str, str],
-    kind: str,
-    axes: list[str] | None = None,
-) -> int:
-    text = "\n".join(
-        [
-            sections["Non-Negotiable Rules"],
-            sections["Technical Selection Criteria"],
-            sections["Selection Rules"],
-            sections["Risk Escalation Rules"],
-            sections["Critical Details"],
-            sections["Proactive Professional Triggers"],
-            body,
-        ]
-    )
-    selected_axes = axes or list(PROFESSIONAL_AXIS_TERMS)
-    axis_hits = _professional_axis_hits(text, selected_axes)
-    context_hits = _professional_axis_context_hits(text, selected_axes)
-    expected_axes = 6 if kind == "professional-skill" else 5 if kind == "domain-extension" else 4
-    decision_bound = sum(
-        1
-        for term in ("decision", "evidence", "failure", "escalate", "handoff", "block")
-        if term in text.casefold()
-    )
-    score = 0
-    score += 2 if axis_hits >= max(2, expected_axes - 2) else 0
-    score += 3 if axis_hits >= expected_axes else 0
-    score += 3 if context_hits >= max(2, expected_axes - 2) else 0
-    score += 2 if context_hits >= expected_axes else 0
-    score += 2 if _concrete_anchor_count(text) >= expected_axes else 0
-    score += min(3, decision_bound // 2)
-    score += 2 if sections["Risk Escalation Rules"] or sections["Proactive Professional Triggers"] else 0
-    if _generic_best_practice_warning(text):
-        score -= 2
-    return _clamp(score, 0, DEPTH_DIMENSION_WEIGHTS["domain_judgment_depth"])
-
-
-def _score_depth_decisions(sections: dict[str, str]) -> int:
-    mode_text = sections["Mode Matrix"]
-    selection_text = "\n".join(
-        [
-            sections["Selection Rules"],
-            sections["Technical Selection Criteria"],
-            sections["Risk Escalation Rules"],
-            sections["Required Context / Missing Information Policy"],
-            sections["Do Not Use When"],
-            mode_text,
-        ]
-    )
-    analysis = _mode_matrix_analysis(mode_text) if mode_text else {
-        "quality_rows": 0,
-        "evidence_rows": 0,
-        "route_rows": 0,
-        "skip_rows": 0,
-    }
-    folded = selection_text.casefold()
-    score = 0
-    score += min(4, analysis["quality_rows"])
-    score += 2 if any(
-        term in folded
-        for term in (
-            "blocking",
-            "non-blocking",
-            "ask",
-            "proceed",
-            "missing-input",
-            "missing input",
-            "instead of guessing",
-        )
-    ) else 0
-    score += 2 if any(term in folded for term in ("escalate", "risk escalation", "l4", "l5")) else 0
-    score += 2 if any(term in folded for term in ("skip", "do not", "unless", "only when")) else 0
-    score += 2 if re.search(r"\b(if|when)\b.+\b(require|route|select|block|handoff|return)\b", folded, re.DOTALL) else 0
-    return _clamp(score, 0, DEPTH_DIMENSION_WEIGHTS["decision_criteria_completeness"])
-
-
-def _score_depth_failure_modes(sections: dict[str, str]) -> int:
-    failure_text = sections["Failure Modes"]
-    if not failure_text:
-        return 0
-    count = len(re.findall(r"^\s*[-*]\s+", failure_text, re.MULTILINE)) + len(_table_data_rows(failure_text))
-    folded = failure_text.casefold()
-    structure_hits = sum(
-        1
-        for term in (
-            "condition",
-            "symptom",
-            "cause",
-            "consequence",
-            "impact",
-            "hidden risk",
-            "detection",
-            "prevent",
-            "repair",
-            "fix",
-            "required correction",
-            "mitigation",
-            "evidence",
-            "wrong",
-        )
-        if term in folded
-    )
-    score = 0
-    score += 3 if count >= 3 else 0
-    score += 2 if count >= 6 else 0
-    score += 3 if structure_hits >= 3 else 0
-    score += 2 if structure_hits >= 5 else 0
-    score += 2 if _concrete_anchor_count(failure_text) >= 4 else 0
-    return _clamp(score, 0, DEPTH_DIMENSION_WEIGHTS["failure_mode_specificity"])
-
-
-def _score_depth_evidence(sections: dict[str, str], kind: str, path: Path) -> int:
-    text = "\n".join(
-        [
-            sections["Evidence Contract"],
-            sections["Output Contract"],
-            sections["Quality Gate"],
-            sections["Handoff"],
-        ]
-    )
-    hits = _evidence_obligation_hits(text)
-    score = _clamp(len(hits), 0, 8)
-    folded = text.casefold()
-    score += 2 if any(term in folded for term in ("strong evidence", "weak evidence", "missing evidence", "invalid evidence")) else 0
-    score += 2 if _score_evidence_contract_strength(text, kind, path) >= 4 else 0
-    return _clamp(score, 0, DEPTH_DIMENSION_WEIGHTS["evidence_contract_completeness"])
-
-
-def _score_depth_output(sections: dict[str, str]) -> int:
-    text = "\n".join([sections["Output Contract"], sections["Evidence Contract"], sections["Handoff"]])
-    folded = text.casefold()
-    obligation_hits = sum(1 for term in OUTPUT_OBLIGATION_TERMS if term in folded)
-    actionability = _score_output_actionability(sections["Output Contract"], text)
-    return _clamp(obligation_hits + min(actionability, 4), 0, DEPTH_DIMENSION_WEIGHTS["output_contract_actionability"])
-
-
-def _score_depth_boundary(sections: dict[str, str], kind: str) -> int:
-    text = "\n".join(
-        [
-            sections["Stage Ownership"],
-            sections["Adjacent Skill Conflict Resolution"],
-            sections["Do Not Use When"],
-            sections["Handoff"],
-            sections["Output Contract"],
-        ]
-    ).casefold()
-    score = 0
-    score += 2 if any(term in text for term in ("own", "owner", "ownership")) else 0
-    score += 2 if any(term in text for term in ("do not", "must not", "not replace", "non-owned")) else 0
-    score += 2 if any(term in text for term in ("adjacent", "handoff", "hand off", "return to")) else 0
-    score += 1 if any(term in text for term in ("reviewer", "gate", "addendum", "fragment")) else 0
-    score += 2 if _score_keyword_coverage(text, BOUNDARY_TERMS) >= 3 else 0
-    if kind == "foundation-capability" and "top-level" in text and "fragment" in text:
-        score = min(9, score + 1)
-    if kind == "domain-extension" and "owner" in text and "addendum" in text:
-        score = min(9, score + 1)
-    return _clamp(score, 0, DEPTH_DIMENSION_WEIGHTS["boundary_and_ownership_precision"])
-
-
-def _score_depth_tradeoffs(body: str, sections: dict[str, str]) -> int:
-    text = "\n".join(
-        [
-            sections["Trade-Offs"],
-            sections["Tradeoff Priorities"],
-            sections["Non-Negotiable Rules"],
-            sections["Risk Escalation Rules"],
-            body,
-        ]
-    )
-    folded = text.casefold()
-    priority_patterns = len(re.findall(r"\b[a-z][a-z -]{3,40}\s+before\s+[a-z][a-z -]{3,40}", folded))
-    score = min(5, priority_patterns)
-    score += 1 if any(term in folded for term in ("trade-off", "tradeoff", "priority", "prioritize")) else 0
-    score += 1 if any(term in folded for term in ("correctness", "compatibility", "authorization", "rollback", "evidence")) else 0
-    return _clamp(score, 0, DEPTH_DIMENSION_WEIGHTS["tradeoff_priority_quality"])
-
-
-def _score_depth_anti_patterns(sections: dict[str, str]) -> int:
-    text = "\n".join(
-        [
-            sections["Anti-Patterns"],
-            sections["Anti-Examples"],
-            sections["Do Not Use When"],
-            sections["Failure Modes"],
-            sections["Critical Details"],
-        ]
-    )
-    folded = text.casefold()
-    if not folded.strip():
-        return 0
-    score = 0
-    score += 2 if any(
-        term in folded
-        for term in ("wrong:", "bad:", "anti-pattern", "anti-example", "rationalization")
-    ) else 0
-    score += 1 if any(term in folded for term in ("why wrong", "consequence", "because", "hidden risk")) else 0
-    score += 1 if any(term in folded for term in ("detect", "signal", "when")) else 0
-    score += 1 if any(
-        term in folded
-        for term in ("replacement", "instead", "prefer", "repair", "required correction")
-    ) else 0
-    score += 2 if len(re.findall(r"^\s*[-*]\s+", text, re.MULTILINE)) >= 3 else 0
-    return _clamp(score, 0, DEPTH_DIMENSION_WEIGHTS["anti_pattern_quality"])
-
-
-def _score_depth_validation(sections: dict[str, str]) -> int:
-    text = "\n".join([sections["Evidence Contract"], sections["Quality Gate"], sections["Output Contract"]]).casefold()
-    score = 0
-    score += 1 if any(term in text for term in ("validation", "validator", "test", "command")) else 0
-    score += 1 if any(term in text for term in ("risk", "failure", "contract", "boundary")) else 0
-    score += 1 if any(term in text for term in ("what evidence proves", "proves")) else 0
-    score += 1 if any(term in text for term in ("does not prove", "unproven", "not verified", "missing evidence")) else 0
-    score += 1 if any(term in text for term in ("fallback", "manual", "residual risk", "next gate")) else 0
-    return _clamp(score, 0, DEPTH_DIMENSION_WEIGHTS["validation_semantics"])
-
-
-def _score_depth_residual_risk(sections: dict[str, str]) -> int:
-    text = "\n".join([sections["Evidence Contract"], sections["Output Contract"], sections["Handoff"], sections["Quality Gate"]]).casefold()
-    score = 0
-    score += 1 if "residual risk" in text else 0
-    score += 1 if any(term in text for term in ("owner", "next gate", "handoff", "follow-up")) else 0
-    score += 1 if any(term in text for term in ("not verified", "missing evidence", "evidence limits", "does not prove")) else 0
-    return _clamp(score, 0, DEPTH_DIMENSION_WEIGHTS["residual_risk_handling"])
-
-
-def _professional_axis_hits(text: str, axes: list[str] | tuple[str, ...] = PROFESSIONAL_AXIS_TERMS) -> int:
-    folded = text.casefold()
-    return sum(1 for axis in axes if _professional_axis_present(folded, axis))
-
-
-def _professional_axis_context_hits(text: str, axes: list[str] | tuple[str, ...]) -> int:
-    chunks = [
-        chunk
-        for chunk in re.split(r"(?:\n\s*\n|\n\s*[-*]\s+|\n\s*\|)", text)
-        if chunk.strip()
-    ]
-    folded_chunks = [chunk.casefold() for chunk in chunks]
-    return sum(1 for axis in axes if _professional_axis_has_context(folded_chunks, axis))
-
-
-def _professional_axis_has_context(folded_chunks: list[str], axis: str) -> bool:
-    for chunk in folded_chunks:
-        if not _professional_axis_present(chunk, axis):
-            continue
-        has_decision = any(
-            term in chunk
-            for term in (
-                "block",
-                "decision",
-                "escalate",
-                "handoff",
-                "preserve",
-                "reject",
-                "require",
-                "route",
-                "select",
-                "verify",
-            )
-        )
-        has_proof_or_failure = any(
-            term in chunk
-            for term in (
-                "command",
-                "detect",
-                "evidence",
-                "failure",
-                "proof",
-                "risk",
-                "scan",
-                "test",
-                "validation",
-            )
-        )
-        if has_decision and has_proof_or_failure:
-            return True
-    return False
-
-
-def _professional_axis_present(folded_text: str, axis: str) -> bool:
-    folded_axis = axis.casefold().strip()
-    if not folded_axis:
-        return False
-    if folded_axis in folded_text:
-        return True
-    tokens = _professional_axis_tokens(axis)
-    if not tokens:
-        return False
-    required = 1 if len(tokens) == 1 else min(2, len(tokens))
-    return sum(1 for token in tokens if token in folded_text) >= required
-
-
-def _professional_axis_tokens(axis: str) -> list[str]:
-    stop_words = {
-        "and",
-        "before",
-        "for",
-        "from",
-        "into",
-        "or",
-        "the",
-        "under",
-        "when",
-        "with",
-    }
-    return [
-        token
-        for token in re.findall(r"[a-z0-9]+", axis.casefold())
-        if len(token) >= 3 and token not in stop_words
-    ]
-
-
-def _professional_depth_warnings(
-    total: int,
-    dimensions: dict[str, int],
-    sections: dict[str, str],
-    body: str,
-    kind: str,
-    name: str,
-    axis_spec: dict[str, Any],
-) -> list[ProfessionalDepthWarning]:
-    warnings: list[ProfessionalDepthWarning] = []
-    release_threshold = 85
-    if total < release_threshold:
-        warnings.append(
-            _depth_warning(
-                "professionalism_score_below_release_threshold",
-                "release-blocking" if kind == "professional-skill" else "review-required",
-                f"{name} professionalism_score {total}/100 is below {release_threshold}",
-                "professionalism_score",
-            )
-        )
-    if axis_spec.get("missing_specific_axes"):
-        warnings.append(
-            _depth_warning(
-                "missing_judgment_axes",
-                "release-blocking" if kind == "professional-skill" else "review-required",
-                f"{name} uses {axis_spec.get('source')} instead of item-specific professional judgment axes",
-                "domain_judgment_depth",
-            )
-        )
-    for dimension, max_points in DEPTH_DIMENSION_WEIGHTS.items():
-        score = dimensions.get(dimension, 0)
-        if score >= int(max_points * 0.7):
-            continue
-        warning_type = _depth_dimension_warning_type(dimension)
-        severity = "release-blocking" if kind == "professional-skill" and dimension in DEPTH_CORE_DIMENSIONS else "review-required"
-        warnings.append(
-            _depth_warning(
-                warning_type,
-                severity,
-                f"{dimension} weak: {score}/{max_points}",
-                dimension,
-            )
-        )
-    if _generic_best_practice_warning(body):
-        warnings.append(
-            _depth_warning(
-                "generic_best_practice_substitution",
-                "review-required",
-                "generic best-practices wording weakens professional decision depth",
-                "domain_judgment_depth",
-            )
-        )
-    if kind == "foundation-capability":
-        boundary_text = "\n".join([sections["Output Contract"], sections["Handoff"], sections["Stage Ownership"]]).casefold()
-        if "fragment" not in boundary_text and "return to owner" not in boundary_text:
-            warnings.append(
-                _depth_warning(
-                    "owner_capability_confusion",
-                    "review-required",
-                    "foundation capability depth output does not clearly stay as an owner-returned fragment",
-                    "boundary_and_ownership_precision",
-                )
-            )
-    if kind == "domain-extension":
-        domain_text = "\n".join([sections["When To Use"], sections["Do Not Use When"], sections["Handoff"]]).casefold()
-        if "weak signal" not in domain_text and "keyword" not in domain_text:
-            warnings.append(
-                _depth_warning(
-                    "domain_keyword_only_professionalism_gap",
-                    "review-required",
-                    "domain extension does not clearly reject keyword-only activation",
-                    "boundary_and_ownership_precision",
-                )
-            )
-    return warnings
-
-
-def _depth_dimension_warning_type(dimension: str) -> str:
-    return {
-        "professional_responsibility_clarity": "missing_professional_responsibility",
-        "domain_judgment_depth": "weak_domain_judgment_depth",
-        "decision_criteria_completeness": "weak_decision_criteria",
-        "failure_mode_specificity": "weak_failure_mode_specificity",
-        "evidence_contract_completeness": "weak_evidence_contract",
-        "output_contract_actionability": "weak_output_contract",
-        "boundary_and_ownership_precision": "weak_boundary_ownership",
-        "tradeoff_priority_quality": "missing_tradeoff_priority",
-        "anti_pattern_quality": "weak_anti_patterns",
-        "validation_semantics": "weak_validation_semantics",
-        "residual_risk_handling": "missing_residual_risk",
-    }.get(dimension, "weak_professional_depth_dimension")
-
-
-def _depth_warning(
-    warning_type: str,
-    severity: str,
-    message: str,
-    dimension: str,
-) -> ProfessionalDepthWarning:
-    return ProfessionalDepthWarning(
-        type=warning_type,
-        severity=severity,
-        message=message,
-        dimension=dimension,
-    )
-
-
-def _professional_depth_status(total: int) -> str:
-    if total >= 95:
-        return "sample-grade"
-    if total >= 85:
-        return "release-grade"
-    if total >= 75:
-        return "needs-review"
-    if total >= 60:
-        return "weak"
-    return "failing"
-
-
-def _professional_depth_recommended_fixes(warnings: list[ProfessionalDepthWarning]) -> list[str]:
-    fixes: list[str] = []
-    warning_types = {warning.type for warning in warnings}
-    if "missing_professional_responsibility" in warning_types:
-        fixes.append("Declare owned decisions, non-owned decisions, expected output, and primary failure risk.")
-    if "weak_domain_judgment_depth" in warning_types:
-        fixes.append("Add skill-specific judgment axes that state decision impact, evidence, failure prevented, and handoff.")
-    if "weak_decision_criteria" in warning_types:
-        fixes.append("Tighten ordered decision rules with blocking/skip/escalation criteria.")
-    if "weak_failure_mode_specificity" in warning_types:
-        fixes.append("Rewrite failure modes with condition, consequence, detection, prevention or repair, and evidence.")
-    if "weak_evidence_contract" in warning_types or "weak_validation_semantics" in warning_types:
-        fixes.append("Map validation evidence to what it proves, what it does not prove, missing evidence, residual risk, and next gate.")
-    if "weak_output_contract" in warning_types:
-        fixes.append("Make the output contract directly actionable for the next implementer, reviewer, tester, or release owner.")
-    if "weak_boundary_ownership" in warning_types or "owner_capability_confusion" in warning_types:
-        fixes.append("Clarify owner/reviewer/gate role, adjacent boundaries, and handoff or return-to-owner rules.")
-    if "missing_tradeoff_priority" in warning_types:
-        fixes.append("Add skill-specific priority rules for conflicting professional goals.")
-    if "weak_anti_patterns" in warning_types:
-        fixes.append("Add anti-patterns with wrong behavior, why wrong, detection signal, and replacement action.")
-    if "missing_residual_risk" in warning_types:
-        fixes.append("Require residual-risk owner and next-gate handling for unverified work.")
-    return fixes[:6]
-
-
-def _normalize_duplicate_line(line: str) -> str:
-    stripped = re.sub(r"\s+", " ", line.strip()).casefold()
-    if len(stripped) < 90:
-        return ""
-    if stripped.startswith(("- l1 changes:", "- l2 changes:", "- l3 changes:", "- l4/l5 changes:")):
-        return ""
-    if any(fragment in stripped for fragment in DUPLICATE_IGNORE_FRAGMENTS):
-        return ""
-    return stripped
-
-
-def _normalize_duplicate_section(text: str) -> str:
-    stripped = re.sub(r"\s+", " ", text.strip()).casefold()
-    if len(stripped) < 180:
-        return ""
-    if any(fragment in stripped for fragment in DUPLICATE_IGNORE_FRAGMENTS):
-        return ""
-    return stripped
-
-
-def _build_coverage_matrix(items: list[SkillScore]) -> CoverageMatrixReport:
-    routing_counts = _coverage_counts_from_routing()
-    benchmark_counts = _coverage_counts_from_benchmarks()
-    rows: list[CoverageRow] = []
-    for item in sorted(items, key=lambda entry: (entry.kind, entry.name)):
-        if item.kind == "foundation-capability" and item.name not in KEY_FOUNDATION_CAPABILITIES:
-            continue
-        path = ROOT / item.path
-        try:
-            _metadata, _raw, body = parse_frontmatter(path)
-        except ValidationProblem:
-            body = ""
-        sections = {
-            title: _extract_section(body, title)
-            for title in (
-                "Stage Fit",
-                "Selection Rules",
-                "Mode Matrix",
-                "Proactive Professional Triggers",
-                "Evidence Contract",
-                "Output Contract",
-                "Failure Modes",
-                "Quality Gate",
-                "Reference Loading Policy",
-            )
-        }
-        if item.kind == "foundation-capability" and item.name not in ENHANCED_FOUNDATION_CAPABILITIES:
-            mode_matrix = "n/a"
-            proactive = "n/a"
-        else:
-            mode_matrix = _coverage_cell(
-                _score_mode_coverage(sections["Mode Matrix"], sections, item.kind, path) >= 4,
-                partial=bool(sections["Mode Matrix"]) or bool(sections["Stage Fit"]),
-            )
-            proactive = _coverage_cell(
-                _score_proactive_trigger_quality(
-                    sections["Proactive Professional Triggers"],
-                    item.kind,
-                )
-                >= 4,
-                partial=bool(sections["Proactive Professional Triggers"]),
-            )
-        evidence = _coverage_cell(
-            _score_evidence_contract_strength(
-                sections["Output Contract"] + "\n" + sections["Evidence Contract"],
-                item.kind,
-                path,
-            )
-            >= 4,
-            partial=bool(sections["Evidence Contract"]) or bool(sections["Output Contract"]),
-        )
-        output_contract = _coverage_cell(
-            _score_output_actionability(sections["Output Contract"], sections["Output Contract"]) >= 4,
-            partial=bool(sections["Output Contract"]),
-        )
-        failure_modes = _coverage_cell(_score_failure_modes(sections["Failure Modes"], item.kind) >= 3)
-        quality_gate = _coverage_cell(bool(sections["Quality Gate"]))
-        reference_hint = _coverage_cell(
-            bool(sections["Reference Loading Policy"])
-            or any(term.casefold() in body.casefold() for term in REFERENCE_HINT_TERMS),
-            partial=bool(_reference_files(path)),
-        )
-        senior_programming_judgment_coverage = _senior_programming_judgment_coverage(
-            item.name,
-            body,
-        )
-        routing_coverage = _coverage_count_cell(routing_counts.get(item.name, 0))
-        benchmark_coverage = _coverage_count_cell(benchmark_counts.get(item.name, 0))
-        if item.name == "change-forge-router":
-            routing_coverage = (
-                "n/a (router owns routing fixture corpus; "
-                f"eval-routing cases={_routing_fixture_count()})"
-            )
-            benchmark_coverage = "n/a (covered by eval-routing and agent-behavior)"
-        rows.append(
-            CoverageRow(
-                name=item.name,
-                path=item.path,
-                kind=item.kind,
-                mode_matrix=mode_matrix,
-                proactive_triggers=proactive,
-                evidence_contract=evidence,
-                output_contract=output_contract,
-                failure_modes=failure_modes,
-                quality_gate=quality_gate,
-                reference_loading_hint=reference_hint,
-                senior_programming_judgment_coverage=senior_programming_judgment_coverage,
-                routing_coverage=routing_coverage,
-                benchmark_coverage=benchmark_coverage,
-                anti_bloat_status=_anti_bloat_status(item.dimensions.get("anti_bloat_control", 0)),
-                status=item.status,
-                score=item.total,
-                warnings=item.warnings,
-            )
-        )
-    return CoverageMatrixReport(
-        generated_at=datetime.now(timezone.utc).isoformat(),
-        rows_checked=len(rows),
-        rows=rows,
-    )
-
-
-def _coverage_cell(ok: bool, partial: bool = False) -> str:
-    if ok:
-        return "yes"
-    if partial:
-        return "partial"
-    return "no"
-
-
-def _coverage_count_cell(count: int) -> str:
-    return f"yes ({count})" if count else "no"
-
-
-def _senior_programming_judgment_coverage(name: str, body: str) -> str:
-    folded = re.sub(r"[_-]+", " ", body.casefold())
-    in_scope = (
-        name == "senior-programming-judgment-core"
-        or "senior programming judgment" in folded
-        or "senior programming judgment" in name.replace("-", " ")
-    )
-    if not in_scope:
-        return "n/a"
-    hits = sum(1 for term in SENIOR_PROGRAMMING_JUDGMENT_TERMS if term in folded)
-    if hits == len(SENIOR_PROGRAMMING_JUDGMENT_TERMS):
-        return "yes"
-    return f"partial ({hits}/{len(SENIOR_PROGRAMMING_JUDGMENT_TERMS)})" if hits else "no"
-
-
-def _routing_fixture_count() -> int:
-    if not ROUTING_EVALS_DIR.is_dir():
-        return 0
-    return sum(1 for path in ROUTING_EVALS_DIR.glob("*.yaml") if path.is_file())
-
-
-def _anti_bloat_status(score: int) -> str:
-    if score >= 4:
-        return "ok"
-    if score >= 3:
-        return "needs-review"
-    return "bloat-risk"
-
-
-def _coverage_counts_from_routing() -> dict[str, int]:
-    counts: dict[str, int] = {}
-    if not ROUTING_EVALS_DIR.is_dir():
-        return counts
-    for path in ROUTING_EVALS_DIR.glob("*.yaml"):
-        try:
-            data = load_yaml_file(path)
-        except ValidationProblem:
-            continue
-        expected = data.get("expected") if isinstance(data, dict) else None
-        if not isinstance(expected, dict):
-            continue
-        for field_name in ("skills", "capabilities"):
-            for name in _as_string_list(expected.get(field_name)):
-                counts[name] = counts.get(name, 0) + 1
-    return counts
-
-
-def _coverage_counts_from_benchmarks() -> dict[str, int]:
-    counts: dict[str, int] = {}
-    if PROFESSIONAL_BENCHMARKS_DIR.is_dir():
-        for path in PROFESSIONAL_BENCHMARKS_DIR.rglob("expected.yaml"):
-            try:
-                data = load_yaml_file(path)
-            except ValidationProblem:
-                continue
-            if not isinstance(data, dict):
-                continue
-            for name in _as_string_list(data.get("expected_professional_skill")):
-                counts[name] = counts.get(name, 0) + 1
-            for name in _as_string_list(data.get("expected_capabilities")):
-                counts[name] = counts.get(name, 0) + 1
-    if CODEGEN_BENCHMARKS_DIR.is_dir():
-        for path in CODEGEN_BENCHMARKS_DIR.rglob("expected-qualities.yaml"):
-            try:
-                data = load_yaml_file(path)
-            except ValidationProblem:
-                continue
-            if not isinstance(data, dict):
-                continue
-            route_hints = data.get("route_hints")
-            if not isinstance(route_hints, dict):
-                continue
-            for field_name in ("skills", "capabilities"):
-                for name in _as_string_list(route_hints.get(field_name)):
-                    counts[name] = counts.get(name, 0) + 1
-    return counts
-
-
-def _as_string_list(value: Any) -> list[str]:
-    if isinstance(value, str):
-        return [value.strip()] if value.strip() else []
-    if isinstance(value, list):
-        return [str(item).strip() for item in value if str(item).strip()]
-    return []
-
-
-def _write_reports(report: EvalReport, reports_dir: Path, report_format: str) -> list[Path]:
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    written: list[Path] = []
-    if report_format in {"all", "markdown"}:
-        path = reports_dir / MARKDOWN_REPORT
-        path.write_text(_render_markdown(report), encoding="utf-8")
-        written.append(path)
-    if report_format in {"all", "json"}:
-        path = reports_dir / JSON_REPORT
-        payload = asdict(report)
-        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        written.append(path)
-    return written
-
-
-def _write_depth_reports(
-    report: ProfessionalDepthReport,
-    reports_dir: Path,
-    report_format: str,
-) -> list[Path]:
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    written: list[Path] = []
-    if report_format in {"all", "markdown"}:
-        path = reports_dir / DEPTH_MARKDOWN_REPORT
-        path.write_text(_render_depth_markdown(report), encoding="utf-8")
-        written.append(path)
-    if report_format in {"all", "json"}:
-        path = reports_dir / DEPTH_JSON_REPORT
-        path.write_text(json.dumps(asdict(report), indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        written.append(path)
-    return written
-
-
-def _write_coverage_matrix(
-    report: CoverageMatrixReport,
-    reports_dir: Path,
-    report_format: str,
-) -> list[Path]:
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    written: list[Path] = []
-    if report_format in {"all", "markdown"}:
-        path = reports_dir / COVERAGE_MARKDOWN_REPORT
-        path.write_text(_render_coverage_markdown(report), encoding="utf-8")
-        written.append(path)
-    if report_format in {"all", "json"}:
-        path = reports_dir / COVERAGE_JSON_REPORT
-        path.write_text(json.dumps(asdict(report), indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        written.append(path)
-    return written
-
-
-def _render_depth_markdown(report: ProfessionalDepthReport) -> str:
-    lines = [
-        "# Skill Professionalism Depth Evaluation",
-        "",
-        f"- Generated: {report.generated_at}",
-        f"- Items checked: {report.items_checked}",
-        f"- Warning count: {report.warning_count}",
-        f"- Average professionalism score: {report.average_professionalism_score:.2f}/100",
-        f"- Score model: {report.score_model}",
-        f"- Score model path: `{report.score_model_path}`",
-        f"- Judgment axis registry: `{report.judgment_axis_registry}`",
-        "",
-        "This report separates professional depth from activation, routing, reference precision, and body-size efficiency.",
-        "",
-        "## Scores",
-        "",
-        "| Item | Kind | Score | Status | Warnings |",
-        "| --- | --- | ---: | --- | ---: |",
-    ]
-    for item in sorted(report.items, key=lambda entry: (entry.professionalism_score, entry.path)):
-        lines.append(
-            f"| `{item.path}` | {item.kind} | {item.professionalism_score}/100 | "
-            f"{item.status} | {len(item.warnings)} |"
-        )
-
-    lines.extend(["", "## Metadata Warnings", ""])
-    if report.metadata_warnings:
-        for warning in report.metadata_warnings:
-            lines.append(f"- {warning}")
-    else:
-        lines.append("- None")
-
-    lines.extend(["", "## Dimension Detail", ""])
-    for item in sorted(report.items, key=lambda entry: entry.path):
-        lines.append(f"### `{item.path}`")
-        lines.append("")
-        lines.append("| Dimension | Score |")
-        lines.append("| --- | ---: |")
-        for dimension, max_points in DEPTH_DIMENSION_WEIGHTS.items():
-            lines.append(f"| {dimension} | {item.dimensions.get(dimension, 0)}/{max_points} |")
-        if item.warnings:
-            lines.append("")
-            lines.append("Warnings:")
-            for warning in item.warnings:
-                lines.append(
-                    f"- {warning.severity}: {warning.type} ({warning.dimension}) - {warning.message}"
-                )
-        if item.recommended_fixes:
-            lines.append("")
-            lines.append("Recommended fixes:")
-            for fix in item.recommended_fixes:
-                lines.append(f"- {fix}")
-        lines.append("")
-    return "\n".join(lines).rstrip() + "\n"
-
-
-def _render_markdown(report: EvalReport) -> str:
-    lines = [
-        "# Skill Professionalism Evaluation",
-        "",
-        f"- Generated: {report.generated_at}",
-        f"- Skills/capabilities checked: {report.skills_checked}",
-        f"- Warning count: {report.warning_count}",
-        f"- Average score: {report.average_score:.2f}/60",
-        "",
-        "## Scores",
-        "",
-        "| Item | Kind | Score | Status | Missing Sections | Warnings |",
-        "| --- | --- | ---: | --- | ---: | ---: |",
-    ]
-    for item in sorted(report.items, key=lambda entry: (entry.total, entry.path)):
-        lines.append(
-            f"| `{item.path}` | {item.kind} | {item.total}/60 | {item.status} | "
-            f"{len(item.likely_missing_sections)} | {len(item.warnings)} |"
-        )
-
-    lines.extend(["", "## Warnings", ""])
-    any_warning = False
-    for item in sorted(report.items, key=lambda entry: (entry.path)):
-        if not item.warnings:
-            continue
-        any_warning = True
-        lines.append(f"### `{item.path}`")
-        if item.likely_missing_sections:
-            lines.append("- likely missing sections: " + ", ".join(item.likely_missing_sections))
-        for warning in item.warnings:
-            lines.append(
-                f"- message: {warning.message} | type: {warning.type} | "
-                f"scope: {warning.scope} | release_relevance: {warning.release_relevance} | "
-                f"reason: {warning.reason}"
-            )
-        if item.recommended_fixes:
-            lines.append("")
-            lines.append("Recommended fixes:")
-            for fix in item.recommended_fixes:
-                lines.append(f"- {fix}")
-        lines.append("")
-    if not any_warning:
-        lines.append("No warnings.")
-    return "\n".join(lines).rstrip() + "\n"
-
-
-def _render_coverage_markdown(report: CoverageMatrixReport) -> str:
-    lines = [
-        "# Professional Coverage Matrix",
-        "",
-        f"- Generated: {report.generated_at}",
-        f"- Rows checked: {report.rows_checked}",
-        "",
-        "| Item | Kind | Mode Matrix | Proactive Triggers | Evidence Contract | Output Contract | Failure Modes | Quality Gate | Reference Loading Hint | Senior Programming Judgment Coverage | Routing Coverage | Benchmark Coverage | Anti-bloat Status | Status |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-    ]
-    for row in report.rows:
-        lines.append(
-            "| "
-            + " | ".join(
-                [
-                    f"`{row.name}`",
-                    row.kind,
-                    row.mode_matrix,
-                    row.proactive_triggers,
-                    row.evidence_contract,
-                    row.output_contract,
-                    row.failure_modes,
-                    row.quality_gate,
-                    row.reference_loading_hint,
-                    row.senior_programming_judgment_coverage,
-                    row.routing_coverage,
-                    row.benchmark_coverage,
-                    row.anti_bloat_status,
-                    row.status,
-                ]
-            )
-            + " |"
-        )
-    weak = [
-        row
-        for row in report.rows
-        if row.status in {"weak", "needs-review"} or row.anti_bloat_status == "bloat-risk"
-    ]
-    if weak:
-        lines.extend(["", "## Weak Spots", ""])
-        for row in weak:
-            gaps = [
-                label
-                for label, value in (
-                    ("Mode Matrix", row.mode_matrix),
-                    ("Proactive Triggers", row.proactive_triggers),
-                    ("Evidence Contract", row.evidence_contract),
-                    ("Output Contract", row.output_contract),
-                    ("Failure Modes", row.failure_modes),
-                    ("Quality Gate", row.quality_gate),
-                    ("Reference Loading Hint", row.reference_loading_hint),
-                    ("Routing Coverage", row.routing_coverage),
-                    ("Benchmark Coverage", row.benchmark_coverage),
-                    ("Anti-bloat Status", row.anti_bloat_status),
-                )
-                if value in {"no", "weak", "bloat-risk"}
-            ]
-            lines.append(f"- `{row.name}`: {', '.join(gaps) if gaps else 'score/status needs review'}")
-    return "\n".join(lines).rstrip() + "\n"
-
-
-def _table_data_rows(text: str) -> list[str]:
-    rows: list[str] = []
-    for line in text.splitlines():
-        stripped = line.strip()
-        if not stripped.startswith("|") or not stripped.endswith("|"):
-            continue
-        if set(stripped.replace("|", "").strip()) <= {"-", ":", " "}:
-            continue
-        if "mode" in stripped.casefold() and "trigger" in stripped.casefold():
-            continue
-        rows.append(stripped)
+    for kind, path, key in REGISTRIES:
+        data = load_yaml_file(path)
+        if not isinstance(data, dict) or not isinstance(data.get(key), list):
+            raise ValidationProblem(f"{path}: expected top-level list '{key}'")
+        for raw in data[key]:
+            if not isinstance(raw, dict):
+                raise ValidationProblem(f"{path}: entries in '{key}' must be mappings")
+            name = str(raw.get("name", "")).strip()
+            if not name:
+                raise ValidationProblem(f"{path}: registry entry is missing name")
+            if name in names:
+                raise ValidationProblem(f"{path}: duplicate registered skill '{name}'")
+            names.add(name)
+            rows.append((kind, raw))
     return rows
 
 
-def _contains_all(text: str, terms: tuple[str, ...]) -> bool:
-    folded = text.casefold()
-    return all(term in folded for term in terms)
+def _evaluate(kind: str, entry: dict[str, Any]) -> SkillResult:
+    name = str(entry.get("name", "")).strip()
+    source_dir = ROOT / str(entry.get("path", ""))
+    source = source_dir / "SKILL.md"
+    if kind == "control":
+        required = CONTROL_SECTIONS
+    elif kind == "foundation":
+        required = FOUNDATION_SECTIONS
+    else:
+        required = PROFESSIONAL_DOMAIN_SECTIONS
+    result = SkillResult(
+        name=name,
+        kind=kind,
+        path=_rel(source),
+        status="pass",
+        authoring_score=0,
+        required_sections=list(required),
+        role_support=_strings(entry.get("role_support")),
+        trigger_signals=_strings(entry.get("trigger_signals")),
+        anti_trigger_signals=_strings(entry.get("anti_trigger_signals")),
+        layer3_candidates=_strings(entry.get("layer3_candidates")),
+    )
+    result.missing_registry_fields = [
+        field
+        for field in REGISTRY_FIELDS
+        if field not in entry or (field != "reference_index" and not _present(entry.get(field)))
+    ]
+    if result.missing_registry_fields:
+        result.errors.append(
+            "registry contract missing: " + ", ".join(result.missing_registry_fields)
+        )
+    if not source.is_file():
+        result.errors.append("registered SKILL.md does not exist")
+        result.status = "fail"
+        return result
+
+    text = source.read_text(encoding="utf-8")
+    result.line_count = len(text.splitlines())
+    try:
+        frontmatter, _raw_frontmatter, body = parse_frontmatter(source)
+    except ValidationProblem as exc:
+        result.errors.append(str(exc))
+        result.status = "fail"
+        return result
+    if set(frontmatter) != {"name", "description"}:
+        result.errors.append("frontmatter must contain only name and description")
+    if str(frontmatter.get("name", "")).strip() != name:
+        result.errors.append("frontmatter name does not match registry name")
+
+    sections = _sections(body, required)
+    headings = set(re.findall(r"^##\s+(.+?)\s*$", body, flags=re.MULTILINE))
+    result.missing_sections = [section for section in required if section not in headings]
+    if result.missing_sections:
+        result.errors.append("missing AI execution sections: " + ", ".join(result.missing_sections))
+    empty_headings = empty_markdown_headings(body)
+    if empty_headings:
+        details = ", ".join(
+            f"{title} (line {line_number})"
+            for line_number, _level, title in empty_headings
+        )
+        result.errors.append("empty Markdown sections: " + details)
+    result.decision_rule_count = sum(
+        _list_count(sections.get(title, ""))
+        for title in ("Decision Rules", "Professional Decision Rules", "High-Value Rules")
+    )
+    result.gotcha_count = sum(
+        _list_count(sections.get(title, ""))
+        for title in ("High-Value Gotchas", "Anti-Patterns")
+    )
+
+    indexed = reference_paths(
+        entry.get("reference_index"), f"{kind}:{name}.reference_index", owner=name
+    )
+    result.reference_count = len(indexed)
+    for relative in indexed:
+        target = source_dir / relative
+        if not target.is_file():
+            result.broken_references.append(relative)
+        if relative not in body:
+            result.unlinked_references.append(relative)
+    if result.broken_references:
+        result.errors.append("missing targeted references: " + ", ".join(result.broken_references))
+    if result.unlinked_references:
+        result.warnings.append(
+            "registry references are not directly linked from root SKILL.md: "
+            + ", ".join(result.unlinked_references)
+        )
+
+    if kind == "foundation" and result.decision_rule_count < 2:
+        result.warnings.append("fewer than two explicit High-Value Rules")
+    elif kind != "control" and result.decision_rule_count < 2:
+        result.warnings.append("fewer than two explicit Professional Decision Rules")
+    if kind == "foundation" and result.gotcha_count < 1:
+        result.warnings.append("Anti-Patterns has no explicit list item")
+    elif kind != "control" and result.gotcha_count < 1:
+        result.warnings.append("High-Value Gotchas has no explicit list item")
+    if kind != "control" and result.line_count > 120:
+        result.warnings.append(f"root SKILL.md has {result.line_count} lines; targeted-reference split should be reviewed")
+    section_defects = min(
+        len(required),
+        len(result.missing_sections) + len(empty_headings),
+    )
+    section_points = round(60 * (len(required) - section_defects) / len(required))
+    registry_points = round(20 * (len(REGISTRY_FIELDS) - len(result.missing_registry_fields)) / len(REGISTRY_FIELDS))
+    reference_points = 10 if not result.broken_references and not result.unlinked_references else 0
+    concise_points = 10 if kind == "control" or result.line_count <= 120 else 5
+    result.authoring_score = section_points + registry_points + reference_points + concise_points
+    result.status = "fail" if result.errors else ("needs-review" if result.warnings else "pass")
+    return result
 
 
-def _reference_files(path: Path) -> list[Path]:
-    refs_dir = path.parent / "references"
-    if not refs_dir.is_dir():
-        return []
-    return sorted(ref for ref in refs_dir.glob("*.md") if ref.is_file())
+def _sections(body: str, required: tuple[str, ...]) -> dict[str, str]:
+    matches = list(re.finditer(r"^##\s+(.+?)\s*$", body, flags=re.MULTILINE))
+    all_sections: dict[str, str] = {}
+    for index, match in enumerate(matches):
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(body)
+        all_sections[match.group(1).strip()] = body[start:end].strip()
+    return {title: all_sections.get(title, "") for title in required}
+
+
+def _list_count(text: str) -> int:
+    return len(re.findall(r"^(?:\s*[-*]|\s*\d+\.)\s+\S", text, flags=re.MULTILINE))
+
+
+def build_coverage_matrix(
+    release_review_config: Path = DEFAULT_RELEASE_REVIEW_CONFIG,
+    *,
+    results: list[SkillResult] | None = None,
+) -> dict[str, Any]:
+    """Build deterministic coverage evidence without reading tracked reports."""
+
+    if results is None:
+        results = [_evaluate(kind, entry) for kind, entry in _load_entries()]
+    known_skills = {row.name for row in results}
+    policy = load_professional_coverage_policy(
+        release_review_config,
+        known_skills=known_skills,
+    )
+
+    routing_evaluator = _load_evaluator(
+        ROUTING_EVALUATOR,
+        "skill_professionalism_routing_evaluator",
+    )
+    routing = routing_evaluator.evaluate_routes()
+    capability_routes = routing_evaluator.evaluate_routes(
+        CAPABILITY_ROUTING_FIXTURES,
+        _validate_capability_matrix=False,
+    )
+    benchmarks = _load_evaluator(
+        BENCHMARK_EVALUATOR,
+        "skill_professionalism_benchmark_evaluator",
+    ).evaluate_benchmarks()
+    pressure = _load_evaluator(
+        PRESSURE_EVALUATOR,
+        "skill_professionalism_pressure_evaluator",
+    ).evaluate_pressure_cases()
+    source_errors = [
+        *[f"routing: {item}" for item in _strings(routing.get("errors"))],
+        *[
+            f"capability routing: {item}"
+            for item in _strings(capability_routes.get("errors"))
+        ],
+        *[f"benchmarks: {item}" for item in _strings(benchmarks.get("errors"))],
+        *[f"pressure: {item}" for item in _strings(pressure.get("errors"))],
+    ]
+
+    evidence_by_skill: dict[str, dict[str, list[str]]] = {
+        name: {
+            "positive_route": [],
+            "negative_route": [],
+            "behavior": [],
+            "pressure": [],
+            "release_critical": [],
+            "adversarial_negative_control": [],
+        }
+        for name in known_skills
+    }
+    for case in routing.get("results", []):
+        if not isinstance(case, dict) or case.get("passed") is not True:
+            continue
+        actual = _mapping(case.get("actual"))
+        selected = {
+            str(actual.get("primary_skill", "")),
+            str(actual.get("review_skill", "")),
+            *_strings(actual.get("layer3_skills")),
+        }
+        case_id = str(case.get("id", "")).strip()
+        for name in selected & known_skills:
+            evidence_by_skill[name]["positive_route"].append(case_id)
+        for name in set(_strings(case.get("excluded_skills"))) & known_skills:
+            evidence_by_skill[name]["negative_route"].append(case_id)
+
+    for case in benchmarks.get("results", []):
+        if not isinstance(case, dict):
+            continue
+        selected = {
+            str(case.get("primary_skill", "")),
+            *_strings(case.get("layer3_skills")),
+        }
+        selected &= known_skills
+        case_id = str(case.get("case_id", "")).strip()
+        positive = (
+            case.get("expected_status") == "pass"
+            and case.get("schema_status") == "pass"
+            and case.get("comparison_status") == "pass"
+            and not _strings(case.get("forbidden_behavior_hits"))
+        )
+        adversarial = (
+            case.get("expected_status") == "fail"
+            and case.get("comparison_status") == "expected-fail-detected"
+        )
+        if positive:
+            for name in selected:
+                evidence_by_skill[name]["behavior"].append(case_id)
+                if case.get("coverage_class") == "release-critical":
+                    evidence_by_skill[name]["release_critical"].append(case_id)
+        elif adversarial:
+            for name in selected:
+                evidence_by_skill[name]["adversarial_negative_control"].append(case_id)
+
+    for case in pressure.get("results", []):
+        if not isinstance(case, dict) or case.get("status") != "pass":
+            continue
+        # A named reviewer is only a planned handoff in the current fixture schema;
+        # it does not prove that review behavior executed under pressure.
+        selected = {
+            str(case.get("primary_skill", "")),
+            *_strings(case.get("layer3_skills")),
+        }
+        case_id = str(case.get("case_id", "")).strip()
+        for name in selected & known_skills:
+            evidence_by_skill[name]["pressure"].append(case_id)
+
+    rows: list[dict[str, Any]] = []
+    for result in results:
+        evidence = {
+            key: sorted(set(values))
+            for key, values in evidence_by_skill[result.name].items()
+        }
+        result.routing_coverage_count = len(evidence["positive_route"])
+        result.benchmark_coverage_count = len(evidence["behavior"])
+        states = {
+            "registered": True,
+            "route_covered": bool(evidence["positive_route"]),
+            "negative_route_covered": bool(evidence["negative_route"]),
+            "behavior_covered": bool(evidence["behavior"]),
+            "pressure_covered": bool(evidence["pressure"]),
+            "release_critical_covered": bool(evidence["release_critical"]),
+        }
+        required = list(policy["requirements"].get(result.name, []))
+        unmet = [name for name in required if not states[name]]
+        gate_status = (
+            "not-required"
+            if not required
+            else ("pass" if not unmet else "fail")
+        )
+        rows.append(
+            {
+                "name": result.name,
+                "layer": result.kind,
+                "role_support": result.role_support,
+                "trigger_contract": "present" if result.trigger_signals else "missing",
+                "anti_trigger_contract": (
+                    "present" if result.anti_trigger_signals else "missing"
+                ),
+                "layer3_candidates": result.layer3_candidates,
+                "authoring_status": result.status,
+                "evidence_case_ids": evidence,
+                "evidence_counts": {
+                    key: len(values) for key, values in evidence.items()
+                },
+                "coverage_states": states,
+                "required_states": required,
+                "unmet_required_states": unmet,
+                "coverage_gate_status": gate_status,
+            }
+        )
+
+    return {
+        "schema_version": 3,
+        "architecture": "hookless-control-plane",
+        "evaluation_kind": "deterministic-coverage-evidence",
+        "evidence_limitations": [
+            "Registered means Registry presence only; authoring_status reports static source quality separately.",
+            "Route coverage uses deterministic fixtures and does not prove live router precision or recall.",
+            "Behavior and release-critical coverage use checked-in captured outputs and phrase obligations, not fresh model runs.",
+            "Pressure coverage counts executed primary and Layer 3 fixture roles, not a merely declared reviewer.",
+            "No wall-clock performance, production accuracy, or installed user experience is proved.",
+        ],
+        "state_definitions": {
+            "registered": "present in the owning source Registry",
+            "route_covered": "selected by at least one passing deterministic route",
+            "negative_route_covered": "explicitly excluded by at least one passing deterministic route",
+            "behavior_covered": "selected by at least one passing positive captured benchmark with no forbidden behavior hit",
+            "pressure_covered": "executed as primary or selected Layer 3 in at least one passing pressure fixture",
+            "release_critical_covered": "selected by at least one passing release-critical benchmark",
+        },
+        "coverage_policy": {
+            "source": _rel(release_review_config),
+            "decision_id": policy["id"],
+            "decision_schema_version": policy["schema_version"],
+            "fingerprint": policy["fingerprint"],
+            "required_skill_count": len(policy["requirements"]),
+        },
+        "errors": source_errors,
+        "gate_summary": {
+            "required_skill_count": sum(bool(row["required_states"]) for row in rows),
+            "pass_count": sum(row["coverage_gate_status"] == "pass" for row in rows),
+            "fail_count": sum(row["coverage_gate_status"] == "fail" for row in rows),
+            "not_required_count": sum(
+                row["coverage_gate_status"] == "not-required" for row in rows
+            ),
+        },
+        "rows": rows,
+    }
+
+
+@lru_cache(maxsize=3)
+def _load_evaluator(path: Path, module_name: str) -> ModuleType:
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise ValidationProblem(f"cannot load evaluator: {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _write_primary(directory: Path, payload: dict[str, Any]) -> None:
+    (directory / "skill-professionalism-eval.json").write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    lines = [
+        "# Hookless Skill Professionalism Evaluation",
+        "",
+        "> Static authoring evidence only. No agent was executed and no efficiency or adoption claim is made.",
+        "",
+        f"- Skills checked: {payload['skills_checked']}",
+        f"- Errors: {payload['error_count']}",
+        f"- Warnings: {payload['warning_count']}",
+        "",
+        "| Layer | Skill | Score | Authoring status | Route cases | Benchmark cases |",
+        "|---|---|---:|---|---:|---:|",
+    ]
+    for row in payload["results"]:
+        lines.append(
+            f"| {row['kind']} | `{row['name']}` | {row['authoring_score']} | "
+            f"{row['status']} | {row['routing_coverage_count']} | {row['benchmark_coverage_count']} |"
+        )
+    if payload["errors"]:
+        lines.extend(["", "## Errors", ""] + [f"- {item}" for item in payload["errors"]])
+    if payload["warnings"]:
+        lines.extend(["", "## Warnings", ""] + [f"- {item}" for item in payload["warnings"]])
+    (directory / "skill-professionalism-eval.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _write_depth(directory: Path, payload: dict[str, Any]) -> None:
+    depth = {
+        "schema_version": 2,
+        "evaluation_kind": "static-authoring-depth",
+        "score_semantics": "section, registry, reference, and root-concision completeness; not model performance",
+        "errors": payload["errors"],
+        "results": [
+            {
+                "name": row["name"],
+                "kind": row["kind"],
+                "path": row["path"],
+                "total_score": row["authoring_score"],
+                "status": row["status"],
+                "decision_rule_count": row["decision_rule_count"],
+                "gotcha_count": row["gotcha_count"],
+                "line_count": row["line_count"],
+            }
+            for row in payload["results"]
+        ],
+    }
+    (directory / "skill-professionalism-depth.json").write_text(
+        json.dumps(depth, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    lines = [
+        "# Hookless Skill Authoring Depth",
+        "",
+        "> Scores are static completeness heuristics; they are not accuracy or adoption evidence.",
+        "",
+        "| Skill | Layer | Score | Rules | Gotchas / Anti-patterns | Root lines |",
+        "|---|---|---:|---:|---:|---:|",
+    ]
+    for row in depth["results"]:
+        lines.append(
+            f"| `{row['name']}` | {row['kind']} | {row['total_score']} | "
+            f"{row['decision_rule_count']} | {row['gotcha_count']} | {row['line_count']} |"
+        )
+    (directory / "skill-professionalism-depth.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _write_coverage(directory: Path, coverage: dict[str, Any]) -> None:
+    (directory / "professional-coverage-matrix.json").write_text(
+        json.dumps(coverage, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    lines = [
+        "# Hookless Professional Coverage Matrix",
+        "",
+        "> Coverage is deterministic and captured-fixture evidence, not observed production or live-agent performance.",
+        "",
+        f"- Required Skills: {coverage['gate_summary']['required_skill_count']}",
+        f"- Coverage gate failures: {coverage['gate_summary']['fail_count']}",
+        f"- Source errors: {len(coverage['errors'])}",
+        "",
+        "| Layer | Skill | Authoring | +Route | -Route | Behavior | Pressure | Release-critical | Coverage gate |",
+        "|---|---|---|---:|---:|---:|---:|---:|---|",
+    ]
+    for row in coverage["rows"]:
+        counts = row["evidence_counts"]
+        lines.append(
+            f"| {row['layer']} | `{row['name']}` | {row['authoring_status']} | "
+            f"{counts['positive_route']} | {counts['negative_route']} | "
+            f"{counts['behavior']} | {counts['pressure']} | "
+            f"{counts['release_critical']} | {row['coverage_gate_status']} |"
+        )
+    if coverage["errors"]:
+        lines.extend(["", "## Errors", ""] + [f"- {item}" for item in coverage["errors"]])
+    (directory / "professional-coverage-matrix.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _strings(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    return []
+
+
+def _mapping(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _present(value: Any) -> bool:
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (list, dict)):
+        return bool(value)
+    return value is not None
 
 
 def _rel(path: Path) -> str:
@@ -3034,10 +675,6 @@ def _rel(path: Path) -> str:
         return str(path.relative_to(ROOT))
     except ValueError:
         return str(path)
-
-
-def _clamp(value: int, low: int, high: int) -> int:
-    return max(low, min(high, int(value)))
 
 
 if __name__ == "__main__":

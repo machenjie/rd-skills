@@ -7,21 +7,12 @@ focus:
   - AQE and broadcast join
   - data quality and cost guardrails
 route_hints:
-  skills:
-    - data-middleware-change-builder
-    - reliability-observability-gate
-    - quality-test-gate
-  capabilities:
-    - performance-budgeting
-    - profiling
-    - observability
-    - regression-testing
-  domain_extensions:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: data-middleware-change-builder
+  layer3_skills:
     - bigdata-product-extension
-  quality_gates:
-    - implementation gate
-    - reliability gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Skewed key behavior is identified and mitigated.
   - Partition count and file size are justified.

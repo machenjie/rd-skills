@@ -1,20 +1,22 @@
 # Example Output
 
 ```markdown
-## Contract Test Plan
+## Contract Compatibility Decision
 
-Contract: account.updated event v2.
+Surface: `account.updated` event during the v1-to-v2 rollout.
+Provider: billing service.
+Consumers: analytics loader and notification service; partner consumers remain unknown.
 
-Provider: billing-service.
-Consumers: analytics-loader, notification-service.
+Compatibility risks:
+- Retained v1 payloads omit `billing_region`.
+- A new status value may reach an older closed-enum consumer.
+- Duplicate delivery can replay the same account transition.
 
-Checks:
-- Schema registry compatibility remains backward compatible.
-- `account_id`, `status`, and `occurred_at` are required.
-- Unknown fields are ignored by consumers.
-- New `billing_region` field is optional for v2 rollout.
-- Invalid enum value fails provider contract test.
+Proof:
+- Provider verification covers required identifiers, error handling, and v1/v2 payloads.
+- Each named consumer parses retained v1 and current v2 fixtures and tolerates unknown status values according to its policy.
+- The selected registry check covers the named subject and compared schemas; semantic replay remains covered by consumer cases.
 
-Release gate:
-- Provider verification and two consumer fixtures pass in CI.
+Residual boundary:
+- Unknown partner consumers need owner acceptance before the rollout gate can close.
 ```

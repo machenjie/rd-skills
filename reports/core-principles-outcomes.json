@@ -1,0 +1,5416 @@
+{
+  "authoring_principles_status": "pass",
+  "authorities": [
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
+              "id": "prompt-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-control-plane-prompt",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "skill-routing-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-skill-routing",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "hookless-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-hookless-residue",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-recommended-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-recommended",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-full-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-full",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-dev-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-dev",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "profiles-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-agent-profiles",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "installation-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-installation",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "routing-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-routing",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "agent-lightweight-valid",
+              "status": "pass"
+            },
+            {
+              "id": "final-goal-structural-costs",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-agent-lightweight",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "agent-behavior-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-agent-behavior",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "pressure-behavior-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-pressure-behavior",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "roles-authority",
+      "pointer": "/roles",
+      "source": "src/control-model/core-contracts.json",
+      "value_sha256": "508d49b349628d55c572f66bff1b2c6c2fddcb4414aa7241f32cc10b63a13726"
+    },
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
+              "id": "prompt-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-control-plane-prompt",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "docs-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-docs-consistency",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "rendered-context-valid",
+              "status": "pass"
+            },
+            {
+              "id": "final-goal-context-costs",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-rendered-context",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "context-control-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-context-control",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "context-budget-authority",
+      "pointer": "/context_budget_contract",
+      "source": "src/control-model/core-contracts.json",
+      "value_sha256": "454030221e8fe476f80513f330c2a9567b36c006ee9326da9847b6328cab1891"
+    },
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
+              "id": "agent-lightweight-valid",
+              "status": "pass"
+            },
+            {
+              "id": "final-goal-structural-costs",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-agent-lightweight",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "rendered-context-valid",
+              "status": "pass"
+            },
+            {
+              "id": "final-goal-context-costs",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-rendered-context",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "context-control-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-context-control",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "professionalism-authoring-valid",
+              "status": "pass"
+            },
+            {
+              "id": "professional-review-cost-fixtures-valid",
+              "status": "pass"
+            },
+            {
+              "id": "readability-review-current",
+              "status": "pass"
+            },
+            {
+              "id": "professional-completeness-review-current",
+              "status": "pass"
+            },
+            {
+              "id": "professional-review-cost-current",
+              "status": "pass"
+            },
+            {
+              "id": "root-release-current",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-professionalism-regression",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "final-goal-authority",
+      "pointer": "/final_goal_contract",
+      "source": "src/control-model/core-contracts.json",
+      "value_sha256": "89aa5b8661c5d7b2290faea0f8dfac3a67bb717bb7bd01492cdbc2ac0b436124"
+    },
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
+              "id": "registry-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-registry",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "skill-routing-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-skill-routing",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "reference-content-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-reference-content",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-recommended-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-recommended",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-full-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-full",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-dev-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-dev",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "built-links-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-built-links",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "reference-contract-authority",
+      "pointer": "/reference_contract",
+      "source": "src/control-model/core-contracts.json",
+      "value_sha256": "261b43c8d5ba01b6a326eb9476cd95af3571453e6b715f944cb62ec6b7c3e1a1"
+    },
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
+              "id": "prompt-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-control-plane-prompt",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "task-contracts-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-task-contracts",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-recommended-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-recommended",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-full-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-full",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-dev-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-dev",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "docs-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-docs-consistency",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "agent-lightweight-valid",
+              "status": "pass"
+            },
+            {
+              "id": "final-goal-structural-costs",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-agent-lightweight",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "task-contract-authority",
+      "pointer": "/task_contract",
+      "source": "src/control-model/core-contracts.json",
+      "value_sha256": "69081cfba9081401fe146d96addd6f51b6e5f23b039533bc0a70176275929b97"
+    },
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
+              "id": "prompt-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-control-plane-prompt",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "task-contracts-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-task-contracts",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-recommended-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-recommended",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-full-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-full",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-dev-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-dev",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "profiles-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-agent-profiles",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "docs-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-docs-consistency",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "agent-lightweight-valid",
+              "status": "pass"
+            },
+            {
+              "id": "final-goal-structural-costs",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-agent-lightweight",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "evidence-contract-authority",
+      "pointer": "/visible_evidence_contract",
+      "source": "src/control-model/core-contracts.json",
+      "value_sha256": "02a459cfba78d4cff253471a0d2e358710674cb3e8962c124fa7fd11a61ba9b0"
+    },
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
+              "id": "prompt-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-control-plane-prompt",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "task-contracts-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-task-contracts",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-recommended-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-recommended",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-full-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-full",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-dev-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-dev",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "profiles-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-agent-profiles",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "docs-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-docs-consistency",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "agent-lightweight-valid",
+              "status": "pass"
+            },
+            {
+              "id": "final-goal-structural-costs",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-agent-lightweight",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "completion-contract-authority",
+      "pointer": "/completion_state",
+      "source": "src/control-model/core-contracts.json",
+      "value_sha256": "c2c75fe14f60b6f981c9db3ce5ba14afc5c6016d5ecd279fddef7312f444fd30"
+    },
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
+              "id": "control-skill-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-control-skills",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "prompt-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-control-plane-prompt",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-recommended-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-recommended",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-full-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-full",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-dev-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-dev",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "profiles-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-agent-profiles",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "installation-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-installation",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "rendered-context-valid",
+              "status": "pass"
+            },
+            {
+              "id": "final-goal-context-costs",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-rendered-context",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "prompt-contract-authority",
+      "pointer": "/prompt_contract",
+      "source": "src/control-model/core-contracts.json",
+      "value_sha256": "6310a21448c580d1a12ee7a49035397b2287bffd93b4f7628c9d5d97ef60f825"
+    },
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
+              "id": "build-recommended-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-recommended",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-full-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-full",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "build-dev-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "build-dev",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "profiles-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-agent-profiles",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "installation-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-installation",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "rendered-context-valid",
+              "status": "pass"
+            },
+            {
+              "id": "final-goal-context-costs",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-rendered-context",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "profile-contract-authority",
+      "pointer": "/profile_contract",
+      "source": "src/control-model/core-contracts.json",
+      "value_sha256": "71f421e88b3df899caf6e8e88dad731da3a46c7a5ad26b5544978464788a1308"
+    },
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
+              "id": "control-skill-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-control-skills",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "control-skill-contract-authority",
+      "pointer": "/control_skill_contract",
+      "source": "src/control-model/core-contracts.json",
+      "value_sha256": "07008420311603b6368b470ec5771c4c4b8a0891c59eef658558e38278e04733"
+    },
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
+              "id": "docs-exact-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-docs-consistency",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "docs-contract-authority",
+      "pointer": "/docs_contract",
+      "source": "src/control-model/core-contracts.json",
+      "value_sha256": "bed3a12381f5d76e789c63b1d1fdf5931bccec638f6b7dae5a9c417a15e9da9c"
+    }
+  ],
+  "command_execution_count": 33,
+  "contract_errors": [],
+  "contract_sha256": "5b45f88d7724eff7bc6a7081d755a12233a1cb59c41e1a6f0028fb556381119b",
+  "contract_source": "src/control-model/core-contracts.json",
+  "formal_principles_status": "pass",
+  "input_tree": {
+    "post": {
+      "file_count": 2572,
+      "sha256": "d3a4dd35cdcd68c3be1bdd7783872d729620dd84ee938cad7798655c4357abae"
+    },
+    "pre": {
+      "file_count": 2572,
+      "sha256": "d3a4dd35cdcd68c3be1bdd7783872d729620dd84ee938cad7798655c4357abae"
+    },
+    "unchanged": true
+  },
+  "kind": "changeforge.core_principles_outcomes",
+  "limitations": [
+    "Evidence is limited to static contracts, deterministic fixtures, code-generation definitions and harness or negative-control checks, builds, and simulated installation.",
+    "This evaluation does not prove real-host Profile startup, wall-clock performance, production accuracy, or the installed user experience.",
+    "The formal Core Principles sub-gate is not the repository formal release gate and does not cover every mandatory release gate listed below."
+  ],
+  "outcomes": [
+    {
+      "capabilities": [
+        "skill-source-validation"
+      ],
+      "dimensions": [
+        "professional-skill-injection-source-quality"
+      ],
+      "id": "skills-source-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-skills",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "capability-registry-validation"
+      ],
+      "dimensions": [
+        "professional-skill-injection-source-quality"
+      ],
+      "id": "capabilities-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-capabilities",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "domain-extension-validation"
+      ],
+      "dimensions": [
+        "professional-skill-injection-source-quality"
+      ],
+      "id": "domain-extensions-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-domain-extensions",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "reference-registry-validation"
+      ],
+      "dimensions": [
+        "reference-loading-registry-contract"
+      ],
+      "id": "registry-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-registry",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "control-skill-validation"
+      ],
+      "dimensions": [
+        "control-plane-only-dispatch-boundary",
+        "single-source-of-truth-source-projections"
+      ],
+      "id": "control-skill-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-control-skills",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "prompt-contract-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "control-plane-only-dispatch-boundary",
+        "minimum-sufficient-process-adaptive-control",
+        "explicit-task-contract-schema",
+        "evidence-before-completion-contract",
+        "single-source-of-truth-source-projections",
+        "framework-transparency-visible-boundaries",
+        "strong-user-feedback-progress-contract",
+        "explicit-completion-state-contract"
+      ],
+      "id": "prompt-exact-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-control-plane-prompt",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "task-contract-validation"
+      ],
+      "dimensions": [
+        "core-model-control-loop",
+        "explicit-task-contract-schema",
+        "safe-parallelism-contract-and-ownership",
+        "evidence-before-completion-contract",
+        "explicit-completion-state-contract"
+      ],
+      "id": "task-contracts-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-task-contracts",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "skill-routing-validation"
+      ],
+      "dimensions": [
+        "context-isolation-role-and-routing",
+        "reference-loading-routing-and-build"
+      ],
+      "id": "skill-routing-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-skill-routing",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "hookless-architecture-validation"
+      ],
+      "dimensions": [
+        "control-plane-only-hookless-boundary"
+      ],
+      "id": "hookless-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-hookless-residue",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "source-invariant-validation"
+      ],
+      "dimensions": [
+        "single-source-of-truth-source-projections"
+      ],
+      "id": "src-invariants-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-src-invariants",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "skill-reference-link-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation"
+      ],
+      "id": "skill-body-links-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-skill-body-links",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "skill-content-budget-validation"
+      ],
+      "dimensions": [
+        "ai-first-readability-and-density"
+      ],
+      "id": "skill-content-size-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-skill-content-size",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "content-readability-audit"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "ai-first-readability-and-density"
+      ],
+      "id": "content-audit-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
+            "type": "integer"
+          },
+          "expected": 9,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/ai_readability/summary/hard_gate_ready",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "audit-skill-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "content-audit-formal-release-currentness"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation"
+      ],
+      "id": "content-audit-formal-release-current",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/gate_status/formal_release/status",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "694df57a7909d9f9edbd3acb4ccfce5fbee156fab749383121f17fef16bbab57",
+            "length": 7,
+            "type": "string"
+          },
+          "expected": "current",
+          "operator": "equals",
+          "pointer": "/semantic_disposition_application/status",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "audit-skill-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "root-control-content-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation"
+      ],
+      "id": "root-control-content-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
+            "type": "integer"
+          },
+          "expected": 9,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
+            "type": "integer"
+          },
+          "expected": 7,
+          "operator": "equals",
+          "pointer": "/root_content/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+            "type": "integer"
+          },
+          "expected": 1,
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/common_errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/surfaces/control/status",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/surfaces/control/errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "audit-skill-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "root-professional-content-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "ai-first-readability-and-density",
+        "professional-skill-injection-source-quality"
+      ],
+      "id": "root-professional-content-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
+            "type": "integer"
+          },
+          "expected": 9,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
+            "type": "integer"
+          },
+          "expected": 7,
+          "operator": "equals",
+          "pointer": "/root_content/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+            "type": "integer"
+          },
+          "expected": 1,
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/common_errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/surfaces/professional/status",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/surfaces/professional/errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "audit-skill-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "root-foundation-content-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "ai-first-readability-and-density",
+        "professional-skill-injection-source-quality"
+      ],
+      "id": "root-foundation-content-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
+            "type": "integer"
+          },
+          "expected": 9,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
+            "type": "integer"
+          },
+          "expected": 7,
+          "operator": "equals",
+          "pointer": "/root_content/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+            "type": "integer"
+          },
+          "expected": 1,
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/common_errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/surfaces/foundation/status",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/surfaces/foundation/errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "audit-skill-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "root-domain-content-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "ai-first-readability-and-density",
+        "professional-skill-injection-source-quality"
+      ],
+      "id": "root-domain-content-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
+            "type": "integer"
+          },
+          "expected": 9,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
+            "type": "integer"
+          },
+          "expected": 7,
+          "operator": "equals",
+          "pointer": "/root_content/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+            "type": "integer"
+          },
+          "expected": 1,
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/common_errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/surfaces/domain/status",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/surfaces/domain/errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "audit-skill-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "root-description-content-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "ai-first-readability-and-density"
+      ],
+      "id": "root-description-content-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
+            "type": "integer"
+          },
+          "expected": 9,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
+            "type": "integer"
+          },
+          "expected": 7,
+          "operator": "equals",
+          "pointer": "/root_content/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+            "type": "integer"
+          },
+          "expected": 1,
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/common_errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/surfaces/description/status",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/root_content/surface_validation/surfaces/description/errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "audit-skill-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "root-lifecycle-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation"
+      ],
+      "id": "root-lifecycle-current",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
+            "type": "integer"
+          },
+          "expected": 9,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
+            "type": "integer"
+          },
+          "expected": 7,
+          "operator": "equals",
+          "pointer": "/root_content/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+            "type": "integer"
+          },
+          "expected": 4,
+          "operator": "equals",
+          "pointer": "/root_content/semantic_advisories/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/root_content/semantic_advisories/lifecycle/snapshot_current",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/root_content/semantic_advisories/lifecycle/bootstrap_refresh_chain/valid",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/root_content/semantic_advisories/lifecycle/errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "audit-skill-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "reference-control-content-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "ai-first-readability-and-density",
+        "reference-loading-registry-contract"
+      ],
+      "id": "reference-control-content-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
+            "type": "integer"
+          },
+          "expected": 9,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+            "type": "integer"
+          },
+          "expected": 4,
+          "operator": "equals",
+          "pointer": "/reference_content/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+            "type": "integer"
+          },
+          "expected": 1,
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/common_errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/surfaces/control/status",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/surfaces/control/errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "audit-skill-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "reference-professional-content-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "ai-first-readability-and-density",
+        "professional-skill-injection-source-quality",
+        "reference-loading-registry-contract"
+      ],
+      "id": "reference-professional-content-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
+            "type": "integer"
+          },
+          "expected": 9,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+            "type": "integer"
+          },
+          "expected": 4,
+          "operator": "equals",
+          "pointer": "/reference_content/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+            "type": "integer"
+          },
+          "expected": 1,
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/common_errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/surfaces/professional/status",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/surfaces/professional/errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "audit-skill-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "reference-foundation-content-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "ai-first-readability-and-density",
+        "professional-skill-injection-source-quality",
+        "reference-loading-registry-contract"
+      ],
+      "id": "reference-foundation-content-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
+            "type": "integer"
+          },
+          "expected": 9,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+            "type": "integer"
+          },
+          "expected": 4,
+          "operator": "equals",
+          "pointer": "/reference_content/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+            "type": "integer"
+          },
+          "expected": 1,
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/common_errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/surfaces/foundation/status",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/surfaces/foundation/errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "audit-skill-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "reference-domain-content-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "ai-first-readability-and-density",
+        "professional-skill-injection-source-quality",
+        "reference-loading-registry-contract"
+      ],
+      "id": "reference-domain-content-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
+            "type": "integer"
+          },
+          "expected": 9,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+            "type": "integer"
+          },
+          "expected": 4,
+          "operator": "equals",
+          "pointer": "/reference_content/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+            "type": "integer"
+          },
+          "expected": 1,
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/common_errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/surfaces/domain/status",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/reference_content/surface_validation/surfaces/domain/errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-content-audit.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "audit-skill-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "strict-reference-content-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "ai-first-readability-and-density",
+        "reference-loading-registry-contract"
+      ],
+      "id": "reference-content-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-reference-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "strict-root-content-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "ai-first-readability-and-density"
+      ],
+      "id": "root-content-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-root-content",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "recommended-build-validation"
+      ],
+      "dimensions": [
+        "core-model-build-and-installation"
+      ],
+      "id": "build-recommended-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "build-recommended",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "full-build-validation"
+      ],
+      "dimensions": [
+        "core-model-build-and-installation"
+      ],
+      "id": "build-full-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "build-full",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "dev-build-validation"
+      ],
+      "dimensions": [
+        "core-model-build-and-installation"
+      ],
+      "id": "build-dev-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "build-dev",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "profile-contract-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "control-plane-only-dispatch-boundary",
+        "explicit-task-contract-schema",
+        "context-isolation-role-and-routing",
+        "single-source-of-truth-source-projections",
+        "framework-transparency-visible-boundaries",
+        "explicit-completion-state-contract"
+      ],
+      "id": "profiles-exact-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-agent-profiles",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "docs-projection-validation"
+      ],
+      "dimensions": [
+        "single-source-of-truth-source-projections"
+      ],
+      "id": "docs-exact-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-docs-consistency",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "built-reference-validation"
+      ],
+      "dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "context-isolation-role-and-routing",
+        "reference-loading-routing-and-build"
+      ],
+      "id": "built-links-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-built-links",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "installation-simulation"
+      ],
+      "dimensions": [
+        "core-model-build-and-installation"
+      ],
+      "id": "installation-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+            "type": "integer"
+          },
+          "expected": 2,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/installation-validation.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/status",
+          "resolution_status": "resolved",
+          "source": "reports/installation-validation.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/errors",
+          "resolution_status": "resolved",
+          "source": "reports/installation-validation.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-installation",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "routing-evaluation"
+      ],
+      "dimensions": [
+        "core-model-control-loop"
+      ],
+      "id": "routing-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "e7f6c011776e8db7cd330b54174fd76f7d0216b612387a5ffcfb81e6f0919683",
+            "type": "integer"
+          },
+          "expected": 6,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/routing-eval.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/status",
+          "resolution_status": "resolved",
+          "source": "reports/routing-eval.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/errors",
+          "resolution_status": "resolved",
+          "source": "reports/routing-eval.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "eval-routing",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "skill-professionalism-evaluation"
+      ],
+      "dimensions": [
+        "ai-first-readability-and-density",
+        "professional-skill-injection-source-quality"
+      ],
+      "id": "skill-professionalism-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+            "type": "integer"
+          },
+          "expected": 2,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-professionalism-eval.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-professionalism-eval.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "eval-skill-professionalism",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "professional-benchmark-evaluation"
+      ],
+      "dimensions": [
+        "professional-skill-injection-benchmarks"
+      ],
+      "id": "professional-benchmarks-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+            "type": "integer"
+          },
+          "expected": 3,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/professional-benchmarks-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/errors",
+          "resolution_status": "resolved",
+          "source": "reports/professional-benchmarks-report.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "eval-professional-benchmarks",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "professional-routing-evaluation"
+      ],
+      "dimensions": [
+        "professional-skill-injection-routing"
+      ],
+      "id": "professional-routing-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d",
+            "type": "integer"
+          },
+          "expected": 5,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/professional-routing-coverage.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/errors",
+          "resolution_status": "resolved",
+          "source": "reports/professional-routing-coverage.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-professional-routing",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "agent-lightweight-evaluation"
+      ],
+      "dimensions": [
+        "core-model-control-loop",
+        "minimum-sufficient-process-adaptive-control",
+        "explicit-task-contract-behavior",
+        "safe-parallelism-behavior-and-conflicts",
+        "evidence-before-completion-behavior",
+        "strong-user-feedback-progress-contract",
+        "explicit-completion-state-behavior",
+        "final-goal-structural-cost"
+      ],
+      "id": "agent-lightweight-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+            "type": "integer"
+          },
+          "expected": 2,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/hookless-control-plane-eval.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/status",
+          "resolution_status": "resolved",
+          "source": "reports/hookless-control-plane-eval.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/errors",
+          "resolution_status": "resolved",
+          "source": "reports/hookless-control-plane-eval.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "eval-agent-lightweight",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "structural-cost-evaluation"
+      ],
+      "dimensions": [
+        "final-goal-structural-cost",
+        "final-goal-verification-and-professionalism-cost"
+      ],
+      "id": "final-goal-structural-costs",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+            "type": "integer"
+          },
+          "expected": 5,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/maximum_structural_proxies/subagent_count"
+          },
+          "operator": "less_than_or_equal",
+          "pointer": "/aggregate_structural_proxies/subagent_count/max",
+          "resolution_status": "resolved",
+          "source": "reports/hookless-control-plane-eval.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5",
+            "type": "integer"
+          },
+          "expected": 11,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/maximum_structural_proxies/control_turn_count"
+          },
+          "operator": "less_than_or_equal",
+          "pointer": "/aggregate_structural_proxies/control_turn_count/max",
+          "resolution_status": "resolved",
+          "source": "reports/hookless-control-plane-eval.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/maximum_structural_proxies/duplicate_read_count"
+          },
+          "operator": "less_than_or_equal",
+          "pointer": "/aggregate_structural_proxies/duplicate_read_count/max",
+          "resolution_status": "resolved",
+          "source": "reports/hookless-control-plane-eval.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+            "type": "integer"
+          },
+          "expected": 4,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/maximum_structural_proxies/verification_action_count"
+          },
+          "operator": "less_than_or_equal",
+          "pointer": "/aggregate_structural_proxies/verification_action_count/max",
+          "resolution_status": "resolved",
+          "source": "reports/hookless-control-plane-eval.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "eval-agent-lightweight",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "rendered-context-evaluation"
+      ],
+      "dimensions": [
+        "context-isolation-rendered-budget",
+        "final-goal-context-cost"
+      ],
+      "id": "rendered-context-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+            "type": "integer"
+          },
+          "expected": 2,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/rendered-context-budget.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/status",
+          "resolution_status": "resolved",
+          "source": "reports/rendered-context-budget.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/errors",
+          "resolution_status": "resolved",
+          "source": "reports/rendered-context-budget.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "eval-rendered-context",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "context-cost-evaluation"
+      ],
+      "dimensions": [
+        "final-goal-context-cost"
+      ],
+      "id": "final-goal-context-costs",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "2f8375d2a98f83f0aed5fb0d64b6e805901267915321ceb9d3a2063b60d05cbb",
+            "type": "integer"
+          },
+          "expected": 2200,
+          "expected_from": {
+            "authority": "context-budget-authority",
+            "pointer": "/budget_classes/main/capacity_ceiling"
+          },
+          "operator": "equals",
+          "pointer": "/aggregate/max_main/capacity_ceiling",
+          "resolution_status": "resolved",
+          "source": "reports/rendered-context-budget.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "14be4b45f18e0d8c67b4f719b5144eee88497e413709d11d85b096d8e2346310",
+            "type": "number"
+          },
+          "expected": 0.1,
+          "expected_from": {
+            "authority": "context-budget-authority",
+            "pointer": "/budget_classes/main/minimum_headroom_ratio"
+          },
+          "operator": "equals",
+          "pointer": "/aggregate/max_main/minimum_headroom_ratio",
+          "resolution_status": "resolved",
+          "source": "reports/rendered-context-budget.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "48449a14a4ff7d79bb7a1b6f3d488eba397c36ef25634c111b49baf362511afc",
+            "type": "integer"
+          },
+          "expected": 80,
+          "expected_from": {
+            "authority": "context-budget-authority",
+            "pointer": "/budget_classes/main/minimum_release_margin_tokens"
+          },
+          "operator": "equals",
+          "pointer": "/aggregate/max_main/minimum_release_margin_tokens",
+          "resolution_status": "resolved",
+          "source": "reports/rendered-context-budget.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "434c9b5ae514646bbd91b50032ca579efec8f22bf0b4aac12e65997c418e0dd6",
+            "type": "integer"
+          },
+          "expected": 80,
+          "expected_from": {
+            "authority": "context-budget-authority",
+            "pointer": "/budget_classes/main/minimum_release_margin_tokens"
+          },
+          "operator": "greater_than_or_equal",
+          "pointer": "/aggregate/max_main/release_margin_tokens",
+          "resolution_status": "resolved",
+          "source": "reports/rendered-context-budget.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "10dbd4e0df89589171745d365197dd9bccce27f05f560dac3a518f74b80e5b57",
+            "type": "number"
+          },
+          "expected": 0.03,
+          "expected_from": {
+            "authority": "context-budget-authority",
+            "pointer": "/duplicate_rule_token_ratio_max"
+          },
+          "operator": "less_than_or_equal",
+          "pointer": "/aggregate/max_duplicate_rule_token_ratio",
+          "resolution_status": "resolved",
+          "source": "reports/rendered-context-budget.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "eval-rendered-context",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "context-control-evaluation"
+      ],
+      "dimensions": [
+        "core-model-control-loop",
+        "minimum-sufficient-process-loop-cost",
+        "safe-parallelism-behavior-and-conflicts",
+        "context-isolation-control-behavior",
+        "final-goal-context-cost"
+      ],
+      "id": "context-control-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+            "type": "integer"
+          },
+          "expected": 2,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/context-control-plane-eval.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/status",
+          "resolution_status": "resolved",
+          "source": "reports/context-control-plane-eval.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/errors",
+          "resolution_status": "resolved",
+          "source": "reports/context-control-plane-eval.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "eval-context-control",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "agent-behavior-evaluation"
+      ],
+      "dimensions": [
+        "core-model-control-loop",
+        "evidence-before-completion-behavior",
+        "framework-transparency-behavior",
+        "strong-user-feedback-behavior-under-pressure",
+        "explicit-completion-state-behavior"
+      ],
+      "id": "agent-behavior-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "eval-agent-behavior",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "professional-sample-evaluation"
+      ],
+      "dimensions": [
+        "professional-skill-injection-routing"
+      ],
+      "id": "professional-samples-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+            "type": "integer"
+          },
+          "expected": 2,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/professional-agent-samples-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/errors",
+          "resolution_status": "resolved",
+          "source": "reports/professional-agent-samples-report.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "eval-professional-samples",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "pressure-behavior-evaluation"
+      ],
+      "dimensions": [
+        "strong-user-feedback-behavior-under-pressure",
+        "explicit-completion-state-behavior",
+        "final-goal-structural-cost"
+      ],
+      "id": "pressure-behavior-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        }
+      ],
+      "producer": "eval-pressure-behavior",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "professionalism-authoring-gate"
+      ],
+      "dimensions": [
+        "ai-first-readability-and-density",
+        "final-goal-verification-and-professionalism-cost"
+      ],
+      "id": "professionalism-authoring-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+            "type": "integer"
+          },
+          "expected": 3,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "99ed75255a375e37ddad9d98b844e334552add7574b1bfee1c8db2edf35eab73",
+            "length": 21,
+            "type": "string"
+          },
+          "expected": "current-contract-pass",
+          "operator": "equals",
+          "pointer": "/authoring_gate",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "9e318183567cae90c0a7f1faf7e389b026b6aa886bcb5f188815a5f1823dc9ed",
+            "length": 25,
+            "type": "string"
+          },
+          "expected": "agent-facing-root-content",
+          "operator": "equals",
+          "pointer": "/root_content_summary/readiness_scope",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/root_content_summary/structural_strict_ready",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/root_content_summary/semantic_triage_complete",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/root_content_summary/strict_ready",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/root_content_summary/semantic_unresolved_candidates",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/root_content_summary/semantic_disposition_errors",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+            "type": "integer"
+          },
+          "expected": 3,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-release-readiness.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "99ed75255a375e37ddad9d98b844e334552add7574b1bfee1c8db2edf35eab73",
+            "length": 21,
+            "type": "string"
+          },
+          "expected": "current-contract-pass",
+          "operator": "equals",
+          "pointer": "/authoring_gate",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-release-readiness.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-professionalism-regression",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "professional-review-cost-fixture-evaluation"
+      ],
+      "dimensions": [
+        "final-goal-verification-and-professionalism-cost"
+      ],
+      "id": "professional-review-cost-fixtures-valid",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+            "type": "integer"
+          },
+          "expected": 1,
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-professionalism-regression",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "three-expert-majority-readability-review"
+      ],
+      "dimensions": [
+        "ai-first-expert-disposition"
+      ],
+      "id": "readability-review-current",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/aggregate/readability_review_current",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/readability/decision_complete",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/readability/storage_current",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/readability/source_current",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/readability/accepted_for_formal",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+            "type": "integer"
+          },
+          "expected": 2,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/readability/panel_artifact_schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/readability/tracked_tightening_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/readability/detector_false_positive_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/readability/rewrite_required_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/readability/blocker_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-professionalism-regression",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "qualified-reviewer-pool-professional-completeness-review"
+      ],
+      "dimensions": [
+        "professional-skill-injection-expert-disposition"
+      ],
+      "id": "professional-completeness-review-current",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/aggregate/professional_completeness_review_current",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/decision_complete",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/storage_current",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/source_current",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/accepted_for_formal",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "0b9fd54c2af2b50d5c143eb6145c3c59b41e983a09a2af5ad8d1c54242105480",
+            "length": 79,
+            "type": "string"
+          },
+          "expected": "exact-package-carry-forward-qualified-reviewer-pool-domain-critical-fail-closed",
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/decision_method",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+            "type": "integer"
+          },
+          "expected": 3,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/panel_artifact_schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+            "type": "integer"
+          },
+          "expected": 3,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/panel_size",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/evidence_contract_satisfied",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/review_contract_current",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/review_plan_current",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/review_binding_current",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/provenance_current",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/round_lifecycle_current",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "7045d16ae7f043ec25774a0a85d6f479e5bb019e9c5a1584bc76736d116b8f33",
+            "type": "integer"
+          },
+          "expected": 189,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/qualification_summary/covered_target_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+            "type": "integer"
+          },
+          "expected": 2,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/qualification_summary/required_domain_experts_per_target",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+            "type": "integer"
+          },
+          "expected": 1,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/qualification_summary/required_architecture_experts_per_target",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "bd14620394b6083fbf735bbfc55773765de1d750ec053f281fe77d7764d7b36b",
+            "type": "integer"
+          },
+          "expected": 5670,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/evidence_summary/criterion_result_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "7045d16ae7f043ec25774a0a85d6f479e5bb019e9c5a1584bc76736d116b8f33",
+            "type": "integer"
+          },
+          "expected": 189,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/required_target_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "7045d16ae7f043ec25774a0a85d6f479e5bb019e9c5a1584bc76736d116b8f33",
+            "type": "integer"
+          },
+          "expected": 189,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/applied_target_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "7045d16ae7f043ec25774a0a85d6f479e5bb019e9c5a1584bc76736d116b8f33",
+            "type": "integer"
+          },
+          "expected": 189,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/accepted_current_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/correction_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/unresolved_professional_disagreement_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-professionalism-regression",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "professional-review-cost-currentness"
+      ],
+      "dimensions": [
+        "final-goal-verification-and-professionalism-cost"
+      ],
+      "id": "professional-review-cost-current",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+            "type": "integer"
+          },
+          "expected": 3,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/panel_artifact_schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/review_cost_current",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "97a6d21df7c51e8289ac1a8c026aaac143e15aa1957f54f42e30d8f8a85c3a55",
+            "type": "integer"
+          },
+          "expected": 567,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/review_cost/effective_vote_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "bd14620394b6083fbf735bbfc55773765de1d750ec053f281fe77d7764d7b36b",
+            "type": "integer"
+          },
+          "expected": 5670,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/review_cost/effective_criterion_result_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
+            "length": 4,
+            "type": "string"
+          },
+          "expected": "pass",
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/status",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "7688b6ef52555962d008fff894223582c484517cea7da49ee67800adc7fc8866",
+            "type": "integer"
+          },
+          "expected": 56,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/thresholds/maximum_fresh_target_count"
+          },
+          "operator": "less_than_or_equal",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/fresh_target_count/max",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "07b9a953cbe76a5f41bd4adab5c4959dbf823cc55c5e3fda56438cab6d0a99c4",
+            "type": "integer"
+          },
+          "expected": 450000,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/thresholds/maximum_input_ratio_ppm"
+          },
+          "operator": "less_than_or_equal",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/input_ratio_ppm/max",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "6fc78faf8c7f416b3914dde43a48c46e82fd5543d2b8d64210f33eb723ecd9df",
+            "length": 11,
+            "type": "object"
+          },
+          "expected": {
+            "case_count": 189,
+            "cases_fingerprint": "d60712b8cd1e96a230c2146538eb535d71af615537de2378d2fb721cbacb742e",
+            "catalog_fingerprint": "7200a46718ca4ae58739acb2fbb3fb98311aacb30b98fcc7cd4e1fb79bcd5e59",
+            "fresh_target_count": {
+              "max": 56,
+              "mean_milli": 17148,
+              "min": 3,
+              "p95": 35,
+              "sum": 3241
+            },
+            "full_projection_fingerprint": "5afc06501de0b1bdbe244c0fd405de539413bd86ee3382d88740328d734a94a9",
+            "full_rereview_deduplicated_capsule_input_bytes_proxy": 117048396,
+            "input_ratio_ppm": {
+              "max": 348284,
+              "mean": 137127,
+              "min": 34819,
+              "p95": 238428,
+              "sum": 25917087
+            },
+            "material_catalog_fingerprint": "15dc47f1b88078e6d537d45d84a93f88d4c06f5bb10c25bf508ff824484c2a56",
+            "named_isolated_case": {
+              "canonical_capsule_input_bytes_proxy": 9952446,
+              "carried_forward_target_count": 181,
+              "fresh_target_count": 8,
+              "input_ratio_ppm": 85028,
+              "skill_id": "acceptance-criteria-builder"
+            },
+            "professional_packages_fingerprint": "3bac086e24ee1a2ed5fcbc63b4496e1b5b8404f76876a7bff813dcf3bf341279",
+            "review_contract_fingerprint": "f80ffe96349a5cf35fc5c02ea698ede77e01c892a24fa35b1baecc1d9ec48fa1"
+          },
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "7045d16ae7f043ec25774a0a85d6f479e5bb019e9c5a1584bc76736d116b8f33",
+            "type": "integer"
+          },
+          "expected": 189,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/case_count"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/case_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "0877fe4fb35840eab983755c01798b2c8a0f24ebbc65b63f7e7c109e3e06ad69",
+            "type": "integer"
+          },
+          "expected": 117048396,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/full_rereview_deduplicated_capsule_input_bytes_proxy"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/full_rereview_deduplicated_capsule_input_bytes_proxy",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+            "type": "integer"
+          },
+          "expected": 3,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/fresh_target_count/min"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/fresh_target_count/min",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b3b130b344c28e52c7bd5347314547502cb39fec8ea539a78087539c236c6501",
+            "type": "integer"
+          },
+          "expected": 3241,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/fresh_target_count/sum"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/fresh_target_count/sum",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "fc2a469f632123744e40d97fecb9fe8ce740518f1613c1d2dc10b571b5038570",
+            "type": "integer"
+          },
+          "expected": 17148,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/fresh_target_count/mean_milli"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/fresh_target_count/mean_milli",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "9f14025af0065b30e47e23ebb3b491d39ae8ed17d33739e5ff3827ffb3634953",
+            "type": "integer"
+          },
+          "expected": 35,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/fresh_target_count/p95"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/fresh_target_count/p95",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "7688b6ef52555962d008fff894223582c484517cea7da49ee67800adc7fc8866",
+            "type": "integer"
+          },
+          "expected": 56,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/fresh_target_count/max"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/fresh_target_count/max",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "ed81097e9dca5128f963ba2d433a8f3da3fe0db758a555d3d7306bd1f24f8b56",
+            "type": "integer"
+          },
+          "expected": 34819,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/min"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/input_ratio_ppm/min",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "d0f1cd7f5b6adeff6e3b911c03c9fb6c678cc48bb01f745f2e818de8342085e3",
+            "type": "integer"
+          },
+          "expected": 25917087,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/sum"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/input_ratio_ppm/sum",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "af2bc88524bd57e16db8a4af6fe08789168b284373f14dddb8daa7b7f70f6c71",
+            "type": "integer"
+          },
+          "expected": 137127,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/mean"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/input_ratio_ppm/mean",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "a5c025f25d822017483c6dd90107390bad275d21722183232daf7094315d6567",
+            "type": "integer"
+          },
+          "expected": 238428,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/p95"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/input_ratio_ppm/p95",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "07b9a953cbe76a5f41bd4adab5c4959dbf823cc55c5e3fda56438cab6d0a99c4",
+            "type": "integer"
+          },
+          "expected": 348284,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/max"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/input_ratio_ppm/max",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "2c624232cdd221771294dfbb310aca000a0df6ac8b66b696d90ef06fdefb64a3",
+            "type": "integer"
+          },
+          "expected": 8,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/named_isolated_case/fresh_target_count"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/named_isolated_case/fresh_target_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "580811fa95269f3ecd4f22d176e079d36093573680b6ef66fa341e687a15b5da",
+            "type": "integer"
+          },
+          "expected": 181,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/named_isolated_case/carried_forward_target_count"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/named_isolated_case/carried_forward_target_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "aea1524f002d8c6e45f590490bb31a2a9ee2c1473ae3b777c6f39967efd96d46",
+            "type": "integer"
+          },
+          "expected": 9952446,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/named_isolated_case/canonical_capsule_input_bytes_proxy"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/named_isolated_case/canonical_capsule_input_bytes_proxy",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "45ca3a4f6e85fd9a955e497f325349e6959cde627ee8e0b4e3eb975caae4a38f",
+            "type": "integer"
+          },
+          "expected": 85028,
+          "expected_from": {
+            "authority": "final-goal-authority",
+            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/named_isolated_case/input_ratio_ppm"
+          },
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/named_isolated_case/input_ratio_ppm",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-professionalism-regression",
+      "status": "pass"
+    },
+    {
+      "capabilities": [
+        "root-release-lifecycle"
+      ],
+      "dimensions": [
+        "single-source-of-truth-formal-lifecycle"
+      ],
+      "id": "root-release-current",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "type": "boolean"
+          },
+          "expected": true,
+          "operator": "equals",
+          "pointer": "/root_content_summary/semantic_lifecycle_formal_release_ready",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        }
+      ],
+      "producer": "validate-professionalism-regression",
+      "status": "pass"
+    }
+  ],
+  "principles": [
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "ai-first",
+      "name": "AI First",
+      "required_dimensions": [
+        "ai-first-ai-facing-surface-validation",
+        "ai-first-readability-and-density",
+        "ai-first-expert-disposition"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "prompt-exact-valid",
+          "profiles-exact-valid",
+          "skill-body-links-valid",
+          "skill-content-size-valid",
+          "content-audit-valid",
+          "root-control-content-valid",
+          "root-professional-content-valid",
+          "root-foundation-content-valid",
+          "root-domain-content-valid",
+          "root-description-content-valid",
+          "reference-control-content-valid",
+          "reference-professional-content-valid",
+          "reference-foundation-content-valid",
+          "reference-domain-content-valid",
+          "reference-content-valid",
+          "root-content-valid",
+          "built-links-valid",
+          "skill-professionalism-valid",
+          "professionalism-authoring-valid"
+        ],
+        "formal_release": [
+          "root-lifecycle-current",
+          "readability-review-current",
+          "content-audit-formal-release-current"
+        ]
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "core-model",
+      "name": "Core Model",
+      "required_dimensions": [
+        "core-model-control-loop",
+        "core-model-build-and-installation"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "task-contracts-valid",
+          "routing-valid",
+          "agent-lightweight-valid",
+          "agent-behavior-valid",
+          "context-control-valid",
+          "build-recommended-valid",
+          "build-full-valid",
+          "build-dev-valid",
+          "installation-valid"
+        ],
+        "formal_release": []
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "control-plane-only",
+      "name": "Control Plane Only",
+      "required_dimensions": [
+        "control-plane-only-dispatch-boundary",
+        "control-plane-only-hookless-boundary"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "control-skill-valid",
+          "prompt-exact-valid",
+          "profiles-exact-valid",
+          "hookless-valid"
+        ],
+        "formal_release": []
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "minimum-sufficient-process",
+      "name": "Minimum Sufficient Process",
+      "required_dimensions": [
+        "minimum-sufficient-process-adaptive-control",
+        "minimum-sufficient-process-loop-cost"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "prompt-exact-valid",
+          "agent-lightweight-valid",
+          "context-control-valid"
+        ],
+        "formal_release": []
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "explicit-task-contract",
+      "name": "Explicit Task Contract",
+      "required_dimensions": [
+        "explicit-task-contract-schema",
+        "explicit-task-contract-behavior"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "task-contracts-valid",
+          "prompt-exact-valid",
+          "profiles-exact-valid",
+          "agent-lightweight-valid"
+        ],
+        "formal_release": []
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "safe-parallelism",
+      "name": "Safe Parallelism",
+      "required_dimensions": [
+        "safe-parallelism-contract-and-ownership",
+        "safe-parallelism-behavior-and-conflicts"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "task-contracts-valid",
+          "agent-lightweight-valid",
+          "context-control-valid"
+        ],
+        "formal_release": []
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "context-isolation",
+      "name": "Context Isolation",
+      "required_dimensions": [
+        "context-isolation-role-and-routing",
+        "context-isolation-rendered-budget",
+        "context-isolation-control-behavior"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "profiles-exact-valid",
+          "skill-routing-valid",
+          "built-links-valid",
+          "rendered-context-valid",
+          "context-control-valid"
+        ],
+        "formal_release": []
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "professional-skill-injection",
+      "name": "Professional Skill Injection",
+      "required_dimensions": [
+        "professional-skill-injection-source-quality",
+        "professional-skill-injection-routing",
+        "professional-skill-injection-benchmarks",
+        "professional-skill-injection-expert-disposition"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "skills-source-valid",
+          "capabilities-valid",
+          "domain-extensions-valid",
+          "root-professional-content-valid",
+          "root-foundation-content-valid",
+          "root-domain-content-valid",
+          "reference-professional-content-valid",
+          "reference-foundation-content-valid",
+          "reference-domain-content-valid",
+          "skill-professionalism-valid",
+          "professional-benchmarks-valid",
+          "professional-routing-valid",
+          "professional-samples-valid"
+        ],
+        "formal_release": [
+          "professional-completeness-review-current"
+        ]
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "reference-loading",
+      "name": "Reference Loading",
+      "required_dimensions": [
+        "reference-loading-registry-contract",
+        "reference-loading-routing-and-build"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "registry-valid",
+          "reference-control-content-valid",
+          "reference-professional-content-valid",
+          "reference-foundation-content-valid",
+          "reference-domain-content-valid",
+          "reference-content-valid",
+          "skill-routing-valid",
+          "built-links-valid"
+        ],
+        "formal_release": []
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "evidence-before-completion",
+      "name": "Evidence Before Completion",
+      "required_dimensions": [
+        "evidence-before-completion-contract",
+        "evidence-before-completion-behavior"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "task-contracts-valid",
+          "prompt-exact-valid",
+          "agent-lightweight-valid",
+          "agent-behavior-valid"
+        ],
+        "formal_release": []
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "single-source-of-truth",
+      "name": "Single Source of Truth",
+      "required_dimensions": [
+        "single-source-of-truth-source-projections",
+        "single-source-of-truth-formal-lifecycle"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "prompt-exact-valid",
+          "profiles-exact-valid",
+          "control-skill-valid",
+          "docs-exact-valid",
+          "src-invariants-valid"
+        ],
+        "formal_release": [
+          "root-release-current"
+        ]
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "framework-transparency",
+      "name": "Framework Transparency",
+      "required_dimensions": [
+        "framework-transparency-visible-boundaries",
+        "framework-transparency-behavior"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "prompt-exact-valid",
+          "profiles-exact-valid",
+          "agent-behavior-valid"
+        ],
+        "formal_release": []
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "strong-user-feedback",
+      "name": "Strong User Feedback",
+      "required_dimensions": [
+        "strong-user-feedback-progress-contract",
+        "strong-user-feedback-behavior-under-pressure"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "prompt-exact-valid",
+          "agent-lightweight-valid",
+          "agent-behavior-valid",
+          "pressure-behavior-valid"
+        ],
+        "formal_release": []
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "explicit-completion-state",
+      "name": "Explicit Completion State",
+      "required_dimensions": [
+        "explicit-completion-state-contract",
+        "explicit-completion-state-behavior"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "task-contracts-valid",
+          "prompt-exact-valid",
+          "profiles-exact-valid",
+          "agent-lightweight-valid",
+          "agent-behavior-valid",
+          "pressure-behavior-valid"
+        ],
+        "formal_release": []
+      },
+      "status": "pass"
+    },
+    {
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
+      "id": "final-goal",
+      "name": "Final Goal",
+      "required_dimensions": [
+        "final-goal-context-cost",
+        "final-goal-structural-cost",
+        "final-goal-verification-and-professionalism-cost"
+      ],
+      "required_outcomes": {
+        "authoring": [
+          "rendered-context-valid",
+          "context-control-valid",
+          "agent-lightweight-valid",
+          "final-goal-structural-costs",
+          "final-goal-context-costs",
+          "pressure-behavior-valid",
+          "professionalism-authoring-valid",
+          "professional-review-cost-fixtures-valid"
+        ],
+        "formal_release": [
+          "professional-review-cost-current"
+        ]
+      },
+      "status": "pass"
+    }
+  ],
+  "principles_status": "pass",
+  "producers": [
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-skills.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-skills",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-capabilities.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-capabilities",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-domain-extensions.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-domain-extensions",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-registry.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-registry",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-control-skills.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-control-skills",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-control-plane-prompt.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-control-plane-prompt",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-task-contracts.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-task-contracts",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-skill-routing.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-skill-routing",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-hookless-residue.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-hookless-residue",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-src-invariants.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-src-invariants",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-skill-body-links.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-skill-body-links",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-skill-content-size.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-skill-content-size",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/audit-skill-content.py",
+        "--gate",
+        "authoring"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "audit-skill-content",
+      "reports": [
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/skill-content-audit.json",
+          "sha256": "5459fabbd351e6a933edcac219bae35f39baeed9061b034ce1f509bb03122040"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-reference-content.py",
+        "--strict"
+      ],
+      "depends_on": [
+        "audit-skill-content"
+      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-reference-content",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-root-content.py",
+        "--strict"
+      ],
+      "depends_on": [
+        "audit-skill-content"
+      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-root-content",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build.py",
+        "--profile",
+        "recommended"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "build-recommended",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build.py",
+        "--profile",
+        "full"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "build-full",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build.py",
+        "--profile",
+        "dev"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "build-dev",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-agent-profiles.py"
+      ],
+      "depends_on": [
+        "build-recommended",
+        "build-full",
+        "build-dev"
+      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-agent-profiles",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-docs-consistency.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-docs-consistency",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-built-skill-reference-links.py"
+      ],
+      "depends_on": [
+        "build-recommended",
+        "build-full",
+        "build-dev"
+      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-built-links",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-installation.py"
+      ],
+      "depends_on": [
+        "validate-built-links",
+        "validate-agent-profiles"
+      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-installation",
+      "reports": [
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/installation-validation.json",
+          "sha256": "74c4869e97a3f992c24f9737064b2749c0a1ff9002eb35916156e595128272c2"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/eval-routing.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "eval-routing",
+      "reports": [
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/routing-eval.json",
+          "sha256": "f0ea6c07db4a2e6fa19b40ee8e1efff99e1eba0e23585c5f16b82dea492bb12c"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/eval-skill-professionalism.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "eval-skill-professionalism",
+      "reports": [
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/skill-professionalism-eval.json",
+          "sha256": "9677ed02e09f8af15cdc4d90c75dd3d7ca817b4abdcb2c597510005fad0785d6"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/eval-professional-benchmarks.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "eval-professional-benchmarks",
+      "reports": [
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/professional-benchmarks-report.json",
+          "sha256": "f6189277c383dfe665925c527abb3e19b0228cc901dcc86400b3139764e8b71c"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-professional-routing-coverage.py"
+      ],
+      "depends_on": [
+        "eval-routing",
+        "eval-skill-professionalism",
+        "eval-professional-benchmarks"
+      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-professional-routing",
+      "reports": [
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/professional-routing-coverage.json",
+          "sha256": "6d83145db6ebcff81eb2e92dd87a4ad70300b9d2c87637ae43987de71cfaec9a"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/eval-agent-lightweight.py"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "eval-agent-lightweight",
+      "reports": [
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/hookless-control-plane-eval.json",
+          "sha256": "b547bf42c12fe53dc1110c86cd46ee84a96a027be1b478a43985859d62ba4601"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/eval-rendered-context-budget.py"
+      ],
+      "depends_on": [
+        "build-recommended",
+        "build-full",
+        "build-dev"
+      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "eval-rendered-context",
+      "reports": [
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/rendered-context-budget.json",
+          "sha256": "23aef7c0e87251ccf3c8525796439fdba38f522e57a8bed415e0d91cee1f6161"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/eval-context-control-plane.py"
+      ],
+      "depends_on": [
+        "eval-agent-lightweight",
+        "eval-rendered-context"
+      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "eval-context-control",
+      "reports": [
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/context-control-plane-eval.json",
+          "sha256": "3d702107e84ff2449270f21fb7fd1f87e7912ec0f22d0aedcb927892d25750cf"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/eval-agent-behavior.py",
+        "--format",
+        "json",
+        "--output-dir",
+        "evals/agent-behavior/outputs"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "eval-agent-behavior",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/eval-professional-agent-samples.py",
+        "--promoted-only",
+        "--strict"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "eval-professional-samples",
+      "reports": [
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/professional-agent-samples-report.json",
+          "sha256": "e4df82720dc12ba2f8ff257b12f2b1c5801530bc73feb6a0827009bff917a519"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/eval-pressure-behavior.py",
+        "--format",
+        "json",
+        "--output-dir",
+        "evals/pressure/outputs"
+      ],
+      "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "eval-pressure-behavior",
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-professionalism-regression.py",
+        "--strict",
+        "--report-only"
+      ],
+      "depends_on": [
+        "audit-skill-content",
+        "eval-skill-professionalism",
+        "eval-professional-benchmarks",
+        "validate-professional-routing",
+        "eval-professional-samples",
+        "eval-pressure-behavior"
+      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-professionalism-regression",
+      "reports": [
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/professionalism-regression-report.json",
+          "sha256": "f07d566a0d4ec853136390dc7aaf0a5317cbad5bf0a97c1b503e4a48c9101ce5"
+        },
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/professionalism-release-readiness.json",
+          "sha256": "ddf00e33af27e74a380b388abf76d03634c943332f9602c7c37ea3066b485335"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "pass",
+      "stderr_sha256": null,
+      "stdout_sha256": null,
+      "timed_out": false,
+      "timeout_seconds": 1200
+    }
+  ],
+  "schema_version": 3,
+  "uncovered_mandatory_release_gates": [
+    "examples-validation",
+    "showcase-freshness",
+    "marketplace-catalog-freshness",
+    "marketplace-index-validation",
+    "productization-assets-validation",
+    "open-source-readiness",
+    "unit-tests",
+    "codegen-benchmark-validation",
+    "codegen-benchmark-sample-run",
+    "quickstart-dry-runs",
+    "remote-ci-current-commit"
+  ]
+}

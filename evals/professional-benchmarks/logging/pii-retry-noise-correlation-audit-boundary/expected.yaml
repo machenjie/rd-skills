@@ -1,0 +1,31 @@
+coverage_class: release-critical
+expected_stage: implementation-review
+expected_professional_skill: logging-design-gate
+expected_capabilities:
+  - logging-error-handling
+  - observability
+  - secret-configuration-security
+expected_hidden_risks:
+  - raw webhook body exposes PII and credentials
+  - intermediate retry errors create false incidents
+  - missing correlation breaks causal reconstruction
+  - per-item hot-path logging creates unbounded volume
+  - audit and diagnostic records need different integrity and retention
+expected_evidence:
+  - field-classification and redaction negative test
+  - terminal-versus-intermediate retry logging test
+  - correlation propagation across ingress queue and handler
+  - representative log volume and cardinality estimate
+  - audit sink access retention and immutability check
+forbidden_behaviors:
+  - log the raw webhook body
+  - emit error for every retry failure
+  - omit the correlation identifier
+  - emit one detailed log per hot-path item
+  - use diagnostic logs as the audit record
+expected_output_obligations:
+  - approved logging field schema
+  - event severity and sampling policy
+  - audit boundary and diagnostic boundary
+  - validation result and residual risk
+expected_with_skill_status: pass

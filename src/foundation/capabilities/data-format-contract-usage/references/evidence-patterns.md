@@ -1,7 +1,5 @@
 # Data Format Contract Evidence Patterns
 
-## Required Evidence
-
 - Format and content type.
 - Schema authority and owner.
 - Parser/serializer library, version, and options.
@@ -12,7 +10,11 @@
 
 ## Fixture Requirements
 
-Include examples for absent vs null, false vs missing, zero vs empty, unknown fields, duplicate keys where relevant, old and new schema, and malformed hostile input. For Protobuf include reserved fields. For YAML include ambiguous scalars. For CSV include formula-looking cells.
+Include examples for absent versus null, false versus missing, zero versus empty, unknown fields, and relevant duplicate keys.
+Include old-schema, new-schema, and malformed hostile input examples.
+For Protobuf, include reserved fields.
+For YAML, include ambiguous scalars.
+For CSV, include formula-looking cells.
 
 ## Handoff Shape
 
@@ -28,4 +30,8 @@ Data Format Contract Record
 
 ## Blocking Conditions
 
-Block completion when parser settings are unknown, Protobuf numbers are reused, YAML/XML unsafe parsing is used on untrusted input, generated artifacts are stale, or compatibility is claimed without old/new fixture evidence.
+Block completion when parser settings are unknown.
+Block completion when Protobuf numbers are reused.
+Block completion when YAML or XML uses unsafe parsing on untrusted input.
+Block completion when generated artifacts are stale.
+Block compatibility claims without old/new fixture evidence.

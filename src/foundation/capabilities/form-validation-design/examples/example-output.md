@@ -8,7 +8,7 @@ Mode selected:
 
 Source evidence:
 - Current invite form, invite API contract, backend validation schema, and existing component tests inspected.
-- Repository graph showed a prior invite form pattern; accepted only after current schema and tests matched.
+- repository inspection showed a prior invite form pattern; accepted only after current schema and tests matched.
 - No real browser screen-reader pass, production race/load test, or legal copy review verified in this planning pass.
 
 Form:

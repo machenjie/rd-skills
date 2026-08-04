@@ -1,37 +1,24 @@
 # Example Output
 
 ```markdown
-## Kubernetes Gateway Plan
+## Kubernetes Runtime Decision
 
-mode_selected:
-- Helm/GitOps release with traffic exposure review.
+Boundary: a stateless API workload and its internal service gain a new external route.
 
-boundaries_inspected:
-- Workload, namespace, Service, Gateway route, TLS, ServiceAccount/RBAC, NetworkPolicy, ExternalSecrets, Helm chart, rollout, rollback, and post-deploy watch.
+Workload and health:
+- The selected controller matches long-running replaceable processes with no stable local storage.
+- Startup gates initialization, readiness controls traffic and drain, and liveness observes a local unrecoverable process failure.
+- Requests, limits, scaling, disruption, and placement use the current load and failure-domain evidence; production headroom remains unproved.
 
-workload_contract:
-- Deployment for stateless API.
-- Non-root security context and dedicated service account.
-- Requests and limits sized from current staging load.
-- PDB `minAvailable: 1` and zone topology spread required.
+Identity and traffic:
+- A workload-specific identity receives the changed permissions and network paths.
+- The route names listener, host/path, backend, TLS/auth, timeout, tenant exposure, and external DNS/edge owner.
+- Secret values remain outside rendered source; the release identity records their version references.
 
-traffic_security:
-- Service exposes HTTP internally.
-- Gateway routes api.example.com/v2 to the service with TLS and request timeout.
-- NetworkPolicy allows only Gateway namespace ingress and approved database egress.
+Rollout:
+- Rendered workload, image digest, config, route, policy, and target namespace share one release identity.
+- Mixed-version compatibility, watch signals, stop authority, route reversal, and forward recovery are named.
 
-health_resources_scaling:
-- Readiness checks dependency-backed health.
-- Liveness checks process recovery only after startup completes; it does not call the database.
-- HPA scales on CPU and request latency saturation signal.
-
-release_validation:
-- `helm lint`, `helm template`, values schema validation, rendered manifest validation, and policy checks must pass with current output and exit code recorded.
-
-rollback_plan:
-- Rolling update with canary verification and rollback trigger on error-rate SLI.
-- Rollback covers image, values/config, ExternalSecret version, Gateway route, and schema compatibility; CRD/hook scope is not changed.
-
-residual_risk:
-- Live DNS/CDN behavior and production capacity remain unproven until staged release watch.
+Evidence limit:
+- Current render and policy checks prove inspected intent; live admission, edge propagation, traffic, and capacity await the authorized release gate.
 ```

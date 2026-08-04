@@ -14,11 +14,19 @@ The starter repo represents a CI job skips tests by selecting packages affected 
 - Lockfile and generated contract changes invalidate affected test caches.
 - Unknown paths fall back to a broader safe test set.
 - CI output explains selected and skipped tests.
+- Implement graph selection in `affected_tests/graph_selection.py` and its tests.
+- Implement cache/fallback/explanation policy in `affected_tests/cache_policy.py`
+  and its tests. These two write scopes are independent and may run in isolated
+  workspaces.
+- Integrate both behaviors through `affected_tests/selector.py` only after both
+  independent slices complete.
 
 ## Constraints
 
 - Module graph edges include generated and runtime dependencies.
 - Tests cover direct, transitive, lockfile, generated, and unknown path cases.
+- Integration tests must prove both independent behaviors are present together;
+  either slice alone is incomplete.
 - Cache keys include dependency graph and tool version inputs.
 - Preserve the existing public contract unless the prompt explicitly asks for a compatible addition.
 - Do not replace the benchmark with documentation-only output.

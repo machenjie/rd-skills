@@ -4,17 +4,32 @@ Load this reference when concrete examples are needed to calibrate hallucinated 
 
 ## Anti-Examples
 
-| AI Output Pattern | Problem | Required Action |
+| AI Output Pattern | Problem | Correction Direction To Report |
 |---|---|---|
-| `lodash.deepClone(obj)` using a non-existent method | Hallucinated API | Verify method name and version; replace with `structuredClone` or `_.cloneDeep` |
-| `catch (e) {}` | Silent failure | Require logging, error propagation, or explicit ignore with comment |
-| New `AbstractFactory` for one implementation | Over-abstraction | Collapse to direct instantiation; reintroduce factory when a second implementation exists |
-| New stateless `Helper` class with unrelated methods | Helper bag | Move methods to owning objects/modules or collapse to local functions |
-| Policy function writes to database and emits events | Side-effect pollution | Split pure policy from orchestrating service and adapter side effects |
-| Business fixture added to shared test utils | Test ownership pollution | Move fixture/factory to owning module test boundary |
-| Feature flag added with no cleanup path | Permanent compatibility debt | Add owner, expiry, old/new tests, and removal plan |
-| Test asserts `expect(mockFn).toHaveBeenCalled()` only | Mock-only test | Add assertion on actual output or side effect |
-| `import { compress } from 'lz4-wasm'` as a new dependency | Undeclared dependency | Run CVE/license review and evaluate a standard-library alternative |
+| `lodash.deepClone(obj)` using a non-existent method | Hallucinated API and unproven clone semantics | Report the invalid API, reachable value-shape impact, and the unresolved clone-equivalence boundary below. |
+| `catch (e) {}` | Silent failure | Report the lost error signal and identify the required observable error policy. |
+| New `AbstractFactory` for one implementation | Over-abstraction | Report the unsupported variation and identify the simplest ownership boundary justified by current behavior. |
+| New stateless `Helper` class with unrelated methods | Helper bag | Report the ownership diffusion and identify the behavior's owning object, module, or local boundary. |
+| Policy function writes to database and emits events | Side-effect pollution | Report the mixed responsibilities and identify the policy, orchestration, and adapter boundaries. |
+| Business fixture added to shared test utils | Test ownership pollution | Report the ownership leak and identify the owning module's test boundary. |
+| Feature flag added with no cleanup path | Permanent compatibility debt | Report the lifecycle gap and identify required ownership, expiry, old/new proof, and retirement evidence. |
+| Test asserts `expect(mockFn).toHaveBeenCalled()` only | Mock-only test | Report the missing behavior proof and identify the observable output or side-effect oracle. |
+| `import { compress } from 'lz4-wasm'` as a new dependency | Undeclared dependency | Report the dependency risk and identify API, CVE, license, runtime, and existing-alternative evidence gaps. |
+
+## Clone Equivalence Evidence
+
+Treat `structuredClone` and `_.cloneDeep` only as candidates after semantic-equivalence proof for the accepted task domain.
+
+| Evidence dimension | Required proof |
+|---|---|
+| Accepted values | Representative task-specific values cover the accepted value categories. |
+| Identity and descriptors | Prototype or class identity, accessors, non-enumerable properties, and symbols retain the required semantics. |
+| Executable and graph values | Functions and circular references preserve required behavior or fail as the current contract requires. |
+| Transfer semantics | Transferable values preserve required ownership, detachment, and error behavior. |
+| Runtime boundary | The supported runtime and version expose the candidate with the required semantics. |
+| Failure behavior | Unsupported values and clone failures produce contract-compatible errors and side effects. |
+
+Report task-specific equivalence tests for the applicable dimensions. When proof is unavailable, report the evidence gap without selecting either candidate.
 
 ## Failure Modes
 

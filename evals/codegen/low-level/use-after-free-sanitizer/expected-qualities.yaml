@@ -7,24 +7,12 @@ focus:
   - sanitizer testing
   - FFI boundary safety
 route_hints:
-  skills:
-    - backend-change-builder
-    - security-privacy-gate
-    - reliability-observability-gate
-    - quality-test-gate
-  capabilities:
-    - cpp-professional-usage
-    - language-performance-safety
-    - language-testing-strategy
-    - dependency-vulnerability-scanning
-    - regression-testing
-  domain_extensions:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
     - low-level-systems-extension
-  quality_gates:
-    - implementation gate
-    - security gate
-    - reliability gate
-    - test gate
+  review_skill: security-privacy-gate
 expected_outcomes:
   - Buffer ownership is explicit across allocation, transfer, and release.
   - Use after free is eliminated under address sanitizer.

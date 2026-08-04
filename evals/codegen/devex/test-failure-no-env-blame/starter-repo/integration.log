@@ -1,0 +1,3 @@
+integration setup: database=orders_test host=127.0.0.1 port=5433
+fixture contract: expected postgres port=5432
+failure: ECONNREFUSED 127.0.0.1:5433 before test body

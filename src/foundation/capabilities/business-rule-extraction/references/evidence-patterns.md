@@ -10,5 +10,5 @@ Use this reference when business-rule closure depends on rule-to-validation mapp
 - **Rule change readiness:** prove rule-to-validation map, owner review, implementation location, release blocker, stale command status, and residual risk owner.
 
 ## Evidence Rules
-- Every accepted rule claim names source or owner evidence, validator/test/report artifact, freshness, what it proves, what it does not prove, and next gate.
-- Project memory, repository graph, old tickets, support notes, spreadsheets, and generated summaries are discovery inputs only until current source, owner review, or validation confirms the rule.
+- For each accepted rule claim, record its authoritative source or owner, freshness, and exact proof; add validator/report evidence, material proof limits, and a next step when validation or closure remains incomplete.
+- prior task evidence, repository inspection, old tickets, support notes, spreadsheets, and generated summaries are discovery inputs only until current source, owner review, or validation confirms the rule.

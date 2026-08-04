@@ -1,0 +1,474 @@
+---
+schema_version: 6
+kind: changeforge.domain_skills
+description: "Focused Layer 3 domain extensions loaded only when a domain signal is present."
+domain_skills:
+  - name: web3-product-extension
+    routing_mode: modifier-only
+    used_by: ["engineering-change-analysis", "integration-change-builder"]
+    required_expertise_tags: ["domain-web3-product-extension", "foundation-data-middleware", "foundation-reliability-operations", "foundation-security-privacy", "specialty-messaging-event-delivery", "specialty-transaction-consistency"]
+    path: "src/domain-extensions/web3-product-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["blockchain", "smart contract", "wallet", "key", "chain transaction", "custody behavior"]
+    boundary_signals: ["recovery", "finality", "upgrade", "replay"]
+    anti_trigger_signals:
+      - "ordinary non-web3 application work"
+      - "hash or signature terminology without chain or custody behavior"
+    required_inputs: ["chain, custody, signing, and finality boundaries"]
+    output_contract: ["domain risks, invariants, failure modes, and validation obligations"]
+    escalation_signals: ["domain risk changes public behavior, irreversible state, safety, security, or financial correctness"]
+    reference_index:
+      - path: "references/checklist.md"
+        type: decision-checklist
+        load_when: "chain custody signing contract finality or indexer behavior needs domain risk closure"
+        do_not_load_when: "hash or signature terminology appears without chain or custody behavior"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["checklist-result", "residual-risk"]
+  - name: ai-product-extension
+    routing_mode: modifier-only
+    used_by: ["ai-code-review-refactor", "backend-change-builder", "data-middleware-change-builder", "engineering-change-analysis", "frontend-change-builder", "installed-client-change-builder", "integration-change-builder", "security-privacy-gate"]
+    required_expertise_tags: ["domain-ai-product-extension", "foundation-data-api-contracts", "foundation-quality-testing", "foundation-reliability-operations", "foundation-security-privacy"]
+    path: "src/domain-extensions/ai-product-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["model", "prompt", "retrieval", "embedding", "evaluation", "AI data"]
+    boundary_signals: ["permission", "model context", "delegated authority", "consequential"]
+    anti_trigger_signals:
+      - "deterministic product behavior with no AI surface"
+      - "AI terminology, static algorithms, or ordinary search without a model decision"
+    required_inputs: ["model and data contract, evaluation target, and safety boundary"]
+    output_contract: ["AI-specific risks, evaluation, fallback, and observability obligations"]
+    escalation_signals: ["domain risk changes public behavior, irreversible state, safety, security, or financial correctness"]
+    reference_index:
+      - path: "references/checklist.md"
+        type: decision-checklist
+        load_when: "model prompt retrieval embedding tool or evaluation behavior crosses product surfaces"
+        do_not_load_when: "AI terminology describes a static algorithm or ordinary search without a model decision"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["checklist-result", "residual-risk"]
+  - name: bigdata-product-extension
+    routing_mode: modifier-only
+    used_by: ["data-middleware-change-builder", "engineering-change-analysis"]
+    required_expertise_tags: ["domain-bigdata-product-extension", "foundation-data-api-contracts", "foundation-data-middleware", "foundation-reliability-operations", "specialty-messaging-event-delivery", "specialty-migration-compatibility"]
+    path: "src/domain-extensions/bigdata-product-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["batch", "stream", "data lake", "distributed compute", "schema evolution", "high-volume pipeline"]
+    boundary_signals: ["checkpoint", "downstream", "partition", "consumer", "schema compatibility"]
+    anti_trigger_signals:
+      - "ordinary transactional persistence"
+      - "single-database large-table work without a distributed pipeline, replay, or downstream consumer boundary"
+    required_inputs: ["data volume, latency, schema, replay, and ownership boundary"]
+    output_contract: ["big-data correctness, performance, replay, and operability obligations"]
+    escalation_signals: ["domain risk changes public behavior, irreversible state, safety, security, or financial correctness"]
+    reference_index:
+      - path: "references/checklist.md"
+        type: decision-checklist
+        load_when: "distributed batch stream schema replay backfill or consumer behavior needs domain risk closure"
+        do_not_load_when: "the task changes one database table without a distributed pipeline or replay boundary"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["checklist-result", "residual-risk"]
+  - name: iot-embedded-extension
+    routing_mode: modifier-only
+    used_by: ["delivery-release-gate", "engineering-change-analysis"]
+    required_expertise_tags: ["domain-iot-embedded-extension", "domain-low-level-systems-extension", "foundation-delivery-platform", "foundation-reliability-operations", "foundation-security-privacy"]
+    path: "src/domain-extensions/iot-embedded-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["device", "firmware", "edge", "protocol", "sensor", "actuator", "physical safety", "constrained runtime"]
+    boundary_signals: ["recovery", "activation", "physical safety", "timing", "hardware"]
+    anti_trigger_signals:
+      - "ordinary cloud or desktop application work"
+      - "protocol documentation or cloud-only APIs without device or firmware behavior"
+    required_inputs: ["device capability, safety, protocol, timing, and update boundary"]
+    output_contract: ["embedded safety, timing, compatibility, recovery, and validation obligations"]
+    escalation_signals: ["domain risk changes public behavior, irreversible state, safety, security, or financial correctness"]
+    reference_index:
+      - path: "references/checklist.md"
+        type: decision-checklist
+        load_when: "device firmware provisioning connectivity update or safety behavior needs domain risk closure"
+        do_not_load_when: "the task is protocol documentation or a cloud API with no device or firmware behavior"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["checklist-result", "residual-risk"]
+  - name: payment-trading-extension
+    routing_mode: modifier-only
+    used_by: ["backend-change-builder", "engineering-change-analysis", "security-privacy-gate"]
+    required_expertise_tags: ["domain-payment-trading-extension", "foundation-data-middleware", "foundation-domain-modeling", "foundation-reliability-operations", "foundation-security-privacy", "specialty-concurrency-coordination", "specialty-identity-access-control", "specialty-transaction-consistency"]
+    path: "src/domain-extensions/payment-trading-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["payment", "ledger", "balance", "settlement", "trading", "order", "wallet", "money movement"]
+    boundary_signals: ["accounting", "reconciliation", "fill", "settlement"]
+    anti_trigger_signals:
+      - "non-financial workflow with no monetary invariant"
+      - "price display or ordinary orders without funds, ledger, settlement, or execution state"
+    required_inputs: ["money representation, ownership, ledger, idempotency, reconciliation, and regulatory boundary"]
+    output_contract: ["financial decision with invariant, authority, selected control, reconciliation limits, regulatory scope and accountable owner, control evidence, exceptions, release consequences, proof limits, and residual risk"]
+    escalation_signals: ["domain risk changes public behavior, irreversible state, safety, security, or financial correctness"]
+    reference_index:
+      - path: "references/checklist.md"
+        type: decision-checklist
+        load_when: "money movement ledger order execution settlement or reconciliation behavior needs domain risk closure"
+        do_not_load_when: "the task only displays prices or ordinary orders without funds or execution state"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["checklist-result", "residual-risk"]
+  - name: low-level-systems-extension
+    routing_mode: modifier-only
+    used_by: ["backend-change-builder", "engineering-change-analysis"]
+    required_expertise_tags: ["domain-low-level-systems-extension", "foundation-language-professional-usage", "foundation-reliability-operations", "foundation-security-privacy", "specialty-concurrency-coordination", "specialty-lang-cpp", "specialty-lang-rust"]
+    path: "src/domain-extensions/low-level-systems-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["kernel", "driver", "C", "C++", "Rust", "memory", "ABI", "real-time", "systems concurrency"]
+    boundary_signals: ["ownership", "resource", "deadline", "platform"]
+    anti_trigger_signals:
+      - "managed-runtime application work with no systems boundary"
+      - "C++ or Rust usage without a native ABI, OS, or resource boundary"
+    required_inputs: ["memory, ownership, ABI, concurrency, timing, and platform boundary"]
+    output_contract: ["systems safety, performance, compatibility, and validation obligations"]
+    escalation_signals: ["domain risk changes public behavior, irreversible state, safety, security, or financial correctness"]
+    reference_index:
+      - path: "references/checklist.md"
+        type: decision-checklist
+        load_when: "native memory ABI FFI syscall concurrency or platform-resource behavior needs domain risk closure"
+        do_not_load_when: "C++ or Rust is mentioned without a native ABI OS or resource boundary"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["checklist-result", "residual-risk"]
+  - name: android-platform-extension
+    routing_mode: modifier-only
+    used_by: ["ai-code-review-refactor", "engineering-change-analysis", "installed-client-change-builder"]
+    required_expertise_tags: ["domain-android-platform-extension", "foundation-delivery-platform", "foundation-experience-design", "foundation-quality-testing", "foundation-reliability-operations", "foundation-security-privacy"]
+    path: "src/domain-extensions/android-platform-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["Android", "platform accessibility behavior"]
+    boundary_signals: ["application lifecycle", "accessibility behavior"]
+    anti_trigger_signals: ["Web PWA backend infrastructure non-Android Kotlin-only or framework-only work without a confirmed Android target", "store rollout signing authorization or release approval"]
+    required_inputs: ["confirmed Android target, API/SDK range, variant, lifecycle/component owner, manifest/permission, storage/package/device evidence, and, when accessibility changes, representation/input/scaling delta and required accessibility evidence"]
+    output_contract: ["Android decision with platform owner, API/SDK/form-factor scope, normal/failure behavior, accessibility delta when applicable, artifact/device validation, proof limits, and residual risk"]
+    escalation_signals: ["target, SDK/variant, identity, permission, state owner, data recovery, representative device evidence, or, for an accessibility change, representation/input/scaling or required accessibility evidence is unresolved"]
+    reference_index:
+      - path: "references/lifecycle-task-and-state-contracts.md"
+        type: targeted
+        load_when: "Activity process task back-stack configuration-change or saved-state behavior affects the decision"
+        do_not_load_when: "the change cannot alter Android lifecycle task navigation restoration or state ownership"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/components-permissions-and-background-contracts.md"
+        type: targeted
+        load_when: "Intent deep-link exported-component permission foreground-service persistent-work or notification behavior affects the decision"
+        do_not_load_when: "the change has no Android entry authority permission background execution or notification effect"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "failure-decision", "validation-plan"]
+      - path: "references/storage-and-keystore-contracts.md"
+        type: targeted
+        load_when: "local storage backup account scope encryption or Android Keystore behavior affects the decision"
+        do_not_load_when: "no Android-local data key backup migration logout or recovery behavior can change"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/compatibility-packaging-and-performance-contracts.md"
+        type: targeted
+        load_when: "API compatibility APK AAB signing Play packaging ANR startup or device-matrix proof affects the decision"
+        do_not_load_when: "no Android version artifact package signing performance or supported-device evidence changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/jetpack-compose-contracts.md"
+        type: targeted
+        load_when: "Jetpack Compose state navigation lifecycle side-effect or rendering behavior affects the Android decision"
+        do_not_load_when: "the UI uses Views only or Kotlin syntax changes without Android Compose behavior"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "proof-limit", "validation-plan"]
+      - path: "references/accessibility-representation-input-and-scaling.md"
+        type: targeted
+        load_when: "Android Views or Compose semantics TalkBack Switch Access Voice Access keyboard D-pad accessibility focus alternatives font or display scaling or Android accessibility evidence affects the decision"
+        do_not_load_when: "no Android behavior changes or only Android accessibility API names are mentioned"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/special-form-factor-boundaries.md"
+        type: targeted
+        load_when: "Android TV Wear OS or Android Automotive is an explicit supported target or requested coverage claim"
+        do_not_load_when: "the confirmed target is handheld or tablet Android with no special-form-factor claim"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+  - name: cloud-platform-extension
+    routing_mode: modifier-only
+    used_by: ["backend-change-builder", "engineering-change-analysis", "platform-infrastructure-change-builder", "reliability-observability-gate", "security-privacy-gate"]
+    required_expertise_tags: ["domain-cloud-platform-extension", "foundation-delivery-platform", "foundation-reliability-operations", "foundation-security-privacy", "specialty-identity-access-control"]
+    path: "src/domain-extensions/cloud-platform-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["cloud control plane"]
+    boundary_signals: ["account authority"]
+    anti_trigger_signals: ["unknown cloud scope provider-name-only local Kubernetes or generic backend work without cloud control-plane dependency", "release authorization or production mutation"]
+    required_inputs: ["confirmed provider account environment region plane resource owner identity network capacity key and source authority"]
+    output_contract: ["selected Professional owner cloud boundary authority and resource owners normal and failure behavior live-state evidence validation proof limits and residual risk"]
+    escalation_signals: ["account resource owner authority region plane or decision-critical provider state remains unresolved"]
+    reference_index:
+      - path: "references/resource-control-and-data-plane-boundaries.md"
+        type: targeted
+        load_when: "hierarchy ownership billing inherited policy control-plane or data-plane classification affects the decision"
+        do_not_load_when: "ownership and plane authority are accepted and cannot change recovery or runtime behavior"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "decision-record", "proof-limit"]
+      - path: "references/iam-workload-identity-and-network-contracts.md"
+        type: targeted
+        load_when: "IAM federation cross-boundary trust VPC VNet subnet route DNS endpoint or shared-network behavior changes"
+        do_not_load_when: "no identity trust authorization or cloud network boundary changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "failure-decision", "validation-plan"]
+      - path: "references/region-failure-domain-consistency-and-quota-contracts.md"
+        type: targeted
+        load_when: "region zone replication residency quota throttle retry propagation or failover behavior affects acceptance"
+        do_not_load_when: "no location capacity propagation retry or failure-domain decision changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/encryption-kms-and-cost-contracts.md"
+        type: targeted
+        load_when: "key authority location rotation replication deletion recovery budget or cost blast radius changes"
+        do_not_load_when: "no cloud key lifecycle encryption cost owner or material resource-spend dimension changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "failure-decision", "residual-risk"]
+      - path: "references/provider-api-and-managed-service-authority.md"
+        type: targeted
+        load_when: "provider SDK service API version lifecycle managed-service responsibility or customer authority changes"
+        do_not_load_when: "no provider compatibility managed-service authority or operational ownership decision changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+  - name: cross-platform-client-extension
+    routing_mode: modifier-only
+    used_by: ["ai-code-review-refactor", "engineering-change-analysis", "installed-client-change-builder"]
+    required_expertise_tags: ["domain-cross-platform-client-extension", "foundation-delivery-platform", "foundation-experience-design", "foundation-quality-testing", "foundation-reliability-operations"]
+    path: "src/domain-extensions/cross-platform-client-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["shared installed client"]
+    boundary_signals: ["concrete platform targets"]
+    anti_trigger_signals: ["framework name without repository build release or published-artifact target evidence", "unknown target language-only Web PWA backend infrastructure or release authorization"]
+    required_inputs: ["confirmed framework target matrix build variants artifacts shared and platform owners bridge versions parity and per-target evidence"]
+    output_contract: ["shared and platform ownership decision concrete target matrix compatibility boundary parity normal and failure behavior per-target validation proof limits and residual risk"]
+    escalation_signals: ["target set owner bridge contract platform delta artifact or per-target evidence remains unresolved"]
+    reference_index:
+      - path: "references/shared-and-target-ownership-contracts.md"
+        type: targeted
+        load_when: "shared adapter native lifecycle persistence permission or packaging ownership affects the decision"
+        do_not_load_when: "ownership is already accepted and no shared/platform boundary can change"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "decision-record", "proof-limit"]
+      - path: "references/bridge-plugin-and-ffi-contracts.md"
+        type: targeted
+        load_when: "bridge FFI plugin generated binding serialization threading cancellation error or version behavior changes"
+        do_not_load_when: "no shared/native invocation or plugin compatibility boundary changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "failure-decision", "validation-plan"]
+      - path: "references/parity-and-regression-contracts.md"
+        type: targeted
+        load_when: "behavior UI accessibility lifecycle failure or cross-target regression claims affect acceptance"
+        do_not_load_when: "the change has no cross-target parity or platform-specific regression claim"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/framework-target-evidence-contracts.md"
+        type: evidence-pattern
+        load_when: "framework support build target release configuration or published artifacts determine the concrete platform set"
+        do_not_load_when: "concrete targets are already proven and framework support cannot alter scope"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "residual-risk"]
+  - name: ios-ipados-platform-extension
+    routing_mode: modifier-only
+    used_by: ["ai-code-review-refactor", "engineering-change-analysis", "installed-client-change-builder"]
+    required_expertise_tags: ["domain-ios-ipados-platform-extension", "foundation-delivery-platform", "foundation-experience-design", "foundation-quality-testing", "foundation-reliability-operations", "foundation-security-privacy"]
+    path: "src/domain-extensions/ios-ipados-platform-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["iOS/iPadOS"]
+    boundary_signals: ["application lifecycle"]
+    anti_trigger_signals: ["Web PWA backend infrastructure non-Apple-mobile Swift-only or framework-only work without a confirmed iOS/iPadOS target", "store rollout signing authorization or release approval"]
+    required_inputs: ["confirmed iOS/iPadOS target OS SDK form factor lifecycle entitlement data artifact signing and device evidence"]
+    output_contract: ["iOS/iPadOS decision platform owner target scope normal and failure behavior artifact and device validation proof limits and residual risk"]
+    escalation_signals: ["target OS lifecycle owner entitlement data recovery artifact or representative device evidence is unknown"]
+    reference_index:
+      - path: "references/lifecycle-scenes-and-background-contracts.md"
+        type: targeted
+        load_when: "app or scene lifecycle multiple-scene restoration BackgroundTasks or background expiration affects the decision"
+        do_not_load_when: "no iOS/iPadOS lifecycle scene restoration or background-execution behavior can change"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/entry-capabilities-and-entitlements-contracts.md"
+        type: targeted
+        load_when: "URL scheme Universal Link push capability entitlement App ID or provisioning behavior affects the decision"
+        do_not_load_when: "no external entry capability entitlement identity or provisioning behavior changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+      - path: "references/data-keychain-and-extension-contracts.md"
+        type: targeted
+        load_when: "Keychain Data Protection app group shared container or app-extension data behavior affects the decision"
+        do_not_load_when: "no local secret protected file shared-container or extension boundary changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/ui-form-factor-and-accessibility-contracts.md"
+        type: targeted
+        load_when: "UIKit SwiftUI iPhone iPad VoiceOver Dynamic Type or adaptive-interface behavior affects the decision"
+        do_not_load_when: "no Apple mobile UI framework form-factor or accessibility delta changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "proof-limit", "validation-plan"]
+      - path: "references/compatibility-signing-and-distribution-contracts.md"
+        type: targeted
+        load_when: "deployment compatibility app/API versions archive signing provisioning TestFlight or App Store proof affects the decision"
+        do_not_load_when: "no supported version artifact identity signing distribution or mixed-version evidence changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/special-platform-boundaries.md"
+        type: targeted
+        load_when: "watchOS tvOS or visionOS is an explicit target or requested coverage claim adjacent to iOS/iPadOS"
+        do_not_load_when: "the confirmed scope is only iOS/iPadOS with no special-platform claim"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+  - name: linux-desktop-platform-extension
+    routing_mode: modifier-only
+    used_by: ["ai-code-review-refactor", "engineering-change-analysis", "installed-client-change-builder"]
+    required_expertise_tags: ["domain-linux-desktop-platform-extension", "foundation-delivery-platform", "foundation-experience-design", "foundation-quality-testing", "foundation-reliability-operations"]
+    path: "src/domain-extensions/linux-desktop-platform-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["Linux graphical desktop"]
+    boundary_signals: ["desktop session"]
+    anti_trigger_signals: ["Linux server service runtime Web PWA backend infrastructure language-only or framework-only work without a confirmed Linux desktop target", "distribution rollout authorization or independent review"]
+    required_inputs: ["confirmed Linux desktop distribution environment display session toolkit identity integration package and accessibility evidence"]
+    output_contract: ["Linux desktop decision Professional owner distribution session toolkit package scope normal and failure behavior artifact validation proof limits and residual risk"]
+    escalation_signals: ["target distribution session toolkit package identity update source or environment evidence is unknown"]
+    reference_index:
+      - path: "references/display-session-and-toolkit-contracts.md"
+        type: targeted
+        load_when: "X11 Wayland Xwayland compositor window focus coordinate clipboard input or toolkit behavior affects the decision"
+        do_not_load_when: "no Linux display-session compositor window input or toolkit behavior changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+      - path: "references/dbus-portal-and-session-integration-contracts.md"
+        type: targeted
+        load_when: "D-Bus name object interface desktop portal consent request or graphical-session integration affects the decision"
+        do_not_load_when: "no Linux D-Bus portal consent or session integration changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "failure-decision", "validation-plan"]
+      - path: "references/desktop-entry-mime-and-keyring-contracts.md"
+        type: targeted
+        load_when: "desktop entry application ID MIME association activation or keyring behavior affects the decision"
+        do_not_load_when: "no Linux launcher association identity activation or secret-store behavior changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+      - path: "references/packaging-installation-and-update-contracts.md"
+        type: targeted
+        load_when: "Flatpak Snap AppImage deb rpm sandbox install update rollback or distribution evidence affects the decision"
+        do_not_load_when: "no Linux desktop package sandbox installation update or channel evidence changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "proof-limit", "validation-plan"]
+      - path: "references/desktop-environment-input-and-localization-contracts.md"
+        type: targeted
+        load_when: "desktop environment IME locale font fractional scaling or toolkit behavior affects the decision"
+        do_not_load_when: "no Linux desktop input localization font scaling or environment-specific behavior changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/accessibility-platform-deltas.md"
+        type: targeted
+        load_when: "Linux desktop toolkit AT-SPI keyboard focus scaling or assistive-technology behavior changes"
+        do_not_load_when: "no Linux-desktop-specific accessibility behavior changes beyond Foundation rules"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/server-and-system-boundaries.md"
+        type: targeted
+        load_when: "Linux server daemon system service or host-runtime adjacency could misroute ownership"
+        do_not_load_when: "the task is confirmed graphical desktop work with no server system or service boundary"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["routing-decision", "boundary-decision", "proof-limit"]
+  - name: macos-platform-extension
+    routing_mode: modifier-only
+    used_by: ["ai-code-review-refactor", "engineering-change-analysis", "installed-client-change-builder"]
+    required_expertise_tags: ["domain-macos-platform-extension", "foundation-delivery-platform", "foundation-experience-design", "foundation-quality-testing", "foundation-reliability-operations", "foundation-security-privacy"]
+    path: "src/domain-extensions/macos-platform-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["macOS installed application"]
+    boundary_signals: ["application lifecycle"]
+    anti_trigger_signals: ["Web PWA backend infrastructure non-macOS Swift-only or framework-only work without a confirmed macOS target", "release signing notarization or rollout authorization"]
+    required_inputs: ["confirmed macOS target framework SDK lifecycle file sandbox helper architecture package updater and accessibility evidence"]
+    output_contract: ["macOS decision owner target scope normal and failure behavior architecture app/API artifact validation updater proof limits and residual risk"]
+    escalation_signals: ["target framework lifecycle file authority entitlement helper artifact architecture updater or hardware evidence is unknown"]
+    reference_index:
+      - path: "references/framework-lifecycle-window-and-document-contracts.md"
+        type: targeted
+        load_when: "AppKit SwiftUI Mac Catalyst app window document responder or restoration behavior affects the decision"
+        do_not_load_when: "no macOS framework lifecycle window document responder or restoration behavior can change"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "proof-limit", "validation-plan"]
+      - path: "references/file-sandbox-and-entitlement-contracts.md"
+        type: targeted
+        load_when: "file authorization security-scoped bookmark App Sandbox container or entitlement behavior affects the decision"
+        do_not_load_when: "no macOS file authority bookmark sandbox container or entitlement behavior changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+      - path: "references/keychain-xpc-and-helper-contracts.md"
+        type: targeted
+        load_when: "Keychain XPC helper agent daemon login item protocol identity or privilege behavior affects the decision"
+        do_not_load_when: "no macOS secret interprocess helper login persistence or privilege boundary changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/signing-notarization-and-distribution-contracts.md"
+        type: targeted
+        load_when: "hardened runtime nested signing Developer ID notarization Gatekeeper Mac App Store or independent distribution proof affects the decision"
+        do_not_load_when: "no macOS runtime protection signed artifact notarization or distribution-channel evidence changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/architecture-and-update-contracts.md"
+        type: targeted
+        load_when: "universal binary Apple Silicon Intel updater installer upgrade downgrade or mixed-version behavior affects the decision"
+        do_not_load_when: "no macOS architecture update installation or compatibility evidence changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+      - path: "references/accessibility-platform-deltas.md"
+        type: targeted
+        load_when: "AppKit SwiftUI or Mac Catalyst changes macOS keyboard focus VoiceOver menu window or custom-control accessibility"
+        do_not_load_when: "no macOS-specific accessibility behavior changes beyond reusable Foundation rules"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+  - name: windows-platform-extension
+    routing_mode: modifier-only
+    used_by: ["ai-code-review-refactor", "backend-change-builder", "domain-impact-modeler", "engineering-change-analysis", "installed-client-change-builder"]
+    required_expertise_tags: ["domain-windows-platform-extension", "foundation-delivery-platform", "foundation-experience-design", "foundation-quality-testing", "foundation-reliability-operations", "foundation-security-privacy"]
+    path: "src/domain-extensions/windows-platform-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["Windows packaged desktop application", "Windows service"]
+    boundary_signals: ["application identity", "service lifecycle"]
+    anti_trigger_signals: ["Web PWA generic backend infrastructure non-Windows C#-only PowerShell-only or framework-only work without a confirmed Windows target", "release signing or rollout authorization"]
+    required_inputs: ["confirmed Windows target framework identity package installer integration process security architecture DPI accessibility and artifact evidence"]
+    output_contract: ["Windows decision Professional owner framework identity architecture scope normal and failure behavior artifact host validation proof limits and residual risk"]
+    escalation_signals: ["target identity installer service owner principal architecture channel accessibility or artifact evidence is unknown"]
+    reference_index:
+      - path: "references/framework-lifecycle-and-activation-contracts.md"
+        type: targeted
+        load_when: "Win32 WinUI WPF WinForms lifecycle activation single-instance or UI-thread behavior affects the decision"
+        do_not_load_when: "no Windows desktop framework lifecycle activation instance or thread behavior changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "proof-limit", "validation-plan"]
+      - path: "references/identity-packaging-and-installation-contracts.md"
+        type: targeted
+        load_when: "packaged unpackaged MSIX package/app identity installer update repair or uninstall behavior affects the decision"
+        do_not_load_when: "no Windows identity deployment installation update repair or uninstall behavior changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+      - path: "references/os-integration-and-registration-contracts.md"
+        type: targeted
+        load_when: "registry file association protocol handler or COM registration behavior affects the decision"
+        do_not_load_when: "no Windows registry association protocol or COM surface changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/service-background-and-notification-contracts.md"
+        type: targeted
+        load_when: "Windows service background task or app notification behavior affects the decision"
+        do_not_load_when: "no Windows service background execution or notification behavior changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["routing-decision", "failure-decision", "validation-plan"]
+      - path: "references/security-ipc-and-loading-contracts.md"
+        type: targeted
+        load_when: "UAC AppContainer DPAPI Credential Manager named pipe single-instance or DLL loading affects the decision"
+        do_not_load_when: "no Windows privilege container secret IPC instance or module-loading behavior changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+      - path: "references/architecture-signing-and-distribution-contracts.md"
+        type: targeted
+        load_when: "x86 x64 ARM64 signing Store enterprise or direct distribution evidence affects the decision"
+        do_not_load_when: "no Windows architecture signed-artifact or distribution-channel evidence changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]
+      - path: "references/dpi-and-accessibility-deltas.md"
+        type: targeted
+        load_when: "Windows scaling high-DPI UI Automation keyboard focus or assistive-technology behavior changes"
+        do_not_load_when: "no Windows-specific DPI accessibility input or focus behavior changes beyond Foundation rules"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "proof-limit", "validation-plan"]

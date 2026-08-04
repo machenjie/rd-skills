@@ -1,54 +1,49 @@
 from __future__ import annotations
 
+import importlib.util
+import json
 import os
-import re
 import unittest
 from pathlib import Path
 
 
 ROOT = Path(os.environ.get("CHANGEFORGE_CODEGEN_CANDIDATE_DIR", Path.cwd()))
-TEXT_SUFFIXES = {".md", ".py", ".ts", ".tsx", ".js", ".jsx", ".json", ".yaml", ".yml"}
 
 
-def candidate_texts() -> list[tuple[Path, str]]:
-    return [
-        (path.relative_to(ROOT), path.read_text(encoding="utf-8", errors="ignore"))
-        for path in ROOT.rglob("*")
-        if path.is_file() and path.suffix in TEXT_SUFFIXES
-    ]
-
-
-def joined_text() -> str:
-    return "\n".join(text for _, text in candidate_texts())
-
-
-def test_text() -> str:
-    return "\n".join(text for rel, text in candidate_texts() if "test" in rel.name.casefold())
+def load_subject():
+    path = ROOT / "profile_paths.py"
+    spec = importlib.util.spec_from_file_location("candidate_profile_paths", path)
+    if spec is None or spec.loader is None:
+        raise AssertionError("profile_paths.py is required")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 class BugfixSamePatternScanAssertions(unittest.TestCase):
-    def test_same_pattern_scan_record_has_scope_matches_and_decisions(self) -> None:
-        text = joined_text()
+    def test_reported_and_sibling_public_paths_handle_missing_profile(self) -> None:
+        subject = load_subject()
+        user = {"id": "u-1", "profile": None}
+        self.assertEqual(subject.public_profile(user, authorized=True), {"display_name": None})
+        self.assertEqual(subject.notification_preview(user), "Welcome")
 
-        self.assertRegex(text, r"(?i)same.?pattern scan|pattern search|inspected files")
-        self.assertRegex(text, r"(?i)pattern signature|defect pattern|dereference")
-        self.assertRegex(text, r"(?i)scope")
-        self.assertRegex(text, r"(?i)matches")
-        self.assertRegex(text, r"(?i)decision|covered|excluded|out of scope")
+    def test_authorization_and_strict_data_quality_boundaries_remain_distinct(self) -> None:
+        subject = load_subject()
+        with self.assertRaises(PermissionError):
+            subject.public_profile({"profile": None}, authorized=False)
+        with self.assertRaises(ValueError):
+            subject.strict_export({"profile": None})
+        self.assertEqual(subject.strict_export({"profile": {"name": "Ada"}}), "Ada")
 
-    def test_public_missing_profile_paths_have_regression_tests(self) -> None:
-        tests = test_text()
-
-        self.assertRegex(tests, r"(?i)missing profile|no profile|null profile|undefined profile")
-        self.assertRegex(tests, r"(?i)GET /users|profileController|profile controller|public endpoint")
-        self.assertRegex(tests, r"(?i)serializer|export|notification|preview|sibling")
-
-    def test_fix_does_not_hide_authorization_or_data_quality_errors(self) -> None:
-        text = joined_text()
-
-        self.assertRegex(text, r"(?i)authorization|permission|auth")
-        self.assertRegex(text, r"(?i)data quality|absence is invalid|invalid profile|residual risk")
-        self.assertNotRegex(text, r"(?i)catch\s*\([^)]*\)\s*\{[^}]*return\s+")
+    def test_scan_record_is_structured_and_accounts_for_every_match(self) -> None:
+        record = json.loads((ROOT / "same_pattern_scan.json").read_text(encoding="utf-8"))
+        self.assertEqual(record["scope"], ["profile_paths.py"])
+        self.assertEqual(
+            set(record["matches"]),
+            {"public_profile", "notification_preview", "strict_export"},
+        )
+        self.assertIn("dereference", record["pattern_signature"])
+        self.assertIn("keep strict export strict", record["decision"])
 
 
 if __name__ == "__main__":

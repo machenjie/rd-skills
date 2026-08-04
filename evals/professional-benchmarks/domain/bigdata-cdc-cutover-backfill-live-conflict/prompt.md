@@ -1,0 +1,1 @@
+Review a warehouse migration that takes a database snapshot, starts CDC after the snapshot finishes, and runs a resumable historical backfill while the live stream and correction job write the same derived table. Late corrections can arrive during a resumed backfill. Define the cutover, writer ownership, reconciliation, and proof needed before consumers switch to the new table.

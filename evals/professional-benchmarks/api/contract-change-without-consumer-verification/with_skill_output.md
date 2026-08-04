@@ -1,6 +1,6 @@
 Selected stage: implementation-planning.
 Selected professional skill: data-api-contract-changer.
-Selected capabilities: contract-testing, version-compatibility.
+Selected Layer 3 Skills: api-contract-design, version-compatibility, dto-schema-design.
 
 Hidden risks: contract change without consumer verification; provider-only test misses consumer compatibility; breaking API field change lacks schema diff or migration evidence.
 

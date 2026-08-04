@@ -4,25 +4,16 @@ complexity: L4
 focus:
   - validation freshness
   - stale validation detection
-  - Stop closure integrity
+  - final handoff integrity
   - residual risk honesty
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
-    - agent-execution-discipline
-    - implementation-structure-design
-    - code-review
-    - unit-testing
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: quality-test-gate
+  layer3_skills:
+    - test-strategy
     - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
-    - AI review gate
-    - execution discipline gate
+  review_skill: quality-test-gate
 expected_outcomes:
   - Old validation is marked stale after the edit.
   - Final evidence distinguishes stale and fresh validation.

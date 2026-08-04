@@ -1,38 +1,22 @@
-# Context Control Plane Eval
+# Context Control Plane Evaluation
 
-- status: `partial`
-- fixture_status: `pass`
-- overhead_status: `partial`
-- release_status: `partial`
-- structural_fixture_status: `pass`
-- cases: `8/8`
-- raw_leak_count: `0`
-- live_codex_executed: `False`
+Status: **pass**
 
-## Context Control Overhead
+Evidence scope: **deterministic-fixtures**
 
-- status: `partial`
-- input_token_overhead_pct: `228.79`
-- output_token_overhead_pct: `35.56`
-- turn_overhead: `None`
-- command_delta: `19.91`
-- pass_rate_delta: `0.0417`
-- live_pass_rate: `{"pass_rate_delta": 0.0417, "status": "collected"}`
-- token_overhead: `{"input_pct": 228.79, "output_pct": 35.56, "status": "collected"}`
-- turn_overhead_detail: `{"status": "not_collected", "turn_overhead": null}`
-- runtime_telemetry: `{"command_delta": 19.91, "live_codex_executed": false, "source": "reports/codex-live-benchmark-summary.json", "status": "existing_report"}`
-- overhead_policy_verdict: `partial: structural fixtures pass and live overhead is collected, but high token overhead remains an ungoverned P2 risk; do not claim Context Control Plane quality or cost improvement`
-- evidence_boundary: `Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead. High overhead without pass-rate improvement is not success.`
+Observable fixture count: **16**
 
-## Cases
+This evaluation combines deterministic rendered instruction-token budgets with route-once loading, progress density, prompt-enforced Utility workspace checks, current shared-workspace serial writes, and a conditional isolated-write contract. It does not claim current isolated-write support.
 
-| Case | Status | Budget | Selected refs | Skipped refs |
-| --- | --- | --- | --- | --- |
-| routing-budget-minimal | `pass` | `minimal` | `2` | `1` |
-| routing-budget-broad-audit | `pass` | `staged-plan` | `7` | `2` |
-| reference-signal-density | `pass` | `staged-plan` | `5` | `3` |
-| jit-context-pack-runtime-budget | `pass` | `staged-plan` | `4` | `2` |
-| tool-output-boundary-large-output | `pass` | `single-stage` | `4` | `2` |
-| compaction-snapshot-v2 | `pass` | `single-stage` | `6` | `2` |
-| branch-route-repair-summary | `pass` | `staged-plan` | `4` | `1` |
-| negative-small-typo-no-context-control | `pass` | `minimal` | `1` | `0` |
+## Limitations
+
+- Step counts are structural proxies and do not prove wall-clock performance.
+- Checked-in fixtures do not prove real-host accuracy.
+- Fixture evaluation does not prove the installed user experience.
+- Typed discipline events prove fixture structure and order, not the quality or completeness of real repository inspection.
+- Counts cover deterministic rendered ChangeForge instructions and canonical Capsules rendered from versioned checked-in fixture data, not a host-observed model request.
+- Counts exclude host system prompts, tool schemas, user conversation history, repository reads, diffs, command output, and other dynamic evidence.
+- Host loaders may transform Profile or Skill files and may expose discovery metadata differently; this report does not prove real-host accuracy.
+- Token counts do not prove wall-clock performance, production accuracy, Profile startup, or the installed user experience.
+- Duplicate-token measurement detects exact normalized Markdown rule blocks, not semantic paraphrases.
+- Nested Layer 3 Reference counts include only explicitly named fixture files; directories, indexes, catalogs, and recursively linked files are never loaded.

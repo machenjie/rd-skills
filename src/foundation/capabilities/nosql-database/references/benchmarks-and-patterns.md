@@ -1,99 +1,34 @@
 # NoSQL Database Benchmarks And Patterns
 
-Use this reference when NoSQL database output needs detailed store-selection, access-pattern, consistency, or operational-limit examples that would make the main `SKILL.md` too large. Keep the main body focused on routing, ownership, evidence, output contract, and quality gates.
+Load this reference when a non-relational store, partition/key/document model, consistency boundary, denormalized projection, or operational limit is being selected or changed. Do not load it when the current relational/source store already satisfies the access and correctness contract.
 
-## Benchmark Anchors
+## Workload And Store Fit
 
-- DynamoDB access-pattern-first modeling, single-table design, composite sort keys, GSI overloading, item collections, and Streams-based fan-out.
-- MongoDB document design anti-patterns, JSON Schema validation, index discipline, document size limits, and embedding vs reference rules.
-- Cassandra and HBase wide-column modeling with partition key, clustering columns, compaction strategy, and no cross-partition transaction assumption.
-- Firestore and Bigtable query constraints, composite indexes, hierarchical documents, and hotspot avoidance.
-- Redis key/value design for ephemeral state, TTL discipline, memory policy, and durability limitations.
-- Graph database modeling for node/relationship traversal workloads where edges are first-class data.
-- Time-series stores for tag cardinality, retention, downsampling, and write-heavy time-partitioned workloads.
-- CAP and PACELC models for consistency/availability/latency tradeoffs in distributed data stores.
-- Kleppmann, Fowler, and Sadalage aggregate-oriented data modeling for choosing document/key-value/column-family storage by access pattern and consistency boundary.
-
-## Store Selection Matrix
-
-| Workload | Candidate store | Avoid when | Required proof |
+| Workload | Candidate family | Reject or escalate when | Required proof |
 | --- | --- | --- | --- |
-| Flexible documents read together | MongoDB / Firestore | Multi-entity ACID, arbitrary joins, strict relational constraints. | Document shape, validator, query/index map, schemaVersion policy. |
-| High-scale key lookup with predictable patterns | DynamoDB / key-value | Unknown ad-hoc query patterns, low-cardinality access, cross-item invariants. | AP list, PK/SK/GSI map, item size, capacity and cost estimate. |
-| Wide-column write-heavy time/range access | Cassandra / HBase / Bigtable | Need cross-partition transactions or ad-hoc filtering. | Partition/clustering key, partition size, compaction, query table per access pattern. |
-| Graph traversal | Neo4j / Neptune | Simple lookup or tabular reporting is enough. | Node/edge model, traversal depth, relationship cardinality, permission model. |
-| Time-series metrics/events | InfluxDB / TimescaleDB / Cassandra | Need mutable business records or relational joins. | Measurement/tags, tag cardinality, retention, downsampling, late data behavior. |
-| Ephemeral session/cache state | Redis / Memcached | Durable source-of-truth records are required. | TTL, eviction policy, cache-loss behavior, persistence decision. |
-| Full-text or analytics | OpenSearch / ClickHouse / BigQuery | Source DB or NoSQL key lookup serves the need. | Relevance/OLAP requirement, ingestion freshness, reindex/drift plan. |
+| Predictable key/range lookup | Key-value or wide-column. | Ad-hoc queries, low-cardinality hot keys, joins, or cross-partition invariants dominate. | Complete access-pattern map, key/index mapping, skew, capacity, and cost. |
+| Aggregate-shaped documents | Document store. | Independent sub-entity updates, large/unbounded arrays, or cross-document invariants dominate. | Embed/reference rule, document maximums, schema/version, indexes, and update contention. |
+| Relationship traversal | Graph store. | Bounded lookup/reporting is simpler in the current store. | Node/edge authority, depth/cycle/cardinality, permission, and traversal budget. |
+| Time-series or high-write ranges | Time-series/wide-column store. | Mutable business records or cross-series consistency is required. | Tags/cardinality, partition/time bucket, retention, late data, downsampling, and repair. |
+| Ephemeral state | Cache/key-value store. | Loss or eviction would destroy authoritative state. | TTL/eviction, persistence choice, source rebuild, and failure behavior. |
+| Search/analytics projection | Search or columnar derived store. | It is being used as authority without explicit ownership. | Source, ingestion/deletion, freshness, drift/reindex, and fallback. |
 
-## DynamoDB Access Pattern Template
+Before designing keys, inventory current in-scope read, write, update, delete, and scan patterns found through code, telemetry, or owner evidence. For each discovered pattern, record actor or tenant scope, consistency need, expected and worst-case volume, ordering or range, and latency. Also record its index or key path and rejected scan or secondary-store alternative. Record unknown consumers as proof limits.
 
-```text
-Design order:
-1. List access patterns before table keys.
-2. Classify consistency and volume per access pattern.
-3. Map each pattern to PK/SK or GSI.
-4. Check hot partition, item collection size, item size, and write amplification.
+## Easy-To-Miss Boundaries
 
-AP1: Get user profile by userId
-  Query: PK = USER#<userId>, SK = PROFILE
-  Consistency: strong if profile controls permission/eligibility; eventual for display-only.
+- Partition keys need distribution evidence for top tenant/status/time bursts, not average cardinality. Bound partition/item-collection/document size and define split/bucket/overflow behavior.
+- Strong versus eventual reads are chosen per invariant consequence. A stale projection may serve browsing when critical actions revalidate the source and the UI or consumer handles bounded lag safely.
+- Denormalized copies name writer authority, propagation order, lag budget, delete/visibility propagation, reconciliation, and replay. “Eventually consistent” is incomplete without repair ownership.
+- Classify each invariant as single-item or document, single-partition, or cross-partition. The evidence proves the selected store transaction or conditional-write boundary and covers cross-boundary recovery, idempotency, reconciliation, and partial effects.
+- Old documents/items remain readable through a schema/version/default/upcast strategy; required fields, type changes, index creation, backfill, mixed versions, and rollback need current evidence.
+- Secondary indexes have a beneficiary access pattern plus write amplification, storage, lag, and cost evidence. No unsupported query silently falls back to a full scan/filter.
+- Define throughput/burst ceilings, retry/throttle behavior, backup/restore or rebuild, TTL/retention, hot-key/lag/drift/item-size signals, and provider limits from current documentation/configuration rather than remembered constants.
 
-AP2: List orders for user by createdAt
-  Query: PK = USER#<userId>, SK begins_with ORDER# sorted by createdAt
-  Volume: expected max orders per user; item collection growth checked.
+## Evidence And Proof Limits
 
-AP3: Get order by orderId
-  Query: GSI1PK = ORDER#<orderId>
-  Note: GSI eventual consistency accepted only if caller can tolerate read lag.
+Use representative maximum-size items and skewed key distributions, old/new schema fixtures, stale-index cases, duplicate/reordered propagation, and cross-partition failure cases where applicable. Local emulators and synthetic loads do not prove provider limits, production distribution, live cost, global consistency, or restore behavior.
 
-AP4: Admin list by status
-  Query: GSI2PK = STATUS#<status>#BUCKET#<bucket>
-  Note: status alone is low cardinality; bucket or alternate projection required for write-heavy path.
-```
+Reject store-first design, low-cardinality hot keys, unversioned documents, and secondary-index or projection reads used for immediate correctness without revalidation. Also reject authoritative data in an eviction-prone cache by default, unowned denormalization, and scans hidden behind convenient APIs.
 
-## Consistency Decision Matrix
-
-| Invariant or read | Strong consistency required? | Accept eventual consistency only when | Evidence |
-| --- | --- | --- | --- |
-| Financial balance or ledger | Yes | Never for authoritative decision. | Strong read/write, single invariant owner, reconciliation. |
-| Inventory purchase gate | Yes | Search/listing may be eventual if checkout revalidates source of truth. | Source verification before commit, stale UI behavior. |
-| Permission or entitlement | Usually yes | Cached or projected view has short TTL plus invalidation and denial-safe fallback. | Revocation path, stale-read consequence, audit. |
-| User profile display | No | Staleness is cosmetic and bounded. | Lag budget and refresh behavior. |
-| Audit append log | Strong write, eventual read may be acceptable | Readers tolerate lag and cannot mutate audit state. | Write durability, retention, query lag. |
-| Derived catalog/search card | No, if source revalidated for critical actions | Product accepts freshness SLO. | Projection lag metric, drift repair, fallback. |
-
-## Operational Limit Checklist
-
-- Item/document size: projected p50/p95/p99 plus hard maximum.
-- Partition/item-collection size: max rows/documents per partition key, top-tenant/time-bucket skew, and split strategy.
-- Index count and projection size: every secondary index has a beneficiary access pattern and write-cost estimate.
-- Throughput and cost: expected RCU/WCU, read/write rate, burst behavior, autoscaling or provisioned capacity, and budget ceiling.
-- TTL/retention: what expires, what must never expire, and how erasure/archive requirements interact with TTL.
-- Backup and restore: point-in-time recovery, snapshot scope, restore test, and rebuild path for derived projections.
-- Observability: throttle rate, consumed capacity, hot key/partition, item size, index lag, replication lag, drift, and cost alarms.
-
-## Validation Patterns
-
-| Risk | Validation evidence |
-| --- | --- |
-| Hot partition | Synthetic or analytical key-distribution check using expected tenant/status/time skew. |
-| Unsupported query | Access-pattern map proves every query has key/index support; no scan fallback. |
-| Old document breakage | Reader compatibility test for old and new `schemaVersion`; migration/backfill validation query. |
-| Stale GSI read | Test or design proof that caller tolerates lag or revalidates against base/source. |
-| Denormalization drift | Reconciliation query/job and replay/repair procedure. |
-| TTL behavior | Expiration test or store-level TTL configuration review plus "must not expire" list. |
-| Item overflow | Size estimate with representative max document/item; split or blob-reference plan. |
-| Cross-partition atomicity | Supported transaction proof or Saga/Outbox/compensation design. |
-
-## Anti-Patterns To Reject
-
-| Anti-pattern | Why it fails | Required correction |
-| --- | --- | --- |
-| Choosing NoSQL before listing queries. | Key/index design cannot be validated and later access patterns require backfill. | Build AP1..N and map each to key/index or rejected alternative. |
-| Partition key is `status` or `date`. | Low-cardinality or bursty key creates hot partitions. | Add high-cardinality component, bucket, or query-specific projection. |
-| Document shape has no version. | Old data breaks when readers expect new required fields. | Add schemaVersion and backward-compatible reader/upcaster. |
-| Denormalized copy has no owner. | Data drifts indefinitely after source updates. | Name writer authority, event propagation, lag budget, reconciliation. |
-| GSI read used for immediate correctness. | GSI may lag after write. | Use strong base-table read or source-of-truth revalidation. |
-| Redis used as durable database by default. | Eviction, restart, or failover can lose authoritative data. | Use Redis as cache/ephemeral state or design durability/recovery explicitly. |
-| Cassandra `ALLOW FILTERING` in production. | Cluster scan grows with data and bypasses modeling discipline. | Build query-specific table keyed for that access pattern. |
+Route source modeling to `data-model-design`, migration to `data-migration-design`, cross-boundary consistency to `transaction-consistency`, search/OLAP to `search-analytics-design`, cache-only needs to `cache-design`, capacity to `performance-budgeting`, and recovery/operations to `backup-recovery` or `reliability-observability-gate`.

@@ -1,0 +1,1 @@
+Review a Rust-to-C++ callback bridge that may panic or throw during callbacks, returns buffers allocated by either runtime, and publishes a shared callback context using relaxed atomics before all fields are initialized. Establish the ABI, unwind, allocator, ownership, and memory-ordering contract plus negative evidence required for the implementation handoff.

@@ -19,7 +19,7 @@ unless the rest of the pattern is scanned and the local-only scope is justified.
 - Fix every occurrence that shares the same user-visible defect, or document why
   specific occurrences are intentionally out of scope.
 - Add regression tests for the reported endpoint and any covered sibling path.
-- Include a same-pattern scan record in the Execution Discipline Report.
+- Include a same-pattern scan record in the final handoff.
 
 ## Constraints
 

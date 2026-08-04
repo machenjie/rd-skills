@@ -1,0 +1,10 @@
+# Change Documentation Gate Reference Index
+
+Use this index to load only the local reference needed for the selected documentation risk. Record skipped-reference rationale when a plausible reference is not loaded.
+
+| Reference | Load When | Do Not Load When | Depends On | Conflicts With | Max Level | Output Fragment |
+| --- | --- | --- | --- | --- | --- | --- |
+| `../examples/example-output.md` | A compact example helps show required and skipped documentation artifacts. | The body output contract is enough or artifact status must be source-specific. | Changed surface, affected audience, and doc artifact candidates. | Treating example artifacts as evidence for the current change. | L1 | Tiny docs-required/skipped matrix. |
+| `references/checklist.md` | A bounded review needs quick artifact coverage across README, API docs, migration notes, ADRs, changelog, runbooks, user docs, config, and skipped rationale. | Detailed output fields or evidence closure is required. | Affected docs surfaces, audience, and no-docs rationale. | Checklist completion replacing source/docs freshness or owner evidence. | L2 | Documentation checklist. |
+| `references/documentation-output-and-gates.md` | Drafting or reviewing documentation matrices, release notes, runbooks, migration notes, ADRs, incident/compliance packets, or no-docs decisions. | Body output contract is sufficient for a small decision. | Artifact, audience, status, rationale, validation, owner, and release block status. | Generic writing style advice replacing source-backed closure. | L4 | Artifact decision matrix and gate-specific checks. |
+| `references/evidence-patterns.md` | Closure depends on source-to-doc freshness, consumer-impact proof, rendered/link/spec validation, evidence retention, safe disclosure, or tool-output boundaries. | No evidence freshness, retention, or safe-disclosure risk is material. | Source path, docs path, validation command, approval owner, retention, proof limits, and residual risk. | Evidence packet treated as production behavior proof or audit approval. | L4 | Claim-to-evidence map and handoff evidence shape. |

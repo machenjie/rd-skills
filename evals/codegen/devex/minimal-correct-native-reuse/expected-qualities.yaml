@@ -7,22 +7,11 @@ focus:
   - dependency avoidance
   - quality preserved under small change
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
-    - agent-execution-discipline
-    - implementation-structure-design
-    - code-review
-    - unit-testing
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
-    - AI review gate
-    - execution discipline gate
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Existing helpers or native features are reused.
   - No unnecessary dependency or abstraction is introduced.

@@ -1,217 +1,56 @@
 ---
 name: rust-professional-usage
-description: "Use this capability when a selected owner skill needs focused rules for writing or reviewing professional Rust for systems, services, CLIs, WASM, unsafe/FFI, async, Cargo dependencies, concurrency, or performance-sensitive modules with focus on ownership, lifetimes, Result modeling, traits, runtime choice, unsafe invariants, graph/memory freshness, validation evidence, and zero-cost abstraction. Do not use it as a standalone owner for broader implementation, review, release, or documentation work."
-license: MIT
-changeforge_kind: foundation-capability
-changeforge_capability_id: "93"
-changeforge_version: 0.1.0
-metadata:
-  changeforge.skill_type: foundation-capability
-  changeforge.capability_group: language-professional-usage
+description: "`analysis-agent`/`task-agent`/`review-agent`: use when Rust changes cross ownership, unsafe/FFI, panic, cancellation, or Send/Sync boundaries; skip tool-only work."
 ---
 
-# Mission
+# rust-professional-usage
 
-Enforce professional Rust usage for systems, services, CLIs, WASM, and performance-sensitive modules: ownership and lifetime discipline, `Result`-based error modeling, justified trait abstractions, explicit async-runtime choice, documented `unsafe` invariants, concurrency safety, and zero-cost abstractions backed by measurement. Reject `Box<dyn Trait>` hierarchies that mimic Java; reject `unwrap()` in library code; reject `unsafe` without a written safety contract.
+## Registry Trigger
 
-# Capability Boundary
+**Use when**
 
-`rust-professional-usage` returns a narrow `language-professional-usage` decision fragment to low-level-systems-extension, backend-change-builder, reliability-observability-gate, quality-test-gate, ai-code-review-refactor, language-runtime-selection. It does not replace the selected professional owner, expand the task, decide unrelated architecture or release scope, or close ordinary engineering work by itself.
+- Rust code changes ownership or lifetime, unsafe or FFI, panic or error behavior, async cancellation, or `Send`/`Sync` boundaries.
+- Compiler-enforced safety depends on a caller, runtime, foreign-code, or shutdown invariant in the current scope.
 
-# Tooling Baseline (Rust)
+**Do not use when**
 
-Treat tool versions as project policy inputs, not permanent recommendations. If a Rust toolchain, edition, MSRV, scanner, or async runtime rule is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, record the project rule and update this capability before relying on it for new product work.
+- The open decision is language/runtime selection, package policy, build mechanics, test strategy, or measured performance work.
+- No Rust-specific ownership, unsafe, concurrency, panic, or foreign boundary changes.
 
-- **Toolchain**: stable Rust on the release cadence approved by the project. Pin via `rust-toolchain.toml`; declare an **MSRV (Minimum Supported Rust Version)** in `Cargo.toml` (`rust-version = "..."`) for libraries; choose edition 2021 or 2024 deliberately and document migration constraints.
-- **Format**: `rustfmt` with project `rustfmt.toml` (or defaults); CI runs `cargo fmt -- --check`.
-- **Lint**: `cargo clippy --all-targets --all-features -- -D warnings` in CI, with `clippy::pedantic` enabled for new code (`#![warn(clippy::pedantic)]`) and selective allows justified inline.
-- **Vulnerability scan**: `cargo audit` in CI; `cargo deny check` for license + bans + advisories.
-- **Documentation lint**: `RUSTDOCFLAGS="-D warnings" cargo doc --no-deps`; `#![warn(missing_docs)]` on public APIs of libraries.
-- **`unsafe` audit**: `cargo geiger` to surface unsafe usage; `miri` (`cargo +nightly miri test`) for unsafe / FFI test coverage.
-- **Test framework**: stdlib `#[test]` + `cargo test --all-features`; `proptest` or `quickcheck` for property tests; `cargo-fuzz` (libFuzzer) or `afl.rs` for fuzz harnesses on parsers / deserializers; `criterion` for benchmarks.
-- **Concurrency model checking**: `loom` for testing concurrent primitives across schedule permutations.
-- **Async runtime**: `tokio` ≥ 1.38 is the default for services (broadest ecosystem). `async-std` and `smol` only with explicit justification. Mixing runtimes is rejected.
-- **Error handling**: `thiserror` for library error enums; `anyhow` for binaries / application code. **Not** both in the same crate without a clear boundary.
-- **CI**: `cargo build --locked`, `cargo test --locked`, `cargo clippy --locked`, `cargo audit`, `cargo deny check`.
+## Skill Role
 
-# Load When
-Use when Rust code is added, reviewed, refactored, or selected for a system / service / CLI / WASM / embedded / performance-sensitive component. Use whenever `unsafe`, `async`, FFI (`extern "C"`), a new trait, or a major Cargo dependency change is introduced.
+Protect Rust ownership and lifetimes, unsafe contracts, panic and cancellation behavior, `Send`/`Sync` obligations, and FFI representation and ownership.
 
-# Do Not Load When
-Do not use to teach Rust syntax. Do not use to introduce Rust solely because of safety appeal — require named team ownership, hiring plan, and ecosystem fit for the target domain.
+## High-Value Rules
 
-# Used By / Owner Skill Compatibility
-low-level-systems-extension, backend-change-builder, reliability-observability-gate, quality-test-gate, ai-code-review-refactor, language-runtime-selection
+- Model ownership, borrowing, mutation, and invalidation before adding clones, reference counting, or interior mutability.
+- Define unsafe aliasing, alignment, initialization, provenance, lifetime, and thread invariants behind the safe surface.
+- Define typed recoverable errors while preventing unwinding across incompatible FFI boundaries.
+- Keep partial state and resources safe when futures are dropped at await points.
+- Give spawned and blocking work owned completion, failure observation, and shutdown while deriving `Send` and `Sync` through captured fields and callbacks.
+- Define FFI representation, allocation, buffers, errors, callbacks, thread affinity, and unwind behavior.
+- Do not rely on async cleanup from `Drop` or permit a second panic during unwinding.
+- Return the Rust safety decision with inspected language evidence, proof limits, and specialist routes even when no Reference loads.
 
-# Required Input Fragment
+## Anti-Patterns
 
-For `rust-professional-usage`, the owner skill must provide task intent, affected surface, current and desired behavior, relevant constraints, selected stage or mode, validation target, and material data/API/security/release boundaries. If that input is missing, return a missing-input fragment instead of guessing.
+- Clone, `Arc`, `Mutex`, or interior mutability is added until the borrow checker accepts code while ownership remains unnamed.
+- A narrow unsafe operation is wrapped by a safe API that accepts states its safety contract did not validate.
+- Compile, lint, or one target-specific interpreter run is treated as proof for foreign callers, optimizer behavior, or supported architectures.
+- Detached tasks, blocking work, guards across await, or cancellation leave a protocol transition or resource lifetime without an owner.
 
-# Stage Fit
+## Stop Conditions
 
-Use during Rust implementation planning, coding, bug-fix, code-review, refactoring, testing, and release-readiness review. Per-stage focus:
+- Route language, package, build, test, performance, and public compatibility decisions to their specialist owners.
+- Route atomics and synchronization protocols to `concurrency-control`.
+- Route ABI, operating-system, allocator, interrupt, or hardware invariants to `low-level-systems-extension`.
 
-- **coding**: ownership/borrowing, `Result`/`?` error model, justified `unsafe` boundary, trait design, async runtime choice.
-- **debugging-diagnosis**: lifetime/borrow errors, `panic`/`unwrap` paths, async deadlock, `Send`/`Sync` violation.
-- **code-review**: unjustified `unsafe`, `clone()` overuse, premature trait abstraction, error-type erosion.
-- **refactoring**: module/visibility boundary, public trait/type compatibility, lifetime simplification.
-- **testing**: unit and `#[should_panic]`, property tests, `miri` or sanitizer for `unsafe`.
+## Output Contract
 
-# Mode Matrix
+- Rust safety decision with ownership lifetime unsafe panic cancellation Send Sync FFI risks proof limits and specialist routes
 
-| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
-| --- | --- | --- | --- | --- | --- |
-| Ownership and error boundary | Borrow checker workaround, `.clone()` spread, `unwrap`, `panic!`, `Box<dyn Error>`, library API. | Preserve ownership clarity and typed recoverable errors without hiding failure behavior. | Ownership map, clone-cost decision, typed error boundary, panic audit, tests. | `failure-contract-design`, `code-review` | Teaching syntax or style-only review. |
-| Unsafe, FFI, and layout | `unsafe`, `extern "C"`, `repr(C)`, raw pointer, custom allocator, `Pin`, `no_std`. | Document invariants and keep safe wrappers, ABI, panic, and aliasing rules explicit. | `// SAFETY:` contract, FFI layout, panic boundary, Miri/fuzz/unsafe audit. | `low-level-systems-extension`, `security-privacy-gate` | Trusting compiler success as safety proof. |
-| Async and concurrency | Tokio task, runtime attribute, `Send`/`Sync`, `Arc<Mutex>`, channel, atomics, lock across await. | Keep runtime singular, cancellation-aware, deadlock-resistant, and scheduler-safe. | Runtime choice, lock/await audit, loom or stress evidence, blocking-call scan. | `concurrency-control`, `reliability-observability-gate` | Sequential tests as concurrency proof. |
-| Trait/API and dependency | New trait, public type, feature flag, workspace crate, new dependency, generated client. | Avoid single-impl abstraction, preserve semver, and control feature/provenance risk. | Impl inventory, semver check, cargo tree/audit/deny reports, accepted-risk owner. | `package-dependency-management`, `consumer-impact-analysis` | Dependency by convenience. |
-| Existing Rust behavior reuse | Repository graph, project memory, old review, generated bindings, prior validation says safe. | Confirm current source, Cargo files, generated artifacts, and validation freshness before closure. | Inspected paths, accepted/rejected memory, changed-path validators, residual unknowns. | `repository-graph-analysis`, `validation-broker` | Stale memory as proof. |
+## Targeted References
 
-# Non-Negotiable Rules
-
-- **`unsafe` requires a `// SAFETY:` comment** documenting every invariant the caller (or the surrounding code) must uphold. Reviewed by ≥ 2 engineers including one fluent in unsafe Rust. Covered by `miri` tests where feasible.
-- **No `unwrap()` / `expect()` / `panic!()` in library code** (`lib.rs` and its modules). Acceptable: tests, `main()`, and clearly documented `expect("static invariant")` for compile-time-known cases.
-- **Error model**: libraries return typed `Result<T, E>` with `E` implementing `std::error::Error` (via `thiserror::Error`). Binaries can use `anyhow::Result<T>` for top-level. Mixing requires explicit conversion boundary.
-- **Lifetimes model ownership; cloning is not the default.** `.clone()` on every shared value is rejected; use `&T`, `Arc<T>`, `Cow<'_, T>` deliberately. Profile when clone vs borrow vs Arc is unclear.
-- **Trait abstractions justified by ≥ 2 implementations or a clear extension contract.** Single-impl traits are rejected unless they document the planned second implementation or serve as a test/mock boundary.
-- **Async runtime is explicit and singular per process.** `tokio` (default) or `async-std`, never both. `tokio::main` / `#[tokio::test]` at entry points; `block_on` only outside async context.
-- **Clippy + fmt + tests + audit + deny green in CI** — no `#[allow(clippy::...)]` without inline justification + owner.
-- **Public API of libraries follows semver**: breaking change = major bump. Verified with `cargo semver-checks`.
-- **Concurrency primitives**: prefer message passing (`tokio::sync::mpsc`) over shared `Arc<Mutex<T>>`. When `Arc<Mutex<T>>` is necessary, lock scope is minimal; never hold a lock across `.await`.
-- **`Sync` / `Send` bounds** documented for types crossing thread boundaries.
-
-# Industry Benchmarks
-
-- **The Rust Programming Language ("the book")** and **Rust API Guidelines** (`rust-lang.github.io/api-guidelines`).
-- **Rustonomicon** for unsafe.
-- **Tokio docs / tokio-console** for async runtime patterns and diagnostics.
-- **Rust Performance Book** (Nicholas Nethercote) for allocation, profiling, build-time tuning.
-- **Programming Rust** (Blandy / Orendorff / Tindall) and **Rust for Rustaceans** (Gjengset) as professional references.
-- **CWE Top 25** — idiomatic Rust fixes: parameterized SQL via `sqlx::query!` macro; command injection — `std::process::Command::arg` (never shell); path traversal — `std::path::Path::canonicalize` + base check.
-- **RustSec advisory DB** and **OSV-Scanner** for vulnerability detection.
-- **`cargo semver-checks`** for library compatibility.
-
-# Decision Rules
-Select when Rust / Cargo / ownership / lifetimes / `unsafe` / traits / async runtime / WASM / FFI / systems performance is part of the request. Pair with `low-level-systems-extension` (unsafe, FFI, embedded), `language-performance-safety` (hot paths), `concurrency-control` (synchronization), `package-dependency-management` (Cargo deps), and `quality-test-gate` (fuzz / property evidence).
-
-# Proactive Professional Triggers
-
-- **Signal:** `unsafe`, raw pointer, FFI, `repr(C)`, custom allocator, `Pin`, or `no_std` appears without a written invariant. **Hidden risk:** Rust's safety story is bypassed and UB can survive ordinary tests. **Required professional action:** require a safety contract, safe wrapper, and unsafe-specific validation. **Route to:** `low-level-systems-extension`, `quality-test-gate`. **Evidence required:** `// SAFETY:` invariant, aliasing/lifetime/layout rule, Miri/fuzz/geiger command or not-run owner.
-- **Signal:** `unwrap`, `expect`, `panic!`, `Box<dyn Error>`, or `anyhow` appears in a library or recoverable boundary. **Hidden risk:** consumers lose typed failure handling or hit production panics. **Required professional action:** design typed `Result` and panic boundaries before accepting the API. **Route to:** `failure-contract-design`, `code-review`. **Evidence required:** error enum/conversion map, no-panic scan, caller-visible negative tests, residual exception owner.
-- **Signal:** async runtime, `tokio::spawn`, `block_on`, `Arc<Mutex<_>>`, channel, atomics, or lock across `.await` changes. **Hidden risk:** deadlock, cancellation leak, runtime mixing, or non-`Send` future appears only under scheduler pressure. **Required professional action:** review runtime singularity, lock scope, blocking calls, and concurrency validator depth. **Route to:** `concurrency-control`, `reliability-observability-gate`. **Evidence required:** runtime map, `await_holding_lock`/stress/loom evidence, skipped scheduler risks.
-- **Signal:** new trait, `Box<dyn Trait>`, public generic, feature flag, workspace crate, or Cargo dependency is introduced. **Hidden risk:** Java-style abstraction, semver break, feature unification, or unreviewed advisory enters the graph. **Required professional action:** prove abstraction and dependency value before acceptance. **Route to:** `implementation-structure-design`, `package-dependency-management`. **Evidence required:** impl inventory, rejected concrete alternative, `cargo tree -e features`, audit/deny report, compatibility note.
-- **Signal:** repository graph, project memory, generated bindings, or old validation claims Rust code is safe, unused, race-free, or already tested. **Hidden risk:** stale context misses current Cargo features, generated FFI callers, or changed unsafe/concurrency paths. **Required professional action:** confirm current source and validation freshness before handoff. **Route to:** `repository-graph-analysis`, `project-memory-governance`, `validation-broker`. **Evidence required:** inspected files, accepted/rejected memory, fresh command/report, remaining unknowns.
-
-# Risk Escalation Rules
-
-- Escalate to `low-level-systems-extension` for `unsafe`, FFI, `extern "C"`, embedded / `#![no_std]`, custom allocator, SIMD, or lock-free primitives.
-- Escalate to `language-performance-safety` for hot paths, allocation profiling, async runtime diagnostics.
-- Escalate to `quality-test-gate` for fuzz / property / `miri` / `loom` evidence.
-- Escalate to `concurrency-control` for `Mutex` / channel / atomics / memory-ordering design.
-- Escalate to `package-dependency-management` for Cargo dep additions, `cargo audit` / `cargo deny` advisories, license review.
-- Escalate to `security-privacy-gate` for `unsafe` exposed to untrusted input, deserialization (serde with `deny_unknown_fields`), command/SQL injection.
-
-# Critical Gotchas
-- **Borrow checker errors are design feedback.** Fighting the borrow checker with `Rc<RefCell<T>>` everywhere is usually a sign the data model is wrong; redesign data flow.
-- **`.clone()` cost varies enormously**: cloning a `String` allocates; cloning an `Arc<T>` is an atomic increment; cloning a `&str` is free. Be explicit about which.
-- **`async` is contagious.** Once a function is async, all callers must be async or use `block_on`. Async runtime selection is therefore a load-bearing decision.
-- **Holding a lock across `.await`** — if the future is cancelled or moved to a different runtime thread, the lock may not release as expected; use `tokio::sync::Mutex` (async-aware) and minimize critical section, or restructure to release before await.
-- **`tokio::spawn` requires `'static`** — spawned futures cannot borrow stack data; use `Arc` / `Clone` for shared state.
-- **`Send` / `Sync` are auto-traits** — a type containing `Rc` is `!Send`; a type with interior mutability via `RefCell` is `!Sync`. Use `Arc` + `Mutex` for cross-thread.
-- **`Pin<T>`** required for self-referential futures; almost always handled by `tokio::spawn` / async machinery; manual `Pin` work indicates designing a future / stream and requires `Pin` correctness review.
-- **`unsafe` invariants** must specify: lifetime/aliasing rules (no overlapping mutable references), alignment, validity (no `&T` to invalid bits), thread-safety, panic safety (no panic across FFI boundary without `catch_unwind`).
-- **FFI**: `extern "C"` boundary requires `#[repr(C)]` on shared types; never let Rust panic propagate across FFI (use `std::panic::catch_unwind` at the boundary).
-- **`Vec::with_capacity` / `String::with_capacity`** when size is known — avoids reallocation in tight loops.
-- **Iterator chains often compile to optimal code** — prefer them over manual indexing; verify with `cargo asm` / godbolt when claims matter.
-- **`#[non_exhaustive]` on public enums / structs** for forward-compat in libraries.
-- **`serde` with `#[serde(deny_unknown_fields)]`** at trust boundaries to prevent silent field drift / injection.
-- **Cargo features unification surprise**: a transitive crate enabling a feature you don't want. Audit with `cargo tree -e features -f "{p} {f}"`.
-
-# Anti-Patterns
-- **Wrong: borrow-checker workaround as design closure.** Consequence: `clone()`, `Rc<RefCell<_>>`, or `Arc<Mutex<_>>` can hide ownership confusion and move cost into runtime. Detect it when no ownership map, clone-cost decision, or mutation boundary exists; replacement is a simpler data flow, borrowed view, `Cow`, or message boundary.
-- **Wrong: `unsafe` comment as safety proof.** Consequence: undefined behavior survives ordinary tests when aliasing, layout, panic, and lifetime invariants are not validated. Detect it when `// SAFETY:` lacks caller obligations, safe-wrapper scope, Miri/fuzz/geiger evidence, or reviewer owner; replacement is a narrow safe API plus unsafe-specific validation.
-- **Wrong: Cargo build success as dependency or API proof.** Consequence: feature unification, semver breakage, advisory exposure, or generated binding drift reaches consumers. Detect it when no `cargo tree -e features`, audit/deny, semver-checks, or generated artifact diff exists; replacement is dependency provenance plus compatibility evidence.
-
-# Reference Loading Policy
-
-Load [references/checklist.md](references/checklist.md) when Rust changes touch ownership/lifetimes, error modeling, async/runtime behavior, unsafe, FFI, trait/public API design, concurrency, Cargo dependencies, feature flags, or validation tooling such as clippy, Miri, loom, fuzzing, cargo audit, or cargo test. Use [examples/example-output.md](examples/example-output.md) only when the expected review shape is unclear. Do not load references for rustfmt-only edits.
-Load [references/evidence-patterns.md](references/evidence-patterns.md) when closure depends on graph/memory claims, stale validation, unsafe/runtime/dependency evidence quality, tool permission boundaries, or changed-Rust-surface-to-validation mapping.
-
-# Failure Modes
-Every failure-mode finding must state symptom, cause, detection, impact, evidence status, residual owner, and repair or next gate.
-
-- **Undocumented `unsafe`** — Symptom: invariant violation under refactor; UB. Cause: missing `// SAFETY:` block; assumed invariants not documented. Detection: `cargo geiger`, code review. Impact: memory safety lost, security exposure.
-- **`unwrap()` in library** — Symptom: library panics in consumer code path. Cause: error handling shortcut. Detection: clippy `unwrap_used` lint. Impact: consumer outage.
-- **Lock held across `.await`** — Symptom: deadlock / cancellation hang. Cause: `let g = mutex.lock().unwrap(); some_async().await;`. Detection: clippy `await_holding_lock`. Impact: deadlock.
-- **Async runtime mixing** — Symptom: panic about "no reactor running" or undefined behavior. Cause: tokio future polled by async-std executor. Detection: review + runtime-aware tests. Impact: production crash.
-- **`.clone()` everywhere** — Symptom: allocator hot in profile; latency high. Cause: avoiding borrow checker via clone. Detection: profile + review. Impact: allocator pressure, GC-like cost.
-- **Single-impl trait** — Symptom: `trait Foo` with one `impl Foo for Concrete`; tests box-dyn-mock. Cause: Java-style abstraction. Detection: review. Impact: complexity tax with no abstraction value.
-- **`Box<dyn Error>` everywhere** — Symptom: lost type information; `match` impossible. Cause: error model not designed. Detection: review for `thiserror` enum at library boundaries. Impact: poor error handling at consumer.
-- **FFI panic propagation** — Symptom: undefined behavior in C caller after Rust panic. Cause: panic crossed `extern "C"`. Detection: `catch_unwind` at FFI boundary mandatory; tests for panic paths. Impact: UB in C ABI.
-- **`Vec` growth in hot path** — Symptom: profile shows `realloc` hot. Cause: `Vec::push` without `with_capacity`. Detection: profile. Impact: latency.
-- **Cargo feature explosion** — Symptom: build pulls unexpected heavy deps. Cause: transitive feature unification. Detection: `cargo tree -e features`. Impact: bloat, build time.
-
-# Output Fragment
-Return a **Rust Usage Review** containing:
-- **selected_mode / professional_decision / inspected_boundaries / evidence_collected / evidence_limits / validation_status / residual_risk / next_gate or next_owner**
-- **Mode selected**: ownership/error, unsafe/FFI/layout, async/concurrency, trait/API/dependency, or existing-behavior reuse, with trigger signal
-- **Boundaries inspected**: crates/modules, public APIs, unsafe blocks, FFI/generated bindings, async runtime entrypoints, Cargo files, tests, docs, generated artifacts, and skipped boundaries with reason
-- **Toolchain pin** (`rust-toolchain.toml`), **edition**, **MSRV**
-- **Tooling pins**: clippy lint set, rustfmt config, cargo-audit / cargo-deny / cargo-semver-checks status
-- **Ownership / borrowing model**: clone audit; `Arc` / `Cow` / lifetime choices justified
-- **Error model**: `thiserror` vs `anyhow` boundary; `Result<T, E>` discipline; panic boundaries
-- **`unsafe` blocks**: each with `// SAFETY:` doc, reviewer names, miri coverage
-- **Async runtime**: declared (tokio / async-std); singular per process; `tokio-console` available
-- **Concurrency**: lock scope; no `.await` while holding sync lock; channel vs Arc<Mutex> choice; `Send`/`Sync` bounds documented
-- **Trait audit**: each trait has ≥ 2 impls or documented extension contract
-- **Dependencies**: `cargo audit` / `cargo deny` results; feature audit (`cargo tree -e features`)
-- **Public API compat** (libraries): `cargo semver-checks` verdict
-- **Tests**: unit + property (proptest / quickcheck) + fuzz (cargo-fuzz) + loom (concurrency) + miri (unsafe) coverage
-- **Performance**: criterion benchmarks for hot paths; allocation profile
-- **Rust graph, memory, and execution freshness**: crate graph, generated bindings, Cargo files, project-memory claims, and previous Rust validation accepted, rejected, stale, or not verified after the final edit
-- **Rust validation proof**: literal cargo or validator command, exit code, report/artifact path, and what the output proves or does not prove
-- **Tool permission boundary**: test/Miri/loom/fuzz/build/Cargo-audit/generated-artifact command class, sandbox/approval state, write scope, and secret-output redaction rule
-- **Accepted Rust deviations** with owner, scope, expiration, and cleanup trigger
-
-# Evidence Requirement
-For `rust-professional-usage`, classify strong evidence, weak evidence, missing evidence, or invalid evidence. State what evidence proves, what it does not prove, residual risk, and next gate.
-
-A Rust change is professionally complete only when the output includes:
-
-- **Ownership boundary**: ownership, borrowing, lifetimes, clone/copy cost, and mutation boundary.
-- **Error model**: `Result`, typed errors, `thiserror`/`anyhow` boundary, and no panic in recoverable path.
-- **Async/runtime boundary**: runtime assumptions, cancellation, `Send`/`Sync`, blocking calls inside async.
-- **Unsafe boundary**: justification, invariants, tests, and safe wrapper if `unsafe` appears.
-- **Trait/API design**: trait object vs generic choice, coherence, object safety, and public API stability.
-- **Validation evidence**: `cargo test`, `cargo clippy`, `cargo fmt`, Miri/loom when applicable, or not-verified disclosure.
-- **What evidence proves**: the inspected Rust safety and API boundary is covered.
-- **What evidence does not prove**: every platform, production concurrency, FFI caller behavior, or all unsafe aliasing scenarios.
-- **Graph and memory freshness**: current source, generated artifacts, Cargo manifests, toolchain config, and prior project-memory claims confirmed or rejected before closure.
-- **Rust residual risk**: untested runtime/platform/scheduler/FFI/dependency behavior, owner, and next gate.
-
-# Quality Gate
-
-1. `cargo fmt --check` + `cargo clippy --all-targets -- -D warnings` + `cargo test --locked` + `cargo audit` + `cargo deny check` all green.
-2. Every `unsafe` block has a `// SAFETY:` comment; miri tests where feasible; ≥ 2 reviewers including unsafe-fluent.
-3. No `unwrap()` / `expect()` / `panic!()` in library code without justification.
-4. Async runtime declared and singular; no `await_holding_lock`.
-5. Traits justified (≥ 2 impls or documented extension contract).
-6. Public library API: `cargo semver-checks` verdict matches version bump.
-7. Hot paths have criterion benchmarks; allocation profile reviewed if claims involve performance.
-8. Parsers / deserializers / FFI boundaries have fuzz harness or property tests.
-9. `cargo geiger` reviewed; unsafe surface area minimized.
-10. Cargo features audited; no transitive feature surprises.
-11. Validation report maps each changed Rust path to command, exit code, covered risk, stale/not-run targets, and residual owner.
-12. Tool permission/sandbox record exists for test, Miri, loom, fuzz, build, audit, deny, semver, generated-binding, or artifact-writing commands.
-
-# Return To Owner Skill
-- **`low-level-systems-extension`** for unsafe, ABI, FFI, embedded, allocator, lock-free primitives.
-- **`language-performance-safety`** for hot-path allocation, async runtime profile.
-- **`concurrency-control`** for atomics, memory ordering, channel design.
-- **`package-dependency-management`** for crate adds, audit, license.
-- **`quality-test-gate`** for fuzz / property / miri / loom evidence.
-- **`security-privacy-gate`** for unsafe-on-untrusted-input, serde boundaries, injection.
-
-# Completion Criteria
-
-Review is complete when: toolchain + clippy + audit + deny + Miri or unsafe-specific substitute (where applicable) + tests are green with commands and exit codes recorded; every `unsafe` is documented and reviewed; error model is consistent; async runtime is singular; traits are justified; lock scope is minimal; public API compatibility is verified; graph/memory claims are current-source confirmed; and any accepted exception has owner, scope, and expiration.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | Rust change crosses ownership unsafe panic cancellation Send Sync or FFI boundary whose soundness remains unclear | Current Rust ownership contracts and focused safety checks settle the changed boundary | task-agent, review-agent, analysis-agent | option-comparison, selected-approach |

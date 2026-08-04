@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-08-02-r22",
+  "created_on": "2026-08-02",
+  "packet_sha256": "0e078640f9f508b36043dac1f2574405c7c3177deaf58ec71967b4113b0793da",
+  "source_fingerprints": {
+    "audit": "681b35ed25e9e6f6423533056723983f998cb3bb6dc3ddf9f8c2f1701175eca6",
+    "reference_candidates": "1a8e5ed6e42995ae227233ef430ee7e75c28819f0fe580387266900f5e1bd886",
+    "reference_detector": "4b04a9b693ac3079a1af6154425ed64408474d5027c0119ed6360c9288356112",
+    "reference_groups": "aa063d66e92ded0513416306d5a118f5519e9205806d70477ded8417aabb5a79",
+    "reference_source": "48c3bd8f1827a470f021dee015da7b633a08841eff0ca72e45ce606206f48fba",
+    "root_candidates": "830cee98d158c76c5cb9e5d6eb5ffc73498c55deb3fdbd1eca9116512b2846a7",
+    "root_context": "ab95ca9c6fd442902502b28a4ebb22bf33024bfca9fc849995f085f0b9d3db80",
+    "root_detector": "998c2581653aac9c406208b35436660dfee1fd1862514c38264d2ad52a3f73ad",
+    "root_source": "1bd17827aa5a697d4a80e7682652fde46c5500050e97fed6a8709b894fa50025"
+  },
+  "voter": {
+    "voter_id": "semantic-r22-architecture",
+    "agent_id": "/root/architecture_platform_domain_a",
+    "role": "senior skill-reference architecture reviewer",
+    "expertise": [
+      "skill-reference architecture",
+      "Domain extension ownership boundaries",
+      "semantic disposition governance"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "root:4e84f474724dae709f136d9f1ccb67e2ffb82d46256aba4cbf7761d03344442c",
+      "axis": "root",
+      "candidate_id": "4e84f474724dae709f136d9f1ccb67e2ffb82d46256aba4cbf7761d03344442c",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The universal quantifier is bounded by the repository-proven affected-target matrix. Shared logic success cannot prove native adapters, platform-specific negative behavior, or the emitted artifact on another affected target.",
+      "authority_or_condition": "The selected installed-client Professional owns implementation and validation workflow; this Domain owns shared-versus-platform constraints, while each confirmed platform Domain owns its native behavior.",
+      "decision_owner": "cross-platform-client-extension",
+      "mitigation": "Retain the rule. Re-evaluate its finite target set whenever repository, build, release, or published-artifact evidence changes.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:cd9d813a014e6ae974bbb628bb9ad5b0037b6d196c767092a237ae32c32cada1",
+      "axis": "root",
+      "candidate_id": "cd9d813a014e6ae974bbb628bb9ad5b0037b6d196c767092a237ae32c32cada1",
+      "disposition": "valid-contextual-rule",
+      "rationale": "This sentence enforces the Domain modifier boundary. It prevents shared-client constraints from becoming a standalone task or displacing the single selected Professional owner.",
+      "authority_or_condition": "The preceding Role sentence binds this Domain to a selected installed-client Professional, and current task evidence separately selects each affected concrete platform Domain.",
+      "decision_owner": "cross-platform-client-extension",
+      "mitigation": "Retain the ownership prohibition. Re-review if routing metadata ever permits this Domain to activate without a selected Professional owner.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "This ballot decides only the two static packet-bound Root candidates and their current local ownership context; it does not prove detector completeness, whole-Skill professional correctness, runtime behavior, panel majority, or release readiness."
+  ]
+}

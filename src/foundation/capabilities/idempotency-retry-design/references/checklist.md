@@ -1,14 +1,13 @@
 # Idempotency Retry Design Checklist
 
-- Identify every side effect and duplicate-execution risk.
-- Define idempotency key source, scope, operation, subject, and retention window.
-- Compare payloads for repeated keys and define conflict behavior.
-- Store original outcome or enough state to replay safely.
-- Classify retryable, non-retryable, timeout, and unknown-outcome errors.
-- Set max attempts, total deadline, backoff, jitter, and retry budget.
-- Prevent retries of unsafe mutations without idempotency.
-- Define deduplication for webhooks, async consumers, and external callbacks.
-- Define terminal failure, compensation, reconciliation, or manual recovery.
-- Reconcile repository graph, project memory, runbooks, old reports, and prior validation against current source.
-- Record read-only versus state-mutating replay, provider, queue, database, cache, validation, and diagnostic actions.
-- Add tests for duplicate request, timeout retry, conflict payload, permanent failure, and replay.
+- Inventory logical operations and the clients, brokers, providers, workflows, operators, or recovery paths that can repeat them.
+- Bind identity to the required principal, tenant, subject, operation, canonical request meaning, and version behavior.
+- Inventory business and external side effects; map record/effect/publication/acknowledgement ordering and each reachable crash window.
+- Define ownership and caller-visible behavior for pending, succeeded, failed, and unknown states under same-identity concurrency.
+- Define result reuse, conflict behavior, authorization, and information exposure for repeat observations.
+- Identify the authoritative status source and safe action after timeout, cancellation, or transport loss when commit status is not proven.
+- Define retention, expiry, tombstone, late-replay, backfill, and disaster-recovery behavior from the identified replay sources.
+- Bound aggregate attempts, elapsed work, concurrency, pacing, and cancellation across the retrying layers in scope.
+- Name the owned terminal, reconciliation, compensation, manual recovery, or accepted-loss path.
+- Test concurrent duplicates, payload/version conflict, crash windows, unknown outcomes, late replay, exhaustion, and owner recovery.
+- Record externally owned effects and residual duplicate-or-loss risk that current evidence cannot close.

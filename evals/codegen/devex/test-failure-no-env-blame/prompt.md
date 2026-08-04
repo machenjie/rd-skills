@@ -2,8 +2,8 @@
 
 ## Task
 
-Fix a failing integration test without blaming the user's environment before
-inspecting the test setup, configuration, and logs.
+Diagnose a failing integration test from repository evidence. Do not edit any
+file, install anything, or attempt a repair.
 
 ## Context
 
@@ -17,25 +17,25 @@ response says postgres is probably not running locally and stops there.
 - Inspect the test harness, database configuration, fixture setup, and relevant
   logs before naming a cause.
 - Produce a verified-cause statement with confirming and counter-evidence.
-- Fix the smallest cause-backed issue in test setup or config.
-- Include validation evidence showing the integration test behavior after the fix.
+- Identify the smallest cause-backed repair boundary, but leave implementation
+  to a later task.
+- Cite the exact source/config/log locations that confirm the diagnosis.
 
 ## Constraints
 
 - Do not tell the user to restart services without first inspecting repo-owned
   setup and configuration.
 - Do not skip the failing integration path by converting it to a mocked unit test.
-- Do not broaden the fix into unrelated test infrastructure refactoring.
+- Do not modify the workspace, including source, tests, config, fixtures, or docs.
 
 ## Deliverables
 
-- Minimal fix to the failing integration test setup, configuration, or fixture.
 - Verified-cause statement and evidence inventory.
-- Regression test or harness check that would fail if the config drifts again.
+- A bounded repair recommendation and a validation plan for a later task.
 
 ## Completion Evidence
 
-- Command output from the relevant test or harness check.
+- Read-only inspection evidence from the supplied source, config, fixture, and log.
 - Diagnosis record showing symptom, hypothesis tested, method, verified cause,
   counter-evidence, and residual risk.
-- No unsupported environment-blame language in the final handoff.
+- No unsupported environment-blame language and no workspace changes.

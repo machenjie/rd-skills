@@ -15,12 +15,6 @@ __MACOSX/
 # Local development evidence
 .dev/*.tmp
 
-# Runtime scratch state
-runtime/**
-!runtime/
-!runtime/README.md
-!runtime/**/.gitkeep
-
 # Local environment
 .env
 .env.*
@@ -39,6 +33,3 @@ evals/agent-behavior/outputs/*
 # Generated pressure-behavior eval reports (working area)
 evals/pressure/outputs/*
 !evals/pressure/outputs/.gitkeep
-
-# Codex CLI live benchmark reports
-reports/codex-live-runs/

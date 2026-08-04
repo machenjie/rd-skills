@@ -1,7 +1,5 @@
 # Network Protocol Gateway Benchmarks And Patterns
 
-## Benchmarks
-
 - RFC 9110/9111/9112 for HTTP semantics, caching, and HTTP/1.1 syntax.
 - RFC 8446 for TLS 1.3 and certificate-chain behavior.
 - RFC 7239 for `Forwarded` headers and W3C Trace Context for correlation.
@@ -11,7 +9,7 @@
 
 ## Timeout Pattern
 
-Timeout budgets should be explicit at every hop:
+Derive explicit timeout budgets for the affected hops in the actual request chain from current upstream behavior and the end-to-end deadline:
 
 | Hop | Timeout fields | Evidence |
 | --- | --- | --- |
@@ -24,7 +22,7 @@ Timeout budgets should be explicit at every hop:
 
 ## Header Trust Pattern
 
-Only the first trusted proxy should normalize external client identity. Downstream services should trust `Forwarded` or `X-Forwarded-*` only from known proxy IPs or internal mesh identity.
+At the first trusted ingress, discard or normalize untrusted client-identity headers. Each subsequent trusted proxy preserves or appends identity according to the documented hop model, and downstream services accept forwarded identity only from authenticated or allowlisted proxies.
 
 ## Streaming Pattern
 

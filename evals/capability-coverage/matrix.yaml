@@ -1,0 +1,1792 @@
+---
+schema_version: 1
+kind: changeforge.capability_coverage_matrix
+required_space:
+  engineering_tasks:
+    - requirement intake
+    - repository analysis
+    - diagnosis
+    - architecture design
+    - task planning
+    - web implementation
+    - installed client implementation
+    - backend implementation
+    - data platform implementation
+    - infrastructure implementation
+    - integration implementation
+    - developer tooling implementation
+    - testing
+    - security review
+    - reliability review
+    - implementation review
+    - release
+    - rollback
+    - incident response
+    - documentation
+  platforms:
+    - Web browser
+    - PWA
+    - Android
+    - Android TV
+    - Wear OS
+    - Android Automotive
+    - iOS
+    - iPadOS
+    - watchOS
+    - tvOS
+    - visionOS
+    - macOS
+    - Mac Catalyst
+    - Windows desktop
+    - Windows service
+    - Linux desktop
+    - Linux server
+    - CLI
+    - TUI
+    - daemon
+    - container
+    - Kubernetes
+    - cloud platform
+    - serverless
+    - edge runtime
+    - browser extension
+    - embedded device
+    - firmware
+    - RTOS
+    - kernel
+    - driver
+    - cross-platform client
+  language_runtimes:
+    - C
+    - C++
+    - Rust
+    - Go
+    - Java
+    - JVM
+    - Kotlin
+    - Swift
+    - Objective-C
+    - C#
+    - .NET
+    - JavaScript
+    - TypeScript
+    - Node.js
+    - Python
+    - Shell
+    - PowerShell
+    - SQL
+    - Dart
+    - PHP
+    - Ruby
+    - Scala
+  cross_cutting_risks:
+    - lifecycle
+    - process termination
+    - state restoration
+    - offline behavior
+    - sync conflict
+    - accessibility
+    - privacy
+    - local data security
+    - permissions
+    - authentication
+    - authorization
+    - tenant isolation
+    - cryptography
+    - key lifecycle
+    - audit evidence
+    - concurrency
+    - distributed consistency
+    - retry
+    - idempotency
+    - migration
+    - backward compatibility
+    - packaging
+    - signing
+    - installation
+    - update
+    - rollback
+    - performance
+    - capacity
+    - resilience
+    - observability
+    - testing
+    - release
+    - infrastructure as code
+  product_domains:
+    - AI product
+    - machine learning system
+    - big data
+    - SaaS
+    - multitenancy
+    - payments
+    - trading
+    - commerce
+    - marketplace
+    - Web3
+    - enterprise identity
+    - collaboration
+    - realtime communication
+    - media processing
+    - gaming
+    - XR
+    - IoT
+    - embedded
+    - automotive
+    - industrial automation
+    - healthcare
+    - telecom
+    - geospatial
+  routing_combinations:
+    - route-react-web
+    - route-android-installed-client
+    - route-android-installed-client-accessibility
+    - route-ios-installed-client
+    - route-windows-installed-client
+    - route-macos-installed-client
+    - route-linux-installed-client
+    - route-flutter-android-ios
+    - route-electron-windows
+    - route-terraform-source
+    - route-terraform-production-apply
+    - route-ordinary-android-no-mobile-bridge
+    - route-ordinary-ios-no-mobile-bridge
+    - route-cross-platform-alone-rejected
+    - route-unknown-target-analysis-first
+    - route-web-installed-zero-conflict
+    - route-backend-installed-zero-conflict
+    - route-infrastructure-release-zero-conflict
+    - route-platform-professional-zero-conflict
+    - route-language-domain-zero-conflict
+
+entries:
+  - id: task-requirement-intake
+    axis: engineering-task
+    surface: Engineering workflow
+    task_type: requirement intake
+    language_runtime: []
+    cross_cutting_risks: []
+    expected_professional_owner: change-intake-compiler
+    expected_domain_extensions: []
+    expected_foundation_skills: [requirement-clarification]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: The registered intake owner and requirement clarification contract cover this task.
+    evidence_fixtures: [ambiguous-request]
+  - id: task-repository-analysis
+    axis: engineering-task
+    surface: Repository
+    task_type: repository analysis
+    language_runtime: []
+    cross_cutting_risks: []
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: []
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: The analysis owner has a source-backed repository context capability.
+    evidence_fixtures: [source-backed-question]
+  - id: task-diagnosis
+    axis: engineering-task
+    surface: Failure investigation
+    task_type: diagnosis
+    language_runtime: []
+    cross_cutting_risks: [observability]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: []
+    expected_foundation_skills: [failure-diagnosis]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Diagnosis mode and failure recurrence evidence have a registered owner.
+    evidence_fixtures: [failure-diagnosis]
+  - id: task-architecture-design
+    axis: engineering-task
+    surface: Architecture
+    task_type: architecture design
+    language_runtime: []
+    cross_cutting_risks: [backward compatibility]
+    expected_professional_owner: architecture-impact-reviewer
+    expected_domain_extensions: []
+    expected_foundation_skills: [module-boundary-design]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Architecture placement and dependency direction have one analysis owner.
+    evidence_fixtures: [structure-cross-module-public-edge]
+  - id: task-planning
+    axis: engineering-task
+    surface: Engineering workflow
+    task_type: task planning
+    language_runtime: []
+    cross_cutting_risks: [release]
+    expected_professional_owner: task-dag-planner
+    expected_domain_extensions: []
+    expected_foundation_skills: [task-dag-decomposition]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Multi-task decomposition and dependency ordering have one planning owner.
+    evidence_fixtures: [accepted-brief-task-dag]
+  - id: task-web-implementation
+    axis: engineering-task
+    surface: Web browser
+    task_type: web implementation
+    language_runtime: [JavaScript, TypeScript]
+    cross_cutting_risks: [accessibility]
+    expected_professional_owner: frontend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [web-platform-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Browser implementation ownership composes with current web-platform decision guidance.
+    evidence_fixtures: [capcov-admission-foundation-web-platform-decision]
+  - id: task-installed-client-implementation
+    axis: engineering-task
+    surface: Installed client
+    task_type: installed client implementation
+    language_runtime: [Kotlin, Swift, C#]
+    cross_cutting_risks: [lifecycle, state restoration, offline behavior]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [client-lifecycle-state-restoration]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Generic installed-client implementation has one owner and current owner-bound lifecycle guidance without assuming a target platform or universal client-testing selection.
+    evidence_fixtures: [capcov-admission-foundation-client-lifecycle-decision]
+  - id: task-backend-implementation
+    axis: engineering-task
+    surface: Backend service
+    task_type: backend implementation
+    language_runtime: []
+    cross_cutting_risks: [concurrency, idempotency]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Backend service and worker source changes have one registered task owner without unconditionally selecting a Layer 3 Skill.
+    evidence_fixtures: [low-level-anti-rust-business-service]
+  - id: task-data-platform-implementation
+    axis: engineering-task
+    surface: Data platform
+    task_type: data platform implementation
+    language_runtime: [SQL]
+    cross_cutting_risks: [migration, distributed consistency]
+    expected_professional_owner: data-middleware-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [transaction-consistency]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Current data-platform analysis evidence selects transaction consistency under the data-middleware owner.
+    evidence_fixtures: [accepted-data-analysis]
+  - id: task-infrastructure-implementation
+    axis: engineering-task
+    surface: Infrastructure source
+    task_type: infrastructure implementation
+    language_runtime: []
+    cross_cutting_risks: [infrastructure as code]
+    expected_professional_owner: platform-infrastructure-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [infrastructure-as-code-safety]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Generic infrastructure source implementation has one owner and IaC safety guidance without assuming a cloud boundary.
+    evidence_fixtures: [capcov-admission-prof-platform-infrastructure-positive, capcov-admission-foundation-iac-safety-decision]
+  - id: task-integration-implementation
+    axis: engineering-task
+    surface: External integration
+    task_type: integration implementation
+    language_runtime: []
+    cross_cutting_risks: [retry, backward compatibility]
+    expected_professional_owner: integration-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [contract-testing]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Integration contracts and bounded source changes have one registered owner.
+    evidence_fixtures: [accepted-integration-analysis]
+  - id: task-developer-tooling-implementation
+    axis: engineering-task
+    surface: Repository tooling
+    task_type: developer tooling implementation
+    language_runtime: []
+    cross_cutting_risks: [testing]
+    expected_professional_owner: repository-tooling-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [build-tool-professional-usage, filesystem-process-safety, targeted-validation-selection]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: "Repository-owned generators, plugins, harnesses, internal CLIs, monorepo automation, and maintenance utilities share one bounded implementation owner with build, filesystem/process, and validation companions."
+    evidence_fixtures: [repository-tooling-direct, capcov-admission-foundation-filesystem-process-safety-decision]
+  - id: task-testing
+    axis: engineering-task
+    surface: Verification
+    task_type: testing
+    language_runtime: []
+    cross_cutting_risks: [testing]
+    expected_professional_owner: quality-test-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [regression-testing]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Current testing evidence selects regression-testing under the registered quality gate.
+    evidence_fixtures: [validation]
+  - id: task-security-review
+    axis: engineering-task
+    surface: Security
+    task_type: security review
+    language_runtime: []
+    cross_cutting_risks: [authentication, authorization, privacy]
+    expected_professional_owner: security-privacy-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [threat-modeling]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Security and privacy decisions have one registered analysis and review gate.
+    evidence_fixtures: [security]
+  - id: task-reliability-review
+    axis: engineering-task
+    surface: Reliability
+    task_type: reliability review
+    language_runtime: []
+    cross_cutting_risks: [resilience, observability, capacity]
+    expected_professional_owner: reliability-observability-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [degradation-circuit-breaking]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Reliability, recovery, SLO, capacity, and observability have one gate.
+    evidence_fixtures: [reliability]
+  - id: task-implementation-review
+    axis: engineering-task
+    surface: Implementation diff
+    task_type: implementation review
+    language_runtime: []
+    cross_cutting_risks: [testing]
+    expected_professional_owner: ai-code-review-refactor
+    expected_domain_extensions: []
+    expected_foundation_skills: [code-review]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Independent implementation review is assigned only to the review agent owner.
+    evidence_fixtures: [review-only]
+  - id: task-release
+    axis: engineering-task
+    surface: Delivery
+    task_type: release
+    language_runtime: []
+    cross_cutting_risks: [release, rollback]
+    expected_professional_owner: delivery-release-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [release-rollback]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Release decisions and delivery execution have one registered gate.
+    evidence_fixtures: [release]
+  - id: task-rollback
+    axis: engineering-task
+    surface: Delivery
+    task_type: rollback
+    language_runtime: []
+    cross_cutting_risks: [rollback, backward compatibility]
+    expected_professional_owner: delivery-release-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [release-rollback]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Rollback approval and execution boundaries are owned by the delivery gate.
+    evidence_fixtures: [release]
+  - id: task-incident-response
+    axis: engineering-task
+    surface: Active incident
+    task_type: incident response
+    language_runtime: []
+    cross_cutting_risks: [resilience, observability]
+    expected_professional_owner: incident-response-coordinator
+    expected_domain_extensions: []
+    expected_foundation_skills: [failure-diagnosis, observability]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: "Active multi-responder incident command, mitigation coordination, communications, and handoff have one analysis owner with diagnosis and observability companions."
+    evidence_fixtures: [incident-response-command]
+  - id: task-documentation
+    axis: engineering-task
+    surface: Documentation
+    task_type: documentation
+    language_runtime: []
+    cross_cutting_risks: [backward compatibility]
+    expected_professional_owner: change-documentation-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [documentation-generation]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Source-backed documentation changes and review have one registered gate.
+    evidence_fixtures: [documentation]
+
+  - id: platform-web-browser
+    axis: platform
+    surface: Web browser
+    task_type: browser application change
+    language_runtime: [JavaScript, TypeScript]
+    cross_cutting_risks: [accessibility, offline behavior]
+    expected_professional_owner: frontend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [web-platform-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: The frontend owner composes with reusable browser runtime decision guidance.
+    evidence_fixtures: [capcov-admission-foundation-web-platform-decision]
+  - id: platform-pwa
+    axis: platform
+    surface: PWA
+    task_type: PWA-only browser change
+    language_runtime: [JavaScript, TypeScript]
+    cross_cutting_risks: [offline behavior, update]
+    expected_professional_owner: frontend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [web-platform-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: PWA browser and service-worker decisions use web-platform guidance without assuming an offline-sync product contract.
+    evidence_fixtures: [capcov-route-pwa-only-owner]
+  - id: platform-android
+    axis: platform
+    surface: Android
+    task_type: installed Android application change
+    language_runtime: [Kotlin, Java]
+    cross_cutting_risks: [lifecycle, permissions, signing]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [android-platform-extension]
+    expected_foundation_skills: [client-lifecycle-state-restoration]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Current Android evidence composes the installed-client owner with Android and lifecycle guidance without unconditionally selecting Kotlin guidance.
+    evidence_fixtures: [capcov-admission-domain-android-explicit, capcov-admission-foundation-client-lifecycle-decision]
+  - id: platform-android-tv
+    axis: platform
+    surface: Android TV
+    task_type: Android TV installed-client change
+    language_runtime: [Kotlin, Java]
+    cross_cutting_risks: [accessibility, lifecycle]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: []
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: repository analysis is stable, but the still-uncovered TV-specific platform contract and evidence boundary for input, focus, playback, and distribution remain unproven."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: platform-wear-os
+    axis: platform
+    surface: Wear OS
+    task_type: Wear OS installed-client change
+    language_runtime: [Kotlin, Java]
+    cross_cutting_risks: [lifecycle, offline behavior]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: []
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: analysis is stable, but wearable lifecycle, power, interaction, and distribution constraints remain separately unproven."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: platform-android-automotive
+    axis: platform
+    surface: Android Automotive
+    task_type: Android Automotive client analysis
+    language_runtime: [Kotlin, Java]
+    cross_cutting_risks: [permissions, resilience]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: []
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: software analysis has an owner, but driver-distraction, vehicle integration, safety, and distribution rules require separate qualified evidence."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: platform-ios
+    axis: platform
+    surface: iOS
+    task_type: installed iOS application change
+    language_runtime: [Swift, Objective-C]
+    cross_cutting_risks: [lifecycle, state restoration, signing]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [ios-ipados-platform-extension]
+    expected_foundation_skills: [client-lifecycle-state-restoration, swift-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: iOS implementation composes one client owner with its platform, lifecycle, and Swift guidance.
+    evidence_fixtures: [capcov-admission-prof-installed-client-positive, capcov-admission-domain-ios-ipados-explicit, capcov-admission-foundation-client-lifecycle-decision, capcov-admission-foundation-swift-decision]
+  - id: platform-ipados
+    axis: platform
+    surface: iPadOS
+    task_type: installed iPadOS application change
+    language_runtime: [Swift, Objective-C]
+    cross_cutting_risks: [lifecycle, state restoration, accessibility]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [ios-ipados-platform-extension]
+    expected_foundation_skills: [client-lifecycle-state-restoration, swift-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: iPadOS implementation uses the installed-client owner and the shared iOS and iPadOS platform contract.
+    evidence_fixtures: [capcov-admission-prof-installed-client-positive, capcov-admission-domain-ios-ipados-explicit, capcov-admission-foundation-client-lifecycle-decision, capcov-admission-foundation-swift-decision]
+  - id: platform-watchos
+    axis: platform
+    surface: watchOS
+    task_type: watchOS installed-client analysis
+    language_runtime: [Swift]
+    cross_cutting_risks: [lifecycle, offline behavior]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: []
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: analysis has an owner, but watchOS lifecycle, interaction, extension, and distribution behavior is not covered by the iOS and iPadOS extension."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: platform-tvos
+    axis: platform
+    surface: tvOS
+    task_type: tvOS installed-client analysis
+    language_runtime: [Swift]
+    cross_cutting_risks: [accessibility, lifecycle]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: []
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: analysis has an owner, but tvOS focus, remote input, playback, and distribution behavior is not covered by the iOS and iPadOS extension."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: platform-visionos
+    axis: platform
+    surface: visionOS
+    task_type: visionOS installed-client analysis
+    language_runtime: [Swift]
+    cross_cutting_risks: [accessibility, lifecycle, performance]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: []
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: analysis has an owner, but spatial lifecycle, immersion, input, rendering, and safety behavior remains independently unproven."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: platform-macos
+    axis: platform
+    surface: macOS
+    task_type: installed macOS application change
+    language_runtime: [Swift, Objective-C]
+    cross_cutting_risks: [lifecycle, signing, installation]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [macos-platform-extension]
+    expected_foundation_skills: [swift-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Current macOS evidence composes the installed-client owner with macOS and Swift guidance without universal client-testing selection.
+    evidence_fixtures: [capcov-admission-domain-macos-explicit, capcov-admission-foundation-swift-decision]
+  - id: platform-mac-catalyst
+    axis: platform
+    surface: Mac Catalyst
+    task_type: Mac Catalyst installed-client change
+    language_runtime: [Swift, Objective-C]
+    cross_cutting_risks: [lifecycle, signing, backward compatibility]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [macos-platform-extension]
+    expected_foundation_skills: [swift-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Mac Catalyst uses the installed-client owner with macOS and Swift guidance without unconditionally loading the iOS and iPadOS extension.
+    evidence_fixtures: [capcov-admission-prof-installed-client-positive, capcov-admission-domain-macos-explicit, capcov-admission-foundation-swift-decision]
+  - id: platform-windows-desktop
+    axis: platform
+    surface: Windows desktop
+    task_type: installed Windows desktop application change
+    language_runtime: [C#, .NET, C++]
+    cross_cutting_risks: [installation, update, signing]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [windows-platform-extension]
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Current Windows desktop evidence selects the installed-client owner and Windows Domain modifier without unconditional language or client-testing guidance.
+    evidence_fixtures: [capcov-admission-domain-windows-explicit]
+  - id: platform-windows-service
+    axis: platform
+    surface: Windows service
+    task_type: Windows service source change
+    language_runtime: [C#, .NET]
+    cross_cutting_risks: [process termination, permissions, update]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: [windows-platform-extension]
+    expected_foundation_skills: [csharp-dotnet-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Windows service source changes compose the backend owner with Windows service and C# and .NET guidance.
+    evidence_fixtures: [structure-ef-mapping-domain-facts-unchanged, capcov-admission-foundation-csharp-dotnet-decision]
+  - id: platform-linux-desktop
+    axis: platform
+    surface: Linux desktop
+    task_type: installed Linux graphical application change
+    language_runtime: [C++, Rust]
+    cross_cutting_risks: [installation, accessibility, update]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [linux-desktop-platform-extension]
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Current Linux graphical desktop evidence selects the installed-client owner and Linux desktop Domain modifier without universal client-testing guidance.
+    evidence_fixtures: [capcov-admission-domain-linux-desktop-explicit]
+  - id: platform-linux-server
+    axis: platform
+    surface: Linux server
+    task_type: Linux server operational change
+    language_runtime: [Shell, Python, Go]
+    cross_cutting_risks: [process termination, resilience, observability]
+    expected_professional_owner: reliability-observability-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [linux-systems-professional-usage]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: the reliability owner is stable, but current owner-bound route evidence does not select linux-systems-professional-usage for the Linux server surface."
+    evidence_fixtures: [gap:owner-bound-linux-systems-route-evidence]
+  - id: platform-cli
+    axis: platform
+    surface: CLI
+    task_type: command-line interface change
+    language_runtime: [Shell, Python, Go]
+    cross_cutting_risks: [process termination, backward compatibility]
+    expected_professional_owner: data-api-contract-changer
+    expected_domain_extensions: []
+    expected_foundation_skills: [cli-daemon-interface-design]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: command contracts have a stable owner, but repository-local CLI implementation ownership varies by product boundary."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: platform-tui
+    axis: platform
+    surface: TUI
+    task_type: terminal user-interface change
+    language_runtime: [Rust, Go, Python]
+    cross_cutting_risks: [accessibility, process termination]
+    expected_professional_owner: experience-impact-modeler
+    expected_domain_extensions: []
+    expected_foundation_skills: [interaction-state-modeling]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: interaction analysis is stable, but terminal capability, input, accessibility, and rendering constraints lack a reusable implementation contract."
+    evidence_fixtures: [gap:tui-implementation-contract]
+  - id: platform-daemon
+    axis: platform
+    surface: daemon
+    task_type: long-running daemon change
+    language_runtime: [Go, Rust, Python]
+    cross_cutting_risks: [process termination, resilience, observability]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [async-job-design]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: the backend owner is stable, but current owner-bound route evidence does not select async-job-design for the daemon surface."
+    evidence_fixtures: [gap:owner-bound-async-job-route-evidence]
+  - id: platform-container
+    axis: platform
+    surface: container
+    task_type: container delivery change
+    language_runtime: []
+    cross_cutting_risks: [packaging, installation, rollback]
+    expected_professional_owner: delivery-release-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [containerization]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: image delivery has a stable gate, but container-specific source/runtime implementation still lacks a stable owner."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: platform-kubernetes
+    axis: platform
+    surface: Kubernetes
+    task_type: Kubernetes source configuration change
+    language_runtime: []
+    cross_cutting_risks: [infrastructure as code, rollback]
+    expected_professional_owner: platform-infrastructure-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [infrastructure-as-code-safety]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Kubernetes source mutations use the infrastructure owner and IaC safety while release approval remains separate.
+    evidence_fixtures: [capcov-admission-prof-platform-infrastructure-positive, capcov-admission-foundation-iac-safety-decision]
+  - id: platform-cloud
+    axis: platform
+    surface: cloud platform
+    task_type: cloud resource source change
+    language_runtime: []
+    cross_cutting_risks: [permissions, capacity, infrastructure as code]
+    expected_professional_owner: platform-infrastructure-change-builder
+    expected_domain_extensions: [cloud-platform-extension]
+    expected_foundation_skills: [infrastructure-as-code-safety]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Explicit cloud resource source changes compose the infrastructure owner with cloud and IaC guidance.
+    evidence_fixtures: [capcov-admission-prof-platform-infrastructure-positive, capcov-admission-domain-cloud-platform-explicit, capcov-admission-foundation-iac-safety-decision]
+  - id: platform-serverless
+    axis: platform
+    surface: serverless
+    task_type: serverless application change
+    language_runtime: [JavaScript, TypeScript, Python, Go]
+    cross_cutting_risks: [lifecycle, retry, capacity]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [async-job-design]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: function implementation has a backend owner, but the unresolved provider-semantics contract for lifecycle, concurrency, quota, and deployment prevents complete coverage."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: platform-edge-runtime
+    axis: platform
+    surface: edge runtime
+    task_type: edge runtime application change
+    language_runtime: [JavaScript, TypeScript, Rust]
+    cross_cutting_risks: [lifecycle, capacity, backward compatibility]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: [low-level-systems-extension]
+    expected_foundation_skills: [language-performance-safety]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: backend source ownership is stable, but the unresolved edge execution contract for API, isolation, region, storage, and execution limits prevents complete coverage."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: platform-browser-extension
+    axis: platform
+    surface: browser extension
+    task_type: browser extension product change
+    language_runtime: [JavaScript, TypeScript]
+    cross_cutting_risks: [permissions, privacy, update]
+    expected_professional_owner: frontend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [frontend-testing]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: browser UI implementation has a stable owner, but extension permissions, content isolation, background lifecycle, and store release need a Domain contract."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: platform-embedded-device
+    axis: platform
+    surface: embedded device
+    task_type: embedded device software change
+    language_runtime: [C, C++, Rust]
+    cross_cutting_risks: [lifecycle, update, resilience]
+    expected_professional_owner: delivery-release-gate
+    expected_domain_extensions: [iot-embedded-extension]
+    expected_foundation_skills: [release-rollback]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: device delivery constraints exist, but general embedded implementation ownership is split across backend, low-level, and hardware boundaries."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: platform-firmware
+    axis: platform
+    surface: firmware
+    task_type: firmware delivery change
+    language_runtime: [C, C++, Rust]
+    cross_cutting_risks: [update, rollback, signing]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: [iot-embedded-extension]
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Firmware evidence adds the IoT modifier after the analysis route is fixed; it does not select a delivery owner.
+    evidence_fixtures: [iot-firmware-actuator-rollout]
+  - id: platform-rtos
+    axis: platform
+    surface: RTOS
+    task_type: real-time device software change
+    language_runtime: [C, C++, Rust]
+    cross_cutting_risks: [concurrency, performance, resilience]
+    expected_professional_owner: delivery-release-gate
+    expected_domain_extensions: [iot-embedded-extension]
+    expected_foundation_skills: [release-rollback]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: device delivery has an owner, but hard real-time scheduling and platform-specific safety verification require bounded expert evidence."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: platform-kernel
+    axis: platform
+    surface: kernel
+    task_type: kernel source change
+    language_runtime: [C, Rust]
+    cross_cutting_risks: [concurrency, performance, resilience]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: [low-level-systems-extension]
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Native OS and resource evidence adds the low-level modifier after the analysis route is fixed; it does not select a backend owner.
+    evidence_fixtures: [low-level-kernel-driver]
+  - id: platform-driver
+    axis: platform
+    surface: driver
+    task_type: device driver source change
+    language_runtime: [C, C++, Rust]
+    cross_cutting_risks: [concurrency, permissions, resilience]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: [low-level-systems-extension]
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Driver boundary evidence adds the low-level modifier after the analysis route is fixed; it does not select a backend owner.
+    evidence_fixtures: [low-level-kernel-driver]
+  - id: platform-cross-platform-client
+    axis: platform
+    surface: cross-platform client
+    task_type: packaged cross-platform client change
+    language_runtime: [Dart, JavaScript, TypeScript, Kotlin, C#]
+    cross_cutting_risks: [lifecycle, backward compatibility, packaging]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: []
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: generic cross-platform work is analysis-first until repository and release evidence identify concrete target platforms."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+
+  - id: language-go-java-jvm-python
+    axis: language-runtime
+    surface: Backend language and runtime
+    task_type: language-specific backend implementation
+    language_runtime: [Go, Java, JVM, Python]
+    cross_cutting_risks: [concurrency, performance]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [go-professional-usage, java-jvm-professional-usage, python-professional-usage]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: the backend owner is stable, but current owner-bound evidence does not independently select the declared Go, Java and JVM, and Python runtime Skills."
+    evidence_fixtures: [gap:owner-bound-runtime-specific-route-evidence]
+  - id: language-typescript
+    axis: language-runtime
+    surface: Web language
+    task_type: TypeScript frontend implementation
+    language_runtime: [TypeScript]
+    cross_cutting_risks: [backward compatibility]
+    expected_professional_owner: frontend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [typescript-professional-usage]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: the frontend owner is stable, but current owner-bound route evidence does not select typescript-professional-usage."
+    evidence_fixtures: [gap:owner-bound-typescript-route-evidence]
+  - id: language-shell
+    axis: language-runtime
+    surface: Delivery automation
+    task_type: shell delivery change
+    language_runtime: [Shell]
+    cross_cutting_risks: [process termination, installation]
+    expected_professional_owner: delivery-release-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [shell-cli-professional-usage]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: the delivery owner is stable, but current owner-bound route evidence does not select shell-cli-professional-usage."
+    evidence_fixtures: [gap:owner-bound-shell-route-evidence]
+  - id: language-sql
+    axis: language-runtime
+    surface: Data platform language
+    task_type: SQL data change
+    language_runtime: [SQL]
+    cross_cutting_risks: [migration, performance]
+    expected_professional_owner: data-middleware-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [sql-professional-usage]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: the data-middleware owner is stable, but current owner-bound route evidence does not select sql-professional-usage."
+    evidence_fixtures: [gap:owner-bound-sql-route-evidence]
+  - id: language-kotlin
+    axis: language-runtime
+    surface: Kotlin backend language
+    task_type: Kotlin backend implementation
+    language_runtime: [Kotlin]
+    cross_cutting_risks: [concurrency]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [kotlin-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Kotlin backend source decisions compose with the backend owner without implying an Android platform.
+    evidence_fixtures: [capcov-admission-foundation-kotlin-decision]
+  - id: language-swift
+    axis: language-runtime
+    surface: Swift installed-client language
+    task_type: Swift installed-client implementation
+    language_runtime: [Swift]
+    cross_cutting_risks: [concurrency, lifecycle]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [swift-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Swift source decisions compose with the installed-client owner without assuming an Apple target platform.
+    evidence_fixtures: [capcov-admission-foundation-swift-decision]
+  - id: language-csharp-dotnet
+    axis: language-runtime
+    surface: C# and .NET backend language
+    task_type: C# and .NET backend implementation
+    language_runtime: [C#, .NET]
+    cross_cutting_risks: [concurrency, process termination]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [csharp-dotnet-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: C# and .NET backend source decisions compose with the backend owner without assuming a Windows platform.
+    evidence_fixtures: [capcov-admission-foundation-csharp-dotnet-decision]
+  - id: language-powershell
+    axis: language-runtime
+    surface: PowerShell infrastructure language
+    task_type: PowerShell infrastructure implementation
+    language_runtime: [PowerShell]
+    cross_cutting_risks: [process termination, infrastructure as code]
+    expected_professional_owner: platform-infrastructure-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [powershell-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: PowerShell infrastructure source decisions compose with the infrastructure owner without assuming a cloud platform.
+    evidence_fixtures: [capcov-admission-foundation-powershell-decision]
+  - id: language-c-cpp-rust
+    axis: language-runtime
+    surface: Native systems language
+    task_type: native systems implementation and review
+    language_runtime: [C, C++, Rust]
+    cross_cutting_risks: [concurrency, performance]
+    expected_professional_owner: ai-code-review-refactor
+    expected_domain_extensions: []
+    expected_foundation_skills: [cpp-professional-usage, rust-professional-usage]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: C++ and Rust review guidance is stable, but C-specific ownership and implementation guidance is not safely represented by the C++ contract."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: language-objective-c
+    axis: language-runtime
+    surface: Apple native language
+    task_type: Objective-C compatibility analysis
+    language_runtime: [Objective-C]
+    cross_cutting_risks: [backward compatibility, lifecycle]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: []
+    expected_foundation_skills: [version-compatibility]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: compatibility analysis is stable, but Objective-C ownership, ARC interoperability, and platform implementation decisions lack a reusable language contract."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: language-javascript-nodejs
+    axis: language-runtime
+    surface: JavaScript runtime
+    task_type: plain JavaScript and Node.js implementation
+    language_runtime: [JavaScript, Node.js]
+    cross_cutting_risks: [process termination, concurrency, performance]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [nodejs-runtime-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: "Node.js event-loop, stream, Buffer, process, module, cancellation, and active-resource decisions compose with the backend owner without relying on TypeScript guidance."
+    evidence_fixtures: [capcov-admission-foundation-nodejs-runtime-decision]
+  - id: language-dart-php-ruby-scala
+    axis: language-runtime
+    surface: Additional language runtime
+    task_type: language-specific implementation analysis
+    language_runtime: [Dart, PHP, Ruby, Scala]
+    cross_cutting_risks: [concurrency, performance, backward compatibility]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: []
+    expected_foundation_skills: [version-compatibility]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: analysis has a stable owner, but these runtimes lack repeated failure evidence and qualified specialist contracts sufficient for new Foundation Skills."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+
+  - id: risk-client-lifecycle-restoration
+    axis: cross-cutting-risk
+    surface: Installed client
+    task_type: client lifecycle and restoration decision
+    language_runtime: []
+    cross_cutting_risks: [lifecycle, process termination, state restoration]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [client-lifecycle-state-restoration]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Shared termination, snapshot, cancellation, and restoration decisions have one client owner and lifecycle contract.
+    evidence_fixtures: [capcov-admission-foundation-client-lifecycle-decision]
+  - id: risk-offline-sync
+    axis: cross-cutting-risk
+    surface: Installed and browser client
+    task_type: offline and synchronization decision
+    language_runtime: []
+    cross_cutting_risks: [offline behavior, sync conflict]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [offline-sync-conflict-resolution]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Local-first authority, pending operations, conflicts, and recovery have one client owner and offline-sync contract.
+    evidence_fixtures: [capcov-admission-foundation-offline-sync-decision]
+  - id: risk-accessibility
+    axis: cross-cutting-risk
+    surface: Web browser user interface
+    task_type: web accessibility decision
+    language_runtime: []
+    cross_cutting_risks: [accessibility]
+    expected_professional_owner: frontend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [accessibility-inclusive-design]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Web semantic, focus, assistive-technology, and manual-proof decisions use the frontend owner and reusable accessibility guidance.
+    evidence_fixtures: [capcov-admission-foundation-accessibility-decision]
+  - id: risk-privacy
+    axis: cross-cutting-risk
+    surface: Sensitive data
+    task_type: privacy data lifecycle decision
+    language_runtime: []
+    cross_cutting_risks: [privacy]
+    expected_professional_owner: security-privacy-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [privacy-data-lifecycle]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Data inventory, purpose, minimization, retention, deletion, export, sharing, and provider handling have one security owner.
+    evidence_fixtures: [capcov-admission-foundation-privacy-data-lifecycle-decision]
+  - id: risk-client-local-data-security
+    axis: cross-cutting-risk
+    surface: Client local data
+    task_type: client local-data security decision
+    language_runtime: []
+    cross_cutting_risks: [local data security]
+    expected_professional_owner: security-privacy-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [privacy-data-lifecycle, authentication-security]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Current owner-bound client local-data evidence composes privacy lifecycle and credential-session authentication guidance without fixing a mobile platform.
+    evidence_fixtures: [capcov-admission-foundation-privacy-data-lifecycle-decision, security-credential-session-lifecycle-change]
+  - id: risk-permission-authentication-authorization
+    axis: cross-cutting-risk
+    surface: Trust boundary
+    task_type: identity and permission decision
+    language_runtime: []
+    cross_cutting_risks: [permissions, authentication, authorization]
+    expected_professional_owner: security-privacy-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [permission-boundary-modeling, authentication-security]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Current security evidence composes permission-boundary and credential-session authentication guidance under one specialist gate.
+    evidence_fixtures: [security, security-credential-session-lifecycle-change]
+  - id: risk-tenant-isolation
+    axis: cross-cutting-risk
+    surface: Shared service boundary
+    task_type: tenant isolation decision
+    language_runtime: []
+    cross_cutting_risks: [tenant isolation]
+    expected_professional_owner: security-privacy-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [permission-boundary-modeling, tenant-isolation]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: "Permission ownership composes with reusable tenant isolation across storage, execution, cache, queue, telemetry, administration, and lifecycle paths."
+    evidence_fixtures: [security, capcov-admission-foundation-tenant-isolation-decision]
+  - id: risk-cryptography-key-lifecycle
+    axis: cross-cutting-risk
+    surface: Cryptographic boundary
+    task_type: cryptography and key lifecycle decision
+    language_runtime: []
+    cross_cutting_risks: [cryptography, key lifecycle]
+    expected_professional_owner: security-privacy-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [cryptography-key-lifecycle]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: "Current owner-bound evidence selects cryptographic construction, nonce, envelope, rotation, recovery, destruction, and agility guidance without unconditionally selecting logging-owned secret handling."
+    evidence_fixtures: [capcov-admission-foundation-cryptography-key-lifecycle-decision]
+  - id: risk-audit-evidence
+    axis: cross-cutting-risk
+    surface: Audit trail
+    task_type: audit evidence integrity decision
+    language_runtime: []
+    cross_cutting_risks: [audit evidence]
+    expected_professional_owner: security-privacy-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [audit-evidence-integrity]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: "Security analysis owns audit trust, integrity, and custody; audit-evidence-integrity is selected without automatically adding observability."
+    evidence_fixtures: [capcov-admission-foundation-audit-evidence-integrity-analysis-positive]
+  - id: risk-concurrency
+    axis: cross-cutting-risk
+    surface: Shared mutable state
+    task_type: concurrency decision
+    language_runtime: []
+    cross_cutting_risks: [concurrency]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [concurrency-control]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Shared-state ordering, ownership, cancellation, and race decisions have reusable guidance.
+    evidence_fixtures: [structure-real-pattern-force]
+  - id: risk-distributed-consistency
+    axis: cross-cutting-risk
+    surface: Distributed state
+    task_type: distributed consistency decision
+    language_runtime: []
+    cross_cutting_risks: [distributed consistency]
+    expected_professional_owner: data-middleware-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [transaction-consistency, distributed-workflow-consistency]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: "Data-middleware ownership composes transaction rules with cross-service workflow identity, unknown outcomes, compensation, convergence, reconciliation, repair, and evolution."
+    evidence_fixtures: [accepted-data-analysis, capcov-admission-foundation-distributed-workflow-decision]
+  - id: risk-retry-idempotency
+    axis: cross-cutting-risk
+    surface: Side-effect boundary
+    task_type: retry and idempotency decision
+    language_runtime: []
+    cross_cutting_risks: [retry, idempotency]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [idempotency-retry-design]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: the backend owner is stable, but current owner-bound route evidence does not select idempotency-retry-design for the retry and idempotency surface."
+    evidence_fixtures: [gap:owner-bound-idempotency-route-evidence]
+  - id: risk-migration-compatibility
+    axis: cross-cutting-risk
+    surface: Versioned contract
+    task_type: migration and compatibility decision
+    language_runtime: []
+    cross_cutting_risks: [migration, backward compatibility]
+    expected_professional_owner: data-api-contract-changer
+    expected_domain_extensions: []
+    expected_foundation_skills: [data-migration-design, version-compatibility]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: the API-contract owner and version-compatibility evidence are stable, but current owner-bound route evidence does not select data-migration-design."
+    evidence_fixtures: [gap:owner-bound-data-migration-route-evidence]
+  - id: risk-packaging-distribution
+    axis: cross-cutting-risk
+    surface: Delivery artifact
+    task_type: packaging and distribution decision
+    language_runtime: []
+    cross_cutting_risks: [packaging, signing, installation, update]
+    expected_professional_owner: delivery-release-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [release-rollback, build-tool-professional-usage]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: Android, iOS/iPadOS, Windows, macOS, and Linux desktop Domains now cover the five core platforms, but special-platform package identity, signing, repair, uninstall, store, and direct-update evidence remains incomplete."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: risk-release-rollback
+    axis: cross-cutting-risk
+    surface: Production delivery
+    task_type: release and rollback decision
+    language_runtime: []
+    cross_cutting_risks: [rollback, release]
+    expected_professional_owner: delivery-release-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [release-rollback]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Approval, rollout, compatibility, stop, rollback, and recovery decisions have one gate.
+    evidence_fixtures: [release]
+  - id: risk-performance-capacity-resilience-observability
+    axis: cross-cutting-risk
+    surface: Operational system
+    task_type: nonfunctional operational decision
+    language_runtime: []
+    cross_cutting_risks: [performance, capacity, resilience, observability]
+    expected_professional_owner: reliability-observability-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [performance-budgeting, degradation-circuit-breaking, observability]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: the reliability owner and degradation and observability evidence are stable, but current owner-bound route evidence does not select performance-budgeting."
+    evidence_fixtures: [gap:owner-bound-performance-budget-route-evidence]
+  - id: risk-testing
+    axis: cross-cutting-risk
+    surface: Verification
+    task_type: testing evidence decision
+    language_runtime: []
+    cross_cutting_risks: [testing]
+    expected_professional_owner: quality-test-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [regression-testing]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Current validation evidence selects regression-testing under the specialist quality gate.
+    evidence_fixtures: [validation]
+  - id: risk-infrastructure-as-code
+    axis: cross-cutting-risk
+    surface: Infrastructure source
+    task_type: infrastructure as code safety decision
+    language_runtime: []
+    cross_cutting_risks: [infrastructure as code]
+    expected_professional_owner: platform-infrastructure-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [infrastructure-as-code-safety]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Desired state, provider state, drift, plan freshness, identity, replacement, destroy, and recovery have generic IaC guidance without assuming cloud.
+    evidence_fixtures: [capcov-admission-foundation-iac-safety-decision]
+
+  - id: domain-ai-product
+    axis: product-domain
+    surface: AI product
+    task_type: AI product security and behavior decision
+    language_runtime: []
+    cross_cutting_risks: [privacy, authorization, observability]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: [ai-product-extension]
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: AI boundary evidence adds the AI modifier after the analysis route is fixed; it does not select a security owner.
+    evidence_fixtures: [ai-rag-tool-authority]
+  - id: domain-machine-learning-system
+    axis: product-domain
+    surface: machine learning system
+    task_type: machine learning system change
+    language_runtime: [Python]
+    cross_cutting_risks: [testing, observability, privacy]
+    expected_professional_owner: security-privacy-gate
+    expected_domain_extensions: [ai-product-extension]
+    expected_foundation_skills: [threat-modeling]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: AI product risk has a stable owner, but training, feature, lineage, drift, serving, and reproducibility decisions require a machine-learning systems extension."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: domain-big-data
+    axis: product-domain
+    surface: big data
+    task_type: distributed data platform change
+    language_runtime: [Java, JVM, Python, Scala, SQL]
+    cross_cutting_risks: [distributed consistency, migration, capacity]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: [bigdata-product-extension]
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Distributed-data boundary evidence adds the Big Data modifier after the analysis route is fixed; it does not select a data owner.
+    evidence_fixtures: [bigdata-cdc-stream-replay]
+  - id: domain-saas
+    axis: product-domain
+    surface: SaaS
+    task_type: SaaS product change
+    language_runtime: []
+    cross_cutting_risks: [tenant isolation, authorization]
+    expected_professional_owner: security-privacy-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [permission-boundary-modeling, tenant-isolation]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: access control and tenant-isolation mechanisms have stable owners, but tenant product lifecycle, control plane, customization, billing, and noisy-neighbor decisions still lack a SaaS Domain owner."
+    evidence_fixtures: [capcov-admission-foundation-tenant-isolation-decision, capcov-admission-foundation-tenant-isolation-saas-lifecycle-negative]
+  - id: domain-multitenancy
+    axis: product-domain
+    surface: multitenancy
+    task_type: multitenant system change
+    language_runtime: []
+    cross_cutting_risks: [tenant isolation, privacy, authorization]
+    expected_professional_owner: security-privacy-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [permission-boundary-modeling, tenant-isolation]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: permission review and cross-layer isolation now have reusable owners, but tenant product-lifecycle and domain-semantic decisions still lack a Domain owner."
+    evidence_fixtures: [capcov-admission-foundation-tenant-isolation-decision, capcov-admission-foundation-tenant-isolation-saas-lifecycle-negative]
+  - id: domain-payments
+    axis: product-domain
+    surface: payments
+    task_type: payment system change
+    language_runtime: []
+    cross_cutting_risks: [idempotency, audit evidence, authorization]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: [payment-trading-extension]
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Current payment route evidence is analysis-first and composes the payment Domain extension with repository context.
+    evidence_fixtures: [payment-ledger-settlement-paraphrase]
+  - id: domain-trading
+    axis: product-domain
+    surface: trading
+    task_type: trading system change
+    language_runtime: []
+    cross_cutting_risks: [concurrency, audit evidence, resilience]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: [payment-trading-extension]
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Current trading route evidence is analysis-first and composes the payment and trading Domain extension with repository context.
+    evidence_fixtures: [payment-trading-execution]
+  - id: domain-commerce
+    axis: product-domain
+    surface: commerce
+    task_type: commerce product change
+    language_runtime: []
+    cross_cutting_risks: [distributed consistency, idempotency]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [service-business-logic]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: backend business rules have a stable owner, but the unadmitted commerce-domain contract leaves catalog, inventory, price, promotion, order, return, and fulfillment boundaries unproven."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: domain-marketplace
+    axis: product-domain
+    surface: marketplace
+    task_type: marketplace product change
+    language_runtime: []
+    cross_cutting_risks: [authorization, tenant isolation, audit evidence]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [service-business-logic]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: backend workflows have a stable owner, but multi-party authority, listing, matching, trust, dispute, settlement, and moderation need a Domain extension."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: domain-web3
+    axis: product-domain
+    surface: Web3
+    task_type: blockchain integration change
+    language_runtime: []
+    cross_cutting_risks: [cryptography, key lifecycle, distributed consistency]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: [web3-product-extension]
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Chain boundary evidence adds the Web3 modifier after the analysis route is fixed; it does not select an integration owner.
+    evidence_fixtures: [web3-chain-custody-finality]
+  - id: domain-enterprise-identity
+    axis: product-domain
+    surface: enterprise identity
+    task_type: enterprise identity change
+    language_runtime: []
+    cross_cutting_risks: [authentication, authorization, audit evidence]
+    expected_professional_owner: security-privacy-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [authentication-authorization]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: authentication has a stable owner, but federation, provisioning, directory, claim mapping, delegation, lifecycle, and enterprise audit need a Domain extension."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: domain-collaboration
+    axis: product-domain
+    surface: collaboration
+    task_type: collaborative product change
+    language_runtime: []
+    cross_cutting_risks: [distributed consistency, authorization, offline behavior]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [concurrency-control]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: backend state changes have a stable owner, but shared-document authority, presence, conflict, history, and convergence need a collaboration extension."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: domain-realtime-communication
+    axis: product-domain
+    surface: realtime communication
+    task_type: realtime communication change
+    language_runtime: []
+    cross_cutting_risks: [retry, resilience, capacity]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [message-queue-design]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: messaging has a stable owner, but presence, fanout, ordering, reconnect, session, and realtime delivery semantics need a Domain extension."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: domain-media-processing
+    axis: product-domain
+    surface: media processing
+    task_type: media processing change
+    language_runtime: []
+    cross_cutting_risks: [performance, capacity, resilience]
+    expected_professional_owner: reliability-observability-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [performance-budgeting]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: performance has a stable owner, but codec, timing, synchronization, pipeline, quality, device, and content-rights decisions need specialist evidence."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: domain-gaming
+    axis: product-domain
+    surface: gaming
+    task_type: game system change
+    language_runtime: [C++, C#]
+    cross_cutting_risks: [performance, distributed consistency]
+    expected_professional_owner: architecture-impact-reviewer
+    expected_domain_extensions: []
+    expected_foundation_skills: [architecture-tradeoff-analysis]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: architecture analysis has a stable owner, but frame loops, simulation, determinism, netcode, assets, engines, and platform certification need a game extension."
+    evidence_fixtures: [gap:gaming-specialist-extension]
+  - id: domain-xr
+    axis: product-domain
+    surface: XR
+    task_type: spatial product change
+    language_runtime: [C++, C#]
+    cross_cutting_risks: [accessibility, performance, privacy]
+    expected_professional_owner: experience-impact-modeler
+    expected_domain_extensions: []
+    expected_foundation_skills: [interaction-state-modeling]
+    coverage_status: partial
+    disposition: retain-partial
+    reason: "Gap: experience analysis has a stable owner, but spatial input, comfort, tracking, rendering, safety, and device behavior need an XR extension."
+    evidence_fixtures: [evals/capability-coverage/admission-cases.yaml]
+  - id: domain-iot
+    axis: product-domain
+    surface: IoT
+    task_type: IoT product change
+    language_runtime: [C, C++, Rust]
+    cross_cutting_risks: [resilience, update, signing]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: [iot-embedded-extension]
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Device boundary evidence adds the IoT modifier after the analysis route is fixed; it does not select a delivery owner.
+    evidence_fixtures: [iot-firmware-actuator-rollout]
+  - id: domain-embedded
+    axis: product-domain
+    surface: embedded
+    task_type: embedded product change
+    language_runtime: [C, C++, Rust]
+    cross_cutting_risks: [resilience, update, performance]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: [iot-embedded-extension]
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Embedded boundary evidence adds the IoT modifier after the analysis route is fixed; it does not select a delivery owner.
+    evidence_fixtures: [iot-device-physical-runtime]
+  - id: domain-automotive
+    axis: product-domain
+    surface: automotive
+    task_type: automotive industry system change
+    language_runtime: []
+    cross_cutting_risks: []
+    expected_professional_owner: null
+    expected_domain_extensions: []
+    expected_foundation_skills: []
+    coverage_status: intentionally-unsupported
+    disposition: do-not-support
+    reason: Reliable official or primary source contract evidence is unavailable, and qualified automotive reviewer evidence is unavailable.
+    evidence_fixtures: ["gap:official-primary-source", "gap:qualified-reviewer"]
+  - id: domain-industrial-automation
+    axis: product-domain
+    surface: industrial automation
+    task_type: industrial automation system change
+    language_runtime: []
+    cross_cutting_risks: []
+    expected_professional_owner: null
+    expected_domain_extensions: []
+    expected_foundation_skills: []
+    coverage_status: intentionally-unsupported
+    disposition: do-not-support
+    reason: Reliable official or primary source contract evidence is unavailable, and qualified industrial automation reviewer evidence is unavailable.
+    evidence_fixtures: ["gap:official-primary-source", "gap:qualified-reviewer"]
+  - id: domain-healthcare
+    axis: product-domain
+    surface: healthcare
+    task_type: healthcare industry system change
+    language_runtime: []
+    cross_cutting_risks: []
+    expected_professional_owner: null
+    expected_domain_extensions: []
+    expected_foundation_skills: []
+    coverage_status: intentionally-unsupported
+    disposition: do-not-support
+    reason: Reliable official or primary source contract evidence is unavailable, and qualified healthcare reviewer evidence is unavailable.
+    evidence_fixtures: ["gap:official-primary-source", "gap:qualified-reviewer"]
+  - id: domain-telecom
+    axis: product-domain
+    surface: telecom
+    task_type: telecom industry system change
+    language_runtime: []
+    cross_cutting_risks: []
+    expected_professional_owner: null
+    expected_domain_extensions: []
+    expected_foundation_skills: []
+    coverage_status: intentionally-unsupported
+    disposition: do-not-support
+    reason: Reliable official or primary source contract evidence is unavailable, and qualified telecom reviewer evidence is unavailable.
+    evidence_fixtures: ["gap:official-primary-source", "gap:qualified-reviewer"]
+  - id: domain-geospatial
+    axis: product-domain
+    surface: geospatial
+    task_type: geospatial industry system change
+    language_runtime: []
+    cross_cutting_risks: []
+    expected_professional_owner: null
+    expected_domain_extensions: []
+    expected_foundation_skills: []
+    coverage_status: intentionally-unsupported
+    disposition: do-not-support
+    reason: Reliable official or primary source contract evidence is unavailable, and qualified geospatial reviewer evidence is unavailable.
+    evidence_fixtures: ["gap:official-primary-source", "gap:qualified-reviewer"]
+
+  - id: route-react-web
+    axis: routing-combination
+    surface: React web component
+    task_type: route browser implementation
+    language_runtime: [JavaScript, TypeScript]
+    cross_cutting_risks: [accessibility]
+    expected_professional_owner: frontend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [web-platform-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: React browser work routes to the frontend owner with web-platform guidance.
+    evidence_fixtures: [capcov-route-react-web-owner]
+  - id: route-android-installed-client
+    axis: routing-combination
+    surface: Android screen or service
+    task_type: route installed Android implementation
+    language_runtime: [Kotlin, Java]
+    cross_cutting_risks: [lifecycle]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [android-platform-extension]
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Android installed-client work routes to one client owner with the Android Domain.
+    evidence_fixtures: [capcov-route-android-owner]
+  - id: route-android-installed-client-accessibility
+    axis: routing-combination
+    surface: Android installed application accessibility behavior
+    task_type: route installed Android accessibility implementation
+    language_runtime: [Kotlin, Java]
+    cross_cutting_risks: [accessibility]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [android-platform-extension]
+    expected_foundation_skills: [accessibility-inclusive-design]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Android accessibility source work keeps one installed-client owner and composes Android platform deltas with reusable inclusive-interaction decisions.
+    evidence_fixtures: [capcov-route-android-accessibility-owner]
+  - id: route-ios-installed-client
+    axis: routing-combination
+    surface: iOS scene or background task
+    task_type: route installed iOS implementation
+    language_runtime: [Swift]
+    cross_cutting_risks: [lifecycle]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [ios-ipados-platform-extension]
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: iOS installed-client work routes to one client owner with the iOS and iPadOS Domain.
+    evidence_fixtures: [capcov-route-ios-owner]
+  - id: route-windows-installed-client
+    axis: routing-combination
+    surface: Windows packaged desktop app
+    task_type: route installed Windows implementation
+    language_runtime: [C#, .NET]
+    cross_cutting_risks: [packaging]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [windows-platform-extension]
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Windows installed-client work routes to one client owner with the Windows Domain.
+    evidence_fixtures: [capcov-route-windows-owner]
+  - id: route-macos-installed-client
+    axis: routing-combination
+    surface: macOS AppKit or SwiftUI app
+    task_type: route installed macOS implementation
+    language_runtime: [Swift]
+    cross_cutting_risks: [lifecycle]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [macos-platform-extension]
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: macOS installed-client work routes to one client owner with the macOS Domain.
+    evidence_fixtures: [capcov-route-macos-owner]
+  - id: route-linux-installed-client
+    axis: routing-combination
+    surface: Linux graphical desktop app
+    task_type: route installed Linux desktop implementation
+    language_runtime: [C++, Rust]
+    cross_cutting_risks: [installation]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [linux-desktop-platform-extension]
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Linux graphical installed-client work routes to one client owner with the Linux desktop Domain.
+    evidence_fixtures: [capcov-route-linux-desktop-owner]
+  - id: route-flutter-android-ios
+    axis: routing-combination
+    surface: Flutter Android and iOS app
+    task_type: route cross-platform installed-client implementation
+    language_runtime: [Dart]
+    cross_cutting_risks: [lifecycle, packaging]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [cross-platform-client-extension, android-platform-extension, ios-ipados-platform-extension]
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Flutter work with explicit Android and iOS targets composes the cross-platform modifier with exactly those target Domains.
+    evidence_fixtures: [capcov-route-flutter-android-ios]
+  - id: route-electron-windows
+    axis: routing-combination
+    surface: Electron on Windows
+    task_type: route cross-platform Windows installed-client implementation
+    language_runtime: [JavaScript, TypeScript]
+    cross_cutting_risks: [packaging, update]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [cross-platform-client-extension, windows-platform-extension]
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Electron work with an explicit Windows target composes the cross-platform modifier with the Windows Domain.
+    evidence_fixtures: [capcov-route-electron-windows]
+  - id: route-terraform-source
+    axis: routing-combination
+    surface: Terraform module source
+    task_type: route infrastructure source implementation
+    language_runtime: []
+    cross_cutting_risks: [infrastructure as code]
+    expected_professional_owner: platform-infrastructure-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [infrastructure-as-code-safety]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Terraform source work routes to the infrastructure owner with IaC guidance while excluding the release owner.
+    evidence_fixtures: [capcov-route-terraform-source]
+  - id: route-terraform-production-apply
+    axis: routing-combination
+    surface: Terraform production apply
+    task_type: route production rollout decision
+    language_runtime: []
+    cross_cutting_risks: [release, rollback]
+    expected_professional_owner: delivery-release-gate
+    expected_domain_extensions: []
+    expected_foundation_skills: [release-rollback, version-compatibility]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Production apply remains a delivery decision and never becomes infrastructure source implementation.
+    evidence_fixtures: [capcov-route-terraform-apply]
+  - id: route-ordinary-android-no-mobile-bridge
+    axis: routing-combination
+    surface: Ordinary Android request
+    task_type: reject generic mobile compatibility bridge
+    language_runtime: [Kotlin, Java]
+    cross_cutting_risks: [lifecycle]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [android-platform-extension]
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Ordinary Android work selects the Android successor directly and does not load the explicit-only mobile bridge.
+    evidence_fixtures: [capcov-route-android-owner]
+  - id: route-ordinary-ios-no-mobile-bridge
+    axis: routing-combination
+    surface: Ordinary iOS request
+    task_type: reject generic mobile compatibility bridge
+    language_runtime: [Swift]
+    cross_cutting_risks: [lifecycle]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [ios-ipados-platform-extension]
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Ordinary iOS work selects the iOS and iPadOS successor directly and does not load the explicit-only mobile bridge.
+    evidence_fixtures: [capcov-route-ios-owner]
+  - id: route-cross-platform-alone-rejected
+    axis: routing-combination
+    surface: Cross-platform framework with unknown targets
+    task_type: reject targetless Domain routing
+    language_runtime: []
+    cross_cutting_risks: [packaging]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: []
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Targetless cross-platform work stops in repository analysis instead of selecting a Domain alone.
+    evidence_fixtures: [capcov-route-cross-alone-rejected]
+  - id: route-unknown-target-analysis-first
+    axis: routing-combination
+    surface: Unknown installed-client target
+    task_type: inspect targets before implementation routing
+    language_runtime: []
+    cross_cutting_risks: [packaging]
+    expected_professional_owner: engineering-change-analysis
+    expected_domain_extensions: []
+    expected_foundation_skills: [repository-context-map]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Unknown targets are resolved from repository and release configuration before one bounded question.
+    evidence_fixtures: [capcov-unknown-installed-client-target-analysis]
+  - id: route-web-installed-zero-conflict
+    axis: routing-combination
+    surface: Web and installed-client boundary
+    task_type: reject frontend and installed-client dual ownership
+    language_runtime: []
+    cross_cutting_risks: [lifecycle]
+    expected_professional_owner: frontend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [web-platform-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: React browser work stays with the frontend owner and explicitly excludes installed-client ownership.
+    evidence_fixtures: [capcov-route-react-web-owner]
+  - id: route-backend-installed-zero-conflict
+    axis: routing-combination
+    surface: Backend and installed-client boundary
+    task_type: reject backend and installed-client dual ownership
+    language_runtime: []
+    cross_cutting_risks: [backward compatibility]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Generic backend work stays with the backend owner and explicitly excludes installed-client and platform routing.
+    evidence_fixtures: [capcov-route-backend-no-installed-client]
+  - id: route-infrastructure-release-zero-conflict
+    axis: routing-combination
+    surface: Infrastructure source and production release boundary
+    task_type: reject infrastructure builder and release dual ownership
+    language_runtime: []
+    cross_cutting_risks: [infrastructure as code, release]
+    expected_professional_owner: platform-infrastructure-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [infrastructure-as-code-safety]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Terraform source work stays with the infrastructure builder and explicitly excludes production release ownership.
+    evidence_fixtures: [capcov-route-terraform-source]
+  - id: route-platform-professional-zero-conflict
+    axis: routing-combination
+    surface: Platform Domain and Professional owner boundary
+    task_type: reject Domain as primary owner
+    language_runtime: []
+    cross_cutting_risks: [lifecycle]
+    expected_professional_owner: installed-client-change-builder
+    expected_domain_extensions: [android-platform-extension]
+    expected_foundation_skills: []
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Android remains a modifier-only Domain beneath one installed-client Professional owner.
+    evidence_fixtures: [capcov-route-android-owner]
+  - id: route-language-domain-zero-conflict
+    axis: routing-combination
+    surface: Language and platform boundary
+    task_type: reject language name as platform Domain trigger
+    language_runtime: [Kotlin, Swift, C#]
+    cross_cutting_risks: [lifecycle]
+    expected_professional_owner: backend-change-builder
+    expected_domain_extensions: []
+    expected_foundation_skills: [kotlin-professional-usage]
+    coverage_status: covered
+    disposition: retain-existing
+    reason: Kotlin backend work selects Kotlin guidance under the backend owner without triggering an Android Domain.
+    evidence_fixtures: [capcov-route-kotlin-backend-no-android]

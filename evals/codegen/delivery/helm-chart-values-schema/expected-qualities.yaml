@@ -7,21 +7,13 @@ focus:
   - secret values prevention
   - atomic upgrade
 route_hints:
-  skills:
-    - delivery-release-gate
-    - security-privacy-gate
-    - quality-test-gate
-  capabilities:
-    - kubernetes-gateway
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: delivery-release-gate
+  layer3_skills:
     - ci-cd
-    - secret-configuration-security
     - release-rollback
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - security gate
-    - delivery gate
-    - test gate
+  review_skill: delivery-release-gate
 expected_outcomes:
   - values.schema.json rejects missing or unsafe values.
   - values.yaml contains no plaintext secrets.

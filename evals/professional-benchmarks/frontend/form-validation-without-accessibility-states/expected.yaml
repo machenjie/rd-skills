@@ -4,7 +4,6 @@ expected_capabilities:
   - form-validation-design
   - frontend-testing
   - interaction-state-modeling
-  - code-clarity-maintainability
 expected_hidden_risks:
   - inaccessible validation feedback
   - lossy form state after API failure

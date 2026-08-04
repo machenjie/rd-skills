@@ -7,25 +7,12 @@ focus:
   - secret rotation
   - safe failure handling
 route_hints:
-  skills:
-    - change-intake-compiler
-    - integration-change-builder
-    - backend-change-builder
-    - security-privacy-gate
-    - quality-test-gate
-  capabilities:
-    - input-validation
-    - secret-configuration-security
-    - integration-testing
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: integration-change-builder
+  layer3_skills:
     - contract-testing
-    - logging-error-handling
-  domain_extensions: []
-  quality_gates:
-    - requirement gate
-    - implementation gate
-    - security gate
-    - test gate
-    - documentation gate
+  review_skill: security-privacy-gate
 expected_outcomes:
   - Valid signatures generated from raw bytes are accepted.
   - Equivalent JSON with altered whitespace fails when the signature no longer matches raw bytes.

@@ -7,20 +7,12 @@ focus:
   - safe user-visible error mapping
   - async failure and DLQ behavior
 route_hints:
-  skills:
-    - backend-change-builder
-    - integration-change-builder
-    - reliability-observability-gate
-  capabilities:
-    - failure-contract-design
-    - logging-error-handling
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
     - idempotency-retry-design
-    - observability
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - reliability gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Adapter, repository, service, controller, job, and consumer boundaries declare failure contracts.
   - Retryable, terminal, validation, permission, conflict, timeout, cancellation, and partial failure states are distinguishable.

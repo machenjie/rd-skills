@@ -1,34 +1,22 @@
-# Kubernetes Gateway Evidence Patterns
+# Kubernetes Runtime Evidence Patterns
 
-## Required Evidence
+These records separate rendered intent, effective runtime behavior, rollout evidence, and live authority.
 
-- Source boundary: manifests, Helm chart, values overlays, GitOps app, CRDs/hooks, namespace, Service, Ingress/Gateway, RBAC, NetworkPolicy, secrets/config, pipeline, runbook, dashboard, and owner.
-- Render evidence: `helm lint`, `helm template`, values schema, rendered manifest validation, policy-as-code result, diff, artifact path, exit code, and freshness after final edit.
-- Traffic/security evidence: host/path/TLS/auth/timeouts/rate limits, public/internal exposure, DNS/CDN/WAF/load balancer boundary, ServiceAccount/RBAC diff, NetworkPolicy allowlist, secret source, and rollback step.
-- Reliability evidence: probe semantics, requests/limits baseline, HPA/KEDA/VPA metric, PDB/topology decision, post-deploy watch metric, alert owner, and capacity evidence limit.
-- Release/rollback evidence: rollout strategy, atomic/wait/GitOps sync behavior, image/config/secret/route/schema/CRD/hook rollback scope, forward-fix owner, and stop condition.
-- Graph/memory/execution evidence: inspected paths, accepted/rejected prior deploy claims, generated report/dist freshness, final validation order, and unverified provider/cluster behavior.
+## Desired-State Claim
 
-## Tool Permission Boundary
+- Record source manifests or package inputs, selected values/profile, rendered artifact, image digest, config/secret references, target cluster/context and namespace, and final-edit freshness.
+- Name schema, render, diff, and policy checks actually executed; scope the claim to the selected inputs and supported platform versions.
+- Treat rendered output as intended state; record admission, defaulting, controller, custom-resource, hook, and provider behavior that remains unobserved.
 
-Classify actions as read-only source inspection, local render/report write, local policy validation, cluster dry-run, GitOps sync, Helm/Kubernetes live mutation, cloud/DNS/CDN/WAF mutation, secret read/write, or rollback. State sandbox/approval state, target context/namespace/account, write scope (`HOME`, source tree, report artifacts, `dist/`, cluster, cloud provider), rollback/forward-fix path, and secret redaction rule.
+## Runtime-Boundary Claim
 
-## Handoff Shape
+- Workload evidence names controller kind, lifecycle, state/volume ownership, probes, termination, resources, scaling, placement, disruption, and observed capacity source.
+- Identity evidence names service account or workload identity, permissions, secret/config source, network paths, tenant scope, and policy enforcement source.
+- Traffic evidence names listener/route/backend, TLS/auth, timeout/retry/body/rate behavior, public or internal exposure, and DNS/edge/load-balancer ownership.
 
-```markdown
-Kubernetes Gateway Evidence Record
-- Source boundary:
-- Render/policy proof:
-- Traffic/security proof:
-- Reliability proof:
-- Release/rollback proof:
-- Graph/memory/execution freshness:
-- Tool permission boundary:
-- Validation:
-- What remains unproved:
-- Residual operational risk:
-```
+## Rollout And Authority Claim
 
-## Blocking Conditions
-
-Block completion when live mutation lacks dry-run/rendered diff and rollback, public exposure lacks owner/TLS/auth/blast-radius review, secrets are present in committed values/manifests, probes/resources/PDB are copied without service-specific evidence, CRD/hook rollback is unclear, or stale graph/memory/deploy claims are reused without current-source confirmation.
+- Record mixed-version combinations, rollout/watch signals, stop authority, image/config/secret/route/custom-resource/hook reversal, persistent or external state, and forward-recovery owner.
+- Distinguish local render or dry-run evidence from live admission, traffic, capacity, secret rotation, and recovery evidence.
+- For a live action, record explicit target and authority, expected write scope, redaction, stop condition, and recovery path.
+- Close with untested platform versions, traffic paths, capacity conditions, state transitions, provider behavior, and residual ownership.

@@ -1,0 +1,22 @@
+coverage_class: standard
+expected_stage: implementation-review
+expected_professional_skill: backend-change-builder
+expected_capabilities:
+  - low-level-systems-extension
+expected_hidden_risks:
+  - exception or panic can unwind across the FFI boundary
+  - allocation in one runtime can be freed by an incompatible allocator
+  - relaxed publication can expose partially initialized shared state
+expected_evidence:
+  - cross-language unwind containment negative test
+  - allocator pairing and ownership transfer test
+  - happens-before litmus or sanitizer evidence for publication
+forbidden_behaviors:
+  - allow exceptions to cross the C ABI
+  - free foreign memory with the local allocator
+  - replace publication ordering with volatile access
+expected_output_obligations:
+  - ABI ownership and error contract
+  - selected unwind allocator and publication controls
+  - platform proof limits and residual owner
+expected_with_skill_status: pass

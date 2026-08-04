@@ -1,66 +1,28 @@
-# Contract Testing Benchmarks And Patterns
+# Contract Compatibility Decision Patterns
 
-Load this reference when selecting contract testing tooling, classifying breaking changes, comparing REST/gRPC/event/webhook/GraphQL contract styles, or designing a Pact Broker, schema registry, generated-client, or vendor-fixture workflow. Keep routine routing in `SKILL.md`.
+These patterns select scoped compatibility proof without treating one mechanism as universal.
 
-## Benchmark Anchors
+## Select Proof From The Boundary
 
-- **Pact / Pact Specification v3/v4**: consumer-driven contract testing for REST, gRPC, and messages with provider verification.
-- **Spring Cloud Contract**: JVM ecosystem consumer/provider contract tests and stub generation.
-- **OpenAPI Specification 3.x**: machine-readable REST contract validated with `spectral`, `openapi-diff`, or `oasdiff`.
-- **AsyncAPI 2.x/3.x**: event and async-message contract specification.
-- **Protocol Buffers / gRPC**: binary compatibility with `buf breaking`.
-- **Confluent Schema Registry, AWS Glue Schema Registry, Apicurio**: Avro, Protobuf, and JSON Schema compatibility modes.
-- **JSON Schema Draft 2020-12**: structural validation and explicit unknown-field policy.
-- **Pact Broker / PactFlow**: versioned contract registry and provider verification coordination.
-- **WireMock / MockServer**: stubs generated from contracts or recorded fixtures.
-- **Spectral**: OpenAPI/AsyncAPI linting with custom rulesets.
-- **OWASP API Security Top 10 2023**: authentication and object-property risks that can appear in API contracts.
-- **RFC 8594 Sunset header**: deprecation and sunset signaling for HTTP APIs.
-
-## Contract Type Selection Matrix
-
-| Contract type | Tooling | Machine-readable source | Breaking change detection | Pick when |
-| --- | --- | --- | --- | --- |
-| REST / HTTP | Pact v4, OAS3 diff, WireMock stubs | OpenAPI 3.x YAML/JSON | `oasdiff breaking`; Pact provider test | HTTP services with independent release cycles |
-| gRPC / Protobuf | `buf breaking`, Pact gRPC plugin | `.proto` files | `buf breaking --against origin/main` | gRPC services; strict binary compatibility needed |
-| Async / Events | Pact v3 message pacts, AsyncAPI diff | AsyncAPI 2.x/3.x YAML | AsyncAPI diff; Pact message provider test | Kafka, SNS, SQS, webhooks, event-driven |
-| JSON Schema | AJV, `ajv-cli`, json-schema-diff | JSON Schema 2020-12 | json-schema-diff; unknown-field policy | DTOs, config, data pipeline payloads |
-| Avro Kafka | Confluent Schema Registry CLI | `.avsc` | Registry compatibility check | Confluent Kafka with schema registry |
-| Protobuf Kafka | `buf`, Confluent Schema Registry | `.proto` | `buf breaking`; registry FULL mode | High-throughput serialized events needing binary compatibility |
-| GraphQL | `graphql-inspector diff` | SDL schema | `graphql-inspector diff` breaking | GraphQL APIs with external consumer apps |
-| Webhook | Pact v4 async; WireMock stubbing | OpenAPI Webhook or AsyncAPI | Manual review plus pact or event fixture | Third-party webhook integrations |
-
-## Breaking Change Classification
-
-| Change type | Breaking? | Safe evolution strategy |
+| Surface at risk | Easy-to-miss incompatibility | Scoped proof |
 | --- | --- | --- |
-| Remove required field from response | Yes | Deprecate, keep for at least one version, then sunset |
-| Remove required request field | Yes if consumers send it | Version if ambiguous; mark optional first |
-| Change field type | Yes | Add new field name and deprecate old; never silently change type |
-| Remove HTTP status code | Yes | Keep old code while adding new code during transition |
-| Remove enum value | Yes | Do not remove; deprecate and keep tolerant readers |
-| Add optional response field | No | Safe when consumers ignore unknown fields |
-| Add required request field | Yes | Add as optional first; enforce in next version |
-| Add enum value in closed enum | Often yes | Use extensible enum pattern or versioned enum |
-| Change collection sort order | Yes if consumers rely on it | Document sort and provide explicit `sort` parameter |
-| Remove endpoint or operation | Yes | Sunset header, deprecation notice, and versioned replacement |
-| Rename field | Yes | Add new field, deprecate old, and support both during migration |
-| Widen nullability | Yes for strict consumers | Deprecate and version; test null handling |
+| Request or response | absent/null/default differences, error and authorization shape, unknown fields, ordering, pagination | provider verification plus representative consumer parsing or behavior |
+| Event or retained message | reader/writer direction, field identity, replay, duplicate delivery, old payloads | changed schema check plus old/new producer-consumer and retained-payload cases |
+| Generated client | generator/runtime version, closed enums, deserialization, call-site adoption | regenerate and compile or execute named client versions and affected calls |
+| External provider or webhook | documented behavior differs from observed behavior, signing, partial payloads, capture drift | redacted provenance-bearing fixture replay plus stated unobserved behavior |
+| Independently deployed consumer | unknown release order, long-lived installation, hidden dependency | named coexistence matrix and explicit unknown-consumer residual risk |
 
-## Consumer-Driven Workflow
+## Mixed-Version Pattern
 
-```text
-Consumer writes interaction expectations
-  -> publishes pact or expectation to broker with consumer version
-Provider CI runs provider verification against selected consumer versions
-  -> PR is blocked if any active consumer expectation fails
-Deployment gate runs can-i-deploy or equivalent
-  -> deployment is blocked if provider version is not verified for target environment
-```
+1. Name versions that can coexist and which side reads or writes each representation.
+2. Record the authoritative schema or observed fixture, compatibility policy, retention or replay source, and rollout order.
+3. Exercise semantic branches consumers use, including old readers receiving new values and new readers receiving retained old payloads.
+4. Preserve stable identifiers and migration meaning until the consuming population or retained data no longer needs them.
+5. Remove compatibility paths only with current consumer and replay evidence plus an owned rollback or recovery path.
 
-## Fixture And Registry Patterns
+## Decision Boundaries
 
-- Recorded vendor fixtures must include source, captured_at, vendor version, redaction status, and replay command.
-- Schema registry checks must name subject, compatibility mode, old schema, new schema, producer version, and consumer version.
-- Generated-client checks should compile or test the generated client against the changed schema, not only diff the schema text.
-- Consumer pacts should live with consumers; provider-owned self-certification is not consumer-driven evidence.
+- Schema shape checks structural evolution; semantic compatibility still needs named provider and consumer behavior.
+- Provider verification closes named expectations; consumer discovery and production adoption remain separate claims.
+- Captured provider behavior is evidence for its source, version, environment, and capture time, not an evergreen specification.
+- Contract tests route real transport, persistence, timing, and deployment interaction to integration or journey proof.

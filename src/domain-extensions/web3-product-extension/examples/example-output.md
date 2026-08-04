@@ -3,7 +3,8 @@
 ## Web3 Domain Findings
 - Blocking: signature request must use typed, human-readable fields with chain id, contract address, action, nonce, expiry, and replay protection.
 - Required state model: requested, wallet-opened, signed, submitted, pending, confirmed, failed, reverted, replaced, reorged.
-- Consistency requirement: backend ownership must reconcile contract events with indexer lag and never treat cached ownership as final during pending transfer.
+- Consistency requirement: backend ownership must reconcile contract events with indexer lag.
+- Cached ownership is never final during a pending transfer.
 
 ## Verification
 - Unit tests for nonce reuse, wrong chain, expired signature, duplicate submit, and revert handling.

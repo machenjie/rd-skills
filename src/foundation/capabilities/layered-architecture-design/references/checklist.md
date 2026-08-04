@@ -1,8 +1,8 @@
 # Layered Architecture Design Checklist
 
 - Select the layering mode and scope the use case, module/package boundary, included layers, and excluded surfaces.
-- Record current source evidence: entry points, services/use cases, domain objects, repositories/adapters, imports, architecture checks, tests, graph, memory, and validation freshness.
-- Accept, reject, or mark not verified any reused repository graph, project memory, layer convention, repository pattern, transaction pattern, exception mapping, or enforcement result.
+- Record current source evidence: entry points, services/use cases, domain objects, repositories/adapters, imports, architecture checks, tests, repository inspection and prior task evidence, and validation freshness.
+- Accept, reject, or mark not verified any reused repository inspection, prior task evidence, layer convention, repository pattern, transaction pattern, exception mapping, or enforcement result.
 - Identify presentation, application, domain, and infrastructure elements.
 - Confirm controllers or handlers do not own core business decisions.
 - Confirm domain code has no infrastructure or framework dependency.

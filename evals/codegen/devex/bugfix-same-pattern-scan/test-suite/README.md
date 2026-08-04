@@ -5,7 +5,7 @@
 - Reported endpoint returns the expected missing-profile response instead of crashing.
 - Any sibling matched path has either a regression test or an explicit out-of-scope rationale.
 - Same-pattern scan evidence exists before final acceptance.
-- Validation output is included in the closure package.
+- Validation results are included in the final handoff.
 
 ## Fixtures
 

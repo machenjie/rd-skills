@@ -3,7 +3,6 @@ expected_professional_skill: backend-change-builder
 expected_capabilities:
   - permission-boundary-modeling
   - authentication-authorization
-  - agent-execution-discipline
   - regression-testing
 expected_hidden_risks:
   - IDOR from missing object ownership check

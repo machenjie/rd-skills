@@ -1,489 +1,447 @@
 #!/usr/bin/env python3
-"""Validate ChangeForge registries and cross-references."""
+"""Validate the four hookless ChangeForge Skill registries."""
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
+from typing import Any
 
 from validation_utils import (
+    CORE_CONTRACTS,
+    EXPECTED_CONTROL_SKILL_COUNT,
     EXPECTED_DOMAIN_EXTENSION_COUNT,
     EXPECTED_FOUNDATION_CAPABILITY_COUNT,
     EXPECTED_PROFESSIONAL_SKILL_COUNT,
-    EXPECTED_PROFILE_TOP_LEVEL_COUNTS,
+    REGISTRY_SCHEMA_VERSIONS,
+    ROLE_CONTRACT_MODEL,
     ValidationProblem,
-    collect_reference_values,
-    entry_path,
-    entry_ref,
+    domain_modifier_routing_authority,
     fail_many,
+    domain_registry_contract_errors,
+    foundation_content_class_errors,
+    foundation_ownership_errors,
+    foundation_registry_field_errors,
     load_yaml_file,
     parse_frontmatter,
     path_is_within,
-    registry_items,
-    relpath,
-    validate_expected_count,
-    validate_no_personal_references,
+    professional_automatic_routing_contract_errors,
+    professional_review_skill_ids,
+    reference_contract_has_owner_anchor,
+    reference_contracts,
+    reference_type_for_path,
+    required_expertise_tag_errors,
+    role_contract_map_errors,
 )
 
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_DIR = ROOT / "src" / "registry"
-PROFESSIONAL_SKILLS_DIR = ROOT / "src" / "professional-skills"
-CAPABILITIES_DIR = ROOT / "src" / "foundation" / "capabilities"
-DOMAIN_EXTENSIONS_DIR = ROOT / "src" / "domain-extensions"
-STAGE_MODEL_REGISTRY = REGISTRY_DIR / "stage-model.yaml"
-REQUIRED_REGISTRIES = (
+SPECS = {
+    "control-skills.yaml": (
+        "changeforge.control_skills",
+        "control_skills",
+        ROOT / "src" / "control-skills",
+        EXPECTED_CONTROL_SKILL_COUNT,
+        REGISTRY_SCHEMA_VERSIONS["control"],
+    ),
+    "professional-skills.yaml": (
+        "changeforge.professional_skills",
+        "professional_skills",
+        ROOT / "src" / "professional-skills",
+        EXPECTED_PROFESSIONAL_SKILL_COUNT,
+        REGISTRY_SCHEMA_VERSIONS["professional"],
+    ),
+    "foundation-skills.yaml": (
+        "changeforge.foundation_skills",
+        "foundation_skills",
+        ROOT / "src" / "foundation" / "capabilities",
+        EXPECTED_FOUNDATION_CAPABILITY_COUNT,
+        REGISTRY_SCHEMA_VERSIONS["foundation"],
+    ),
+    "domain-skills.yaml": (
+        "changeforge.domain_skills",
+        "domain_skills",
+        ROOT / "src" / "domain-extensions",
+        EXPECTED_DOMAIN_EXTENSION_COUNT,
+        REGISTRY_SCHEMA_VERSIONS["domain"],
+    ),
+}
+REQUIRED_FIELDS = (
+    "name",
+    "path",
+    "role_support",
+    "trigger_signals",
+    "anti_trigger_signals",
+    "required_inputs",
+    "output_contract",
+    "escalation_signals",
+    "reference_index",
+)
+ROLES = set(ROLE_CONTRACT_MODEL)
+ROLE_IMPOSSIBLE_INPUT_PHRASES = {
+    "analysis-agent": (
+        "actual diff",
+        "all changed paths",
+        "material edit marker",
+        "post edit validation",
+        "post-edit validation",
+        "validation evidence and freshness",
+    ),
+    "task-agent": ("bounded architecture artifact", "decision criteria and supporting source evidence"),
+    "review-agent": ("accepted task capsule", "accepted integration task capsule"),
+}
+OLD_REGISTRIES = (
     "skills.yaml",
     "capabilities.yaml",
     "domain-extensions.yaml",
+    "specialist-packs.yaml",
+    "review-packs.yaml",
     "routing-rules.yaml",
+    "stage-model.yaml",
 )
-BANNED_REGISTRIES = (
-    ROOT / "registry" / "toolbox.yaml",
-    REGISTRY_DIR / "toolbox.yaml",
-)
-REFERENCE_KEYS = {
-    "skill",
-    "skills",
-    "skill_name",
-    "skill_names",
-    "capability",
-    "capabilities",
-    "capability_id",
-    "capability_ids",
-    "changeforge_capability_id",
-    "domain_extension",
-    "domain_extensions",
-    "domain_extension_id",
-    "domain_extension_ids",
-    "target",
-    "targets",
-    "route_to",
-    "routes_to",
-    "uses",
-    "used_by",
-    "requires",
-    "required_capabilities",
-    "fallback",
-    "fallbacks",
-    "handoff",
-    "handoffs",
+FORBIDDEN_FIELDS = {
+    "consumer_role",
+    "consumer_roles",
+    "stage",
+    "allowed_actions",
+    "forbidden_actions",
     "handoff_to",
-    "handoff_targets",
-}
-HANDOFF_KEYS = {
-    "handoff",
-    "handoffs",
-    "handoff_to",
-    "handoff_targets",
-    "escalate_to",
-    "escalates_to",
+    "review_pair",
+    "parallel_safety",
+    "context_budget",
+    "runtime_role",
+    "digest",
+    "runtime_identity",
 }
 
 
-def _load_skill_names() -> set[str]:
-    names: set[str] = set()
-    if not PROFESSIONAL_SKILLS_DIR.exists():
-        return names
+def main() -> int:
+    errors: list[str] = []
+    for name in OLD_REGISTRIES:
+        if (REGISTRY_DIR / name).exists():
+            errors.append(f"obsolete registry remains: src/registry/{name}")
+    if (ROOT / "registry" / "toolbox.yaml").exists() or (REGISTRY_DIR / "toolbox.yaml").exists():
+        errors.append("toolbox registry is forbidden")
 
-    for skill_dir in PROFESSIONAL_SKILLS_DIR.iterdir():
-        if not skill_dir.is_dir() or skill_dir.name.startswith("."):
-            continue
-        names.add(skill_dir.name)
-        skill_file = skill_dir / "SKILL.md"
-        if skill_file.is_file():
-            try:
-                metadata, _raw_frontmatter, _body = parse_frontmatter(skill_file)
-            except ValidationProblem:
-                continue
-            name = metadata.get("name")
-            if isinstance(name, str):
-                names.add(name)
-    return names
-
-
-def _load_capability_refs() -> set[str]:
-    refs: set[str] = set()
-    if not CAPABILITIES_DIR.exists():
-        return refs
-
-    for capability_dir in CAPABILITIES_DIR.iterdir():
-        if not capability_dir.is_dir() or capability_dir.name.startswith((".", "_")):
-            continue
-        refs.add(capability_dir.name)
-        skill_file = capability_dir / "SKILL.md"
-        if skill_file.is_file():
-            try:
-                metadata, _raw_frontmatter, _body = parse_frontmatter(skill_file)
-            except ValidationProblem:
-                continue
-            for key in ("name", "changeforge_capability_id"):
-                value = metadata.get(key)
-                if isinstance(value, str):
-                    refs.add(value)
-    return refs
-
-
-def _load_domain_extension_names() -> set[str]:
-    names: set[str] = set()
-    if not DOMAIN_EXTENSIONS_DIR.exists():
-        return names
-
-    for extension_dir in DOMAIN_EXTENSIONS_DIR.iterdir():
-        if not extension_dir.is_dir() or extension_dir.name.startswith("."):
-            continue
-        names.add(extension_dir.name)
-        skill_file = extension_dir / "SKILL.md"
-        if skill_file.is_file():
-            try:
-                metadata, _raw_frontmatter, _body = parse_frontmatter(skill_file)
-            except ValidationProblem:
-                continue
-            name = metadata.get("name")
-            if isinstance(name, str):
-                names.add(name)
-    return names
-
-
-def _entry_path_exists(path_value: str, expected_root: Path) -> bool:
-    candidate = (ROOT / path_value).resolve()
-    return path_is_within(expected_root, candidate) and candidate.exists()
-
-
-def _validate_registry_entry_reference(
-    entry: object,
-    keys: tuple[str, ...],
-    existing_refs: set[str],
-    expected_root: Path,
-    registry_name: str,
-    index: int,
-    errors: list[str],
-) -> None:
-    path_value = entry_path(entry)
-    if not path_value:
-        errors.append(f"{registry_name}[{index}]: missing source path")
-        return
-    if not _entry_path_exists(path_value, expected_root):
-        errors.append(f"{registry_name}[{index}]: path does not exist: {path_value}")
-        return
-
-    ref = entry_ref(entry, keys)
-    if ref is None:
-        errors.append(f"{registry_name}[{index}]: missing reference name/id/path")
-        return
-    if ref not in existing_refs:
-        errors.append(f"{registry_name}[{index}]: references missing item '{ref}'")
-
-
-def _validate_capability_status(entry: object, index: int, errors: list[str]) -> None:
-    if not isinstance(entry, dict):
-        return
-    if entry.get("status") != "implemented":
-        errors.append(
-            "capabilities.yaml:capabilities"
-            f"[{index}]: status must be implemented"
+    loaded: dict[str, list[dict[str, Any]]] = {}
+    for file_name, (
+        kind,
+        key,
+        source_root,
+        expected_count,
+        expected_schema_version,
+    ) in SPECS.items():
+        entries = _validate_registry(
+            file_name,
+            kind,
+            key,
+            source_root,
+            expected_count,
+            expected_schema_version,
+            errors,
         )
+        loaded[key] = entries
+        if file_name == "professional-skills.yaml":
+            errors.extend(
+                professional_automatic_routing_contract_errors(
+                    load_yaml_file(REGISTRY_DIR / file_name),
+                    file_name,
+                )
+            )
+
+    layer3_names = _names(loaded.get("foundation_skills", [])) | _names(loaded.get("domain_skills", []))
+    for index, entry in enumerate(loaded.get("professional_skills", [])):
+        context = f"professional-skills.yaml:professional_skills[{index}]"
+        candidates = _string_list(entry.get("layer3_candidates"), f"{context}.layer3_candidates", errors)
+        if len(candidates) != len(set(candidates)):
+            errors.append(f"{context}: duplicate Layer 3 candidate")
+        for name in candidates:
+            if name not in layer3_names:
+                errors.append(f"{context}: unknown Layer 3 candidate {name!r}")
+        if not isinstance(entry.get("task_routable"), bool):
+            errors.append(f"{context}: task_routable must be boolean")
+
+    try:
+        covered_review_skills = professional_review_skill_ids(
+            loaded.get("professional_skills", []),
+            CORE_CONTRACTS["review_discipline_contract"]["professional_risk_matrix"],
+        )
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+    else:
+        if not covered_review_skills:
+            errors.append(
+                "professional review risk matrix selector must cover at least one Skill"
+            )
+
+    for index, entry in enumerate(loaded.get("foundation_skills", [])):
+        context = f"foundation-skills.yaml:foundation_skills[{index}]"
+        errors.extend(foundation_registry_field_errors(entry, context))
+        errors.extend(foundation_content_class_errors(entry, context))
+        if not isinstance(entry.get("group"), str) or not entry.get("group", "").strip():
+            errors.append(f"{context}: group must be a non-empty string")
+    errors.extend(
+        foundation_ownership_errors(
+            loaded.get("foundation_skills", []),
+            loaded.get("professional_skills", []),
+        )
+    )
+    try:
+        domain_modifier_routing_authority(
+            load_yaml_file(REGISTRY_DIR / "domain-skills.yaml"),
+            load_yaml_file(REGISTRY_DIR / "professional-skills.yaml"),
+        )
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+
+    if errors:
+        return fail_many("validate-registry", errors)
+    print("validate-registry: three-layer Skill registries and references are valid.")
+    return 0
 
 
-def _validate_capability_used_by_references(
-    entry: object,
-    index: int,
-    all_refs: set[str],
+def _validate_registry(
+    file_name: str,
+    kind: str,
+    key: str,
+    source_root: Path,
+    expected_count: int,
+    expected_schema_version: int,
     errors: list[str],
-) -> None:
-    context = f"capabilities.yaml:capabilities[{index}]"
-    if not isinstance(entry, dict):
-        return
-    used_by = entry.get("used_by")
-    if not isinstance(used_by, list):
-        errors.append(f"{context}: field 'used_by' must be a list")
-        return
-    for target in used_by:
-        if not isinstance(target, str) or not target.strip():
-            errors.append(f"{context}: used_by entries must be non-empty strings")
+) -> list[dict[str, Any]]:
+    path = REGISTRY_DIR / file_name
+    if not path.is_file():
+        errors.append(f"missing src/registry/{file_name}")
+        return []
+    try:
+        data = load_yaml_file(path)
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+        return []
+    if not isinstance(data, dict):
+        errors.append(f"{file_name}: must be a mapping")
+        return []
+    if (
+        type(data.get("schema_version")) is not int
+        or data.get("schema_version") != expected_schema_version
+        or data.get("kind") != kind
+    ):
+        errors.append(
+            f"{file_name}: expected schema_version {expected_schema_version} "
+            f"and kind {kind}"
+        )
+    if key == "domain_skills":
+        errors.extend(domain_registry_contract_errors(data, file_name))
+    entries = data.get(key)
+    if not isinstance(entries, list):
+        errors.append(f"{file_name}:{key} must be a list")
+        return []
+    if len(entries) != expected_count:
+        errors.append(f"{file_name}:{key} expected {expected_count} entries, found {len(entries)}")
+    normalized: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for index, entry in enumerate(entries):
+        context = f"{file_name}:{key}[{index}]"
+        if not isinstance(entry, dict):
+            errors.append(f"{context}: must be a mapping")
             continue
-        if target not in all_refs:
-            errors.append(f"{context}: used_by references missing item '{target}'")
-
-
-def _validate_optional_status(
-    entry: object,
-    registry_name: str,
-    index: int,
-    errors: list[str],
-) -> None:
-    if not isinstance(entry, dict) or "status" not in entry:
-        return
-    if entry.get("status") != "implemented":
-        errors.append(f"{registry_name}[{index}]: status must be implemented when present")
+        normalized.append(entry)
+        for field in REQUIRED_FIELDS:
+            if field not in entry:
+                errors.append(f"{context}: missing {field}")
+        forbidden = FORBIDDEN_FIELDS & set(entry)
+        if forbidden:
+            errors.append(f"{context}: forbidden runtime fields {sorted(forbidden)}")
+        name = entry.get("name")
+        if not isinstance(name, str) or not name.strip():
+            errors.append(f"{context}: name must be a non-empty string")
+            continue
+        if name in seen:
+            errors.append(f"{context}: duplicate name {name!r}")
+        seen.add(name)
+        roles = _string_list(entry.get("role_support"), f"{context}.role_support", errors)
+        if not roles or not set(roles) <= ROLES:
+            errors.append(f"{context}: role_support must use the four static profiles")
+        if key == "control_skills" and roles != ["main-control-agent"]:
+            errors.append(f"{context}: control Skill must support only main-control-agent")
+        if key != "control_skills" and "main-control-agent" in roles:
+            errors.append(f"{context}: non-control Skill cannot support main-control-agent")
+        if key != "control_skills":
+            errors.extend(
+                required_expertise_tag_errors(
+                    entry.get("required_expertise_tags"),
+                    context,
+                    layer={
+                        "professional_skills": "professional",
+                        "foundation_skills": "foundation",
+                        "domain_skills": "domain",
+                    }[key],
+                    skill_name=name,
+                    foundation_group=entry.get("group"),
+                )
+            )
+        common_inputs = _string_list(
+            entry.get("required_inputs"), f"{context}.required_inputs", errors
+        )
+        if key == "professional_skills" and len(roles) > 1:
+            by_role = entry.get("required_inputs_by_role")
+            errors.extend(role_contract_map_errors(by_role, roles, f"{context}.required_inputs_by_role"))
+            errors.extend(
+                role_contract_map_errors(
+                    entry.get("output_contract_by_role"),
+                    roles,
+                    f"{context}.output_contract_by_role",
+                )
+            )
+            if isinstance(by_role, dict):
+                for role in roles:
+                    values = _string_list(
+                        by_role.get(role),
+                        f"{context}.required_inputs_by_role.{role}",
+                        errors,
+                    )
+                    if not values:
+                        errors.append(
+                            f"{context}.required_inputs_by_role.{role}: must be non-empty"
+                        )
+                    _reject_impossible_role_inputs(
+                        [*common_inputs, *values], role, context, errors
+                    )
+        elif key == "professional_skills":
+            errors.extend(role_contract_map_errors(entry.get("required_inputs_by_role"), roles, f"{context}.required_inputs_by_role"))
+            errors.extend(role_contract_map_errors(entry.get("output_contract_by_role"), roles, f"{context}.output_contract_by_role"))
+        registry_fields = (
+            "trigger_signals",
+            "anti_trigger_signals",
+            "required_inputs",
+            "output_contract",
+            "escalation_signals",
+        )
+        if key == "domain_skills":
+            registry_fields = (*registry_fields, "boundary_signals")
+        for field in registry_fields:
+            values = _string_list(entry.get(field), f"{context}.{field}", errors)
+            if not values:
+                errors.append(f"{context}.{field}: must be non-empty")
+        try:
+            references = reference_contracts(
+                entry.get("reference_index"),
+                f"{context}.reference_index",
+                owner=name,
+            )
+        except ValidationProblem as exc:
+            errors.append(str(exc))
+            references = []
+        if key != "control_skills":
+            supported_roles = set(roles)
+            for reference in references:
+                consumers = set(reference["required_by"])
+                if not consumers <= supported_roles:
+                    errors.append(
+                        f"{context}.reference_index: {reference['path']!r} required_by "
+                        f"{sorted(consumers)} exceeds owner role_support {sorted(supported_roles)}"
+                    )
+        if key == "foundation_skills":
+            seen_load_conditions: dict[str, str] = {}
+            for reference in references:
+                normalized_load = " ".join(
+                    re.findall(r"[a-z0-9]+", reference["load_when"].casefold())
+                )
+                previous = seen_load_conditions.get(normalized_load)
+                if previous is not None:
+                    errors.append(
+                        f"{context}.reference_index: {reference['path']!r} and "
+                        f"{previous!r} must not use equivalent load conditions"
+                    )
+                else:
+                    seen_load_conditions[normalized_load] = reference["path"]
+        source_value = entry.get("path")
+        if not isinstance(source_value, str):
+            errors.append(f"{context}: path must be a string")
+            continue
+        source = (ROOT / source_value).resolve()
+        if not path_is_within(source_root, source) or not (source / "SKILL.md").is_file():
+            errors.append(f"{context}: invalid source path {source_value!r}")
+            continue
+        try:
+            metadata, _raw, body = parse_frontmatter(source / "SKILL.md")
+        except ValidationProblem as exc:
+            errors.append(str(exc).replace(str(ROOT) + "/", ""))
+            continue
+        if metadata.get("name") != name:
+            errors.append(f"{context}: name does not match {source_value}/SKILL.md")
+        for reference in references:
+            reference_path = reference["path"]
+            expected_type = reference_type_for_path(reference_path)
+            if reference["type"] != expected_type:
+                errors.append(
+                    f"{context}.reference_index: {reference_path!r} must use type "
+                    f"{expected_type!r}, found {reference['type']!r}"
+                )
+            candidate = (source / reference_path).resolve()
+            if not path_is_within(source, candidate) or not candidate.is_file():
+                errors.append(f"{context}: missing reference {reference_path!r}")
+                continue
+            if key == "foundation_skills":
+                owner_context_parts = [name, body]
+                for field in (
+                    "trigger_signals",
+                    "anti_trigger_signals",
+                    "required_inputs",
+                    "output_contract",
+                    "escalation_signals",
+                ):
+                    value = entry.get(field)
+                    if isinstance(value, list):
+                        owner_context_parts.extend(
+                            item for item in value if isinstance(item, str)
+                        )
+                try:
+                    owner_context_parts.append(candidate.read_text(encoding="utf-8"))
+                except (OSError, UnicodeError):
+                    pass
+                if not reference_contract_has_owner_anchor(
+                    reference,
+                    name,
+                    "\n".join(owner_context_parts),
+                ):
+                    errors.append(
+                        f"{context}.reference_index: {reference_path!r} JIT conditions "
+                        "do not anchor to the Foundation owner or Reference subject"
+                    )
+    return normalized
 
 
 def _string_list(value: object, context: str, errors: list[str]) -> list[str]:
-    if value is None:
-        return []
     if not isinstance(value, list):
         errors.append(f"{context}: must be a list")
         return []
     values: list[str] = []
-    for index, item in enumerate(value):
+    for item in value:
         if not isinstance(item, str) or not item.strip():
-            errors.append(f"{context}[{index}]: must be a non-empty string")
+            errors.append(f"{context}: entries must be non-empty strings")
             continue
         values.append(item.strip())
     return values
 
 
-def _required_string_list(value: object, context: str, errors: list[str]) -> list[str]:
-    if value is None:
-        errors.append(f"{context}: must be a list")
-        return []
-    return _string_list(value, context, errors)
+def _names(entries: list[dict[str, Any]]) -> set[str]:
+    return {str(entry.get("name")) for entry in entries if isinstance(entry.get("name"), str)}
 
 
-def _validate_unique_strings(values: list[str], context: str, errors: list[str]) -> None:
-    seen: set[str] = set()
-    for value in values:
-        if value in seen:
-            errors.append(f"{context}: duplicate entry '{value}'")
-        seen.add(value)
-
-
-def _validate_quality_gate_membership(
-    values: list[str],
-    known_quality_gates: set[str],
-    context: str,
-    errors: list[str],
+def _reject_impossible_role_inputs(
+    values: list[str], role: str, context: str, errors: list[str]
 ) -> None:
+    forbidden = ROLE_IMPOSSIBLE_INPUT_PHRASES.get(role, ())
     for value in values:
-        if value not in known_quality_gates:
-            errors.append(f"{context}: references unknown quality gate '{value}'")
-
-
-def _validate_quality_gate_references(
-    registry_data: dict[str, object],
-    errors: list[str],
-) -> None:
-    routing_rules = registry_data.get("routing-rules.yaml")
-    if not isinstance(routing_rules, dict):
-        errors.append("routing-rules.yaml: registry must be a mapping")
-        return
-
-    quality_gates = _required_string_list(
-        routing_rules.get("quality_gates"),
-        "routing-rules.yaml:quality_gates",
-        errors,
-    )
-    if not quality_gates:
-        errors.append("routing-rules.yaml:quality_gates must be non-empty")
-    _validate_unique_strings(quality_gates, "routing-rules.yaml:quality_gates", errors)
-    known_quality_gates = set(quality_gates)
-
-    risk_rules = routing_rules.get("risk_trigger_rules")
-    if isinstance(risk_rules, list):
-        for index, entry in enumerate(risk_rules):
-            if not isinstance(entry, dict):
-                continue
-            gates = _string_list(
-                entry.get("required_quality_gates"),
-                f"routing-rules.yaml:risk_trigger_rules[{index}].required_quality_gates",
-                errors,
-            )
-            _validate_quality_gate_membership(
-                gates,
-                known_quality_gates,
-                f"routing-rules.yaml:risk_trigger_rules[{index}].required_quality_gates",
-                errors,
-            )
-
-    if not STAGE_MODEL_REGISTRY.is_file():
-        errors.append(f"missing registry file: {relpath(ROOT, STAGE_MODEL_REGISTRY)}")
-        return
-    try:
-        stage_model = load_yaml_file(STAGE_MODEL_REGISTRY)
-    except ValidationProblem as exc:
-        errors.append(str(exc))
-        return
-    if not isinstance(stage_model, dict):
-        errors.append(f"{relpath(ROOT, STAGE_MODEL_REGISTRY)}: registry must be a mapping")
-        return
-
-    stages = stage_model.get("stages")
-    if not isinstance(stages, list):
-        errors.append(f"{relpath(ROOT, STAGE_MODEL_REGISTRY)}:stages must be a list")
-        return
-    for index, entry in enumerate(stages):
-        if not isinstance(entry, dict):
-            continue
-        gates = _string_list(
-            entry.get("required_quality_gates"),
-            f"{relpath(ROOT, STAGE_MODEL_REGISTRY)}:stages[{index}].required_quality_gates",
-            errors,
-        )
-        _validate_quality_gate_membership(
-            gates,
-            known_quality_gates,
-            f"{relpath(ROOT, STAGE_MODEL_REGISTRY)}:stages[{index}].required_quality_gates",
-            errors,
-        )
-
-
-def main() -> int:
-    errors: list[str] = []
-
-    if not REGISTRY_DIR.exists():
-        errors.append("missing src/registry")
-        return fail_many("validate-registry", errors)
-
-    for path in BANNED_REGISTRIES:
-        if path.exists():
-            errors.append(f"banned personal asset mapping registry exists: {relpath(ROOT, path)}")
-
-    toolbox_dir = ROOT / "src" / "toolbox"
-    if toolbox_dir.exists():
-        errors.append(f"banned personal asset mapping path exists: {relpath(ROOT, toolbox_dir)}")
-
-    missing = [name for name in REQUIRED_REGISTRIES if not (REGISTRY_DIR / name).is_file()]
-    if missing:
-        errors.append(f"missing registry file(s): {', '.join(missing)}")
-        return fail_many("validate-registry", errors)
-
-    registry_data: dict[str, object] = {}
-    for name in REQUIRED_REGISTRIES:
-        path = REGISTRY_DIR / name
-        text = path.read_text(encoding="utf-8")
-        validate_no_personal_references(text, relpath(ROOT, path), errors)
-        try:
-            registry_data[name] = load_yaml_file(path)
-        except ValidationProblem as exc:
-            errors.append(str(exc))
-            registry_data[name] = {}
-
-    skill_names = _load_skill_names()
-    capability_refs = _load_capability_refs()
-    domain_extension_names = _load_domain_extension_names()
-    all_refs = skill_names | capability_refs | domain_extension_names
-
-    skill_entries = registry_items(
-        registry_data["skills.yaml"],
-        "skills",
-        REGISTRY_DIR / "skills.yaml",
-        errors,
-    )
-    validate_expected_count(
-        errors,
-        "professional skill registry entrie(s)",
-        len(skill_entries),
-        EXPECTED_PROFESSIONAL_SKILL_COUNT,
-        "skills.yaml:skills",
-    )
-    for index, entry in enumerate(skill_entries):
-        _validate_optional_status(entry, "skills.yaml:skills", index, errors)
-        _validate_registry_entry_reference(
-            entry,
-            ("name", "skill", "skill_name", "id"),
-            skill_names,
-            PROFESSIONAL_SKILLS_DIR,
-            "skills.yaml:skills",
-            index,
-            errors,
-        )
-
-    capability_entries = registry_items(
-        registry_data["capabilities.yaml"],
-        "capabilities",
-        REGISTRY_DIR / "capabilities.yaml",
-        errors,
-    )
-    validate_expected_count(
-        errors,
-        "capability registry entrie(s)",
-        len(capability_entries),
-        EXPECTED_FOUNDATION_CAPABILITY_COUNT,
-        "capabilities.yaml:capabilities",
-    )
-    for index, entry in enumerate(capability_entries):
-        _validate_capability_status(entry, index, errors)
-        _validate_registry_entry_reference(
-            entry,
-            ("changeforge_capability_id", "capability_id", "id", "name", "capability"),
-            capability_refs,
-            CAPABILITIES_DIR,
-            "capabilities.yaml:capabilities",
-            index,
-            errors,
-        )
-        _validate_capability_used_by_references(entry, index, all_refs, errors)
-
-    domain_extension_entries = registry_items(
-        registry_data["domain-extensions.yaml"],
-        "domain_extensions",
-        REGISTRY_DIR / "domain-extensions.yaml",
-        errors,
-    )
-    validate_expected_count(
-        errors,
-        "domain extension registry entrie(s)",
-        len(domain_extension_entries),
-        EXPECTED_DOMAIN_EXTENSION_COUNT,
-        "domain-extensions.yaml:domain_extensions",
-    )
-    for index, entry in enumerate(domain_extension_entries):
-        _validate_optional_status(
-            entry,
-            "domain-extensions.yaml:domain_extensions",
-            index,
-            errors,
-        )
-        _validate_registry_entry_reference(
-            entry,
-            ("name", "domain_extension", "domain_extension_id", "id"),
-            domain_extension_names,
-            DOMAIN_EXTENSIONS_DIR,
-            "domain-extensions.yaml:domain_extensions",
-            index,
-            errors,
-        )
-
-    profile_counts = {
-        "recommended": len(skill_entries),
-        "full": len(skill_entries) + len(domain_extension_entries),
-        "dev": len(skill_entries) + len(capability_entries) + len(domain_extension_entries),
-    }
-    for profile, expected_count in EXPECTED_PROFILE_TOP_LEVEL_COUNTS.items():
-        validate_expected_count(
-            errors,
-            f"{profile} profile top-level skill(s)",
-            profile_counts[profile],
-            expected_count,
-            "registry profile counts",
-        )
-
-    routing_entries = registry_items(
-        registry_data["routing-rules.yaml"],
-        "routing_rules",
-        REGISTRY_DIR / "routing-rules.yaml",
-        errors,
-    )
-    for index, entry in enumerate(routing_entries):
-        for ref in collect_reference_values(entry, REFERENCE_KEYS):
-            first_part = ref.strip("/").split("/", 1)[0]
-            if ref not in all_refs and first_part not in all_refs:
+        folded = value.casefold()
+        for phrase in forbidden:
+            if phrase in folded:
                 errors.append(
-                    f"routing-rules.yaml:routing_rules[{index}]: broken reference '{ref}'"
+                    f"{context}.required_inputs_by_role.{role}: input {value!r} "
+                    f"requires an artifact unavailable to {role}"
                 )
-
-    _validate_quality_gate_references(registry_data, errors)
-
-    for registry_name, data in registry_data.items():
-        for ref in collect_reference_values(data, HANDOFF_KEYS):
-            first_part = ref.strip("/").split("/", 1)[0]
-            if ref not in all_refs and first_part not in all_refs:
-                errors.append(f"{registry_name}: broken handoff reference '{ref}'")
-
-    if errors:
-        return fail_many("validate-registry", errors)
-
-    print("validate-registry: registry references are valid.")
-    return 0
 
 
 if __name__ == "__main__":

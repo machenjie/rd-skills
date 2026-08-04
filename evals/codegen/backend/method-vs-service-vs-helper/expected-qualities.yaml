@@ -7,21 +7,12 @@ focus:
   - helper scope and naming
   - business versus utility classification
 route_hints:
-  skills:
-    - domain-impact-modeler
-    - backend-change-builder
-    - quality-test-gate
-  capabilities:
-    - implementation-structure-design
-    - language-idiom-enforcement
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
     - service-business-logic
-    - business-rule-extraction
-    - unit-testing
-  domain_extensions: []
-  quality_gates:
-    - domain gate
-    - implementation gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Cancellation eligibility stays with the object or policy that protects the order invariant.
   - OrderService keeps orchestration, authorization, transaction, and collaborator coordination responsibilities.

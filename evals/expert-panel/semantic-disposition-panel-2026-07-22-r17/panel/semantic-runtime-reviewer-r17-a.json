@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-22-r17",
+  "created_on": "2026-07-22",
+  "packet_sha256": "2d1730fbd92c50bf81fc31ac53799285b4282de2585eb7b66853485a12808b92",
+  "source_fingerprints": {
+    "audit": "33898840af2f90d861cd4dbe297a5e34534830dac7ef8bf081ae357105cd7f88",
+    "reference_candidates": "981964da12d38e5c32eceb7bb2dbc4cbcf6f91226a1a998d508f1e75041f4763",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "21da29d34018eff13200facc49b1370b50c07ed2cc0106dc2b0ef6d0e637de23",
+    "root_candidates": "eb2808118a8536a8adf728434f8a1ee9c288b3268e92d86c0e8c6d1956eff13e",
+    "root_context": "14d1ddb7efaaa015666d53951aa7167085fcb7c31e07a624c0a98f4ffd0b3caa",
+    "root_detector": "0b6168c2f3aaacfc611421aa8ef533171e4adf229986be73016c74154d402aef",
+    "root_source": "e42c3221a69656eee13cd3996b6bdf1c0e992d20fccdd6cb0d7607ab38f1c1c1"
+  },
+  "voter": {
+    "voter_id": "semantic-runtime-reviewer-r17-a",
+    "agent_id": "/root/semantic_r17_review_a",
+    "role": "semantic-runtime-contract-reviewer",
+    "expertise": [
+      "fail-closed routing",
+      "runtime control contracts"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "root:7d33c995b85f5a4cd709b2f71211cfa3d6f5f5001c6a9acb03c7f766de59bf34",
+      "axis": "root",
+      "candidate_id": "7d33c995b85f5a4cd709b2f71211cfa3d6f5f5001c6a9acb03c7f766de59bf34",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Repair changes the material and diff boundary, so validation and review of the superseded state cannot support implementation closure.",
+      "authority_or_condition": "The rule is confined to implementation closure; Core marks stale-after-edit evidence and unreviewed changed scope as fail-closed non-completion outcomes.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Keep closure nonterminal until post-repair validation and review of the latest changed scope are current.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "axis": "root",
+      "candidate_id": "9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The complete seven-control set preserves authority, safety, formal evidence, targeted validation, independent review, and current completion evidence at every routed level.",
+      "authority_or_condition": "Canonical Core enumerates exactly seven non_bypassable controls and L1 retains them all; build and install exact validation provide the stated trust anchor.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Retain build-install exact validation, the malformed-artifact integrity fallback, and the explicit runtime limits on coordinated tampering and unknown IDs.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "axis": "root",
+      "candidate_id": "ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "disposition": "valid-contextual-rule",
+      "rationale": "One completed path per canonical identity prevents same-path validation loops, while the adjacent gap-or-transition clause admits justified additional evidence paths.",
+      "authority_or_condition": "Core validation_loop sets complete_path_limit to one within the validation identity and requires a bound gap or verifiable state transition for another path.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Keep the adjacent exception clause and block repeated completed paths without a canonical uncovered gap or evidence transition.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:b61da714f82520865615d8f43b04368d741da1b26010a59cb6a3982aba447284",
+      "axis": "root",
+      "candidate_id": "b61da714f82520865615d8f43b04368d741da1b26010a59cb6a3982aba447284",
+      "disposition": "valid-contextual-rule",
+      "rationale": "A single primary Skill gives each routed task one responsibility and output authority, while optional Layer 3 guidance covers bounded supporting concerns.",
+      "authority_or_condition": "The current router routes once per task with one primary Professional Skill; source-free direct answers and utility no-edit work are separately excluded from normal Skill loading.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Preserve route-once assignment and prevent task agents from rerouting or chaining competing primary Professional Skills over the same scope.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "axis": "root",
+      "candidate_id": "d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Writing a diff export into the workspace would mutate the reviewed change set, defeating supplied-artifact scope integrity and no-edit evidence.",
+      "authority_or_condition": "This path applies only when supplied-artifact mode lacks a diff; Core utility rules require diff-export/no-edit output as supplied content or a host-native artifact.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Preserve identical before-and-after workspace checks and invalidate downstream review or closure when comparison evidence changes or is unavailable.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "axis": "root",
+      "candidate_id": "ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Formal readiness asserts a stronger evidence boundary, so ordinary authoring validation cannot substantiate that claim without dedicated formal evidence gates.",
+      "authority_or_condition": "Core makes formal evidence non-bypassable when formal readiness is declared and repeats that condition as validation_loop.formal_scope_rule.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Keep formal readiness fail closed until the repository's formal-release evidence succeeds against the final material tree.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "This independent ballot is static source-contract review; it does not prove real-host startup, runtime routing behavior, production enforcement, coordinated-tamper detection, or installed user experience.",
+    "The review covers only the six packet-named Main Root targets and their current source and Core authority context; it does not satisfy readability or professional-completeness formal attestations."
+  ]
+}

@@ -1,8 +1,8 @@
 # Data Model Evidence Patterns
 
-Use this reference when model closure depends on graph, memory, execution output, validation freshness, tool permission boundaries, compatibility claims, or production evidence limits. Keep it as an evidence map, not a second data modeling tutorial.
+Use this reference when model closure depends on repository inspection and prior task evidence, execution output, validation freshness, tool permission boundaries, compatibility claims, or production evidence limits. Keep it as an evidence map, not a second data modeling tutorial.
 
-# Model-To-Validation Map
+## Model-To-Validation Map
 
 | Model claim | Minimum evidence | What it proves | What it does not prove |
 | --- | --- | --- | --- |
@@ -16,51 +16,14 @@ Use this reference when model closure depends on graph, memory, execution output
 | Existing model evolution is compatible | Old/new model diff, old readers/writers, old rows, generated clients, report/jobs, and migration handoff inspected | Inspected version window has a compatibility path | Live migration duration, rollback execution, or uninspected mobile/client lag is safe |
 | Regulated or temporal data is modeled | Data classification, retention/deletion/audit rule, temporal strategy, and security/privacy owner | Inspected fields have a reviewable retention and history model | Legal approval, restore RTO, or full compliance packet is complete |
 
-# Graph, Memory, And Execution Reconciliation
+## Current Evidence And Freshness
 
-- Treat repository graph, project memory, prior model notes, old ADRs, generated artifacts, dashboards, and earlier validation reports as discovery inputs until current source confirms them.
-- Accept a previous "single writer", "no direct DB consumers", "DTO boundary is clean", "null is harmless", or "projection is derived" claim only when the current schema, repositories, generated clients, jobs, reports, migrations, and tests still match it.
+- Treat repository inspection, prior task evidence, prior model notes, old ADRs, generated artifacts, dashboards, and earlier validation reports as discovery inputs until current source confirms them.
+- Accept a prior claim only while current schema, repositories, generated clients, jobs, reports, migrations, and tests still match. Examples include "single writer", "no direct DB consumers", "DTO boundary is clean", "null is harmless", and "projection is derived".
 - Mark evidence stale after edits to schema/model files, migrations, generated clients, DTO mappers, repository methods, fixtures, validation queries, reports, build/install outputs, or registry/routing rules.
 - Record inspected and skipped consumers: application readers/writers, jobs, imports, reports, ETL, dashboards, generated clients, external integrations, support tooling, and manual query surfaces.
-- Map every final model-safety claim to a command, test, validator, report, schema diff, generated-client diff, review artifact, or explicit not-run residual risk.
+- For model-safety claims made about task-affected surfaces, cite fresh claim-specific command, test, validator, report, schema or generated-client diff, or review evidence; otherwise record `not_run` and the residual risk.
 
-# Tool Permission Boundary
-
-| Action | Boundary record |
-| --- | --- |
-| Local source reads, `rg`, `find`, parser scripts, report inspection | Read-only local shell action; cite searched paths and avoid full output dumps |
-| Local validators and builds | State-mutating only for reports/dist/build artifacts; cite log path and exit code |
-| Local schema generation, migration dry run, or fixture DB reset | State-mutating test action; record dataset, cleanup/reset, and absence of production credentials |
-| Production DB, migration, backup, restore, cloud, or deploy command | High-risk state-mutating action; require permission, dry-run when available, rollback/forward-fix path, stop condition, and redaction rule |
-| Telemetry, dashboard, audit, or report export | Read-only or connector-scoped; redact tenant/user/secret-bearing values and state retention limits |
-
-# Handoff Evidence Shape
-
-```yaml
-model_evidence_closure:
-  inspected_paths:
-    - path: ""
-      finding: ""
-  accepted_prior_claims:
-    - claim: ""
-      current_evidence: ""
-  rejected_or_stale_claims:
-    - claim: ""
-      reason: ""
-  changed_model_to_validation_map:
-    - model_decision: ""
-      validator_or_test: ""
-      exit_code: ""
-      artifact_or_report: ""
-      proves: ""
-      does_not_prove: ""
-  tool_permission_boundary:
-    action_class: ""
-    sandbox: ""
-    state_mutation: ""
-    redaction: ""
-  residual_risk:
-    - risk: ""
-      owner: ""
-      next_gate: ""
-```
+- If local schema generation, migration dry run, or fixture DB reset, record dataset, cleanup/reset, and absence of production credentials.
+- If production DB, migration, backup, restore, cloud, or deploy command, require permission, dry-run when available, rollback/forward-fix path, stop condition, and redaction rule.
+- If telemetry, dashboard, audit, or report export, redact tenant/user/secret-bearing values and state retention limits.

@@ -7,23 +7,12 @@ focus:
   - read freshness
   - observability
 route_hints:
-  skills:
-    - data-middleware-change-builder
-    - backend-change-builder
-    - reliability-observability-gate
-    - quality-test-gate
-  capabilities:
-    - cache-design
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: data-middleware-change-builder
+  layer3_skills:
     - transaction-consistency
-    - repository-persistence
-    - integration-testing
-    - regression-testing
-    - observability
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - reliability gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Settings reads reflect successful writes within the declared freshness boundary.
   - Failed writes do not evict or repopulate cache with uncommitted data.

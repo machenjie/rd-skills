@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: data-middleware-change-builder.
-Selected capabilities: sql-professional-usage.
+Selected Layer 3 Skills: sql-professional-usage.
 
 Hidden risks: SQL dynamic query without parameterization; unsafe interpolation allows injection; tenant predicate missing from query test.
 

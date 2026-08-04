@@ -1,22 +1,23 @@
 # Expected Route
 
-```yaml
-scenario_id: l2-frontend-form-validation
-selected_skills:
-  - frontend-change-builder
-  - experience-impact-modeler
-  - quality-test-gate
-selected_capabilities:
-  - implementation-structure-design
-  - form-validation-design
-  - interaction-state-modeling
-  - design-system-rules
-  - frontend-api-integration
-  - frontend-testing
-required_quality_gates:
-  - implementation gate
-  - test gate
-review_owner: quality-test-gate
-```
+## Path
 
-The frontend owner handles state, rendering, accessibility, and API error handling. The experience owner checks empty/loading/error/success/disabled states.
+Direct Task, because behavior, local scope, owner, placement, observable acceptance,
+non-production verification, rollback, and consumer impact are explicit.
+
+## Task Assignment
+
+- Profile: `task-agent`
+- Primary Professional Skill: `frontend-change-builder`
+- Layer 3 Skills: `state-management-design`, `frontend-testing`
+- Allowed scope: the billing form, its existing API/error adapter, and adjacent tests
+- Verify: `npm test -- --runInBand src/billing/settings/__tests__/BillingSettingsForm.test.tsx`
+  in the non-production test environment for dirty, submitting, failed, and
+  successful states
+
+## Independent Review
+
+- Profile: `review-agent`
+- Review Skill: `ai-code-review-refactor`
+- Boundary: actual diff, every changed file, state transitions, accessibility,
+  design-system reuse, and validation freshness

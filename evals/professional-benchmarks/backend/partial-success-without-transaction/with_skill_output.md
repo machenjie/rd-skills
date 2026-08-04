@@ -1,6 +1,6 @@
 Selected stage: implementation-planning.
 Selected professional skill: backend-change-builder.
-Selected capabilities: transaction-consistency, service-business-logic, logging-error-handling, data-migration-design.
+Selected Layer 3 Skills: transaction-consistency, service-business-logic, logging-error-handling.
 
 Hidden risks: inconsistent account and billing state; event emitted without durable state or compensation; silent partial success with no recovery contract.
 Inspected boundaries: account service state write, billing adapter call, event emission, retry/logging path, and API success contract.

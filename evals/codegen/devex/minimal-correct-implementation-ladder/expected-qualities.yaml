@@ -7,21 +7,11 @@ focus:
   - feature-local implementation
   - validation evidence for small changes
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
-    - minimal-correct-implementation
-    - implementation-structure-design
-    - code-clarity-maintainability
-    - agent-execution-discipline
-    - unit-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
-    - AI review gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Existing order formatter and label ownership are searched before new code is accepted.
   - The selected implementation is local/direct unless boundary evidence proves otherwise.

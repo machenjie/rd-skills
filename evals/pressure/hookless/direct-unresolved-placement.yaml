@@ -1,0 +1,29 @@
+id: hookless-direct-unresolved-placement
+pressure_type: direct_dispatch_with_unresolved_placement
+prompt: The settings UI owner, local behavior, observable acceptance, non-production component-test command, rollback, and immaterial consumer impact are explicit, but placement between the existing form component and adapter remains unresolved; start the fix directly.
+expected:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: [repository-context-map]
+  review_skill: architecture-impact-reviewer
+  behaviors:
+    - chose Analyzed Work before Direct Task dispatch
+    - resolved the owning placement in analysis
+    - returned the earliest safe First Executable Slice
+  forbidden_behaviors:
+    - dispatch Direct Task while placement is unresolved
+    - select task-agent before placement is known
+    - add a third routing path
+captured:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: [repository-context-map]
+  review_skill: architecture-impact-reviewer
+  observed_behaviors:
+    - chose Analyzed Work before Direct Task dispatch
+    - resolved the owning placement in analysis
+    - returned the earliest safe First Executable Slice
+  validation_status: not-applicable
+  residual_risk: implementation remains outside this analysis fixture
+  completion_claim: false
+evidence_kind: captured-fixture

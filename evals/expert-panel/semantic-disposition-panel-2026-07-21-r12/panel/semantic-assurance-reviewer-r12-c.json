@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-21-r12",
+  "created_on": "2026-07-22",
+  "packet_sha256": "d984aeb0bc795ed1300bb389aa63bcfb71e8e770085aeb2c8e4ffd12375b700a",
+  "source_fingerprints": {
+    "audit": "525054b1787bc1a2682a674b38ebe9509c78ee7686eacca787c84d278e71b407",
+    "reference_candidates": "981964da12d38e5c32eceb7bb2dbc4cbcf6f91226a1a998d508f1e75041f4763",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "21da29d34018eff13200facc49b1370b50c07ed2cc0106dc2b0ef6d0e637de23",
+    "root_candidates": "94a2a8301bc1670513e3850df7eea96154efc6241063171d6c74f0fa1dba2eaf",
+    "root_context": "07f4d1f21430903aa6cf5272c13679453d305b434b3f208c243a2e545d46875f",
+    "root_detector": "0b6168c2f3aaacfc611421aa8ef533171e4adf229986be73016c74154d402aef",
+    "root_source": "80bc453f72b25049e306211e915c6be2a989fd2708a7e972d75912719d27dd56"
+  },
+  "voter": {
+    "voter_id": "semantic-assurance-reviewer-r12-c",
+    "agent_id": "/root/semantic_r10_review_c",
+    "role": "semantic-assurance-reviewer",
+    "expertise": [
+      "independent-assurance-review",
+      "loop-safety"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "root:7d33c995b85f5a4cd709b2f71211cfa3d6f5f5001c6a9acb03c7f766de59bf34",
+      "axis": "root",
+      "candidate_id": "7d33c995b85f5a4cd709b2f71211cfa3d6f5f5001c6a9acb03c7f766de59bf34",
+      "disposition": "valid-contextual-rule",
+      "rationale": "At implementation closure, a repair has changed the reviewed material and invalidated prior validation and review evidence. Requiring fresh validation and re-review prevents a superseded diff from supporting completion, while the surrounding closure rules provide exact fail-closed states when current evidence is stale or unavailable.",
+      "authority_or_condition": "After any repair material edit, implementation closure requires current post-edit validation, review of every changed file in the latest diff, and no unresolved blockers.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Treat the previous diff and its evidence as superseded, rerun targeted validation, review the latest actual diff and every changed file, and retain in-progress, blocked, or partial status until current evidence exists.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "axis": "root",
+      "candidate_id": "9f1d1952e764717ac2c2ebddf1e4fe84532a40c4ac2c83e4d1e037be809588ea",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The current context preserves the governing precondition that the execution-level reference must be fully loaded and schema-validated before routing. Core enumerates exactly seven non-bypassable controls, and even L1 retains them, so universal application is a deliberate cross-level invariant rather than an unsupported mechanism.",
+      "authority_or_condition": "After the execution-level reference passes existence, JSON, closed-schema, and exact-identifier checks, every effective level must retain the seven Core-enumerated non-bypassable controls.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Reject partial computation when policy data is missing, invalid, or unknown; invoke the L4 integrity fallback, preserve historical maxima, and block editing.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "axis": "root",
+      "candidate_id": "ae24b2065d5f795a45bbf81606cd48e184666e6c9befb639a160bff77b961dff",
+      "disposition": "valid-contextual-rule",
+      "rationale": "This threshold is grounded in Core validation_loop rather than in an arbitrary time estimate. It caps completed paths per bound validation identity to prevent same-path retry loops, while the adjacent clause permits another path only for a documented gap or transition, making the limit conditional and actionable.",
+      "authority_or_condition": "For a validation identity bound to material tree, declared scope, effective level, and validation path identity, the complete path limit is one; another requires a bound gap or verifiable transition.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Bind canonical claim and gap manifests plus transition evidence; a completed same identity or invalid transition must stop as blocked or partial instead of retrying.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:b61da714f82520865615d8f43b04368d741da1b26010a59cb6a3982aba447284",
+      "axis": "root",
+      "candidate_id": "b61da714f82520865615d8f43b04368d741da1b26010a59cb6a3982aba447284",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The fixed count applies to primary routing authority, not to all guidance: the router separately permits zero to three named Layer 3 Skills and one Review Skill. One primary Professional Skill prevents conflicting execution authorities and task-agent rerouting while retaining bounded domain extensions.",
+      "authority_or_condition": "Main control routes once per task to exactly one primary Professional Skill; optional named Layer 3 items and the separately authorized Review Skill do not become additional primaries.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Select the primary from the router's positive and anti-trigger boundaries, use engineering-change-analysis when implementation ownership or impact remains unresolved, and prohibit downstream task-agent rerouting.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:bd3ed81c6404fcc6acbc82067ed81772b1e27fe6a15ea79f430ec87c65219184",
+      "axis": "root",
+      "candidate_id": "bd3ed81c6404fcc6acbc82067ed81772b1e27fe6a15ea79f430ec87c65219184",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The word every is scoped to implementation or repair review, where the actual diff defines changed scope and each changed file supplies the context needed to assess it. Acceptance and validation results make the review actionable, and excluding implementer reasoning preserves the reviewer's independent judgment.",
+      "authority_or_condition": "For implementation or repair review after the latest material edit, main control must provide acceptance, the actual current diff, every file changed by that diff, and current validation results.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Block review and mark diff scope unverified when the actual diff is absent or inaccessible; never substitute a changed-file summary, and re-review only the latest repaired diff.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "axis": "root",
+      "candidate_id": "d4c3493359c6be65367d7e08c9a7dd08e59562b84475fea1f1bc65e9687e1bf0",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The Direct Task context defines separate native, supplied-artifact, and unsupported review branches. In the supplied-artifact branch, task-agent diff-export/no-edit supplies the actual diff without transferring implementation reasoning, and forbidding a workspace file prevents evidence generation from contaminating the change set being reviewed.",
+      "authority_or_condition": "Only supplied-artifact mode with no available actual diff uses task-agent diff-export/no-edit; native mode supplies the host-native diff directly and unsupported mode blocks review.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Return diff content or a host-native artifact, enforce before-and-after workspace change-set equality, and mark diff scope unverified if the export is absent, unavailable, or modifying.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "axis": "root",
+      "candidate_id": "ed6f18be80db1ebc8b6b150cd0ba51ef35dc9cd26020fa659e2832161cb51cc7",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Core treats formal-release-declared as an L4 trigger and independently records the validation-loop formal_scope_rule, so declaring readiness changes required rigor but cannot prove readiness. This sentence prevents a routing-level scope assertion from replacing final-tree formal evidence.",
+      "authority_or_condition": "When formal release readiness is explicitly declared by user fact or accepted Task Contract goal, the L4 floor applies and the separate formal evidence requirement remains mandatory.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Require current formal-release evaluation and strict professionalism evidence on the final tree; otherwise report release-not-ready and withhold formal completion.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:faf517472eb6c4de41f69645bafe95242ce2096188ee12b0a4742ade745f0360",
+      "axis": "root",
+      "candidate_id": "faf517472eb6c4de41f69645bafe95242ce2096188ee12b0a4742ade745f0360",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Within Review and Repair, a material repair supersedes the previously reviewed diff and invalidates validation evidence tied to the older material. Fresh validation and re-review are therefore necessary evidence transitions, not unconditional repeated work, and they bind completion claims to the latest edit.",
+      "authority_or_condition": "Whenever repair changes material after a prior validation or review, the previous diff is superseded and both targeted validation and independent review must be refreshed against the latest material.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Mark older validation and diff-review evidence superseded or invalid, record the latest-material-edit transition, then require current validation-passed and changed-scope-reviewed evidence before closure.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "This fresh ballot reviews only the eight packet-selected Root targets; exact carry-forward Root targets and all Reference candidates are outside its decision scope.",
+    "Static review of the current prompt, profiles, router, and Core contracts does not prove real-host startup, runtime enforcement, or production behavior.",
+    "No r12 reviewer ballot or panel decision was consulted."
+  ]
+}

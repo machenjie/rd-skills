@@ -1,0 +1,22 @@
+{
+  "changed_files": ["calculator.py", "repair_evidence.json"],
+  "final_diff": "integer-cent allocation with deterministic remainder distribution",
+  "plan_vs_actual": "planned and implemented cents-preserving allocation",
+  "re_review": {
+    "finding_id": "ALLOC-1",
+    "status": "passed"
+  },
+  "repair": {
+    "finding_id": "ALLOC-1",
+    "summary": "distribute remainder cents deterministically"
+  },
+  "residual_risk": "binary float input is rounded to the nearest cent at the boundary",
+  "review_finding": {
+    "id": "ALLOC-1",
+    "summary": "independent rounding loses cents"
+  },
+  "validation_evidence": {
+    "cases": ["10.00/3", "0.05/2", "invalid parts"],
+    "status": "passed"
+  }
+}

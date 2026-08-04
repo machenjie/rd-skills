@@ -81,33 +81,17 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "structure-placement-reuse-existing-function",
         "test-failure-no-env-blame",
     ),
-    "injection": (
-        "professional-route-manifest-activation",
-        "stage-specific-reference-loading",
-    ),
     "logging": (
         "redacted-structured-log-design",
     ),
-    "memory": (
-        "repeated-failure-fragile-file",
-    ),
     "pressure": (
         "professional-boundary-under-user-pressure",
-    ),
-    "process": (
-        "full-pdd-ddd-sdd-tdd-review-repair",
-    ),
-    "repo-intel": (
-        "caller-callee-test-impact-map",
     ),
     "review": (
         "repair-rereview-required",
     ),
     "validation": (
         "stale-validation-after-edit",
-    ),
-    "compact": (
-        "context-retention-after-compaction",
     ),
     "structure": (
         "design-pattern-overengineering",

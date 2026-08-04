@@ -9,8 +9,8 @@ Mode selected:
 Source evidence:
 - Ticket `EXP-1842` requests monthly export eligibility filtering only.
 - Current CSV contract test `export_schema_v1` preserves column order.
-- Repository graph shows export scheduling lives in a separate module and was not inspected beyond route ownership.
-- Project memory about a future reporting redesign is not accepted as current scope because no approved roadmap item is linked.
+- repository inspection shows export scheduling lives in a separate module and was not inspected beyond route ownership.
+- prior task evidence about a future reporting redesign is not accepted as current scope because no approved roadmap item is linked.
 
 In scope:
 - Exclude closed accounts from standard monthly export.

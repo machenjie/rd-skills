@@ -2,6 +2,7 @@ expected_stage: testing
 expected_professional_skill: quality-test-gate
 expected_capabilities:
   - integration-testing
+  - test-strategy
 expected_hidden_risks:
   - integration test mocks away real boundary
   - mocked repository hides database constraint or transaction behavior

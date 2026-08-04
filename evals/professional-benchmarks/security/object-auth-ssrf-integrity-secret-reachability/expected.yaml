@@ -1,0 +1,31 @@
+coverage_class: release-critical
+expected_stage: release-review
+expected_professional_skill: security-privacy-gate
+expected_capabilities:
+  - permission-boundary-modeling
+  - web-security
+  - secret-configuration-security
+expected_hidden_risks:
+  - tenant object ownership is not implied by authentication
+  - redirect and DNS re-resolution can reach a private address
+  - ambient-cookie mutation lacks cross-site request integrity
+  - credentials can enter logs and build artifacts
+  - scanner severity lacks deployed reachability evidence
+expected_evidence:
+  - cross-tenant denied-object test
+  - redirect-hop and post-resolution private-address test
+  - cross-site ambient-cookie negative test
+  - log and build-artifact credential scan
+  - deployed-version and reachable-call-path proof
+forbidden_behaviors:
+  - treat authentication as object authorization
+  - validate only the initial URL
+  - use scanner severity as final exploitability
+  - retain raw credentials in logs or artifacts
+  - approve ambient-cookie mutation without request integrity
+expected_output_obligations:
+  - release verdict with blocking findings
+  - reviewed and unreviewed trust boundaries
+  - repair owner and residual risk
+  - evidence limits and unproved claims
+expected_with_skill_status: pass

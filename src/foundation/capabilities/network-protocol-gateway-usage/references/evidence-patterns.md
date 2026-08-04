@@ -1,7 +1,5 @@
 # Network Protocol Gateway Evidence Patterns
 
-## Required Evidence
-
 - Hop map: client, DNS, CDN/WAF, load balancer, ingress/proxy, app, upstream, and response path.
 - Config: gateway route, timeout, retry, header, TLS, body limit, buffering, and cache settings.
 - Probe: `curl`, `openssl s_client`, `dig`, gateway config test, synthetic request, or provider diagnostic.

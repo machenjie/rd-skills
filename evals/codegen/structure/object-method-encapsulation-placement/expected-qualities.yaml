@@ -7,21 +7,23 @@ focus:
   - value object boundary
   - module-local helper privacy
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
+    - domain-object-identification
     - implementation-structure-design
-    - code-clarity-maintainability
-    - refactoring
-    - unit-testing
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - AI review gate
-    - test gate
+  review_skill: architecture-impact-reviewer
+release_contract:
+  case_id: structure/object-method-encapsulation-placement
+  control_path: analyzed
+  primary_skill: engineering-change-analysis
+  task_skill: backend-change-builder
+  review_skill: architecture-impact-reviewer
+  tasks:
+    - task_id: place-and-implement
+      skill: backend-change-builder
+      review_skill: architecture-impact-reviewer
 expected_outcomes:
   - Object candidates are classified before moving helpers or creating classes.
   - Only methods that protect state, invariants, lifecycle, or collaborator boundaries move onto domain/value objects.

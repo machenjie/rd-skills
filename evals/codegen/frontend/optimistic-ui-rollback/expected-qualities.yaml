@@ -7,24 +7,13 @@ focus:
   - API error handling
   - concurrent interaction control
 route_hints:
-  skills:
-    - change-impact-analyzer
-    - frontend-change-builder
-    - reliability-observability-gate
-    - quality-test-gate
-  capabilities:
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: frontend-change-builder
+  layer3_skills:
     - state-management-design
-    - frontend-api-integration
-    - interaction-state-modeling
     - frontend-testing
-    - regression-testing
-    - observability
-  domain_extensions: []
-  quality_gates:
-    - impact gate
-    - implementation gate
-    - reliability gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Successful archive remains responsive and reconciles server returned state.
   - Failed archive restores the task content order and selection state.

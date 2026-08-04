@@ -1,6 +1,6 @@
 # Event Evidence Freshness
 
-Load this reference when a domain event decision depends on repository graph, project memory, generated contracts, execution logs, prior validation, or migration history. These sources are selectors until reconciled with current source after the final event edit.
+Load this reference when a domain event decision depends on repository inspection, prior task evidence, generated contracts, execution logs, prior validation, or migration history. These sources are selectors until reconciled with current source after the final event edit.
 
 ## Freshness Record
 
@@ -16,7 +16,7 @@ Record these fields before approving an event catalog:
 ## Reconciliation Rules
 
 - A graph scan before a consumer registration, topic binding, schema file, generated contract, or outbox relay edit cannot prove the final topology.
-- Project memory without source/date can suggest an event candidate, but it cannot approve fact semantics, consumers, or compatibility.
+- prior task evidence without source/date can suggest an event candidate, but it cannot approve fact semantics, consumers, or compatibility.
 - A generated contract check is stale when schema, registry mode, event type, package namespace, or consumer code changes afterward.
 - A replay or DLQ test proves only the consumers, fixtures, and broker behavior it exercised; name untested production lag, large replay, and unknown consumers.
-- A validation pass must be fresh after the final event modeling change before handoff claims readiness.
+- Before claiming a changed event-model boundary ready, rerun validations affected by the final producer, schema, consumer, topology, replay, or terminal-routing edit. Absent a rerun, the claim narrows and evidence remains stale or unrun.

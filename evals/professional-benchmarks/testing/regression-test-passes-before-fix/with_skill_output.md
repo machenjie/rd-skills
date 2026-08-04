@@ -1,6 +1,6 @@
 Selected stage: testing.
 Selected professional skill: quality-test-gate.
-Selected capabilities: regression-testing, agent-execution-discipline.
+Selected Layer 3 Skills: regression-testing, test-strategy.
 
 Hidden risks: test passes before fix and is not a real regression test; defect recurrence path not protected; completion claim without red-before-fix evidence.
 

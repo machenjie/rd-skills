@@ -9,7 +9,7 @@ state_scope:
 - Surface: project settings route.
 - Owners: ProjectSettingsRoute owns query/cache decisions; SettingsForm owns editable draft; AuthProvider owns identity and permissions.
 - Source evidence inspected: route loader, `useProjectQuery`, `useUpdateProjectMutation`, AuthProvider, existing settings form tests.
-- graph_memory_trajectory_judgment: existing query client and auth provider accepted after source inspection; old localStorage permission helper rejected as stale pattern.
+- current_evidence_judgment: existing query client and auth provider accepted after source inspection; old localStorage permission helper rejected as stale pattern.
 
 state_inventory:
 - Project details: server state from `GET /projects/:id`; owned by query cache; read by settings panels; written by update mutation.

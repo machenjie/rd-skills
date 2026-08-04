@@ -7,29 +7,13 @@ focus:
   - reconciliation
   - money precision
 route_hints:
-  skills:
-    - domain-impact-modeler
-    - backend-change-builder
-    - data-api-contract-changer
-    - security-privacy-gate
-    - quality-test-gate
-    - change-documentation-gate
-  capabilities:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
     - transaction-consistency
-    - repository-persistence
-    - state-machine-modeling
-    - i18n-timezone-money-safety
-    - integration-testing
-    - regression-testing
-  domain_extensions:
     - payment-trading-extension
-  quality_gates:
-    - domain gate
-    - API/data gate
-    - implementation gate
-    - security gate
-    - test gate
-    - documentation gate
+  review_skill: security-privacy-gate
 expected_outcomes:
   - Every refund creates balanced debit and credit ledger entries.
   - Repeated provider refund events are idempotent.

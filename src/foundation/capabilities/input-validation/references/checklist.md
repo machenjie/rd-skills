@@ -1,17 +1,15 @@
 # Input Validation Checklist
 
-- Select the mode: new boundary, existing evolution, identifier/object scope, URL/path/fetch/execution selector, file/import intake, webhook/event payload, or validation error contract.
-- Name every input source, actor, trust level, parser/validator owner, and server-side enforcement point.
-- Inspect current routes, handlers, DTOs/schemas, validators, mappers, services, repositories, adapters, jobs/events, generated artifacts, tests, and relevant project memory or graph claims.
-- For every field, declare type, required/optional, nullable/absent/empty semantics when relevant, size, length, range, enum, pattern/grammar, format, array/object bounds, and cross-field constraints.
-- Define the canonicalization sequence before security checks: decode, Unicode normalize, trim, parse, resolve path/URL, case-fold where valid, and preserve raw body only where signatures require it.
-- Reject unknown request fields unless a compatibility path explicitly tolerates them without mapping them into commands, ORM models, prompts, jobs, or provider calls.
-- Validate identifiers for syntax, existence, ownership, tenant scope, permission context, lifecycle state, and query/filter placement using trusted server-side data.
-- Guard state-changing and business-significant inputs with current-state, invariant, quota, pricing, role, permission, and lifecycle checks at the service/domain boundary.
-- For URL/path/fetch/redirect/template/query/shell/selector/tool inputs, define destination or grammar allowlist, deny ranges/base path, timeout/size bounds, fail-closed behavior, and redacted diagnostics.
-- For file/upload/import/archive inputs, validate size, magic bytes/content signature, filename/storage key, path containment, archive entries, scan-before-publish state, tenant ownership, and malicious fixtures.
-- For webhooks/events, verify raw-body signature before parse, constant-time comparison, timestamp/freshness, replay/idempotency key, schema version, and safe rejection behavior.
-- Define validation errors with stable code/type, status, field path, safe message, safe rejected-value echo policy, redaction for logs/metrics/traces, and localization or SDK impact.
-- Classify compatibility when constraints tighten, required fields change, enum/range/length changes, parser strictness changes, unknown-field handling changes, or accepted file/event types change.
-- Map every changed rule to validation evidence: valid, invalid, boundary, malformed, hostile, unauthorized, unknown-field, file/webhook/fetch, compatibility, and error-contract cases.
-- Record reuse/placement rationale, behavior preservation, graph-memory-trajectory judgment, evidence limits, handoff boundaries, residual-risk owner, and final validation freshness.
+Load this reference when one change spans several input boundaries, representations, constraint classes, state checks, writable fields, rejection outcomes, or consumer effects. Do not load it when the root contract resolves one bounded field or boundary.
+
+- Record each changed or reachable input source, actor or system, trust level, transport form, parser, enforcement owner, downstream consumer, and unknown entry point.
+- Separate raw-preserved, decoded, parsed, normalized, and canonical forms; name ambiguity, duplicate, coercion, and transformation behavior plus the representation used for each decision.
+- Derive relevant presence, null/empty/default, type, unit, precision, grammar, unknown-field, nesting, collection, byte, parser-work, and amplification constraints from the consumer contract.
+- Define cross-field and business invariants, lifecycle or version authority, the state-change window, revalidation point, and stale, replay, or duplicate indicators.
+- Route business uniqueness, key or result reuse, retry budget, and duplicate side-effect outcomes to `idempotency-retry-design`.
+- Map accepted external fields into an owned command or update surface and identify authority-, tenant-, money-, lifecycle-, destination-, execution-, or publication-sensitive fields.
+- Define malformed, unsupported, conflicting, stale, unavailable-authority, and policy-owned denial outcomes with safe location/remediation, disclosure bounds, redacted diagnostics, and consumer compatibility.
+- Validate provider, service, callback, generated-client, cache, and stored responses for expected authority, version, structure, semantics, freshness, bounds, and failure behavior before trusted use.
+- Route browser/server exploit paths to `web-security`. Subject-resource-action policy belongs to `permission-boundary-modeling`. Cross-graph protected outcomes, abuse reachability/prioritization, and candidate control placement belong to `threat-modeling`. Authenticated-subject authority/derivation/propagation/handoff belongs to `authentication-authorization`. Credential/session/token lifecycle/replay/recovery/assurance/compromise belongs to `authentication-security`. Business idempotency outcomes belong to `idempotency-retry-design`.
+- Select applicable valid, invalid, boundary, malformed, ambiguous, unknown-field, resource-amplification, stale, replay, sensitive-write, external-response, and compatibility cases.
+- Record final-edit freshness, explicit non-applicability, proof limits, unverified entry points or consumers, and residual owners.

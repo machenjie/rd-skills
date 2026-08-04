@@ -1,93 +1,32 @@
-# Module Boundary Benchmarks And Enforcement
+# Module Boundary Enforcement And Proof
 
-Load this reference when module boundary design needs named benchmark support, dependency enforcement examples, a boundary classification matrix, or public API surface examples. The `SKILL.md` body carries the decision-critical routing and output contract; this file carries deep benchmark and enforcement material for architecture-design, implementation-planning, code-review, and refactoring.
+These patterns compare enforcement mechanisms and bound static, generated, dynamic, and runtime proof for changed module edges.
 
-## Benchmark Anchors
+## Enforcement Choice
 
-- Eric Evans, Domain-Driven Design: bounded contexts define semantic boundaries where language, model, and invariants are consistent; crossing a context requires explicit translation such as a context map or anti-corruption layer.
-- Robert C. Martin package principles: release equivalence, common closure, common reuse, and acyclic dependencies explain why modules should group code that changes and releases together while avoiding cycles and unused dependency burden.
-- Conway's Law and Team Topologies: module boundaries should reflect ownership and communication paths so one stream-aligned team can evolve a value stream without routine cross-team coordination.
-- Modular monolith practice: a single deployable can still enforce hard internal isolation and versioned contracts, leaving service extraction as a later operational decision only when independent deployability is justified.
-- Dependency Cruiser, import-linter, ArchUnit, and NDepend: module rules should fail CI through import graph contracts, not rely on review comments or convention.
+| Boundary risk | Mechanism | Evidence and limit |
+| --- | --- | --- |
+| Internal import or private-type reach-through | Language or package visibility, explicit exports, an import rule, or an architecture test. | Proves covered source edges; reflection, generated code, dynamic loading, and runtime calls need separate inspection. |
+| Accidental public-surface growth | Export or API diff, consumer inventory, compatibility review, and contract tests. | Covers inspected consumers and tested semantics; unknown external consumers remain a stated risk. |
+| Source or generated dependency cycle | Dependency graph plus a cycle check over authored and generated sources. | Proves the scanned graph; service locators, callbacks, plugins, and network cycles may remain outside it. |
+| State or storage bypass | Contract-level integration tests, write/read-path scan, and access-control checks where available. | Covers exercised paths; ad hoc queries, operator access, and uninspected runtimes remain outside the proof. |
+| Temporary exception | Narrow rule with reason, owner, affected edges, removal condition, and review date. | Records accepted debt; it does not establish that the crossing is safe or permanent. |
 
-## Module Boundary Classification Matrix
+## Boundary Evidence Record
 
-| Boundary Type | Scope | Public API | Allowed Imports | Example |
-| --- | --- | --- | --- | --- |
-| Business Capability Module | Single bounded context | Use cases, domain events, DTOs | Shared technical utilities; no other capability internals | `orders/` imports only `shared/` |
-| Shared Technical Module | Cross-cutting pure utilities | Utility functions, primitives | Standard library and third-party dependencies; no business modules | `shared/crypto`, `shared/date` |
-| Integration Adapter | External system boundary | Adapter interface or port | Owning capability module plus external SDK | `payment-gateway-adapter/` |
-| Domain Extension | Sub-domain specialization | Extension hooks, events | Parent capability public API only | `enterprise-billing/` imports `billing/api` |
-| Orchestration / Gateway | Cross-capability coordination | Use-case orchestrators | Multiple capability public APIs, read-only fan-in unless explicitly owned | `checkout/` imports `orders/api` and `inventory/api` |
+- Name the boundary-kind, authoritative mechanism, enforcement owner, responsibility, invariant or policy authority, state/source authority, and accountable reviewer.
+- Record public exports and consumers, private internals, allowed and forbidden edges, and the cycle-check source and result.
+- Record enforcement location and command, generated or dynamic surfaces inspected, exceptions, migration/rollback, and residual unknowns.
 
-## Dependency Direction Enforcement Rules
+## Official Sources
 
-Allowed dependency examples:
+Official sources were accessed on 2026-07-26.
 
-```text
-orders -> shared/utils           (business capability -> shared technical utility)
-payment-adapter -> orders/api    (adapter -> capability public API)
-checkout -> orders/api           (orchestrator -> capability public API)
-checkout -> inventory/api        (orchestrator -> capability public API)
-```
+- [Go language specification](https://go.dev/ref/spec)
+- [Go: How to Write Go Code](https://go.dev/doc/code)
+- [Bazel repositories, packages, and targets](https://bazel.build/versions/7.4.0/concepts/build-ref)
+- [Bazel visibility](https://bazel.build/versions/8.5.0/concepts/visibility)
 
-Forbidden dependency examples:
+## Proof Limits
 
-```text
-orders -> payments               (capability A -> capability B: business coupling)
-payments -> orders               (capability B -> capability A: bidirectional circular risk)
-orders -> orders/internal/db     (external module -> private internals)
-shared/utils -> orders           (shared utility -> business capability inversion)
-payments -> checkout             (owned capability -> orchestrator direction inversion)
-```
-
-Dependency Cruiser rule example:
-
-```json
-{
-  "forbidden": [
-    {
-      "name": "no-cross-capability-import",
-      "from": { "path": "^src/orders" },
-      "to": { "path": "^src/payments" }
-    },
-    {
-      "name": "no-internal-access",
-      "from": { "pathNot": "^src/orders" },
-      "to": { "path": "^src/orders/internal" }
-    }
-  ]
-}
-```
-
-import-linter contract example:
-
-```ini
-[importlinter:contract:no-cross-capability]
-name = No cross-capability imports
-type = forbidden
-source_modules = orders
-forbidden_modules = payments
-```
-
-## Module Public API Surface Design
-
-```text
-orders/
-  api/              PUBLIC: everything here is the module contract
-    __init__.py     exports: OrderService, CreateOrderCommand, OrderCreatedEvent
-    order_service.py
-    commands.py
-    events.py
-  internal/         PRIVATE: never imported from outside
-    _order_entity.py
-    _order_repository.py
-    _order_validator.py
-  tests/
-```
-
-Rules:
-
-- External modules import only from the public API surface.
-- Internals are unreachable from outside and enforced by import tooling where possible.
-- Every new public export is a compatibility commitment and requires current consumer evidence.
+The Go specification establishes package blocks, file blocks, imports, exported identifiers, and import-cycle constraints; it does not prescribe a repository's semantic owner or general directory layout. Go's code-layout guidance is tool and module guidance, not proof that a directory owns a domain rule. Bazel defines packages through `BUILD` files, targets and dependency labels, while visibility enforces who may depend on a target. Bazel does not prove domain ownership, runtime/service boundaries, dynamic edges, external SDK compatibility, or untracked consumers.

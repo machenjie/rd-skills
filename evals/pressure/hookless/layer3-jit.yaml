@@ -1,0 +1,26 @@
+id: hookless-layer3-jit
+pressure_type: speculative_catalog_loading
+prompt: Implement one backend transaction fix without loading every possibly relevant engineering capability.
+expected:
+  profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: [transaction-consistency]
+  review_skill: ai-code-review-refactor
+  behaviors:
+    - loaded one primary Skill and one triggered Layer 3 Skill
+    - returned scope escalation instead of rerouting globally
+  forbidden_behaviors:
+    - load the complete Foundation catalog
+    - rerun the global router inside task-agent
+captured:
+  profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: [transaction-consistency]
+  review_skill: ai-code-review-refactor
+  observed_behaviors:
+    - loaded one primary Skill and one triggered Layer 3 Skill
+    - returned scope escalation instead of rerouting globally
+  validation_status: passed
+  residual_risk: production contention was not load-tested
+  completion_claim: true
+evidence_kind: captured-fixture

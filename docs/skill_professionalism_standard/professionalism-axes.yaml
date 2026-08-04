@@ -23,12 +23,12 @@ default_axes:
     - domain evidence
     - owner handoff
 items:
-  change-forge-router:
+  routing-quality-review:
     axes:
       - route classification and complexity
       - owner reviewer skill selection
       - foundation capability selection
-      - runtime profile boundary
+      - build profile boundary
       - hidden risk escalation
       - validation and handoff evidence
   change-intake-compiler:
@@ -39,14 +39,14 @@ items:
       - acceptance signal
       - stakeholder evidence source
       - downstream owner handoff
-  change-impact-analyzer:
+  engineering-change-analysis:
     axes:
-      - affected surface inventory
-      - blast radius boundary
-      - same pattern scan
-      - product behavior preservation
-      - hidden dependency risk
-      - validation coverage map
+      - problem acceptance and non goal trace
+      - ownership invariant placement and reuse evidence
+      - contract data failure and consumer impact
+      - acceptance to validation and rollback map
+      - first executable slice safety
+      - review complete task decomposition and residual risk
   acceptance-criteria-builder:
     axes:
       - observable acceptance behavior
@@ -63,18 +63,18 @@ items:
       - rollback and stop condition
       - validation checkpoint
       - owner handoff
-  development-process-orchestrator:
+  high-risk-design-review:
     axes:
-      - PDD requirement trace
-      - DDD invariant trace
-      - SDD design decision trace
-      - TDD validation trace
-      - phase review evidence
+      - problem and acceptance trace
+      - ownership and invariant trace
+      - placement contract and failure trace
+      - acceptance-to-validation trace
+      - bounded review evidence
       - repair and re review loop
-  phase-review-capsule:
+  engineering-artifact-review:
     axes:
       - reviewed artifact scope
-      - phase verdict
+      - review verdict
       - blocker finding evidence
       - approved scope limit
       - repair requirement
@@ -211,12 +211,6 @@ items:
       - split merge readability
       - test clarity review
       - change navigation deletion path
-  engineering-stage-professionalism:
-    axes:
-      - current engineering stage
-      - selected skipped capability
-      - context budget decision
-      - stage transition evidence
   implementation-structure-design:
     axes:
       - reuse ladder decision
@@ -505,12 +499,6 @@ items:
       - sandbox approval evidence
       - side effect and secret exposure
       - rollback and closure freshness
-  agent-workflow-state-machine:
-    axes:
-      - legal stage transition
-      - owner reviewer split
-      - validation freshness state
-      - repair loop closure
   api-contract-design:
     axes:
       - endpoint contract boundary
@@ -595,7 +583,7 @@ items:
       - skipped reference rationale
       - tool output boundary
       - compaction residual risk
-  context-packaging:
+  task-handoff-context:
     axes:
       - handoff context scope
       - evidence compression boundary
@@ -691,18 +679,12 @@ items:
       - idempotency retry risk
       - ordering consistency validation
       - replay failure handoff
-  execution-trajectory-analysis:
+  observable-action-sequence-analysis:
     axes:
       - action order evidence
       - repeated failure diagnosis
       - stale validation detection
       - repair route handoff
-  executor-adapter-protocol:
-    axes:
-      - adapter capability boundary
-      - command outcome visibility
-      - unsupported evidence downgrade
-      - runtime handoff contract
   extensibility-design:
     axes:
       - extension point ownership
@@ -1002,7 +984,7 @@ items:
       - changed path validation map
       - validator depth selection
       - freshness and negative evidence
-      - stop closure handoff
+      - final closure handoff
   version-compatibility:
     axes:
       - old new version contract
@@ -1029,13 +1011,6 @@ items:
       - tool call sandbox and confirmation
       - eval dataset and hallucination metric
       - model version drift and rollback
-  mobile-product-extension:
-    axes:
-      - platform lifecycle and permissions
-      - offline sync and conflict handling
-      - push deep link and background behavior
-      - device capability and store release
-      - mobile regression evidence
   bigdata-product-extension:
     axes:
       - batch and stream lineage

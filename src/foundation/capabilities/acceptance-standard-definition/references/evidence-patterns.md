@@ -10,5 +10,5 @@ Use this reference when acceptance closure depends on proof freshness, stakehold
 - **Operational or release criterion:** prove rollback, alert, dashboard, runbook, support diagnosis, owner, and not-run or stale validation status.
 
 ## Evidence Rules
-- Every accepted standard names the validator or review artifact, owner, freshness, what it proves, what it does not prove, and next gate.
-- Project memory, generated plans, repository graph, and old tickets are selectors only until current source, owner review, or validation evidence confirms the criterion.
+- For a directly executable criterion, record its acceptance-to-validator mapping. When acceptance depends on stakeholder judgment, freshness-sensitive evidence, or a material proof limit, record the accountable owner or review artifact and evidence freshness. The record states what the evidence proves, its non-proofs, and the recommended next step.
+- prior task evidence, generated plans, repository inspection, and old tickets are selectors only until current source, owner review, or validation evidence confirms the criterion.

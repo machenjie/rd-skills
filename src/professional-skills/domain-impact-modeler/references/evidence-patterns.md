@@ -8,10 +8,11 @@ Use this reference when domain impact closure depends on source-backed facts, ow
 - **State machine change:** prove transition table delta, forbidden transitions, side effects, compensation, regression tests, and event or audit output.
 - **Domain event change:** prove producer, consumer list, event schema diff, version/upcaster plan, replay risk, migration owner, and contract test or schema validator output.
 - **Cross-context ownership change:** prove context map, relationship pattern, ACL or translation boundary, writer scan, dependency direction, and team acknowledgement.
-- **Business Semantic Pack claim:** mark each vocabulary, object, rule, workflow, or signal claim as FACT only when backed by current source, owner review, user source, or validation evidence.
+- **Business invariant claim:** accept vocabulary, object, rule, workflow, or signal semantics only when backed by current source, owner review, user input, or validation evidence.
 
 ## Evidence Rules
 - Every accepted evidence item names source path or owner review, validation command or report artifact when available, freshness, and the exact domain claim it proves.
-- Every evidence item also states what it does not prove: downstream consumer behavior, historical data cleanliness, replay safety, compliance interpretation, or future owner acceptance.
-- Graph and memory are selectors only; they can choose files, events, or owners to inspect, but they cannot prove a domain fact without current source, owner review, user source, or validation.
-- Do not close domain work when rule authority is split, event consumers are unknown, or forbidden transitions lack evidence; route to the owner gate instead.
+- For evidence whose limits could change a domain conclusion, state the material non-proofs, such as unknown consumer behavior, historical-data cleanliness, replay safety, compliance interpretation, or owner acceptance.
+- Treat repository inspection and prior task evidence as selectors for files, events, or owners, not as proof of a domain fact.
+- Do not close domain work when rule authority is split, event consumers are unknown, or forbidden transitions lack evidence.
+- Route unresolved domain authority or evidence to the owner gate.

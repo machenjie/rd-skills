@@ -7,21 +7,13 @@ focus:
   - private helper co-location
   - navigation cost
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
+    - minimal-correct-implementation
     - implementation-structure-design
-    - code-clarity-maintainability
-    - refactoring
-    - unit-testing
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - AI review gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - The small cancellation rule is added to the existing cohesive owner file when ownership, lifecycle, invariants, collaborators, and change reason remain the same.
   - Private helper predicates, local constants, and owner-internal mappers stay co-located with the service or use-case when cohesive.

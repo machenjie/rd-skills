@@ -1,0 +1,3 @@
+# Architecture review scenario
+
+Review a proposal to move an order-pricing rule into `shared/common/pricing`. The proposal found only direct imports, although plugin class names and runtime registrations also come from configuration and reflection. During migration, the old pricing table and a new pricing service would both accept writes indefinitely. The proposed dependency direction conflicts with the repository's current module graph, and the order module is the only proven consumer of the proposed shared abstraction. Decide whether to approve, reject, or revise the design and identify the proof needed for cutover.

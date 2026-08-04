@@ -2,7 +2,7 @@ expected_stage: testing
 expected_professional_skill: quality-test-gate
 expected_capabilities:
   - regression-testing
-  - agent-execution-discipline
+  - test-strategy
 expected_hidden_risks:
   - test passes before fix and is not a real regression test
   - defect recurrence path not protected

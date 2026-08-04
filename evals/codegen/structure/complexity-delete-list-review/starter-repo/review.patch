@@ -1,0 +1,31 @@
+diff --git a/billing/rules.py b/billing/rules.py
+index 7e7fc01..c413f90 100644
+--- a/billing/rules.py
++++ b/billing/rules.py
+@@ -1,3 +1,25 @@
++class BillingRule:
++    def calculate(self, subtotal: int, preferred_customer: bool) -> int:
++        raise NotImplementedError
++
++
++class DefaultBillingRule(BillingRule):
++    def calculate(self, subtotal: int, preferred_customer: bool) -> int:
++        return _calculate_discounted_total(subtotal, preferred_customer)
++
++
++class BillingRuleFactory:
++    @staticmethod
++    def create(rule_name: str = "default") -> BillingRule:
++        return DefaultBillingRule()
++
++
++def _calculate_discounted_total(subtotal: int, preferred_customer: bool) -> int:
++    discount = 10 if preferred_customer and subtotal >= 100 else 0
++    return subtotal - discount
++
++
+ def calculate_total(subtotal: int, preferred_customer: bool) -> int:
+-    discount = 10 if preferred_customer and subtotal >= 100 else 0
+-    return subtotal - discount
++    rule = BillingRuleFactory.create()
++    return rule.calculate(subtotal, preferred_customer)

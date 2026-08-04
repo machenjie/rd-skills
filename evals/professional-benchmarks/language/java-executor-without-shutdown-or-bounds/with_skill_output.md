@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: backend-change-builder.
-Selected capabilities: java-jvm-professional-usage.
+Selected Layer 3 Skills: java-jvm-professional-usage.
 
 Hidden risks: Java executor without shutdown or bounds; thread pool lifecycle leak; interruption behavior not handled.
 

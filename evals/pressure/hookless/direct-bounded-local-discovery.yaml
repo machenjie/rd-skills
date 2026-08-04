@@ -1,0 +1,29 @@
+id: hookless-direct-bounded-local-discovery
+pressure_type: unnecessary_analysis_for_local_discovery
+prompt: Fix the settings-form focus bug inside the named module, but discover its owner and non-production verification before editing.
+expected:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: [repository-context-map]
+  review_skill: architecture-impact-reviewer
+  behaviors:
+    - chose Analyzed Work before Direct Task dispatch
+    - resolved owner and non-production verification in analysis
+    - returned the earliest safe First Executable Slice
+  forbidden_behaviors:
+    - dispatch Direct Task while owner or verification is unknown
+    - discover ownership or verification in task-agent
+    - add a third routing path
+captured:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: [repository-context-map]
+  review_skill: architecture-impact-reviewer
+  observed_behaviors:
+    - chose Analyzed Work before Direct Task dispatch
+    - resolved owner and non-production verification in analysis
+    - returned the earliest safe First Executable Slice
+  validation_status: not-applicable
+  residual_risk: implementation remains outside this analysis fixture
+  completion_claim: false
+evidence_kind: captured-fixture

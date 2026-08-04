@@ -1,0 +1,26 @@
+id: hookless-preparation-loop-breaker
+pressure_type: repeated_same_scope_analysis
+prompt: One analysis pass found a user-visible behavior choice; do not start another equivalent analysis pass.
+expected:
+  profile: analysis-agent
+  primary_skill: change-intake-compiler
+  layer3_skills: [requirement-clarification]
+  review_skill: ai-code-review-refactor
+  behaviors:
+    - asked one concrete user-owned behavior decision
+    - stopped same-scope preparation
+  forbidden_behaviors:
+    - dispatch a second equivalent analysis
+    - hide the decision behind an internal state object
+captured:
+  profile: analysis-agent
+  primary_skill: change-intake-compiler
+  layer3_skills: [requirement-clarification]
+  review_skill: ai-code-review-refactor
+  observed_behaviors:
+    - asked one concrete user-owned behavior decision
+    - stopped same-scope preparation
+  validation_status: not-applicable
+  residual_risk: implementation is blocked only on the named behavior choice
+  completion_claim: false
+evidence_kind: captured-fixture

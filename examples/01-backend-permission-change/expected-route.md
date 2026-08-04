@@ -1,30 +1,28 @@
 # Expected Route
 
-```yaml
-scenario_id: backend-auth-idor
-selected_skills:
-  - change-intake-compiler
-  - change-impact-analyzer
-  - backend-change-builder
-  - security-privacy-gate
-  - quality-test-gate
-  - change-documentation-gate
-selected_capabilities:
-  - implementation-structure-design
-  - permission-boundary-modeling
-  - authentication-authorization
-  - web-security
-  - input-validation
-  - regression-testing
-  - logging-error-handling
-required_quality_gates:
-  - requirement gate
-  - impact gate
-  - implementation gate
-  - security gate
-  - test gate
-  - documentation gate
-review_owner: quality-test-gate
-```
+## Path
 
-The backend owner handles validation, authorization, transaction, and error model decisions. The security gate owns object-level authorization and denied-path behavior. Documentation review keeps the endpoint behavior and error contract visible to consumers.
+Analyzed Work, because tenant authorization and invoice access cross a security
+boundary.
+
+## Analysis Assignment
+
+- Profile: `analysis-agent`
+- Primary Professional Skill: `security-privacy-gate`
+- Layer 3 Skills: `permission-boundary-modeling`, `threat-modeling`
+- First Executable Slice: add an observable denied-cross-organization regression
+  case at the existing invoice endpoint owner.
+
+## Implementation Assignment
+
+- Profile: `task-agent`
+- Primary Professional Skill: `backend-change-builder`
+- Allowed scope: the invoice endpoint owner and its adjacent tests
+- Verify: the targeted allowed/denied backend tests
+
+## Independent Review
+
+- Profile: `review-agent`
+- Review Skill: `security-privacy-gate`
+- Boundary: actual diff, every changed file, tenant ownership enforcement,
+  response compatibility, and denied-path coverage

@@ -1,32 +1,18 @@
 #!/usr/bin/env python3
-"""Generate a scenario showcase from existing ChangeForge examples."""
+"""Generate a ChangeForge scenario showcase from bounded Markdown examples."""
 
 from __future__ import annotations
 
 import argparse
-import importlib.util
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from validation_utils import load_yaml_file
+
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def _load_validate_examples():
-    spec = importlib.util.spec_from_file_location(
-        "validate_examples_for_showcase",
-        ROOT / "scripts" / "validate-examples.py",
-    )
-    if spec is None or spec.loader is None:
-        raise RuntimeError("unable to load validate-examples.py")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-VALIDATE_EXAMPLES = _load_validate_examples()
 
 
 @dataclass(frozen=True)
@@ -34,141 +20,127 @@ class ShowcaseScenario:
     path: Path
     name: str
     prompt_summary: str
-    fixture_id: str
-    selected_skills: list[str]
-    selected_capabilities: list[str]
-    required_quality_gates: list[str]
-    evidence_obligations: list[str]
-    review_owner: str
+    route_path: str
+    profiles: tuple[str, ...]
+    professional_skills: tuple[str, ...]
+    layer3_skills: tuple[str, ...]
+    evidence_obligations: tuple[str, ...]
+
+
+def _known_names(root: Path) -> tuple[set[str], set[str]]:
+    professional = load_yaml_file(root / "src/registry/professional-skills.yaml")["professional_skills"]
+    foundation = load_yaml_file(root / "src/registry/foundation-skills.yaml")["foundation_skills"]
+    domain = load_yaml_file(root / "src/registry/domain-skills.yaml")["domain_skills"]
+    return (
+        {item["name"] for item in professional},
+        {item["name"] for item in [*foundation, *domain]},
+    )
 
 
 def _scenario_name(path: Path) -> str:
     return path.name[3:].replace("-", " ").title()
 
 
-def _prompt_summary(path: Path) -> str:
+def _first_prose(path: Path) -> str:
     for line in path.read_text(encoding="utf-8").splitlines():
         stripped = line.strip()
         if stripped and not stripped.startswith("#"):
             return stripped
-    return "Prompt summary unavailable."
+    return "Not supplied."
 
 
-def _evidence_obligations(path: Path) -> list[str]:
-    obligations: list[str] = []
+def _path_summary(text: str) -> str:
+    match = re.search(r"^## Path\s*$\n+(.*?)(?=^## |\Z)", text, re.M | re.S)
+    if not match:
+        return "Not supplied."
+    return " ".join(line.strip() for line in match.group(1).splitlines() if line.strip())
+
+
+def _evidence(path: Path) -> tuple[str, ...]:
+    """Return top-level bullets with their indented continuation lines intact."""
+
+    bullets: list[str] = []
     for line in path.read_text(encoding="utf-8").splitlines():
-        stripped = line.strip()
-        if stripped.startswith("- "):
-            obligations.append(stripped[2:].strip())
-    return obligations
+        if line.startswith("- "):
+            bullets.append(line[2:].strip())
+            continue
+        if bullets and line[:1].isspace() and line.strip():
+            bullets[-1] = f"{bullets[-1]} {line.strip()}"
+    return tuple(bullets)
 
 
 def collect_scenarios(root: Path) -> list[ShowcaseScenario]:
-    """Collect numbered examples into showcase scenario records."""
-    scenarios: list[ShowcaseScenario] = []
-    for scenario_dir in sorted((root / "examples").glob("[0-9][0-9]-*")):
-        if not scenario_dir.is_dir():
+    professional, layer3 = _known_names(root)
+    result: list[ShowcaseScenario] = []
+    for directory in sorted((root / "examples").glob("[0-9][0-9]-*")):
+        if not directory.is_dir():
             continue
-        route_path = scenario_dir / "expected-route.md"
-        payload = VALIDATE_EXAMPLES._route_payload(route_path.read_text(encoding="utf-8"), route_path)
-        scenarios.append(
+        route = (directory / "expected-route.md").read_text(encoding="utf-8")
+        backticks = set(re.findall(r"`([a-z0-9-]+)`", route))
+        result.append(
             ShowcaseScenario(
-                path=scenario_dir,
-                name=_scenario_name(scenario_dir),
-                prompt_summary=_prompt_summary(scenario_dir / "prompt.md"),
-                fixture_id=str(payload.get("scenario_id", "")).strip(),
-                selected_skills=VALIDATE_EXAMPLES._list_value(payload, "selected_skills"),
-                selected_capabilities=VALIDATE_EXAMPLES._list_value(payload, "selected_capabilities"),
-                required_quality_gates=VALIDATE_EXAMPLES._list_value(payload, "required_quality_gates"),
-                evidence_obligations=_evidence_obligations(scenario_dir / "expected-evidence.md"),
-                review_owner=str(payload.get("review_owner", "")).strip(),
+                path=directory,
+                name=_scenario_name(directory),
+                prompt_summary=_first_prose(directory / "prompt.md"),
+                route_path=_path_summary(route),
+                profiles=tuple(sorted(backticks & {"analysis-agent", "task-agent", "review-agent"})),
+                professional_skills=tuple(sorted(backticks & professional)),
+                layer3_skills=tuple(sorted(backticks & layer3)),
+                evidence_obligations=_evidence(directory / "expected-evidence.md"),
             )
         )
-    return scenarios
+    return result
 
 
-def _comma(values: list[str]) -> str:
+def _csv(values: tuple[str, ...]) -> str:
     return ", ".join(f"`{value}`" for value in values) if values else "`none`"
 
 
-def _ordinary_agent_miss(scenario: ShowcaseScenario) -> str:
-    first_gate = scenario.required_quality_gates[0] if scenario.required_quality_gates else "route validation"
-    first_capability = scenario.selected_capabilities[0] if scenario.selected_capabilities else "selected capability evidence"
-    return (
-        "Treats the prompt as a direct implementation request, then skips "
-        f"`{first_gate}`, `{first_capability}`, independent review, or residual-risk handoff."
-    )
-
-
-def _changeforge_forces(scenario: ShowcaseScenario) -> str:
-    owner = scenario.review_owner or "the selected review owner"
-    return (
-        f"Routes ownership to `{owner}`, requires {_comma(scenario.required_quality_gates)}, "
-        "and makes validation evidence plus residual risk part of the completion contract."
-    )
-
-
 def render_showcase(root: Path) -> str:
-    """Render the scenario showcase Markdown."""
-    scenarios = collect_scenarios(root)
     lines = [
         "# Scenario Showcase",
         "",
-        "This generated showcase compares ordinary agent shortcuts with ChangeForge-routed behavior using the existing `examples/` scenarios. It does not create or require a demo repository, runnable demo app, generated app, target app, or large sample project.",
+        "This generated view summarizes the bounded Direct, Analyzed, and Review contracts in `examples/`. It is deterministic documentation, not host-performance, real-host accuracy, or installed-experience evidence.",
         "",
         "_Generated by `python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md`. Do not edit by hand._",
         "",
-        "## Scenarios",
-        "",
     ]
-    for scenario in scenarios:
-        scenario_link = f"../{scenario.path.relative_to(root)}"
-        fixture_link = f"../evals/routing/{scenario.fixture_id}.yaml" if scenario.fixture_id else ""
+    for scenario in collect_scenarios(root):
+        link = f"../{scenario.path.relative_to(root)}"
         lines.extend(
             [
-                f"### {scenario.name}",
+                f"## {scenario.name}",
                 "",
-                f"- Scenario: [{scenario.path.name}]({scenario_link})",
-                f"- Prompt summary: {scenario.prompt_summary}",
-                f"- Routing fixture: [{scenario.fixture_id}]({fixture_link})" if scenario.fixture_id else "- Routing fixture: `missing`",
-                f"- Selected skills: {_comma(scenario.selected_skills)}",
-                f"- Selected capabilities: {_comma(scenario.selected_capabilities)}",
-                f"- Required quality gates: {_comma(scenario.required_quality_gates)}",
-                f"- Evidence obligations: {_comma(scenario.evidence_obligations)}",
-                f"- What ordinary agents usually miss: {_ordinary_agent_miss(scenario)}",
-                f"- What ChangeForge route forces: {_changeforge_forces(scenario)}",
+                f"- Example: [{scenario.path.name}]({link})",
+                f"- Request: {scenario.prompt_summary}",
+                f"- Path decision: {scenario.route_path}",
+                f"- Profiles: {_csv(scenario.profiles)}",
+                f"- Professional Skills: {_csv(scenario.professional_skills)}",
+                f"- Triggered Layer 3 Skills: {_csv(scenario.layer3_skills)}",
+                "- Evidence obligations:",
+                *(
+                    [f"  - {item}" for item in scenario.evidence_obligations]
+                    or ["  - Not supplied."]
+                ),
                 "",
             ]
         )
     return "\n".join(lines)
 
 
-def _check_file(path: Path, expected: str) -> list[str]:
-    if not path.exists():
-        return [f"{path} does not exist"]
-    if path.read_text(encoding="utf-8") != expected:
-        return [f"{path} is stale"]
-    return []
-
-
 def main(argv: list[str] | None = None) -> int:
-    """CLI entrypoint for writing or checking the generated showcase."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True)
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
-
     out = Path(args.out)
     rendered = render_showcase(ROOT)
     if args.check:
-        errors = _check_file(out, rendered)
-        if errors:
-            for error in errors:
-                print(f"generate-examples-showcase: ERROR: {error}", file=sys.stderr)
+        if not out.is_file() or out.read_text(encoding="utf-8") != rendered:
+            print(f"generate-examples-showcase: ERROR: {out} is stale", file=sys.stderr)
             return 1
         print("generate-examples-showcase: committed output is fresh")
         return 0
-
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(rendered, encoding="utf-8")
     print(f"wrote examples showcase to {out}")
@@ -176,4 +148,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

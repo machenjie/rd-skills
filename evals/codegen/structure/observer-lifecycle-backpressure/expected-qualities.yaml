@@ -7,21 +7,14 @@ focus:
   - event fan-out isolation
   - observability and cleanup
 route_hints:
-  skills:
-    - backend-change-builder
-    - reliability-observability-gate
-    - quality-test-gate
-  capabilities:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
     - design-pattern-selection
+    - concurrency-control
     - implementation-structure-design
-    - language-performance-safety
-    - async-job-design
-    - observability
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - reliability gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Observer or pub/sub is accepted only with explicit subscription lifecycle and unsubscribe behavior.
   - Notification, audit, and search indexing subscribers are isolated from the main transaction.

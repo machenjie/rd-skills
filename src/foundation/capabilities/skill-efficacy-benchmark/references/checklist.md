@@ -1,33 +1,18 @@
-# Skill Efficacy Benchmark Checklist
+# Skill Efficacy Benchmark Decision Checklist
 
-Use this checklist when drafting or reviewing a concrete skill efficacy case, routing/reference budget benchmark, score-improvement claim, or report-supported handoff.
+Dev/evaluation-only checklist; do not load it for ordinary product work.
 
-## Case Definition
-
-- Name the `case_id`, changed skill/capability/route/hook/eval surface, and behavior claim.
-- State the bounded task and why the benchmark is needed instead of prose.
-- Identify baseline artifact, treatment artifact, and any unavailable baseline reason.
-- Keep the same task, route risk, source-vs-dist boundary, and runtime profile for baseline and treatment.
-
-## Metric And Guard Checks
-
-- Map each claim to routing correctness, evidence completeness, defect catch, validation freshness, over-routing, under-routing, token overhead, or turn overhead.
-- Record token and turn fields as measured values or `not_collected`.
-- Include selected/skipped reference counts and skipped-reference rationale.
-- Add an over-routing guard for trivial or out-of-scope cases.
-- Add an under-routing guard for hidden-risk cases.
-- Mark structural-only evidence when no representative live agent run exists.
-
-## Evidence Freshness
-
-- Inspect current source, registry/routing, generated reports, validation output, graph, memory, and execution trajectory relevant to the case.
-- Classify graph and memory evidence as accepted, rejected, stale, partial, or not verified.
-- Confirm validation ran after the final material edit or mark it stale/not-run.
-- Map each changed skill body, reference, registry rule, hook prompt, eval fixture, report, or runtime output to a validator or residual-risk owner.
-
-## Privacy And Boundary
-
-- Reject raw prompts, secrets, environment values, private archives, unbounded source corpora, and full command output.
-- Retain only bounded structural facts, redacted fixture inputs, command status, and artifact paths.
-- State what the benchmark proves and what it does not prove.
-- Include rollback note, residual risk owner, and next gate.
+1. Name the case, changed Skill/Profile/route/reference/evaluation surface, and concrete behavior claim.
+2. Define the bounded task and why a benchmark is needed instead of prose or a validator alone.
+3. Identify baseline and treatment artifacts plus the reason any comparable baseline is unavailable.
+4. Hold task, route risk, Profile/build profile, source-vs-dist boundary, fixtures, and metric definitions constant.
+5. Map each claim to routing, evidence, defect catch, freshness, over-routing, under-routing, token, turn, or elapsed evidence.
+6. Record token, turn, and elapsed values only as measured or `not_collected`.
+7. Record selected and skipped references/Skills with task-specific reasons and context-cost limits.
+8. Include both a trivial/out-of-scope over-routing guard and a hidden-risk under-routing guard.
+9. Classify evidence as `structural-only` when representative live agent runs and a defensible sample are absent.
+10. Do not use `structural-only` as the final verdict.
+11. When a comparable baseline is missing, set the final verdict to `not_enough_evidence`.
+12. Inspect current source, registry/routing, reports, diff, built boundary, and action evidence; treat prior notes as leads until fresh confirmation.
+13. For a surface changed by the current authoring task, run mapped validation after the final material edit or name the stale/not-run gap and residual owner.
+14. Enforce bounded/redacted fixture privacy, state what the case proves and does not prove, and name rollback, residual owner, and next step.

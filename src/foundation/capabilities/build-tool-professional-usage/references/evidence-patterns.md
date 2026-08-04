@@ -1,7 +1,5 @@
 # Build Tool Evidence Patterns
 
-## Required Evidence
-
 - Tool and target: command, target name, package/module, and config file.
 - Graph evidence: declared inputs, outputs, dependencies, generated sources, and affected consumers.
 - Generator evidence: source spec, generator version, generated output, and drift command.

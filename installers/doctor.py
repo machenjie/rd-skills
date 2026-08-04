@@ -1,653 +1,246 @@
 #!/usr/bin/env python3
-"""Inspect ChangeForge build outputs and installed runtime targets."""
+"""Inspect a hookless ChangeForge installation."""
 
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
+import re
 import sys
+import tomllib
 from pathlib import Path
-from typing import Any
 
 from changeforge_install import (
+    AGENT_PROFILE_NAMES,
     AGENTS,
-    DEFAULT_TARGET_DIRS,
-    HOOK_AUX_SUBDIR,
-    HOOK_PROJECT_SUBPATH,
-    HOOK_SCRIPTS_SUBDIR,
-    HOOK_USER_HOME_SUBDIR,
-    MANIFEST_NAME,
+    COMPILED_LAYER3_FORMAT,
+    EXPECTED_PROFILE_COUNTS,
+    HOST_ENFORCEMENT_SOURCE,
     PROFILES,
-    PROJECT_SUBPATHS,
     SCOPES,
-    SOURCE_SKILL_ROOTS,
     InstallError,
+    host_enforcement_for_agent,
+    legacy_residue_paths,
+    managed_profile_files,
+    managed_skill_names,
     read_manifest,
-    resolve_target_dir,
-    hooks_supported,
+    resolve_source_profile_dir,
+    resolve_targets,
     source_version,
-    skill_metadata,
+    validated_built_core_model,
+    validated_built_profile_sha256,
+    validate_openai_bundles,
 )
 
-ROOT = Path(__file__).resolve().parents[1]
-for _support_path in (ROOT / "src" / "hook-runtime" / "scripts", ROOT / "src"):
-    if str(_support_path) not in sys.path:
-        sys.path.insert(0, str(_support_path))
 
-try:
-    from changeforge_adapter_capabilities import format_coverage_matrix
-except Exception:  # pragma: no cover - source-tree path fallback for direct runs.
-    format_coverage_matrix = None
+def _print_enforcement(agent: str, enforcement: dict) -> None:
+    print(
+        "doctor: declared-default profile enforcement "
+        f"host={agent} delivery={enforcement['profile_delivery']} "
+        f"diff_input_mode={enforcement['diff_input_mode']} "
+        f"validation_mode={enforcement['validation_mode']} "
+        f"utility_no_edit={enforcement['utility_no_edit']}"
+    )
+    for role, capabilities in enforcement["roles"].items():
+        print(
+            f"- {role}: tool_allowlist={capabilities['tool_allowlist']}; "
+            "workspace_write_protection="
+            f"{capabilities['workspace_write_protection']}; "
+            "read_only_command_semantics="
+            f"{capabilities['read_only_command_semantics']}"
+        )
+        for limitation in capabilities.get("limitations", []):
+            print(f"  limitation: {limitation}")
 
 
-COMMON_HOOK_SUPPORT_FILES = ("changeforge_professional_contract.md",)
-COPILOT_HOOK_SUPPORT_FILES = (
-    "changeforge_copilot_skill_summary.md",
-    "changeforge_copilot_professional_contract.md",
-)
+def _profile_projection_issues(
+    agent: str,
+    profile_root: Path,
+    manifest: dict,
+    enforcement: dict,
+    expected_build_digests: dict[str, str],
+) -> list[str]:
+    issues: list[str] = []
+    suffix = {"codex": ".toml", "claude": ".md", "copilot": ".agent.md"}[agent]
+    payloads: dict[str, bytes] = {}
+    for role in AGENT_PROFILE_NAMES:
+        path = profile_root / f"{role}{suffix}"
+        if path.is_symlink():
+            issues.append(f"installed Agent Profile must not be a symlink: {path.name}")
+            continue
+        if path.is_file():
+            payloads[role] = path.read_bytes()
+    actual_digests = {
+        role: hashlib.sha256(raw).hexdigest() for role, raw in payloads.items()
+    }
+    declared_digests = manifest.get("installed_agent_profile_sha256")
+    if actual_digests != declared_digests:
+        issues.append("installed Agent Profile file digests do not match the install manifest")
+    if declared_digests != expected_build_digests:
+        issues.append("install manifest Agent Profile digests do not match the validated build")
+    if actual_digests != expected_build_digests:
+        issues.append("installed Agent Profile files do not match the validated build")
+    expected_sandbox = {
+        "main-control-agent": "read-only",
+        "analysis-agent": "read-only",
+        "task-agent": "workspace-write",
+        "review-agent": "read-only",
+    }
+    for role in AGENT_PROFILE_NAMES:
+        path = profile_root / f"{role}{suffix}"
+        raw = payloads.get(role)
+        if raw is None:
+            continue
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            issues.append(f"installed Agent Profile is not UTF-8: {path.name}")
+            continue
+        expected_tools = enforcement["roles"][role]["rendered_tools"]
+        expected_modes = (
+            "Current host modes: "
+            f"diff_input_mode={enforcement['diff_input_mode']}; "
+            f"validation_mode={enforcement['validation_mode']}; "
+            f"utility_no_edit={enforcement['utility_no_edit']}."
+        )
+        if "Declared tool boundary:" not in text:
+            issues.append(f"{path.name}: missing declared tool boundary")
+        if role == "main-control-agent":
+            if expected_modes not in text:
+                issues.append(f"{path.name}: missing exact current host modes")
+        elif any(
+            marker in text
+            for marker in (
+                "Current host modes:",
+                "diff_input_mode=",
+                "validation_mode=",
+                "utility_no_edit=",
+            )
+        ):
+            issues.append(f"{path.name}: worker Profile must not receive host modes")
+        if agent == "codex":
+            try:
+                payload = tomllib.loads(text)
+            except tomllib.TOMLDecodeError:
+                issues.append(f"invalid Codex Agent Profile TOML: {path.name}")
+                continue
+            if payload.get("sandbox_mode") != expected_sandbox[role]:
+                issues.append(f"{path.name}: sandbox_mode is not the declared default")
+            instructions = str(payload.get("developer_instructions") or "")
+            if role == "main-control-agent" and expected_modes not in instructions:
+                issues.append(f"{path.name}: parsed instructions omit current host modes")
+        elif agent == "claude":
+            match = re.search(r"^tools:\s*(.*)$", text, re.MULTILINE)
+            actual_tools = [item.strip() for item in match.group(1).split(",")] if match else []
+            if actual_tools != expected_tools:
+                issues.append(f"{path.name}: Claude tools differ from the declared default")
+        else:
+            match = re.search(r"^tools:\s*(\[[^\n]*\])$", text, re.MULTILINE)
+            try:
+                actual_tools = json.loads(match.group(1)) if match else []
+            except json.JSONDecodeError:
+                actual_tools = []
+            if actual_tools != expected_tools:
+                issues.append(f"{path.name}: Copilot tools differ from the declared default")
+    return issues
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Check ChangeForge runtime installation health.")
-    parser.add_argument("--agent", choices=AGENTS)
-    parser.add_argument("--scope", choices=SCOPES)
-    parser.add_argument("--target", type=Path, help="Project root, or explicit user/admin skills dir.")
-    parser.add_argument("--profile", choices=PROFILES, help="Expected installed profile.")
-    parser.add_argument(
-        "--telemetry-report",
-        type=Path,
-        help="Optional review report to summarize (markdown, json, or yaml).",
-    )
-    parser.add_argument(
-        "--telemetry-root",
-        type=Path,
-        help="Optional telemetry root; doctor finds the latest review report under it.",
-    )
-    parser.add_argument(
-        "--repo-hash",
-        help="Optional repo hash to scope --telemetry-root report discovery.",
-    )
-    parser.add_argument(
-        "--check-hooks",
-        action="store_true",
-        help="Inspect optional project hook files, manifest, and config references.",
-    )
-    parser.add_argument(
-        "--check-bootstrap",
-        action="store_true",
-        help="Inspect the optional advisory route-preflight bootstrap fragment.",
-    )
+    parser = argparse.ArgumentParser(description="Check ChangeForge installation health.")
+    parser.add_argument("--agent", choices=AGENTS, required=True)
+    parser.add_argument("--scope", choices=SCOPES, required=True)
+    parser.add_argument("--target", type=Path)
+    parser.add_argument("--profile", choices=PROFILES)
     args = parser.parse_args()
-
     try:
-        targets = _selected_targets(args.agent, args.scope, args.target)
+        expected_enforcement = host_enforcement_for_agent(args.agent)
+        if args.agent == "openai-api":
+            profile = args.profile or "recommended"
+            source = resolve_source_profile_dir(args.agent, args.scope, profile)
+            validate_openai_bundles(profile, source)
+            _print_enforcement(args.agent, expected_enforcement)
+            print(f"doctor: {profile} OpenAI API output is healthy")
+            return 0
+        targets = resolve_targets(args.agent, args.scope, args.target)
+        manifest = read_manifest(targets.skills)
+        issues: list[str] = []
+        if manifest is None:
+            issues.append(f"missing install manifest in {targets.skills}")
+        else:
+            if manifest.get("architecture") != "hookless-control-plane-v1":
+                issues.append("installed manifest is not hookless-control-plane-v1")
+            if manifest.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
+                issues.append(
+                    "installed manifest compiled_layer3_format is not "
+                    f"{COMPILED_LAYER3_FORMAT}"
+                )
+            if manifest.get("source_version") != source_version():
+                issues.append("installed source version differs from current source")
+            if args.profile and manifest.get("profile") != args.profile:
+                issues.append(f"installed profile {manifest.get('profile')!r} does not match {args.profile!r}")
+            if manifest.get("installed_agent_profile_enforcement") != expected_enforcement:
+                issues.append("installed Agent Profile enforcement matrix is stale or invalid")
+            enforcement_source = manifest.get("agent_profile_enforcement_source")
+            expected_digest = hashlib.sha256(HOST_ENFORCEMENT_SOURCE.read_bytes()).hexdigest()
+            if not isinstance(enforcement_source, dict) or enforcement_source.get("sha256") != expected_digest:
+                issues.append("installed Agent Profile enforcement source digest is stale or invalid")
+            profile = str(manifest.get("profile") or "")
+            expected_core_model = validated_built_core_model(
+                args.agent, args.scope, profile
+            )
+            if manifest.get("core_model") != expected_core_model:
+                issues.append(
+                    "installed core model digest does not match the validated build"
+                )
+            installed_skills = managed_skill_names(manifest)
+            expected_count = EXPECTED_PROFILE_COUNTS.get(profile)
+            if expected_count is None:
+                issues.append(f"installed manifest has unsupported profile {profile!r}")
+            elif len(installed_skills) != expected_count:
+                issues.append(f"installed manifest must contain {expected_count} Skills, found {len(installed_skills)}")
+            for name in sorted(installed_skills):
+                if not (targets.skills / name / "SKILL.md").is_file():
+                    issues.append(f"missing installed Skill {name}")
+            if targets.profiles is not None:
+                expected_build_digests = validated_built_profile_sha256(
+                    args.agent, args.scope, profile
+                )
+                extension = {"codex": ".toml", "claude": ".md", "copilot": ".agent.md"}[args.agent]
+                expected_files = {f"{name}{extension}" for name in AGENT_PROFILE_NAMES}
+                installed_files = managed_profile_files(manifest)
+                if installed_files != expected_files:
+                    issues.append("installed Agent Profile files are not the exact four-role set")
+                for name in sorted(installed_files):
+                    if not (targets.profiles / name).is_file():
+                        issues.append(f"missing installed Agent Profile file {name}")
+                installed_names = set(manifest.get("installed_agent_profiles") or [])
+                if installed_names != set(AGENT_PROFILE_NAMES):
+                    issues.append("installed Agent Profile set is not the four-role model")
+                issues.extend(
+                    _profile_projection_issues(
+                        args.agent,
+                        targets.profiles,
+                        manifest,
+                        expected_enforcement,
+                        expected_build_digests,
+                    )
+                )
+        for path in legacy_residue_paths(args.agent, args.scope, args.target, targets.skills):
+            issues.append(f"legacy ChangeForge residue remains: {path}")
+        if issues:
+            print("doctor: issues")
+            for issue in issues:
+                print(f"- {issue}")
+            return 1
+        _print_enforcement(args.agent, expected_enforcement)
+        if targets.profiles is not None:
+            print("doctor: observed-installed Profile files match declared digests and critical fields")
+        print("doctor: hookless installation is healthy")
+        return 0
     except InstallError as exc:
-        print(f"doctor: ERROR: {exc}")
+        print(f"doctor: ERROR: {exc}", file=sys.stderr)
         return 1
-
-    current_version = source_version()
-    issues: list[str] = []
-    duplicate_index: dict[str, list[str]] = {}
-
-    print("doctor: supported target directories")
-    for label, path in targets:
-        state = "present" if path.is_dir() else "missing"
-        print(f"- {label}: {path} ({state})")
-        if not path.is_dir():
-            continue
-
-        manifest = read_manifest(path)
-        if manifest is not None:
-            _inspect_manifest(label, path, manifest, current_version, args.profile, issues)
-
-        _inspect_skill_dirs(label, path, duplicate_index, issues)
-
-    _inspect_duplicates(duplicate_index, issues)
-    _print_governance_source_status()
-    _print_runtime_coverage_matrix()
-
-    if args.telemetry_report is not None or args.telemetry_root is not None:
-        _report_telemetry(args.telemetry_report, args.telemetry_root, args.repo_hash)
-
-    if args.check_hooks:
-        _check_hooks(args.agent, args.scope, args.target, issues)
-
-    if args.check_bootstrap:
-        _check_project_bootstrap(args.target, issues)
-
-    if issues:
-        print("doctor: issues")
-        for issue in issues:
-            print(f"- {issue}")
-        print("doctor: remediation")
-        _print_remediation(issues)
-        return 1
-
-    print("doctor: no installation issues detected.")
-    return 0
-
-
-def _selected_targets(
-    agent: str | None,
-    scope: str | None,
-    target: Path | None,
-) -> list[tuple[str, Path]]:
-    if agent or scope:
-        if not agent or not scope:
-            raise InstallError("--agent and --scope must be supplied together")
-        return [(f"{agent}:{scope}", resolve_target_dir(agent, scope, target))]
-
-    project_root = target.expanduser().resolve() if target is not None else Path.cwd().resolve()
-    targets: list[tuple[str, Path]] = []
-    for agent_name, subpath in PROJECT_SUBPATHS.items():
-        targets.append((f"{agent_name}:project", project_root / subpath))
-    for key, default_path in DEFAULT_TARGET_DIRS.items():
-        agent_name, scope_name = key
-        targets.append((f"{agent_name}:{scope_name}", default_path.expanduser()))
-    for key, source_root in SOURCE_SKILL_ROOTS.items():
-        agent_name, scope_name = key
-        if scope_name == "admin":
-            targets.append((f"{agent_name}:{scope_name}", Path("/etc/codex/skills")))
-    return _dedupe_targets(targets)
-
-
-def _dedupe_targets(targets: list[tuple[str, Path]]) -> list[tuple[str, Path]]:
-    deduped: list[tuple[str, Path]] = []
-    seen: set[Path] = set()
-    for label, path in targets:
-        resolved = path.expanduser()
-        key = resolved.resolve() if resolved.exists() else resolved
-        if key in seen:
-            continue
-        seen.add(key)
-        deduped.append((label, resolved))
-    return deduped
-
-
-def _inspect_manifest(
-    label: str,
-    path: Path,
-    manifest: dict[str, Any],
-    current_version: str,
-    expected_profile: str | None,
-    issues: list[str],
-) -> None:
-    installed_version = manifest.get("source_version")
-    if installed_version != current_version:
-        issues.append(
-            f"{label}: installed source version {installed_version!r} differs from current {current_version!r}"
-        )
-
-    profile = manifest.get("profile")
-    if expected_profile is not None and profile != expected_profile:
-        issues.append(
-            f"{label}: installed profile {profile!r} does not match expected {expected_profile!r}"
-        )
-
-    target_path = manifest.get("target_path")
-    if isinstance(target_path, str) and Path(target_path) != path:
-        issues.append(f"{label}: manifest target_path points at {target_path}, expected {path}")
-
-    installed_names = _manifest_names(manifest)
-    for name in installed_names:
-        if not (path / name).exists():
-            issues.append(f"{label}: manifest lists missing skill directory {name}")
-
-
-def _inspect_skill_dirs(
-    label: str,
-    path: Path,
-    duplicate_index: dict[str, list[str]],
-    issues: list[str],
-) -> None:
-    for child in sorted(path.iterdir()):
-        if not child.is_dir() or child.name.startswith("."):
-            continue
-        skill_file = child / "SKILL.md"
-        if not skill_file.is_file():
-            issues.append(f"{label}: {child.name} is missing SKILL.md")
-            continue
-        try:
-            metadata = skill_metadata(child)
-        except InstallError as exc:
-            issues.append(f"{label}: {child.name} has invalid SKILL.md: {exc}")
-            continue
-        name = metadata.get("name")
-        skill_name = str(name) if isinstance(name, str) else child.name
-        duplicate_index.setdefault(skill_name, []).append(f"{label}:{child}")
-
-
-def _manifest_names(manifest: dict[str, Any]) -> list[str]:
-    names: list[str] = []
-    for key in (
-        "installed_skills",
-        "installed_professional_skills",
-        "installed_domain_extensions",
-        "installed_foundation_capabilities",
-    ):
-        value = manifest.get(key)
-        if isinstance(value, list):
-            names.extend(str(item) for item in value if isinstance(item, str))
-    return sorted(set(names))
-
-
-def _inspect_duplicates(duplicate_index: dict[str, list[str]], issues: list[str]) -> None:
-    for name, locations in sorted(duplicate_index.items()):
-        if len(locations) > 1:
-            issues.append(f"duplicate skill name {name!r} found in: {', '.join(locations)}")
-
-
-def _report_telemetry(
-    report_arg: Path | None,
-    telemetry_root: Path | None,
-    repo_hash: str | None,
-) -> None:
-    """Show an informational telemetry summary. This never changes doctor's exit.
-
-    Telemetry is optional. Doctor reads a generated review report and prints its
-    counts; it does not fix telemetry, never reads prompts, and never mutates
-    skills. When no report is available it points to review-agent-telemetry.py.
-    """
-    # Lazy import: changeforge_install puts scripts/ on sys.path when it loads.
-    from telemetry_utils import find_latest_report, read_report_summary, resolve_telemetry_root
-
-    print("doctor: telemetry summary")
-    report_path = report_arg
-    if report_path is None and telemetry_root is not None:
-        report_path = find_latest_report(resolve_telemetry_root(telemetry_root), repo_hash)
-
-    if report_path is None:
-        print("- no review report found; run scripts/review-agent-telemetry.py to generate one")
-        return
-
-    summary = read_report_summary(report_path)
-    if summary is None:
-        print(f"- could not read telemetry summary from {report_path}")
-        print("- run scripts/review-agent-telemetry.py to regenerate the report")
-        return
-
-    print(f"- report: {report_path}")
-    adoption = summary.get("route_manifest_adoption")
-    closures = summary.get("code_change_closures")
-    if adoption is not None and closures is not None:
-        present = summary.get("route_manifest_closures", 0)
-        print(
-            f"- route manifest adoption: {present}/{closures} "
-            f"({float(adoption) * 100:.0f}%)"
-        )
-    for label, key in (
-        ("sessions", "sessions"),
-        ("missed router", "missed_router"),
-        ("missed reference", "missed_reference"),
-        ("missed gate", "missed_gate"),
-        ("validation evidence missing", "validation_evidence_missing"),
-        ("unverified completion claims", "unverified_completion_claims"),
-        ("incomplete required references", "incomplete_required_references"),
-        ("residual risk missing", "residual_risk_missing"),
-        ("pressure candidate suggestions", "pressure_candidate_suggestions"),
-        ("high severity suggestions", "high_severity_suggestions"),
-    ):
-        print(f"- {label}: {summary.get(key, 'n/a')}")
-    print("- telemetry is advisory; review suggestions before any human promotion")
-
-
-def _check_hooks(
-    agent_filter: str | None,
-    scope_filter: str | None,
-    target: Path | None,
-    issues: list[str],
-) -> None:
-    """Inspect optional hook files and config references.
-
-    Hooks are never required. This reports whether hook files and config are
-    installed for the requested runtime and only adds an issue when hooks look
-    partially installed.
-    """
-    print("doctor: hook activation status")
-    hook_specs = _hook_specs(agent_filter, scope_filter, target, issues)
-    any_present = False
-    for label, agent, _scope, scripts_dir, aux_dir, config_path, unsupported in hook_specs:
-        if unsupported:
-            print(f"- {label}: hooks enabled: unsupported")
-            continue
-        manifest_path = aux_dir / ".changeforge-hook-manifest.json"
-        config_name = config_path.name
-        scripts = sorted(scripts_dir.glob("changeforge_*.py")) if scripts_dir.is_dir() else []
-        references = _config_references_hooks(config_path) if config_path.is_file() else False
-        present_signals = [bool(scripts), manifest_path.is_file(), references]
-        if not any(present_signals):
-            print(f"- {label}: hooks enabled: no (no hook files or config found)")
-            continue
-        any_present = True
-        expected_support = list(COMMON_HOOK_SUPPORT_FILES)
-        if agent == "copilot":
-            expected_support.extend(COPILOT_HOOK_SUPPORT_FILES)
-        required_paths = [
-            manifest_path,
-            *(scripts_dir / support_file for support_file in expected_support),
-            scripts_dir / "changeforge_session_bootstrap.py",
-            scripts_dir / "changeforge_post_tool_collector.py",
-            scripts_dir / "changeforge_compaction.py",
-            scripts_dir / "changeforge_sdd_material_choice_gate.py",
-            scripts_dir / "changeforge_pre_edit_structure_gate.py",
-            scripts_dir / "changeforge_permission_policy_gate.py",
-            scripts_dir / "changeforge_subagent_review_gate.py",
-            scripts_dir / "changeforge_hook_policy.py",
-            scripts_dir / "changeforge_state_reducer.py",
-            scripts_dir / "changeforge_stop_closure_gate.py",
-        ]
-        complete = (
-            bool(scripts)
-            and config_path.is_file()
-            and all(path.is_file() for path in required_paths)
-        )
-        state = _hook_enabled_state(agent, config_path.is_file(), references, complete)
-        print(f"- {label}: hooks enabled: {state}")
-        print(f"- {label}: hook profile: default_compact")
-        print(f"- {label}: hook scripts: {len(scripts)} found in {scripts_dir}")
-        if not scripts:
-            issues.append(f"{label}: hook config or manifest present but no changeforge_* hook scripts")
-        if manifest_path.is_file():
-            print(f"- {label}: manifest present")
-        else:
-            issues.append(f"{label}: missing {manifest_path.name}")
-        for support_file in expected_support:
-            support_path = scripts_dir / support_file
-            if support_path.is_file():
-                print(f"- {label}: support file present: {support_file}")
-            else:
-                issues.append(f"{label}: missing {support_file}")
-        if not (scripts_dir / "changeforge_session_bootstrap.py").is_file():
-            issues.append(f"{label}: missing session bootstrap hook")
-        if not (scripts_dir / "changeforge_post_tool_collector.py").is_file():
-            issues.append(f"{label}: missing post-tool collector hook")
-        if not (scripts_dir / "changeforge_compaction.py").is_file():
-            issues.append(f"{label}: missing compact compaction hook")
-        if not (scripts_dir / "changeforge_sdd_material_choice_gate.py").is_file():
-            issues.append(f"{label}: missing SDD material choice gate")
-        if not (scripts_dir / "changeforge_pre_edit_structure_gate.py").is_file():
-            issues.append(f"{label}: missing pre-edit structure gate")
-        if not (scripts_dir / "changeforge_permission_policy_gate.py").is_file():
-            issues.append(f"{label}: missing permission policy gate")
-        if not (scripts_dir / "changeforge_subagent_review_gate.py").is_file():
-            issues.append(f"{label}: missing subagent review gate")
-        if not (scripts_dir / "changeforge_hook_policy.py").is_file():
-            issues.append(f"{label}: missing hook policy support")
-        if not (scripts_dir / "changeforge_state_reducer.py").is_file():
-            issues.append(f"{label}: missing state reducer support")
-        if not (scripts_dir / "changeforge_stop_closure_gate.py").is_file():
-            issues.append(f"{label}: missing stage-aware Stop closure hook")
-        if config_path.is_file():
-            reference_state = (
-                "references generated hooks"
-                if references
-                else "does NOT reference changeforge hooks"
-            )
-            print(f"- {label}: {config_name} {reference_state}")
-            if not references:
-                issues.append(f"{label}: {config_name} does not reference changeforge hook scripts")
-            config_text = config_path.read_text(encoding="utf-8", errors="replace")
-            if agent in {"codex", "claude"} and "changeforge_pre_edit_structure_gate" not in config_text:
-                issues.append(f"{label}: {config_name} does not reference pre-edit structure gate")
-            if agent == "copilot" and '"UserPromptSubmit"' in config_text:
-                issues.append(f"{label}: {config_name} wires unsupported UserPromptSubmit advisory")
-        else:
-            print(f"- {label}: {config_name} not found (manual merge may be pending)")
-        bootstrap_path = aux_dir / "changeforge-route-preflight.md"
-        if bootstrap_path.is_file():
-            wired = (scripts_dir / "changeforge_session_bootstrap.py").is_file()
-            detail = "SessionStart hook script present" if wired else "SessionStart hook script missing"
-            print(f"- {label}: route-preflight bootstrap fragment present ({detail})")
-        else:
-            print(f"- {label}: route-preflight bootstrap fragment not found (optional)")
-        professional_path = scripts_dir / "changeforge_professional_contract.md"
-        if professional_path.is_file():
-            print(f"- {label}: professional contract support present")
-    if not any_present:
-        print("- no hooks installed for inspected target(s) (this is fine; hooks are optional)")
-
-
-def _hook_specs(
-    agent_filter: str | None,
-    scope_filter: str | None,
-    target: Path | None,
-    issues: list[str],
-) -> list[tuple[str, str, str, Path, Path, Path, bool]]:
-    """Return hook inspection specs for the selected runtime boundary."""
-    if agent_filter is not None and scope_filter is not None:
-        if not hooks_supported(agent_filter, scope_filter):
-            label = f"{agent_filter}:{scope_filter}"
-            return [(label, agent_filter, scope_filter, Path(), Path(), Path(), True)]
-        target_root = _hook_target_root(agent_filter, scope_filter, target)
-        return [_hook_spec(agent_filter, scope_filter, target_root)]
-
-    project_root = target.expanduser().resolve() if target is not None else Path.cwd().resolve()
-    specs: list[tuple[str, str, str, Path, Path, Path, bool]] = []
-    for agent in ("codex", "claude", "copilot"):
-        try:
-            specs.append(_hook_spec(agent, "project", project_root / HOOK_PROJECT_SUBPATH[agent]))
-        except KeyError as exc:
-            issues.append(f"{agent}: missing hook layout constant: {exc}")
-    return specs
-
-
-def _hook_target_root(agent: str, scope: str, target: Path | None) -> Path:
-    if scope == "project":
-        project_root = target.expanduser().resolve() if target is not None else Path.cwd().resolve()
-        return project_root / HOOK_PROJECT_SUBPATH[agent]
-    return (Path.home() / HOOK_USER_HOME_SUBDIR[agent]).expanduser().resolve()
-
-
-def _hook_spec(
-    agent: str,
-    scope: str,
-    target_root: Path,
-) -> tuple[str, str, str, Path, Path, Path, bool]:
-    scripts_dir = target_root / HOOK_SCRIPTS_SUBDIR[agent]
-    aux_dir = target_root / HOOK_AUX_SUBDIR[agent]
-    config_path = _hook_config_path(agent, target_root)
-    label = f"{agent}:{scope}"
-    return (label, agent, scope, scripts_dir, aux_dir, config_path, False)
-
-
-def _hook_config_path(agent: str, target_root: Path) -> Path:
-    if agent == "codex":
-        return target_root / "hooks.json"
-    if agent == "claude":
-        return target_root / "settings.changeforge-hooks.fragment.json"
-    return target_root / "hooks" / "changeforge-hooks.json"
-
-
-def _hook_enabled_state(
-    agent: str,
-    config_present: bool,
-    references: bool,
-    complete: bool,
-) -> str:
-    if not config_present:
-        return "partial (hook files found but config is missing)"
-    if not references:
-        return "partial (config does not reference generated hooks)"
-    if not complete:
-        return "partial (config references hooks but required hook files are missing)"
-    if agent == "claude":
-        return "pending manual merge (settings fragment references generated hooks)"
-    return "yes (config references generated hooks; runtime trust state not inspectable)"
-
-
-def _check_project_bootstrap(target: Path | None, issues: list[str]) -> None:
-    """Inspect the optional standalone advisory route-preflight fragment.
-
-    The advisory fragment installed by ``install.py --with-bootstrap`` lives at
-    ``.changeforge/changeforge-route-preflight.md``. It is never required; this
-    only reports presence and never adds an issue for a missing optional file.
-    """
-    project_root = (target.expanduser().resolve() if target is not None else Path.cwd().resolve())
-    fragment = project_root / ".changeforge" / "changeforge-route-preflight.md"
-    professional = project_root / ".changeforge" / "changeforge-professional-contract.md"
-    print(f"doctor: route-preflight bootstrap ({project_root})")
-    if fragment.is_file():
-        print(f"- advisory fragment present: {fragment}")
-        if "change-forge-router" not in _safe_read(fragment):
-            issues.append(
-                "bootstrap fragment present but does not name change-forge-router as the fixed entry"
-            )
-    else:
-        print("- no advisory bootstrap fragment installed (this is fine; bootstrap is optional)")
-    if professional.is_file():
-        print(f"- professional bootstrap fragment present: {professional}")
-        if "owner skill" not in _safe_read(professional):
-            issues.append(
-                "professional bootstrap fragment present but does not reference owner skill"
-            )
-    else:
-        print("- no professional bootstrap fragment installed (this is fine; bootstrap is optional)")
-
-
-def _safe_read(path: Path) -> str:
-    try:
-        return path.read_text(encoding="utf-8")
-    except OSError:
-        return ""
-
-
-def _config_references_hooks(config_path: Path) -> bool:
-    try:
-        text = config_path.read_text(encoding="utf-8")
-    except OSError:
-        return False
-    return "changeforge_" in text
-
-
-def _print_remediation(issues: list[str]) -> None:
-    printed: set[str] = set()
-    for issue in issues:
-        if "missing SKILL.md" in issue:
-            message = "Remove or repair the malformed skill directory before using this target."
-        elif "differs from current" in issue:
-            message = "Run installers/upgrade.py with the intended --agent, --scope, --target, and --profile."
-        elif "profile" in issue and "does not match" in issue:
-            message = "Reinstall or upgrade with the expected --profile."
-        elif "duplicate skill name" in issue:
-            message = "Keep one active copy in the intended scope and uninstall the duplicate ChangeForge-managed copy."
-        elif "manifest lists missing" in issue:
-            message = "Run installers/upgrade.py to refresh the manifest and managed directories."
-        else:
-            message = "Review the reported path and rerun doctor after remediation."
-        if message not in printed:
-            print(f"- {message}")
-            printed.add(message)
-
-
-def _print_governance_source_status() -> None:
-    """Print structural governance status without running validators or tests."""
-    print("doctor: governance source status")
-    _print_structural_status(
-        "skill registry status",
-        (
-            ROOT / "src" / "registry" / "skills.yaml",
-            ROOT / "src" / "professional-skills",
-            ROOT / "scripts" / "validate-skills.py",
-        ),
-    )
-    _print_structural_status(
-        "capability registry status",
-        (
-            ROOT / "src" / "registry" / "capabilities.yaml",
-            ROOT / "src" / "foundation" / "capabilities",
-            ROOT / "scripts" / "validate-capabilities.py",
-        ),
-    )
-    _print_source_dist_boundary_status()
-    _print_structural_status(
-        "hook adapter matrix status",
-        (
-            ROOT / "src" / "hook-runtime" / "scripts" / "changeforge_adapter_capabilities.py",
-            ROOT / "docs" / "HOOKS.md",
-            ROOT / "scripts" / "validate-hooks.py",
-        ),
-    )
-    _print_structural_status(
-        "validation broker mapping status",
-        (
-            ROOT / "src" / "validation_broker" / "command_resolver.py",
-            ROOT / "src" / "validation_broker" / "skill_behavior_change.py",
-            ROOT / "scripts" / "validate-validation-broker.py",
-        ),
-    )
-    _print_structural_status(
-        "memory schema/gate status",
-        (
-            ROOT / "src" / "project_memory" / "schemas" / "memory-event.v1.schema.json",
-            ROOT / "src" / "project_memory" / "gates" / "fragile_file_gate.py",
-            ROOT / "scripts" / "validate-project-memory.py",
-        ),
-    )
-    _print_structural_status(
-        "repository graph freshness support status",
-        (
-            ROOT / "src" / "repository_intelligence" / "graph" / "evidence.py",
-            ROOT / "src" / "repository_intelligence" / "graph" / "repo_indexer.py",
-            ROOT / "src" / "repository_intelligence" / "packaging" / "context_pack_builder.py",
-            ROOT / "scripts" / "validate-repository-graph.py",
-            ROOT / "scripts" / "validate-context-pack.py",
-        ),
-    )
-    _print_structural_status(
-        "skill efficacy fixture status",
-        (
-            ROOT / "evals" / "skill-efficacy",
-            ROOT / "evals" / "skill-efficacy" / "fixtures" / "over-under-routing.yaml",
-            ROOT / "scripts" / "validate-skill-efficacy-benchmarks.py",
-        ),
-    )
-
-
-def _print_structural_status(label: str, required_paths: tuple[Path, ...]) -> None:
-    missing = [relpath for relpath in (_display_path(path) for path in required_paths) if relpath]
-    if missing:
-        print(f"- {label}: partial (missing {', '.join(missing)})")
-    else:
-        print(f"- {label}: present")
-
-
-def _display_path(path: Path) -> str | None:
-    if path.exists():
-        return None
-    try:
-        return str(path.relative_to(ROOT))
-    except ValueError:
-        return str(path)
-
-
-def _print_source_dist_boundary_status() -> None:
-    missing = []
-    for path in (ROOT / "src", ROOT / "dist", ROOT / "scripts" / "validate-src-invariants.py"):
-        if not path.exists():
-            missing.append(_display_path(path) or str(path))
-    forbidden = [
-        path
-        for path in (
-            ROOT / "src" / "toolbox",
-            ROOT / "registry" / "toolbox.yaml",
-            ROOT / "src" / "registry" / "toolbox.yaml",
-        )
-        if path.exists()
-    ]
-    if forbidden:
-        names = ", ".join(_display_path(path) or str(path.relative_to(ROOT)) for path in forbidden)
-        print(f"- source/dist boundary status: fail (forbidden path present: {names})")
-    elif missing:
-        print(f"- source/dist boundary status: partial (missing {', '.join(missing)})")
-    else:
-        print("- source/dist boundary status: present")
-
-
-def _print_runtime_coverage_matrix() -> None:
-    print("doctor: runtime coverage matrix")
-    if format_coverage_matrix is None:
-        print("- unavailable: adapter capability module could not be loaded")
-        return
-    print(format_coverage_matrix())
 
 
 if __name__ == "__main__":

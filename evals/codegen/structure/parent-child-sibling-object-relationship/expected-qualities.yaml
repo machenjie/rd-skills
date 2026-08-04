@@ -7,23 +7,14 @@ focus:
   - sibling object
   - forbidden internal access
 route_hints:
-  skills:
-    - backend-change-builder
-    - ai-code-review-refactor
-    - quality-test-gate
-  capabilities:
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
+    - domain-object-identification
+    - design-pattern-selection
     - implementation-structure-design
-    - module-boundary-design
-    - code-clarity-maintainability
-    - refactoring
-    - unit-testing
-    - regression-testing
-  domain_extensions: []
-  quality_gates:
-    - architecture gate
-    - implementation gate
-    - AI review gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Cancellation, refund, and shipping rules are split as sibling policies or child objects based on ownership evidence.
   - The parent coordinates public lifecycle and does not become pass-through glue.

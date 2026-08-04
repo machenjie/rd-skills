@@ -1,1 +1,0 @@
-"""Scorecard generation tests."""

@@ -1,266 +1,76 @@
 ---
 name: architecture-impact-reviewer
-description: "Use this skill when implementing, reviewing, planning, or validating product or code changes that need architectural impact review across boundaries, layering, dependency direction, service ownership, scalability, extensibility, operability, tradeoffs, and simpler alternatives."
-license: MIT
-changeforge_kind: professional-skill
-changeforge_version: 0.1.0
-metadata:
-  changeforge.profile: recommended
-  changeforge.skill_type: professional
+description: "Use `analysis-agent` for module-boundary or dependency-direction analysis, or `review-agent` for independent assessment of a bounded architecture artifact. Skip isolated owner-internal edits with no structural impact."
 ---
 
-# Architecture Impact Reviewer
+# architecture-impact-reviewer
 
-## Mission
-Keep the architecture coherent, observable, and evolutionarily sound by rigorously reviewing every change that touches module boundaries, dependency direction, service topology, shared abstractions, data ownership, or scalability assumptions — while consistently defaulting to the simplest design that satisfies current requirements and credible near-term constraints.
+## Role
 
-## Stage Ownership
-Own the SDD slice for ChangeForge process traces: modules, files, public API, data flow, error contract, compatibility, migration, rollback, and structure tradeoffs. Use `logging-design-gate` for the SDD logging_decision when code logs, audit logs, security logs, dependency logs, or retry/fallback diagnostics are relevant.
+Support `analysis-agent` and `review-agent` for bounded structure, dependency, ownership, reuse, and scalability decisions.
 
-## Stage Fit
-Use `architecture-impact-reviewer` in planning and SDD before coding when architecture shape is undecided; in code-review when a diff changes boundaries; in refactoring when structure moves; in debugging or bug-fix work only when the root cause crosses a module, service, data, or release boundary; and in testing or release stages to verify dependency graph, rollout, rollback, validation evidence, and handoff gates.
+- **Analysis mode (`analysis-agent`):** Decide placement, ownership, and dependency direction.
+- **Review mode (`review-agent`):** Judge the artifact against its placement and boundary criteria.
 
 ## When To Use
-- A change introduces a new module, service, shared library, or cross-team dependency.
-- A monorepo, workspace, package graph, affected-test strategy, generated-file policy, or incremental-build system changes module boundaries.
-- New abstractions, interfaces, generic handlers, or extension points are proposed.
-- Data ownership moves across service or team boundaries.
-- An async workflow, event-driven pattern, or message queue is added or modified.
-- A synchronous dependency is introduced between services that have separate availability targets.
-- The change affects API or contract boundaries that external consumers depend on.
-- A migration, protocol change, or topology change is involved.
-- The team is unsure whether to build, buy, or reuse an existing capability.
 
-## Do Not Use When
-- The change is a local implementation detail that fits cleanly within existing architecture and carries no boundary, coupling, or scaling risk.
-- The change is a bug fix confined to a single module with no interface change.
-- Documentation or configuration updates with no impact on system topology or service contracts.
+- module boundary change
+- dependency direction risk
+- owner-internal implementation structure reuse or deliberate separation remains unresolved
 
-## Adjacent Skill Conflict Resolution
+## Do Not Use
 
-For `architecture-impact-reviewer`, keep this skill primary only when architecture boundaries, dependency direction, service ownership, scalability, operability, or tradeoff decisions decide the next action. Hand API/schema compatibility to `data-api-contract-changer`, storage/query/migration concerns to `data-middleware-change-builder`, security/privacy decisions to `security-privacy-gate`, reliability/observability decisions to `reliability-observability-gate`, release/rollback readiness to `delivery-release-gate`, and documentation contract updates to `change-documentation-gate`. Domain extensions add risk-specific addenda after the primary owner is selected; record skipped plausible owners when the routing choice affects handoff or validation.
+- isolated owner internal edit after placement is fixed
+- no structural impact
 
-## Required Context / Missing Information Policy
+## Required Inputs
 
-Before `architecture-impact-reviewer` plans or closes work, collect current behavior, desired behavior, non-goals, affected surface, owner module, validation signal, existing conventions, and material data/API/security/release boundaries. Ask or block only when the missing fact can change public contract, data model, authorization, tenant behavior, migration/rollback, irreversible operation, or domain semantics; otherwise proceed with explicit reversible assumptions.
+- desired behavior
+- module and dependency boundary
+- **Analysis mode (`analysis-agent`):** candidate ownership, dependency, consumer, and reuse evidence.
+- **Review mode (`review-agent`):** bounded architecture artifact with its placement criteria and supporting evidence.
 
-## Critical Gotchas
+## Professional Decision Rules
 
-- `architecture-impact-reviewer` must inspect the owning source, tests, configs, docs, and generated-artifact boundaries before planning material engineering work.
-- `architecture-impact-reviewer` must select only risk-changing references, capabilities, gates, or domain extensions; do not load nearby material because it exists.
-- `architecture-impact-reviewer` must close with fresh validation evidence, evidence limits, residual risk, and next owner or gate when work remains.
+- When new structure or a boundary is proposed, place behavior with the owner of its reason to change and preserve the affected dependency direction.
+- Reuse an abstraction only when its contract and ownership match current evidence.
+- Similarity alone does not justify reuse.
+- Skip reuse proof for owner-internal edits without structural change.
+- Compare the smallest local design with broader alternatives using only material change-locality, coupling, compatibility, operability, and deletion constraints.
+- Require placement and ownership rationale only for proposed files, services, shared helpers, dependencies, public surfaces, or moved responsibilities that change structure.
 
-## Non-Negotiable Rules
-- **Direct use still runs the runtime prompt flow.** When `architecture-impact-reviewer` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
-- Default to the simplest sufficient design — **complexity requires justification, simplicity does not**.
-- Respect existing ownership and dependency direction: dependencies must flow toward stable, lower-volatility layers, never the other direction.
-- All tradeoffs between chosen design and alternatives must be made explicit in writing — no implicit decisions.
-- Do not decide preference-sensitive architecture tradeoffs for the user. When two or more viable designs satisfy the requirement but differ in complexity, reversibility, extensibility, public API, migration cost, or operational cost, present user-facing options and mark the SDD design decision point as `required` or `resolved`.
-- A recommendation is not a user choice. When recommending an option, state whether it is "recommended but awaiting user choice" or "safe default" with local, reversible, conventional, and acceptance-neutral rationale.
-- Do not add abstractions for anticipated future use cases that do not currently exist and have no concrete roadmap commitment.
-- Every service or module boundary creates a failure mode — new boundaries require explicit availability, consistency, and failure handling analysis.
-- Avoid synchronous dependencies on services with lower availability targets than the calling service.
-- Shared abstractions must have a clear owner — unowned shared code accumulates as unmaintainable technical debt.
-- Every architectural decision that is reversible should be noted as such; irreversible decisions require explicit acknowledgment and approval.
-- Data ownership must be singular: each entity or aggregate has one authoritative owner; reads from non-owners go through contracts, not direct database access.
-- New external service dependencies require a circuit breaker, fallback, timeout, and operational runbook.
-- Monorepo module boundaries are architectural boundaries: workspace layout, dependency graph, generated-code ownership, and affected-test selection must reflect real ownership, not folder convenience.
+## High-Value Gotchas
 
-## Industry Benchmarks
-- **Architecture Decision Records (ADRs)**: Every significant architectural choice should produce a written ADR with context, decision, rationale, alternatives rejected, and consequences.
-- **Clean Architecture (Uncle Bob / Robert Martin)**: Dependency rule — source code dependencies point inward only, toward higher-level policy. UI and infrastructure are plugins, not core.
-- **Domain-Driven Design (DDD)**: Bounded contexts, aggregate ownership, anti-corruption layers, published languages for cross-context communication.
-- **Modular Monolith / Evolutionary Architecture**: Don't distribute before you must — premature service extraction creates coordination and failure complexity that scales with team maturity.
-- **The Twelve-Factor App**: Factor III (Config), Factor IV (Backing services), Factor V (Build/release/run) — architectural decisions affecting deployability and environment parity.
-- **CAP / PACELC Theorem**: Partition-tolerant systems cannot simultaneously guarantee consistency and availability — every distributed data ownership decision must declare its consistency model.
-- **Service Mesh / API Gateway patterns**: Cross-cutting concerns (auth, rate limiting, tracing) belong at the infrastructure layer, not embedded in every service.
-- **CQRS and Event Sourcing**: Apply when write and read models are under significantly different load profiles, not as a default pattern — operational complexity cost is high.
+- A shared helper without one owner becomes a coupling sink.
+- New abstraction before a second concrete use often raises change cost.
+- Generated output is not the source of truth.
 
-### Complexity Justification Matrix
+## Execution Checklist
 
-| Proposed Addition | Justification Required | Simpler Alternative |
-|---|---|---|
-| New microservice | >2 teams own distinct scaling/deployment lifecycles | Modular monolith with clear bounded module |
-| Shared library | ≥3 consumers with identical need; single owner declared | Copy-paste with protocol for future consolidation |
-| Event-driven async | Decoupling required; eventual consistency acceptable | Direct synchronous call with timeout |
-| CQRS read model | Write model cannot serve read load patterns | Index or view on the existing model |
-| Generic handler / plugin system | ≥3 extension cases exist today | Explicit if/switch with planned refactor trigger |
-| New external service dependency | No internal capability meets need | Extend existing service or use standard library |
+1. Trace the proposed responsibility to its current owner, consumers, and dependency direction.
+2. Compare the smallest local placement with only materially different structural alternatives.
+3. Verify compatibility, reversibility, deletion cost, and affected enforcement boundaries.
+4. **Analysis mode:** select one placement and record rejected alternatives.
+5. **Review mode:** judge placement, dependency direction, and enforcement boundaries.
+6. Stop when ownership, consumer, or dependency evidence cannot support one placement.
 
-## Technical Selection Criteria
-Evaluate architecture proposals against:
-- **Boundary clarity**: Can each module's responsibilities be stated in one sentence without exception lists?
-- **Dependency direction**: Do all dependencies flow from volatile layers to stable layers? Are no cycles introduced?
-- **Coupling measurement**: How many callers would break if this component changed its interface? Is that acceptable?
-- **Data ownership**: Is there a single authoritative owner for each entity? Is cross-owner data access mediated by contracts?
-- **Scalability model**: What are the throughput and latency assumptions? At what scale does this design break?
-- **Failure blast radius**: If this component fails, what is the operational impact? Is that bounded?
-- **Deployability**: Can this component be deployed independently? What is the rollout and rollback sequence?
-- **Observability gap**: What tracing, metrics, and alerts would operators need to diagnose failures in this design?
-- **Migration path**: If this design turns out to be wrong, what is the escape hatch? Can it be reversed?
-- **Team ownership**: Who owns each boundary, shared contract, and service for ongoing maintenance?
-- **Monorepo module graph**: Which packages/modules exist, who owns them, which dependencies are allowed, which generated files cross boundaries, and which affected tests prove the boundary?
+## Stop / Escalation Conditions
 
-## Mode Selection
-Select the architecture review mode before approving a design.
-
-| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
-|---|---|---|---|---|---|
-| Boundary review | New module, directory, shared package, public API, generated client, or ownership boundary. | Keep responsibilities, public surface, dependency direction, and owner explicit. | Module graph, owner, allowed imports, public/private surface, affected tests. | `module-boundary-design`, `implementation-structure-design` | Service split unless module boundary cannot serve the need. |
-| Complexity challenge | New abstraction, plugin system, generic handler, framework, queue, or service is proposed. | Compare over-engineering vs under-design and choose simplest sufficient option. | Alternatives, concrete constraints, rejected simpler option, reversibility. | `architecture-tradeoff-analysis`, `solution-optimality-evaluation` | Future-proofing without current use cases. |
-| Service/data ownership | New service, direct DB access, cross-service write, event stream, or system-of-record move. | Preserve one data owner, consistency model, failure handling, and migration path. | Owner map, contract/event boundary, rollback/migration, consistency tradeoff. | `domain-impact-modeler`, `data-api-contract-changer` | Direct database sharing as shortcut. |
-| Reliability/operability review | New synchronous dependency, external vendor, SLO path, or topology change. | Bound failure blast radius, availability chain, timeout, fallback, observability, and runbook. | Availability math, timeout/circuit/fallback, metrics/traces/alerts, runbook owner. | `reliability-observability-gate`, `integration-change-builder` | Release gate unless deployment topology changes. |
-| Refactor/monorepo governance | Package graph, affected tests, build cache, generated files, or shared utility pollution. | Prevent hidden coupling and test selection gaps during structural change. | Dependency graph, transitive dependents, cache key inputs, generated source owner. | `ci-cd`, `quality-test-gate`, `refactoring` | New architecture decision when behavior-preserving local refactor suffices. |
-
-## Proactive Professional Triggers
-These triggers are hidden-risk escalators, not ordinary checklist items.
-
-- **Signal:** A helper, common package, shared module, plugin point, or generic interface is proposed for one consumer. **Hidden risk:** speculative abstraction creates hidden coupling and unowned boundary debt. **Required professional action:** challenge reuse threshold and local placement first. **Route to:** `implementation-structure-design`, `architecture-tradeoff-analysis`. **Evidence required:** consumer scan output, owner, rejected local alternative, and reversibility decision.
-- **Signal:** A new service or direct cross-service data access is proposed without data owner and contract. **Hidden risk:** split-brain ownership or distributed monolith. **Required professional action:** assign authoritative owner and mediated contract before approval. **Route to:** `domain-impact-modeler`, `data-api-contract-changer`. **Evidence required:** owner map, data flow, contract/event path, rollback/migration risk.
-- **Signal:** Synchronous dependency is added on a lower-SLO or unknown-SLO service. **Hidden risk:** caller availability is silently reduced and p99 latency compounds. **Required professional action:** require timeout, fallback, circuit, availability math, and observability before approving the dependency. **Route to:** `reliability-observability-gate`, `integration-change-builder`. **Evidence required:** SLO comparison matrix, timeout budget, fallback test output, and alert/runbook owner.
-- **Signal:** Monorepo or generated-code change updates one package but not affected-test selection or source-of-truth policy. **Hidden risk:** transitive consumers and generated clients drift unnoticed. **Required professional action:** inspect graph and generated-file ownership before merge. **Route to:** `ci-cd`, `quality-test-gate`. **Evidence required:** dependency graph, generated source, affected tests, cache key inputs.
-- **Signal:** module, layer, public export, import, dependency direction, or generated-code rule is documented but has no tool or CI enforcement. **Hidden risk:** architecture drift returns after review. **Required professional action:** convert the rule into enforceable tooling or a staged baseline. **Route to:** `architecture-enforcement-tooling`, `ci-cd`. **Evidence required:** rule list, tool choice, CI command, failure example, generated-code exception, and migration path.
-- **Signal:** composition root, dependency graph, service locator, singleton, or cross-module dependency lifecycle is unclear. **Hidden risk:** circular dependency, hidden global state, or shutdown leak becomes architecture debt. **Required professional action:** review dependency wiring and lifecycle before approving the boundary. **Route to:** `dependency-wiring-lifecycle`, `module-boundary-design`. **Evidence required:** dependency graph, lifecycle scope, construction/shutdown owner, and cycle check.
-- **Signal:** public API, SDK, event, package export, or generated client change lacks consumer impact analysis. **Hidden risk:** architecture boundary change breaks consumers outside the module graph. **Required professional action:** assess consumers before approval. **Route to:** `consumer-impact-analysis`, `data-api-contract-changer`. **Evidence required:** changed contract, consumer inventory, compatibility, telemetry, migration, and rollback.
-- **Signal:** architecture proposes mode/config-driven variation without owner, expiry, or invariant guard. **Hidden risk:** hidden strategy system and unreviewed runtime policy. **Required professional action:** apply runtime configuration policy. **Route to:** `configuration-runtime-policy`, `extensibility-design`. **Evidence required:** typed config, default, validation, switch rationale, cleanup owner, and invariant check.
-- **Signal:** architecture proposes in-memory registries, batch reconciliation, ranking, graph traversal, caches, or routing tables without input scale or memory bounds. **Hidden risk:** architecture looks clean locally but breaks at production cardinality through memory loss or wrong latency assumptions. **Required professional action:** require an algorithm/data-structure decision before accepting the design. **Route to:** `algorithm-data-structure-selection`, `solution-optimality-evaluation`. **Evidence required:** input size/distribution, time and space complexity report, memory budget, benchmark output, selected structure, and rejected alternatives.
-- **Signal:** architecture places persistence, cache, event publication, external IO, logging, metrics, time, random, or environment reads inside mappers, policies, domain objects, or boundary conversions. **Hidden risk:** side effects become invisible across module boundaries and break transaction or observability guarantees. **Required professional action:** trace data and side-effect ownership. **Route to:** `data-side-effect-flow-tracing`, `module-boundary-design`. **Evidence required:** flow map, owner boundary, transaction/outbox ordering, idempotency/compensation, and observability point.
-- **Signal:** Design says "we can refactor later" for irreversible data, API, service, or public abstraction choice. **Hidden risk:** missing escape hatch causes rollback failure or stale public abstraction debt. **Required professional action:** document ADR and rollback path or reduce scope to a reversible step. **Route to:** `release-rollback`, `change-documentation-gate`. **Evidence required:** reversibility classification, ADR need, rollback/migration path, residual owner.
-- **Signal:** Two or more viable architecture options differ mainly by user or owner preference: minimal patch versus systematic refactor, reuse existing structure versus new boundary, compatibility-first versus new model, local sync path versus cache/queue/worker, function versus class, inheritance versus composition, or public API shape. **Hidden risk:** the agent silently commits the product or owner to a stale API contract, migration path, or rollback cost. **Required professional action:** classify the SDD `design_decision_points`, require user choice when blocking, and document options, recommendation, `user_choice_status`, resolution evidence, and residual risk. **Route to:** `development-process-orchestrator`, `requirement-clarification`, `implementation-structure-design`. **Evidence required:** process-trace.json `design_decision_points`, option tradeoff matrix, no-choice rationale or safe-default rationale, validation output, and rollback owner.
-
-### Monorepo Architecture Review
-
-For monorepo or workspace changes, require:
-
-- Module graph with packages/modules, owners, public interfaces, and forbidden dependency directions.
-- Affected test selection that includes direct dependents, transitive dependents, contract tests, generated clients, and shared tooling.
-- Incremental build strategy with Bazel, Pants, Nx, Turborepo, or equivalent only when the module graph justifies it.
-- Build cache correctness: cache key inputs include lockfiles, toolchain versions, generated inputs, configuration, and test fixtures.
-- Generated file policy: committed vs ignored outputs, source of truth, drift check, and review owner.
-- DevEx boundary: onboarding time, devcontainer or reproducible local environment, pre-commit scope, and full-suite fallback cadence.
-
-### Decision Tree: Approve or Request Design Revision
-
-```
-Does the change introduce a new service or module boundary?
-├── Yes → Require ownership declaration and failure handling analysis
-│   └── No clear owner → Block until ownership assigned
-Does the change create a new inter-service synchronous dependency?
-├── Yes → Check availability targets (caller vs. callee)
-│   └── Callee is lower availability → Require async or graceful degradation
-Does the change introduce a shared abstraction?
-├── Yes → Require ≥2 current consumers and named owner
-│   └── Single consumer → Use local implementation
-Does the change move data ownership across a boundary?
-├── Yes → Require explicit data contract and migration path
-│   └── No contract → Block
-All checks pass → Review tradeoffs, document in ADR, approve
-```
-
-## Solution Optimality Self-Check
-Apply when evaluating architectural options — every choice must survive explicit challenge before endorsement. Answer the **Three-Challenge Rule**: (1) why this design (state the concrete constraint simpler options fail), (2) is it the simplest sufficient architecture (a modular monolith before microservices until evidence justifies the cost), (3) what is the strongest simpler alternative and the specific operational cost that rejects it. Quantify the architecture performance dimensions — hops/latency, availability arithmetic, throughput ceiling, Amdahl's sequential fraction — and record the result as an ADR that names the rejected alternative.
-
-Load [references/solution-optimality.md](references/solution-optimality.md) for the full architecture performance-dimension matrix and additional considerations (operational cost, availability chaining, data-ownership invariant) when endorsing added complexity. Method compiled from `solution-optimality-evaluation`.
-
-## Risk Escalation
-- Escalate when the change alters the ownership boundary of a shared service used by multiple teams.
-- Escalate when persistence ownership moves between services — this affects consistency, migration, and disaster recovery.
-- Escalate when a new synchronous dependency reduces overall system availability (Amdahl's Law of service chaining).
-- Escalate when the proposed design relies on eventual consistency for money movement, authorization decisions, or audit records.
-- Escalate when a change cannot be rolled back without manual data migration or customer-visible downtime.
-- Escalate when the design adds a new external vendor dependency that creates a single point of failure.
-- Escalate when the change affects publicly documented API contracts with SLA obligations.
-- Escalate when monorepo affected-test selection can skip transitive dependents, generated-code consumers, or shared contract tests.
-- Escalate when build cache keys omit lockfiles, generated inputs, toolchain versions, or environment-affecting configuration.
-
-## Critical Details
-- The hardest architectural problems are not technical — they are ownership and coordination problems. Name the owner before approving the design.
-- Architecture drift accumulates via individually approved changes — always check the cumulative direction, not just the isolated change.
-- "We can refactor later" is an escalation signal, not a resolution — future refactors rarely happen unless the pain is immediate.
-- Distributed transactions (2PC, SAGA) add significant complexity; require explicit documentation of the failure recovery and compensating transaction model.
-- Every new queue, topic, or event stream requires: schema ownership, versioning strategy, consumer documentation, and dead-letter handling.
-- GraphQL federated schemas, service meshes, and API gateways each solve specific problems — they also introduce operational complexity that must be owned by an operator.
-- Security boundaries are architectural boundaries: if services share a database directly, they share a security perimeter — document this explicitly.
-- Circuit breakers and bulkheads must be configured with realistic thresholds — default "open" thresholds from libraries are rarely appropriate for production.
-- A module graph is a product of architecture, not tooling. Bazel, Pants, Nx, or Turborepo can enforce a graph, but they cannot decide ownership, API stability, or dependency direction. Those are architecture decisions.
-- Generated code creates hidden dependencies. OpenAPI clients, protobufs, ORM types, GraphQL artifacts, and SDKs must be represented in the module graph so affected tests run when source schemas change.
-
-## Anti-Patterns
-- **Wrong: boundary by folder convenience.** Consequence: ownership, public surface, and allowed dependency direction stay implicit. Detect it when imports, generated files, or shared types bypass the named owner; replacement is an owned module boundary with enforcement or an explicit local placement.
-- **Wrong: "we can refactor later" as the rollback plan.** Consequence: public API, data owner, and service topology choices become irreversible without an ADR. Detect it when no migration, compatibility bridge, exit criterion, or rollback owner exists; replacement is a reversible step or documented decision point.
-- **Wrong: shared abstraction before shared demand.** Consequence: a one-consumer helper becomes a cross-team contract. Detect it when consumer scan evidence shows fewer than three current consumers; replacement is local code plus a future consolidation trigger.
-
-### Anti-Examples
-
-| Proposed Architecture | Problem | Preferred Alternative |
-|---|---|---|
-| "We'll add a plugin system for future extensibility" | Speculative complexity, no concrete extensions yet | Explicit case handling, revisit when third extension exists |
-| Service A reads directly from Service B's database | Cross-ownership data access, hidden coupling | Publish API or event from Service B |
-| Generic `EventBus.publish("anything")` | No schema, no owner, no versioning | Explicit typed events with schema and consumer documentation |
-| New service for a feature owned by one team | No independent deployment need | Bounded module within existing service |
-| Auth decision made in-process per service | No consistent enforcement, easy to bypass | Centralized auth middleware / API gateway |
-
-## Failure Modes
-For `architecture-impact-reviewer`, state symptom, impact, and detection.
-State repair and evidence before closure.
-
-- **Premature abstraction**: Generic handlers and plugin systems created for anticipated use cases that never materialize — complexity persists, benefit never arrives.
-- **Boundary leak**: Module A imports types from Module C's internal layer — the boundary dissolves over time and refactoring becomes impossible.
-- **Hidden synchronous dependency**: Service A calls Service B synchronously during checkout — Service B's 200 ms latency spike degrades Service A's p99 from 100 ms to 300 ms.
-- **Unowned shared library**: A shared utility package has no declared owner — bug fixes require a team coordination meeting with no clear accountability.
-- **Data ownership ambiguity**: Two services each update the `user.email` field — consistency depends on write order, which is non-deterministic.
-- **Rollback-impossible schema migration**: A new service owns a table that the old service still reads — rolling back the new service requires schema migration coordination.
-- **No ADR for irreversible decision**: The team chose Event Sourcing without documenting why — six months later no one remembers the reasoning and the pattern is cargo-culted.
-- **Availability chain degradation**: A new synchronous dependency on a 99.5% available service reduces the calling service's effective availability to ≤99.5%.
-- **Decentralized auth logic**: Each service implements its own role check — the checks diverge over time, creating inconsistent authorization behavior.
-
-## Reference Loading Policy
-Do not load every reference by default. For L1 `architecture-impact-reviewer` work, use this body unless selected risk requires more detail.
-Load [references/architecture-output-and-gates.md](references/architecture-output-and-gates.md) when closure needs the full output field list, quality gate, or handoff table. Load [references/checklist.md](references/checklist.md) for a compact architecture checklist during bounded reviews. Load [references/solution-optimality.md](references/solution-optimality.md) when endorsing added complexity or rejecting the strongest simpler alternative.
-For L2, L3, L4, and L5 `architecture-impact-reviewer` work, read `references/capabilities/index.md` only to locate selected capability references; load selected files at `references/capabilities/<capability-id>-<capability-name>.md`, then add skill or domain references only when route risk requires them.
-
-## Execution Procedure
-
-For `architecture-impact-reviewer`: confirm activation and role; classify missing context; inspect relevant source/test/config/doc evidence; select mode, complexity, risk, and minimal references; execute or review only the owned surface; validate with concrete commands, diffs, tests, evals, or not-run limits; route repair through the owner; hand off with residual risk and next gate.
+- Stop an architecture decision when a proposed structure or boundary lacks the applicable owner, public/private surface, dependency direction, data ownership, reversibility, or simpler-alternative evidence.
+- Stop new shared abstractions, plugins, services, queues, registries, or generic interfaces until current consumers, owner, reversibility, and rejected local alternative are proven.
+- Stop public or indirectly consumed boundary changes when affected-consumer and compatibility or versioning proof is missing. Topology, enforcement, rollout, or observability proof becomes required only for runtime, deployment, ownership, or dependency-direction changes.
+- Stop tool execution when graph tooling, production telemetry, external connectors, or release actions lack permission/sandbox, scope, rollback/revert path, and redaction evidence.
 
 ## Output Contract
-Return a structured architecture review with actionable evidence:
-- **Mode and decision:** selected mode, trigger signal, Approved / Approved with conditions / Returned for redesign.
-- **Boundaries inspected:** modules, packages, services, public APIs, data owners, generated files, dependency edges, release topology, tests, and skipped areas with reason.
-- **Architecture judgment:** over-engineering vs under-design decision, strongest simpler alternative rejected, tradeoffs, reversibility, hidden coupling ruled out, and owner accountability.
-- **User-choice decision:** material architecture choices, options, recommended option, whether the recommendation awaits user selection or is a safe default, and resolution evidence.
-- **Boundary impact:** module/service ownership, dependency direction, data ownership, consumer impact, public/private surface, architecture enforcement, and dependency lifecycle.
-- **Operability impact:** failure blast radius, availability math, observability requirements, rollout/rollback behavior, build/test impact, and ADR requirement.
-- **Reuse / placement rationale:** existing module/service/API/contract reused or new boundary justified, with public/private decision.
-- **Validation evidence:** dependency graph, affected tests, build cache, ADR, or not-verified disclosure, including what evidence proves and does not prove.
-- **Validation status:** each command, test, validator, artifact, report path, exit code or review status, freshness after the final architecture edit, and not-run owner.
-- **Evidence quality:** strong evidence, weak evidence, missing evidence, or invalid evidence classification for graph, contract, production-scale, organization-owner, and security-boundary assumptions.
-- **Residual risk and next gate:** accepted tradeoff, deferred ADR, rollout/reliability/docs handoff, owner, and review date.
 
-For the full output field list, quality gate, and handoff table, load `references/architecture-output-and-gates.md`.
+- **Analysis mode (`analysis-agent`):** placement decision; rejected alternatives; dependency and consumer impact.
+- **Review mode (`review-agent`):** architecture verdict; boundary findings; unreviewed structural risk.
 
-## Evidence Contract
-Close an architecture review only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
-- **Basis**: the existing module boundaries, dependency directions, and parent-directory conventions the review starts from — structure-first, before any new boundary is proposed.
-- **Files and boundaries inspected**: the existing modules, public interfaces, shared functions, and dependency edges read, and where the change would alter them.
-- **Placement rationale**: why any new directory, class, interface, or service is justified over reusing existing structure, with at least one simpler alternative and the explicit reason it is rejected.
-- **Validation commands**: the dependency-graph, affected-test, or build-cache checks run to confirm no cycle or boundary violation, each with its outcome.
-- **Validation status**: for each command, test, validator, artifact, or report path, record exit code or review status, freshness after the final architecture edit, and fallback/manual evidence when automated graph checks are unavailable.
-- **Evidence quality**: classify proof as strong evidence, weak evidence, missing evidence, or invalid evidence; security boundary assumptions without source proof remain residual risk and route to `security-privacy-gate`.
-- **Architecture judgment and evidence limits**: mode selected, behavior preservation, reversibility, what evidence proves, what it does not prove, residual risk, and next gate.
-- **Residual risk**: the accepted tradeoff, failure blast radius, or deferred ADR that remains, with the named owner and review date.
+## Targeted References
 
-## Quality Gate
-- The chosen design is simpler than an explicitly considered alternative, or the complexity has a concrete constraint and owner.
-- Every new boundary has owner, public/private surface, dependency direction, failure strategy, data ownership, and rollback/reversibility decision.
-- Synchronous dependency availability, operational blast radius, observability, and build/test or monorepo graph impact are quantified when relevant.
-- No speculative abstractions, unowned shared utilities, ambiguous data owners, or unenforced architecture rules are approved without explicit residual risk.
-- Irreversible decisions have ADR or documented no-ADR rationale, owner, review date, and next gate.
-
-## Handoff
-- Hand data/API contracts, implementation, external dependencies, SLI/SLO/observability, release topology, migration, rollback, ADRs, runbooks, and developer guides to the owning professional skill.
-- Hand module graph enforcement, affected tests, build cache, workspace dependencies, generated packages, forbidden-dependency rules, dependency lifecycle, and public consumer impact to the matching capability owner.
-- Hand architecture-level caches, registries, batch flows, graph/routing structures, hidden side effects, or cleanup/deletion work to the selected foundation capability.
-
-## Completion Criteria
-The change has an architecture direction with justified complexity, documented tradeoffs, declared ownership for all boundaries, an explicit failure handling strategy, a quantified availability impact, monorepo/module graph governance when applicable, and either an approved ADR or a documented rationale for why one is not required.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [architecture output and gates](references/architecture-output-and-gates.md) | targeted | L3-L5 analysis or review needs mode-specific closure and targeted gates for selected placement, consumer/data, topology/enforcement, or reversibility risk | The root result is sufficient and no selected risk needs the extended proof contract | analysis-agent, review-agent | gate-decision, residual-risk |
+| [checklist](references/checklist.md) | decision-checklist | A bounded L2 mode needs compact checks for its triggered placement, ownership, dependency, consumer, data, topology, or reversibility risk | The root contract is enough or targeted proof fields are required | analysis-agent, review-agent | checklist-result, residual-risk |
+| [index](references/index.md) | index | competing architecture impact reviewer references require dependency, conflict, or output-fragment selection | the architecture impact reviewer root or a task-named reference already resolves selection | analysis-agent, review-agent | reference-selection |
+| [solution optimality](references/solution-optimality.md) | targeted | An architecture boundary, ownership, dependency, topology, or operational-responsibility decision has a material alternative | The change is owner-internal with no structural impact or current evidence already fixes placement | analysis-agent, review-agent | selected-approach, residual-risk |

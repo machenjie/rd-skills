@@ -2,7 +2,9 @@
 
 Integration: Payment provider webhook for subscription status.
 
-Security: Verify signature and timestamp; reject replay outside five-minute tolerance.
+Provider contract: `<provider-name>/<webhook-version>` defines `<signed-representation>` and `<permitted transformation or canonicalization>`.
+
+Security: Preserve raw bytes only if that contract signs raw bytes. Verify the signature over the exact signed representation, freshness under `<provider-contract-derived freshness/replay window>`, and replay identity before any later representation change or effect.
 
 Idempotency: Process event ID once and store final state.
 

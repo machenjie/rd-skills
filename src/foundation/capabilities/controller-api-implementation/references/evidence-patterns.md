@@ -1,6 +1,6 @@
 # Controller Evidence Patterns
 
-Use this reference when controller closure depends on repository graph, project memory, generated code, execution trajectory, validation freshness, or tool permission boundaries. Treat graph and memory as selectors until current source and validation evidence confirm them.
+Use this reference when controller closure depends on repository inspection, prior task evidence, generated code, observable action sequence, validation freshness, or tool permission boundaries. Treat repository inspection and prior task evidence as selectors until current source and validation evidence confirm them.
 
 ## Controller Claim To Evidence Map
 
@@ -17,53 +17,13 @@ Use this reference when controller closure depends on repository graph, project 
 | Metadata and limits are bounded | Correlation id, content type, page/size limits, rate-limit headers, and log field decision | The inspected route has safe transport metadata and bounds | Production SLOs, load behavior, or all payload sizes are proven |
 | Validation is fresh | Final source edit timestamp or diff, rerun command/report, exit code, and not-run disclosures | Evidence was produced after the final relevant edit | Future edits or untested routes remain covered |
 
-## Graph, Memory, And Execution Reconciliation
+## Current Evidence And Freshness
 
-- Accept repository graph only when it includes handlers, middleware/auth extraction, validators, mappers, service boundaries, tests, specs, generated artifacts, and route registration after the final edit.
-- Use project memory, old API docs, generated examples, previous reviews, and compaction summaries only as selectors; verify every accepted claim against current source, contract, and command output.
+- Accept repository inspection only when it includes handlers, middleware/auth extraction, validators, mappers, service boundaries, tests, specs, generated artifacts, and route registration after the final edit.
+- Verify every accepted claim against current source, contract, and command output, using prior evidence, old documentation, generated examples, reviews, and compaction summaries only as selectors.
 - Mark controller evidence stale after edits to route registration, middleware, auth context, validators, DTOs, error catalog, mappers, service signatures, generated files, examples, tests, or validation reports.
 - Record skipped boundaries explicitly: alternate routes, jobs, internal RPC, admin/support tools, generated clients, gateway transformations, logs, telemetry, and unknown consumers.
 - Map final confidence to current artifacts: source path, graph result, spec path, generated diff, test command, validator report, fixture, owner review, or explicit residual risk.
 
-## Tool Permission Boundary
-
-| Action | Boundary record |
-| --- | --- |
-| Source reads, route graph search, registry search, same-pattern scan, and report inspection | Read-only local shell action; cite paths/patterns and avoid large raw output dumps |
-| Local validators, unit/contract/security tests, generated diff, and synthetic invalid payload fixtures | State-mutating only for reports, caches, temp fixtures, or generated artifacts; cite command, exit code, artifact path, sandbox, and cleanup |
-| API sandbox request, gateway test, telemetry query, or production-like fixture replay | Data-reading or network-sensitive action; record target, dataset, timeout, redaction, owner, and no-secret handling |
-| Deploy, rollback, gateway config, IAM/auth policy, or secret-bearing operation | High-risk write/release action; require explicit permission, dry-run when available, rollback or forward-fix path, owner, and redaction rule |
-
-## Handoff Evidence Shape
-
-```yaml
-controller_evidence_closure:
-  inspected_boundaries:
-    - boundary: ""
-      source_or_artifact: ""
-      finding: ""
-  accepted_graph_memory_execution_claims:
-    - claim: ""
-      current_evidence: ""
-      freshness: ""
-  rejected_or_stale_claims:
-    - claim: ""
-      reason: ""
-  controller_to_validation_map:
-    - responsibility: ""
-      proof: ""
-      command_or_artifact: ""
-      exit_code_or_status: ""
-      proves: ""
-      does_not_prove: ""
-      owner: ""
-  tool_permission_boundary:
-    action_class: ""
-    sandbox: ""
-    state_mutation: ""
-    redaction: ""
-  residual_risk:
-    - risk: ""
-      owner: ""
-      next_gate: ""
-```
+- If API sandbox request, gateway test, telemetry query, or production-like fixture replay, record target, dataset, timeout, redaction, owner, and no-secret handling.
+- If deploy, rollback, gateway config, IAM/auth policy, or secret-bearing operation, require explicit permission, dry-run when available, rollback or forward-fix path, owner, and redaction rule.

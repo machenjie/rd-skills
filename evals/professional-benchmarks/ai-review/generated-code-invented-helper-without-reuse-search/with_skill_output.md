@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: ai-code-review-refactor.
-Selected capabilities: implementation-structure-design, code-clarity-maintainability, agent-execution-discipline, code-review.
+Selected Layer 3 Skills: implementation-structure-design, code-clarity-maintainability, code-review.
 
 Hidden risks: invented shared helper without reuse search; wrong placement and business vocabulary in shared code; AI-generated comments claiming unsupported universality.
 

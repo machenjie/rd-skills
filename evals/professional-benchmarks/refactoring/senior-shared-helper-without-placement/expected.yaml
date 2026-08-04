@@ -1,26 +1,20 @@
-expected_stage: implementation-planning
-expected_professional_skill: backend-change-builder
+expected_stage: implementation-preparation
+expected_professional_skill: engineering-change-analysis
 expected_capabilities:
-  - senior-programming-judgment-core
-  - implementation-structure-design
-  - module-boundary-design
-  - validation-broker
-  - agent-execution-discipline
+  - repository-context-map
 expected_hidden_risks:
-  - shared/common helper pollution
-  - rule owner hidden in generic utility
-  - validation can pass without proving caller invariants
+  - existing order-status owner is unknown
+  - shared utility placement can invert dependency direction
+  - caller invariants may diverge across services
 expected_evidence:
-  - search existing order/status helpers
-  - selected owner and rejected locations
-  - order-status rule mapped to tests and proof limits
-  - residual risk owner and next gate
+  - repository search for existing order-status implementations
+  - verified consumers and dependency edges
+  - owner and boundary evidence with proof limits
 forbidden_behaviors:
-  - accept a shared helper because it seems convenient
-  - skip reuse search and placement rationale
-  - claim tests prove behavior without caller invariant mapping
+  - create status_utils.py before owner discovery
+  - declare shared reuse without consumer evidence
+  - claim validation before mapping caller invariants
 expected_output_obligations:
-  - senior programming judgment summary
-  - reuse ladder and placement rationale
-  - validation proof limits and residual risk
-
+  - current-behavior and owner map
+  - placement decision inputs and unresolved boundary
+  - analysis-only evidence-gathering step

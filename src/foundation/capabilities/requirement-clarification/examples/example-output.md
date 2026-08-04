@@ -12,7 +12,7 @@ boundaries_inspected:
 - Request ticket and finance comment thread.
 - Export route and export query.
 - Existing export tests.
-- Project memory note claiming inactive accounts are excluded.
+- prior task evidence note claiming inactive accounts are excluded.
 - Not inspected: production export telemetry and downstream finance reconciliation job.
 
 source_evidence:
@@ -20,8 +20,8 @@ source_evidence:
 - Verified: request asks to exclude accounts closed before the selected reporting period.
 - Stakeholder claim: product says inactive accounts are not needed in ordinary exports.
 
-graph_memory_trajectory_judgment:
-- Rejected: project memory claim that inactive accounts are already excluded; current query includes them.
+current_evidence_judgment:
+- Rejected: prior task evidence claim that inactive accounts are already excluded; current query includes them.
 - Not verified: downstream reconciliation dependence on row count.
 
 blocking_unknowns:
@@ -30,13 +30,13 @@ blocking_unknowns:
   - Owner: compliance owner
   - Decision needed: include, exclude, or add export mode split
   - Why blocking: answer changes data visibility and retention behavior
-  - Downstream gate: security-privacy-gate or data-api-contract-changer
+  - Downstream Skill or owner: security-privacy-gate or data-api-contract-changer
 - BU2: Does finance reconciliation depend on current row counts?
   - Category: external consumer/compatibility
   - Owner: finance systems owner
   - Decision needed: compatible change, versioned export, or coordinated rollout
   - Why blocking: answer changes consumer contract
-  - Downstream gate: consumer-impact-analysis
+  - Downstream Skill or owner: consumer-impact-analysis
 
 non_blocking_unknowns:
 - NU1: Final filter label text.

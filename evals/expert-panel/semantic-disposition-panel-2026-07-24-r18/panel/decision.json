@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-decision",
+  "review_id": "semantic-disposition-panel-2026-07-24-r18",
+  "decided_on": "2026-07-24",
+  "decision_method": "three-independent-experts-majority",
+  "source_fingerprints": {
+    "audit": "19db3035c7fe1dacc2605cf445e0b491efbbb8269d61cef0e1b5eb6cb6f6692f",
+    "reference_candidates": "75305b873890a005c142924e2e63ec32445f664bdb1ed944c1cd460cc9579a42",
+    "reference_detector": "4b04a9b693ac3079a1af6154425ed64408474d5027c0119ed6360c9288356112",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "5e911823eeab10e6492067101bbce82c0c5901f136a0521eb3499c9dc30fa821",
+    "root_candidates": "8f453e8f37eede380af81328f4abc8f837de1959c323980469dea89e22793a11",
+    "root_context": "21677f5ed1177acd0d70a5201310eba17a25843552ef86db8a8fa935a235d94f",
+    "root_detector": "0b6168c2f3aaacfc611421aa8ef533171e4adf229986be73016c74154d402aef",
+    "root_source": "09f83d36206ddc69c3cfee671d3b3a8bdf58c85d915e12ba39ffa8974e9ca72f"
+  },
+  "panel_contract": {
+    "decision_method": "three-independent-experts-majority",
+    "required_voters": 3,
+    "abstentions_allowed": false,
+    "minimum_winning_votes": 2,
+    "independent_ballots": true,
+    "required_target_count": 0,
+    "required_axis_target_counts": {
+      "root": 0,
+      "reference": 0
+    },
+    "allowed_dispositions": [
+      "false-positive",
+      "rewrite",
+      "time-bounded-exception",
+      "valid-contextual-rule"
+    ]
+  },
+  "packet": {
+    "path": "evals/expert-panel/semantic-disposition-panel-2026-07-24-r18/packet.json",
+    "sha256": "93da11b647bc1244aa12da6abe49a748e39bead486d858a17a0e032a435a1046"
+  },
+  "voters": [
+    {
+      "voter_id": "semantic-r18-runtime",
+      "agent_id": "semantic-runtime-reviewer-2026-07-24",
+      "role": "semantic-runtime-contract-reviewer",
+      "expertise": [
+        "semantic runtime contracts"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r18-runtime.json",
+      "ballot_sha256": "3130b47b7aa6e064f7846cb5e8d2cde00e2db7cca24a33aaec1a222165c83c30"
+    },
+    {
+      "voter_id": "semantic-r18-assurance",
+      "agent_id": "semantic-assurance-reviewer-2026-07-24",
+      "role": "semantic-assurance-reviewer",
+      "expertise": [
+        "semantic-assurance",
+        "evidence-provenance"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r18-assurance.json",
+      "ballot_sha256": "e2d6b63110779f6296f01ca4b4feb073e48017657492d5ca206c5b84626e29be"
+    },
+    {
+      "voter_id": "semantic-r18-boundary",
+      "agent_id": "semantic-boundary-reviewer-2026-07-24",
+      "role": "semantic-boundary-reviewer",
+      "expertise": [
+        "semantic boundary",
+        "detector coverage"
+      ],
+      "independent_review": true,
+      "ballot_path": "semantic-r18-boundary.json",
+      "ballot_sha256": "8c783ac47c06b57f417c1432e2f704e1c03137334229c8f773082a1ad562ca30"
+    }
+  ],
+  "semantic_decisions": [],
+  "summary": {
+    "semantic_dispositions": {
+      "false-positive": 0,
+      "rewrite": 0,
+      "time-bounded-exception": 0,
+      "valid-contextual-rule": 0
+    }
+  },
+  "limitations": [
+    "This majority is authoring lifecycle evidence only.",
+    "It cannot satisfy readability or professional-completeness formal attestations.",
+    "The record contains no generated single-source-of-truth disposition entries.",
+    "A rewrite majority requires a source edit before any resolved governance entry can exist."
+  ]
+}

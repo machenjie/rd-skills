@@ -6,4 +6,5 @@
 - independent review: `quality-test-gate` reviews the implementation and denied-path coverage; `security-privacy-gate` reviews authorization boundary evidence.
 - repair/re-review: any missing denied path routes back to `backend-change-builder`, then re-review repeats.
 - residual risk: undocumented external consumers of the invoice response format.
-- handoff: include route manifest, inspected files, test output, denied-path evidence, compatibility note, residual risk, and next release gate.
+- handoff: include actual changed files, commands, results, denied-path evidence,
+  compatibility note, unverified scope, residual risk, and next step.

@@ -7,22 +7,12 @@ focus:
   - response body cleanup
   - timeout and retry behavior
 route_hints:
-  skills:
-    - backend-change-builder
-    - integration-change-builder
-    - reliability-observability-gate
-    - quality-test-gate
-  capabilities:
-    - language-performance-safety
-    - design-pattern-selection
-    - implementation-structure-design
-    - profiling
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills:
     - idempotency-retry-design
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - reliability gate
-    - test gate
+  review_skill: reliability-observability-gate
 expected_outcomes:
   - Repository or adapter uses a lifecycle-managed reusable HTTP/DB/SDK client or pool.
   - Pool sizing, keep-alive, timeout, retry, shutdown, and observability are declared.

@@ -1,18 +1,10 @@
 # Consumer Impact Benchmarks And Patterns
-
 Use this reference for L3+ public API/SDK/schema/event/export changes, generated-client impact, unknown consumers, compatibility migrations, telemetry gates, deprecation/removal, mixed-version rollout, rollback, or mobile/partner lag.
-
 ## Benchmark Anchors
-
-- **Semantic Versioning 2.0.0:** breaking public API changes require major versioning or explicit compatibility bridge.
-- **Consumer-driven contract testing:** active consumer expectations must be verified by the provider before deployment.
-- **OpenAPI / AsyncAPI / Protobuf breaking-change detection:** schema diff tools catch structural changes but not all semantic, default, or rollout risks.
-- **Schema registry compatibility modes:** BACKWARD, FORWARD, and FULL compatibility must match producer/consumer rollout order.
-- **RFC 8594 Sunset header:** public deprecation needs machine-readable retirement signaling and migration guidance.
-- **Expand/contract rollout:** deploy additive compatibility first, migrate consumers, then remove old behavior only after evidence.
-- **Generated client governance:** generated SDKs, package exports, examples, and compile checks are consumer evidence, not incidental artifacts.
-- **Telemetry-gated deprecation:** old/new usage and error telemetry should drive removal readiness where available.
-
+- **SemVer 2.0.0 / RFC 8594:** breaking public APIs need a major version or bridge; deprecation needs machine-readable sunset signaling and migration guidance.
+- **Consumer contracts / generated clients:** providers verify active expectations before deploy; generated SDKs, exports, examples, diffs, and compile checks are consumer evidence.
+- **OpenAPI / AsyncAPI / Protobuf / schema registries:** When structural schema tooling governs a mixed-version rollout, align the inspected diff and BACKWARD/FORWARD/FULL mode with producer/consumer order. A passing structural check supports shape compatibility. It does not prove semantic, default, or rollout safety.
+- **Expand/contract plus telemetry:** add compatibility, migrate, then remove only after available old/new usage and error evidence supports the gate.
 ## Consumer Inventory Matrix
 
 | Consumer Class | Examples | Evidence |
@@ -60,10 +52,6 @@ Use this reference for L3+ public API/SDK/schema/event/export changes, generated
 | Config bridge | Config key/default changes during rolling restart | old/new key support, precedence, cleanup owner |
 
 ## Anti-Patterns
-
-- "No callers" based only on local `rg`.
-- Server unit tests presented as consumer compatibility proof.
-- Generated clients changed without semver, public API diff, compile, or downstream smoke.
-- Event payload changed without replay fixture, schema registry mode, or subscriber inventory.
-- Deprecation removed because a date elapsed while telemetry still shows usage.
-- Rollback defined as redeploying old code without checking new data/events/config.
+- "No callers" from local `rg`, or server unit tests presented as consumer compatibility proof.
+- Generated clients or event payloads changed without semver/API diff, compile/downstream smoke, replay fixture, registry mode, and subscriber inventory as applicable.
+- Deprecation removed by date despite usage telemetry, or rollback reduced to old-code redeploy without checking new data, events, and config.

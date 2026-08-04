@@ -1,14 +1,28 @@
-Selected stage: implementation-planning.
-Selected professional skill: backend-change-builder.
-Selected capabilities: senior-programming-judgment-core, implementation-structure-design, module-boundary-design, validation-broker, agent-execution-discipline.
+Selected stage: implementation-preparation.
+Route: Analyzed Work.
+Start Profile: analysis-agent.
+Primary Professional Skill: engineering-change-analysis.
+Layer 3 Skills: repository-context-map.
+Review Skill: architecture-impact-reviewer.
+Execution Level: L4.
+Level Basis: the rule owner and module boundary are unresolved. Existing helpers and consumers were not inspected.
 
-Hidden risks: shared/common helper pollution; rule owner hidden in generic utility; validation can pass without proving caller invariants.
-Senior programming judgment required: purpose, source-backed facts, owning object/module, boundary, reuse and placement, minimality, validation map, and residual risk.
-Evidence required: search existing order/status helpers; identify selected owner and rejected locations; map order-status rule to tests; state what validation proves and does not prove; assign residual risk owner and next gate.
-Output obligations: reuse ladder; placement rationale; object/rule boundary; validation command; proof limits; residual risk.
-Inspected boundaries: src/common candidate, domain service owner, existing order/status helpers, caller tests, and validation fixture boundary.
-Validation command: not verified; fixture describes expected agent output only.
-What evidence proves: the helper cannot be accepted from convenience naming alone.
-What evidence does not prove: all real repository helper candidates have been scanned.
-Residual risk: unknown indirect caller; owner: quality-test-gate.
-Next gate: AI review gate.
+Required risks:
+- existing order-status owner is unknown
+- shared utility placement can invert dependency direction
+- caller invariants may diverge across services
+
+Required evidence:
+- repository search for existing order-status implementations
+- verified consumers and dependency edges
+- owner and boundary evidence with proof limits
+
+Required outputs:
+- current-behavior and owner map
+- placement decision inputs and unresolved boundary
+- analysis-only evidence-gathering step
+
+Evidence-gathering step: search repository definitions, imports, callers, tests, and current module ownership before proposing placement.
+This step gathers analysis evidence only. It is not an authoritative or dispatchable implementation slice.
+Stop before implementation. Do not create the helper, select its owner, choose placement, or claim validation until the evidence is current.
+Proof limits: this is a captured fixture. It proves the required analysis contract, not repository inspection, owner resolution, placement, implementation, tests, or production behavior.

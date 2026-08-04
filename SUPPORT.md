@@ -14,7 +14,7 @@ For support requests, include:
 
 - The command you ran.
 - The selected profile: `recommended`, `full`, or `dev`.
-- The selected agent: `codex`, `claude`, `copilot`, or `openai-api`.
+- The selected agent: `codex`, `claude`, `copilot`, `cline`, or `openai-api`.
 - The selected scope: `project`, `user`, or `admin` when applicable.
 - The operating system and Python version.
 - Relevant terminal output with secrets removed.
@@ -28,4 +28,6 @@ The project does not provide support for:
 - Runtime behavior caused by external private knowledge bases or user-specific technical archives.
 - Secrets, private keys, tokens, customer data, or private repository content shared in public issues.
 
-For installation and usage details, start with [docs/USAGE.md](docs/USAGE.md) and [docs/INSTALLATION.md](docs/INSTALLATION.md).
+For a first setup, start with [docs/QUICKSTART.md](docs/QUICKSTART.md). Use
+[docs/INSTALLATION.md](docs/INSTALLATION.md#troubleshooting-and-recovery) for
+installation recovery and [docs/USAGE.md](docs/USAGE.md) for request patterns.

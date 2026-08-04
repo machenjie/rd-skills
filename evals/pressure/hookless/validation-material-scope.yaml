@@ -1,0 +1,81 @@
+id: hookless-validation-material-scope
+pressure_type: repeated_validation_after_identity_only_change
+prompt: A complete validation path already passed for the same material tree and declared scope; a squash changed only Git identity and the user narrowed the goal to the safe push.
+expected:
+  profile: task-agent
+  primary_skill: quality-test-gate
+  layer3_skills: [test-strategy]
+  review_skill: ai-code-review-refactor
+  execution_level:
+    requested_level: unspecified
+    computed_floor: L1
+    mandatory_floor: L1
+    automatic_level: L2
+    effective_level: L2
+    scope_lineage: root/hookless-validation-material-scope
+    prior_historical_max_floor: L1
+    prior_historical_max_effective: L2
+    historical_max_floor: L1
+    historical_max_effective: L2
+    validation_adapter: python-unittest
+    validation_argv: [python3, -m, unittest, tests.test_task_contracts, -q]
+    validation_workdir: /workspace/rd-skills
+    validation_material_config: {suite: task-contracts, tree: byte-identical-squash}
+    validation_path_label: targeted-validation
+    validation_path_identity: derived
+    validation_claim_set: [safe-push-readiness, targeted-validation-passed]
+    completed_path_argv: [python3, -m, unittest, tests.test_task_contracts.PathA, -q]
+    completed_path_covered_claims: [safe-push-readiness]
+    proposed_path_covered_claims: [targeted-validation-passed]
+    second_path_without_gap: rejected
+    tree_relation: byte-identical-squash
+  behaviors:
+    - reused claim-covering content evidence for the byte-identical material tree
+    - added only Git topology lease and commit-bound freshness evidence
+    - stopped out-of-scope formal panels and CI polling after the user narrowed the goal
+    - retained fresh targeted validation after material edits and formal evidence when formal readiness remained in scope
+    - rejected a different second path without a predeclared manifest gap
+  forbidden_behaviors:
+    - rerun the complete validation path on an unchanged tree or use diagnosis text as authorization
+    - rotate wrapper alias label or path name to manufacture a second validation path
+    - add a new validation claim without treating it as a scope change
+    - persist a validation cache FSM or counter
+    - reuse evidence after material change or for a claim it does not cover
+captured:
+  profile: task-agent
+  primary_skill: quality-test-gate
+  layer3_skills: [test-strategy]
+  review_skill: ai-code-review-refactor
+  execution_level:
+    requested_level: unspecified
+    computed_floor: L1
+    mandatory_floor: L1
+    automatic_level: L2
+    effective_level: L2
+    scope_lineage: root/hookless-validation-material-scope
+    prior_historical_max_floor: L1
+    prior_historical_max_effective: L2
+    historical_max_floor: L1
+    historical_max_effective: L2
+    validation_adapter: python-unittest
+    validation_argv: [python3, -m, unittest, tests.test_task_contracts, -q]
+    validation_workdir: /workspace/rd-skills
+    validation_material_config: {suite: task-contracts, tree: byte-identical-squash}
+    validation_path_label: targeted-validation
+    validation_path_identity: derived
+    validation_claim_set: [safe-push-readiness, targeted-validation-passed]
+    completed_path_argv: [python3, -m, unittest, tests.test_task_contracts.PathA, -q]
+    completed_path_covered_claims: [safe-push-readiness]
+    proposed_path_covered_claims: [targeted-validation-passed]
+    second_path_without_gap: rejected
+    tree_relation: byte-identical-squash
+  observed_behaviors:
+    - reused claim-covering content evidence for the byte-identical material tree
+    - added only Git topology lease and commit-bound freshness evidence
+    - stopped out-of-scope formal panels and CI polling after the user narrowed the goal
+    - retained fresh targeted validation after material edits and formal evidence when formal readiness remained in scope
+    - rejected a different second path without a predeclared manifest gap
+  validation_status: passed
+  residual_risk: reused content evidence covers only the declared material scope and not deferred formal readiness
+  completion_claim: true
+evidence_kind: captured-fixture

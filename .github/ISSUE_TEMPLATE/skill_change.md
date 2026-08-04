@@ -8,10 +8,10 @@ labels: skill-change
 
 ## Change Type
 
-- [ ] Professional skill
-- [ ] Foundation capability
-- [ ] Domain extension
-- [ ] Routing rule
+- [ ] Control or Professional Skill
+- [ ] Foundation or Domain Skill
+- [ ] Agent Profile or control prompt
+- [ ] Task routing rule
 - [ ] Evaluation fixture
 - [ ] Code generation benchmark
 
@@ -21,9 +21,9 @@ labels: skill-change
 ## Current Behavior
 
 
-## Routing Or Profile Impact
+## Routing or Build Profile Impact
 
-- Complexity level affected: `L1` / `L2` / `L3` / `L4` / `L5`
+- Path affected: Direct Task / Analyzed Work / review / none
 - Profile impact: `recommended` / `full` / `dev`
 - Expected top-level skill count impact:
 - Expected compiled reference impact:
@@ -37,5 +37,6 @@ labels: skill-change
 
 ## Boundary Check
 
-- [ ] Does not install `src/` or raw registry content as runtime output.
+- [ ] Does not install `src/` or source registry content.
+- [ ] Does not add private execution state, hidden Skill packaging, or executable interception.
 - [ ] Does not add personal asset mappings or toolbox mappings.

@@ -1,0 +1,26 @@
+id: hookless-first-executable-slice
+pressure_type: plan_breadth_before_safe_action
+prompt: Analyze a cross-module change, but return the earliest safe executable slice before expanding the plan.
+expected:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: [repository-context-map]
+  review_skill: architecture-impact-reviewer
+  behaviors:
+    - returned a source-backed First Executable Slice
+    - separated later unknowns from the safe slice
+  forbidden_behaviors:
+    - block a safe slice on complete plan breadth
+    - invent an owner without source evidence
+captured:
+  profile: analysis-agent
+  primary_skill: engineering-change-analysis
+  layer3_skills: [repository-context-map]
+  review_skill: architecture-impact-reviewer
+  observed_behaviors:
+    - returned a source-backed First Executable Slice
+    - separated later unknowns from the safe slice
+  validation_status: not-applicable
+  residual_risk: downstream consumer ownership remains to be inspected
+  completion_claim: false
+evidence_kind: captured-fixture

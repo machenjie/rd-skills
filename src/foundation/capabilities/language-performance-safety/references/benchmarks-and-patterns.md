@@ -16,7 +16,7 @@ Use this reference when `language-performance-safety` needs deeper tool selectio
 
 ## Calibration Anchors
 
-- **Amdahl's Law:** optimize only the fraction that can move end-to-end latency or throughput.
+- **Amdahl's Law:** Prioritize the fraction whose measured contribution can materially move the named end-to-end latency or throughput objective; treat correctness, safety, cost, memory, and tail-risk work as separate justified objectives.
 - **Universal Scalability Law:** model contention and coherency when concurrency gains flatten or reverse.
 - **Little's Law:** align in-flight work, queue depth, and pool size with throughput and service time.
 - **USE and RED methods:** separate utilization, saturation, errors, rate, and duration before changing code.
@@ -27,10 +27,10 @@ Use this reference when `language-performance-safety` needs deeper tool selectio
 ## Runtime Safety Patterns
 
 - Offload CPU-bound and synchronous IO work from event loops to bounded executors with cancellation and queue limits.
-- Bound every queue, channel, fan-out list, retry accumulator, batch, buffer, cache, and page by count and/or bytes before allocation.
+- For each queue, channel, fan-out list, retry accumulator, batch, buffer, cache, or page, determine whether untrusted, external, or workload-dependent input drives it. When it does, define a count/byte ceiling before allocation or prove the source is already bounded.
 - Construct reusable clients, pools, timers, subscriptions, and watchers at the composition root or a scoped factory with explicit shutdown.
 - Close response bodies, streams, cursors, readers, temp files, timers, and descriptors on success, error, timeout, cancellation, and shutdown paths.
-- Hold locks only around in-memory critical sections; never across storage, network, file, user, or external service IO.
+- Avoid holding an in-process lock across potentially blocking or unbounded I/O. If correctness requires serialization spanning I/O, use a boundary-appropriate transaction, lease, or fencing protocol, or document bounded wait, cancellation, failure cleanup, and contention evidence.
 - Prefer streaming, chunking, pagination, spill-to-disk, or rejection over load-all processing for untrusted or large inputs.
 - Use object pools only when profiling proves allocation cost and lifecycle reset is correct; otherwise prefer simple ownership and GC.
 - Require invariant review plus sanitizer/race/stress evidence for unsafe/native/FFI changes before release approval.

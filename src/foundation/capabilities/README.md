@@ -1,12 +1,12 @@
 # Foundation Capability Library
 
-Foundation capabilities are mandatory source assets for ChangeForge professional skills. They capture reusable expert judgment for product-change engineering: selection rules, risk gates, benchmark expectations, output contracts, and handoff criteria.
+Foundation Skills are focused source assets for ChangeForge Professional Skills. They capture reusable expert judgment for one concrete engineering decision at a time.
 
-The library contains 136 implemented capabilities plus `_template`. Capabilities are not language primers, framework walkthroughs, tool catalogs, or source-installable runtime skills. They are compiled into professional skill references for the `recommended` and `full` runtime profiles.
+The library contains 150 implemented Foundation Skills plus `_template`. They are not language primers, framework walkthroughs, tool catalogs, or independently selected task owners. Selected entries are compiled into Professional Skill references for the `recommended` and `full` build profiles.
 
 Language capabilities are professional engineering rules, not language tutorials or personal technical asset mappings.
 
-## Runtime Profile Rules
+## Build Profile Rules
 
 - `recommended`: compile foundation capabilities into professional skill `references/`.
 - `full`: compile foundation capabilities into professional skill `references/`.
@@ -18,8 +18,8 @@ Language capabilities are professional engineering rules, not language tutorials
 - Treat each capability as a reusable card used by one or more professional skills.
 - Keep implementation-specific examples out unless they demonstrate an output contract.
 - Store capability source under `src/foundation/capabilities/`.
-- Keep generated runtime content under `dist/`.
+- Keep generated built content under `dist/`.
 
 ## Registry
 
-The canonical capability list is `src/registry/capabilities.yaml`. Implemented registry entries must point to authored capability folders.
+The canonical list is `src/registry/foundation-skills.yaml`. Registry entries must point to authored Foundation Skill folders.

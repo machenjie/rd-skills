@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""Validate offline professional benchmark case specifications and fixtures.
+"""Validate captured professional-skill benchmark deltas for Hookless skills.
 
-Benchmarks under evals/professional-benchmarks/ are schema fixtures for
-professional engineering behavior. This script validates fixture structure,
-registry references, and optional baseline-vs-with-skill captured outputs. It
-does not call an LLM, access the network, or mutate benchmark sources.
+The Markdown outputs are repository fixtures, not fresh model runs.  The report
+therefore proves fixture quality and deterministic obligation coverage only.
 """
 
 from __future__ import annotations
@@ -14,974 +12,415 @@ import json
 import re
 import sys
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from telemetry_utils import load_registry_names
 from validation_utils import ValidationProblem, load_yaml_file
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REGISTRY_DIR = ROOT / "src" / "registry"
-ROUTING_RULES = REGISTRY_DIR / "routing-rules.yaml"
-DEFAULT_BENCHMARKS_DIR = ROOT / "evals" / "professional-benchmarks"
-DEFAULT_REPORTS_DIR = ROOT / "reports"
-MARKDOWN_REPORT = "professional-benchmarks-eval.md"
-JSON_REPORT = "professional-benchmarks-eval.json"
-PRIMARY_MARKDOWN_REPORT = "professional-benchmarks-report.md"
-PRIMARY_JSON_REPORT = "professional-benchmarks-report.json"
+DEFAULT_CASES = ROOT / "evals/professional-benchmarks"
+DEFAULT_REPORTS = ROOT / "reports"
 
-REQUIRED_EXPECTED_FIELDS = (
-    "expected_stage",
-    "expected_professional_skill",
+LIST_FIELDS = (
     "expected_capabilities",
     "expected_hidden_risks",
     "expected_evidence",
     "forbidden_behaviors",
     "expected_output_obligations",
 )
-REQUIRED_LIST_FIELDS = (
-    "expected_capabilities",
+DECISION_OBLIGATION_FIELDS = (
     "expected_hidden_risks",
     "expected_evidence",
-    "forbidden_behaviors",
     "expected_output_obligations",
 )
-
-MIN_LIST_COUNTS = {
-    "expected_capabilities": 1,
-    "expected_hidden_risks": 2,
-    "expected_evidence": 2,
-    "forbidden_behaviors": 2,
-    "expected_output_obligations": 3,
+COVERAGE_CLASSES = {
+    "standard",
+    "release-critical",
+    "adversarial-negative-control",
 }
 
-GENERIC_EXPECTED_PHRASES = (
-    "add tests",
-    "check security",
-    "do validation",
-    "ensure quality",
-    "handle errors",
-    "make it robust",
-    "review code",
-    "run tests",
-    "use best practices",
-)
-
 
 @dataclass
-class ProfessionalDeltaSummary:
-    baseline_missing: list[str] = field(default_factory=list)
-    with_skill_present: list[str] = field(default_factory=list)
-    remaining_gaps: list[str] = field(default_factory=list)
-    forbidden_behavior_hits: list[str] = field(default_factory=list)
-    delta_score: int = 0
-    note: str = "deterministic rule heuristic; not an LLM judge"
-
-
-@dataclass
-class BenchmarkResult:
+class CaseResult:
     case_id: str
     path: str
     expected_stage: str = ""
-    expected_skills: list[str] = field(default_factory=list)
-    expected_capabilities: list[str] = field(default_factory=list)
-    expected_with_skill_status: str = "pass"
-    adversarial_detection_status: str = "not-applicable"
-    schema_status: str = "not-run"
-    comparison_status: str = "schema-only"
-    benchmark_quality_status: str = "not-run"
-    baseline_defect_hits: list[str] = field(default_factory=list)
-    with_skill_obligation_coverage: list[str] = field(default_factory=list)
-    delta_score: int = 0
-    remaining_gaps: list[str] = field(default_factory=list)
-    missing_expected_items: list[str] = field(default_factory=list)
-    forbidden_behavior_hits: list[str] = field(default_factory=list)
-    professional_delta_summary: ProfessionalDeltaSummary = field(default_factory=ProfessionalDeltaSummary)
-    errors: list[str] = field(default_factory=list)
-    comparison: "ComparisonResult | None" = None
-
-    @property
-    def ok(self) -> bool:
-        return not self.errors
-
-
-@dataclass
-class BenchmarkReport:
-    generated_at: str
-    cases_checked: int
-    mode: str
-    errors: list[str]
-    results: list[BenchmarkResult]
-    comparison_cases_checked: int = 0
-    actual_output_comparison: str = (
-        "deterministic rule heuristic; auto mode compares baseline_output.md "
-        "and with_skill_output.md when both exist"
-    )
-
-
-@dataclass
-class OutputCoverage:
-    selected_stage: bool = False
-    selected_professional_skill: bool = False
-    selected_capabilities: bool = False
-    expected_hidden_risks: bool = False
-    forbidden_behaviors_absent: bool = False
-    expected_evidence: bool = False
-    expected_output_obligations: bool = False
-    inspected_boundaries: bool = False
-    evidence_limits: bool = False
-    residual_risk: bool = False
-    residual_risk_owner: bool = False
-    next_gate: bool = False
-    validation_or_not_verified: bool = False
-    validation_outcome: bool = False
-    route_relevance: bool = False
-    score: int = 0
-    matched_hidden_risks: list[str] = field(default_factory=list)
-    matched_evidence: list[str] = field(default_factory=list)
-    matched_obligations: list[str] = field(default_factory=list)
-    forbidden_hits: list[str] = field(default_factory=list)
-
-
-@dataclass
-class ComparisonResult:
-    mode: str
-    baseline_path: str = ""
-    with_skill_path: str = ""
+    primary_skill: str = ""
+    layer3_skills: list[str] = field(default_factory=list)
+    coverage_class: str = "standard"
+    expected_status: str = "pass"
+    schema_status: str = "fail"
+    comparison_status: str = "not-run"
     baseline_score: int = 0
     with_skill_score: int = 0
-    improvement: int = 0
-    baseline_defect_hits: list[str] = field(default_factory=list)
-    baseline_coverage: OutputCoverage | None = None
-    with_skill_coverage: OutputCoverage | None = None
+    obligation_delta: int = 0
+    covered_hidden_risks: list[str] = field(default_factory=list)
+    covered_evidence: list[str] = field(default_factory=list)
+    covered_output_obligations: list[str] = field(default_factory=list)
+    baseline_forbidden_behavior_hits: list[str] = field(default_factory=list)
+    forbidden_behavior_hits: list[str] = field(default_factory=list)
+    detected_adversarial_defects: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = _parse_args(sys.argv[1:] if argv is None else argv)
-    benchmarks_dir = args.benchmarks_dir or DEFAULT_BENCHMARKS_DIR
-    reports_dir = args.reports_dir or DEFAULT_REPORTS_DIR
-
-    registry = load_registry_names(REGISTRY_DIR)
-    stages = _stage_names()
-    case_dirs = _collect_case_dirs(benchmarks_dir)
-    results = [_evaluate_case(path, registry, stages, args.mode) for path in case_dirs]
-    errors = [f"{result.path}: {error}" for result in results for error in result.errors]
-    if len(case_dirs) < 10:
-        errors.append(
-            f"{_rel(benchmarks_dir)}: expected at least 10 benchmark cases, found {len(case_dirs)}"
-        )
-    comparison_count = sum(
-        1 for result in results if result.comparison and result.comparison.mode == "comparison"
-    )
-    if args.mode == "comparison" and comparison_count == 0:
-        errors.append("comparison mode requires at least one case with baseline_output.md and with_skill_output.md")
-    if args.actual_output_dir is not None:
-        if not args.actual_output_dir.exists():
-            errors.append(f"{_rel(args.actual_output_dir)}: actual output directory does not exist")
-
-    report = BenchmarkReport(
-        generated_at=datetime.now(timezone.utc).isoformat(),
-        cases_checked=len(case_dirs),
-        mode=args.mode,
-        errors=errors,
-        results=results,
-        comparison_cases_checked=comparison_count,
-    )
-    written = _write_reports(report, reports_dir, args.format)
-    print(f"eval-professional-benchmarks: checked {len(case_dirs)} case(s); errors={len(errors)}")
-    for path in written:
-        print(f"- report: {path}")
-    if errors:
-        for error in errors:
-            print(f"eval-professional-benchmarks: ERROR: {error}", file=sys.stderr)
+    args = _args(sys.argv[1:] if argv is None else argv)
+    cases_dir = args.benchmarks_dir or DEFAULT_CASES
+    reports_dir = args.reports_dir or DEFAULT_REPORTS
+    try:
+        payload = evaluate_benchmarks(cases_dir, args.mode)
+    except ValidationProblem as exc:
+        print(f"eval-professional-benchmarks: ERROR: {exc}", file=sys.stderr)
         return 1
-    return 0
-
-
-def _parse_args(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--benchmarks-dir", type=Path, default=None)
-    parser.add_argument("--reports-dir", type=Path, default=None)
-    parser.add_argument(
-        "--format",
-        choices=("all", "markdown", "json"),
-        default="all",
-        help="report format to write; default writes both Markdown and JSON",
+    errors = payload["errors"]
+    _write(reports_dir, payload, args.format)
+    print(
+        "eval-professional-benchmarks: "
+        f"checked {payload['cases_checked']} cases; "
+        f"comparisons={payload['comparison_cases_checked']}; "
+        f"errors={len(errors)}; evidence=captured-fixture"
     )
-    parser.add_argument(
-        "--mode",
-        choices=("auto", "schema-only", "comparison"),
-        default="auto",
-        help=(
-            "schema-only validates case structure; comparison compares cases with "
-            "baseline_output.md and with_skill_output.md; auto compares only cases with both files"
+    for error in errors:
+        print(f"eval-professional-benchmarks: ERROR: {error}", file=sys.stderr)
+    return 1 if errors else 0
+
+
+def evaluate_benchmarks(
+    cases_dir: Path = DEFAULT_CASES,
+    mode: str = "auto",
+) -> dict[str, Any]:
+    """Evaluate all captured benchmark fixtures without writing reports."""
+
+    professional, layer3, routable = _registries()
+    case_dirs = sorted(path.parent for path in cases_dir.rglob("expected.yaml"))
+    results = [_case(path, professional, layer3, routable, mode) for path in case_dirs]
+    errors = [f"{row.path}: {message}" for row in results for message in row.errors]
+    if len(results) < 10:
+        errors.append(f"{_rel(cases_dir)}: expected at least 10 professional benchmark cases")
+    return {
+        "schema_version": 3,
+        "architecture": "hookless-control-plane",
+        "evaluation_kind": "captured-fixture-comparison",
+        "evidence_limitations": [
+            "baseline_output.md and with_skill_output.md are checked-in captured fixtures, not fresh model runs",
+            "phrase coverage is deterministic and cannot establish live model accuracy",
+            "no efficiency or adoption threshold is evaluated",
+        ],
+        "mode": mode,
+        "cases_checked": len(results),
+        "comparison_cases_checked": sum(
+            row.comparison_status in {"pass", "expected-fail-detected"} for row in results
         ),
-    )
-    parser.add_argument(
-        "--actual-output-dir",
-        type=Path,
-        default=None,
-        help="deprecated compatibility option; comparison fixtures live beside each case",
-    )
+        "counts_by_coverage_class": {
+            name: sum(row.coverage_class == name for row in results)
+            for name in sorted(COVERAGE_CLASSES)
+        },
+        "errors": errors,
+        "results": [asdict(row) for row in results],
+    }
+
+
+def _args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--benchmarks-dir", type=Path)
+    parser.add_argument("--reports-dir", type=Path)
+    parser.add_argument("--format", choices=("all", "markdown", "json"), default="all")
+    parser.add_argument("--mode", choices=("auto", "schema-only", "comparison"), default="auto")
+    parser.add_argument("--actual-output-dir", type=Path, help="deprecated; captured outputs live beside each case")
     return parser.parse_args(argv)
 
 
-def _collect_case_dirs(root: Path) -> list[Path]:
-    if not root.is_dir():
-        return []
-    return sorted(
-        path.parent
-        for path in root.rglob("expected.yaml")
-        if path.is_file() and (path.parent / "prompt.md").is_file()
-    )
+def _registries() -> tuple[dict[str, set[str]], set[str], set[str]]:
+    professional_data = load_yaml_file(ROOT / "src/registry/professional-skills.yaml")
+    foundation_data = load_yaml_file(ROOT / "src/registry/foundation-skills.yaml")
+    domain_data = load_yaml_file(ROOT / "src/registry/domain-skills.yaml")
+    if not all(isinstance(item, dict) for item in (professional_data, foundation_data, domain_data)):
+        raise ValidationProblem("three-layer Skill registries must be mappings")
+    rows = professional_data.get("professional_skills", [])
+    professional = {
+        str(row.get("name", "")): set(_strings(row.get("layer3_candidates")))
+        for row in rows
+        if isinstance(row, dict)
+    }
+    routable = {
+        str(row.get("name", ""))
+        for row in rows
+        if isinstance(row, dict) and bool(row.get("task_routable", True))
+    }
+    layer3 = {
+        str(row.get("name", ""))
+        for row in foundation_data.get("foundation_skills", [])
+        if isinstance(row, dict)
+    } | {
+        str(row.get("name", ""))
+        for row in domain_data.get("domain_skills", [])
+        if isinstance(row, dict)
+    }
+    return professional, layer3, routable
 
 
-def _evaluate_case(
-    case_dir: Path,
-    registry: dict[str, set[str]],
-    stages: set[str],
+def _case(
+    directory: Path,
+    professional: dict[str, set[str]],
+    layer3: set[str],
+    routable: set[str],
     mode: str,
-) -> BenchmarkResult:
-    result = BenchmarkResult(_rel(case_dir), _rel(case_dir))
-    prompt_path = case_dir / "prompt.md"
-    expected_path = case_dir / "expected.yaml"
-    if not prompt_path.is_file():
-        result.errors.append("missing prompt.md")
-    if not expected_path.is_file():
-        result.errors.append("missing expected.yaml")
-        return result
-
-    prompt = prompt_path.read_text(encoding="utf-8") if prompt_path.is_file() else ""
-    if len(prompt.strip()) < 40:
-        result.errors.append("prompt.md must contain a concrete scenario prompt")
-    if _contains_forbidden_scope(prompt):
-        result.errors.append("prompt.md contains forbidden non-professional scope")
-
+) -> CaseResult:
+    result = CaseResult(case_id=_rel(directory), path=_rel(directory))
+    expected_path = directory / "expected.yaml"
+    prompt_path = directory / "prompt.md"
     try:
-        data = load_yaml_file(expected_path)
+        expected = load_yaml_file(expected_path)
     except ValidationProblem as exc:
         result.errors.append(str(exc))
         return result
-    if not isinstance(data, dict):
+    if not isinstance(expected, dict):
         result.errors.append("expected.yaml must be a mapping")
         return result
+    prompt = prompt_path.read_text(encoding="utf-8") if prompt_path.is_file() else ""
+    if len(prompt.strip()) < 40:
+        result.errors.append("prompt.md must contain a concrete scenario")
 
-    for field_name in REQUIRED_EXPECTED_FIELDS:
-        if field_name not in data:
-            result.errors.append(f"missing required field '{field_name}'")
-
-    result.expected_stage = _string(data.get("expected_stage"))
-    result.expected_skills = _string_list(data.get("expected_professional_skill"))
-    result.expected_capabilities = _string_list(data.get("expected_capabilities"))
-    result.expected_with_skill_status = _string(data.get("expected_with_skill_status")) or "pass"
-    if result.expected_with_skill_status not in {"pass", "fail"}:
-        result.errors.append("expected_with_skill_status must be pass or fail")
-
-    if not result.expected_stage:
-        result.errors.append("expected_stage must be non-empty")
-    elif stages and result.expected_stage not in stages:
-        result.errors.append(f"unknown expected_stage '{result.expected_stage}'")
-
-    if not result.expected_skills:
-        result.errors.append("expected_professional_skill must include at least one skill")
-    for skill in result.expected_skills:
-        if skill not in registry["skills"]:
-            result.errors.append(f"unknown professional skill '{skill}'")
-
-    if not result.expected_capabilities:
-        result.errors.append("expected_capabilities must include at least one capability")
-    for capability in result.expected_capabilities:
-        if capability not in registry["capabilities"]:
-            result.errors.append(f"unknown capability '{capability}'")
-
-    for field_name in REQUIRED_LIST_FIELDS:
-        values = _string_list(data.get(field_name))
-        if not values:
-            result.errors.append(f"{field_name} must be a non-empty list")
-            continue
-        minimum = MIN_LIST_COUNTS[field_name]
-        if len(values) < minimum:
-            result.errors.append(
-                f"{field_name} must include at least {minimum} concrete item(s)"
-            )
-        vague_values = (
-            field_name != "expected_capabilities"
-            and any(_looks_vague_expected_item(value) for value in values)
-        )
-        if any(_looks_placeholder(value) for value in values) or vague_values:
-            result.errors.append(f"{field_name} contains placeholder or vague content")
-
-    obligations = _string_list(data.get("expected_output_obligations"))
-    if not any("evidence" in item.casefold() or "validation" in item.casefold() for item in obligations):
-        result.errors.append("expected_output_obligations must include at least one evidence or validation obligation")
-
-    schema_errors = list(result.errors)
-    result.schema_status = "pass" if not schema_errors else "fail"
-    result.comparison = _evaluate_comparison(case_dir, data, result, mode, registry)
-    result.comparison_status = _comparison_status(result.comparison)
-    result.missing_expected_items = _missing_expected_items(data, result, schema_errors)
-    result.forbidden_behavior_hits = _forbidden_behavior_hits(result.comparison)
-    result.professional_delta_summary = _professional_delta_summary(
-        result.comparison,
-        result.missing_expected_items,
-        result.forbidden_behavior_hits,
-    )
-    comparison_errors = list(result.comparison.errors)
-    if result.expected_with_skill_status == "fail" and result.comparison.mode == "comparison":
-        if comparison_errors:
-            result.adversarial_detection_status = "detected"
-            result.comparison_status = "expected-fail"
-            comparison_errors = []
-        else:
-            result.adversarial_detection_status = "missed"
-            comparison_errors.append("adversarial with_skill_output.md unexpectedly passed")
-    elif result.expected_with_skill_status == "fail":
-        result.adversarial_detection_status = "missing-comparison"
-        comparison_errors.append("adversarial benchmark requires paired baseline_output.md and with_skill_output.md")
+    raw_stage = expected.get("expected_stage")
+    if isinstance(raw_stage, str) and raw_stage.strip():
+        result.expected_stage = raw_stage.strip()
     else:
-        result.adversarial_detection_status = "not-applicable"
-    result.errors.extend(comparison_errors)
-    result.baseline_defect_hits = _baseline_defect_hits(result.comparison)
-    result.with_skill_obligation_coverage = _with_skill_obligation_coverage(result.comparison)
-    result.delta_score = result.professional_delta_summary.delta_score
-    result.remaining_gaps = list(result.professional_delta_summary.remaining_gaps)
-    result.benchmark_quality_status = "pass" if not result.errors else "fail"
+        result.errors.append("expected_stage must be a non-blank string")
+    result.primary_skill = str(expected.get("expected_professional_skill", "")).strip()
+    result.layer3_skills = _strings(expected.get("expected_capabilities"))
+    result.expected_status = str(
+        expected.get("expected_with_skill_status", "pass")
+    ).strip().casefold()
+    if result.expected_status not in {"pass", "fail"}:
+        result.errors.append("expected_with_skill_status must equal 'pass' or 'fail'")
+    raw_coverage_class = expected.get("coverage_class")
+    if raw_coverage_class is None:
+        result.coverage_class = (
+            "adversarial-negative-control"
+            if result.expected_status == "fail"
+            else "standard"
+        )
+    elif isinstance(raw_coverage_class, str):
+        result.coverage_class = raw_coverage_class.strip().casefold()
+    else:
+        result.coverage_class = ""
+    if result.coverage_class not in COVERAGE_CLASSES:
+        result.errors.append(
+            "coverage_class must equal standard, release-critical, or "
+            "adversarial-negative-control"
+        )
+    if (
+        result.coverage_class == "adversarial-negative-control"
+        and result.expected_status != "fail"
+    ):
+        result.errors.append(
+            "adversarial-negative-control requires expected_with_skill_status=fail"
+        )
+    if result.coverage_class != "adversarial-negative-control" and result.expected_status == "fail":
+        result.errors.append(
+            "expected_with_skill_status=fail requires adversarial-negative-control"
+        )
+    if result.primary_skill not in professional:
+        result.errors.append(f"unknown primary Professional Skill '{result.primary_skill}'")
+    elif result.primary_skill not in routable:
+        result.errors.append(f"primary Professional Skill is not task-routable: '{result.primary_skill}'")
+    if len(result.layer3_skills) > 3:
+        result.errors.append("benchmark loads more than three Layer 3 Skills; narrow the risk surface")
+    if len(result.layer3_skills) != len(set(result.layer3_skills)):
+        result.errors.append("benchmark repeats a Layer 3 Skill")
+    for name in result.layer3_skills:
+        if name not in layer3:
+            result.errors.append(f"unknown Layer 3 Skill '{name}'")
+        elif result.primary_skill in professional and name not in professional[result.primary_skill]:
+            result.errors.append(
+                f"Layer 3 Skill '{name}' is not a candidate of primary Skill "
+                f"'{result.primary_skill}'"
+            )
+    validated_lists: dict[str, list[str]] = {}
+    normalized_lists: dict[str, list[str]] = {}
+    for field in LIST_FIELDS:
+        raw_values = expected.get(field)
+        if (
+            not isinstance(raw_values, list)
+            or not raw_values
+            or not all(isinstance(item, str) and item.strip() for item in raw_values)
+        ):
+            result.errors.append(f"{field} must be a non-empty list of non-blank strings")
+            validated_lists[field] = []
+            normalized_lists[field] = []
+            continue
+        values = [item.strip() for item in raw_values]
+        normalized = [_fold(item) for item in values]
+        if any(not item for item in normalized):
+            result.errors.append(f"{field} contains an obligation with no searchable text")
+        if len(normalized) != len(set(normalized)):
+            result.errors.append(
+                f"{field} must not repeat normalized obligations"
+            )
+        validated_lists[field] = values
+        normalized_lists[field] = normalized
 
+    obligation_origins: dict[str, str] = {}
+    for field in DECISION_OBLIGATION_FIELDS:
+        for obligation in normalized_lists[field]:
+            previous = obligation_origins.get(obligation)
+            if previous is not None:
+                result.errors.append(
+                    "decision obligations must be distinct across "
+                    f"{previous} and {field}"
+                )
+            else:
+                obligation_origins[obligation] = field
+    if result.expected_status == "pass":
+        forbidden = set(normalized_lists["forbidden_behaviors"])
+        overlap = sorted(forbidden & set(obligation_origins))
+        if overlap:
+            result.errors.append(
+                "positive benchmark forbidden behaviors must be distinct from "
+                "required decision obligations"
+            )
+
+    if len(validated_lists["expected_hidden_risks"]) < 2:
+        result.errors.append("expected_hidden_risks must name at least two concrete risks")
+    if len(validated_lists["expected_evidence"]) < 2:
+        result.errors.append("expected_evidence must name at least two concrete proof obligations")
+    if len(validated_lists["forbidden_behaviors"]) < 2:
+        result.errors.append("forbidden_behaviors must name at least two unsafe shortcuts")
+    if len(validated_lists["expected_output_obligations"]) < 3:
+        result.errors.append("expected_output_obligations must name at least three handoff obligations")
+    result.schema_status = "pass" if not result.errors else "fail"
+    if result.errors or mode == "schema-only":
+        result.comparison_status = "schema-only"
+        return result
+
+    baseline_path = directory / "baseline_output.md"
+    with_path = directory / "with_skill_output.md"
+    if not baseline_path.is_file() or not with_path.is_file():
+        if mode == "comparison":
+            result.errors.append("comparison mode requires baseline_output.md and with_skill_output.md")
+        result.comparison_status = "schema-only"
+        return result
+    baseline = baseline_path.read_text(encoding="utf-8")
+    with_skill = with_path.read_text(encoding="utf-8")
+    expected_groups = {
+        "hidden": _strings(expected.get("expected_hidden_risks")),
+        "evidence": _strings(expected.get("expected_evidence")),
+        "output": _strings(expected.get("expected_output_obligations")),
+    }
+    baseline_hits = sum(_contains(baseline, item) for values in expected_groups.values() for item in values)
+    result.baseline_forbidden_behavior_hits = [
+        item
+        for item in _strings(expected.get("forbidden_behaviors"))
+        if _contains(baseline, item)
+    ]
+    result.covered_hidden_risks = [item for item in expected_groups["hidden"] if _contains(with_skill, item)]
+    result.covered_evidence = [item for item in expected_groups["evidence"] if _contains(with_skill, item)]
+    result.covered_output_obligations = [item for item in expected_groups["output"] if _contains(with_skill, item)]
+    result.forbidden_behavior_hits = [
+        item for item in _strings(expected.get("forbidden_behaviors")) if _contains(with_skill, item)
+    ]
+    result.baseline_score = baseline_hits
+    result.with_skill_score = (
+        len(result.covered_hidden_risks)
+        + len(result.covered_evidence)
+        + len(result.covered_output_obligations)
+    )
+    result.obligation_delta = result.with_skill_score - result.baseline_score
+    comparison_errors: list[str] = []
+    if not _contains(with_skill, result.primary_skill):
+        comparison_errors.append("captured with-skill output does not name the selected primary Skill")
+    missing_layer3 = [name for name in result.layer3_skills if not _contains(with_skill, name)]
+    if missing_layer3:
+        comparison_errors.append("captured with-skill output omits Layer 3 Skill(s): " + ", ".join(missing_layer3))
+    if len(result.covered_hidden_risks) < 2:
+        comparison_errors.append("captured output covers fewer than two expected hidden risks")
+    if len(result.covered_evidence) < 2:
+        comparison_errors.append("captured output covers fewer than two expected evidence obligations")
+    if len(result.covered_output_obligations) < 2:
+        comparison_errors.append("captured output covers fewer than two expected handoff obligations")
+    if result.obligation_delta <= 0:
+        comparison_errors.append("captured with-skill output has no positive obligation-coverage delta")
+    if result.forbidden_behavior_hits:
+        comparison_errors.append(
+            "captured with-skill output contains forbidden behavior(s): "
+            + ", ".join(result.forbidden_behavior_hits)
+        )
+    if result.coverage_class == "release-critical":
+        if len(result.covered_hidden_risks) != len(expected_groups["hidden"]):
+            comparison_errors.append(
+                "release-critical output does not cover every expected hidden risk"
+            )
+        if len(result.covered_evidence) != len(expected_groups["evidence"]):
+            comparison_errors.append(
+                "release-critical output does not cover every expected evidence obligation"
+            )
+        if len(result.covered_output_obligations) != len(expected_groups["output"]):
+            comparison_errors.append(
+                "release-critical output does not cover every expected handoff obligation"
+            )
+        if not result.baseline_forbidden_behavior_hits:
+            comparison_errors.append(
+                "release-critical baseline must contain at least one forbidden behavior"
+            )
+    if result.expected_status == "fail":
+        result.detected_adversarial_defects = comparison_errors
+        if not comparison_errors:
+            result.errors.append("adversarial captured output was incorrectly accepted")
+            result.comparison_status = "fail"
+        else:
+            result.comparison_status = "expected-fail-detected"
+    else:
+        result.errors.extend(comparison_errors)
+        result.comparison_status = "pass" if not comparison_errors else "fail"
     return result
 
 
-def _evaluate_comparison(
-    case_dir: Path,
-    expected: dict[str, Any],
-    schema_result: BenchmarkResult,
-    mode: str,
-    registry: dict[str, set[str]],
-) -> ComparisonResult:
-    baseline_path = case_dir / "baseline_output.md"
-    with_skill_path = case_dir / "with_skill_output.md"
-    has_pair = baseline_path.is_file() and with_skill_path.is_file()
-    comparison = ComparisonResult(mode="schema-only")
-    if mode == "schema-only":
-        return comparison
-    if not has_pair:
-        comparison.mode = "missing-pair"
-        if not baseline_path.is_file():
-            comparison.errors.append("missing baseline_output.md")
-        if not with_skill_path.is_file():
-            comparison.errors.append("missing with_skill_output.md")
-        return comparison
-
-    comparison.mode = "comparison"
-    comparison.baseline_path = _rel(baseline_path)
-    comparison.with_skill_path = _rel(with_skill_path)
-    baseline_text = baseline_path.read_text(encoding="utf-8")
-    with_skill_text = with_skill_path.read_text(encoding="utf-8")
-    if len(baseline_text.strip()) < 40:
-        comparison.errors.append("baseline_output.md must contain a concrete simulated output")
-    if len(with_skill_text.strip()) < 80:
-        comparison.errors.append("with_skill_output.md must contain a concrete simulated output")
-
-    baseline = _coverage_for_output(baseline_text, expected, schema_result, registry)
-    with_skill = _coverage_for_output(with_skill_text, expected, schema_result, registry)
-    comparison.baseline_coverage = baseline
-    comparison.with_skill_coverage = with_skill
-    comparison.baseline_score = baseline.score
-    comparison.with_skill_score = with_skill.score
-    comparison.improvement = with_skill.score - baseline.score
-    max_score = _coverage_dimension_count(with_skill)
-    comparison.baseline_defect_hits = [
-        item for item in _string_list(expected.get("forbidden_behaviors"))
-        if _meaning_present(_fold(baseline_text), item)
-    ]
-
-    if comparison.improvement <= 0:
-        comparison.errors.append(
-            f"with_skill_output.md must cover more professional obligations than baseline_output.md "
-            f"({with_skill.score} <= {baseline.score})"
-        )
-    if baseline.score > 3:
-        comparison.errors.append(
-            f"baseline_output.md is too professional for a negative fixture ({baseline.score}/{max_score} > 3/{max_score})"
-        )
-    if with_skill.score < 8:
-        comparison.errors.append(
-            f"with_skill_output.md must cover core professional obligations ({with_skill.score}/{max_score} < 8/{max_score})"
-        )
-    if comparison.improvement < 4:
-        comparison.errors.append(
-            f"professional delta is too small to prove skill value ({comparison.improvement:+d} < +4)"
-        )
-    if not comparison.baseline_defect_hits:
-        comparison.errors.append("baseline_output.md must demonstrate at least one forbidden behavior")
-    for field_name, ok in asdict(with_skill).items():
-        if field_name in {
-            "score",
-            "matched_hidden_risks",
-            "matched_evidence",
-            "matched_obligations",
-            "forbidden_hits",
-        }:
-            continue
-        if not ok:
-            comparison.errors.append(f"with_skill_output.md missing comparison dimension '{field_name}'")
-    return comparison
-
-
-def _coverage_dimension_count(coverage: OutputCoverage) -> int:
-    return sum(
-        1
-        for key in asdict(coverage)
-        if key
-        not in {
-            "score",
-            "matched_hidden_risks",
-            "matched_evidence",
-            "matched_obligations",
-            "forbidden_hits",
-        }
-    )
-
-
-def _coverage_for_output(
-    text: str,
-    expected: dict[str, Any],
-    schema_result: BenchmarkResult,
-    registry: dict[str, set[str]],
-) -> OutputCoverage:
-    folded = _fold(text)
-    hidden_risks = _string_list(expected.get("expected_hidden_risks"))
-    evidence = _string_list(expected.get("expected_evidence"))
-    forbidden = _string_list(expected.get("forbidden_behaviors"))
-    obligations = _string_list(expected.get("expected_output_obligations"))
-
-    matched_hidden = [item for item in hidden_risks if _meaning_present(folded, item)]
-    matched_evidence = [item for item in evidence if _meaning_present(folded, item)]
-    matched_obligations = [item for item in obligations if _meaning_present(folded, item)]
-    forbidden_hits = [item for item in forbidden if _forbidden_present(folded, item)]
-
-    selected_stage = bool(
-        schema_result.expected_stage
-        and schema_result.expected_stage.casefold() in folded
-        and ("selected stage" in folded or "stage:" in folded or "current_stage" in folded)
-    )
-    expected_skills = schema_result.expected_skills
-    selected_professional_skill = bool(expected_skills) and all(
-        skill.casefold() in folded for skill in expected_skills
-    ) and ("selected professional skill" in folded or "selected skill" in folded or "selected_skills" in folded)
-    expected_capabilities = schema_result.expected_capabilities
-    selected_capabilities = bool(expected_capabilities) and all(
-        capability.casefold() in folded for capability in expected_capabilities
-    ) and ("selected capabilities" in folded or "selected_capabilities" in folded)
-    validation_or_not_verified = bool(
-        re.search(r"\b(pytest|npm test|go test|mvn test|cargo test|python3|unittest|validate-|eval-|not[- ]verified|not verified|validation command)\b", folded)
-    )
-    validation_outcome = _validation_has_outcome(text)
-    route_relevance = _route_relevance(text, schema_result, registry)
-    coverage = OutputCoverage(
-        selected_stage=selected_stage,
-        selected_professional_skill=selected_professional_skill,
-        selected_capabilities=selected_capabilities,
-        expected_hidden_risks=bool(hidden_risks) and len(matched_hidden) == len(hidden_risks),
-        forbidden_behaviors_absent=not forbidden_hits,
-        expected_evidence=bool(evidence) and len(matched_evidence) == len(evidence),
-        expected_output_obligations=bool(obligations)
-        and len(matched_obligations) == len(obligations),
-        inspected_boundaries=bool(
-            re.search(r"\b(inspected boundaries|boundaries inspected|boundary scan|files and boundaries inspected)\b", folded)
-        ),
-        evidence_limits=bool(
-            re.search(r"\b(what evidence does not prove|what it does not prove|evidence limits|does not prove)\b", folded)
-        ),
-        residual_risk="residual risk" in folded or "residual-risk" in folded,
-        residual_risk_owner=_residual_risk_has_owner(text),
-        next_gate="next gate" in folded or "handoff" in folded or "next professional gate" in folded,
-        validation_or_not_verified=validation_or_not_verified,
-        validation_outcome=validation_outcome,
-        route_relevance=route_relevance,
-        matched_hidden_risks=matched_hidden,
-        matched_evidence=matched_evidence,
-        matched_obligations=matched_obligations,
-        forbidden_hits=forbidden_hits,
-    )
-    coverage.score = sum(
-        1
-        for key, value in asdict(coverage).items()
-        if key
-        not in {
-            "score",
-            "matched_hidden_risks",
-            "matched_evidence",
-            "matched_obligations",
-            "forbidden_hits",
-        }
-        and bool(value)
-    )
-    return coverage
-
-
-def _validation_has_outcome(text: str) -> bool:
-    folded = _fold(text)
-    if "validation command" not in folded and not re.search(
-        r"\b(pytest|npm test|go test|mvn test|cargo test|python3|unittest|validate-|eval-)\b",
-        folded,
-    ):
-        return False
-    validation_chunks = [
-        line
-        for line in text.splitlines()
-        if "validation" in line.casefold()
-        or re.search(
-            r"\b(pytest|npm test|go test|mvn test|cargo test|python3|unittest|validate-|eval-)\b",
-            line.casefold(),
-        )
-    ]
-    outcome_terms = (
-        "exit code",
-        "failed",
-        "failure",
-        "not run",
-        "not verified",
-        "output",
-        "outcome",
-        "pass",
-        "passed",
-        "warning",
-    )
-    return any(any(term in line.casefold() for term in outcome_terms) for line in validation_chunks)
-
-
-def _residual_risk_has_owner(text: str) -> bool:
-    for line in text.splitlines():
-        folded = line.casefold()
-        if "residual risk" not in folded:
-            continue
-        if any(
-            token in folded
-            for token in (
-                "maintainer",
-                "on-call",
-                "owned by",
-                "owner",
-                "platform",
-                "qa",
-                "release",
-                "security",
-                "sre",
-                "team",
-            )
-        ):
-            return True
-    return False
-
-
-def _route_relevance(
-    text: str,
-    schema_result: BenchmarkResult,
-    registry: dict[str, set[str]],
-) -> bool:
-    route_lines = [line for line in text.splitlines() if "route to" in line.casefold()]
-    if not route_lines:
-        return True
-    known_names = set(registry.get("skills", set())) | set(registry.get("capabilities", set()))
-    expected_names = set(schema_result.expected_skills) | set(schema_result.expected_capabilities)
-    routed_names: set[str] = set()
-    unknown_names: set[str] = set()
-    for line in route_lines:
-        for name in re.findall(r"`([^`]+)`", line):
-            if name in known_names:
-                routed_names.add(name)
-            elif re.fullmatch(r"[a-z0-9][a-z0-9_-]+", name):
-                unknown_names.add(name)
-    if unknown_names:
-        return False
-    if routed_names and not routed_names.intersection(expected_names):
-        return False
-    return True
-
-
-def _comparison_status(comparison: ComparisonResult | None) -> str:
-    if comparison is None or comparison.mode != "comparison":
-        if comparison is not None and comparison.errors:
-            return "fail"
-        return "schema-only"
-    return "pass" if not comparison.errors else "fail"
-
-
-def _missing_expected_items(
-    expected: dict[str, Any],
-    result: BenchmarkResult,
-    schema_errors: list[str],
-) -> list[str]:
-    missing = list(schema_errors)
-    comparison = result.comparison
-    if not comparison or comparison.mode != "comparison" or not comparison.with_skill_coverage:
-        return missing
-
-    missing.extend(_coverage_missing_items(expected, result, comparison.with_skill_coverage))
-    return missing
-
-
-def _forbidden_behavior_hits(comparison: ComparisonResult | None) -> list[str]:
-    if not comparison or comparison.mode != "comparison" or not comparison.with_skill_coverage:
-        return []
-    return list(comparison.with_skill_coverage.forbidden_hits)
-
-
-def _baseline_defect_hits(comparison: ComparisonResult | None) -> list[str]:
-    if not comparison or comparison.mode != "comparison":
-        return []
-    return list(comparison.baseline_defect_hits)
-
-
-def _with_skill_obligation_coverage(comparison: ComparisonResult | None) -> list[str]:
-    if not comparison or comparison.mode != "comparison" or not comparison.with_skill_coverage:
-        return []
-    return _coverage_present_items_for_result(comparison.with_skill_coverage)
-
-
-def _professional_delta_summary(
-    comparison: ComparisonResult | None,
-    missing_expected_items: list[str],
-    forbidden_behavior_hits: list[str],
-) -> ProfessionalDeltaSummary:
-    if not comparison or comparison.mode != "comparison":
-        return ProfessionalDeltaSummary(
-            note="schema-only: no paired baseline_output.md and with_skill_output.md comparison"
-        )
-    baseline_missing: list[str] = []
-    with_skill_present: list[str] = []
-    if comparison.baseline_coverage:
-        baseline_missing = _coverage_missing_items_for_result(comparison.baseline_coverage)
-    if comparison.with_skill_coverage:
-        with_skill_present = _coverage_present_items_for_result(comparison.with_skill_coverage)
-    return ProfessionalDeltaSummary(
-        baseline_missing=baseline_missing,
-        with_skill_present=with_skill_present,
-        remaining_gaps=missing_expected_items,
-        forbidden_behavior_hits=forbidden_behavior_hits,
-        delta_score=comparison.improvement,
-    )
-
-
-def _coverage_missing_items(
-    expected: dict[str, Any],
-    result: BenchmarkResult,
-    coverage: OutputCoverage,
-) -> list[str]:
-    missing: list[str] = []
-    if not coverage.selected_stage:
-        missing.append(f"selected stage: {result.expected_stage}")
-    if not coverage.selected_professional_skill:
-        missing.append("selected professional skill: " + ", ".join(result.expected_skills))
-    if not coverage.selected_capabilities:
-        missing.append("selected capabilities: " + ", ".join(result.expected_capabilities))
-    for item in _string_list(expected.get("expected_hidden_risks")):
-        if item not in coverage.matched_hidden_risks:
-            missing.append(f"hidden risk: {item}")
-    for item in _string_list(expected.get("expected_evidence")):
-        if item not in coverage.matched_evidence:
-            missing.append(f"evidence: {item}")
-    for item in _string_list(expected.get("expected_output_obligations")):
-        if item not in coverage.matched_obligations:
-            missing.append(f"output obligation: {item}")
-    if not coverage.inspected_boundaries:
-        missing.append("inspected boundaries")
-    if not coverage.evidence_limits:
-        missing.append("what evidence does not prove")
-    if not coverage.residual_risk:
-        missing.append("residual risk")
-    if not coverage.residual_risk_owner:
-        missing.append("residual risk owner")
-    if not coverage.next_gate:
-        missing.append("next gate")
-    if not coverage.validation_or_not_verified:
-        missing.append("validation command or not-verified disclosure")
-    if not coverage.validation_outcome:
-        missing.append("validation command outcome")
-    if not coverage.route_relevance:
-        missing.append("route relevance")
-    if not coverage.forbidden_behaviors_absent:
-        missing.append("forbidden behaviors absent")
-    return missing
-
-
-def _coverage_missing_items_for_result(coverage: OutputCoverage) -> list[str]:
-    labels = {
-        "selected_stage": "selected stage",
-        "selected_professional_skill": "selected professional skill",
-        "selected_capabilities": "selected capabilities",
-        "expected_hidden_risks": "expected hidden risks",
-        "forbidden_behaviors_absent": "forbidden behaviors absent",
-        "expected_evidence": "expected evidence",
-        "expected_output_obligations": "expected output obligations",
-        "inspected_boundaries": "inspected boundaries",
-        "evidence_limits": "what evidence does not prove",
-        "residual_risk": "residual risk",
-        "residual_risk_owner": "residual risk owner",
-        "next_gate": "next gate",
-        "validation_or_not_verified": "validation command or not-verified disclosure",
-        "validation_outcome": "validation command outcome",
-        "route_relevance": "route relevance",
-    }
-    return [label for key, label in labels.items() if not bool(getattr(coverage, key))]
-
-
-def _coverage_present_items_for_result(coverage: OutputCoverage) -> list[str]:
-    labels = {
-        "selected_stage": "selected stage",
-        "selected_professional_skill": "selected professional skill",
-        "selected_capabilities": "selected capabilities",
-        "expected_hidden_risks": "expected hidden risks",
-        "forbidden_behaviors_absent": "forbidden behaviors avoided",
-        "expected_evidence": "expected evidence",
-        "expected_output_obligations": "expected output obligations",
-        "inspected_boundaries": "inspected boundaries",
-        "evidence_limits": "what evidence does not prove",
-        "residual_risk": "residual risk",
-        "residual_risk_owner": "residual risk owner",
-        "next_gate": "next gate",
-        "validation_or_not_verified": "validation command or not-verified disclosure",
-        "validation_outcome": "validation command outcome",
-        "route_relevance": "route relevance",
-    }
-    return [label for key, label in labels.items() if bool(getattr(coverage, key))]
-
-
-def _stage_names() -> set[str]:
-    if not ROUTING_RULES.is_file():
-        return set()
-    try:
-        data = load_yaml_file(ROUTING_RULES)
-    except ValidationProblem:
-        return set()
-    if not isinstance(data, dict):
-        return set()
-    raw = data.get("engineering_stage_signals")
-    if isinstance(raw, dict):
-        return {str(key).strip() for key in raw if str(key).strip()}
-    if isinstance(raw, list):
-        names = set()
-        for item in raw:
-            if isinstance(item, dict) and isinstance(item.get("stage"), str):
-                names.add(item["stage"].strip())
-            elif isinstance(item, str):
-                names.add(item.strip())
-        return names
-    return set()
-
-
-def _write_reports(report: BenchmarkReport, reports_dir: Path, report_format: str) -> list[Path]:
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    written: list[Path] = []
-    if report_format in {"all", "markdown"}:
-        path = reports_dir / PRIMARY_MARKDOWN_REPORT
-        path.write_text(_render_markdown(report), encoding="utf-8")
-        written.append(path)
-        legacy = reports_dir / MARKDOWN_REPORT
-        legacy.write_text(_render_markdown(report), encoding="utf-8")
-        written.append(legacy)
-    if report_format in {"all", "json"}:
-        path = reports_dir / PRIMARY_JSON_REPORT
-        path.write_text(json.dumps(asdict(report), indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        written.append(path)
-        legacy = reports_dir / JSON_REPORT
-        legacy.write_text(json.dumps(asdict(report), indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        written.append(legacy)
-    return written
-
-
-def _render_markdown(report: BenchmarkReport) -> str:
-    lines = [
-        "# Professional Benchmarks Evaluation",
-        "",
-        f"- Generated: {report.generated_at}",
-        f"- Mode: {report.mode}",
-        f"- Cases checked: {report.cases_checked}",
-        f"- Comparison cases checked: {report.comparison_cases_checked}",
-        f"- Errors: {len(report.errors)}",
-        f"- Actual output comparison: {report.actual_output_comparison}",
-        "- Comparison note: this is a deterministic rule heuristic; it cannot replace human review or a real agent eval.",
-        "",
-        "| Case | Schema Status | Comparison Status | Stage | Skills | Missing Expected Items | Forbidden Behavior Hits | Professional Delta Summary | Errors |",
-        "| --- | --- | --- | --- | --- | ---: | ---: | --- | ---: |",
-    ]
-    for result in report.results:
-        skills = ", ".join(result.expected_skills)
-        summary = _format_result_delta_summary(result)
-        lines.append(
-            f"| `{result.path}` | {result.schema_status} | {result.comparison_status} | "
-            f"`{result.expected_stage}` | {skills} | {len(result.missing_expected_items)} | "
-            f"{len(result.forbidden_behavior_hits)} | {summary} | {len(result.errors)} |"
-        )
-    lines.extend(
-        [
-            "",
-            "## Benchmark Quality Details",
-            "",
-            "| Case | Benchmark Quality Status | Expected Failure | Adversarial Detection | Observed Failure Reasons | Baseline Defect Hits | With-Skill Obligation Coverage | Delta Score | Remaining Gaps |",
-            "| --- | --- | --- | --- | --- | ---: | --- | --- | ---: |",
-        ]
-    )
-    for result in report.results:
-        lines.append(
-            f"| `{result.path}` | {result.benchmark_quality_status} | "
-            f"{_expected_failure_label(result)} | "
-            f"{_adversarial_detection_label(result)} | "
-            f"{_observed_failure_reasons(result)} | "
-            f"{len(result.baseline_defect_hits)} | "
-            f"{', '.join(result.with_skill_obligation_coverage) or '-'} | "
-            f"{_delta_score_display(result)} | {len(result.remaining_gaps)} |"
-        )
-    if report.errors:
-        lines.extend(["", "## Errors", ""])
-        for error in report.errors:
-            lines.append(f"- {error}")
-    return "\n".join(lines).rstrip() + "\n"
-
-
-def _string(value: Any) -> str:
-    return value.strip() if isinstance(value, str) else ""
-
-
-def _string_list(value: Any) -> list[str]:
-    if isinstance(value, str):
-        return [value.strip()] if value.strip() else []
-    if isinstance(value, list):
-        return [str(item).strip() for item in value if str(item).strip()]
-    return []
-
-
-def _looks_placeholder(value: str) -> bool:
-    folded = value.strip().casefold()
-    return folded in {"todo", "tbd", "placeholder", "n/a", "none"} or "similar to above" in folded
-
-
-def _looks_vague_expected_item(value: str) -> bool:
-    folded = re.sub(r"\s+", " ", value.strip().casefold())
-    if any(phrase == folded or phrase in folded for phrase in GENERIC_EXPECTED_PHRASES):
-        return True
-    meaningful_tokens = [
-        token
-        for token in re.findall(r"[a-z0-9_-]+", folded)
-        if len(token) >= 4
-        and token
-        not in {
-            "with",
-            "without",
-            "must",
-            "should",
-            "expected",
-            "output",
-            "risk",
-        }
-    ]
-    return len(meaningful_tokens) < 2
-
-
-def _format_delta_summary(summary: ProfessionalDeltaSummary) -> str:
-    return (
-        f"baseline_missing: {len(summary.baseline_missing)}; "
-        f"with_skill_present: {len(summary.with_skill_present)}; "
-        f"remaining_gaps: {len(summary.remaining_gaps)}; "
-        f"forbidden_behavior_hits: {len(summary.forbidden_behavior_hits)}; "
-        f"delta_score: {summary.delta_score:+d}"
-    )
-
-
-def _format_result_delta_summary(result: BenchmarkResult) -> str:
-    if result.expected_with_skill_status == "fail":
-        return (
-            f"Adversarial Detection: {_adversarial_detection_label(result)}; "
-            f"Expected Failure: {_expected_failure_label(result)}; "
-            f"Observed Failure Reasons: {_observed_failure_reasons(result)}; "
-            f"Delta Score: {_delta_score_display(result)}"
-        )
-    return _format_delta_summary(result.professional_delta_summary)
-
-
-def _expected_failure_label(result: BenchmarkResult) -> str:
-    return "yes" if result.expected_with_skill_status == "fail" else "no"
-
-
-def _adversarial_detection_label(result: BenchmarkResult) -> str:
-    if result.expected_with_skill_status != "fail":
-        return "-"
-    return result.adversarial_detection_status or "not-run"
-
-
-def _observed_failure_reasons(result: BenchmarkResult) -> str:
-    if result.expected_with_skill_status != "fail":
-        return "-"
-    parts = []
-    if result.missing_expected_items:
-        parts.append(f"missing expected items={len(result.missing_expected_items)}")
-    if result.forbidden_behavior_hits:
-        parts.append(f"forbidden hits={len(result.forbidden_behavior_hits)}")
-    comparison_errors = result.comparison.errors if result.comparison else []
-    if comparison_errors and not parts:
-        parts.append(f"comparison errors={len(comparison_errors)}")
-    return "; ".join(parts) if parts else "none"
-
-
-def _delta_score_display(result: BenchmarkResult) -> str:
-    if result.expected_with_skill_status == "fail":
-        return "not applicable"
-    return f"{result.delta_score:+d}"
-
-
-def _contains_forbidden_scope(text: str) -> bool:
-    folded = text.casefold()
-    forbidden = (
-        "marketplace",
-        "persona",
-        "slash command",
-        "plugin catalog",
-        "badge",
-        "personal knowledge base",
-        "src/toolbox",
-        "registry/toolbox.yaml",
-    )
-    return any(token in folded for token in forbidden)
+def _contains(text: str, phrase: str) -> bool:
+    return _fold(phrase) in _fold(text)
 
 
 def _fold(text: str) -> str:
-    return re.sub(r"[^a-z0-9_-]+", " ", text.casefold())
+    return re.sub(r"[^a-z0-9]+", " ", text.casefold()).strip()
 
 
-def _meaning_present(folded_text: str, phrase: str) -> bool:
-    folded_phrase = _fold(phrase)
-    if folded_phrase and folded_phrase in folded_text:
-        return True
-    tokens = [
-        token
-        for token in folded_phrase.split()
-        if len(token) >= 4
-        and token
-        not in {
-            "with",
-            "without",
-            "from",
-            "that",
-            "this",
-            "must",
-            "claim",
-            "output",
-            "evidence",
-            "validation",
-        }
-    ]
-    if not tokens:
-        return False
-    required = max(1, min(len(tokens), (len(tokens) + 1) // 2))
-    return sum(1 for token in tokens if token in folded_text) >= required
+def _strings(value: Any) -> list[str]:
+    return [str(item).strip() for item in value] if isinstance(value, list) else []
 
 
-def _forbidden_present(folded_text: str, phrase: str) -> bool:
-    folded_phrase = _fold(phrase)
-    return bool(folded_phrase and folded_phrase in folded_text)
+def _write(directory: Path, payload: dict[str, Any], report_format: str) -> None:
+    directory.mkdir(parents=True, exist_ok=True)
+    if report_format in {"all", "json"}:
+        text = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+        (directory / "professional-benchmarks-report.json").write_text(text, encoding="utf-8")
+        (directory / "professional-benchmarks-eval.json").write_text(text, encoding="utf-8")
+    if report_format in {"all", "markdown"}:
+        lines = [
+            "# Hookless Professional Benchmarks",
+            "",
+            "> Checked-in captured outputs only; this report is not a fresh live-agent evaluation.",
+            "",
+            f"- Cases checked: {payload['cases_checked']}",
+            f"- Captured comparisons passed: {payload['comparison_cases_checked']}",
+            "- Release-critical cases: "
+            f"{payload['counts_by_coverage_class']['release-critical']}",
+            f"- Errors: {len(payload['errors'])}",
+            "",
+            "| Case | Class | Primary Skill | Layer 3 count | Baseline | With Skill | Delta | Status |",
+            "|---|---|---|---:|---:|---:|---:|---|",
+        ]
+        for row in payload["results"]:
+            lines.append(
+                f"| `{row['case_id']}` | {row['coverage_class']} | `{row['primary_skill']}` | "
+                f"{len(row['layer3_skills'])} | "
+                f"{row['baseline_score']} | {row['with_skill_score']} | {row['obligation_delta']} | "
+                f"{row['comparison_status']} |"
+            )
+        if payload["errors"]:
+            lines.extend(["", "## Errors", ""] + [f"- {item}" for item in payload["errors"]])
+        text = "\n".join(lines) + "\n"
+        (directory / "professional-benchmarks-report.md").write_text(text, encoding="utf-8")
+        (directory / "professional-benchmarks-eval.md").write_text(text, encoding="utf-8")
 
 
 def _rel(path: Path) -> str:

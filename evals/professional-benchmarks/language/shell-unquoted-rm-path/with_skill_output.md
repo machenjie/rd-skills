@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: delivery-release-gate.
-Selected capabilities: shell-cli-professional-usage.
+Selected Layer 3 Skills: shell-cli-professional-usage.
 
 Hidden risks: shell unquoted variable can delete wrong path; secret exposed through process list; destructive script lacks dry-run and trap cleanup.
 

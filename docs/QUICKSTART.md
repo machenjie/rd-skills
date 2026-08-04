@@ -1,194 +1,135 @@
 # Quickstart
 
-Use this when you want to understand, build, install, verify, and try ChangeForge in a few minutes. For the complete operating guide, see [USAGE.md](USAGE.md).
+This path starts at a fresh checkout and ends with a first bounded engineering
+request. Run commands from the repository root.
 
-## 30 Seconds
+## Prepare
 
-ChangeForge Skill Mesh turns product and code changes into a routed professional workflow: clarify the request, inspect the target code before planning, define test or validation evidence, assign the right skill owner, review independently, repair and re-review when needed, then hand off with evidence and residual risk.
-
-It is not a prompt dump. The system combines:
-
-- `change-forge-router` as the fixed entry for route selection and risk sizing.
-- Professional skills for action ownership.
-- Foundation capability references loaded precisely by route.
-- Quality gates for security, reliability, delivery, tests, docs, and review.
-- Default hooks for supported agents that inject professional context when
-  useful, check material SDD/structure/permission surfaces before mutation, and
-  collect evidence for closure without making the ordinary path fully
-  hard-blocking.
-
-## Pick A Profile
-
-| Profile | Choose It When | Top-Level Runtime Skills |
-| --- | --- | --- |
-| `recommended` | Default global/user install. | 22 professional skills |
-| `full` | Project install where domain extensions should be visible. | 22 professional skills plus 7 domain extensions |
-| `dev` | ChangeForge authoring/debugging only. | 22 professional skills plus 136 foundation capabilities plus 7 domain extensions |
-
-`recommended` and `full` keep foundation capabilities inside professional skill `references/` so the selected route reads only the relevant references. They do not expose every foundation capability as a global top-level skill.
-
-## Three Steps
-
-For the shortest Codex user install, run one command:
+ChangeForge requires Python 3.11 or newer. Install its declared dependencies:
 
 ```bash
-python3 scripts/quickstart.py --agent codex --scope user
+python3 --version
+python3 -m pip install .
 ```
 
-Dry-run the same path without writing:
+Do not install `src/` or source registries. The quickstart builds the selected
+profile into `dist/` before using the installer.
+
+## Choose A Profile
+
+| Profile | Top-level Skills | Choose it for |
+| --- | ---: | --- |
+| `recommended` | 27 | Normal use; all Professional Skills with focused compiled guidance. |
+| `full` | 40 | Normal use that also needs Domain Skills at top level. |
+| `dev` | 190 | Skill authoring, registry work, and development visibility. |
+
+Automatic selection currently chooses `recommended`. Specify `--profile` when
+you need another profile. The normal profiles deliver 154/9 and 141/9
+targeted-companion/routing-only entries respectively; `dev` delivers all 190
+Skills at the top level. [Build profiles](BUILD_PROFILES.md) owns the exact
+composition and manifest contract.
+
+For client work, use the concrete target: ordinary Android and iOS/iPadOS
+requests select their successor platform Domains. Cross-platform frameworks
+also require the cross-platform Domain and every proven concrete target Domain.
+The obsolete mobile Domain and compatibility mode have been removed. Removed
+legacy Skill ids are unsupported and are not redirected.
+
+## Choose A Host And Scope
+
+Supported hosts are `codex`, `claude`, `copilot`, `cline`, and `openai-api`.
+Codex supports `project`, `user`, and `admin`; Claude, Copilot, and Cline support
+`project` and `user`. OpenAI API produces zip files and has no installation
+scope. Codex, Claude, and Copilot receive four native Agent Profile files; Cline
+and OpenAI API receive standard Skills only.
+
+Use `user` for a personal default. Use `project` to keep installation inside a
+specific checkout; replace `/absolute/path/to/project` below with the real
+project root. Use Codex `admin` only with explicit administrative approval; see
+[Installation](INSTALLATION.md#host-scope-and-default-targets).
+
+## Preview Before Writing
+
+Preview a user installation:
 
 ```bash
-python3 scripts/quickstart.py --agent codex --scope user --dry-run
+python3 scripts/quickstart.py --agent codex --scope user --profile recommended --dry-run
 ```
 
-Project installs default to the `full` profile and require `--target`:
+Preview a project installation:
 
 ```bash
-python3 scripts/quickstart.py --agent claude --scope project --target /path/to/project
-python3 scripts/quickstart.py --agent copilot --scope project --target /path/to/project
-python3 scripts/quickstart.py --agent cline --scope project --target /path/to/project
+python3 scripts/quickstart.py --agent claude --scope project --target /absolute/path/to/project --profile recommended --dry-run
 ```
 
-Hook-capable Codex, Claude, and Copilot project/user quickstart installs default
-to `professional-injection`: executable hooks are installed with the compact
-default profile. Codex and Claude run session bootstrap, action-aware prompt
-injection, SDD material-choice, pre-edit structure, permission policy, one
-post-tool collector, compaction on real compaction events, review-capsule
-subagent checks, and Stop closure. Copilot uses the same compact intent but only
-wires supported flat events; it does not add `UserPromptSubmit` advisory hooks.
-Default professional-process modes are warn/monitor, with hard blocking
-reserved for explicit strict mode, `CHANGEFORGE_CI_MODE=ci`, benchmark, or
-maintainer policy, and safety/permission boundaries. Use `--without-hooks` or
-`--activation-level none` to opt out. Use
-`--activation-level bootstrap` when you want only the non-executable
-`.changeforge/changeforge-route-preflight.md` fragment:
+The preview prints the build, install, and doctor plan but does not execute it.
+
+## Install And Run Doctor
+
+Run the selected plan without `--dry-run`:
 
 ```bash
-python3 scripts/quickstart.py --agent codex --scope project --target /path/to/project --without-hooks
-python3 scripts/quickstart.py --agent codex --scope project --target /path/to/project --activation-level bootstrap
+python3 scripts/quickstart.py --agent codex --scope user --profile recommended
 ```
 
-OpenAI API zip output:
+For project scope:
 
 ```bash
-python3 scripts/quickstart.py --agent openai-api
+python3 scripts/quickstart.py --agent claude --scope project --target /absolute/path/to/project --profile recommended
 ```
 
-`scripts/quickstart.py` orchestrates the existing build, installer, and doctor
-commands. Its final summary prints the selected activation status as well as
-the next prompt. It does not implement official marketplace installation.
-The next prompt reminds you that hooks perform compact route, preflight,
-material-choice, evidence-collection, and closure checks by default, but you
-should still state business constraints and design preferences clearly.
-
-## Manual Path
-
-1. Build the profile:
-
-```bash
-python3 scripts/build.py --profile recommended
-```
-
-2. Install into one runtime:
-
-```bash
-python3 installers/install.py --agent codex --scope user --profile recommended --dry-run
-python3 installers/install.py --agent codex --scope user --profile recommended
-```
-
-3. Verify the install:
+Quickstart builds, installs, and runs doctor for Codex, Claude, Copilot, and
+Cline. Repeat doctor independently when diagnosing a changed installation:
 
 ```bash
 python3 installers/doctor.py --agent codex --scope user --profile recommended
 ```
 
-Restart or reload the target runtime after installation if it was already open.
+A healthy result confirms the selected Skill count, manifest, source/core
+bindings, and the host-specific Profile expectation. It describes declared
+host enforcement and limitations; it does not prove that the real host loaded
+the files.
 
-## Minimal Install Examples
+## OpenAI API Zip Path
 
-Codex user install:
-
-```bash
-python3 scripts/quickstart.py --agent codex --scope user
-```
-
-Claude Code project install:
+Preview and then generate the `recommended` bundle set:
 
 ```bash
-python3 scripts/quickstart.py --agent claude --scope project --target /path/to/project
+python3 scripts/quickstart.py --agent openai-api --profile recommended --dry-run
+python3 scripts/quickstart.py --agent openai-api --profile recommended
 ```
 
-GitHub Copilot project install:
+The second command builds and validates one zip per top-level Skill under
+`dist/openai-api/zips/recommended/`. It does not install files or run runtime
+doctor. See [OpenAI API zip output](INSTALLATION.md#openai-api-zip-output) for
+the direct build/validation commands and package boundary.
 
-```bash
-python3 scripts/quickstart.py --agent copilot --scope project --target /path/to/project
-```
+## Submit A First Task
 
-Cline project install:
-
-```bash
-python3 scripts/quickstart.py --agent cline --scope project --target /path/to/project
-```
-
-OpenAI API zip bundles:
-
-```bash
-python3 scripts/quickstart.py --agent openai-api
-```
-
-## First Prompts
-
-Default engineering entry:
+Slash Skill syntax is `/skill-name`. Open a small test repository in the
+configured host. Start with `/engineering-control-plane`, then replace the
+example path and command with real values:
 
 ```text
-Use change-forge-router to classify this request, select the minimum sufficient ChangeForge skill path, and list the evidence gates before implementation.
+/engineering-control-plane
+
+Goal: Add an empty-string check to `src/example.py` without changing its public API.
+Acceptance: Empty input returns the existing validation error; valid input is unchanged.
+Allowed scope: `src/example.py` and its existing test file only.
+Verify: Run `python3 -m unittest tests.test_example`.
+Stop if ownership, contract risk, or verification differs from this request.
 ```
 
-Frontend form state change:
+Some hosts do not provide native Slash UI or autocomplete. Put the literal
+`/engineering-control-plane` in the request text in that case. It expresses
+routing intent; it does not prove native Slash support.
 
-```text
-Use frontend-change-builder and quality-test-gate for this form state change. Clarify acceptance criteria, inspect the existing component and tests before planning, then provide validation evidence and residual risk.
-```
+Expected outcome: the main profile chooses the Direct Task path, a task agent
+implements and validates the latest edit, and a separate review agent inspects
+the actual diff. The final handoff records changed files, commands and results,
+freshness, unverified scope, and residual risk. Unknown ownership or material
+risk switches to Analyzed Work before editing.
 
-Backend API permission change:
-
-```text
-Use backend-change-builder, data-api-contract-changer, security-privacy-gate, and quality-test-gate for this API permission change. Include denied-path tests, object-level authorization risk, contract compatibility, and validation evidence.
-```
-
-Release or deployment review:
-
-```text
-Use delivery-release-gate and reliability-observability-gate to review this deployment plan. Check rollback, configuration, migration order, observability, and post-release validation evidence.
-```
-
-## Common Failures
-
-| Symptom | Likely Cause | Fix |
-| --- | --- | --- |
-| Runtime cannot see installed skills | Runtime was already open. | Restart or reload the target runtime. |
-| Too many top-level skills in a user/global install | Installed `dev` or raw source content. | Use `recommended` and install from `dist/` only. |
-| Foundation capabilities appear as top-level global skills | Wrong profile or wrong install source. | Rebuild/install `recommended` or `full`; do not install `src/`. |
-| Hooks block for a design choice | Material SDD choice has no resolved user evidence. | Choose A/B or provide constraints, then record `resolution_evidence`. |
-| Handoff claims completion without proof | Missing validation evidence. | Run the relevant validator/test/build/doctor command and include result plus residual risk. |
-
-Material choice examples that require user resolution by default:
-
-- New public API, export, interface, or protocol.
-- New shared utility versus reusing an existing owner object.
-- Inheritance versus composition, adapter, wrapper, factory, strategy, plugin, or registry.
-- Schema, migration, rollback, security, auth, permission, tenant, privacy, payment, or irreversible operation.
-
-Examples that should not require a choice:
-
-- Typo, formatting, or docs-only edits.
-- Local reversible same-file fixes that follow repository convention.
-- Prompts, fixtures, or existing owner conventions that already specify the only valid design.
-
-## Next
-
-- Full usage: [USAGE.md](USAGE.md)
-- Hook behavior: [HOOKS.md](HOOKS.md)
-- Benchmarks: [BENCHMARKS.md](BENCHMARKS.md)
-- Scorecard: [SCORECARD.md](SCORECARD.md)
-- Marketplace index: [MARKETPLACE.md](MARKETPLACE.md)
+Continue with [Usage](USAGE.md) for three request patterns and expected decision
+points. If setup fails, use [Installation troubleshooting](INSTALLATION.md#troubleshooting-and-recovery)
+instead of adding `--force` without inspecting the conflict.

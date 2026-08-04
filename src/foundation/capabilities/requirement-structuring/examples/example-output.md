@@ -1,7 +1,7 @@
 # Example Output
 
 ```markdown
-## Structured Change Brief
+## Behavior-First Structured Requirement
 
 mode_selected: evidence freshness
 
@@ -26,15 +26,15 @@ Traceability:
 Graph / Memory / Execution Validation:
 - Repository evidence: export query and contract documentation inspected; no migration path in scope.
 - Graph evidence: export query, export summary count, and contract docs are affected; audit export remains explicitly excluded.
-- Memory evidence: prior audit-export exception accepted only for audit mode; not accepted for standard exports.
+- Prior evidence: prior audit-export exception accepted only for audit mode; not accepted for standard exports.
 - Execution evidence: contract test and mixed-state integration test required before handoff.
 
-Brief To Downstream Map:
+Structured Requirement Trace Map:
 - CSV compatibility -> data/API contract owner -> contract test evidence.
 - Closed-account exclusion -> backend/data owner -> integration test evidence.
 - Audit export exclusion -> non-goal not-present check.
 
 Evidence Limits:
 - No production data profile inspected.
-- No performance claim authorized by this brief.
+- No performance claim authorized by this structured requirement.
 ```

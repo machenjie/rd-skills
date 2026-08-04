@@ -1,18 +1,23 @@
 # Example Output
 
 ```markdown
-## Regression Plan
+## Regression Recurrence Decision
 
-Defect: Viewer could delete archived project through stale action menu.
+Defect: a viewer could delete an archived project through a stale action menu.
+Failure mechanism: the delete command authorized from menu visibility and omitted the authoritative project-state and role check.
 
-Root cause:
-- Permission check used visible menu state instead of server-side project status.
+Guard boundary:
+- Integration guard sends the delete command as a viewer against an archived project.
+- It asserts denial, no project deletion, no downstream delete event, and a bounded audit-denial record.
+- A unit-only guard was rejected because command authorization and persistence state are causal.
 
-Regression test:
-- Integration test sends DELETE as viewer against archived project.
-- Expects 403 and no project deletion.
-- Confirms audit denial event is written.
+Counterfactual:
+- The guard fails on the protected unfixed revision because deletion succeeds, then passes after the final fix.
 
-Fail-before:
-- Test fails on old behavior because delete succeeds.
+Same-pattern scan:
+- Active and archived project entry points, bulk delete, and API callers were inspected.
+- Bulk delete had the same missing check and now shares the guard; no other reachable match was found.
+
+Proof limit:
+- The guard does not establish browser menu freshness or every tenant/object authorization path; those remain with frontend and security proof.
 ```

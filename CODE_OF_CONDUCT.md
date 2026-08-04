@@ -1,6 +1,6 @@
 # Code Of Conduct
 
-ChangeForge Skill Mesh should be a professional, practical, and welcoming project space. This code of conduct applies to project repositories, issues, pull requests, discussions, reviews, and other project-controlled collaboration spaces.
+ChangeForge should be a professional, practical, and welcoming project space. This code of conduct applies to project repositories, issues, pull requests, discussions, reviews, and other project-controlled collaboration spaces.
 
 ## Expected Behavior
 

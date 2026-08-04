@@ -1,0 +1,366 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-packet",
+  "review_id": "semantic-disposition-panel-2026-07-18-r3",
+  "created_on": "2026-07-18",
+  "source_fingerprints": {
+    "audit": "3cdcfec7d3553a27c25d606b21e388ac223a0f25bb66c1dda26770be40d01a5b",
+    "reference_candidates": "64e8e891cdaf7404edd8458b5481d12ef976c3595ff22b4f9a981c1f5ac88cdf",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "12241471c661d9d158ce5f6278f4b2055b167c92fc85ab05f9175c3bcb2055e5",
+    "root_candidates": "2f79d3d9f852326602871ca5b970f3a3d1b7e366f1b82021136c9dafd3e80aac",
+    "root_context": "e3d2a3ca3aac273039b6c4d04c05c728942236757d35a2e46903c5bfa27f71a9",
+    "root_detector": "0d8c01715fb11258126a474356e03b944ddb720f358163915e6ecf912498c33c",
+    "root_source": "83c74d4fe26357937eff18fffc91fabe0988bce647c623652f0b74f14faee963"
+  },
+  "panel_contract": {
+    "decision_method": "three-independent-experts-majority",
+    "required_voters": 3,
+    "abstentions_allowed": false,
+    "minimum_winning_votes": 2,
+    "independent_ballots": true,
+    "required_target_count": 3,
+    "required_axis_target_counts": {
+      "root": 3,
+      "reference": 0
+    },
+    "allowed_dispositions": [
+      "false-positive",
+      "rewrite",
+      "time-bounded-exception",
+      "valid-contextual-rule"
+    ]
+  },
+  "rubric": {
+    "exact_carry_forward": "Do not vote when the current stable candidate identity and all axis-specific occurrence, context, membership, and content evidence equal the prior disposition entry.",
+    "rewrite": "Select rewrite when the current source rule must change.",
+    "valid_contextual_rule": "Select valid-contextual-rule only when current authority and conditions make the detected rule professionally valid.",
+    "false_positive": "Select false-positive only when the detector family does not apply to the current complete context.",
+    "time_bounded_exception": "Select time-bounded-exception only with an accountable owner, current mitigation, and future expiry."
+  },
+  "candidate_provenance": {
+    "root": {
+      "raw_candidate_count": 72,
+      "eligible_candidate_count": 72,
+      "detector_downgraded_count": 0,
+      "configured_entry_count": 69,
+      "exact_carry_forward_count": 69,
+      "exact_carry_forward_candidate_ids": [
+        "00200eb3785c29d06be353c299fd6a0c4ab66c47747974a005ba0e9445834a03",
+        "021aefdb53f077686212d9dddf02c7e013263be4cceb9f8313305f87a2eab2d3",
+        "0aca75c66bb335710883f0006a784f34247a7790b4b3878a447c31a687b99b52",
+        "0cb8d0b1c79bd6239265e78f5b67a274c58cefbcfb599fb2329129969f72de20",
+        "0f4c0d261a605390d0c26d48bdddef0abb1d03b06e398e0719815c95342e6647",
+        "10b3d5b43c094888c05fbc4897c9b9224b84adfceccfa2ba313df5a91b1156d2",
+        "14aaa5b0bd39e0ca590c6ec806c428f2193044de760a13fa0096a29e8dbb6e54",
+        "17cdb219ca40375b59ec12f55b89090a21c90131a83ce1527cfa291411792a30",
+        "17df7adab0e928bbd894ab097c1d44120115900885ad0717656e5d43859ea382",
+        "1904d798893f870492c09dcb0812e92b8614f6ae43e34fd5c9b23a747f5a68b2",
+        "204ddf26447faf7dcb647e2763433b9146e9694ad26403a189e2483fe426adf9",
+        "20a2509033d69453b6fe707a1835d1cea23b3f23e7e310b341166faba1219909",
+        "2a0f412b6bd0177b55258507eef1eeb810fa18406278a0e639e90a0cb64d66e4",
+        "2a54ae2ec0bb75d10eac23a54c8e52507e766d17c8e192ca3c0a3cc23e91ea20",
+        "2d72f4b2b3206aabb86a3a453417cfdcc07eb608b2833734527762e101505e87",
+        "376cd83b6a8efe0e5bd9b9a9d74bbf833410e7644dd378c28253d0863f019276",
+        "38c33eb72654f6bffb9f9a40c4f3874e1a37ddad60bfe56649dda31824a8b514",
+        "3a5115974e7c228a0b2989161e24bd2f9d88fa0a1a39c7868c33cd0ccd9bc5f8",
+        "491220af01d630b94a5692b217bda2b3a1cf7b39d8d333d7cb6c3b3e8be0880e",
+        "491cd785b7062c0e487eea9c148304fd43f7a51ec1e1221558a3b2c33533503d",
+        "4f8513208a5e465926c8998b8d639c38a07d2b84cb36412e13151e7ccb9f2c40",
+        "53244a7f0aa46ccdaed5a68af5bfaa7dccd3fd17f7d372cb44d2126564dd2357",
+        "54af05b938e641a607217739b679e0b05095c6d5c1ccdb398226aa5b80745ba3",
+        "58ea5d937e937add1ab7aa05fa9909bf6e56ebdf9241a5d384ff731ecf428276",
+        "6267bfc3c4d82447013ad5e5d88cff4aa819478c27dc46628ffecb76a0e660bc",
+        "62daf7e48bd5f418e4a68bbcbcff4fef5ad810589f93ce5a5b900cf4c72f43c7",
+        "64829e510d6110c54d7dfc7367d9b26313ced2758d345ce51e46d756fd69ec02",
+        "65a9046498579feeb7b84ae23f628ff1514968a8e034fd183a712345708307b4",
+        "6635be126b16e6178ce43c5f8bd6c189d41f5192cced7a0959d703f4eec20599",
+        "69070ff4063b409289c61ff9dec3c30b70b289647dc094bf55c5d1a2f46089e0",
+        "70ba9061836200de4569805bd3d5e32438674cb93dcfb84968946a6e5f06b071",
+        "73d2dbebf2bdfd4dfa9dcce31007c3da0a9356b6bba6977145650e7c0b33be8d",
+        "803ce95f6fdbc68fae995c8a79f00a8f799cdec968cd6aa935e6de5361f1c0d9",
+        "82ec8db6f7c8076c2396d5f12108214fc308c90ede71d4172aaaa719bcf4e1e9",
+        "8dd0cd64f648cdcbe8d16dbab95b2767a11392348aab839fd9836418662ecfcd",
+        "914347dbde87a4adb4d2ca982f7e68750166cb2197a3c8d730f8bd1b9ce79f38",
+        "91d2f848c6c6080b5b80719894041c446eeb217f926bf185c3aa20786e9e7173",
+        "9279aed25dccdf848654510aad9b18023eba1d41edff1beb67c4112a83701fe4",
+        "95760b51f6312e893662294201ac64b2dab1131a8ae19d756ea284b3b0b41b94",
+        "9ec6fb4ad519bbbe7747c819ad9bff10bfe217107ac70eaf8ce9a46b8c2a60e0",
+        "9f32c6238459456587ab95007af3086bcfac2f8f7c92e56195a4a1aa7146ad0a",
+        "ae233837a4f68f19d86b5160939b842dc5a9b7fa352efa9f4d410d72df9323a8",
+        "aeefeaf1479fcece12e892ba85bff91352f3981a08342eecd2ce2d6971d44dbe",
+        "b1ec4fa794007bc0c2931862730d74b9f261a3a1f2b5b874edd8e75c79813e2e",
+        "b3d32c3dc89c4a8a188b0816c0d61c29e65429451f0112cb016dd9f7617e62ed",
+        "b4a8d69ef5c7ff557d0e4e0762fe7da54d355c979c8c2c93e90fde121717ec57",
+        "b6a21a555175cee9ba5e8a1cec34ea1518e1713438ccea7e4758d43a4d1a42bb",
+        "bd3ed81c6404fcc6acbc82067ed81772b1e27fe6a15ea79f430ec87c65219184",
+        "bd9b1e2b2f73cc0d587c3e74646064e92363819e3c3ec47121381567bf704b72",
+        "bdb71142c58076cf51786a179a7da768631f934ad718c438c77f2507f483bfee",
+        "c49edfe7eee4b0ee995f29a6be806ce1fd2f642bbce67850d31fae3232fe4bfc",
+        "c6ba0afb9a9fd7bf73a4247493c652a1987da6078dcecf08bba4ece1249dd320",
+        "ca0c772aa83d5e8ede532db4fcb97e03eb7a038a26ad29f6a6c64b95c0b4d221",
+        "cd3daff68be8a6d69c63daf0e697abe146673802496681186cec6fcc23ed68f7",
+        "d5220872ab673f3fe0e3814d724cc1fba36d0a91321e6c2783dae8c765abfab4",
+        "d9676d87ebcdbfea48ed65004318e08d09af853bd03fc3fb37f82389e3a6f6de",
+        "dedb43e54a606e6da19a38addf8e0ff7daea4cea347fbb74ef197f69c9c88120",
+        "e2735506386b93486240cef7622a3374cf3839fb3bfc1907c7947db6a6647151",
+        "e3417af7023a54eadebe84064cad566d7167ea2f157c86f84f93ceb1ddd37cd4",
+        "e4f68b4fa285d86b7a81c00e4b2c35de4f504fecf59cd16f3e4a2c2ffc456268",
+        "e6c088e78ad47b278277d5e80d01d32887185418676eb71b3854ec5a99c9737d",
+        "e7acef9d52f436b64e2ca108116643b97c6de6561291ef0d1a9bbfd329952d42",
+        "eac6c1f4724aede34f02f80489c75e7db9d5fb0e638ec8b1a2f6558ef3d99b4e",
+        "ebb095b4a8f88758414cdfac672d479088da0240c0202fefd2e908a11127c40e",
+        "f07e7de4470f583e908237246ed99fd6af13da4e663384004dd1a1953f37ba62",
+        "f48da381697736b250485630860d6a9dc22451e8d2432a73008b8fc28fe3e7e7",
+        "f71e973a368909d89ce5d8c24fa93e7a64474dd34ebbfcef4f5ef96ee1410d43",
+        "fc1882485289d96340fec728af25efc326791d8a29561e9856e363301aaa41ed",
+        "ff713cdf7970a3b855ea1408c671f02a5d48201529a1732cd1d7efcae9cb0c10"
+      ],
+      "review_target_count": 3,
+      "review_target_candidate_ids": [
+        "48a64b23286b9c09b4638e01b4f7ddff96c348c587f4ff066a44805e2062ea74",
+        "858ac0ababfde208b1b45f8cfb0bd5690589d88ca695c0dd5c9c612e8bbf07d9",
+        "fc8cbb1d2a680664d43b0b02990c69d2dc0fa6a40900f07fb9879f9d63d4ad96"
+      ],
+      "same_id_stale_evidence_candidate_ids": [],
+      "stale_old_count": 0,
+      "stale_old_candidate_ids": []
+    },
+    "reference": {
+      "raw_candidate_count": 741,
+      "eligible_candidate_count": 71,
+      "detector_downgraded_count": 670,
+      "configured_entry_count": 71,
+      "exact_carry_forward_count": 71,
+      "exact_carry_forward_candidate_ids": [
+        "02b5179921b5fd6a691aa3c222ab019368ef005219da5c9a6cda245c87fb53e6",
+        "0a5a9fadbd1a352d9ce3a9744b674536ef63f533d48592317d6e5d218a68ee8e",
+        "101228f69fbb7eee2d763880862b52fe8a04de44d1401f91c4a6c12f79fd167c",
+        "132b2a93cf5f9234fb8863a1811734109aceb9ee67118da7ea84d7dd6239a442",
+        "15d7bd3c5c1606cb64e03fc0c6f3a05d0a51306e31badaa91eb2418a94616372",
+        "1d02bd2efcb58e0fdd5c0060217dbb4d5bc60edabd2fa8e4f610e1ab575c5fee",
+        "1e8c7c0b4a6a6cfe84e4860a7eba5244a457cf041e61728365cb4c8bf4fd2cfe",
+        "23b58b28444f064921211dd38f6d4809790e0bd524f7df6b2eb6fa28927a9f89",
+        "3b83bf04b5bc0c894f806010e4db9f8f7b2c40cd5ae9b7b045e7b7b9c5bc0e65",
+        "460f0fc358dddd62792d7efb0a50906e0c0ef3dfc073f515e331ca15e62edd17",
+        "4f0d35c3b492953612bf356f2b99a6a399695f4fe080ccd787d65f2bff6effa2",
+        "563e1e4fe1b37628ce9d85a97c98bb730d3e7df6aa24763665ea37bd27d3a923",
+        "56e4e06c1811b6b7ece39fbd876b8568513c98ae45b4f12d8ba67d287f24c328",
+        "57af97f9a85415684b112c4b99200443010dea92433194dc5c990737ea064f53",
+        "58dce12385f87124bed5ba8847851aa85438b1be31324cfdeb66edaf260d0b39",
+        "5c755a4193739951b93ec3827be911390454392d13c10008b2b63cf9c8a86eae",
+        "642b08d5e6c04db3557681736c7637762e33a5eda63329f203f246eafebf01c1",
+        "78e0ebceb7162e3070d6ca25188f5ab554107300929452f806373a2d8b3ad5c9",
+        "7e437985427177037221ee2df2173f328e41e92d8f592347b9efb68af54d557a",
+        "81bcbd6ff9a95c4f5c1979d8aecdbcead592a7682cf2df7eb150194f4f20ecab",
+        "84d8dcb16b7bf008650a7cb931f31103df8f6db23e2cc15caadf66a6b06ac12b",
+        "86b0298a8b6ba62bebe589bf85c295de5151b07f83db42ea87ef4886ec0b59d2",
+        "89b2593c570c8afdd07c07fd329eeb05a9b66b0a0a1db0a2cdbc580977cd8aca",
+        "8a2567f074a2b4e45734bca759363eb17ac8d97f241510978f962511d1b8ba1d",
+        "8e895420239d3d532786028a75d4fa245bc9989bf77929155f961a18ef61f6ba",
+        "9017fea6148b7591d7d24941ef20c22700b18a0e9b304ae18bd5e19c8326b227",
+        "9987cd928847d80e67595d65e6c65a93548e562ecac70bd7adaa4f00dee3ef3a",
+        "a126c6e297f47700e45b19ccb1e2e0699ebe82a67b6149614698d8a6195217c6",
+        "ac059389998bc792c628c45dcd550da18d47947cc27bc2c139db7391bfe3d284",
+        "b317d26f57bc3b52b61904126ebd8eb344dac307a4f55cf3a5ef0d15dba89652",
+        "b4e178b00c937a52d6d5792ca6b7c758f5cbed3c141ad4bdabca448d030f92c8",
+        "b71986f48092425ad85bd011351ead99b7d96ecd8e748cd910543e7216b09147",
+        "b8e5e864c12bff0f7f60ed18133122f4f7407319e06bb3061ed1ef2751c3eb13",
+        "b8ec5f160d042f07aac3dd773079d5fc6a87fa91000b6da4ba9d8da930b74675",
+        "bc6bef96affabf0981f096a81cde52c1bb5bf8a4549395c629efdb7ab13a7fff",
+        "bdd21534e4a48f77b9751cc8a401d5e1ddfd6344163588ebc5b4dc6b15bd76b6",
+        "c11b0e129bcbbf75ef5b1e67e49f26ad5ac346954b958d542c3fb686ea0c90e4",
+        "c1bb1936dc1c01a676f73e1fdaaf848ab8c0a3aa464b7ad238d96be5ffe2cb54",
+        "c695b2871cb79268d8076d3fba98afc528ffe4571cb15c7e543875cc0734bc40",
+        "c8bf3214265611e7736bad63d365fd6418be7a7dc9680a1af6533877c685c86d",
+        "ca8d5116845159bca4e8e233652624e21e403178b96baccd1ec815f07e786608",
+        "cc4f1b6588aa6dec05dfae764c293df76674953fe799841faec9cdf6e517b9a6",
+        "ce578e91b2ae2c629e2c01f825ccd328a8ce7b982ad5af4d0318306dd09bfe99",
+        "d19e5042294db16a26c76a3850e98927dac95a2635590ff33c4b154bee0c6e6b",
+        "da1f3664e16b94a2d19a33fc62d0265effbabc5b37f2fceb3804b07b9118676b",
+        "db3257bdbbe8be2d0d2d6cb5031ef6065c3f1cffc8fb2c5176a7041244bc6e9e",
+        "dbdeea11c01a7a6412532f937fcc7c4e3a7a9618d479b217cce67e7786576b32",
+        "dd38db7ac024df4a381dd0e8fe04e355deb65f73440a42d31431746db98e48c7",
+        "e3fa434d497bd8231c5da21d44a2f0c9f9637d900d5a27cbf7dc06a6593b1fe6",
+        "e4adae2ace9b5fc98447444c54d9db946704b7b58eba0c53365c5b5d23556257",
+        "e675a156c7cc9a4e0c6284f07b1438f3a3c999f2908158cb89a61b91b048dd38",
+        "e7c8b53362ba6b3d627aefd5b50b195ab727356681e2821bcb7258a88e459144",
+        "e93ac5e5d7c8fc7b52f841fc274793fe970bbddfd8d8f694756e8fc23e8b1a3a",
+        "e9fefa0faed2114896bb5445b95c617f7b79b4ecc0a2330a6e86aa47e1532e61",
+        "ea8481ce8e429a51949ffd2a282a77ce20072baed7ddaf4515be7011737c1066",
+        "ebc265ac28b3ea15306b8ddb619593e0f3b872b78e4b374c0e4ddd405f96a5db",
+        "ec3e4b740ae5cf3f2deef44b545bb8407cc0ad5f9750b1c8a1a83c8e781637bb",
+        "ec9482fc37d3fcb1002755855b3602812a30660c48bf3d8b7e6d47a5e538ea61",
+        "ed7701a62083822168a92df98dbbcfe61daeb745dfd9aa71fc5fe22f3b8b1927",
+        "ef6d00363a847caa90c35a9ddea7414e639a6e9c64808b8cea240da66756a668",
+        "ef9ba7ad4531f05a44c21b198f964367437532d5f6b53c4c299481cba6c123ac",
+        "f05b5a02776f410c9210958ba18c874e075e44cdf10c738395727b165b33be42",
+        "f3fd93974f945229d047630838c3b0a735bec9bdd716b56ab42047f3a7af06d5",
+        "f489f5aae096091fbff8fedd00691cea492e677ebe6c809cd8a3aebb4a0170f3",
+        "f688eaad82309744c5d7834bf0c0938bc7fc96cb33b5aa801220d085225d2bf3",
+        "f777159315da9a4950ec4978078f08464b7df5ff4265f3be226c57db657acfc3",
+        "f8079953197bd9e94700ad08114994c716cf97ade3ca233d51918e5b67bdc947",
+        "f9e6c92d84fc350075ff4d5f402416f34bf1c9c06604ee9a619f36eda9262c54",
+        "f9eaae7a2aa75520b0aedba01f8a774d109dcc17160a2dcbba828b5be38fea6e",
+        "ff472c42f608dcfdd480bf7635a7094b92523c65722fd95eb0f691fe10b20680",
+        "ff9d89323b48425bf84fcde548c19267bb9f187e80e3d9dd838bbb8687578c85"
+      ],
+      "review_target_count": 0,
+      "review_target_candidate_ids": [],
+      "same_id_stale_evidence_candidate_ids": [],
+      "stale_old_count": 0,
+      "stale_old_candidate_ids": []
+    }
+  },
+  "semantic_targets": [
+    {
+      "target_id": "root:48a64b23286b9c09b4638e01b4f7ddff96c348c587f4ff066a44805e2062ea74",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "c7d5855c13fc20127800144d86891238d9c34c20563aa00bfb50742338ce4dfa",
+      "candidate": {
+        "candidate_id": "48a64b23286b9c09b4638e01b4f7ddff96c348c587f4ff066a44805e2062ea74",
+        "context_fingerprint": "1bf800a596c001b32dbe641853af2fe2edc1eed8b79c438651f60b7920a1dbb5",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "71dbbca1469b3189654ebea25e8db5ec81ef0d9e170094ca22fcbddb74a415d5",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "9b31efce260875f6c07787d6b8929b8f4da7123c52dc0b7e5e6b783ca16a70ad",
+        "occurrences": [
+          {
+            "context_fingerprint": "fbdd3abe6df593f4fe97d3998e1866e0de58f984f0483b71e132cee4d811310c",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 57,
+              "start": 57
+            },
+            "owner": "targeted-validation-selection",
+            "path": "src/foundation/capabilities/targeted-validation-selection/SKILL.md",
+            "preview": "Derive each candidate's effects from command behavior, repository guidance",
+            "signals": [
+              "each",
+              "mechanism"
+            ],
+            "tokens": 12
+          }
+        ],
+        "owner": "targeted-validation-selection",
+        "path": "src/foundation/capabilities/targeted-validation-selection/SKILL.md",
+        "preview": "Derive each candidate's effects from command behavior, repository guidance",
+        "priority": "P1",
+        "signals": [
+          "each",
+          "mechanism"
+        ],
+        "skill_owner": "targeted-validation-selection",
+        "tokens": 12,
+        "total_tokens": 12
+      }
+    },
+    {
+      "target_id": "root:858ac0ababfde208b1b45f8cfb0bd5690589d88ca695c0dd5c9c612e8bbf07d9",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "5d65b2938d1c3bf05c594e523d15bcb338e357b9c094b5bba0c9fcbb11670066",
+      "candidate": {
+        "candidate_id": "858ac0ababfde208b1b45f8cfb0bd5690589d88ca695c0dd5c9c612e8bbf07d9",
+        "context_fingerprint": "37c06fe33fcb2a5d899d37a1db6559840d2035973f2ff691443de1ad6d2f6041",
+        "document_part": "body",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "64e3a9d1a06b1fc1e31eacfa86d83f005690b9c42e188296a13f9c648dc8e04a",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "9b31efce260875f6c07787d6b8929b8f4da7123c52dc0b7e5e6b783ca16a70ad",
+        "occurrences": [
+          {
+            "context_fingerprint": "80fec5da30f076eafcec187faa4007f3821af8de558d52f1bb2a148e83e9d463",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 34,
+              "start": 34
+            },
+            "owner": "targeted-validation-selection",
+            "path": "src/foundation/capabilities/targeted-validation-selection/SKILL.md",
+            "preview": "Use one or more known effects",
+            "signals": [
+              "fixed-threshold"
+            ],
+            "tokens": 6
+          }
+        ],
+        "owner": "targeted-validation-selection",
+        "path": "src/foundation/capabilities/targeted-validation-selection/SKILL.md",
+        "preview": "Use one or more known effects",
+        "priority": "P1",
+        "signals": [
+          "fixed-threshold"
+        ],
+        "skill_owner": "targeted-validation-selection",
+        "tokens": 6,
+        "total_tokens": 6
+      }
+    },
+    {
+      "target_id": "root:fc8cbb1d2a680664d43b0b02990c69d2dc0fa6a40900f07fb9879f9d63d4ad96",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "7859624bbbe673075fb2b80f0614ee63df9e0d8d85c0852bb691a7083d11009e",
+      "candidate": {
+        "candidate_id": "fc8cbb1d2a680664d43b0b02990c69d2dc0fa6a40900f07fb9879f9d63d4ad96",
+        "context_fingerprint": "4f7557e818daae158127d0b5969b536bed7cecfe4d0d6c9fbfd141840c2b5e21",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "b45c1af49461e1c8babdddbf5e4a9beec32987fead6e766e2114dbab21207db9",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "9b31efce260875f6c07787d6b8929b8f4da7123c52dc0b7e5e6b783ca16a70ad",
+        "occurrences": [
+          {
+            "context_fingerprint": "9a25dfcc37ec9e1a5df8b90394f71ac21c12271e07fb01894d3ee3881cacd222",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 39,
+              "start": 39
+            },
+            "owner": "targeted-validation-selection",
+            "path": "src/foundation/capabilities/targeted-validation-selection/SKILL.md",
+            "preview": "Review execution requires both active-Profile tool support and a non-modifying classification.",
+            "signals": [
+              "mechanism",
+              "requires"
+            ],
+            "tokens": 16
+          }
+        ],
+        "owner": "targeted-validation-selection",
+        "path": "src/foundation/capabilities/targeted-validation-selection/SKILL.md",
+        "preview": "Review execution requires both active-Profile tool support and a non-modifying classification.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "requires"
+        ],
+        "skill_owner": "targeted-validation-selection",
+        "tokens": 16,
+        "total_tokens": 16
+      }
+    }
+  ],
+  "limitations": [
+    "This panel is authoring lifecycle evidence for semantic dispositions only.",
+    "It cannot satisfy or replace readability or professional-completeness formal attestations.",
+    "A majority rewrite remains a decision record and does not create a single-source-of-truth disposition entry.",
+    "Static semantic review does not prove real-host or production behavior."
+  ]
+}

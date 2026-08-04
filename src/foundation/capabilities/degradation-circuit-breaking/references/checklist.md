@@ -1,7 +1,7 @@
 # Degradation Circuit Breaking Checklist
 
 - Select mode: fail-closed, graceful degradation, latency budget, retry/circuit, bulkhead/load shedding, or repair/drill.
-- Inspect current source, dependency graph, project memory, execution trajectory, SLOs, telemetry, tests, and validation freshness.
+- Inspect current source, dependency graph, prior task evidence, observable action sequence, SLOs, telemetry, tests, and validation freshness.
 - Identify dependency, protected core flow, criticality, and failure modes.
 - Define timeout, bounded retry, fallback, typed degraded response, and terminal failure behavior.
 - Decide fail-open, fail-closed, queued, stale, skipped, or degraded response with product/security justification.

@@ -1,8 +1,9 @@
 expected_stage: implementation-planning
 expected_professional_skill: data-api-contract-changer
 expected_capabilities:
-  - contract-testing
+  - api-contract-design
   - version-compatibility
+  - dto-schema-design
 expected_hidden_risks:
   - contract change without consumer verification
   - provider-only test misses consumer compatibility

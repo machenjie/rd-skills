@@ -1,6 +1,6 @@
 Selected stage: code-review.
 Selected professional skill: ai-code-review-refactor.
-Selected capabilities: implementation-structure-design, agent-execution-discipline, regression-testing.
+Selected Layer 3 Skills: code-review, code-clarity-maintainability, regression-testing.
 
 Hidden risks: route to nonexistent or unrelated capability; validation command without outcome; residual risk without owner; hidden risk keywords without inspected boundaries.
 

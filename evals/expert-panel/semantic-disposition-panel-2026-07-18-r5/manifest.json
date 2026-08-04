@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.expert-panel-round-manifest",
+  "review_id": "semantic-disposition-panel-2026-07-18-r5",
+  "panel_kind": "semantic-disposition",
+  "created_on": "2026-07-18",
+  "decided_on": "2026-07-18",
+  "scope": {
+    "forced_rereview_axes": [
+      "root"
+    ],
+    "target_counts": {
+      "root": 0,
+      "reference": 0,
+      "total": 0
+    },
+    "supersedes": "semantic-disposition-panel-2026-07-18-r4",
+    "prior_detector_fingerprints": {
+      "root": "0d8c01715fb11258126a474356e03b944ddb720f358163915e6ecf912498c33c"
+    },
+    "current_detector_fingerprints": {
+      "root": "0d8c01715fb11258126a474356e03b944ddb720f358163915e6ecf912498c33c"
+    }
+  },
+  "artifacts": [
+    {
+      "role": "immutable-packet",
+      "path": "packet.json",
+      "sha256": "ae8b53ef2083fee1aa122934f52b42362c5c22992a8ba62a5e5e74480c461b26"
+    },
+    {
+      "role": "senior-professional-semantic-reviewer",
+      "path": "panel/semantic-r5-professional-reviewer.json",
+      "sha256": "6d46b8d520aa2e0bb17b9cf807d405db98456e6e970d375712ff0303fe132502"
+    },
+    {
+      "role": "senior-ai-readability-reviewer",
+      "path": "panel/semantic-r5-readability-reviewer.json",
+      "sha256": "53842cc504858caefecde4f55a4123a41d14de4e6bdbfe6e617d8024405a99a8"
+    },
+    {
+      "role": "senior-verification-semantic-reviewer",
+      "path": "panel/semantic-r5-verification-reviewer.json",
+      "sha256": "97e6ca3ddb7d3dd2b8b4f02ea69c4ec90ffde33caf6846093c210cf277d79e6d"
+    },
+    {
+      "role": "derived-majority-decision",
+      "path": "panel/decision.json",
+      "sha256": "9196fb5430f5e721f682823a7f945d872a49981bbb135c5e5410e755cb1662a0"
+    }
+  ],
+  "canonical_ballot_directory": "panel",
+  "duplicate_ballot_copies": false,
+  "limitations": [
+    "This manifest identifies canonical authoring evidence and does not independently validate reviewer identity or expertise.",
+    "The panel addresses semantic dispositions only and cannot replace readability or professional-completeness attestations.",
+    "Static review does not prove real-host behavior, production accuracy, or the installed user experience."
+  ]
+}

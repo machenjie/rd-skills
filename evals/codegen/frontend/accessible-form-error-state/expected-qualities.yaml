@@ -7,20 +7,12 @@ focus:
   - server error mapping
   - regression coverage
 route_hints:
-  skills:
-    - experience-impact-modeler
-    - frontend-change-builder
-    - quality-test-gate
-  capabilities:
-    - form-validation-design
-    - interaction-state-modeling
-    - design-system-rules
-    - frontend-api-integration
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: frontend-change-builder
+  layer3_skills:
     - frontend-testing
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Field level validation errors are programmatically associated with inputs.
   - Form level server errors are announced and do not erase user input.

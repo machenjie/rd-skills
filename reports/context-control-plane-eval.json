@@ -1,150 +1,164 @@
 {
-  "cases": [
-    {
-      "budget_mode": "minimal",
-      "closure_result": "pass",
-      "context_control_selected": true,
-      "errors": [],
-      "fixture": "evals/context-control/routing-budget-minimal.yaml",
-      "id": "routing-budget-minimal",
-      "safety_result": "pass",
-      "selected_reference_count": 2,
-      "skipped_reference_count": 1,
-      "status": "pass"
-    },
-    {
-      "budget_mode": "staged-plan",
-      "closure_result": "partial",
-      "context_control_selected": true,
-      "errors": [],
-      "fixture": "evals/context-control/routing-budget-broad-audit.yaml",
-      "id": "routing-budget-broad-audit",
-      "safety_result": "pass",
-      "selected_reference_count": 7,
-      "skipped_reference_count": 2,
-      "status": "pass"
-    },
-    {
-      "budget_mode": "staged-plan",
-      "closure_result": "partial",
-      "context_control_selected": true,
-      "errors": [],
-      "fixture": "evals/context-control/reference-signal-density.yaml",
-      "id": "reference-signal-density",
-      "safety_result": "pass",
-      "selected_reference_count": 5,
-      "skipped_reference_count": 3,
-      "status": "pass"
-    },
-    {
-      "budget_mode": "staged-plan",
-      "closure_result": "pass",
-      "context_control_selected": true,
-      "errors": [],
-      "fixture": "evals/context-control/jit-context-pack-runtime-budget.yaml",
-      "id": "jit-context-pack-runtime-budget",
-      "safety_result": "pass",
-      "selected_reference_count": 4,
-      "skipped_reference_count": 2,
-      "status": "pass"
-    },
-    {
-      "budget_mode": "single-stage",
-      "closure_result": "partial",
-      "context_control_selected": true,
-      "errors": [],
-      "fixture": "evals/context-control/tool-output-boundary-large-output.yaml",
-      "id": "tool-output-boundary-large-output",
-      "safety_result": "pass",
-      "selected_reference_count": 4,
-      "skipped_reference_count": 2,
-      "status": "pass"
-    },
-    {
-      "budget_mode": "single-stage",
-      "closure_result": "pass",
-      "context_control_selected": true,
-      "errors": [],
-      "fixture": "evals/context-control/compaction-snapshot-v2.yaml",
-      "id": "compaction-snapshot-v2",
-      "safety_result": "pass",
-      "selected_reference_count": 6,
-      "skipped_reference_count": 2,
-      "status": "pass"
-    },
-    {
-      "budget_mode": "staged-plan",
-      "closure_result": "partial",
-      "context_control_selected": true,
-      "errors": [],
-      "fixture": "evals/context-control/branch-route-repair-summary.yaml",
-      "id": "branch-route-repair-summary",
-      "safety_result": "pass",
-      "selected_reference_count": 4,
-      "skipped_reference_count": 1,
-      "status": "pass"
-    },
-    {
-      "budget_mode": "minimal",
-      "closure_result": "pass",
-      "context_control_selected": false,
-      "errors": [],
-      "fixture": "evals/context-control/negative-small-typo-no-context-control.yaml",
-      "id": "negative-small-typo-no-context-control",
-      "safety_result": "pass",
-      "selected_reference_count": 1,
-      "skipped_reference_count": 0,
-      "status": "pass"
-    }
+  "schema_version": 2,
+  "status": "pass",
+  "evidence_scope": "deterministic-fixtures",
+  "limitations": [
+    "Step counts are structural proxies and do not prove wall-clock performance.",
+    "Checked-in fixtures do not prove real-host accuracy.",
+    "Fixture evaluation does not prove the installed user experience.",
+    "Typed discipline events prove fixture structure and order, not the quality or completeness of real repository inspection.",
+    "Counts cover deterministic rendered ChangeForge instructions and canonical Capsules rendered from versioned checked-in fixture data, not a host-observed model request.",
+    "Counts exclude host system prompts, tool schemas, user conversation history, repository reads, diffs, command output, and other dynamic evidence.",
+    "Host loaders may transform Profile or Skill files and may expose discovery metadata differently; this report does not prove real-host accuracy.",
+    "Token counts do not prove wall-clock performance, production accuracy, Profile startup, or the installed user experience.",
+    "Duplicate-token measurement detects exact normalized Markdown rule blocks, not semantic paraphrases.",
+    "Nested Layer 3 Reference counts include only explicitly named fixture files; directories, indexes, catalogs, and recursively linked files are never loaded."
   ],
-  "context_control_overhead": {
-    "command_delta": 19.91,
-    "evidence_boundary": "Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead. High overhead without pass-rate improvement is not success.",
-    "input_token_overhead_pct": 228.79,
-    "live_pass_rate": {
-      "pass_rate_delta": 0.0417,
-      "status": "collected"
-    },
-    "output_token_overhead_pct": 35.56,
-    "overhead_policy_verdict": "partial: structural fixtures pass and live overhead is collected, but high token overhead remains an ungoverned P2 risk; do not claim Context Control Plane quality or cost improvement",
-    "overhead_status": "partial",
-    "pass_rate_delta": 0.0417,
-    "quality_improvement_claim_allowed": false,
-    "runtime_telemetry": {
-      "command_delta": 19.91,
-      "live_codex_executed": false,
-      "source": "reports/codex-live-benchmark-summary.json",
-      "status": "existing_report"
-    },
-    "status": "partial",
-    "structural_fixture_status": "pass",
-    "token_overhead": {
-      "input_pct": 228.79,
-      "output_pct": 35.56,
-      "status": "collected"
-    },
-    "turn_overhead": null,
-    "turn_overhead_detail": {
-      "status": "not_collected",
-      "turn_overhead": null
-    }
+  "fixture_count": 16,
+  "checks": {
+    "bounded_rendered_instruction_context": true,
+    "no_preparation_loop": true,
+    "current_read_only_parallelism_declared": true,
+    "current_write_parallelism_unsupported": true,
+    "shared_workspace_serial_write": true,
+    "conditional_isolated_write_contract": true,
+    "utility_no_edit_workspace_gate": true,
+    "route_once_skill_budget": true
   },
-  "fixture_status": "pass",
-  "generated_by": "scripts/eval-context-control-plane.py",
-  "global_errors": [],
-  "overhead_status": "partial",
-  "release_status": "partial",
-  "schema_version": 1,
-  "status": "partial",
-  "summary": {
-    "capability": "context-control-plane",
-    "capability_id": "128",
-    "case_count": 8,
-    "failed": 0,
-    "fixture_directory": "evals/context-control",
-    "global_error_count": 0,
-    "live_codex_executed": false,
-    "passed": 8,
-    "raw_leak_count": 0
-  }
+  "rendered_context_summary": {
+    "max_main": {
+      "tokens": 1894,
+      "capacity_ceiling": 2200,
+      "minimum_headroom_ratio": 0.1,
+      "required_reserve_tokens": 220,
+      "release_target": 1980,
+      "minimum_release_margin_tokens": 80,
+      "evolution_target": 1900,
+      "release_margin_tokens": 86,
+      "evolution_margin_tokens": 6,
+      "capacity_headroom_tokens": 306,
+      "capacity_headroom_ratio": 0.139091,
+      "host": "copilot",
+      "build_profile": "recommended"
+    },
+    "max_by_budget_class": {
+      "analysis": {
+        "tokens": 4885,
+        "capacity_ceiling": 5000,
+        "minimum_headroom_ratio": 0.0,
+        "required_reserve_tokens": 0,
+        "release_target": 5000,
+        "minimum_release_margin_tokens": 0,
+        "evolution_target": 5000,
+        "release_margin_tokens": 115,
+        "evolution_margin_tokens": 115,
+        "capacity_headroom_tokens": 115,
+        "capacity_headroom_ratio": 0.023,
+        "host": "copilot",
+        "build_profile": "dev",
+        "step": 1,
+        "primary_skill": "engineering-change-analysis"
+      },
+      "task": {
+        "tokens": 3124,
+        "capacity_ceiling": 3200,
+        "minimum_headroom_ratio": 0.0,
+        "required_reserve_tokens": 0,
+        "release_target": 3200,
+        "minimum_release_margin_tokens": 0,
+        "evolution_target": 3200,
+        "release_margin_tokens": 76,
+        "evolution_margin_tokens": 76,
+        "capacity_headroom_tokens": 76,
+        "capacity_headroom_ratio": 0.02375,
+        "host": "copilot",
+        "build_profile": "full",
+        "step": 16,
+        "primary_skill": "backend-change-builder"
+      },
+      "analyzed_task": {
+        "tokens": 6386,
+        "capacity_ceiling": 6500,
+        "minimum_headroom_ratio": 0.0,
+        "required_reserve_tokens": 0,
+        "release_target": 6500,
+        "minimum_release_margin_tokens": 0,
+        "evolution_target": 6500,
+        "release_margin_tokens": 114,
+        "evolution_margin_tokens": 114,
+        "capacity_headroom_tokens": 114,
+        "capacity_headroom_ratio": 0.017538,
+        "host": "copilot",
+        "build_profile": "dev",
+        "step": 6,
+        "primary_skill": "delivery-release-gate"
+      },
+      "review": {
+        "tokens": 3357,
+        "capacity_ceiling": 4000,
+        "minimum_headroom_ratio": 0.0,
+        "required_reserve_tokens": 0,
+        "release_target": 4000,
+        "minimum_release_margin_tokens": 0,
+        "evolution_target": 4000,
+        "release_margin_tokens": 643,
+        "evolution_margin_tokens": 643,
+        "capacity_headroom_tokens": 643,
+        "capacity_headroom_ratio": 0.16075,
+        "host": "copilot",
+        "build_profile": "dev",
+        "step": 1,
+        "primary_skill": "architecture-impact-reviewer"
+      },
+      "utility": {
+        "tokens": 1344,
+        "capacity_ceiling": 2500,
+        "minimum_headroom_ratio": 0.0,
+        "required_reserve_tokens": 0,
+        "release_target": 2500,
+        "minimum_release_margin_tokens": 0,
+        "evolution_target": 2500,
+        "release_margin_tokens": 1156,
+        "evolution_margin_tokens": 1156,
+        "capacity_headroom_tokens": 1156,
+        "capacity_headroom_ratio": 0.4624,
+        "host": "copilot",
+        "build_profile": "recommended",
+        "step": 1,
+        "primary_skill": null
+      }
+    },
+    "max_duplicate_rule_token_ratio": 0.013804,
+    "duplicate_rule_token_ratio_margin": 0.016196,
+    "max_discovery_metadata_tokens": 8752,
+    "loaded_layer3_reference_count": 8,
+    "measured_layer3_reference_component_count": 72,
+    "loaded_layer3_reference_logical_ids": [
+      "ai-product-extension/references/checklist.md",
+      "module-boundary-design/references/benchmarks-and-enforcement.md",
+      "payment-trading-extension/references/checklist.md",
+      "release-rollback/references/benchmarks-and-patterns.md",
+      "release-rollback/references/evidence-patterns.md",
+      "test-strategy/references/checklist.md",
+      "transaction-consistency/references/evidence-patterns.md",
+      "web-security/references/checklist.md"
+    ],
+    "duplicate_block_examples_from_max_ratio_context": [
+      {
+        "sha256": "9a6fb78e5276b378fec6e37c6e6d7760d2b1afc1b44a17738761e4b7058de3da",
+        "tokens_per_extra_copy": 18,
+        "occurrence_count": 2,
+        "extra_copy_count": 1,
+        "duplicate_tokens": 18,
+        "sources": [
+          {
+            "component": "dispatch_capsule:fixture:validation-task-no-edit:step:1:canonical-capsule",
+            "occurrences": 2
+          }
+        ],
+        "preview": "git --no-pager diff --no-ext-diff --no-textconv --binary head"
+      }
+    ]
+  },
+  "errors": []
 }

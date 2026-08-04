@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-07-18-r4",
+  "created_on": "2026-07-18",
+  "packet_sha256": "46c08601aa2b2c32d374d46681087b6d4ce7584ce4b4ea12205aa4850db25938",
+  "source_fingerprints": {
+    "audit": "e8bb8a1b735009804e7a23f6bf714a5ae091ffaf9c8f459bab6d29e9fc19c22e",
+    "reference_candidates": "64e8e891cdaf7404edd8458b5481d12ef976c3595ff22b4f9a981c1f5ac88cdf",
+    "reference_detector": "2a2da4491a15424dbfeb0f93ffdebaba7ecb83fc2465d1eb618ce36a40e64a36",
+    "reference_groups": "0ff51936bdc45eaaf198f22c9660b7705fb6b1134acf0799e1a9ab9c4fb6def4",
+    "reference_source": "67d81a815b4f960a9a11087d77a8ed7b4b1417a474659d1658741e6497eed53b",
+    "root_candidates": "72f6dc5d3eb878357da9f82b180f4f1f02c86178002aaf83445958e5547c6221",
+    "root_context": "4093dbe295b7b09469eb7760ed31332dadc6df93349dfb3e29eb7b5e998b7ad6",
+    "root_detector": "0d8c01715fb11258126a474356e03b944ddb720f358163915e6ecf912498c33c",
+    "root_source": "638ae7cd116378ef94c329299a51375bd912f0a9e1cacf1a4eb20bd55bf42926"
+  },
+  "voter": {
+    "voter_id": "semantic-r4-professional-reviewer",
+    "agent_id": "semantic-r4-professional-agent",
+    "role": "senior-professional-semantic-reviewer",
+    "expertise": [
+      "professional decision semantics and boundary precision"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "root:45030033706eceaef63f523be6dca6d944523e15ff14bef0ee176a9acd585d42",
+      "axis": "root",
+      "candidate_id": "45030033706eceaef63f523be6dca6d944523e15ff14bef0ee176a9acd585d42",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The requirement governs only comparative claims inside a Skill whose trigger requires materially different feasible options. Comparing the selected approach with the strongest feasible alternative is minimum evidence for relative claims; it does not prescribe an implementation mechanism, and the Root excludes cases where no material alternative remains.",
+      "authority_or_condition": "Applies only when materially different feasible solutions remain and a comparative claim could affect selection; Registry triggers, hard-constraint screening, and Stop Conditions remain authoritative.",
+      "decision_owner": "foundation-skill-maintainers",
+      "mitigation": "Retain the feasible-alternative qualifier, hard-constraint veto, specialist-routing boundaries, evidence-limit recording, and reopening conditions; re-review if the rule becomes unconditional or mechanism-specific.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:c31523a7e17fb3768e10440eb161e231f1e5a322a1671972bf68033dbf1d9dbb",
+      "axis": "root",
+      "candidate_id": "c31523a7e17fb3768e10440eb161e231f1e5a322a1671972bf68033dbf1d9dbb",
+      "disposition": "rewrite",
+      "rationale": "One or more known effects imposes a minimum known-category cardinality even though the next rule and indexed Reference admit an unknown effect. A candidate whose behavior is wholly unknown must remain classifiable as unknown and blocked, rather than being forced into an unsupported known class; the taxonomy is sound, but this boundary wording must change.",
+      "authority_or_condition": "The active Profile, workspace scope, Task Contract, command behavior, repository guidance, and adjacent unknown-effect rule jointly determine execution; an unknown-only classification must remain representable and fail closed.",
+      "decision_owner": "foundation-skill-maintainers",
+      "mitigation": "Rewrite the rule to classify every known effect while recording unknown separately, then preserve planned, blocked, or unrun handling whenever capability, authority, or effects remain unresolved.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "This static professional review evaluates current Root, indexed Reference, and Registry semantics; it does not prove host enforcement, command behavior, reviewer identity, or production outcomes."
+  ]
+}

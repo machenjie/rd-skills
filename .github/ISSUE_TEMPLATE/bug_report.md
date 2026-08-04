@@ -13,7 +13,7 @@ labels: bug
 
 - Affected area:
 - Profile: `recommended` / `full` / `dev` / not applicable
-- Runtime/install target: `codex` / `claude` / `copilot` / `openai-api` / not applicable
+- Build/install target: `codex` / `claude` / `copilot` / `cline` / `openai-api` / not applicable
 
 ## Reproduction Steps
 
@@ -33,7 +33,7 @@ labels: bug
 - Python version:
 - Command:
 - Profile: `recommended` / `full` / `dev`
-- Agent target: `codex` / `claude` / `copilot` / `openai-api` / not applicable
+- Agent target: `codex` / `claude` / `copilot` / `cline` / `openai-api` / not applicable
 - Scope: `project` / `user` / `admin` / not applicable
 
 ## Output

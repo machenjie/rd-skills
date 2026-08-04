@@ -1,0 +1,22 @@
+coverage_class: standard
+expected_stage: implementation-review
+expected_professional_skill: backend-change-builder
+expected_capabilities:
+  - payment-trading-extension
+expected_hidden_risks:
+  - a fill can arrive after cancel acknowledgement and reopen terminated quantity
+  - a session sequence reset can hide missing or duplicate execution reports
+  - a stale risk dependency can leave the kill switch unavailable or fail open
+expected_evidence:
+  - partial-fill cancel-race state-machine test
+  - sequence-restart gap snapshot and drop-copy reconciliation test
+  - kill-switch activation and recovery exercise with stale risk input
+forbidden_behaviors:
+  - mark an order cancelled without reconciling late fills
+  - reset sequence counters without an authoritative snapshot
+  - fail open when kill-switch authority is unavailable
+expected_output_obligations:
+  - execution state and quantity invariants
+  - sequence recovery and reconciliation contract
+  - kill-switch authority verdict proof limits and residual owner
+expected_with_skill_status: pass

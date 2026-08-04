@@ -1,129 +1,44 @@
-# Reuse And Placement — Full Protocol
+# Reuse And Placement Evidence
 
-Deep reference for the `## Reuse & Placement` rules in `implementation-structure-design`.
-The capability body carries the decision-critical summary; this file carries the full
-discovery protocol, the reuse ladder record template, and the function-placement decision
-tree. It is loaded in the `dev` profile and by skill authors.
+These decision patterns compare repository-local reuse, owner-private placement, deliberate separate implementation, and generated-source authority by semantics, ownership, failure, lifecycle, evolution, and current consumers.
 
-## Repository Local Pattern Discovery Protocol
+## Search Scope
 
-Before adding or renaming any variable, parameter, field, function, method, class, struct, interface, component, hook, service, repository, adapter, helper, utility, file, package, module, or directory, inspect local conventions in this order:
+- Inspect the owning file and module for current helpers, exports, callers, tests, generated sources, failure behavior, and repository conventions.
+- Expand to sibling modules or shared locations when current consumer scope or boundary risk warrants it.
+- Record searched paths and terms, candidate owners, and runtime, generated, plugin, or external consumers that remain uninspected.
+- Reject reuse based on naming, visual similarity, or duplicated lines when semantics, authority, failure behavior, or lifecycle differ.
+- Do not use a generic shared module as a placement candidate. Export, cross-owner, shared, package, dependency, or cycle decisions route to `module-boundary-design`; distributable SDK/library contracts route to `sdk-library-contract-design`.
 
-1. Same file:
-   - existing helpers;
-   - private functions;
-   - methods;
-   - naming shape;
-   - comment style;
-   - error handling style;
-   - test shape.
+## Reuse Decision
 
-2. Same directory:
-   - file naming pattern;
-   - suffix/prefix convention;
-   - public/private split;
-   - test file naming;
-   - sibling class/function naming;
-   - local helper placement.
+| Decision | Accept when | Reject when |
+| --- | --- | --- |
+| Direct reuse | The current owner already provides the required semantics and failure contract. | Callers would inherit unrelated behavior, authority, or lifecycle. |
+| Owner-local extension | New behavior remains cohesive and existing callers stay compatible. | Modes, flags, or unrelated branches split the responsibility. |
+| Owner-private composition or adapter | The accepted owner stays intact and a real protocol, shape, or dependency-direction mismatch needs translation. | The wrapper relays calls, hides ownership, exports a new contract, or creates a cycle. |
+| Private extraction | Current duplication or mixed responsibility has a named owner and behavior boundary. | Extraction exists for tests, speculative reuse, or line-count reduction. |
+| Owner-private new structure | Current owner-local invariants, failures, lifecycle, or cleanup survive reuse and co-location comparison. | The surface is exported, shared, cross-owner, speculative, or justified by convenience. |
+| Deliberate separate implementation or copy | Semantics, authority, failure behavior, lifecycle, or evolution differ enough that reuse would couple distinct owners. | Only naming, syntax, or line shape differs. |
 
-3. Parent directory or parent module:
-   - module ownership;
-   - exported API;
-   - internal/shared boundary;
-   - parent naming pattern;
-   - existing package/module style.
+For a deliberate separate implementation, record why drift is intentional, how divergence is detected or reviewed, and the delete condition for reconverging or removing the copy.
 
-4. Sibling modules:
-   - equivalent feature/component/service/repository patterns;
-   - similar naming and placement decisions.
+## Generated-Source Placement
 
-5. Shared/common/utils:
-   - only after proving the behavior is pure technical utility and domain-free;
-   - never use shared/common/utils to avoid choosing the owning module.
+Trace `editable source -> generator/template/config -> artifact -> committed/derived policy -> regen/freshness check`.
 
-6. Tests:
-   - naming convention;
-   - placement convention;
-   - test helper/fixture style;
-   - test comment style.
+- Name the editable source and generator owner before choosing placement.
+- Change a derived artifact through its accepted generator, template, or configuration authority.
+- Stop on unknown authority and hand off to `repository-context-map`.
+- Use `build-tool-professional-usage` to validate declared inputs, graph edges, toolchain identity, regeneration, stale-file cleanup, and committed-versus-derived policy.
+- Classify the resulting diff as semantic or mechanical. A semantic diff changes consumer behavior or the generator contract; a mechanical diff only re-expresses authoritative inputs under the fixed generator and formatting policy.
+- Record the consumer validation signal and freshness check after the latest material edit.
 
-7. Generated or registry files:
-   - whether new names require index/export/registration updates;
-   - generated source-of-truth and regeneration policy.
+## Placement Record
 
-The Implementation Structure Plan must state:
+- Record the selected owner, name, visibility, location, consumers, dependencies, tests, generated updates, rejected alternatives, and rollback or deletion condition.
+- Route a changed module surface to `module-boundary-design`, behavior-preserving movement to `refactoring`, and local flow or readability to `code-clarity-maintainability`.
 
-- files inspected;
-- directories inspected;
-- existing functions/classes/modules/services/repositories/hooks/components considered;
-- detected naming convention;
-- detected file naming convention;
-- detected test naming convention;
-- detected placement convention;
-- reuse candidates found;
-- rejected locations and why;
-- final selected name and location;
-- whether comments are required for the new or changed structure.
+## Primary Source
 
-## Reuse Ladder
-
-When adding behavior, choose the first valid option:
-
-1. Direct reuse:
-   - call an existing function, method, class, component, hook, service, repository, adapter, or utility with matching semantics.
-
-2. Same-file extension:
-   - extend an existing private helper, local function, or method if responsibility remains single.
-
-3. Same-module extension:
-   - extend an existing module-internal function, class, service, repository, adapter, or helper without changing old behavior.
-
-4. Existing public API extension:
-   - add a backward-compatible option, overload, parameter object, strategy, or branch only when the public contract remains coherent.
-
-5. Composition:
-   - compose existing functions/classes/services into the required behavior.
-
-6. Adapter/wrapper:
-   - wrap an existing behavior only when the call boundary, dependency direction, or external API shape requires adaptation.
-
-7. Extraction:
-   - extract duplicated or mixed behavior into a clearer private or module-internal abstraction.
-
-8. New code:
-   - create a new function/class/file/directory only after all previous levels are rejected with evidence.
-
-Reject new code when an earlier ladder level can satisfy the requirement with lower structural cost.
-
-The plan must include a Reuse Ladder Record:
-
-- direct reuse candidates;
-- same-file extension candidates;
-- same-module extension candidates;
-- existing public API extension candidates;
-- composition candidates;
-- adapter/wrapper candidates;
-- extraction candidates;
-- final decision;
-- why lower-cost reuse levels were insufficient.
-
-## Function Decision Tree
-
-```text
-Need new behavior?
-|-- Does an existing function already implement the same semantic behavior?
-|   |-- Yes: Reuse it directly.
-|   `-- No
-|-- Is there an existing function with the same concept but missing a case?
-|   |-- Yes: Extend it only if its responsibility remains single and tests cover old and new behavior.
-|   `-- No
-|-- Is this behavior private to one file or class?
-|   |-- Yes: Add a private or local helper in the same file.
-|   `-- No
-|-- Is this behavior private to one module?
-|   |-- Yes: Add a module-internal function.
-|   `-- No
-|-- Is this behavior a stable public contract used by multiple modules?
-|   |-- Yes: Add to the module public API with compatibility review.
-|   `-- No: Keep local; do not export.
-```
+Official source accessed on 2026-07-26: [Bazel repositories, packages, and targets](https://bazel.build/versions/7.4.0/concepts/build-ref). Bazel distinguishes source files, generated files, rules, inputs, outputs, packages, and targets. Those build concepts do not identify this repository's semantic owner, editable authority, checked-in artifact policy, or hidden runtime consumers.

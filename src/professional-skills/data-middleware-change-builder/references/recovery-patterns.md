@@ -1,6 +1,6 @@
 # Data Middleware Recovery Patterns
 
-Use this reference for changes where failure recovery, replay, rollback, reconciliation, or release watch is material to correctness. Recovery design must name the owner, trigger, bounded action, and stop condition.
+Use this reference for changes where failure recovery, replay, rollback, reconciliation, or release watch is material to correctness. For the recovery operation selected for the actual failure window, name its owner, trigger, bounded action, and stop condition, and disclose irreversible or provider-owned steps.
 
 ## Recovery Patterns
 - **Source-of-truth drift:** define the authoritative store, reconciliation query, repair direction, sampling or full-scan strategy, alert threshold, and audit trail.
@@ -13,4 +13,3 @@ Use this reference for changes where failure recovery, replay, rollback, reconci
 - Name the metrics, logs, traces, reports, or dashboards that prove recovery is working during rollout.
 - Define rollback thresholds before release: lock wait, query latency, cache miss storm, queue lag, DLQ depth, reconciliation drift, error rate, and cost spike.
 - Hand unresolved capacity, alert, dashboard, or incident-readiness gaps to `reliability-observability-gate` or `delivery-release-gate` with owner and residual risk.
-

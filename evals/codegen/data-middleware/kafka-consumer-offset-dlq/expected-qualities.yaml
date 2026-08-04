@@ -7,22 +7,12 @@ focus:
   - DLQ topic
   - consumer lag alert
 route_hints:
-  skills:
-    - data-middleware-change-builder
-    - integration-change-builder
-    - reliability-observability-gate
-    - quality-test-gate
-  capabilities:
-    - message-queue-design
-    - idempotency-retry-design
-    - observability
-    - integration-testing
-  domain_extensions:
+  work_path: analyzed-work
+  agent_profile: task-agent
+  primary_skill: data-middleware-change-builder
+  layer3_skills:
     - bigdata-product-extension
-  quality_gates:
-    - implementation gate
-    - reliability gate
-    - test gate
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Offset is committed only after durable side effects.
   - Duplicate delivery is idempotent.

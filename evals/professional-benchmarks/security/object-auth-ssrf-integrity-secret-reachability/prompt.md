@@ -1,0 +1,3 @@
+# Release review scenario
+
+Review a proposed `POST /tenants/{tenant_id}/imports/{object_id}/preview` release. The endpoint uses an ambient session cookie and verifies only that a caller is logged in before loading the named object. It fetches a user-supplied URL after one hostname allowlist and DNS check, then follows redirects while reusing the first resolution. A dependency scanner reports a high-severity issue, but the deployed version, feature-flag state, and reachable call path are unknown. Debug logs and a CI trace artifact currently include the upstream bearer credential. Decide whether the release can proceed and name the evidence required.

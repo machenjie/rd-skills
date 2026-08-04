@@ -7,9 +7,9 @@ delete list.
 
 ## Context
 
-The starter repository has one cohesive billing rule. A generated patch may add
-wrapper-only delegation, one-implementation interfaces, unused configuration,
-future extension scaffolding, and duplicated helper code.
+The starter repository contains the cohesive billing rule and a real
+`review.patch` artifact. Review that patch as supplied; do not apply it and do
+not modify the workspace.
 
 ## Requirements
 
@@ -19,6 +19,7 @@ future extension scaffolding, and duplicated helper code.
   line-count preferences.
 - Require caller search and behavior-preservation evidence before deletion.
 - Add or name tests that would fail if the billing rule changed.
+- Every reportable finding must name the patch file location and concrete impact.
 
 ## Constraints
 
@@ -26,6 +27,7 @@ future extension scaffolding, and duplicated helper code.
 - Do not approve one-implementation interfaces or factories without current
   force.
 - Do not treat "fewest lines" as approval when boundaries would be lost.
+- Do not edit, apply, repair, or regenerate the supplied patch.
 
 ## Deliverables
 
@@ -38,3 +40,4 @@ future extension scaffolding, and duplicated helper code.
 - Automatic review rejects wrapper-only delegation and speculative abstraction.
 - Tests or review evidence cover the protected billing behavior.
 - Residual risk states any complexity intentionally retained.
+- The workspace remains unchanged after the review.

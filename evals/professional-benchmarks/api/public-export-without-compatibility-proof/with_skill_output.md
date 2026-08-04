@@ -1,6 +1,6 @@
 Selected stage: implementation-planning.
 Selected professional skill: data-api-contract-changer.
-Selected capabilities: senior-programming-judgment-core, consumer-impact-analysis, version-compatibility, api-contract-design, contract-testing, validation-broker, implementation-structure-design.
+Selected Layer 3 Skills: api-contract-design, version-compatibility, dto-schema-design.
 
 Hidden risks: public export may break SDK consumers; unit tests may not prove contract compatibility; residual risk lacks owner.
 Senior programming judgment required: purpose, source-backed consumer facts, public boundary, validation proof/does-not-prove, and residual risk owner.

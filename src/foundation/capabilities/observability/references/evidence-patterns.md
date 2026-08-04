@@ -1,6 +1,8 @@
 # Observability Evidence Patterns
 
-Use this reference when observability closure depends on repository graph, project memory, execution trajectory, validation freshness, dashboard/runbook evidence, tool permission boundaries, or a changed-signal-to-validation map. Keep it as an evidence map, not a second observability tutorial.
+Use this reference when observability closure depends on current evidence, validation freshness, tool boundaries, or changed-signal validation.
+Current evidence includes repository inspection, prior-task claims, action sequences, dashboards, and runbooks.
+Keep this file as an evidence map, not a second observability tutorial.
 
 ## Changed-Signal-To-Validation Map
 
@@ -13,53 +15,19 @@ Use this reference when observability closure depends on repository graph, proje
 | Alert and dashboard are actionable | Alert query, threshold, severity, owner, runbook action, dashboard path, and synthetic/sample event when feasible. | The inspected operator workflow can detect and start remediation for the named symptom. | On-call behavior, alert fatigue, or incident response effectiveness is proven. |
 | Validation is fresh | Command or query, working directory or environment, exit code/outcome, report/artifact path, and final-edit freshness. | Evidence was produced after the final material change for the mapped signal. | Later source/config/dashboard/generated/report edits are covered. |
 
-## Graph, Memory, And Execution Reconciliation
+## Current Evidence And Freshness
 
-- Treat repository graph, project memory, old dashboards, incident notes, generated docs, prior validation, and execution trajectory as discovery inputs until current source/config/query evidence confirms them.
-- Accept prior "dashboard exists", "alert covers this", "trace propagation already works", or "runbook owner is current" claims only when current metric names, labels, spans, runbook owner, and changed paths still match.
+- Treat prior repository, task, dashboard, incident, generated-doc, validation, and action-sequence evidence as discovery input.
+- Confirm discovery input with current source, configuration, or query evidence.
+- Accept a prior dashboard, alert, trace, or runbook-owner claim only when current definitions and changed paths still match.
 - Reject or downgrade memory that lacks date, owner, environment, query/config path, changed-signal scope, command outcome, or residual-risk owner.
-- Mark evidence stale after edits to log fields, metric names or labels, span names, trace propagation, alert expressions, dashboards, runbooks, generated docs, reports, build outputs, or validation mappings.
-- Map every final observability confidence claim to a current command, metric query, log query, trace lookup, alert check, dashboard path, synthetic event, owner approval, or explicit not-verified residual risk.
+- Mark evidence stale after edits to log fields, metric names, labels, spans, trace propagation, alerts, dashboards, or runbooks.
+- Also mark it stale after edits to generated docs, reports, build outputs, or validation mappings.
+- Map each final observability claim for the changed signal scope to current evidence.
+- Use a command, telemetry query, trace lookup, alert check, dashboard, synthetic event, owner approval, or explicit residual risk.
 
-## Tool Permission Boundary
-
-| Action | Boundary record |
-| --- | --- |
-| Local source reads, graph search, report inspection, and markdown validation | Read-only local shell action; cite searched paths and avoid full output dumps. |
-| Local validators, tests, builds, alert-rule linters, and dashboard/config checks | State-mutating only for reports, caches, temp files, dist/build artifacts, or local test fixtures; cite log path, command, exit code, and cleanup. |
-| Synthetic telemetry event, fixture generation, dashboard export, or generated doc refresh | State-mutating development action; record source-of-truth input, generated output owner, redaction rule, diff review, and rollback path. |
-| Live telemetry query, connector export, cloud console, deploy, migration, rollback, or production alert change | High-risk or connector-scoped action; require permission or sandbox proof when available, redact tenant/user/secret-bearing values, and state retention limits. |
-
-## Handoff Evidence Shape
-
-```yaml
-observability_evidence_closure:
-  inspected_paths:
-    - path: ""
-      finding: ""
-  accepted_prior_claims:
-    - claim: ""
-      current_evidence: ""
-  rejected_or_stale_claims:
-    - claim: ""
-      reason: ""
-  changed_signal_to_validation_map:
-    - signal: ""
-      source_or_config_path: ""
-      validation_command_or_query: ""
-      exit_code_or_status: ""
-      artifact_or_dashboard: ""
-      proves: ""
-      does_not_prove: ""
-      owner: ""
-      freshness: ""
-  tool_permission_boundary:
-    action_class: ""
-    sandbox: ""
-    state_mutation: ""
-    redaction: ""
-  residual_risk:
-    - risk: ""
-      owner: ""
-      next_gate: ""
-```
+- For synthetic events, fixtures, dashboard exports, or generated docs, record the source-of-truth input and output owner.
+- Also record redaction, diff review, and rollback for those generated artifacts.
+- For live queries, connector exports, consoles, deploys, migrations, rollbacks, or production alert changes, require available permission or sandbox proof.
+- Redact tenant, user, and secret-bearing values from that evidence.
+- State its retention limits.

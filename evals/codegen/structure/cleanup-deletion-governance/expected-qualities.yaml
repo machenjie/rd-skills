@@ -7,20 +7,11 @@ focus:
   - caller and runtime reference search
   - telemetry and rollback
 route_hints:
-  skills:
-    - ai-code-review-refactor
-    - backend-change-builder
-    - change-documentation-gate
-  capabilities:
-    - cleanup-deletion-governance
-    - refactoring
-    - configuration-runtime-policy
-    - code-clarity-maintainability
-  domain_extensions: []
-  quality_gates:
-    - implementation gate
-    - documentation gate
-    - test gate
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: backend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
 expected_outcomes:
   - Dead code, stale feature flags, fallback branches, compatibility code, and deprecated APIs have owner and removal condition.
   - Caller search includes static, runtime, generated, reflection, and package references.

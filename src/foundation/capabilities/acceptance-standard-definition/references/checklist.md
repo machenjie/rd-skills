@@ -9,4 +9,5 @@
 - Map each standard to a requirement or scenario.
 - Identify unacceptable outcomes.
 - Avoid implementation details unless they are contractual constraints.
-- Confirm every standard has a feasible verification artifact.
+- Before accepting a standard, name a feasible verification artifact such as a test, report, query, review artifact, screenshot, or accountable stakeholder decision.
+- Return criteria without feasible proof as unresolved acceptance decisions.

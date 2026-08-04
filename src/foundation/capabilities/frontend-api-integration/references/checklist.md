@@ -1,13 +1,14 @@
 # Frontend API Integration Checklist
 
-- Select the integration mode and list current source evidence, including API client, schema, mocks, tests, graph, memory, and trajectory freshness limits.
-- List every read and write operation used by the UI.
+- Select the integration mode and list current source evidence, including API client, schema, mocks, tests, current source, tests, and validation freshness limits.
+- For the changed UI surface, inventory each invoked read and write operation, including dynamically discovered or inaccessible operations recorded as residual scope for bounded lifecycle, retry, authentication, pagination, cache, and optimistic-update decisions.
 - Define timeout, cancellation, request identity, current input/cursor binding, and stale response handling.
 - Define retry policy per operation class and confirm unsafe mutations require idempotency plus unknown-timeout handling.
 - Handle authentication expiry, refresh-once, refresh failure, protected cache clearing, sign-out, and permission changes.
 - Map 401, 403, 404, 409, 422, 429, timeout, network, and 5xx responses to frontend states and safe recovery actions.
 - Define pagination model, stable ordering, tiebreaker, empty page, filtered empty, and end-of-list behavior.
-- Define cache keys, staleTime, gcTime, invalidation triggers, session reset, background refresh, and stale-data presentation.
+- Define cache keys, freshness or stale allowance, retention or eviction lifetime, invalidation triggers, session reset, background refresh, and stale-data presentation.
+- Map those semantics to library-specific options such as `staleTime` and `gcTime` only when the current library uses them.
 - Validate response shape before rendering or storing API data.
 - Define optimistic update rollback, durable confirmation, conflict behavior, and user-visible failure copy.
 - Define telemetry: trace propagation, safe diagnostics, token/PII redaction, and browser destination allowlist when relevant.

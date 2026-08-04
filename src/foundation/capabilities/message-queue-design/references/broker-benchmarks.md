@@ -1,64 +1,29 @@
-# Message Queue Broker Benchmarks
+# Broker Delivery And Recovery Evidence
 
-Use this reference when broker-specific delivery behavior, retry defaults, partition/ordering scope, transactional outbox relay choice, or replay safety is material to a queue design. Keep broker guarantees separate from application guarantees: broker deduplication windows and transactional producers do not remove the need for durable consumer idempotency when side effects leave the broker.
+**Load when:** broker-specific acknowledgement, delivery, ordering, deduplication, retry, terminal failure, outbox, or replay behavior is material.
 
-## Broker Guarantee Comparison
+**Do not load when:** the task is synchronous retry without message/job delivery, or current broker configuration already proves the bounded behavior.
 
-| Broker | Default Guarantee | Exactly-Once Scope | Ordering Scope | DLQ Support |
-| --- | --- | --- | --- | --- |
-| Kafka | At-least-once with manual offset commit | Kafka-to-Kafka with transactional producer and `read_committed`; not external side effects | Per partition | Manual DLQ topic |
-| SQS Standard | At-least-once | No | None | Built-in redrive policy |
-| SQS FIFO | At-least-once plus finite dedup window | Deduplication ID within a 5-minute window | Per `MessageGroupId` | Built-in redrive policy |
-| RabbitMQ | At-least-once with manual ack | No | Per queue only under constrained consumer topology | Dead-letter exchange |
-| Azure Service Bus | At-least-once | No end-to-end exactly-once | Per session | Built-in dead-letter queue |
-| Google Pub/Sub | At-least-once | No | Per ordering key when enabled | Manual dead-letter topic |
-| NATS JetStream | At-least-once | Bounded message ID dedupe window | Stream/consumer dependent | Configurable delivery subject |
+Use current broker/provider documentation and deployed configuration, actual processing time/failure classes, ordering and duplicate consequences, vendor quotas/limits, business recovery objective, and named recovery owner. Only when retry is selected, derive attempts, delay, backoff, jitter, visibility windows, and caps from current evidence; example values are non-normative.
 
-## Retry Policy Configuration Matrix
+## Broker Decision Questions
 
-| Message Class | Max Attempts | Initial Delay | Backoff | Max Delay | Jitter | Terminal State |
-| --- | --- | --- | --- | --- | --- | --- |
-| Transient database/network timeout | 5 | 1s | Exponential | 300s | 25% or full jitter | DLQ with diagnostic |
-| Downstream dependency 503/429 | 3-5 | Honor `Retry-After` or 5s | Exponential | 300s | 30% or full jitter | DLQ plus alert |
-| Schema or validation error | 1 | n/a | none | n/a | none | DLQ immediately |
-| Ordering-sensitive FIFO stream | 3 | 2s | Exponential | 60s | 20% | DLQ preserving order impact |
-| Background low-priority work | 3 | 30s | Exponential | 600s | 50% | DLQ or dead-letter table |
+1. What delivery guarantee is effective for the configured producer/consumer path, and where do acknowledgement, offset, visibility/lock renewal, retention, and redelivery occur relative to the durable side effect?
+2. What partition, message-group, session, key, or queue topology defines ordering, and what happens to later messages when one item fails or is paused?
+3. What is the real scope and lifetime of broker deduplication or transactional guarantees, and which downstream side effects still require application idempotency or reconciliation?
+4. Which failures are transient, permanent, malformed, unauthorized, dependency-limited, or poison? Select retry or no-retry first; only for a selected retry derive attempts/delay/backoff/jitter from failure duration, provider guidance, rate limits, processing objective, ordering impact, and overload risk.
+5. Once the configured broker path classifies a failure as terminal—immediately for a non-retryable class or after its evidence-derived retry policy is exhausted—record an observable, policy-permitted disposition and accountable recovery owner. DLQ/dead-letter topic, quarantine/table, pause, reject/drop where policy permits, manual repair, compensating action, or controlled replay are candidates; DLQ is not universal.
+6. When business state and publish intent must commit together, evaluate a supported coordination mechanism using relay-duplication, lag, schema-governance, and recovery proof rather than an assumed exactly-once effect.
 
-## Transactional Outbox Flow
+## Replay And Failure Outcomes
 
-```
-BEGIN TRANSACTION
-  UPDATE orders SET status = 'confirmed' WHERE id = :id
-  INSERT INTO outbox (id, topic, payload, status)
-    VALUES (:event_id, 'order.confirmed', :payload, 'PENDING')
-COMMIT
+- Projection/cache rebuild may use deterministic overwrite or upsert when source-of-truth and load protection are proven.
+- Notification, webhook, entitlement, inventory, payment, or ledger effects require consequence-specific duplicate and reconciliation controls before replay.
+- Manual commit/ack is selected only when automatic behavior can acknowledge work before the required durable outcome; verify the actual client/broker mode.
+- When retry amplification can exhaust consumers or block an ordered partition, derive backpressure from observed overload and ordering risk. When the configured path reaches its selected terminal disposition, expose the outcome through an owned signal and operating procedure.
 
-Relay:
-  SELECT pending outbox rows in deterministic order
-  PUBLISH with event_id as idempotency/deduplication key
-  MARK row as published after broker acknowledgement
-```
+## Evidence Outcomes
 
-Guarantees:
-- business state and publish intent commit atomically;
-- relay retries can publish more than once, so consumers still need idempotency;
-- polling relay is simple but adds database load and latency;
-- CDC/Debezium reduces polling load but increases platform and schema governance needs.
-
-## Replay Safety Classes
-
-| Consumer Side Effect | Replay Default | Required Control |
-| --- | --- | --- |
-| Projection rebuild or materialized view update | Safe if idempotent upsert | Unique key or deterministic overwrite |
-| Email, SMS, push, webhook POST | Unsafe by default | Deduplication gate and replay-disabled flag unless explicitly approved |
-| Payment, refund, ledger, inventory mutation | Unsafe by default | Durable idempotency, reconciliation, and approval before replay |
-| Analytics event copy | Usually safe with dedupe | Event ID dedupe and downstream duplication tolerance |
-| Cache warm/invalidation | Safe if bounded | Rate limit and source-of-truth fallback |
-
-## Evidence Checklist
-
-- broker config inspected: topic/queue, partition/message group, retention, visibility/lock timeout, max delivery, DLQ/redrive, consumer group;
-- producer durability inspected: in-transaction outbox, broker ack mode, relay idempotency, retry policy;
-- consumer correctness inspected: idempotency key, dedupe store, payload hash or natural key, ack/offset point, retryable/error classification;
-- operations inspected: lag, age, throughput, retry, DLQ, consumer health, replay runbook, owner, alert threshold;
-- validation mapped: duplicate delivery, poison message, crash before ack/commit, large replay or declared not verified, lag alert, and broker outage residual risk.
+- Inspect broker/topic/queue, producer acknowledgement, consumer group/subscription, ordering, retention, visibility/lock, delivery count, terminal routing, and replay configuration actually deployed.
+- Select tests from paths triggered by the actual broker, topology, and effects: duplicate/redelivery, crash before/after effect and acknowledgement, poison/malformed item, ordering blockage, lag/overload, broker outage, replay, and version skew.
+- State provider-limit, production-lag, regional-failover, large-replay, and operator-recovery proof limits of local tests with their owner.
