@@ -509,14 +509,15 @@ class DocsCoreProjectionTests(unittest.TestCase):
             root = Path(raw)
             self._current_evidence_inputs(root)
             governance = root / "GOVERNANCE.md"
-            governance.write_text(
-                governance.read_text(encoding="utf-8").replace(
-                    "r25 Root lifecycle",
-                    "r23 Root lifecycle",
-                    1,
-                ),
-                encoding="utf-8",
+            current = governance.read_text(encoding="utf-8")
+            self.assertIn("r26 Root lifecycle", current)
+            stale = current.replace(
+                "r26 Root lifecycle",
+                "r25 Root lifecycle",
+                1,
             )
+            self.assertNotEqual(current, stale)
+            governance.write_text(stale, encoding="utf-8")
 
             errors = self.validator._current_evidence_projection_errors(root)
 
