@@ -18,10 +18,10 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "audit-skill-content.py"
 ROOT_DETECTOR_V3_FINGERPRINT = (
-    "1c511eaa70d9a4138d6acb6a989e598c3221089312363d5e077a15032357c464"
+    "4d8059e710c7ecca7d4c839fe63d2c2f88632aa826356280dfe76bed5043ea04"
 )
 SKILL_DETECTOR_V3_FINGERPRINT = (
-    "0d57d32d45961cd4a542edb99256ccba1cf1905aacc42d4af3ba803ffd21f3c3"
+    "dd90d20b43d8cf23c81e03db672fe46d9d8f3e7daeb11d1ca70660dcf413d7cf"
 )
 
 

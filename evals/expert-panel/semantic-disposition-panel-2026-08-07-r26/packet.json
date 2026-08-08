@@ -1,0 +1,4236 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-packet",
+  "review_id": "semantic-disposition-panel-2026-08-07-r26",
+  "created_on": "2026-08-07",
+  "source_fingerprints": {
+    "audit": "0e9a9e41fbc42d969e39db91b7ae0e6db4309ba0731dbf0d741c71d369663791",
+    "reference_candidates": "7ba292dd1b618d6b890633ce3127308f7d167344eb562a5a11d7858c542dab10",
+    "reference_detector": "4b04a9b693ac3079a1af6154425ed64408474d5027c0119ed6360c9288356112",
+    "reference_groups": "aa063d66e92ded0513416306d5a118f5519e9205806d70477ded8417aabb5a79",
+    "reference_source": "99f628fbcd833e3ac092e09c8dc82a3323a60b2378714d8b7dfff03fb48559f3",
+    "root_candidates": "3dd23d67e7b06a8dfaa0d1aef02bdc3f358461be3fcb441b5825d6c4d74406ce",
+    "root_context": "c587c4d206016b8559b8e1e089f98017c59688f893ecef23688c697c39168e14",
+    "root_detector": "4d8059e710c7ecca7d4c839fe63d2c2f88632aa826356280dfe76bed5043ea04",
+    "root_source": "852aa945ee4aa3f5a045dd1f293e5e5aa50e3af4b241014fb634d36bfa5dbe74"
+  },
+  "panel_contract": {
+    "decision_method": "three-independent-experts-majority",
+    "required_voters": 3,
+    "abstentions_allowed": false,
+    "minimum_winning_votes": 2,
+    "independent_ballots": true,
+    "required_target_count": 83,
+    "required_axis_target_counts": {
+      "root": 83,
+      "reference": 0
+    },
+    "allowed_dispositions": [
+      "false-positive",
+      "rewrite",
+      "time-bounded-exception",
+      "valid-contextual-rule"
+    ]
+  },
+  "rubric": {
+    "exact_carry_forward": "Do not vote when the current stable candidate identity and all axis-specific occurrence, context, membership, and content evidence equal the prior disposition entry.",
+    "rewrite": "Select rewrite when the current source rule must change.",
+    "valid_contextual_rule": "Select valid-contextual-rule only when current authority and conditions make the detected rule professionally valid.",
+    "false_positive": "Select false-positive only when the detector family does not apply to the current complete context.",
+    "time_bounded_exception": "Select time-bounded-exception only with an accountable owner, current mitigation, and future expiry."
+  },
+  "candidate_provenance": {
+    "root": {
+      "raw_candidate_count": 83,
+      "eligible_candidate_count": 83,
+      "detector_downgraded_count": 0,
+      "configured_entry_count": 0,
+      "exact_carry_forward_count": 0,
+      "exact_carry_forward_candidate_ids": [],
+      "review_target_count": 83,
+      "review_target_candidate_ids": [
+        "00200eb3785c29d06be353c299fd6a0c4ab66c47747974a005ba0e9445834a03",
+        "021aefdb53f077686212d9dddf02c7e013263be4cceb9f8313305f87a2eab2d3",
+        "0560f7038ba9ca6c7b59e84f6a7ca98ec4b988b76ad90b8e75afcceb8c3803ab",
+        "0cb8d0b1c79bd6239265e78f5b67a274c58cefbcfb599fb2329129969f72de20",
+        "10b3d5b43c094888c05fbc4897c9b9224b84adfceccfa2ba313df5a91b1156d2",
+        "14aaa5b0bd39e0ca590c6ec806c428f2193044de760a13fa0096a29e8dbb6e54",
+        "17cdb219ca40375b59ec12f55b89090a21c90131a83ce1527cfa291411792a30",
+        "1904d798893f870492c09dcb0812e92b8614f6ae43e34fd5c9b23a747f5a68b2",
+        "1af5f56a14fdd4e0844be1cdf446861e201eb5ca4e92ff95b40c78fc910e94af",
+        "1b1ef90112ad11bccd229e552628b754c6091156df8dde46091ba8712e83118e",
+        "204ddf26447faf7dcb647e2763433b9146e9694ad26403a189e2483fe426adf9",
+        "2139f1437973d935ab31633c3ab0746e924be74abed660f6c5a5656020b53855",
+        "2a0f412b6bd0177b55258507eef1eeb810fa18406278a0e639e90a0cb64d66e4",
+        "2d72f4b2b3206aabb86a3a453417cfdcc07eb608b2833734527762e101505e87",
+        "2ffa565928263dfc54d8b9cc3ba7c046ba56e33d619a09d8d67bbc1c997d90c4",
+        "37ee0ef16d7169dfebcc297a4794f3f268241a7990d2f3f11a58651e21214716",
+        "38c33eb72654f6bffb9f9a40c4f3874e1a37ddad60bfe56649dda31824a8b514",
+        "3a5115974e7c228a0b2989161e24bd2f9d88fa0a1a39c7868c33cd0ccd9bc5f8",
+        "45030033706eceaef63f523be6dca6d944523e15ff14bef0ee176a9acd585d42",
+        "491220af01d630b94a5692b217bda2b3a1cf7b39d8d333d7cb6c3b3e8be0880e",
+        "491cd785b7062c0e487eea9c148304fd43f7a51ec1e1221558a3b2c33533503d",
+        "4baae35f1e600adf9689dcbb9893272895fa2d603c874db42e20e95fe6be8091",
+        "4e84f474724dae709f136d9f1ccb67e2ffb82d46256aba4cbf7761d03344442c",
+        "4ec396255b873c12fc53b6d4d14912dec75c54f9cefee79fdd6e885da989725c",
+        "4f8513208a5e465926c8998b8d639c38a07d2b84cb36412e13151e7ccb9f2c40",
+        "521f12b077b7a9b5d49d0ad28bea807a65b7dabd678da3a6be3a3a53f0acc924",
+        "53244a7f0aa46ccdaed5a68af5bfaa7dccd3fd17f7d372cb44d2126564dd2357",
+        "54af05b938e641a607217739b679e0b05095c6d5c1ccdb398226aa5b80745ba3",
+        "54fa169848411b2ebf49cf8b067d212bd6872cd9fee3fbef8796c0fffc2a5b8c",
+        "5623833cdf11c5b5335638f6218c01e0100dd1d49d16ab6eac02a50c9ce75bc8",
+        "582c19c2a623e847272f6fda41d4c6793edaff0b424396395538af79f81800dc",
+        "5a841c20ab33ec7c321007d7699082415388df57b294ee29959bbfbb61be502a",
+        "6267bfc3c4d82447013ad5e5d88cff4aa819478c27dc46628ffecb76a0e660bc",
+        "647f77eab58c06733e9a212592bcb8587e19e5bc3d8e74dd721b7be931d70ef2",
+        "64829e510d6110c54d7dfc7367d9b26313ced2758d345ce51e46d756fd69ec02",
+        "6537235c2554b518a32c51038b8b4c1a27e704764e704ee5f9792898fbc9dad6",
+        "70ba9061836200de4569805bd3d5e32438674cb93dcfb84968946a6e5f06b071",
+        "72d7cb6490fd2ebbd7cf148189f55395aaf18f1f6f061d017732f4756c2ab063",
+        "73d2dbebf2bdfd4dfa9dcce31007c3da0a9356b6bba6977145650e7c0b33be8d",
+        "7f36ce3393245d11b04b54881db0f23b17e627967a29513c6482f4c5000a8e25",
+        "7f7d7e84a3185e11528c54dace429ba90a6a82050f9d7c78c3bff8f40974bfe3",
+        "7f9e0fcbc8c6d8ecb9c0ac1608dc0e7ce1ebc5031d4f63c403663294978c1e4d",
+        "80f3031718e341444348bf7c83a910d7135f1c88c340875ec151f1a9bcffaeaa",
+        "815cf25bbdf7a73dd18b211354dac2015c9a6feb216228d6a2f387e22c981deb",
+        "82ec8db6f7c8076c2396d5f12108214fc308c90ede71d4172aaaa719bcf4e1e9",
+        "84a62368be2634dc9ce9b1b84e8eefec080148c615a77825a7c0ec01c086dec3",
+        "8a9e8eed175bd1c72106ca02cdf2ed1c98f3c96d6dd48429231bd7419f1e15d4",
+        "8dd0cd64f648cdcbe8d16dbab95b2767a11392348aab839fd9836418662ecfcd",
+        "914347dbde87a4adb4d2ca982f7e68750166cb2197a3c8d730f8bd1b9ce79f38",
+        "95760b51f6312e893662294201ac64b2dab1131a8ae19d756ea284b3b0b41b94",
+        "96619f0d01902aaf07aa57414a82336f86a2ae3f47c33e3b82f6159f32d1be54",
+        "995a2da65067c989f15b16e783b05fbe367e11d8e1eae1db094efaa3c5d038aa",
+        "9e420231a24227dbdd9cf8ab44af692a6d966cfd2a9afb3165af3b5b88bfccc8",
+        "9ec6fb4ad519bbbe7747c819ad9bff10bfe217107ac70eaf8ce9a46b8c2a60e0",
+        "9f32c6238459456587ab95007af3086bcfac2f8f7c92e56195a4a1aa7146ad0a",
+        "a32b8e6d164969b8d3b426807f96166f939d69fde77d214944f9afcc8e2cb7c3",
+        "a34e73896f07647684074bfcb5700441dd170f595fe7fc00fdde73403a9aa6eb",
+        "aeefeaf1479fcece12e892ba85bff91352f3981a08342eecd2ce2d6971d44dbe",
+        "b1ec4fa794007bc0c2931862730d74b9f261a3a1f2b5b874edd8e75c79813e2e",
+        "b3d32c3dc89c4a8a188b0816c0d61c29e65429451f0112cb016dd9f7617e62ed",
+        "bc7c9d606307c0090fb96a46de325f7a0b666b6659903cd137eddaedc74f0acd",
+        "bd9b1e2b2f73cc0d587c3e74646064e92363819e3c3ec47121381567bf704b72",
+        "c087620838ba97c47fdfa4b87f78e0483ec886655d6bbeb98d504e18b4f8f977",
+        "c457479aa4d59d9b48bd531e06a1e4877e3978c063aa04cba7657c290bab2140",
+        "c49edfe7eee4b0ee995f29a6be806ce1fd2f642bbce67850d31fae3232fe4bfc",
+        "cd3daff68be8a6d69c63daf0e697abe146673802496681186cec6fcc23ed68f7",
+        "cd9d813a014e6ae974bbb628bb9ad5b0037b6d196c767092a237ae32c32cada1",
+        "d0b057ff13c69fe232f1369b977337c5a107005cd7900488e5d1a894fbd962ec",
+        "d9676d87ebcdbfea48ed65004318e08d09af853bd03fc3fb37f82389e3a6f6de",
+        "dedb43e54a606e6da19a38addf8e0ff7daea4cea347fbb74ef197f69c9c88120",
+        "e2735506386b93486240cef7622a3374cf3839fb3bfc1907c7947db6a6647151",
+        "e3417af7023a54eadebe84064cad566d7167ea2f157c86f84f93ceb1ddd37cd4",
+        "e59a6530f983bfee0e1f36d33148f98c866da5d49b70573c2126338276fe2300",
+        "e6c088e78ad47b278277d5e80d01d32887185418676eb71b3854ec5a99c9737d",
+        "e74bad828c5246cf23d7cb1109f5dcaf657be1290819b8ec48e40f247da33d1d",
+        "ea2266c66efbfb90e89b34ccd07cdd2b41bba23082717dc832ab80736b7ce86e",
+        "eac6c1f4724aede34f02f80489c75e7db9d5fb0e638ec8b1a2f6558ef3d99b4e",
+        "eadab0abf6618f23f50755c1ce5d68a142649950ed7446261d44109502b5b98a",
+        "ebb095b4a8f88758414cdfac672d479088da0240c0202fefd2e908a11127c40e",
+        "f3e260c66abb126a5e0b4ff3efe4449e58d91a69a8347891334c99e3ede62684",
+        "f48da381697736b250485630860d6a9dc22451e8d2432a73008b8fc28fe3e7e7",
+        "f7629f1d8daa1ced84faafa918934392026f78177a2c917e23511f828c01deee",
+        "fcfce45c19bb5754060c28481787b61fd8dc723d2c49455ffb20177a3c190d97"
+      ],
+      "same_id_stale_evidence_candidate_ids": [],
+      "stale_old_count": 0,
+      "stale_old_candidate_ids": []
+    },
+    "reference": {
+      "raw_candidate_count": 929,
+      "eligible_candidate_count": 124,
+      "detector_downgraded_count": 805,
+      "configured_entry_count": 124,
+      "exact_carry_forward_count": 124,
+      "exact_carry_forward_candidate_ids": [
+        "003650c01eeb9de86d82172a56ac893b378958202fdb56c69058ffdd953ad568",
+        "02b5179921b5fd6a691aa3c222ab019368ef005219da5c9a6cda245c87fb53e6",
+        "099e6cdb5c868af220a170a98d3d5f05bb422c5ae3c7a4594047f03150c62021",
+        "0a5a9fadbd1a352d9ce3a9744b674536ef63f533d48592317d6e5d218a68ee8e",
+        "0caa3ee1e803461a57128b991f6a9965437ce9d764b38a176953e623991a6324",
+        "0ec6f2d160bdddece3dd6e2ea13a127f57ce42437b9bed6298738d56082e3d5b",
+        "101228f69fbb7eee2d763880862b52fe8a04de44d1401f91c4a6c12f79fd167c",
+        "105ecb4309cd87e75d6e2205c007af4d2bfacdb6d2cf22b6c1979110b333c828",
+        "132b2a93cf5f9234fb8863a1811734109aceb9ee67118da7ea84d7dd6239a442",
+        "15d7bd3c5c1606cb64e03fc0c6f3a05d0a51306e31badaa91eb2418a94616372",
+        "1933ffb92ea6c5966c9edfd64130ef03b5d6391c6d487c8e59da5da7f2afda90",
+        "1a845349e5ff4d99fe933eb80d7d764b59a520cab704efb90d3166dd67ee6d00",
+        "1c1a29b2dd6e2742b35bf9bca861c7c2a5d3a5fe89102fbf73b28e491e48781f",
+        "1d02bd2efcb58e0fdd5c0060217dbb4d5bc60edabd2fa8e4f610e1ab575c5fee",
+        "1e8c7c0b4a6a6cfe84e4860a7eba5244a457cf041e61728365cb4c8bf4fd2cfe",
+        "216aea6519ff1a54c5efce0dfdd0bfe13c9ac0698be3c09ad3ba63381bc57ea5",
+        "23b58b28444f064921211dd38f6d4809790e0bd524f7df6b2eb6fa28927a9f89",
+        "2663ee89a8b10aa9ac035b35cf5ef684cd805bd3219c600f161a1ddf9cbb6c05",
+        "2cc849e6d5adc151f322ded16d4835c813c353fb8921d02c6ea9eea86dfff80c",
+        "2f23a9fe91e194ce1825c40ef9bc774efb6d00a547aabf05a401252349ffff56",
+        "2f5d35a8a352a5f701a628d96f442e57272da1a3878439c1b4cddba4b9e7be84",
+        "34b7f09c8c4feae161fd085427944a836775f228221999aa0580b436206de9c0",
+        "36fc8ec51b5723500356155ce13eb38cd2c25ac3530fd6a6c14fb7ee629ea746",
+        "3841cd60387c494449931f46622ae1952e711251dde50db393d517d0cd10220d",
+        "3b83bf04b5bc0c894f806010e4db9f8f7b2c40cd5ae9b7b045e7b7b9c5bc0e65",
+        "3e909d7c74dd1b34cba8e5b2883391226f3afffbf1f6bad4e907108ac2e1177d",
+        "3e97e367ed96a458e21821692cfeaa2cc45a931a6acfbb49e858975d34552506",
+        "40c9e55338bf34efecc93092f8d968063c5979cdbda35535c4a2ad7113c782c5",
+        "460f0fc358dddd62792d7efb0a50906e0c0ef3dfc073f515e331ca15e62edd17",
+        "46c5c30b85043d8b80e7554974a1b8592b2a116d6b85c120319f47b136bce5e5",
+        "47ecd1c528dae6b3241866ef22b8cf97f40bc75bda03c3c2d9b5a12e16f5ce6d",
+        "481addbe1655a9451820a1aa431e790877a50711e024347626ac63b8d6c9399c",
+        "493b94a5b2dd492e0f34add6b1d0938d7936efbfc20def7c002b019152e032e3",
+        "4f0d35c3b492953612bf356f2b99a6a399695f4fe080ccd787d65f2bff6effa2",
+        "563e1e4fe1b37628ce9d85a97c98bb730d3e7df6aa24763665ea37bd27d3a923",
+        "56e4e06c1811b6b7ece39fbd876b8568513c98ae45b4f12d8ba67d287f24c328",
+        "57af97f9a85415684b112c4b99200443010dea92433194dc5c990737ea064f53",
+        "58dce12385f87124bed5ba8847851aa85438b1be31324cfdeb66edaf260d0b39",
+        "5ae7ba03296b14710e157adc0cd870e59382387de6c4918bd11e747f90d96f95",
+        "5b3b78d581c88a7ebb6fdc94b91a920f2cef871e351085a6633306f0444b806b",
+        "5c755a4193739951b93ec3827be911390454392d13c10008b2b63cf9c8a86eae",
+        "642b08d5e6c04db3557681736c7637762e33a5eda63329f203f246eafebf01c1",
+        "6c1005671fc3e5ea5907b7cb0abba5702479f7098107a1dfe67c905bfcf25c8c",
+        "76382de18745ca87e681ea4e09ad7fc502a6c7f2c85073e8b76e44dc5561aca0",
+        "777223b0a07e616bef84021bde0df12444b3cb9d638ce5f04aeeaf0a9eac3cb6",
+        "782e7be59887663a954a323e13d4ba0581a160ceb922bb98d95a9bb56872552f",
+        "78e0ebceb7162e3070d6ca25188f5ab554107300929452f806373a2d8b3ad5c9",
+        "7d0571d75593233f82bbd331da1021bce619f6cd45857f1252c73f85ad80d050",
+        "7e437985427177037221ee2df2173f328e41e92d8f592347b9efb68af54d557a",
+        "7f059e6a121660efdb8a9eb9795fcf40197e939765f14c5a0d9bb15b2920c6fb",
+        "81bcbd6ff9a95c4f5c1979d8aecdbcead592a7682cf2df7eb150194f4f20ecab",
+        "84d8dcb16b7bf008650a7cb931f31103df8f6db23e2cc15caadf66a6b06ac12b",
+        "850cc530db65460fd860a6904b44f13da250a9dc30d76d8cdabdbbe9a1d5ca1f",
+        "86b0298a8b6ba62bebe589bf85c295de5151b07f83db42ea87ef4886ec0b59d2",
+        "89b2593c570c8afdd07c07fd329eeb05a9b66b0a0a1db0a2cdbc580977cd8aca",
+        "8a2567f074a2b4e45734bca759363eb17ac8d97f241510978f962511d1b8ba1d",
+        "8e895420239d3d532786028a75d4fa245bc9989bf77929155f961a18ef61f6ba",
+        "8f70a899490f3c7b92ce18951b5db307356d037ed52d21b55d39c7ecc97ec158",
+        "9017fea6148b7591d7d24941ef20c22700b18a0e9b304ae18bd5e19c8326b227",
+        "902046ecb8f1d2e1a2d6a7933cd51b6543b652e39a6a2cf998f5d3fbf6f1c0dc",
+        "98da52cd30b34a3ddb2565b7022a66bf76c0add02600917c4989a052285fd0af",
+        "9987cd928847d80e67595d65e6c65a93548e562ecac70bd7adaa4f00dee3ef3a",
+        "a0ba1191f6fe8e819d8e62a3a10068a4914da901a09e9b56f6513876f69ba4b7",
+        "a126c6e297f47700e45b19ccb1e2e0699ebe82a67b6149614698d8a6195217c6",
+        "a3f59bc18c0bec3fe63fdbe0c79616a5938f26dec10652936840e4c0db4d7caf",
+        "ac059389998bc792c628c45dcd550da18d47947cc27bc2c139db7391bfe3d284",
+        "b1244a8537aa0323270872fe419ad06b0906002e9344c64d9e2504dc2d12e942",
+        "b317d26f57bc3b52b61904126ebd8eb344dac307a4f55cf3a5ef0d15dba89652",
+        "b35564fa7bb53618a1c788d3c5131e1e82dabd812fb7d476e0a5376b165eed9b",
+        "b4e178b00c937a52d6d5792ca6b7c758f5cbed3c141ad4bdabca448d030f92c8",
+        "b6df72015ca60c04b26d1f55b2e16d0a2c4ac7ef24dcfc025bc14680c0e49409",
+        "b8e5e864c12bff0f7f60ed18133122f4f7407319e06bb3061ed1ef2751c3eb13",
+        "b8ec5f160d042f07aac3dd773079d5fc6a87fa91000b6da4ba9d8da930b74675",
+        "b96a42a50ce1bb9fa39fe12a8bba10eabf3fbae5284b7b26abeeebc9cebae481",
+        "bb2c68ea01879d0182bd5f213eb1dee65c2a58df676c5a77da37c59219b54bb2",
+        "bc6bef96affabf0981f096a81cde52c1bb5bf8a4549395c629efdb7ab13a7fff",
+        "bdd21534e4a48f77b9751cc8a401d5e1ddfd6344163588ebc5b4dc6b15bd76b6",
+        "be1608702047e14c60fa1f30a25d66f697e4d4fb1d8584ddea4f7029088a7992",
+        "c11b0e129bcbbf75ef5b1e67e49f26ad5ac346954b958d542c3fb686ea0c90e4",
+        "c1bb1936dc1c01a676f73e1fdaaf848ab8c0a3aa464b7ad238d96be5ffe2cb54",
+        "c5a694dddc1dd23f82c811b7b31c4270403dfcddeb7f1f077ae5156497e8b795",
+        "c8bf3214265611e7736bad63d365fd6418be7a7dc9680a1af6533877c685c86d",
+        "ca8d5116845159bca4e8e233652624e21e403178b96baccd1ec815f07e786608",
+        "cc4f1b6588aa6dec05dfae764c293df76674953fe799841faec9cdf6e517b9a6",
+        "ce578e91b2ae2c629e2c01f825ccd328a8ce7b982ad5af4d0318306dd09bfe99",
+        "d19e5042294db16a26c76a3850e98927dac95a2635590ff33c4b154bee0c6e6b",
+        "d444ff149596a4bc9ca7f314f061a7ee7040374aa7855a6b4923c19e0e790c51",
+        "d8b56a1194c5559c7c4ec09f37f865f8b0967ed4c9b434993bfb6a5f3f32303c",
+        "d938ac607b81a8a0b601519e3864cae204c8eb707fb7274af496f959ce06ccb1",
+        "da1f3664e16b94a2d19a33fc62d0265effbabc5b37f2fceb3804b07b9118676b",
+        "dad9a3254f16f4c5a17736f4f3ca6adb844ced2a1a1847e0d520d2c263fb220c",
+        "db3257bdbbe8be2d0d2d6cb5031ef6065c3f1cffc8fb2c5176a7041244bc6e9e",
+        "dbdeea11c01a7a6412532f937fcc7c4e3a7a9618d479b217cce67e7786576b32",
+        "dd38db7ac024df4a381dd0e8fe04e355deb65f73440a42d31431746db98e48c7",
+        "ddbb3b858e41a978d94ef6a972b60f288b0f67731193af5642b5a5d62fd41b08",
+        "e3fa434d497bd8231c5da21d44a2f0c9f9637d900d5a27cbf7dc06a6593b1fe6",
+        "e4adae2ace9b5fc98447444c54d9db946704b7b58eba0c53365c5b5d23556257",
+        "e675a156c7cc9a4e0c6284f07b1438f3a3c999f2908158cb89a61b91b048dd38",
+        "e7c8b53362ba6b3d627aefd5b50b195ab727356681e2821bcb7258a88e459144",
+        "e93ac5e5d7c8fc7b52f841fc274793fe970bbddfd8d8f694756e8fc23e8b1a3a",
+        "e9fefa0faed2114896bb5445b95c617f7b79b4ecc0a2330a6e86aa47e1532e61",
+        "ec3e4b740ae5cf3f2deef44b545bb8407cc0ad5f9750b1c8a1a83c8e781637bb",
+        "ec9482fc37d3fcb1002755855b3602812a30660c48bf3d8b7e6d47a5e538ea61",
+        "ed7701a62083822168a92df98dbbcfe61daeb745dfd9aa71fc5fe22f3b8b1927",
+        "ef6d00363a847caa90c35a9ddea7414e639a6e9c64808b8cea240da66756a668",
+        "ef879b3db4861387e10bc60dd92b3baf45ec5839d57b3411f7b3d4c2ecb967a3",
+        "ef9ba7ad4531f05a44c21b198f964367437532d5f6b53c4c299481cba6c123ac",
+        "efbff5110d5b6bef6cfdabd85c9c3b557b3014cb90e9d72753f6660d91e693c3",
+        "f053e3ef97f09a359d19822e3dee45278fa3925ee9ca2687144e5416e5bb7665",
+        "f05b5a02776f410c9210958ba18c874e075e44cdf10c738395727b165b33be42",
+        "f3fd93974f945229d047630838c3b0a735bec9bdd716b56ab42047f3a7af06d5",
+        "f415d2e6d96235382049392036902ec65f2033f0c24014d3bfbd020bc84b304e",
+        "f489f5aae096091fbff8fedd00691cea492e677ebe6c809cd8a3aebb4a0170f3",
+        "f688eaad82309744c5d7834bf0c0938bc7fc96cb33b5aa801220d085225d2bf3",
+        "f6ed0118c8df9be0b76ba59478e790253f00d87546326322dfb220d32cad2434",
+        "f777159315da9a4950ec4978078f08464b7df5ff4265f3be226c57db657acfc3",
+        "f9e6c92d84fc350075ff4d5f402416f34bf1c9c06604ee9a619f36eda9262c54",
+        "f9eaae7a2aa75520b0aedba01f8a774d109dcc17160a2dcbba828b5be38fea6e",
+        "fb9c73a5d655534ac439f6b39a986dd886201a782979bd5e33454e603464945d",
+        "fca53a5bb38b383d3ea13f4293317ba7347355645c92ee91cda795bd8965403f",
+        "fed302948986af05ae6b0813b3a78eb2dcbfe99e38e24d91570d0c103ce19745",
+        "ff472c42f608dcfdd480bf7635a7094b92523c65722fd95eb0f691fe10b20680",
+        "ff9d89323b48425bf84fcde548c19267bb9f187e80e3d9dd838bbb8687578c85",
+        "ffa3ce5605019400d1d015e81659920464bdf3f1c95bbb4d031027f6e7830aa0"
+      ],
+      "review_target_count": 0,
+      "review_target_candidate_ids": [],
+      "same_id_stale_evidence_candidate_ids": [],
+      "stale_old_count": 0,
+      "stale_old_candidate_ids": []
+    }
+  },
+  "semantic_targets": [
+    {
+      "target_id": "root:00200eb3785c29d06be353c299fd6a0c4ab66c47747974a005ba0e9445834a03",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "98547e727989dbe4b922b6ad25cd9b7c72fbc362d2bd5b8c337e4fdb9ec21bdf",
+      "candidate": {
+        "candidate_id": "00200eb3785c29d06be353c299fd6a0c4ab66c47747974a005ba0e9445834a03",
+        "context_fingerprint": "1c2bb4e38c464435c964ba341dec049759e3f2c822cb9ffe2b893ac8b290d869",
+        "document_part": "body",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "4580a081317fb1122b8d48f6c2a680d4d93e0f04e88881d1049467da78355fc9",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "8b0426052535d826e0b758ea09262c90465b0b8a62167270124f552f0949f2c0",
+        "occurrences": [
+          {
+            "context_fingerprint": "2f661800f7f273ec60d17102cbfd90e5e6118791e29625fb8197d7fa02389525",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 17,
+              "start": 17
+            },
+            "owner": "network-protocol-gateway-usage",
+            "path": "src/foundation/capabilities/network-protocol-gateway-usage/SKILL.md",
+            "preview": "502 503 504 retry-amplification upstream-status edge origin trace context",
+            "signals": [
+              "fixed-http-status"
+            ],
+            "tokens": 15
+          }
+        ],
+        "owner": "network-protocol-gateway-usage",
+        "path": "src/foundation/capabilities/network-protocol-gateway-usage/SKILL.md",
+        "preview": "502 503 504 retry-amplification upstream-status edge origin trace context",
+        "priority": "P1",
+        "signals": [
+          "fixed-http-status"
+        ],
+        "skill_owner": "network-protocol-gateway-usage",
+        "tokens": 15,
+        "total_tokens": 15
+      }
+    },
+    {
+      "target_id": "root:021aefdb53f077686212d9dddf02c7e013263be4cceb9f8313305f87a2eab2d3",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "bff097b97ad95a6017370985d81619c7fb48619baf564583138248e3fbaf5b93",
+      "candidate": {
+        "candidate_id": "021aefdb53f077686212d9dddf02c7e013263be4cceb9f8313305f87a2eab2d3",
+        "context_fingerprint": "051cd429057ca0633407b6a36352f19794c8f9572cc361a4f0b0c283fdabfaca",
+        "document_part": "body",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "b1f4c53ad2352515076c790221dd0b5a03c5967adf7abc68cb4123a83c7f29d1",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "494d26364e67592e72eb8df71494243376b292409371fe5c68748986d7953791",
+        "occurrences": [
+          {
+            "context_fingerprint": "2ce2ec06909916cc87e6b0403602fc35db7c5795f839f73a954b9e5ae7e832f2",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 33,
+              "start": 33
+            },
+            "owner": "repeat-failure-analysis",
+            "path": "src/foundation/capabilities/repeat-failure-analysis/SKILL.md",
+            "preview": "After two failures, do not repeat the same path without new evidence.",
+            "signals": [
+              "fixed-count"
+            ],
+            "tokens": 14
+          }
+        ],
+        "owner": "repeat-failure-analysis",
+        "path": "src/foundation/capabilities/repeat-failure-analysis/SKILL.md",
+        "preview": "After two failures, do not repeat the same path without new evidence.",
+        "priority": "P1",
+        "signals": [
+          "fixed-count"
+        ],
+        "skill_owner": "repeat-failure-analysis",
+        "tokens": 14,
+        "total_tokens": 14
+      }
+    },
+    {
+      "target_id": "root:0560f7038ba9ca6c7b59e84f6a7ca98ec4b988b76ad90b8e75afcceb8c3803ab",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "923c07171bff73f8cf4ce8aee975ca55ab15dea9455a3bc585d9ef2349f96de3",
+      "candidate": {
+        "candidate_id": "0560f7038ba9ca6c7b59e84f6a7ca98ec4b988b76ad90b8e75afcceb8c3803ab",
+        "context_fingerprint": "55aae4099f58cd17a19905615cc7181b6c0a138c038635b88a25a16fa08736be",
+        "document_part": "body",
+        "finding": "fixed_vendor_tool_candidate",
+        "fingerprint": "e4887f2fab97a95e7d5ef99a2394ea977530b0296889159bfaca5125ad156610",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "b3584b407684bb1b3d99ab2502eedc9fb930e544993a6326a506fea3c413e5af",
+        "occurrences": [
+          {
+            "context_fingerprint": "bc96284a8707a9a9d7ae6c0bc8a18d83af93bf2ba6a48145d9968d86c8f6d52f",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 19,
+              "start": 19
+            },
+            "owner": "cloud-platform-extension",
+            "path": "src/domain-extensions/cloud-platform-extension/SKILL.md",
+            "preview": "Do not use for unknown cloud scope, provider-name-only or language-only work, local Kubernetes, generic backend work without a cloud control-plane dependency",
+            "signals": [
+              "kubernetes"
+            ],
+            "tokens": 28
+          }
+        ],
+        "owner": "cloud-platform-extension",
+        "path": "src/domain-extensions/cloud-platform-extension/SKILL.md",
+        "preview": "Do not use for unknown cloud scope, provider-name-only or language-only work, local Kubernetes, generic backend work without a cloud control-plane dependency",
+        "priority": "P1",
+        "signals": [
+          "kubernetes"
+        ],
+        "skill_owner": "cloud-platform-extension",
+        "tokens": 28,
+        "total_tokens": 28
+      }
+    },
+    {
+      "target_id": "root:0cb8d0b1c79bd6239265e78f5b67a274c58cefbcfb599fb2329129969f72de20",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "5d68f7d90dbc5919db60c8538e88fdfcc87133d3dbebea5b80fa9a39997d47db",
+      "candidate": {
+        "candidate_id": "0cb8d0b1c79bd6239265e78f5b67a274c58cefbcfb599fb2329129969f72de20",
+        "context_fingerprint": "491718b4accc1789a1e78a752d684df303ab54f5c784137b148c01fd2f8090c7",
+        "document_part": "body",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "69a12e58048b9931585e2a659bf209527fd94e96620fd9da79e749445a576b9c",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "494d26364e67592e72eb8df71494243376b292409371fe5c68748986d7953791",
+        "occurrences": [
+          {
+            "context_fingerprint": "6d9c7a61f1f77516a44e8bd80cd95bdbb6195dd48134dde743f9c74e59865dbc",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 36,
+              "start": 35
+            },
+            "owner": "repeat-failure-analysis",
+            "path": "src/foundation/capabilities/repeat-failure-analysis/SKILL.md",
+            "preview": "Change at least one material dimension",
+            "signals": [
+              "fixed-count",
+              "fixed-threshold"
+            ],
+            "tokens": 6
+          }
+        ],
+        "owner": "repeat-failure-analysis",
+        "path": "src/foundation/capabilities/repeat-failure-analysis/SKILL.md",
+        "preview": "Change at least one material dimension",
+        "priority": "P1",
+        "signals": [
+          "fixed-count",
+          "fixed-threshold"
+        ],
+        "skill_owner": "repeat-failure-analysis",
+        "tokens": 6,
+        "total_tokens": 6
+      }
+    },
+    {
+      "target_id": "root:10b3d5b43c094888c05fbc4897c9b9224b84adfceccfa2ba313df5a91b1156d2",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "924fcfa1d18aa3029905a24ddfa77786b1d3d3926d0cbd4d819fd408ecf6633e",
+      "candidate": {
+        "candidate_id": "10b3d5b43c094888c05fbc4897c9b9224b84adfceccfa2ba313df5a91b1156d2",
+        "context_fingerprint": "d99aeeb1415627b8376fe172a030ee88029867e70143be526114869aabc176fa",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "84ab0506402b71c5088500cc9c77ea767c65ac3478fa8c7ed32878bbda8c1d66",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "c445e5db73ea454dfd95513de9f74867c83a7c98de391a2a87c73c32cd475a1b",
+        "occurrences": [
+          {
+            "context_fingerprint": "9bbe27c7125a3f1b0e8c5e00d65f7d06c5e7b31c8d940ecfb37c54c4f32274b9",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 30,
+              "start": 30
+            },
+            "owner": "threat-modeling",
+            "path": "src/foundation/capabilities/threat-modeling/SKILL.md",
+            "preview": "control change that requires review.",
+            "signals": [
+              "mechanism",
+              "requires"
+            ],
+            "tokens": 6
+          }
+        ],
+        "owner": "threat-modeling",
+        "path": "src/foundation/capabilities/threat-modeling/SKILL.md",
+        "preview": "control change that requires review.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "requires"
+        ],
+        "skill_owner": "threat-modeling",
+        "tokens": 6,
+        "total_tokens": 6
+      }
+    },
+    {
+      "target_id": "root:14aaa5b0bd39e0ca590c6ec806c428f2193044de760a13fa0096a29e8dbb6e54",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "fa8746394d103f430d801d651422ca98c9277896e6c88eab2c4234f23597fc5d",
+      "candidate": {
+        "candidate_id": "14aaa5b0bd39e0ca590c6ec806c428f2193044de760a13fa0096a29e8dbb6e54",
+        "context_fingerprint": "5bba82e622e9ddc494035dc2f111a4bbb8b95505035cd625d347a5afd9e41d3c",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "dc842ae11bc08d65c998d3ea63fbda25d55ce9c737f5fad16d9f9ab06b4a8f14",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "7f704220be46d9872520b4c91d81e1fd81e4484c6bfeb4eac5941312ccf96e2c",
+        "occurrences": [
+          {
+            "context_fingerprint": "84afbbe809cddbf55ea1661955ba22f990840f32f51867fbdcf525349d9eed4a",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 27,
+              "start": 27
+            },
+            "owner": "skill-efficacy-benchmark",
+            "path": "src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md",
+            "preview": "Define each benchmark's task, baseline, treatment, metrics, verdict, caveats",
+            "signals": [
+              "each",
+              "mechanism"
+            ],
+            "tokens": 16
+          }
+        ],
+        "owner": "skill-efficacy-benchmark",
+        "path": "src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md",
+        "preview": "Define each benchmark's task, baseline, treatment, metrics, verdict, caveats",
+        "priority": "P1",
+        "signals": [
+          "each",
+          "mechanism"
+        ],
+        "skill_owner": "skill-efficacy-benchmark",
+        "tokens": 16,
+        "total_tokens": 16
+      }
+    },
+    {
+      "target_id": "root:17cdb219ca40375b59ec12f55b89090a21c90131a83ce1527cfa291411792a30",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "dde40aa881f312db7f69b2847248238dd2bc3c7d1098a22e344bf5cd9ccf7b14",
+      "candidate": {
+        "candidate_id": "17cdb219ca40375b59ec12f55b89090a21c90131a83ce1527cfa291411792a30",
+        "context_fingerprint": "72ba1fd306ab8f97e794310277e3be5adc09b1eb7911c19ca3466677dab8d547",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "b712e19f23509f973602ad9ad4637bac52491d37d7e02715a57f4b0e43aafc9c",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "e20fbbb805643f94ece01afeb3c3c496523301df4bdd0ee679542f381816e2fa",
+        "occurrences": [
+          {
+            "context_fingerprint": "98485d11e57fb0d039843c1ee870a104da1db7eaaa7eb27ea0b942712f836ba9",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 29,
+              "start": 29
+            },
+            "owner": "cli-daemon-interface-design",
+            "path": "src/foundation/capabilities/cli-daemon-interface-design/SKILL.md",
+            "preview": "Require explicit production targets and credential input channels protected from history and process listings.",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 15
+          }
+        ],
+        "owner": "cli-daemon-interface-design",
+        "path": "src/foundation/capabilities/cli-daemon-interface-design/SKILL.md",
+        "preview": "Require explicit production targets and credential input channels protected from history and process listings.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "cli-daemon-interface-design",
+        "tokens": 15,
+        "total_tokens": 15
+      }
+    },
+    {
+      "target_id": "root:1904d798893f870492c09dcb0812e92b8614f6ae43e34fd5c9b23a747f5a68b2",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "c0147f2e2bd2f589cae81e183bb1c43bfc0958a9cd356bf8e5c3770feed21ab8",
+      "candidate": {
+        "candidate_id": "1904d798893f870492c09dcb0812e92b8614f6ae43e34fd5c9b23a747f5a68b2",
+        "context_fingerprint": "3afff9e9bdce4a4f6e72359a47e4c6966cb5b59e7626b087d041b891f28f49ad",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "615179096a08bcf501e729ee0168c7db7a0b6e98803c4805f41425aa18ecc8ba",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "33623ce58a663b30898dd2f3959405bb887986c5f64b22538726b8bef9f9919e",
+        "occurrences": [
+          {
+            "context_fingerprint": "2f017cf79d70073c153a0816d96f39493124662ff7e842d26012240fe6f0ec28",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 29,
+              "start": 29
+            },
+            "owner": "cache-design",
+            "path": "src/foundation/capabilities/cache-design/SKILL.md",
+            "preview": "Require explicit durability and recovery proof for write-behind.",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 11
+          }
+        ],
+        "owner": "cache-design",
+        "path": "src/foundation/capabilities/cache-design/SKILL.md",
+        "preview": "Require explicit durability and recovery proof for write-behind.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "cache-design",
+        "tokens": 11,
+        "total_tokens": 11
+      }
+    },
+    {
+      "target_id": "root:1af5f56a14fdd4e0844be1cdf446861e201eb5ca4e92ff95b40c78fc910e94af",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "23c528cd5af194b46bb3de24d53932e32e8e06903436912da2eb67e943e96d08",
+      "candidate": {
+        "candidate_id": "1af5f56a14fdd4e0844be1cdf446861e201eb5ca4e92ff95b40c78fc910e94af",
+        "context_fingerprint": "22e196f65d867a6a72d8b9467c2106ff9ecd1dff429f8b5fa108d9ce5137eee1",
+        "document_part": "body",
+        "finding": "mandatory_artifact_candidate",
+        "fingerprint": "36f20dc6ac10ba1dae6ef74fd6772690d55246fc1b9266e3df835db7eb7c5d70",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "bd66d64192cbed335245389e71a0b4ee0d1aa6bbad2d8c141a6a404e24efe7ef",
+        "occurrences": [
+          {
+            "context_fingerprint": "fe6ecb7b75471f43b3b3b0b636d47947ac770725c698caef0541cdc0f3daec46",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 25,
+              "start": 25
+            },
+            "owner": "android-platform-extension",
+            "path": "src/domain-extensions/android-platform-extension/SKILL.md",
+            "preview": "Record manifest exposure, permissions, background/notification guarantees, storage/key/backup behavior, artifact/signing source, device matrix, ANR evidence",
+            "signals": [
+              "artifact"
+            ],
+            "tokens": 28
+          }
+        ],
+        "owner": "android-platform-extension",
+        "path": "src/domain-extensions/android-platform-extension/SKILL.md",
+        "preview": "Record manifest exposure, permissions, background/notification guarantees, storage/key/backup behavior, artifact/signing source, device matrix, ANR evidence",
+        "priority": "P1",
+        "signals": [
+          "artifact"
+        ],
+        "skill_owner": "android-platform-extension",
+        "tokens": 28,
+        "total_tokens": 28
+      }
+    },
+    {
+      "target_id": "root:1b1ef90112ad11bccd229e552628b754c6091156df8dde46091ba8712e83118e",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "669b96595499b33e0871228f2f50172d005d17763eacf7757d60a6c001435f02",
+      "candidate": {
+        "candidate_id": "1b1ef90112ad11bccd229e552628b754c6091156df8dde46091ba8712e83118e",
+        "context_fingerprint": "9b6c11481e4a7768955aff0f3a44b26631520c688b11744c792c5287163eaa92",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "e577d0c06cb589be98c8351d601b88d675dcebf4e3fed42993cc6be67843f73e",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "ca947ef070dc74782d4e0c1b4e06a0fe6da32f92ac9c5670aee905ae55f46b0a",
+        "occurrences": [
+          {
+            "context_fingerprint": "5fab32cecac7d23b4e937e8f3c7ecbbe5b073cee06d9055eaaa0855515a32609",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 74,
+              "start": 74
+            },
+            "owner": "ai-code-review-refactor",
+            "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
+            "preview": "Never self-upgrade Effective Level during review.",
+            "signals": [
+              "mechanism",
+              "never"
+            ],
+            "tokens": 9
+          }
+        ],
+        "owner": "ai-code-review-refactor",
+        "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
+        "preview": "Never self-upgrade Effective Level during review.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "never"
+        ],
+        "skill_owner": "ai-code-review-refactor",
+        "tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    {
+      "target_id": "root:204ddf26447faf7dcb647e2763433b9146e9694ad26403a189e2483fe426adf9",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "738c48bb35f8aea7a092b41843dbfbebd7e92752d8fe81cf80ca1aaa37d49ab4",
+      "candidate": {
+        "candidate_id": "204ddf26447faf7dcb647e2763433b9146e9694ad26403a189e2483fe426adf9",
+        "context_fingerprint": "e2fafc9cbac669871dc0417f046f2cd707ebb4b3be5a64369400dc2868238a14",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "e1809f1bf0a373b8235ff4422fb101bb4a8fa1cd169b917a1ce524c70d15f631",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "8fe5ca6ef62a941e0f5a30c794adb5075aa893b18bc7f1cd745b0d9c665a9b99",
+        "occurrences": [
+          {
+            "context_fingerprint": "4e538d3544b8575d8dc9e4d56cc97afad17761fcaf4bbde01171d548538b28d2",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 28,
+              "start": 28
+            },
+            "owner": "nosql-database",
+            "path": "src/foundation/capabilities/nosql-database/SKILL.md",
+            "preview": "Classify each invariant as item or document-local, partition-local",
+            "signals": [
+              "each",
+              "mechanism"
+            ],
+            "tokens": 12
+          }
+        ],
+        "owner": "nosql-database",
+        "path": "src/foundation/capabilities/nosql-database/SKILL.md",
+        "preview": "Classify each invariant as item or document-local, partition-local",
+        "priority": "P1",
+        "signals": [
+          "each",
+          "mechanism"
+        ],
+        "skill_owner": "nosql-database",
+        "tokens": 12,
+        "total_tokens": 12
+      }
+    },
+    {
+      "target_id": "root:2139f1437973d935ab31633c3ab0746e924be74abed660f6c5a5656020b53855",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "597e2d8e2473d8106e3cdd39b5be3027eee3bde2cd29d82d490867abc3c53e6c",
+      "candidate": {
+        "candidate_id": "2139f1437973d935ab31633c3ab0746e924be74abed660f6c5a5656020b53855",
+        "context_fingerprint": "2684495bdb858888bd73849eb11fa5bdaec849c3fad747e36acf3416fa28c531",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "d8fae24e6de88429aeb73315c601369f54634c8d4099d739f3bd1a0d18e899ff",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "6a61bd76a8dd9d063372b2c341754c1df631c8a4c33450468adaa20fb7493d23",
+        "occurrences": [
+          {
+            "context_fingerprint": "4d54a317554bc0e59113f7b407eb6ee571784841e83ee1dc49c05391f6d9e625",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 24,
+              "start": 24
+            },
+            "owner": "web-platform-professional-usage",
+            "path": "src/foundation/capabilities/web-platform-professional-usage/SKILL.md",
+            "preview": "**Prefer native document semantics.** Select HTML elements from content and interaction meaning before adding roles or scripted behavior that must recreate browser defaults.",
+            "signals": [
+              "mechanism",
+              "must"
+            ],
+            "tokens": 27
+          }
+        ],
+        "owner": "web-platform-professional-usage",
+        "path": "src/foundation/capabilities/web-platform-professional-usage/SKILL.md",
+        "preview": "**Prefer native document semantics.** Select HTML elements from content and interaction meaning before adding roles or scripted behavior that must recreate browser defaults.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "must"
+        ],
+        "skill_owner": "web-platform-professional-usage",
+        "tokens": 27,
+        "total_tokens": 27
+      }
+    },
+    {
+      "target_id": "root:2a0f412b6bd0177b55258507eef1eeb810fa18406278a0e639e90a0cb64d66e4",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "279f8e064aa055477bfbdd41536529bcd42a846497685bda7d132866da05d2a7",
+      "candidate": {
+        "candidate_id": "2a0f412b6bd0177b55258507eef1eeb810fa18406278a0e639e90a0cb64d66e4",
+        "context_fingerprint": "3b601a180789d71f71ecd44f8b9783b55a5dbc8b3293bfe25dc1c23c53928989",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "aef4566bee67bba9ae8255e38eb0f4daa5901dc256733064eb1d0ea30dfc8828",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "55499f71f5431a58cfcf45670fe2f7fbe4a5779cb67fdc5fbaeb859add0fa4ee",
+        "occurrences": [
+          {
+            "context_fingerprint": "6dada4b8fc81c4829054290f70642809b056d85eba3c7b740f210890f4233282",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 25,
+              "start": 25
+            },
+            "owner": "state-machine-modeling",
+            "path": "src/foundation/capabilities/state-machine-modeling/SKILL.md",
+            "preview": "**Make lifecycle coverage explicit.** Show which valid conditions each state represents, how overlapping facts are resolved",
+            "signals": [
+              "each",
+              "mechanism"
+            ],
+            "tokens": 20
+          }
+        ],
+        "owner": "state-machine-modeling",
+        "path": "src/foundation/capabilities/state-machine-modeling/SKILL.md",
+        "preview": "**Make lifecycle coverage explicit.** Show which valid conditions each state represents, how overlapping facts are resolved",
+        "priority": "P1",
+        "signals": [
+          "each",
+          "mechanism"
+        ],
+        "skill_owner": "state-machine-modeling",
+        "tokens": 20,
+        "total_tokens": 20
+      }
+    },
+    {
+      "target_id": "root:2d72f4b2b3206aabb86a3a453417cfdcc07eb608b2833734527762e101505e87",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "2f0c70a667d8e031a9103c63f094a405a6d4c65e38e69ee83137d5aae3f8068d",
+      "candidate": {
+        "candidate_id": "2d72f4b2b3206aabb86a3a453417cfdcc07eb608b2833734527762e101505e87",
+        "context_fingerprint": "b63fb3685f4f395a7788776bc9874c4aae932f11c873347174ee02cfe26f889b",
+        "document_part": "body",
+        "finding": "mandatory_artifact_candidate",
+        "fingerprint": "5d77e1348365ee9a3e2838c833376169708268896be775597986078e41ffc38d",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "94aea8335a6fb281b3e17ed314684e9d2e69b5c20b76aa29a7a4e4560e70c8f6",
+        "occurrences": [
+          {
+            "context_fingerprint": "41d6abd50ab5f8874c35de6f53b2031c53a8104224ccdc74ff672f61e98773c9",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 30,
+              "start": 30
+            },
+            "owner": "architecture-enforcement-tooling",
+            "path": "src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md",
+            "preview": "Require current rule inventory, negative fixture, exception policy",
+            "signals": [
+              "fixture"
+            ],
+            "tokens": 10
+          }
+        ],
+        "owner": "architecture-enforcement-tooling",
+        "path": "src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md",
+        "preview": "Require current rule inventory, negative fixture, exception policy",
+        "priority": "P1",
+        "signals": [
+          "fixture"
+        ],
+        "skill_owner": "architecture-enforcement-tooling",
+        "tokens": 10,
+        "total_tokens": 10
+      }
+    },
+    {
+      "target_id": "root:2ffa565928263dfc54d8b9cc3ba7c046ba56e33d619a09d8d67bbc1c997d90c4",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "09f2cece8d2fbac6abd23666bd860c5a079524cac8db6e5bba8399d33caf1624",
+      "candidate": {
+        "candidate_id": "2ffa565928263dfc54d8b9cc3ba7c046ba56e33d619a09d8d67bbc1c997d90c4",
+        "context_fingerprint": "8d3f56f90bb0690741a939fce1e0e400f5c48068b32f60f837af629a19fa5ab8",
+        "document_part": "body",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "8f797837bc139ab6901dd383ecb0f7611054de71339d53f14d353737884d610e",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "ca947ef070dc74782d4e0c1b4e06a0fe6da32f92ac9c5670aee905ae55f46b0a",
+        "occurrences": [
+          {
+            "context_fingerprint": "37f12b55f33afeada38df58505e15204f331e372871928ebeba41c10d4e93591",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 39,
+              "start": 39
+            },
+            "owner": "ai-code-review-refactor",
+            "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
+            "preview": "Give L4 one independent final review plus only triggered gates, specialists",
+            "signals": [
+              "fixed-count"
+            ],
+            "tokens": 13
+          }
+        ],
+        "owner": "ai-code-review-refactor",
+        "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
+        "preview": "Give L4 one independent final review plus only triggered gates, specialists",
+        "priority": "P1",
+        "signals": [
+          "fixed-count"
+        ],
+        "skill_owner": "ai-code-review-refactor",
+        "tokens": 13,
+        "total_tokens": 13
+      }
+    },
+    {
+      "target_id": "root:37ee0ef16d7169dfebcc297a4794f3f268241a7990d2f3f11a58651e21214716",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "4e391c8bd77dd3a85a2204ba19df968548911e34523a815360a9b81bf12c822a",
+      "candidate": {
+        "candidate_id": "37ee0ef16d7169dfebcc297a4794f3f268241a7990d2f3f11a58651e21214716",
+        "context_fingerprint": "8f40d55038b39da5c3fdab6f5d5611233dbe3485bdc51eab10839b64faa951fe",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "0be79ecbb0a31671a6d693166c32f1d02d8d4b24e12a7943321613a238bd4f72",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "a8c9e503ddae97dbb41ffa936fadf372df6cc1ef18cf3c8dfbc54ee04269b249",
+        "occurrences": [
+          {
+            "context_fingerprint": "14e4cbf61af6ec924b6c46b1a22c4370ecedff4db8fd42dae76b05702925a813",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 12,
+              "start": 12
+            },
+            "owner": "client-lifecycle-state-restoration",
+            "path": "src/foundation/capabilities/client-lifecycle-state-restoration/SKILL.md",
+            "preview": "Client behavior must survive or intentionally reset across visibility changes, backgrounding, process termination, relaunch, crash, upgrade, logout",
+            "signals": [
+              "mechanism",
+              "must"
+            ],
+            "tokens": 25
+          }
+        ],
+        "owner": "client-lifecycle-state-restoration",
+        "path": "src/foundation/capabilities/client-lifecycle-state-restoration/SKILL.md",
+        "preview": "Client behavior must survive or intentionally reset across visibility changes, backgrounding, process termination, relaunch, crash, upgrade, logout",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "must"
+        ],
+        "skill_owner": "client-lifecycle-state-restoration",
+        "tokens": 25,
+        "total_tokens": 25
+      }
+    },
+    {
+      "target_id": "root:38c33eb72654f6bffb9f9a40c4f3874e1a37ddad60bfe56649dda31824a8b514",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "00194bae6901cd3ecc7be0ec1ecf16e651a62cd6880cb7da6f740db99ed94a13",
+      "candidate": {
+        "candidate_id": "38c33eb72654f6bffb9f9a40c4f3874e1a37ddad60bfe56649dda31824a8b514",
+        "context_fingerprint": "3dd280549488669082a97b81a4efc4f38f06cb9a3302eef56dae410fd6660627",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "e7960fde78a720c034c384f9c08535869f9f75b6e4378b53529380734847ba21",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "8ff03a1bb98fac3765fe30989f7f12a9838a0f654c4e398838c8a45efee317f4",
+        "occurrences": [
+          {
+            "context_fingerprint": "ec978ca4fe10d1f5157050d072a97e1440e9a56fbf8a3729451285d788d54e77",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 57,
+              "start": 57
+            },
+            "owner": "delivery-release-gate",
+            "path": "src/professional-skills/delivery-release-gate/SKILL.md",
+            "preview": "Require rollout approval, watch ownership, stop signals",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 9
+          }
+        ],
+        "owner": "delivery-release-gate",
+        "path": "src/professional-skills/delivery-release-gate/SKILL.md",
+        "preview": "Require rollout approval, watch ownership, stop signals",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "delivery-release-gate",
+        "tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    {
+      "target_id": "root:3a5115974e7c228a0b2989161e24bd2f9d88fa0a1a39c7868c33cd0ccd9bc5f8",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "697439d6c2f16a1f39bb13ce0f9a3e97c67203f5a86c1b1dedfb574b9b38589f",
+      "candidate": {
+        "candidate_id": "3a5115974e7c228a0b2989161e24bd2f9d88fa0a1a39c7868c33cd0ccd9bc5f8",
+        "context_fingerprint": "06c97184d3051f55ef06dc84a64b6bf3b84f266a23c7515fb862be4eae91cc93",
+        "document_part": "body",
+        "finding": "mandatory_artifact_candidate",
+        "fingerprint": "5264e12bb20b67b6d47f6c137817354d0d72501402796ae71b2eb3a21ce19f38",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "5cf68ffb7290c0f441ed510f7e191c7e835c57054d988873f4df26ca7a6b11be",
+        "occurrences": [
+          {
+            "context_fingerprint": "bee6921f43342f8395e27f0148133db74f26291943b233e358a67efb2c6be7f1",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 53,
+              "start": 53
+            },
+            "owner": "bigdata-product-extension",
+            "path": "src/domain-extensions/bigdata-product-extension/SKILL.md",
+            "preview": "Record negative-path tests, cost limits, escalation",
+            "signals": [
+              "tests"
+            ],
+            "tokens": 9
+          }
+        ],
+        "owner": "bigdata-product-extension",
+        "path": "src/domain-extensions/bigdata-product-extension/SKILL.md",
+        "preview": "Record negative-path tests, cost limits, escalation",
+        "priority": "P1",
+        "signals": [
+          "tests"
+        ],
+        "skill_owner": "bigdata-product-extension",
+        "tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    {
+      "target_id": "root:45030033706eceaef63f523be6dca6d944523e15ff14bef0ee176a9acd585d42",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "b26739935c8399ac5bb3d1f06ca4a7707b4d54476b131d9deedc111864569546",
+      "candidate": {
+        "candidate_id": "45030033706eceaef63f523be6dca6d944523e15ff14bef0ee176a9acd585d42",
+        "context_fingerprint": "dc4a543068711f111b9ac429ecfe7e5447951bdcda4c44d3b7cdbb5de4cd7fd5",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "844a3db30768c4c351d14cf3a918e3d7d243cd2e53bd41128889726c973634d0",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "54386b1fa4331cc2a24ab98087e83ec87a98e9e16369c137022b514e8c6a73f1",
+        "occurrences": [
+          {
+            "context_fingerprint": "652141fcdd8c301800fcfd851cce3d2f63cfb260bf429b01c51e801ca1a5dffa",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 13,
+              "start": 13
+            },
+            "owner": "solution-optimality-evaluation",
+            "path": "src/foundation/capabilities/solution-optimality-evaluation/SKILL.md",
+            "preview": "more future-proof require comparison with the strongest feasible alternative.",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 11
+          }
+        ],
+        "owner": "solution-optimality-evaluation",
+        "path": "src/foundation/capabilities/solution-optimality-evaluation/SKILL.md",
+        "preview": "more future-proof require comparison with the strongest feasible alternative.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "solution-optimality-evaluation",
+        "tokens": 11,
+        "total_tokens": 11
+      }
+    },
+    {
+      "target_id": "root:491220af01d630b94a5692b217bda2b3a1cf7b39d8d333d7cb6c3b3e8be0880e",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "c881177f8aa39d4de9bb96835d58f398aa53ab0e48d4c7201010459ec36efb72",
+      "candidate": {
+        "candidate_id": "491220af01d630b94a5692b217bda2b3a1cf7b39d8d333d7cb6c3b3e8be0880e",
+        "context_fingerprint": "7451c8e3c8db740a1e5102a4ee1798eff4b59033d23cf2ebb4262c203faa6690",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "d6391867a229d0ecc265b392dfe9f0c22b1867c82218c3d3a6faca758c61c768",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "e6b67c023180ba746e9128884be7f15830e38b5720835ab910a37a50f5b6a87a",
+        "occurrences": [
+          {
+            "context_fingerprint": "8fe39cb6638bc507fc6ea9b522dd2e97f26a64c9fbd1259625cd4902626212d6",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 33,
+              "start": 33
+            },
+            "owner": "acceptance-criteria-builder",
+            "path": "src/professional-skills/acceptance-criteria-builder/SKILL.md",
+            "preview": "Map each material criterion to a realistic validation signal and state its proof limit.",
+            "signals": [
+              "each",
+              "mechanism"
+            ],
+            "tokens": 15
+          }
+        ],
+        "owner": "acceptance-criteria-builder",
+        "path": "src/professional-skills/acceptance-criteria-builder/SKILL.md",
+        "preview": "Map each material criterion to a realistic validation signal and state its proof limit.",
+        "priority": "P1",
+        "signals": [
+          "each",
+          "mechanism"
+        ],
+        "skill_owner": "acceptance-criteria-builder",
+        "tokens": 15,
+        "total_tokens": 15
+      }
+    },
+    {
+      "target_id": "root:491cd785b7062c0e487eea9c148304fd43f7a51ec1e1221558a3b2c33533503d",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "367366fdf0f56766ddc3a77619942728906cdac59cc9ac4701aa132559278696",
+      "candidate": {
+        "candidate_id": "491cd785b7062c0e487eea9c148304fd43f7a51ec1e1221558a3b2c33533503d",
+        "context_fingerprint": "662e932ca4d87c6ee17838d26be60acb2149ec381ed150678a43340afe37a0d2",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "d8f4bea6d52f776b5d6f4bc92a4adde3c4cf91daeb3fae2619314785c85aa3dd",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "1593935b93e1d5e0a41e41283335b4ad06e7888ea866e8974763bbeaead63bee",
+        "occurrences": [
+          {
+            "context_fingerprint": "a8b4504d9201a86ccdc1149b30b78f5dbcd0385128e1da496e91f8afa43f71c5",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 54,
+              "start": 54
+            },
+            "owner": "business-invariant-analysis",
+            "path": "src/foundation/capabilities/business-invariant-analysis/SKILL.md",
+            "preview": "Map each material invariant to a test, review check",
+            "signals": [
+              "each",
+              "mechanism"
+            ],
+            "tokens": 10
+          }
+        ],
+        "owner": "business-invariant-analysis",
+        "path": "src/foundation/capabilities/business-invariant-analysis/SKILL.md",
+        "preview": "Map each material invariant to a test, review check",
+        "priority": "P1",
+        "signals": [
+          "each",
+          "mechanism"
+        ],
+        "skill_owner": "business-invariant-analysis",
+        "tokens": 10,
+        "total_tokens": 10
+      }
+    },
+    {
+      "target_id": "root:4baae35f1e600adf9689dcbb9893272895fa2d603c874db42e20e95fe6be8091",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "1d3861770655ac0b315f800fb8706826952f9d380c3d819cc8e81f0ede69046e",
+      "candidate": {
+        "candidate_id": "4baae35f1e600adf9689dcbb9893272895fa2d603c874db42e20e95fe6be8091",
+        "context_fingerprint": "dec39e32f6aa225db2909fc93c72eb4152bf6c95baf80ad5e73dfe6070f220ae",
+        "document_part": "body",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "f33f80903aeddc8ce33119328cb6279a4b89f4c9204aff1dd12aa11add605429",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "ca947ef070dc74782d4e0c1b4e06a0fe6da32f92ac9c5670aee905ae55f46b0a",
+        "occurrences": [
+          {
+            "context_fingerprint": "b47c814386e97baf50397773227968c138a06fd179f2a7434f45a90ddb704f8e",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 38,
+              "start": 38
+            },
+            "owner": "ai-code-review-refactor",
+            "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
+            "preview": "Give L3 one independent final review plus only risk-triggered JIT lenses.",
+            "signals": [
+              "fixed-count"
+            ],
+            "tokens": 16
+          }
+        ],
+        "owner": "ai-code-review-refactor",
+        "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
+        "preview": "Give L3 one independent final review plus only risk-triggered JIT lenses.",
+        "priority": "P1",
+        "signals": [
+          "fixed-count"
+        ],
+        "skill_owner": "ai-code-review-refactor",
+        "tokens": 16,
+        "total_tokens": 16
+      }
+    },
+    {
+      "target_id": "root:4e84f474724dae709f136d9f1ccb67e2ffb82d46256aba4cbf7761d03344442c",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "de3594184de1c74ecd9e5450f002d65924e3559be2bd4a5243164175144af7d2",
+      "candidate": {
+        "candidate_id": "4e84f474724dae709f136d9f1ccb67e2ffb82d46256aba4cbf7761d03344442c",
+        "context_fingerprint": "65a9f88ca9b767c94030184dfd5cb7fa332bc1b5e417d64edd4c3cebdecc5703",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "1d8981676262525891368bbef6f28c10547d4033acbda36192d7e89c3bb5acc4",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "fadad21f4caf546de73f28fcf9da89918e947b622ea0a3de4d302b546c161d5d",
+        "occurrences": [
+          {
+            "context_fingerprint": "d3230bbfdf54ee636e20ac9fc4b0818078f79fcb88184eaa3f554f3544c3ca84",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 37,
+              "start": 37
+            },
+            "owner": "cross-platform-client-extension",
+            "path": "src/domain-extensions/cross-platform-client-extension/SKILL.md",
+            "preview": "Validate shared logic plus every affected target, native boundary, release artifact",
+            "signals": [
+              "every",
+              "mechanism"
+            ],
+            "tokens": 13
+          }
+        ],
+        "owner": "cross-platform-client-extension",
+        "path": "src/domain-extensions/cross-platform-client-extension/SKILL.md",
+        "preview": "Validate shared logic plus every affected target, native boundary, release artifact",
+        "priority": "P1",
+        "signals": [
+          "every",
+          "mechanism"
+        ],
+        "skill_owner": "cross-platform-client-extension",
+        "tokens": 13,
+        "total_tokens": 13
+      }
+    },
+    {
+      "target_id": "root:4ec396255b873c12fc53b6d4d14912dec75c54f9cefee79fdd6e885da989725c",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "8b9cf796b90fd3c0a62737d80cecabc73a998913bd66a2bc4ccc7861cb168bbb",
+      "candidate": {
+        "candidate_id": "4ec396255b873c12fc53b6d4d14912dec75c54f9cefee79fdd6e885da989725c",
+        "context_fingerprint": "be3081119a4859f5c15894017f10529e5b75c87b41484c8b410aa26c130e1517",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "082f214bf3141df1315428ade581369ef83df5cb3a0a3b1000f53602c40b217e",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "e3b7c0d8680c93170c7fa8a4fee1623c6b2b202fed4db107e4fe3cf619f26db5",
+        "occurrences": [
+          {
+            "context_fingerprint": "48864d3663181cfeeb21aab5a3f1e7bfd6b0f329b9a33b43853a86b559e14ea4",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 10,
+              "start": 10
+            },
+            "owner": "windows-platform-extension",
+            "path": "src/domain-extensions/windows-platform-extension/SKILL.md",
+            "preview": "It is never the primary Professional review owner.",
+            "signals": [
+              "mechanism",
+              "never"
+            ],
+            "tokens": 9
+          }
+        ],
+        "owner": "windows-platform-extension",
+        "path": "src/domain-extensions/windows-platform-extension/SKILL.md",
+        "preview": "It is never the primary Professional review owner.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "never"
+        ],
+        "skill_owner": "windows-platform-extension",
+        "tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    {
+      "target_id": "root:4f8513208a5e465926c8998b8d639c38a07d2b84cb36412e13151e7ccb9f2c40",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "dd387179cad22f926ff16ab2b387d5b7634abc1b77bd0c9da08f84f1e58ee888",
+      "candidate": {
+        "candidate_id": "4f8513208a5e465926c8998b8d639c38a07d2b84cb36412e13151e7ccb9f2c40",
+        "context_fingerprint": "a238f7727011c28ab90ed0c47a8f614fc3b0db0bbbb3c805730fcb4a79c469f5",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "5adbb5a5d2a96b6102bb888435426aa77a46fa3e1a319adda20869c366264b25",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "046cd90a0601850a5838a741a9e6ee75f8b2a7c97de7f78019d0fb9bf14bf24a",
+        "occurrences": [
+          {
+            "context_fingerprint": "440feee51ed4ed6a354230eef93ec291d7bd8b1714da239d239c65ffcc641906",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 24,
+              "start": 24
+            },
+            "owner": "data-model-design",
+            "path": "src/foundation/capabilities/data-model-design/SKILL.md",
+            "preview": "**Authority before shape.** Record each changed fact's source of truth, mutation authority, lifecycle evidence",
+            "signals": [
+              "each",
+              "mechanism"
+            ],
+            "tokens": 20
+          }
+        ],
+        "owner": "data-model-design",
+        "path": "src/foundation/capabilities/data-model-design/SKILL.md",
+        "preview": "**Authority before shape.** Record each changed fact's source of truth, mutation authority, lifecycle evidence",
+        "priority": "P1",
+        "signals": [
+          "each",
+          "mechanism"
+        ],
+        "skill_owner": "data-model-design",
+        "tokens": 20,
+        "total_tokens": 20
+      }
+    },
+    {
+      "target_id": "root:521f12b077b7a9b5d49d0ad28bea807a65b7dabd678da3a6be3a3a53f0acc924",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "73d83b378f2982d68ac2326c668deb21a706ff1bc24fafe5a557ba0344da1281",
+      "candidate": {
+        "candidate_id": "521f12b077b7a9b5d49d0ad28bea807a65b7dabd678da3a6be3a3a53f0acc924",
+        "context_fingerprint": "bef0e2970d31e4a1398b200393dff6cfe70c62bc2c521a72fe3610aa447c1b90",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "082f214bf3141df1315428ade581369ef83df5cb3a0a3b1000f53602c40b217e",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "625a5f40cbcf8f975502ebc000d6035b79e9f55d89aab950c0217bb0f1e948c4",
+        "occurrences": [
+          {
+            "context_fingerprint": "bed512cae4b2c34dc06ea378afdb48a8eacfcae754bedf020b496cfb46a88d35",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 10,
+              "start": 10
+            },
+            "owner": "ios-ipados-platform-extension",
+            "path": "src/domain-extensions/ios-ipados-platform-extension/SKILL.md",
+            "preview": "It is never the primary Professional review owner.",
+            "signals": [
+              "mechanism",
+              "never"
+            ],
+            "tokens": 9
+          }
+        ],
+        "owner": "ios-ipados-platform-extension",
+        "path": "src/domain-extensions/ios-ipados-platform-extension/SKILL.md",
+        "preview": "It is never the primary Professional review owner.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "never"
+        ],
+        "skill_owner": "ios-ipados-platform-extension",
+        "tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    {
+      "target_id": "root:53244a7f0aa46ccdaed5a68af5bfaa7dccd3fd17f7d372cb44d2126564dd2357",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "46d1d7387850217b40f4bb8c2224503b7413de8b6730c452901d6cf044a2e9aa",
+      "candidate": {
+        "candidate_id": "53244a7f0aa46ccdaed5a68af5bfaa7dccd3fd17f7d372cb44d2126564dd2357",
+        "context_fingerprint": "86e338933f255e8a39fc7a81dcc926a1a35714bd68fbd705d07cf354045567b3",
+        "document_part": "body",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "8005d11156d142a7404268d28aea70bfaca2c52b18d8dd212f002c64f0fcdbfb",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "b546a70573bc35dfcb321958c7f3803df0152933f65076324d1164fe4f2121d0",
+        "occurrences": [
+          {
+            "context_fingerprint": "a6f371a10d816e9c4ff145c92774177effbdf5416637945b7a60ecb68406401c",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 31,
+              "start": 31
+            },
+            "owner": "high-risk-design-review",
+            "path": "src/professional-skills/high-risk-design-review/SKILL.md",
+            "preview": "Test the brief as four connected dimensions",
+            "signals": [
+              "fixed-count"
+            ],
+            "tokens": 7
+          }
+        ],
+        "owner": "high-risk-design-review",
+        "path": "src/professional-skills/high-risk-design-review/SKILL.md",
+        "preview": "Test the brief as four connected dimensions",
+        "priority": "P1",
+        "signals": [
+          "fixed-count"
+        ],
+        "skill_owner": "high-risk-design-review",
+        "tokens": 7,
+        "total_tokens": 7
+      }
+    },
+    {
+      "target_id": "root:54af05b938e641a607217739b679e0b05095c6d5c1ccdb398226aa5b80745ba3",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "fda474cb715946284a4c80a5c65ce24864fcc9d7a24fcd94498f18ffaf67eb07",
+      "candidate": {
+        "candidate_id": "54af05b938e641a607217739b679e0b05095c6d5c1ccdb398226aa5b80745ba3",
+        "context_fingerprint": "58e8d03d70a2da18d852fa01163d0c19f9f7809e3fa02f99bb42694d33ad124f",
+        "document_part": "body",
+        "finding": "fixed_vendor_tool_candidate",
+        "fingerprint": "60825042dba7853c128425abb4ff2b2aa4df3c5f531e6b0aad4accc2de34f4d0",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "8733c75eb6cf81e5e6a52f359432e22e572d3e6fd33d7456f65f0fcd9babe758",
+        "occurrences": [
+          {
+            "context_fingerprint": "987e8c7d0430bb6876346d0f3877b404a093fac4c25eaad23d0655b2fb5f6896",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 46,
+              "start": 46
+            },
+            "owner": "kubernetes-gateway",
+            "path": "src/foundation/capabilities/kubernetes-gateway/SKILL.md",
+            "preview": "Return a Kubernetes runtime decision",
+            "signals": [
+              "kubernetes"
+            ],
+            "tokens": 5
+          }
+        ],
+        "owner": "kubernetes-gateway",
+        "path": "src/foundation/capabilities/kubernetes-gateway/SKILL.md",
+        "preview": "Return a Kubernetes runtime decision",
+        "priority": "P1",
+        "signals": [
+          "kubernetes"
+        ],
+        "skill_owner": "kubernetes-gateway",
+        "tokens": 5,
+        "total_tokens": 5
+      }
+    },
+    {
+      "target_id": "root:54fa169848411b2ebf49cf8b067d212bd6872cd9fee3fbef8796c0fffc2a5b8c",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "20073d4271198586e7a244add6039bb60cd7a49232813d35e5a5127a2fd4db9d",
+      "candidate": {
+        "candidate_id": "54fa169848411b2ebf49cf8b067d212bd6872cd9fee3fbef8796c0fffc2a5b8c",
+        "context_fingerprint": "b78e09b2c196c58a56df6d9a0330b339e7f817390ef872ce1b63ec0cac9498ad",
+        "document_part": "body",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "583f8d55812d9dc6ad66bedbfd0a186d5616fae8a37ca6369d59bd606ce4c328",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "05e9c4c5fcb8bf5f0aa939232ae6ddd094cfd40058b7de6692efbc75727d5826",
+        "occurrences": [
+          {
+            "context_fingerprint": "754a8fa969904f61b7ab0fcdc62d81f77076c1201f0854b2215b2ed8ac8e4a63",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 12,
+              "start": 12
+            },
+            "owner": "task-dag-decomposition",
+            "path": "src/foundation/capabilities/task-dag-decomposition/SKILL.md",
+            "preview": "two or more candidate work units may form a graph",
+            "signals": [
+              "fixed-threshold"
+            ],
+            "tokens": 10
+          }
+        ],
+        "owner": "task-dag-decomposition",
+        "path": "src/foundation/capabilities/task-dag-decomposition/SKILL.md",
+        "preview": "two or more candidate work units may form a graph",
+        "priority": "P1",
+        "signals": [
+          "fixed-threshold"
+        ],
+        "skill_owner": "task-dag-decomposition",
+        "tokens": 10,
+        "total_tokens": 10
+      }
+    },
+    {
+      "target_id": "root:5623833cdf11c5b5335638f6218c01e0100dd1d49d16ab6eac02a50c9ce75bc8",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "35ce689fa0532e4add7031f122d20177468d3dabe1a226017ba9aca8bc2d9e73",
+      "candidate": {
+        "candidate_id": "5623833cdf11c5b5335638f6218c01e0100dd1d49d16ab6eac02a50c9ce75bc8",
+        "context_fingerprint": "2d36e405c724fc00f415e05df3b3fa0c70f12a4a263a220eb0aeb96d220d52ac",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "8d23b5b2c409da75c266b6da1fb3e0b25b76fa38d8cb8b66c0838fb118ecdfb3",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "5e60c571b9148afa93d87445c8fe9c46b18c812ee441f4e35abe0a851084e3ac",
+        "occurrences": [
+          {
+            "context_fingerprint": "6c1b8296b653976879c2589dbf9c8dd6d34dbbbea3f7eb73e8cded4ab61d6c78",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 10,
+              "start": 10
+            },
+            "owner": "linux-desktop-platform-extension",
+            "path": "src/domain-extensions/linux-desktop-platform-extension/SKILL.md",
+            "preview": "A `review-agent` must load it for Linux desktop behavior.",
+            "signals": [
+              "mechanism",
+              "must"
+            ],
+            "tokens": 13
+          }
+        ],
+        "owner": "linux-desktop-platform-extension",
+        "path": "src/domain-extensions/linux-desktop-platform-extension/SKILL.md",
+        "preview": "A `review-agent` must load it for Linux desktop behavior.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "must"
+        ],
+        "skill_owner": "linux-desktop-platform-extension",
+        "tokens": 13,
+        "total_tokens": 13
+      }
+    },
+    {
+      "target_id": "root:582c19c2a623e847272f6fda41d4c6793edaff0b424396395538af79f81800dc",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "5497d334088950cdb67f4a11f480c34d7c992640e56d089b21f11f18c8f7a7e6",
+      "candidate": {
+        "candidate_id": "582c19c2a623e847272f6fda41d4c6793edaff0b424396395538af79f81800dc",
+        "context_fingerprint": "10cd6c7dd61d2152dc48d2284a6e751aadfdb8469b56df520436bf488a8f7c42",
+        "document_part": "body",
+        "finding": "mandatory_artifact_candidate",
+        "fingerprint": "7e130721708ff6a543859386cc0c3e5e9723df75a748cc01c1dd9bda833f8dbc",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "5e60c571b9148afa93d87445c8fe9c46b18c812ee441f4e35abe0a851084e3ac",
+        "occurrences": [
+          {
+            "context_fingerprint": "39f92da348fef762c7112d90c4bade8e9c1d76ecaf3fd735963c4d3f033a431b",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 25,
+              "start": 25
+            },
+            "owner": "linux-desktop-platform-extension",
+            "path": "src/domain-extensions/linux-desktop-platform-extension/SKILL.md",
+            "preview": "Record Flatpak/Snap/AppImage/deb/rpm install/update owner, locale/input method/font/scaling/accessibility matrix, artifact",
+            "signals": [
+              "artifact"
+            ],
+            "tokens": 26
+          }
+        ],
+        "owner": "linux-desktop-platform-extension",
+        "path": "src/domain-extensions/linux-desktop-platform-extension/SKILL.md",
+        "preview": "Record Flatpak/Snap/AppImage/deb/rpm install/update owner, locale/input method/font/scaling/accessibility matrix, artifact",
+        "priority": "P1",
+        "signals": [
+          "artifact"
+        ],
+        "skill_owner": "linux-desktop-platform-extension",
+        "tokens": 26,
+        "total_tokens": 26
+      }
+    },
+    {
+      "target_id": "root:5a841c20ab33ec7c321007d7699082415388df57b294ee29959bbfbb61be502a",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "4b5bbb43e0266b04bfa40149911cc0e6ea0ef4ef8be0863695c8c1301aba4f7a",
+      "candidate": {
+        "candidate_id": "5a841c20ab33ec7c321007d7699082415388df57b294ee29959bbfbb61be502a",
+        "context_fingerprint": "0ce12858440b5b729f1c46f016c36afebc542931141282464bad9e9ac2911b2f",
+        "document_part": "body",
+        "finding": "mandatory_artifact_candidate",
+        "fingerprint": "efe7b849a5d79948b618e28ab5a3a02a2cfee4532440a965a9626336ad310df0",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "fadad21f4caf546de73f28fcf9da89918e947b622ea0a3de4d302b546c161d5d",
+        "occurrences": [
+          {
+            "context_fingerprint": "c19f5655bfd3e41da36d977d27d65d84a594cdaa4bbec8d5559ad0d2676444ac",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 24,
+              "start": 24
+            },
+            "owner": "cross-platform-client-extension",
+            "path": "src/domain-extensions/cross-platform-client-extension/SKILL.md",
+            "preview": "Record the framework and version, target and release matrix, build variants, published artifacts",
+            "signals": [
+              "artifacts"
+            ],
+            "tokens": 16
+          }
+        ],
+        "owner": "cross-platform-client-extension",
+        "path": "src/domain-extensions/cross-platform-client-extension/SKILL.md",
+        "preview": "Record the framework and version, target and release matrix, build variants, published artifacts",
+        "priority": "P1",
+        "signals": [
+          "artifacts"
+        ],
+        "skill_owner": "cross-platform-client-extension",
+        "tokens": 16,
+        "total_tokens": 16
+      }
+    },
+    {
+      "target_id": "root:6267bfc3c4d82447013ad5e5d88cff4aa819478c27dc46628ffecb76a0e660bc",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "e8d8aae1003bfa084122c136dbe54736e521e514fd5a9fa72c62bb835f32ec97",
+      "candidate": {
+        "candidate_id": "6267bfc3c4d82447013ad5e5d88cff4aa819478c27dc46628ffecb76a0e660bc",
+        "context_fingerprint": "79be5ba55f68c4f0445e3c16cf71c31ad4e4ca06da69b1483bba654a510ab55b",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "e7b76f3e62b0931d10c7d12d0bfc26806a3a75f56e22237f578d37c3185aa5d0",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "b546a70573bc35dfcb321958c7f3803df0152933f65076324d1164fe4f2121d0",
+        "occurrences": [
+          {
+            "context_fingerprint": "293514c93807fade735264babbbd92684607b64f3f65172b56180aa0f41e2953",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 40,
+              "start": 40
+            },
+            "owner": "high-risk-design-review",
+            "path": "src/professional-skills/high-risk-design-review/SKILL.md",
+            "preview": "Review breadth must remain proportional to the concrete risk.",
+            "signals": [
+              "mechanism",
+              "must"
+            ],
+            "tokens": 10
+          }
+        ],
+        "owner": "high-risk-design-review",
+        "path": "src/professional-skills/high-risk-design-review/SKILL.md",
+        "preview": "Review breadth must remain proportional to the concrete risk.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "must"
+        ],
+        "skill_owner": "high-risk-design-review",
+        "tokens": 10,
+        "total_tokens": 10
+      }
+    },
+    {
+      "target_id": "root:647f77eab58c06733e9a212592bcb8587e19e5bc3d8e74dd721b7be931d70ef2",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "f87723f18b98827a3f3b6d04d14546204ccc8709d5c737dfdabd3ffeeb36d92d",
+      "candidate": {
+        "candidate_id": "647f77eab58c06733e9a212592bcb8587e19e5bc3d8e74dd721b7be931d70ef2",
+        "context_fingerprint": "19010b98708ccfe4f6a57eb6bd5a79db865841cde6e7e7ea6aecadcb0edf1e7e",
+        "document_part": "body",
+        "finding": "mandatory_artifact_candidate",
+        "fingerprint": "4d4911ee58b5fc8fe0c29b0ffdedfb25a52c744a2684f2c04b39abb51783337e",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "625a5f40cbcf8f975502ebc000d6035b79e9f55d89aab950c0217bb0f1e948c4",
+        "occurrences": [
+          {
+            "context_fingerprint": "376b894f33aa24dafd7337374eb337bea74e9e68b009ff2bc2582b46415f54f6",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 24,
+              "start": 24
+            },
+            "owner": "ios-ipados-platform-extension",
+            "path": "src/domain-extensions/ios-ipados-platform-extension/SKILL.md",
+            "preview": "Record OS/SDK/deployment, device matrix, framework and lifecycle owners, entry/background contracts, capabilities/entitlements, data/extensions, artifact/channel",
+            "signals": [
+              "artifact"
+            ],
+            "tokens": 29
+          }
+        ],
+        "owner": "ios-ipados-platform-extension",
+        "path": "src/domain-extensions/ios-ipados-platform-extension/SKILL.md",
+        "preview": "Record OS/SDK/deployment, device matrix, framework and lifecycle owners, entry/background contracts, capabilities/entitlements, data/extensions, artifact/channel",
+        "priority": "P1",
+        "signals": [
+          "artifact"
+        ],
+        "skill_owner": "ios-ipados-platform-extension",
+        "tokens": 29,
+        "total_tokens": 29
+      }
+    },
+    {
+      "target_id": "root:64829e510d6110c54d7dfc7367d9b26313ced2758d345ce51e46d756fd69ec02",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "10affb6a4ce30f7a66f24fcb03b09fed5b806691a256310a5ebf153ead322083",
+      "candidate": {
+        "candidate_id": "64829e510d6110c54d7dfc7367d9b26313ced2758d345ce51e46d756fd69ec02",
+        "context_fingerprint": "fc3caf547634d9d7196aca31e38127dff6a7584d953bfeb530f60e87a8922473",
+        "document_part": "description",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "396debdc8f1ab8f8d132b75bae5efa5c773d05e92198a0154cca95241e5b2134",
+        "layer": "control-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "cc8af30f60df620e2ac43d7d45de6e52d0bab1a9b168f52a3706d4afaeaf12d0",
+        "occurrences": [
+          {
+            "context_fingerprint": "5eb3082b236ed94f5a51be53960146c2cfedf7a8075a19d6bd9d95247958dd7f",
+            "document_part": "description",
+            "layer": "control-skill",
+            "lines": {
+              "end": 3,
+              "start": 3
+            },
+            "owner": "engineering-control-plane",
+            "path": "src/control-skills/engineering-control-plane/SKILL.md",
+            "preview": "never implement or review.",
+            "signals": [
+              "mechanism",
+              "never"
+            ],
+            "tokens": 5
+          }
+        ],
+        "owner": "engineering-control-plane",
+        "path": "src/control-skills/engineering-control-plane/SKILL.md",
+        "preview": "never implement or review.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "never"
+        ],
+        "skill_owner": "engineering-control-plane",
+        "tokens": 5,
+        "total_tokens": 5
+      }
+    },
+    {
+      "target_id": "root:6537235c2554b518a32c51038b8b4c1a27e704764e704ee5f9792898fbc9dad6",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "46f0ba5977a2753fbefb52bfe53efcdc0f814acf0d836c75ebdfb1e259ce46f7",
+      "candidate": {
+        "candidate_id": "6537235c2554b518a32c51038b8b4c1a27e704764e704ee5f9792898fbc9dad6",
+        "context_fingerprint": "57d00b8e40a9b5e8d1a29d8f0a199d6b792ceb3d399c713e5ceb25f8698f7067",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "8c9b9eee15ddc90764f589ef5b2c8dec8abbe2066900ac37cfd5f43360be5bd1",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "32c89b068ceb8be4cdf14632729013b87f167c89ad30620da6aad17f91411ea8",
+        "occurrences": [
+          {
+            "context_fingerprint": "c1901906478ae3925114cb3eae73b29a27334609137d8c720be9e5da2a03e3f0",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 24,
+              "start": 24
+            },
+            "owner": "code-review",
+            "path": "src/foundation/capabilities/code-review/SKILL.md",
+            "preview": "**Resolve the review surface.** Identify the Current Task Boundary, latest diff, all changed files",
+            "signals": [
+              "all",
+              "mechanism"
+            ],
+            "tokens": 19
+          }
+        ],
+        "owner": "code-review",
+        "path": "src/foundation/capabilities/code-review/SKILL.md",
+        "preview": "**Resolve the review surface.** Identify the Current Task Boundary, latest diff, all changed files",
+        "priority": "P1",
+        "signals": [
+          "all",
+          "mechanism"
+        ],
+        "skill_owner": "code-review",
+        "tokens": 19,
+        "total_tokens": 19
+      }
+    },
+    {
+      "target_id": "root:70ba9061836200de4569805bd3d5e32438674cb93dcfb84968946a6e5f06b071",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "44d98131119566937ad2e3082feca3e3d2b820876f27b81c5a68926dc39eab2c",
+      "candidate": {
+        "candidate_id": "70ba9061836200de4569805bd3d5e32438674cb93dcfb84968946a6e5f06b071",
+        "context_fingerprint": "7ed5e99afb16e4a40018a81b9bcdfe554935770c04164fe77ceeb18e969f48d8",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "e81bde409c7ce9227e73b8e65ca3b88066e6f68b8264421e84f203f18830309e",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "b259bbc437f24dc4b2b2433e5a0fe1dda014e7d4304460858190de1869a19bb3",
+        "occurrences": [
+          {
+            "context_fingerprint": "d64dc4f9e8d18b9cc9a2149a61607b8154a4f27dae9a5b2a597bba531b096a27",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 28,
+              "start": 28
+            },
+            "owner": "plan-execution-consistency",
+            "path": "src/foundation/capabilities/plan-execution-consistency/SKILL.md",
+            "preview": "Require explicit validation coverage for every changed file in scope.",
+            "signals": [
+              "every",
+              "mechanism",
+              "require"
+            ],
+            "tokens": 11
+          }
+        ],
+        "owner": "plan-execution-consistency",
+        "path": "src/foundation/capabilities/plan-execution-consistency/SKILL.md",
+        "preview": "Require explicit validation coverage for every changed file in scope.",
+        "priority": "P1",
+        "signals": [
+          "every",
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "plan-execution-consistency",
+        "tokens": 11,
+        "total_tokens": 11
+      }
+    },
+    {
+      "target_id": "root:72d7cb6490fd2ebbd7cf148189f55395aaf18f1f6f061d017732f4756c2ab063",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "f46a69ccc89c83a9ceedfeda5548961ace305e3f4100f85754c0b2a88b3e2b63",
+      "candidate": {
+        "candidate_id": "72d7cb6490fd2ebbd7cf148189f55395aaf18f1f6f061d017732f4756c2ab063",
+        "context_fingerprint": "821233a3cd3d3dc03883309fcc0d28de3dbe10909365b58cc9cf45753c0cc5f6",
+        "document_part": "control-prompt",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "d99308022255dfde7cd4a5c30cbad96c1e36b27e54948e0a2b256e1c3684d7f6",
+        "layer": "control-prompt",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
+        "occurrences": [
+          {
+            "context_fingerprint": "88c3dd5281b7c936ed69ba7723317dc319e94661bcde470cdf2f75abb1f71811",
+            "document_part": "control-prompt",
+            "layer": "control-prompt",
+            "lines": {
+              "end": 21,
+              "start": 21
+            },
+            "owner": "main-control-agent",
+            "path": "src/control-prompts/main-control-agent.md",
+            "preview": "never infer capability. utility_no_edit=references/utility-capsule-template.md",
+            "signals": [
+              "mechanism",
+              "never"
+            ],
+            "tokens": 16
+          }
+        ],
+        "owner": "main-control-agent",
+        "path": "src/control-prompts/main-control-agent.md",
+        "preview": "never infer capability. utility_no_edit=references/utility-capsule-template.md",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "never"
+        ],
+        "skill_owner": "main-control-agent",
+        "tokens": 16,
+        "total_tokens": 16
+      }
+    },
+    {
+      "target_id": "root:73d2dbebf2bdfd4dfa9dcce31007c3da0a9356b6bba6977145650e7c0b33be8d",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "dc963176ce67f808c1659bd91aa0cabfbb73f18e9391a820e96b83eb529a2115",
+      "candidate": {
+        "candidate_id": "73d2dbebf2bdfd4dfa9dcce31007c3da0a9356b6bba6977145650e7c0b33be8d",
+        "context_fingerprint": "3a0caf755265ab23c2a1706af4ee1794a51aba86f789e0c52db8902a3e9707a2",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "b5cfc5196aa52f86b552e23543dcc00b9f1751e8cf6641b4074dcd3efb209812",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "5c164c2e757e80e014c28f23a55d99b1f852bf528b7cbf5bbe5705f636f1b14b",
+        "occurrences": [
+          {
+            "context_fingerprint": "d83450acb846c24b38173db771814ef834da7f57822e807bc651b54087b97d05",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 37,
+              "start": 37
+            },
+            "owner": "routing-quality-review",
+            "path": "src/professional-skills/routing-quality-review/SKILL.md",
+            "preview": "Validate that every selected Skill and reference is present in built output.",
+            "signals": [
+              "every",
+              "mechanism"
+            ],
+            "tokens": 13
+          }
+        ],
+        "owner": "routing-quality-review",
+        "path": "src/professional-skills/routing-quality-review/SKILL.md",
+        "preview": "Validate that every selected Skill and reference is present in built output.",
+        "priority": "P1",
+        "signals": [
+          "every",
+          "mechanism"
+        ],
+        "skill_owner": "routing-quality-review",
+        "tokens": 13,
+        "total_tokens": 13
+      }
+    },
+    {
+      "target_id": "root:7f36ce3393245d11b04b54881db0f23b17e627967a29513c6482f4c5000a8e25",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "c59a0efaa0e0fc653bf49882155a7919a7f6b58d8656a0289f9b37d71f294664",
+      "candidate": {
+        "candidate_id": "7f36ce3393245d11b04b54881db0f23b17e627967a29513c6482f4c5000a8e25",
+        "context_fingerprint": "8d4925fbf1b1bdc210bd7da9652cd9bf251236931b64e62d838521cff9d3e241",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "082f214bf3141df1315428ade581369ef83df5cb3a0a3b1000f53602c40b217e",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "bd66d64192cbed335245389e71a0b4ee0d1aa6bbad2d8c141a6a404e24efe7ef",
+        "occurrences": [
+          {
+            "context_fingerprint": "61d31906834a0906cf27838ca3a2b422409d71d4c92efa9086511776923c3e02",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 10,
+              "start": 10
+            },
+            "owner": "android-platform-extension",
+            "path": "src/domain-extensions/android-platform-extension/SKILL.md",
+            "preview": "It is never the primary Professional review owner.",
+            "signals": [
+              "mechanism",
+              "never"
+            ],
+            "tokens": 9
+          }
+        ],
+        "owner": "android-platform-extension",
+        "path": "src/domain-extensions/android-platform-extension/SKILL.md",
+        "preview": "It is never the primary Professional review owner.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "never"
+        ],
+        "skill_owner": "android-platform-extension",
+        "tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    {
+      "target_id": "root:7f7d7e84a3185e11528c54dace429ba90a6a82050f9d7c78c3bff8f40974bfe3",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "5be3c6c1464dcc9bd5cb85ae5969fee8867352bd113a0f1312ce74b218aeba33",
+      "candidate": {
+        "candidate_id": "7f7d7e84a3185e11528c54dace429ba90a6a82050f9d7c78c3bff8f40974bfe3",
+        "context_fingerprint": "b5aa9593ef5b840ee9b7ed3aeac93af36a3e0b24f0e3535d6f78f570228bb74a",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "082f214bf3141df1315428ade581369ef83df5cb3a0a3b1000f53602c40b217e",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "51a408b1ebbe4167209b950df52b0bb41975543d8f9286d390e3365fdf81e9ae",
+        "occurrences": [
+          {
+            "context_fingerprint": "658cebf5ce63776a60001f844d2b89e1531908f58435fc7d0a7e5c11514aec6c",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 10,
+              "start": 10
+            },
+            "owner": "macos-platform-extension",
+            "path": "src/domain-extensions/macos-platform-extension/SKILL.md",
+            "preview": "It is never the primary Professional review owner.",
+            "signals": [
+              "mechanism",
+              "never"
+            ],
+            "tokens": 9
+          }
+        ],
+        "owner": "macos-platform-extension",
+        "path": "src/domain-extensions/macos-platform-extension/SKILL.md",
+        "preview": "It is never the primary Professional review owner.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "never"
+        ],
+        "skill_owner": "macos-platform-extension",
+        "tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    {
+      "target_id": "root:7f9e0fcbc8c6d8ecb9c0ac1608dc0e7ce1ebc5031d4f63c403663294978c1e4d",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "5d384a3f1b3a8131b1f986066faf9962dd9af7dafee9962797739ad8c5834fd0",
+      "candidate": {
+        "candidate_id": "7f9e0fcbc8c6d8ecb9c0ac1608dc0e7ce1ebc5031d4f63c403663294978c1e4d",
+        "context_fingerprint": "71f21d11e814538ca87bd4cac36a5ccd28393ab13f0ed0ee180715293236a47d",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "029bc2f941eea60aed4072a657294066edb25c30e3cef3c2130e6b547abef45d",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "bf4933817ccd778235e2e9e9822d6ed693e45a96569c4f367fbbbdc6fd3e75a4",
+        "occurrences": [
+          {
+            "context_fingerprint": "5bc56eb66e59eca53a0b0bc145c9dff77e3a8d1248dc30868533ed6c114607ea",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 28,
+              "start": 28
+            },
+            "owner": "client-application-testing",
+            "path": "src/foundation/capabilities/client-application-testing/SKILL.md",
+            "preview": "**Test every external entry from cold and warm state.** Validate deep links and notifications for duplicate delivery, malformed input, wrong account, unavailable content",
+            "signals": [
+              "every",
+              "mechanism"
+            ],
+            "tokens": 29
+          }
+        ],
+        "owner": "client-application-testing",
+        "path": "src/foundation/capabilities/client-application-testing/SKILL.md",
+        "preview": "**Test every external entry from cold and warm state.** Validate deep links and notifications for duplicate delivery, malformed input, wrong account, unavailable content",
+        "priority": "P1",
+        "signals": [
+          "every",
+          "mechanism"
+        ],
+        "skill_owner": "client-application-testing",
+        "tokens": 29,
+        "total_tokens": 29
+      }
+    },
+    {
+      "target_id": "root:80f3031718e341444348bf7c83a910d7135f1c88c340875ec151f1a9bcffaeaa",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "f9d8705b76a7bda0b942e6a1c30193cbc4133001c3950c1b9646fc9c12a4bf82",
+      "candidate": {
+        "candidate_id": "80f3031718e341444348bf7c83a910d7135f1c88c340875ec151f1a9bcffaeaa",
+        "context_fingerprint": "2105f19bf89c7f6844c6929729cdf41b10792da43cea2278fb6600461c573719",
+        "document_part": "body",
+        "finding": "mandatory_artifact_candidate",
+        "fingerprint": "b1ccb8db56290e2f936fda43154d5dc3640c8ef0d6fe31ead6b9f1becbdcb757",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "e3b7c0d8680c93170c7fa8a4fee1623c6b2b202fed4db107e4fe3cf619f26db5",
+        "occurrences": [
+          {
+            "context_fingerprint": "afec53a75076678166d8fbfb81b3ca7fab0cb1ac6293e73a4da1ab1f414a6efd",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 26,
+              "start": 26
+            },
+            "owner": "windows-platform-extension",
+            "path": "src/domain-extensions/windows-platform-extension/SKILL.md",
+            "preview": "Record registration, activation, COM/IPC, privilege/container, secret, DLL, service/background/notification, DPI, accessibility, artifact, signing",
+            "signals": [
+              "artifact"
+            ],
+            "tokens": 28
+          }
+        ],
+        "owner": "windows-platform-extension",
+        "path": "src/domain-extensions/windows-platform-extension/SKILL.md",
+        "preview": "Record registration, activation, COM/IPC, privilege/container, secret, DLL, service/background/notification, DPI, accessibility, artifact, signing",
+        "priority": "P1",
+        "signals": [
+          "artifact"
+        ],
+        "skill_owner": "windows-platform-extension",
+        "tokens": 28,
+        "total_tokens": 28
+      }
+    },
+    {
+      "target_id": "root:815cf25bbdf7a73dd18b211354dac2015c9a6feb216228d6a2f387e22c981deb",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "327f207a39f076a20d6107e456ae4dc1007916b1f9f9c38f8c102346bc327133",
+      "candidate": {
+        "candidate_id": "815cf25bbdf7a73dd18b211354dac2015c9a6feb216228d6a2f387e22c981deb",
+        "context_fingerprint": "b005d1268a04374b2f3d2a91b96e7e4c1c5d7ff491de98307210d32989fdda43",
+        "document_part": "control-prompt",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "4842bfcdd3a509aca7d2ec8e8f9e78b2f2f7fbb4302b1b45f4b04ed35b0f4952",
+        "layer": "control-prompt",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
+        "occurrences": [
+          {
+            "context_fingerprint": "bce4d9dd7e0a23869961d91a4dd2a481cd4e7ef5f028716356e799495d4f8d27",
+            "document_part": "control-prompt",
+            "layer": "control-prompt",
+            "lines": {
+              "end": 66,
+              "start": 65
+            },
+            "owner": "main-control-agent",
+            "path": "src/control-prompts/main-control-agent.md",
+            "preview": "Completion requires current review-agent evidence",
+            "signals": [
+              "mechanism",
+              "requires"
+            ],
+            "tokens": 6
+          }
+        ],
+        "owner": "main-control-agent",
+        "path": "src/control-prompts/main-control-agent.md",
+        "preview": "Completion requires current review-agent evidence",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "requires"
+        ],
+        "skill_owner": "main-control-agent",
+        "tokens": 6,
+        "total_tokens": 6
+      }
+    },
+    {
+      "target_id": "root:82ec8db6f7c8076c2396d5f12108214fc308c90ede71d4172aaaa719bcf4e1e9",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "8f1924f0952d6c3d9820000d2d2a27891e2fd08f56f65ac77d105f6ca215ba8a",
+      "candidate": {
+        "candidate_id": "82ec8db6f7c8076c2396d5f12108214fc308c90ede71d4172aaaa719bcf4e1e9",
+        "context_fingerprint": "34d44fe59bea56e1038a4efbd2f4c0546ebb8903ad63c547aa7da309812e9063",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "9ec7867c49eae2aa682fad606a47b730d89e7631d3fa72e06afe49f796687c6c",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "ba5a822f376c2f89ea699400fd8aee3e85f517aa404cd6824c75d8325703884f",
+        "occurrences": [
+          {
+            "context_fingerprint": "ca36adbc6215364669e7645aaaa3dc35c305f3fdae4a0fff24ac9ea122b11695",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 53,
+              "start": 53
+            },
+            "owner": "quality-test-gate",
+            "path": "src/professional-skills/quality-test-gate/SKILL.md",
+            "preview": "Map each acceptance criterion and material failure path to one proving signal.",
+            "signals": [
+              "each",
+              "mechanism"
+            ],
+            "tokens": 13
+          }
+        ],
+        "owner": "quality-test-gate",
+        "path": "src/professional-skills/quality-test-gate/SKILL.md",
+        "preview": "Map each acceptance criterion and material failure path to one proving signal.",
+        "priority": "P1",
+        "signals": [
+          "each",
+          "mechanism"
+        ],
+        "skill_owner": "quality-test-gate",
+        "tokens": 13,
+        "total_tokens": 13
+      }
+    },
+    {
+      "target_id": "root:84a62368be2634dc9ce9b1b84e8eefec080148c615a77825a7c0ec01c086dec3",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "83ca5260601b56eb51d604df9585421af2711bf26abb329afeedd2c639c1362e",
+      "candidate": {
+        "candidate_id": "84a62368be2634dc9ce9b1b84e8eefec080148c615a77825a7c0ec01c086dec3",
+        "context_fingerprint": "8a76e310167b9090465044055ea239a4b82b4057ff72c94650580fbfafa17f58",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "e1f5413fe52c79a2537fc253fe8bb4b9f46d1b4073eaeb05bfbdf39989641e81",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "d7cc1d3c591400c8057251e79f584f00e96b07e0ac71da4153a7e505202c9293",
+        "occurrences": [
+          {
+            "context_fingerprint": "140aaecad116bbaab94841655792cebb8c2edbd906a4276fe7f64fa6da33e4ea",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 24,
+              "start": 24
+            },
+            "owner": "ci-cd",
+            "path": "src/foundation/capabilities/ci-cd/SKILL.md",
+            "preview": "Define required checks by trigger, scope, protected target, outcomes, retry",
+            "signals": [
+              "mechanism",
+              "required"
+            ],
+            "tokens": 14
+          }
+        ],
+        "owner": "ci-cd",
+        "path": "src/foundation/capabilities/ci-cd/SKILL.md",
+        "preview": "Define required checks by trigger, scope, protected target, outcomes, retry",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "required"
+        ],
+        "skill_owner": "ci-cd",
+        "tokens": 14,
+        "total_tokens": 14
+      }
+    },
+    {
+      "target_id": "root:8a9e8eed175bd1c72106ca02cdf2ed1c98f3c96d6dd48429231bd7419f1e15d4",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "e0ef61f4bc01c9d1c80fe01734b2268075cced99cb5870a5fbf8a7a897250de1",
+      "candidate": {
+        "candidate_id": "8a9e8eed175bd1c72106ca02cdf2ed1c98f3c96d6dd48429231bd7419f1e15d4",
+        "context_fingerprint": "e9da8c36f1f45406dfea586f6f476a6461107df52cf5a076323cb3658fe65866",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "062dc7159cf4a9c496a67bf23db7451a47f7c892f73f1b8add7fdedee5462dfd",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "625a5f40cbcf8f975502ebc000d6035b79e9f55d89aab950c0217bb0f1e948c4",
+        "occurrences": [
+          {
+            "context_fingerprint": "f5df4aa4fa617f65f46913fad8ea4fa353f1eaedf8864e6e7172b6d89eaa4c56",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 36,
+              "start": 36
+            },
+            "owner": "ios-ipados-platform-extension",
+            "path": "src/domain-extensions/ios-ipados-platform-extension/SKILL.md",
+            "preview": "Require app/API evidence for every claimed mixed installed-client version.",
+            "signals": [
+              "every",
+              "mechanism",
+              "require"
+            ],
+            "tokens": 12
+          }
+        ],
+        "owner": "ios-ipados-platform-extension",
+        "path": "src/domain-extensions/ios-ipados-platform-extension/SKILL.md",
+        "preview": "Require app/API evidence for every claimed mixed installed-client version.",
+        "priority": "P1",
+        "signals": [
+          "every",
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "ios-ipados-platform-extension",
+        "tokens": 12,
+        "total_tokens": 12
+      }
+    },
+    {
+      "target_id": "root:8dd0cd64f648cdcbe8d16dbab95b2767a11392348aab839fd9836418662ecfcd",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "cf24078744ccb28506f3cc481e187ff4be9940c924071c47b7ef44d8f42d37b8",
+      "candidate": {
+        "candidate_id": "8dd0cd64f648cdcbe8d16dbab95b2767a11392348aab839fd9836418662ecfcd",
+        "context_fingerprint": "4a2e1ef7c5499824904a7bf36ccf8e2414326ec2a5810433bcce86d138cd0084",
+        "document_part": "description",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "b5bec4242f6ce888cddae246ee80a454d5c203373c88baa8b340624c7fb8c081",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "88a8826f498efa68cc801f70d8f8b1911c0dc8c80ef64f324d6f95248618b420",
+        "occurrences": [
+          {
+            "context_fingerprint": "67f1000239d330d510b57bbfc0f3c02f6c75a4c224fd44d77e985a7ebe21d624",
+            "document_part": "description",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 3,
+              "start": 3
+            },
+            "owner": "task-dag-planner",
+            "path": "src/professional-skills/task-dag-planner/SKILL.md",
+            "preview": "Use `analysis-agent` to create a Task DAG from an accepted source-backed Brief when 2+ tasks have dependencies, parallel value, integration",
+            "signals": [
+              "fixed-count"
+            ],
+            "tokens": 28
+          }
+        ],
+        "owner": "task-dag-planner",
+        "path": "src/professional-skills/task-dag-planner/SKILL.md",
+        "preview": "Use `analysis-agent` to create a Task DAG from an accepted source-backed Brief when 2+ tasks have dependencies, parallel value, integration",
+        "priority": "P1",
+        "signals": [
+          "fixed-count"
+        ],
+        "skill_owner": "task-dag-planner",
+        "tokens": 28,
+        "total_tokens": 28
+      }
+    },
+    {
+      "target_id": "root:914347dbde87a4adb4d2ca982f7e68750166cb2197a3c8d730f8bd1b9ce79f38",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "97c8430fdd9b08c5d87bc7a2dfe55b07008a8ba4e22f090ccc9814e51ed0fd83",
+      "candidate": {
+        "candidate_id": "914347dbde87a4adb4d2ca982f7e68750166cb2197a3c8d730f8bd1b9ce79f38",
+        "context_fingerprint": "3a7c7ecfd50fa01732c764a7765e033f830f378706c6ff95268db91a939b34a7",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "2dfefde0cb5b8729452d24e207d4471b5fb6bf31206333c5f3ef10a70a7ddd5c",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "8b0426052535d826e0b758ea09262c90465b0b8a62167270124f552f0949f2c0",
+        "occurrences": [
+          {
+            "context_fingerprint": "19679b2b4c3ae86da971390f530a282c5eceda891939d65314eaca0246c2a776",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 37,
+              "start": 37
+            },
+            "owner": "network-protocol-gateway-usage",
+            "path": "src/foundation/capabilities/network-protocol-gateway-usage/SKILL.md",
+            "preview": "Require telemetry that identifies the failing hop and relevant upstream result, duration, retry",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 15
+          }
+        ],
+        "owner": "network-protocol-gateway-usage",
+        "path": "src/foundation/capabilities/network-protocol-gateway-usage/SKILL.md",
+        "preview": "Require telemetry that identifies the failing hop and relevant upstream result, duration, retry",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "network-protocol-gateway-usage",
+        "tokens": 15,
+        "total_tokens": 15
+      }
+    },
+    {
+      "target_id": "root:95760b51f6312e893662294201ac64b2dab1131a8ae19d756ea284b3b0b41b94",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "31774ab6bfa79443422a23365884368faa6bc8229e43b86003a0585d78fcdb84",
+      "candidate": {
+        "candidate_id": "95760b51f6312e893662294201ac64b2dab1131a8ae19d756ea284b3b0b41b94",
+        "context_fingerprint": "e65ff1ebac802f0f08a710a87d063e80dc6b8fbd18ea57bb355df47d24e4c9b3",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "608b86b8763c7af9767e74c01284a0782ba5ac2b868cfc2dcb5eb0303fd21f36",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "5cf68ffb7290c0f441ed510f7e191c7e835c57054d988873f4df26ca7a6b11be",
+        "occurrences": [
+          {
+            "context_fingerprint": "e04fa5076fa74d9f588b2ad72a6ba112aec6fc70c7952cb9271c9e3bb59ed01c",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 31,
+              "start": 31
+            },
+            "owner": "bigdata-product-extension",
+            "path": "src/domain-extensions/bigdata-product-extension/SKILL.md",
+            "preview": "verify every active consumer can read the deployed schema transition.",
+            "signals": [
+              "every",
+              "mechanism"
+            ],
+            "tokens": 11
+          }
+        ],
+        "owner": "bigdata-product-extension",
+        "path": "src/domain-extensions/bigdata-product-extension/SKILL.md",
+        "preview": "verify every active consumer can read the deployed schema transition.",
+        "priority": "P1",
+        "signals": [
+          "every",
+          "mechanism"
+        ],
+        "skill_owner": "bigdata-product-extension",
+        "tokens": 11,
+        "total_tokens": 11
+      }
+    },
+    {
+      "target_id": "root:96619f0d01902aaf07aa57414a82336f86a2ae3f47c33e3b82f6159f32d1be54",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "c51cfe7751c119e8b09585f00726f13d929954682c39ea2330f211f98e982f6c",
+      "candidate": {
+        "candidate_id": "96619f0d01902aaf07aa57414a82336f86a2ae3f47c33e3b82f6159f32d1be54",
+        "context_fingerprint": "51476fd334083987226731bb0311687c8211b1be65fe7a2f7d6af7c960f2762d",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "8c450d1c1fd52209ab613a2b3b62a28d4a72f0ee8944e1bdab1ff2c47da34eb2",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "b5ae285e5447e78fa523b61ec98c4c3bb1d1ac6974ba41d63b41881dbcf9eed1",
+        "occurrences": [
+          {
+            "context_fingerprint": "2ab7b374dd6a6e085ed95fc169c14eb855bc98a6d910daf86969213a40385392",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 12,
+              "start": 12
+            },
+            "owner": "offline-sync-conflict-resolution",
+            "path": "src/foundation/capabilities/offline-sync-conflict-resolution/SKILL.md",
+            "preview": "An installed or browser client must read, write, queue, reconcile, delete",
+            "signals": [
+              "mechanism",
+              "must"
+            ],
+            "tokens": 15
+          }
+        ],
+        "owner": "offline-sync-conflict-resolution",
+        "path": "src/foundation/capabilities/offline-sync-conflict-resolution/SKILL.md",
+        "preview": "An installed or browser client must read, write, queue, reconcile, delete",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "must"
+        ],
+        "skill_owner": "offline-sync-conflict-resolution",
+        "tokens": 15,
+        "total_tokens": 15
+      }
+    },
+    {
+      "target_id": "root:995a2da65067c989f15b16e783b05fbe367e11d8e1eae1db094efaa3c5d038aa",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "6ab62ffcd3775b884c723e89af3f6bcdf020c46b723f5cbd63c236e9a253d1a8",
+      "candidate": {
+        "candidate_id": "995a2da65067c989f15b16e783b05fbe367e11d8e1eae1db094efaa3c5d038aa",
+        "context_fingerprint": "7f5ccfdb34faa89074dd780f2062e8a7b64ed5f6cde79c7083fb4b6de0ad9067",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "0fa913c9ea17ac1da65146a15b12706b7a57278b27f4b20a075170efffb3c7dd",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "15a06f82948ce0e925a02de0fd1b4d1e3260f16beef240718d2884221f2e1e20",
+        "occurrences": [
+          {
+            "context_fingerprint": "6713670ace0499bca4253b8bb4e43db05b17714dfaaf532ac81cc286a213fed0",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 33,
+              "start": 33
+            },
+            "owner": "repository-impact-inspection",
+            "path": "src/foundation/capabilities/repository-impact-inspection/SKILL.md",
+            "preview": "Require source-of-truth and candidate owner/change evidence from `repository-context-map` or equivalent direct inspection.",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 21
+          }
+        ],
+        "owner": "repository-impact-inspection",
+        "path": "src/foundation/capabilities/repository-impact-inspection/SKILL.md",
+        "preview": "Require source-of-truth and candidate owner/change evidence from `repository-context-map` or equivalent direct inspection.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "repository-impact-inspection",
+        "tokens": 21,
+        "total_tokens": 21
+      }
+    },
+    {
+      "target_id": "root:9e420231a24227dbdd9cf8ab44af692a6d966cfd2a9afb3165af3b5b88bfccc8",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "899b44cb19ebb600daeeee7703d090c1a5b14d2e1bc933a5527e00b36d31df31",
+      "candidate": {
+        "candidate_id": "9e420231a24227dbdd9cf8ab44af692a6d966cfd2a9afb3165af3b5b88bfccc8",
+        "context_fingerprint": "8f4646a07ee65b4428b21365e7325cffbd73c589ad31a706e537f1c5870084c0",
+        "document_part": "control-prompt",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "f98c540d04234057ef4f2b32ba5d5c7a8d784151a29d0f37e786e90411c14f83",
+        "layer": "control-prompt",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
+        "occurrences": [
+          {
+            "context_fingerprint": "46be5f10e6a515a2c9f7d31096dcf626f297e0517f8e5beec35f770edbef68ea",
+            "document_part": "control-prompt",
+            "layer": "control-prompt",
+            "lines": {
+              "end": 68,
+              "start": 68
+            },
+            "owner": "main-control-agent",
+            "path": "src/control-prompts/main-control-agent.md",
+            "preview": "Give review-agent the actual diff, every changed file",
+            "signals": [
+              "every",
+              "mechanism"
+            ],
+            "tokens": 10
+          }
+        ],
+        "owner": "main-control-agent",
+        "path": "src/control-prompts/main-control-agent.md",
+        "preview": "Give review-agent the actual diff, every changed file",
+        "priority": "P1",
+        "signals": [
+          "every",
+          "mechanism"
+        ],
+        "skill_owner": "main-control-agent",
+        "tokens": 10,
+        "total_tokens": 10
+      }
+    },
+    {
+      "target_id": "root:9ec6fb4ad519bbbe7747c819ad9bff10bfe217107ac70eaf8ce9a46b8c2a60e0",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "e6c7deac757e3ebc5290dc9029ead19957a698c359b5e9a6f8f4551d64cbda5a",
+      "candidate": {
+        "candidate_id": "9ec6fb4ad519bbbe7747c819ad9bff10bfe217107ac70eaf8ce9a46b8c2a60e0",
+        "context_fingerprint": "c645a129b9e3dd3dee44e4db3e2a98ddca3220b853edce6d3f62962925d7d82c",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "d6c653f750889ebc88b0c5500e9220e8bd598644289932a004aa3db4a2f9656c",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "b546a70573bc35dfcb321958c7f3803df0152933f65076324d1164fe4f2121d0",
+        "occurrences": [
+          {
+            "context_fingerprint": "f0ff4499170aa986ca1c61afbb8ff5c3f01be08f5591583de12f4b655179389a",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 15,
+              "start": 15
+            },
+            "owner": "high-risk-design-review",
+            "path": "src/professional-skills/high-risk-design-review/SKILL.md",
+            "preview": "critical path requires deeper design evidence",
+            "signals": [
+              "mechanism",
+              "requires"
+            ],
+            "tokens": 6
+          }
+        ],
+        "owner": "high-risk-design-review",
+        "path": "src/professional-skills/high-risk-design-review/SKILL.md",
+        "preview": "critical path requires deeper design evidence",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "requires"
+        ],
+        "skill_owner": "high-risk-design-review",
+        "tokens": 6,
+        "total_tokens": 6
+      }
+    },
+    {
+      "target_id": "root:9f32c6238459456587ab95007af3086bcfac2f8f7c92e56195a4a1aa7146ad0a",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "b36b4b700c021f0176957927099e03325bdb32082306e8146fd725ee8a7cca53",
+      "candidate": {
+        "candidate_id": "9f32c6238459456587ab95007af3086bcfac2f8f7c92e56195a4a1aa7146ad0a",
+        "context_fingerprint": "17ca4e6415da5c53a2429bea7d2e32689adbdc69e959f4eb59b71f5e7c33d088",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "6d9d014e50bebd30df671237fb3781ff493b173d63367643d16add20341b0f72",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "b259bbc437f24dc4b2b2433e5a0fe1dda014e7d4304460858190de1869a19bb3",
+        "occurrences": [
+          {
+            "context_fingerprint": "1f71b8c7f11ce26451286fddb9bff302d8a44c5840b68768c6e1107b72def405",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 27,
+              "start": 27
+            },
+            "owner": "plan-execution-consistency",
+            "path": "src/foundation/capabilities/plan-execution-consistency/SKILL.md",
+            "preview": "Require fresh validation evidence after the final repository edit.",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 10
+          }
+        ],
+        "owner": "plan-execution-consistency",
+        "path": "src/foundation/capabilities/plan-execution-consistency/SKILL.md",
+        "preview": "Require fresh validation evidence after the final repository edit.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "plan-execution-consistency",
+        "tokens": 10,
+        "total_tokens": 10
+      }
+    },
+    {
+      "target_id": "root:a32b8e6d164969b8d3b426807f96166f939d69fde77d214944f9afcc8e2cb7c3",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "41b5e9c4afbcf4e23a52f4e13b754a62c5970acafa9f1f3afed749fd949206bb",
+      "candidate": {
+        "candidate_id": "a32b8e6d164969b8d3b426807f96166f939d69fde77d214944f9afcc8e2cb7c3",
+        "context_fingerprint": "98cfeb65598ca694e5875a413bca3076757ccb147b7fce92f0157edfa7a08628",
+        "document_part": "control-prompt",
+        "finding": "tutorial_explanatory_density_candidate",
+        "fingerprint": "ed480e932915d096441a909f281a93c05333179e8d022ece69da28014d3b72aa",
+        "layer": "control-prompt",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
+        "occurrences": [
+          {
+            "context_fingerprint": "8aa413001dd17210dcd86f572ab73857d9f28a7158dca27d77f20e0f38e3228d",
+            "document_part": "control-prompt",
+            "layer": "control-prompt",
+            "lines": {
+              "end": 82,
+              "start": 50
+            },
+            "owner": "main-control-agent",
+            "path": "src/control-prompts/main-control-agent.md",
+            "preview": "engineering-change-analysis: current Engineering Brief is the only operational analysis authority. First Executable Slice is a complete Task Contract v2; dispatch its First Executable Slice verbatim; never regenerate or reinterpret. Specialist input takes effect only after Brief ",
+            "signals": [
+              "example-markers:13",
+              "marker-lines:3",
+              "root-teaching-marker-density"
+            ],
+            "tokens": 244
+          }
+        ],
+        "owner": "main-control-agent",
+        "path": "src/control-prompts/main-control-agent.md",
+        "preview": "engineering-change-analysis: current Engineering Brief is the only operational analysis authority. First Executable Slice is a complete Task Contract v2; dispatch its First Executable Slice verbatim; never regenerate or reinterpret. Specialist input takes effect only after Brief ",
+        "priority": "P1",
+        "signals": [
+          "example-markers:13",
+          "marker-lines:3",
+          "root-teaching-marker-density"
+        ],
+        "skill_owner": "main-control-agent",
+        "tokens": 244,
+        "total_tokens": 244
+      }
+    },
+    {
+      "target_id": "root:a34e73896f07647684074bfcb5700441dd170f595fe7fc00fdde73403a9aa6eb",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "58c0c1d96645858ea7bdd780d06a7776dbd86e5410868577aeda99ca4b4a3e3d",
+      "candidate": {
+        "candidate_id": "a34e73896f07647684074bfcb5700441dd170f595fe7fc00fdde73403a9aa6eb",
+        "context_fingerprint": "b5683c02920f88d996669253802146c6b435f4ec4046f830a9d4105443160f84",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "f779525344b2aef208984a55cbb5eea97d180e2287c7748d988b628beeaee157",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "a0283c608716d9a72e2ca76829504a98cc5f2144e5d02ec7f7ab8096decd8060",
+        "occurrences": [
+          {
+            "context_fingerprint": "cd5f16d20c56ab254761f36355491765d8f3e7c67ff4c59d5828564f88946226",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 20,
+              "start": 20
+            },
+            "owner": "microservice-splitting",
+            "path": "src/foundation/capabilities/microservice-splitting/SKILL.md",
+            "preview": "Own the integrated decision and transition exit criteria while named specialists retain their mechanisms. Require coupling reduction to exceed distributed-system cost.",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 24
+          }
+        ],
+        "owner": "microservice-splitting",
+        "path": "src/foundation/capabilities/microservice-splitting/SKILL.md",
+        "preview": "Own the integrated decision and transition exit criteria while named specialists retain their mechanisms. Require coupling reduction to exceed distributed-system cost.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "microservice-splitting",
+        "tokens": 24,
+        "total_tokens": 24
+      }
+    },
+    {
+      "target_id": "root:aeefeaf1479fcece12e892ba85bff91352f3981a08342eecd2ce2d6971d44dbe",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "ed5ea2cec3419305ce6da5df378828e58681f05a50f3d3431b5ee0329a4d25eb",
+      "candidate": {
+        "candidate_id": "aeefeaf1479fcece12e892ba85bff91352f3981a08342eecd2ce2d6971d44dbe",
+        "context_fingerprint": "08ad2d85f590239101246a7cc5beeffbf638824312e05f51d38d3ee7a4e3687d",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "1099bee5b4c76cc991e0c2ee156bded3ae09a01bf46cfc545c9b1bd69db6042d",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "f53134abf397dc6a475924e2a60c6b6ca1cd7302b9e3d83798693bc82f859ba6",
+        "occurrences": [
+          {
+            "context_fingerprint": "40b8bf1415cc3da7faf6d8e54e7989adcc4b26e236fbc2b260c984e9c66a5ac0",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 27,
+              "start": 27
+            },
+            "owner": "failure-diagnosis",
+            "path": "src/foundation/capabilities/failure-diagnosis/SKILL.md",
+            "preview": "environment-specific, require a coherent causal evidence chain, alternative explanations considered",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 13
+          }
+        ],
+        "owner": "failure-diagnosis",
+        "path": "src/foundation/capabilities/failure-diagnosis/SKILL.md",
+        "preview": "environment-specific, require a coherent causal evidence chain, alternative explanations considered",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "failure-diagnosis",
+        "tokens": 13,
+        "total_tokens": 13
+      }
+    },
+    {
+      "target_id": "root:b1ec4fa794007bc0c2931862730d74b9f261a3a1f2b5b874edd8e75c79813e2e",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "81c492edce86420af156732b60152910dac45315ac4494dc83b2c1052ba6af33",
+      "candidate": {
+        "candidate_id": "b1ec4fa794007bc0c2931862730d74b9f261a3a1f2b5b874edd8e75c79813e2e",
+        "context_fingerprint": "baed11f1d43143550441bdb9ea9a7202e228e1d0d3c73e0e92dc05d46134736c",
+        "document_part": "body",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "dde38592ac47f16507a8eaba69fa27376be9ce7d404515e6569cb50e0716d8a7",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "6d663d1a05894f0d7c662b8986e6366536c29c4837d45dbc5a6fe94b70e46db5",
+        "occurrences": [
+          {
+            "context_fingerprint": "446f06d3569f3d5be24423517cb91b1b090d84bd12a3b8114e33096b1cec630d",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 53,
+              "start": 53
+            },
+            "owner": "engineering-change-analysis",
+            "path": "src/professional-skills/engineering-change-analysis/SKILL.md",
+            "preview": "Classify the request into exactly one supported mode.",
+            "signals": [
+              "fixed-threshold"
+            ],
+            "tokens": 10
+          }
+        ],
+        "owner": "engineering-change-analysis",
+        "path": "src/professional-skills/engineering-change-analysis/SKILL.md",
+        "preview": "Classify the request into exactly one supported mode.",
+        "priority": "P1",
+        "signals": [
+          "fixed-threshold"
+        ],
+        "skill_owner": "engineering-change-analysis",
+        "tokens": 10,
+        "total_tokens": 10
+      }
+    },
+    {
+      "target_id": "root:b3d32c3dc89c4a8a188b0816c0d61c29e65429451f0112cb016dd9f7617e62ed",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "270ae32027255fcd0aadd1592c77dbe5866793849a62490a5c06720aeb5f51a8",
+      "candidate": {
+        "candidate_id": "b3d32c3dc89c4a8a188b0816c0d61c29e65429451f0112cb016dd9f7617e62ed",
+        "context_fingerprint": "571defe298bb75eb1e990e5983beec577e6b9383dffea97e07b4b9f95429eeb1",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "2b8960b4269d1566995b21acbd11e0284df726dc285fefdb9e7e51d1ee6c0521",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "999f9a2855eadce08e9b105b7a247e4c5ea844a091cbd21ab6eeb4770b483758",
+        "occurrences": [
+          {
+            "context_fingerprint": "e6230cf0e891e15d934222c90af722e215aa7f6994361dcfe3cd5f7ba200c656",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 61,
+              "start": 61
+            },
+            "owner": "data-api-contract-changer",
+            "path": "src/professional-skills/data-api-contract-changer/SKILL.md",
+            "preview": "Require current permission, redaction, approval",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 8
+          }
+        ],
+        "owner": "data-api-contract-changer",
+        "path": "src/professional-skills/data-api-contract-changer/SKILL.md",
+        "preview": "Require current permission, redaction, approval",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "data-api-contract-changer",
+        "tokens": 8,
+        "total_tokens": 8
+      }
+    },
+    {
+      "target_id": "root:bc7c9d606307c0090fb96a46de325f7a0b666b6659903cd137eddaedc74f0acd",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "a64b3277a32e6f9d7ba64ff536f75305c606c2698bafb1b2574e478e6edbd0ed",
+      "candidate": {
+        "candidate_id": "bc7c9d606307c0090fb96a46de325f7a0b666b6659903cd137eddaedc74f0acd",
+        "context_fingerprint": "e213e503140d207cb170985532fa47f969024f47f406eabf7d0d89e562a9f079",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "082f214bf3141df1315428ade581369ef83df5cb3a0a3b1000f53602c40b217e",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "5e60c571b9148afa93d87445c8fe9c46b18c812ee441f4e35abe0a851084e3ac",
+        "occurrences": [
+          {
+            "context_fingerprint": "4e63b9e49f8fa54354a1b4634925207465480927e100a777c17b9b54cb401af8",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 10,
+              "start": 10
+            },
+            "owner": "linux-desktop-platform-extension",
+            "path": "src/domain-extensions/linux-desktop-platform-extension/SKILL.md",
+            "preview": "It is never the primary Professional review owner.",
+            "signals": [
+              "mechanism",
+              "never"
+            ],
+            "tokens": 9
+          }
+        ],
+        "owner": "linux-desktop-platform-extension",
+        "path": "src/domain-extensions/linux-desktop-platform-extension/SKILL.md",
+        "preview": "It is never the primary Professional review owner.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "never"
+        ],
+        "skill_owner": "linux-desktop-platform-extension",
+        "tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    {
+      "target_id": "root:bd9b1e2b2f73cc0d587c3e74646064e92363819e3c3ec47121381567bf704b72",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "70e26eabe1d16b73cf6e12003c6c350c041439c3bedc1e2079d104826c4c1877",
+      "candidate": {
+        "candidate_id": "bd9b1e2b2f73cc0d587c3e74646064e92363819e3c3ec47121381567bf704b72",
+        "context_fingerprint": "581ecd203171dd21004979e5907cd3a354a21e3b95644c6cdffeb794cb29d7a6",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "2d0866fe006f6275eae948f2bd8bd60f613e59a4692fb09e428627550755dc87",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "32c89b068ceb8be4cdf14632729013b87f167c89ad30620da6aad17f91411ea8",
+        "occurrences": [
+          {
+            "context_fingerprint": "b4613cba48a0fe58827499f1d4c61c564a3bde5027d19bd77356fe3384d2de1b",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 28,
+              "start": 28
+            },
+            "owner": "code-review",
+            "path": "src/foundation/capabilities/code-review/SKILL.md",
+            "preview": "**Evaluate proof against the failure mechanism.** Require focused evidence for the changed behavior and consequential negative outcomes",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 20
+          }
+        ],
+        "owner": "code-review",
+        "path": "src/foundation/capabilities/code-review/SKILL.md",
+        "preview": "**Evaluate proof against the failure mechanism.** Require focused evidence for the changed behavior and consequential negative outcomes",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "code-review",
+        "tokens": 20,
+        "total_tokens": 20
+      }
+    },
+    {
+      "target_id": "root:c087620838ba97c47fdfa4b87f78e0483ec886655d6bbeb98d504e18b4f8f977",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "70bfbf49e2795a5ad5f0d7c52a524f0e6b7df314687ad0a3ca75ef4554d6f3ad",
+      "candidate": {
+        "candidate_id": "c087620838ba97c47fdfa4b87f78e0483ec886655d6bbeb98d504e18b4f8f977",
+        "context_fingerprint": "88d5b94287580f7a6fd485ad96f652ada05ac21884db349c2357bddbfa7d8ca1",
+        "document_part": "control-prompt",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "cd0c483840cf2a917d3e913257b9686dd7021ce719fb40fd51eaccf58e2004f2",
+        "layer": "control-prompt",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
+        "occurrences": [
+          {
+            "context_fingerprint": "a64fc88c6b9b87a59e4db166f9126d1c0930aba3af157f0cafa51996de3c3312",
+            "document_part": "control-prompt",
+            "layer": "control-prompt",
+            "lines": {
+              "end": 43,
+              "start": 43
+            },
+            "owner": "main-control-agent",
+            "path": "src/control-prompts/main-control-agent.md",
+            "preview": "return Main/block, never third unchanged retry.",
+            "signals": [
+              "mechanism",
+              "never"
+            ],
+            "tokens": 9
+          }
+        ],
+        "owner": "main-control-agent",
+        "path": "src/control-prompts/main-control-agent.md",
+        "preview": "return Main/block, never third unchanged retry.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "never"
+        ],
+        "skill_owner": "main-control-agent",
+        "tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    {
+      "target_id": "root:c457479aa4d59d9b48bd531e06a1e4877e3978c063aa04cba7657c290bab2140",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "1a1e053514ee1c45ff5e70fff1f9427e177a8d38b783edaee6db643479e08bb0",
+      "candidate": {
+        "candidate_id": "c457479aa4d59d9b48bd531e06a1e4877e3978c063aa04cba7657c290bab2140",
+        "context_fingerprint": "4da5646152a332f4f70610e38ab61d783960008f28fde54bfb1c54f04b7b92d9",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "54104f3f8185ce098b5157a2fa1a3470a392b1f8dceeb9c4ed423758af926a9a",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "51a408b1ebbe4167209b950df52b0bb41975543d8f9286d390e3365fdf81e9ae",
+        "occurrences": [
+          {
+            "context_fingerprint": "a19d9433e7a97e2973ce410ab4c1a30f504ccab124dd08cff195d40e35642f72",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 37,
+              "start": 37
+            },
+            "owner": "macos-platform-extension",
+            "path": "src/domain-extensions/macos-platform-extension/SKILL.md",
+            "preview": "Require client and API evidence for each claimed mixed app/API combination.",
+            "signals": [
+              "each",
+              "mechanism",
+              "require"
+            ],
+            "tokens": 13
+          }
+        ],
+        "owner": "macos-platform-extension",
+        "path": "src/domain-extensions/macos-platform-extension/SKILL.md",
+        "preview": "Require client and API evidence for each claimed mixed app/API combination.",
+        "priority": "P1",
+        "signals": [
+          "each",
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "macos-platform-extension",
+        "tokens": 13,
+        "total_tokens": 13
+      }
+    },
+    {
+      "target_id": "root:c49edfe7eee4b0ee995f29a6be806ce1fd2f642bbce67850d31fae3232fe4bfc",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "02647e14c61438082fa2eb6731903de3bdd4b92b08041bd00e847dcb5c4b6065",
+      "candidate": {
+        "candidate_id": "c49edfe7eee4b0ee995f29a6be806ce1fd2f642bbce67850d31fae3232fe4bfc",
+        "context_fingerprint": "80f0655aa2a8197de70d07dd19fffd62366a23ea5268a0080ae9b67b635d30c4",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "a46ca3ff8a4e4dad8d3e4512d452cc8f628ddaede26933171f9b145d8f1e003c",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "4f685214122e25e20e91b43d3871846e18f9960bc75f20e21e87825077a117e9",
+        "occurrences": [
+          {
+            "context_fingerprint": "cdeab344d1fd05c54941be0cb2f9bf6a874d67b8f06a8c536d525ec3273cf295",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 33,
+              "start": 33
+            },
+            "owner": "engineering-artifact-review",
+            "path": "src/professional-skills/engineering-artifact-review/SKILL.md",
+            "preview": "Verify every material claim against current source or explicit owner evidence.",
+            "signals": [
+              "every",
+              "mechanism"
+            ],
+            "tokens": 12
+          }
+        ],
+        "owner": "engineering-artifact-review",
+        "path": "src/professional-skills/engineering-artifact-review/SKILL.md",
+        "preview": "Verify every material claim against current source or explicit owner evidence.",
+        "priority": "P1",
+        "signals": [
+          "every",
+          "mechanism"
+        ],
+        "skill_owner": "engineering-artifact-review",
+        "tokens": 12,
+        "total_tokens": 12
+      }
+    },
+    {
+      "target_id": "root:cd3daff68be8a6d69c63daf0e697abe146673802496681186cec6fcc23ed68f7",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "b15dbc614cdfb4e3d2c9a447fa26864f55dfc38f0fae29bf13d95ca1527003f0",
+      "candidate": {
+        "candidate_id": "cd3daff68be8a6d69c63daf0e697abe146673802496681186cec6fcc23ed68f7",
+        "context_fingerprint": "e3a02425f67c0a2bb7d5eb73165c11d1a5257a17849d7f3aae94107f8bf162f5",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "83c6d4149c8344d235b427e8b17d3d53c2c805c85a5187bbbce976db336f8865",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "f53134abf397dc6a475924e2a60c6b6ca1cd7302b9e3d83798693bc82f859ba6",
+        "occurrences": [
+          {
+            "context_fingerprint": "0da3ea9d794c811258304436ce2a04d0357c7bedf991912412ad14c59887bf17",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 25,
+              "start": 25
+            },
+            "owner": "failure-diagnosis",
+            "path": "src/foundation/capabilities/failure-diagnosis/SKILL.md",
+            "preview": "**Use hypotheses to choose discriminating observations.** Derive predictions from each plausible mechanism, seek both supporting and counter-evidence",
+            "signals": [
+              "each",
+              "mechanism"
+            ],
+            "tokens": 25
+          }
+        ],
+        "owner": "failure-diagnosis",
+        "path": "src/foundation/capabilities/failure-diagnosis/SKILL.md",
+        "preview": "**Use hypotheses to choose discriminating observations.** Derive predictions from each plausible mechanism, seek both supporting and counter-evidence",
+        "priority": "P1",
+        "signals": [
+          "each",
+          "mechanism"
+        ],
+        "skill_owner": "failure-diagnosis",
+        "tokens": 25,
+        "total_tokens": 25
+      }
+    },
+    {
+      "target_id": "root:cd9d813a014e6ae974bbb628bb9ad5b0037b6d196c767092a237ae32c32cada1",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "88f23f750cf9ab2dd1a4059d88eeb5ee5e31a00b04d69ff091fa17be806e6bc2",
+      "candidate": {
+        "candidate_id": "cd9d813a014e6ae974bbb628bb9ad5b0037b6d196c767092a237ae32c32cada1",
+        "context_fingerprint": "09f6ca56aac72589aa43a8da7b21538ad6e9b80a7d344ae7dece28a582fda4e8",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "7f925ed01ddd98f8cb133bf71b251d1dd690a433d1c1650d6596dff2ec694cb9",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "fadad21f4caf546de73f28fcf9da89918e947b622ea0a3de4d302b546c161d5d",
+        "occurrences": [
+          {
+            "context_fingerprint": "b560f64586dba1d61a0cbacd2b82769ae88e31a202e4806e49ff41e433fbef24",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 10,
+              "start": 10
+            },
+            "owner": "cross-platform-client-extension",
+            "path": "src/domain-extensions/cross-platform-client-extension/SKILL.md",
+            "preview": "It is never a standalone target or the primary Professional review owner.",
+            "signals": [
+              "mechanism",
+              "never"
+            ],
+            "tokens": 13
+          }
+        ],
+        "owner": "cross-platform-client-extension",
+        "path": "src/domain-extensions/cross-platform-client-extension/SKILL.md",
+        "preview": "It is never a standalone target or the primary Professional review owner.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "never"
+        ],
+        "skill_owner": "cross-platform-client-extension",
+        "tokens": 13,
+        "total_tokens": 13
+      }
+    },
+    {
+      "target_id": "root:d0b057ff13c69fe232f1369b977337c5a107005cd7900488e5d1a894fbd962ec",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "fbf553d2ebedea75d839294c1f5fdc6430e571cea0f91f18d5674ef76aa041e6",
+      "candidate": {
+        "candidate_id": "d0b057ff13c69fe232f1369b977337c5a107005cd7900488e5d1a894fbd962ec",
+        "context_fingerprint": "8d1496dd5f290939a0a11808bf87a824e4704a414985735916a5d77da399f577",
+        "document_part": "body",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "df7193ebf025652fc8874cb683d6e38499b0b5ae18e57e4b8c1e902b4e5f73b6",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "ca947ef070dc74782d4e0c1b4e06a0fe6da32f92ac9c5670aee905ae55f46b0a",
+        "occurrences": [
+          {
+            "context_fingerprint": "891732c59da213e77b040250b962e944063e65dc5ed92f143cb46897cfabf4cf",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 37,
+              "start": 37
+            },
+            "owner": "ai-code-review-refactor",
+            "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
+            "preview": "Give L1-L2 one independent final review with the base matrix.",
+            "signals": [
+              "fixed-count"
+            ],
+            "tokens": 14
+          }
+        ],
+        "owner": "ai-code-review-refactor",
+        "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
+        "preview": "Give L1-L2 one independent final review with the base matrix.",
+        "priority": "P1",
+        "signals": [
+          "fixed-count"
+        ],
+        "skill_owner": "ai-code-review-refactor",
+        "tokens": 14,
+        "total_tokens": 14
+      }
+    },
+    {
+      "target_id": "root:d9676d87ebcdbfea48ed65004318e08d09af853bd03fc3fb37f82389e3a6f6de",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "c7b91f9fd969ebb73c6f7fe7db23401d8247de8273161d4ff1ca59f1db80db76",
+      "candidate": {
+        "candidate_id": "d9676d87ebcdbfea48ed65004318e08d09af853bd03fc3fb37f82389e3a6f6de",
+        "context_fingerprint": "7001e11b7ae44692102c202f5f0e9383de1a663a4df959589a1a2413a676bd8d",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "812a0d4f819492e190c42e27f2b12b72790d4d529024e75a7f55d87fc7de7c47",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "b5cc99bce6ac412a4a04399a7504d6ea2409ff79b4665b9e870a07f8611de6de",
+        "occurrences": [
+          {
+            "context_fingerprint": "498ccf1706d39b627f87e78ea441b91e7f4f078365e2ffb005fd73ed8bdf1d4c",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 60,
+              "start": 60
+            },
+            "owner": "security-privacy-gate",
+            "path": "src/professional-skills/security-privacy-gate/SKILL.md",
+            "preview": "require CSRF proof only for unproven ambient browser authority.",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 13
+          }
+        ],
+        "owner": "security-privacy-gate",
+        "path": "src/professional-skills/security-privacy-gate/SKILL.md",
+        "preview": "require CSRF proof only for unproven ambient browser authority.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "security-privacy-gate",
+        "tokens": 13,
+        "total_tokens": 13
+      }
+    },
+    {
+      "target_id": "root:dedb43e54a606e6da19a38addf8e0ff7daea4cea347fbb74ef197f69c9c88120",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "c9510e170f4904377643be0d74843dbd519cad294130129eb9b019148f8ff809",
+      "candidate": {
+        "candidate_id": "dedb43e54a606e6da19a38addf8e0ff7daea4cea347fbb74ef197f69c9c88120",
+        "context_fingerprint": "a791957a5b7b4534cb32ff3cf8d9896d5527a678729c407aa299390d6823e1a6",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "1184a503baf2427cf9e7e656322d65024f78dfa5279b638e56ca9066d3f1dc68",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "ae6e5e60b7eaa1341d16b9094548cd876c6e4b73afd95d452b167a1f98ab448e",
+        "occurrences": [
+          {
+            "context_fingerprint": "3f9361b43bb2965477e1f35290143984c14d0826f9ab0f74daf2c3ec5cc454d2",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 24,
+              "start": 24
+            },
+            "owner": "extensibility-design",
+            "path": "src/foundation/capabilities/extensibility-design/SKILL.md",
+            "preview": "**Require evidence of variation before abstraction.** Name current consumers, distinct change reasons, ownership",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 18
+          }
+        ],
+        "owner": "extensibility-design",
+        "path": "src/foundation/capabilities/extensibility-design/SKILL.md",
+        "preview": "**Require evidence of variation before abstraction.** Name current consumers, distinct change reasons, ownership",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "extensibility-design",
+        "tokens": 18,
+        "total_tokens": 18
+      }
+    },
+    {
+      "target_id": "root:e2735506386b93486240cef7622a3374cf3839fb3bfc1907c7947db6a6647151",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "3e312daa9069d421e2347eaf4101d1ae2e7d4a299ce78dcc92571ffffb93a944",
+      "candidate": {
+        "candidate_id": "e2735506386b93486240cef7622a3374cf3839fb3bfc1907c7947db6a6647151",
+        "context_fingerprint": "708efc6aae6d665116c8b149bb6d8f2950ee0235ff95f4c81f049f4079e522de",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "f145ef7c7fc4fa88fdbfed16de92c56d22d0be51f0ed9d0c708bf81504135fd9",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "235e1f891fa0fb2da479e88fc08d18ba2ceeea0d1f64f2b6d7058864b403df26",
+        "occurrences": [
+          {
+            "context_fingerprint": "0e08eebb005ee98e05bcaa33cdcfedec8cf4116c74cf817a2be30aac26162bbe",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 24,
+              "start": 24
+            },
+            "owner": "regression-testing",
+            "path": "src/foundation/capabilities/regression-testing/SKILL.md",
+            "preview": "Require causal-trigger reproduction rather than adjacent correct behavior as the recurrence guard.",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 14
+          }
+        ],
+        "owner": "regression-testing",
+        "path": "src/foundation/capabilities/regression-testing/SKILL.md",
+        "preview": "Require causal-trigger reproduction rather than adjacent correct behavior as the recurrence guard.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "regression-testing",
+        "tokens": 14,
+        "total_tokens": 14
+      }
+    },
+    {
+      "target_id": "root:e3417af7023a54eadebe84064cad566d7167ea2f157c86f84f93ceb1ddd37cd4",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "cc4952f4d006cd7111224b3b9252797e2c3d5a69324ad50754eea3ca3e04fc24",
+      "candidate": {
+        "candidate_id": "e3417af7023a54eadebe84064cad566d7167ea2f157c86f84f93ceb1ddd37cd4",
+        "context_fingerprint": "84e9da3cb2d4749b755aae8ce22bca9257514ea05978f49de849d64021b39dc0",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "dc4d7e2b2f5dee9b1cc98cdb9af9a8797c18c7fe29f20f3b729676f7d128ac09",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "e90be83dab74c80d14eec4c4bec5cf23f7bbe5ba2cbb4f3d882907f0e51b26a3",
+        "occurrences": [
+          {
+            "context_fingerprint": "ad95793889896f2fc27aa743294ac6469a7ab30f949a26336ba467ca5dace258",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 28,
+              "start": 28
+            },
+            "owner": "e2e-testing",
+            "path": "src/foundation/capabilities/e2e-testing/SKILL.md",
+            "preview": "Cleanup must cover success, assertion failure, timeout",
+            "signals": [
+              "mechanism",
+              "must"
+            ],
+            "tokens": 9
+          }
+        ],
+        "owner": "e2e-testing",
+        "path": "src/foundation/capabilities/e2e-testing/SKILL.md",
+        "preview": "Cleanup must cover success, assertion failure, timeout",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "must"
+        ],
+        "skill_owner": "e2e-testing",
+        "tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    {
+      "target_id": "root:e59a6530f983bfee0e1f36d33148f98c866da5d49b70573c2126338276fe2300",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "b6898e2c0e78ee54258b83ce0d98c9984ef270795f496a284454dd9b378871d1",
+      "candidate": {
+        "candidate_id": "e59a6530f983bfee0e1f36d33148f98c866da5d49b70573c2126338276fe2300",
+        "context_fingerprint": "51132db7de20ddb0085144e3fe5e1cdfa4b336316c7df64bfeaefae970708a57",
+        "document_part": "body",
+        "finding": "mandatory_artifact_candidate",
+        "fingerprint": "8ffe1a3c840b7d408ecfd3451e0dbf257480238d40f281f517f463eab22920e2",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "15a06f82948ce0e925a02de0fd1b4d1e3260f16beef240718d2884221f2e1e20",
+        "occurrences": [
+          {
+            "context_fingerprint": "e63519d2fcc167bc103c6ad6cadf45d676716fe5c3c40320a3116a8c80eb3084",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 51,
+              "start": 51
+            },
+            "owner": "repository-impact-inspection",
+            "path": "src/foundation/capabilities/repository-impact-inspection/SKILL.md",
+            "preview": "Record affected and uninspected consumers, tests, contracts",
+            "signals": [
+              "tests"
+            ],
+            "tokens": 11
+          }
+        ],
+        "owner": "repository-impact-inspection",
+        "path": "src/foundation/capabilities/repository-impact-inspection/SKILL.md",
+        "preview": "Record affected and uninspected consumers, tests, contracts",
+        "priority": "P1",
+        "signals": [
+          "tests"
+        ],
+        "skill_owner": "repository-impact-inspection",
+        "tokens": 11,
+        "total_tokens": 11
+      }
+    },
+    {
+      "target_id": "root:e6c088e78ad47b278277d5e80d01d32887185418676eb71b3854ec5a99c9737d",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "4aa96f611cc3b5626f5b796981fd9a6d1353bec34b60bbd2443a19835ec41018",
+      "candidate": {
+        "candidate_id": "e6c088e78ad47b278277d5e80d01d32887185418676eb71b3854ec5a99c9737d",
+        "context_fingerprint": "a51f424de17123660b4a5dc8c2f795a1fd2ebf5d2927a4f88f7f12e54d88f09e",
+        "document_part": "body",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "b439d4efe7a190e3677cf0222c139745df34e80658d1ae8f0d0a22735850bf14",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "d8adbfda6a5a88a53e8cf92e57ae8dd9b4dc48c4f078119cf59688b698f2ad71",
+        "occurrences": [
+          {
+            "context_fingerprint": "046b4bbd3457801d7c8e59f94268dc84e782d415686f142749e9061bd44399f0",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 49,
+              "start": 49
+            },
+            "owner": "task-dag-planner",
+            "path": "src/professional-skills/task-dag-planner/SKILL.md",
+            "preview": "Create a DAG only for two or more real tasks whose every edge expresses a blocking fact.",
+            "signals": [
+              "fixed-count",
+              "fixed-threshold"
+            ],
+            "tokens": 18
+          }
+        ],
+        "owner": "task-dag-planner",
+        "path": "src/professional-skills/task-dag-planner/SKILL.md",
+        "preview": "Create a DAG only for two or more real tasks whose every edge expresses a blocking fact.",
+        "priority": "P1",
+        "signals": [
+          "fixed-count",
+          "fixed-threshold"
+        ],
+        "skill_owner": "task-dag-planner",
+        "tokens": 18,
+        "total_tokens": 18
+      }
+    },
+    {
+      "target_id": "root:e74bad828c5246cf23d7cb1109f5dcaf657be1290819b8ec48e40f247da33d1d",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "9cd31db18f9de57a754cd17a26497f1beb5087c876276e65cbaeca33f68a37ce",
+      "candidate": {
+        "candidate_id": "e74bad828c5246cf23d7cb1109f5dcaf657be1290819b8ec48e40f247da33d1d",
+        "context_fingerprint": "95e2c332602aec46669198d65c0c4fbf7c3ef2f589e1dea0c55987afab2e9944",
+        "document_part": "control-prompt",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "168a9c859b3ca53f9112b1f1c8c7b304e18282e30786aa11879c5a4abfc8751f",
+        "layer": "control-prompt",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
+        "occurrences": [
+          {
+            "context_fingerprint": "3701f62eb7c7fc388a90c78ab923ebc618bb70630840b7a2531dfe32d6c74f4b",
+            "document_part": "control-prompt",
+            "layer": "control-prompt",
+            "lines": {
+              "end": 43,
+              "start": 43
+            },
+            "owner": "main-control-agent",
+            "path": "src/control-prompts/main-control-agent.md",
+            "preview": "After 2 same-path failures, retry needs changed hypothesis/material/gap/transition",
+            "signals": [
+              "fixed-count"
+            ],
+            "tokens": 16
+          }
+        ],
+        "owner": "main-control-agent",
+        "path": "src/control-prompts/main-control-agent.md",
+        "preview": "After 2 same-path failures, retry needs changed hypothesis/material/gap/transition",
+        "priority": "P1",
+        "signals": [
+          "fixed-count"
+        ],
+        "skill_owner": "main-control-agent",
+        "tokens": 16,
+        "total_tokens": 16
+      }
+    },
+    {
+      "target_id": "root:ea2266c66efbfb90e89b34ccd07cdd2b41bba23082717dc832ab80736b7ce86e",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "ff95a9abcd5c3407f583edcb77a47e28c26b2de54d21a33aa7eb0ce40c6de1e2",
+      "candidate": {
+        "candidate_id": "ea2266c66efbfb90e89b34ccd07cdd2b41bba23082717dc832ab80736b7ce86e",
+        "context_fingerprint": "2c31dcc723af18e51b4a6066ee90b4ce0e5a388fa5914eca595c4955e8982bfb",
+        "document_part": "body",
+        "finding": "mandatory_artifact_candidate",
+        "fingerprint": "1e121eca7a9bb5f212025d0cbd8fb4114f26e4e3943f5e82910bfd03f0841947",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "51a408b1ebbe4167209b950df52b0bb41975543d8f9286d390e3365fdf81e9ae",
+        "occurrences": [
+          {
+            "context_fingerprint": "d55ce7b8c91429694ad67f73fb2113220918dfffa9b0091de288abff1d607758",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 24,
+              "start": 24
+            },
+            "owner": "macos-platform-extension",
+            "path": "src/domain-extensions/macos-platform-extension/SKILL.md",
+            "preview": "Record OS/SDK/deployment, AppKit/SwiftUI/Catalyst boundary, lifecycle/responder owners, file/sandbox authority, Keychain/helper topology, artifact/channel",
+            "signals": [
+              "artifact"
+            ],
+            "tokens": 34
+          }
+        ],
+        "owner": "macos-platform-extension",
+        "path": "src/domain-extensions/macos-platform-extension/SKILL.md",
+        "preview": "Record OS/SDK/deployment, AppKit/SwiftUI/Catalyst boundary, lifecycle/responder owners, file/sandbox authority, Keychain/helper topology, artifact/channel",
+        "priority": "P1",
+        "signals": [
+          "artifact"
+        ],
+        "skill_owner": "macos-platform-extension",
+        "tokens": 34,
+        "total_tokens": 34
+      }
+    },
+    {
+      "target_id": "root:eac6c1f4724aede34f02f80489c75e7db9d5fb0e638ec8b1a2f6558ef3d99b4e",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "a5039a5b5ffb7e76e025fb47760c21fff6a583a7dc367416ca134abfa0d7500a",
+      "candidate": {
+        "candidate_id": "eac6c1f4724aede34f02f80489c75e7db9d5fb0e638ec8b1a2f6558ef3d99b4e",
+        "context_fingerprint": "b63fb3685f4f395a7788776bc9874c4aae932f11c873347174ee02cfe26f889b",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "b33abd83d62867d5bfa92a9844255b02b6685e7c2202a4d8c2825bd2ee27a915",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "94aea8335a6fb281b3e17ed314684e9d2e69b5c20b76aa29a7a4e4560e70c8f6",
+        "occurrences": [
+          {
+            "context_fingerprint": "41d6abd50ab5f8874c35de6f53b2031c53a8104224ccdc74ff672f61e98773c9",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 30,
+              "start": 30
+            },
+            "owner": "architecture-enforcement-tooling",
+            "path": "src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md",
+            "preview": "Require current rule inventory, negative fixture, exception policy",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 10
+          }
+        ],
+        "owner": "architecture-enforcement-tooling",
+        "path": "src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md",
+        "preview": "Require current rule inventory, negative fixture, exception policy",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "architecture-enforcement-tooling",
+        "tokens": 10,
+        "total_tokens": 10
+      }
+    },
+    {
+      "target_id": "root:eadab0abf6618f23f50755c1ce5d68a142649950ed7446261d44109502b5b98a",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "1351fbac1cd7c5db048782d84bff16d8654b462e6b016e65cbaf57f3a2c24f76",
+      "candidate": {
+        "candidate_id": "eadab0abf6618f23f50755c1ce5d68a142649950ed7446261d44109502b5b98a",
+        "context_fingerprint": "71f5f7942a2ece72bf459e0138348b8b914d380291446e84818b379ceb045367",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "0b7f7daec39c1e114ef4a4e398ab06d7a6f36a431ce86e6761aaff7d1e6ec939",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "ae6e5e60b7eaa1341d16b9094548cd876c6e4b73afd95d452b167a1f98ab448e",
+        "occurrences": [
+          {
+            "context_fingerprint": "0a55025f113f4d0c144ca3c0e8a5a099a49762c678034cd30fa3905af34e0076",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 44,
+              "start": 44
+            },
+            "owner": "extensibility-design",
+            "path": "src/foundation/capabilities/extensibility-design/SKILL.md",
+            "preview": "Require concise rationale and inspected evidence for inapplicable controls.",
+            "signals": [
+              "mechanism",
+              "require"
+            ],
+            "tokens": 12
+          }
+        ],
+        "owner": "extensibility-design",
+        "path": "src/foundation/capabilities/extensibility-design/SKILL.md",
+        "preview": "Require concise rationale and inspected evidence for inapplicable controls.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "require"
+        ],
+        "skill_owner": "extensibility-design",
+        "tokens": 12,
+        "total_tokens": 12
+      }
+    },
+    {
+      "target_id": "root:ebb095b4a8f88758414cdfac672d479088da0240c0202fefd2e908a11127c40e",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "eb88bf8c094d5e8a47c4ffe3bada44ed426adccdda35296da33f8f423371f270",
+      "candidate": {
+        "candidate_id": "ebb095b4a8f88758414cdfac672d479088da0240c0202fefd2e908a11127c40e",
+        "context_fingerprint": "e96ccc89bcd1bf56e740891921ee60c6fa27181c25c346d7b74d13104e67c9a8",
+        "document_part": "body",
+        "finding": "fixed_duration_threshold_status_candidate",
+        "fingerprint": "337ebb5c82a869dfb322f0e9fa76971fb42c388d85b7b686a593fea83a07ed90",
+        "layer": "foundation-capability",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "f53134abf397dc6a475924e2a60c6b6ca1cd7302b9e3d83798693bc82f859ba6",
+        "occurrences": [
+          {
+            "context_fingerprint": "e79b279fae8cef2f9dd6587b1f24b579c439b91ae2089455c0ebabe5805479a5",
+            "document_part": "body",
+            "layer": "foundation-capability",
+            "lines": {
+              "end": 35,
+              "start": 35
+            },
+            "owner": "failure-diagnosis",
+            "path": "src/foundation/capabilities/failure-diagnosis/SKILL.md",
+            "preview": "Treat correlation, a single successful retry, one familiar failure mode",
+            "signals": [
+              "fixed-count"
+            ],
+            "tokens": 12
+          }
+        ],
+        "owner": "failure-diagnosis",
+        "path": "src/foundation/capabilities/failure-diagnosis/SKILL.md",
+        "preview": "Treat correlation, a single successful retry, one familiar failure mode",
+        "priority": "P1",
+        "signals": [
+          "fixed-count"
+        ],
+        "skill_owner": "failure-diagnosis",
+        "tokens": 12,
+        "total_tokens": 12
+      }
+    },
+    {
+      "target_id": "root:f3e260c66abb126a5e0b4ff3efe4449e58d91a69a8347891334c99e3ede62684",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "994b1f989dd0b357e0ae58de9658d92d49fc619c6803cb7485be1f11d3090fd7",
+      "candidate": {
+        "candidate_id": "f3e260c66abb126a5e0b4ff3efe4449e58d91a69a8347891334c99e3ede62684",
+        "context_fingerprint": "f5e8d9a345086c925da07426521b2e436783fcac13dd743a8f15c9a686044b7b",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "f85dd497277b33f7315ae7c6581f5d41824637ddc958fae52f79a8daf1e5edf0",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "b3584b407684bb1b3d99ab2502eedc9fb930e544993a6326a506fea3c413e5af",
+        "occurrences": [
+          {
+            "context_fingerprint": "474a9615128b370953309660693c7f92be6803dbd78a0f771033efec04875c02",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 10,
+              "start": 10
+            },
+            "owner": "cloud-platform-extension",
+            "path": "src/domain-extensions/cloud-platform-extension/SKILL.md",
+            "preview": "A `review-agent` must load it.",
+            "signals": [
+              "mechanism",
+              "must"
+            ],
+            "tokens": 9
+          }
+        ],
+        "owner": "cloud-platform-extension",
+        "path": "src/domain-extensions/cloud-platform-extension/SKILL.md",
+        "preview": "A `review-agent` must load it.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "must"
+        ],
+        "skill_owner": "cloud-platform-extension",
+        "tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    {
+      "target_id": "root:f48da381697736b250485630860d6a9dc22451e8d2432a73008b8fc28fe3e7e7",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "bafa6a1d637e546072ad9dc2802f1dfb45806a37d6709761ee72a333bddaa9a6",
+      "candidate": {
+        "candidate_id": "f48da381697736b250485630860d6a9dc22451e8d2432a73008b8fc28fe3e7e7",
+        "context_fingerprint": "67da0b14757d8353274322501183960dc6cc56c5a8e25fb0b285c827ecd8276b",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "a886c11d71be3a2442f941c46546086fc1e46583f47cd27763fe3e362f2952c0",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "e6b67c023180ba746e9128884be7f15830e38b5720835ab910a37a50f5b6a87a",
+        "occurrences": [
+          {
+            "context_fingerprint": "f0aa9e5fbac7d5fe75aba9ac3c858bcb74766fdc5968682b65f7112ee3abcf8c",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 46,
+              "start": 46
+            },
+            "owner": "acceptance-criteria-builder",
+            "path": "src/professional-skills/acceptance-criteria-builder/SKILL.md",
+            "preview": "Map each criterion to an observable validation signal and an explicit proof limit.",
+            "signals": [
+              "each",
+              "mechanism"
+            ],
+            "tokens": 14
+          }
+        ],
+        "owner": "acceptance-criteria-builder",
+        "path": "src/professional-skills/acceptance-criteria-builder/SKILL.md",
+        "preview": "Map each criterion to an observable validation signal and an explicit proof limit.",
+        "priority": "P1",
+        "signals": [
+          "each",
+          "mechanism"
+        ],
+        "skill_owner": "acceptance-criteria-builder",
+        "tokens": 14,
+        "total_tokens": 14
+      }
+    },
+    {
+      "target_id": "root:f7629f1d8daa1ced84faafa918934392026f78177a2c917e23511f828c01deee",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "c52891827331feacb1c09666fcfa5d07cd95eb6e5c1515b327227cef90cd91cf",
+      "candidate": {
+        "candidate_id": "f7629f1d8daa1ced84faafa918934392026f78177a2c917e23511f828c01deee",
+        "context_fingerprint": "b8cc3b738e4b0428d9d2170c726e14c9e068e9148c27bc939c71f141a35397d1",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "117879fb6209baf898dafdc8b0936d7edf0f20d2c8b0873a84f09a0a53ddba27",
+        "layer": "professional-skill",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "ca947ef070dc74782d4e0c1b4e06a0fe6da32f92ac9c5670aee905ae55f46b0a",
+        "occurrences": [
+          {
+            "context_fingerprint": "6f1e7e81bd79949acbec93882bc18f1f6d237ebaed15bc1e27eeacb5ed9cb973",
+            "document_part": "body",
+            "layer": "professional-skill",
+            "lines": {
+              "end": 42,
+              "start": 42
+            },
+            "owner": "ai-code-review-refactor",
+            "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
+            "preview": "specialist review never replaces final implementation review.",
+            "signals": [
+              "mechanism",
+              "never"
+            ],
+            "tokens": 9
+          }
+        ],
+        "owner": "ai-code-review-refactor",
+        "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
+        "preview": "specialist review never replaces final implementation review.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "never"
+        ],
+        "skill_owner": "ai-code-review-refactor",
+        "tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    {
+      "target_id": "root:fcfce45c19bb5754060c28481787b61fd8dc723d2c49455ffb20177a3c190d97",
+      "axis": "root",
+      "carry_forward_mismatches": [
+        "prior-entry-missing"
+      ],
+      "candidate_fingerprint": "920aa37404e689f7a0a02b507652b350cb7bae6f0fd4129cc1a1217f52fec8e1",
+      "candidate": {
+        "candidate_id": "fcfce45c19bb5754060c28481787b61fd8dc723d2c49455ffb20177a3c190d97",
+        "context_fingerprint": "6bb4395e87cb3e999b45bdc18b5c8cae1185530d8b8dd2ca0d1fd697cb9496be",
+        "document_part": "body",
+        "finding": "unconditional_mechanism_candidate",
+        "fingerprint": "6db375ed9d48f7f699b43ec970b3ff23db13833febb78bc8f28011bddd47ca4d",
+        "layer": "domain-extension",
+        "occurrence_count": 1,
+        "occurrence_fingerprint": "e3b7c0d8680c93170c7fa8a4fee1623c6b2b202fed4db107e4fe3cf619f26db5",
+        "occurrences": [
+          {
+            "context_fingerprint": "e94568fa3a242e6ae06f63df4e8dfbe141190261863f319526e1ed81da700a1e",
+            "document_part": "body",
+            "layer": "domain-extension",
+            "lines": {
+              "end": 10,
+              "start": 10
+            },
+            "owner": "windows-platform-extension",
+            "path": "src/domain-extensions/windows-platform-extension/SKILL.md",
+            "preview": "A `review-agent` must load it for Windows behavior.",
+            "signals": [
+              "mechanism",
+              "must"
+            ],
+            "tokens": 12
+          }
+        ],
+        "owner": "windows-platform-extension",
+        "path": "src/domain-extensions/windows-platform-extension/SKILL.md",
+        "preview": "A `review-agent` must load it for Windows behavior.",
+        "priority": "P1",
+        "signals": [
+          "mechanism",
+          "must"
+        ],
+        "skill_owner": "windows-platform-extension",
+        "tokens": 12,
+        "total_tokens": 12
+      }
+    }
+  ],
+  "limitations": [
+    "This panel is authoring lifecycle evidence for semantic dispositions only.",
+    "It cannot satisfy or replace readability or professional-completeness formal attestations.",
+    "A majority rewrite remains a decision record and does not create a single-source-of-truth disposition entry.",
+    "Static semantic review does not prove real-host or production behavior.",
+    "Detector-change re-review was forced for semantic axes: root."
+  ]
+}

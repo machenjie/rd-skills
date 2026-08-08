@@ -4,6 +4,13 @@ The review-agent receives one bounded target and does not edit. Implementation
 review requires observable acceptance, the latest actual diff, the declared
 changed-path set, current validation results, and the Evidence Requirements.
 
+For Analyzed Work, this handoff is a derived projection of the current
+Engineering Brief. Goal, Acceptance, Non-goals, Allowed Write Scope, Owner, and
+review boundaries are copied from the Brief and dispatched Slice; review
+evidence and findings cannot redefine them or any other protected Brief
+decision. If the handoff conflicts with the current Brief or a protected
+decision must change, mark it blocked and return to analysis through Main.
+
 The public Execution Level lines use Core public `execution-level/v1`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is
 defined in [execution-level-contract.md](execution-level-contract.md).
@@ -26,6 +33,11 @@ Level: requested=unspecified / L1 / L5; automatic=L2 / L3 / L4; default=L3; effe
 Basis: source=user_fact:<anchor> / analysis_handoff:<anchor>; triggers=["<matched or unknown trigger ID>"] / []; l2=["<false or unknown L2 predicate ID>"] / []; unresolved=[] / ["unknown-critical-boundary=>L4,edit=blocked"]
 L5 Evidence: when=effective L5 only; requires=independent pre-implementation review / strong safety and applicability proof / declared-scope comprehensive negative and failure proof / exhaustive final review
 <!-- END CHANGEFORGE CORE PUBLIC EXECUTION TEMPLATE: review-handoff-template.md -->
+
+Goal:
+Acceptance:
+Non-goals:
+Allowed Write Scope:
 
 ## Owner
 

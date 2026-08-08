@@ -734,7 +734,7 @@ semantically with each other, so matching forged fingerprints, stale coverage,
 missing authoring or release blockers, and gate/aggregate contradictions cannot
 pass by internal mirroring alone.
 
-Current static evidence selectors are r21 Readability, r24 Semantic
-Disposition, r25 Root lifecycle, and r16 schema-3 Professional Completeness for
+Current static evidence selectors are r25 Readability, r26 Semantic
+Disposition, r26 Root lifecycle, and r18 schema-3 Professional Completeness for
 all 189 non-Control packages. These static selectors do not prove that the
 final formal gates or same-commit remote workflow passed.

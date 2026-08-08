@@ -1036,6 +1036,358 @@
       ]
     }
   ],
+  "task_focus_fixture_count": 25,
+  "task_focus_fixtures": [
+    {
+      "id": "focus-current-diff-blocker",
+      "scenario": "finding",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-current-acceptance-blocker",
+      "scenario": "finding",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-current-invariant-blocker",
+      "scenario": "finding",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-scope-blocker-returns-analysis",
+      "scenario": "finding",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-historical-adjacent-nonblocking",
+      "scenario": "finding",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-critical-adjacent-nonblocking",
+      "scenario": "finding",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-rejects-read-scope-write",
+      "scenario": "finding",
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "focus-rejects-read-scope-write: [adjacent-repair] adjacent findings cannot block or enter repair; record and continue the primary task",
+        "focus-rejects-read-scope-write: [read-scope-write] Allowed Read Scope does not grant write authority"
+      ]
+    },
+    {
+      "id": "focus-write-scope-is-permission-ceiling",
+      "scenario": "finding",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-same-pattern-adjacent-recorded",
+      "scenario": "same-pattern",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-same-pattern-current-fixed",
+      "scenario": "same-pattern",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-same-pattern-outside-scope-blocks",
+      "scenario": "same-pattern",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-repair-fresh-latest-evidence",
+      "scenario": "repair",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-adjacent-deferred-from-repair",
+      "scenario": "repair",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-rejects-adjacent-repair",
+      "scenario": "repair",
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "focus-rejects-adjacent-repair: [adjacent-repair] adjacent findings cannot block or enter repair; record and continue the primary task",
+        "focus-rejects-adjacent-repair: [repair-priority] adjacent discovery must not preempt the current requested task or DAG"
+      ]
+    },
+    {
+      "id": "focus-rejects-unrelated-repair-file",
+      "scenario": "repair",
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "focus-rejects-unrelated-repair-file: [repair-unrelated-file] repair must revert the unrelated changed file and must not continue repairing it"
+      ]
+    },
+    {
+      "id": "focus-rejects-stale-repair-evidence",
+      "scenario": "repair",
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "focus-rejects-stale-repair-evidence: [repair-freshness] repair requires fresh validation, latest actual diff, and fresh independent review after the latest material edit"
+      ]
+    },
+    {
+      "id": "focus-repair-adjacent-discovery-does-not-expand",
+      "scenario": "repair",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-l1-single-final",
+      "scenario": "review-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-l2-single-final",
+      "scenario": "review-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-l3-single-jit-final",
+      "scenario": "review-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-rejects-l4-default-prereview",
+      "scenario": "review-level",
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "focus-rejects-l4-default-prereview: [review-l4-prereview] L4 does not default to pre-implementation review"
+      ]
+    },
+    {
+      "id": "focus-review-l4-actual-gates-only",
+      "scenario": "review-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-l5-strong-not-release",
+      "scenario": "review-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-new-high-risk-returns-analysis",
+      "scenario": "review-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-ordinary-l1-l3-cost-neutral",
+      "scenario": "cost",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    }
+  ],
+  "external_read_fixture_count": 14,
+  "external_read_fixtures": [
+    {
+      "id": "external-read-no-material-claim",
+      "operation": "not-applicable",
+      "external_read_triggered": false,
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "external-read-local-evidence-sufficient",
+      "operation": "not-applicable",
+      "external_read_triggered": false,
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "external-read-websearch-official",
+      "operation": "WebSearch",
+      "external_read_triggered": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "external-read-webfetch-versioned",
+      "operation": "WebFetch",
+      "external_read_triggered": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "external-read-connector-readonly",
+      "operation": "ConnectorRead",
+      "external_read_triggered": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "external-read-prompt-injection-ignored",
+      "operation": "WebFetch",
+      "external_read_triggered": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "external-read-task-agent-denied",
+      "operation": "WebSearch",
+      "external_read_triggered": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "external-read-task-agent-denied: [external-read-role] external-read is exclusive to analysis-agent"
+      ]
+    },
+    {
+      "id": "external-read-review-agent-denied",
+      "operation": "WebFetch",
+      "external_read_triggered": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "external-read-review-agent-denied: [external-read-role] external-read is exclusive to analysis-agent"
+      ]
+    },
+    {
+      "id": "external-read-private-query-denied",
+      "operation": "WebSearch",
+      "external_read_triggered": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "external-read-private-query-denied: [external-read-disclosure] request contains protected content: repository-private-source, secret-token-credential, user-sensitive-data, internal-identifier, proprietary-content"
+      ]
+    },
+    {
+      "id": "external-read-raw-instruction-denied",
+      "operation": "WebFetch",
+      "external_read_triggered": true,
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "external-read-raw-instruction-denied: [external-content-control] external instructions became control input"
+      ]
+    },
+    {
+      "id": "external-read-noncritical-proof-limit",
+      "operation": "not-applicable",
+      "external_read_triggered": false,
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "external-read-critical-gap-blocked",
+      "operation": "WebFetch",
+      "external_read_triggered": true,
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "external-read-unsupported-local-continue",
+      "operation": "not-applicable",
+      "external_read_triggered": false,
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "external-read-unsupported-critical-blocked",
+      "operation": "not-applicable",
+      "external_read_triggered": false,
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    }
+  ],
   "cases": [
     {
       "id": "single-file-bug-fix",

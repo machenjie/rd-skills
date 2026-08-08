@@ -69,6 +69,24 @@ PROMPT_TEMPLATE_BINDINGS = (
     ("direct-task-template.md", ("main-control-agent",)),
     ("implementation-handoff-template.md", ("task-agent",)),
 )
+ANALYZED_WORK_PROMPT_TERMS = {
+    "Analyzed Work": (
+        "current Engineering Brief is the only operational analysis authority",
+        "First Executable Slice is a complete Task Contract v2",
+        "dispatch its First Executable Slice verbatim",
+        "never regenerate or reinterpret",
+        "Specialist input takes effect only after Brief incorporation",
+        "DAGs/handoffs are derived",
+        "cannot redefine Brief decisions",
+        "blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief",
+        "redispatch affected tasks",
+        "Direct Task and non-implementation paths remain unchanged",
+    ),
+    "Scheduling and Context": (
+        "current requested task > declared DAG work > current-task blockers > adjacent follow-up",
+        "Adjacent findings never preempt the requested task or DAG",
+    ),
+}
 
 
 def _fold(text: str) -> str:
@@ -338,6 +356,27 @@ def _validate_concepts(text: str, errors: list[str]) -> None:
             )
 
 
+def _validate_analyzed_work_authority(text: str, errors: list[str]) -> None:
+    authority = TASK_CONTRACT_MODEL["analyzed_work_authority"]
+    if authority["operational_authority"] != "current-engineering-brief":
+        errors.append(
+            "Core analyzed-work authority must remain the current Engineering Brief"
+        )
+    for section, terms in ANALYZED_WORK_PROMPT_TERMS.items():
+        surface = extract_section_body(text, section)
+        if surface is None:
+            errors.append(
+                f"cannot validate analyzed-work authority: missing section {section!r}"
+            )
+            continue
+        folded = _fold(surface)
+        for term in terms:
+            if term.casefold() not in folded:
+                errors.append(
+                    f"{section}: missing analyzed-work authority term {term!r}"
+                )
+
+
 def _validate_host_mode_branches(text: str, errors: list[str]) -> None:
     section = extract_section_body(text, PROMPT_CONTRACT_MODEL["host_mode_section"])
     if section is None:
@@ -477,6 +516,7 @@ def main() -> int:
             )
         )
     _validate_concepts(text, errors)
+    _validate_analyzed_work_authority(text, errors)
     _validate_host_mode_branches(text, errors)
     folded = _fold(text)
     for field in LEGACY_HOST_MODE_FIELDS:

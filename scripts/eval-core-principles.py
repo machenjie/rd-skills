@@ -56,6 +56,15 @@ PRODUCER_FAILURE_REASON_CODES = {
     "report-not-refreshed",
     "source-tree-mutated",
 }
+PROFESSIONALISM_PRODUCER_ID = "validate-professionalism-regression"
+PROFESSIONALISM_PRODUCER_ARGV = [
+    "python3",
+    "scripts/validate-professionalism-regression.py",
+    "--strict",
+    "--report-only",
+]
+PROFESSIONALISM_DECLARED_TIMEOUT_SECONDS = 1200
+PROFESSIONALISM_TIMEOUT_SECONDS = 2700
 UNCOVERED_MANDATORY_RELEASE_GATES = [
     "examples-validation",
     "showcase-freshness",
@@ -96,6 +105,19 @@ def _canonical_json(value: object) -> bytes:
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
+
+
+def _producer_timeout_seconds(producer: dict[str, Any]) -> int:
+    """Return the one harness-owned extended subprocess failure ceiling."""
+
+    if (
+        producer.get("id") == PROFESSIONALISM_PRODUCER_ID
+        and producer.get("argv") == PROFESSIONALISM_PRODUCER_ARGV
+        and producer.get("timeout_seconds")
+        == PROFESSIONALISM_DECLARED_TIMEOUT_SECONDS
+    ):
+        return PROFESSIONALISM_TIMEOUT_SECONDS
+    return producer["timeout_seconds"]
 
 
 def _sha256_bytes(value: bytes) -> str:
@@ -628,7 +650,7 @@ def _producer_result_without_execution(
         "id": producer["id"],
         "argv": producer["argv"],
         "depends_on": producer["depends_on"],
-        "timeout_seconds": producer["timeout_seconds"],
+        "timeout_seconds": _producer_timeout_seconds(producer),
         "status": status,
         "exit_code": None,
         "timed_out": False,
@@ -687,6 +709,7 @@ def _run_producers(
             by_id[producer_id] = result
             continue
         executed_argv.add(canonical_argv)
+        timeout_seconds = _producer_timeout_seconds(producer)
         report_before = {
             path: _file_snapshot(root / path) for path in producer["reports"]
         }
@@ -714,7 +737,7 @@ def _run_producers(
                 )
                 process_started = True
                 try:
-                    exit_code = process.wait(timeout=producer["timeout_seconds"])
+                    exit_code = process.wait(timeout=timeout_seconds)
                 except subprocess.TimeoutExpired:
                     timed_out = True
                     failure_reason_codes.append("process-timeout")
@@ -771,7 +794,7 @@ def _run_producers(
             "id": producer_id,
             "argv": producer["argv"],
             "depends_on": producer["depends_on"],
-            "timeout_seconds": producer["timeout_seconds"],
+            "timeout_seconds": timeout_seconds,
             "status": status,
             "exit_code": exit_code,
             "timed_out": timed_out,
@@ -1807,7 +1830,7 @@ def validate_saved_report(root: Path, report: object) -> list[str]:
                 "depends_on"
             ) != declared.get("depends_on") or saved.get(
                 "timeout_seconds"
-            ) != declared.get("timeout_seconds"):
+            ) != _producer_timeout_seconds(declared):
                 errors.append(
                     f"core principles producer contract is stale: {declared.get('id')}"
                 )

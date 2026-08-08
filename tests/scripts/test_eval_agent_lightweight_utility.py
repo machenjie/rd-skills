@@ -59,7 +59,9 @@ class LightweightUtilityContractTests(unittest.TestCase):
         cls.utility_cases = document["utility_cases"]
         cls.adaptive_testing_cases = document["adaptive_testing_cases"]
         cls.review_discipline_cases = document["review_discipline_cases"]
+        cls.task_focus_cases = document["task_focus_cases"]
         cls.completion_state_cases = document["completion_state_cases"]
+        cls.external_read_cases = document["external_read_cases"]
         cls.professional, cls.layer3 = EVAL._skill_registries()
 
     def _errors(self, case: dict) -> list[str]:
@@ -546,6 +548,30 @@ class LightweightUtilityContractTests(unittest.TestCase):
             ),
             disguised_edit_errors,
         )
+
+    def test_task_focus_relation_review_repair_and_cost_matrix_is_closed(self) -> None:
+        results, errors = EVAL._task_focus_fixture_results(self.task_focus_cases)
+        self.assertEqual([], errors)
+        self.assertEqual(25, len(results))
+        self.assertTrue(all(result["matches_expected"] for result in results))
+        self.assertEqual(
+            {"finding", "same-pattern", "repair", "review-level", "cost"},
+            {result["scenario"] for result in results},
+        )
+
+    def test_task_focus_negative_controls_reject_scope_and_review_drift(self) -> None:
+        expected = {
+            "focus-rejects-adjacent-repair": "adjacent findings cannot block or enter repair",
+            "focus-rejects-read-scope-write": "Allowed Read Scope does not grant write authority",
+            "focus-rejects-l4-default-prereview": "L4 does not default to pre-implementation review",
+            "focus-rejects-stale-repair-evidence": "fresh validation, latest actual diff, and fresh independent review",
+            "focus-rejects-unrelated-repair-file": "revert the unrelated changed file",
+        }
+        by_id = {case["id"]: case for case in self.task_focus_cases}
+        for case_id, message in expected.items():
+            with self.subTest(case=case_id):
+                errors = EVAL._task_focus_case_errors(by_id[case_id])
+                self.assertTrue(any(message in error for error in errors), errors)
 
     def test_release_reviews_use_one_typed_guard_per_review_outcome(self) -> None:
         for case in [*self.release_cases, *self.scheduling_cases, *self.utility_cases]:
@@ -2367,6 +2393,87 @@ class LightweightUtilityContractTests(unittest.TestCase):
             any("followed immediately by its result" in error for error in errors),
             errors,
         )
+
+    def test_external_read_fixtures_cover_offline_allow_and_deny_paths(self) -> None:
+        results, errors = EVAL._external_read_fixture_results(
+            copy.deepcopy(self.external_read_cases)
+        )
+        self.assertEqual([], errors)
+        self.assertEqual(14, len(results))
+        self.assertEqual(
+            {"WebSearch", "WebFetch", "ConnectorRead"},
+            {
+                item["operation"]
+                for item in results
+                if item["actual_valid"] and item["external_read_triggered"]
+            },
+        )
+        by_id = {item["id"]: item for item in results}
+        for case_id in (
+            "external-read-no-material-claim",
+            "external-read-local-evidence-sufficient",
+            "external-read-noncritical-proof-limit",
+            "external-read-unsupported-local-continue",
+        ):
+            self.assertFalse(by_id[case_id]["external_read_triggered"])
+        for case_id in (
+            "external-read-task-agent-denied",
+            "external-read-review-agent-denied",
+            "external-read-private-query-denied",
+            "external-read-raw-instruction-denied",
+        ):
+            self.assertFalse(by_id[case_id]["expected_valid"])
+            self.assertTrue(by_id[case_id]["matches_expected"])
+
+    def test_external_read_mutations_reject_prompt_execution_and_disclosure(self) -> None:
+        base = copy.deepcopy(
+            next(
+                case
+                for case in self.external_read_cases
+                if case["id"] == "external-read-prompt-injection-ignored"
+            )
+        )
+        mutations = (
+            ("instruction_executed", True, "external-content-control"),
+            ("raw_instruction_propagated", True, "external-content-control"),
+        )
+        for field, value, expected in mutations:
+            with self.subTest(field=field):
+                case = copy.deepcopy(base)
+                case["response"][field] = value
+                case["expected_valid"] = True
+                case["expected_error"] = None
+                _results, errors = EVAL._external_read_fixture_results([case])
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+        leak = copy.deepcopy(base)
+        leak["request"]["contains_protected_content"] = True
+        leak["expected_valid"] = True
+        leak["expected_error"] = None
+        _results, errors = EVAL._external_read_fixture_results([leak])
+        self.assertTrue(any("external-read-disclosure" in error for error in errors), errors)
+
+    def test_external_read_mutations_reject_role_and_jit_drift(self) -> None:
+        base = copy.deepcopy(
+            next(
+                case
+                for case in self.external_read_cases
+                if case["id"] == "external-read-websearch-official"
+            )
+        )
+        task_case = copy.deepcopy(base)
+        task_case["role"] = "task-agent"
+        task_case["expected_valid"] = True
+        task_case["expected_error"] = None
+        _results, errors = EVAL._external_read_fixture_results([task_case])
+        self.assertTrue(any("external-read-role" in error for error in errors), errors)
+
+        no_claim = copy.deepcopy(base)
+        no_claim["evidence_state"] = "no-material-claim"
+        no_claim["expected_valid"] = True
+        no_claim["expected_error"] = None
+        _results, errors = EVAL._external_read_fixture_results([no_claim])
+        self.assertTrue(any("external-read-jit" in error for error in errors), errors)
 
 
 if __name__ == "__main__":

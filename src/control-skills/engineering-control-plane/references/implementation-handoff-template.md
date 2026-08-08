@@ -3,6 +3,13 @@
 Return this visible contract after the last material edit and its targeted
 validation. It records evidence, not implementer reasoning or self-review.
 
+For Analyzed Work, this handoff is a derived projection of the current
+Engineering Brief and its verbatim-dispatched First Executable Slice. Result
+and evidence may report execution but must not redefine Acceptance, Non-goals,
+Owner, Invariants, Placement, contract semantics, Rollback, or the Slice. If
+the assignment conflicts with the current Brief or needs one of those decisions
+to change, mark it blocked and return to analysis through Main.
+
 The public Execution Level lines use Core public `execution-level/v1`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is
 defined in [execution-level-contract.md](execution-level-contract.md).

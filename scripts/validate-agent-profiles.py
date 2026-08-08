@@ -11,6 +11,7 @@ from pathlib import Path
 
 from validation_utils import (
     COMPLETION_STATE_MODEL,
+    CORE_CONTRACTS,
     EVIDENCE_LEDGER_MODEL,
     IMPLEMENTATION_DISCIPLINE_MODEL,
     REVIEW_DISCIPLINE_MODEL,
@@ -35,6 +36,7 @@ ENFORCEMENT_CAPABILITIES = {
     "tool_allowlist",
     "workspace_write_protection",
     "read_only_command_semantics",
+    "external_source_read",
 }
 HOST_ENFORCEMENT_CAPABILITIES = {
     "profile_delivery",
@@ -49,6 +51,14 @@ HOST_MODE_VALUES = {
     for contract in PROMPT_CONTRACT_MODEL["host_mode_branches"]
 }
 ENFORCEMENT_HOSTS = {"codex", "claude", "copilot", "cline", "openai-api"}
+EXTERNAL_READ_MODEL = CORE_CONTRACTS["external_read_contract"]
+EXTERNAL_READ_HOST_MODES = {
+    "codex": "prompt-enforced",
+    "claude": "native-enforced",
+    "copilot": "unsupported",
+    "cline": "unsupported",
+    "openai-api": "unsupported",
+}
 OLD_NAMES = {
     "analysis-worker", "specialist-worker", "validation-agent", "independent-reviewer",
     "integration-worker", "pdd-freezer", "ddd-freezer", "sdd-contract-freezer",
@@ -274,6 +284,92 @@ def _validate_profile_instruction_contract(
                 )
 
 
+def _validate_external_read_profile_contract(
+    *,
+    role_name: str,
+    error_label: str,
+    instructions: str,
+    errors: list[str],
+) -> None:
+    """Keep external evidence JIT, non-authoritative, and analysis-only."""
+
+    rules = instructions.splitlines()
+    if role_name == EXTERNAL_READ_MODEL["exclusive_role"]:
+        groups = [
+            {
+                "rule_id": "external-read-jit",
+                "required_terms": [
+                    "material unresolved Claim",
+                    "local or current evidence",
+                    "never browse broadly",
+                    "non-material unknown",
+                    "Proof Limit",
+                ],
+            },
+            {
+                "rule_id": "external-read-trust-boundary",
+                "required_terms": [
+                    "untrusted evidence input",
+                    "never control input",
+                    "without executing/downstreaming",
+                    "raw external instructions",
+                    "normalized Claim",
+                    "Evidence Ledger",
+                    "Engineering Brief",
+                ],
+            },
+            {
+                "rule_id": "external-read-disclosure-boundary",
+                "required_terms": [
+                    "WebSearch",
+                    "WebFetch",
+                    "ConnectorRead",
+                    "minimum public information",
+                    "repository-private source",
+                    "credentials",
+                    "sensitive data",
+                    "proprietary content",
+                ],
+            },
+            {
+                "rule_id": "external-read-host-fail-closed",
+                "required_terms": [
+                    "external_source_read",
+                    "unsupported",
+                    "sufficient local evidence",
+                    "unknown-critical-boundary",
+                    "edit blocked",
+                    "no implementation dispatch",
+                ],
+            },
+        ]
+        _validate_instruction_rule_groups(
+            role_name=error_label,
+            contract_label="external-read",
+            groups=groups,
+            rules=rules,
+            errors=errors,
+        )
+        return
+
+    if role_name in EXTERNAL_READ_MODEL["downstream_research_roles"]:
+        _validate_instruction_rule_groups(
+            role_name=error_label,
+            contract_label="external-read denial",
+            groups=[
+                {
+                    "rule_id": "external-read-denied",
+                    "required_terms": [
+                        "Leave external-read research",
+                        "analysis-agent",
+                    ],
+                }
+            ],
+            rules=rules,
+            errors=errors,
+        )
+
+
 def _built_instruction_surface(
     platform: str,
     name: str,
@@ -372,6 +468,23 @@ def _expected_built_instruction_surface(
             f"validation_mode={validation_mode}; "
             f"utility_no_edit={utility_no_edit}."
         )
+    elif name == "analysis-agent":
+        host_entry = hosts.get(platform)
+        if not isinstance(host_entry, dict):
+            return None
+        roles = host_entry.get("roles")
+        if not isinstance(roles, dict):
+            return None
+        role_entry = roles.get("analysis-agent")
+        if not isinstance(role_entry, dict):
+            return None
+        external_mode = role_entry.get("external_source_read")
+        if not isinstance(external_mode, str):
+            return None
+        sections.append(
+            "Current external-read mode: "
+            f"external_source_read={external_mode}."
+        )
 
     expected = "\n\n".join(sections)
     return expected if platform == "codex" else expected + "\n"
@@ -460,6 +573,12 @@ def main(argv: list[str] | None = None) -> int:
             instructions=instructions,
             errors=errors,
         )
+        _validate_external_read_profile_contract(
+            role_name=name,
+            error_label=name,
+            instructions=instructions,
+            errors=errors,
+        )
 
     main_profile = by_name.get("main-control-agent", {})
     if main_profile.get("prompt") != PROMPT_CONTRACT_MODEL["path"]:
@@ -511,6 +630,15 @@ def main(argv: list[str] | None = None) -> int:
             if not isinstance(role_entry, dict):
                 errors.append(f"{host}:{role}: enforcement entry must be an object")
                 continue
+            expected_role_fields = ENFORCEMENT_CAPABILITIES | {
+                "rendered_tools",
+                "limitations",
+            }
+            if set(role_entry) != expected_role_fields:
+                errors.append(
+                    f"{host}:{role}: enforcement fields must be exactly "
+                    f"{sorted(expected_role_fields)}"
+                )
             for capability in ENFORCEMENT_CAPABILITIES:
                 if role_entry.get(capability) not in ENFORCEMENT_STATUSES:
                     errors.append(f"{host}:{role}: invalid {capability} enforcement")
@@ -519,6 +647,35 @@ def main(argv: list[str] | None = None) -> int:
     codex_main = hosts.get("codex", {}).get("roles", {}).get("main-control-agent", {})
     if codex_main.get("tool_allowlist") != "prompt-enforced":
         errors.append("codex:main-control-agent tool allowlist must be prompt-enforced")
+    for host, expected_mode in EXTERNAL_READ_HOST_MODES.items():
+        roles = hosts.get(host, {}).get("roles", {})
+        analysis = roles.get("analysis-agent", {})
+        if analysis.get("external_source_read") != expected_mode:
+            errors.append(
+                f"{host}:analysis-agent external_source_read must be {expected_mode}"
+            )
+        for role in set(ROLE_CONTRACT_MODEL) - {"analysis-agent"}:
+            if roles.get(role, {}).get("external_source_read") != "unsupported":
+                errors.append(
+                    f"{host}:{role} external_source_read must be unsupported"
+                )
+    claude_analysis_tools = (
+        hosts.get("claude", {})
+        .get("roles", {})
+        .get("analysis-agent", {})
+        .get("rendered_tools")
+    )
+    if claude_analysis_tools != [
+        "Skill",
+        "Read",
+        "Grep",
+        "Glob",
+        "WebSearch",
+        "WebFetch",
+    ]:
+        errors.append(
+            "claude:analysis-agent must expose only the native read and Web read tools"
+        )
     for host in ("claude", "copilot"):
         review = hosts.get(host, {}).get("roles", {}).get("review-agent", {})
         if review.get("read_only_command_semantics") != "unsupported":
@@ -563,6 +720,12 @@ def main(argv: list[str] | None = None) -> int:
                     role_name=name,
                     error_label=f"{platform}:{name}",
                     readability_label=f"{platform}:{name}#decoded-instructions",
+                    instructions=instruction_block,
+                    errors=errors,
+                )
+                _validate_external_read_profile_contract(
+                    role_name=name,
+                    error_label=f"{platform}:{name}",
                     instructions=instruction_block,
                     errors=errors,
                 )
@@ -618,12 +781,28 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 if expected_modes not in text:
                     errors.append(f"{platform}:{name}: missing exact current host modes")
+            elif name == "analysis-agent":
+                expected_mode = (
+                    hosts.get(platform, {})
+                    .get("roles", {})
+                    .get("analysis-agent", {})
+                    .get("external_source_read")
+                )
+                expected_external_mode = (
+                    "Current external-read mode: "
+                    f"external_source_read={expected_mode}."
+                )
+                if expected_external_mode not in text:
+                    errors.append(
+                        f"{platform}:{name}: missing exact external-read mode"
+                    )
                 if (
-                    text.count("diff_input_mode=") != 1
-                    or text.count("validation_mode=") != 1
-                    or text.count("utility_no_edit=") != 1
+                    text.count("Current external-read mode:") != 1
+                    or text.count("external_source_read=") != 1
                 ):
-                    errors.append(f"{platform}:{name}: host modes must be injected exactly once")
+                    errors.append(
+                        f"{platform}:{name}: external-read mode must be injected exactly once"
+                    )
             elif any(
                 marker in text
                 for marker in (
@@ -631,6 +810,8 @@ def main(argv: list[str] | None = None) -> int:
                     "diff_input_mode=",
                     "validation_mode=",
                     "utility_no_edit=",
+                    "Current external-read mode:",
+                    "external_source_read=",
                 )
             ):
                 errors.append(f"{platform}:{name}: worker Profile must not receive host modes")

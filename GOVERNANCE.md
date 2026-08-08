@@ -504,8 +504,8 @@ refresh current evidence.
 - **Targeted validation:** the ordinary authoring gate followed by
   `python3 scripts/eval-core-principles.py --gate formal-release` and
   `python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review`.
-- **Current evidence:** Current static evidence selectors are r21 Readability,
-  r24 Semantic Disposition, r25 Root lifecycle, and r16 schema-3 Professional
+- **Current evidence:** Current static evidence selectors are r25 Readability,
+  r26 Semantic Disposition, r26 Root lifecycle, and r18 schema-3 Professional
   Completeness for all 189 non-Control packages. Their selected configuration,
   decisions, required ballots, and required schema-3 lineage are checked in.
   Readability has no tracked tightening, unresolved detector false positive, or

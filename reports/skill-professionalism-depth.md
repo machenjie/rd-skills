@@ -7,9 +7,9 @@
 | `engineering-control-plane` | control | 100 | 0 | 0 | 40 |
 | `routing-quality-review` | professional | 100 | 5 | 3 | 69 |
 | `change-intake-compiler` | professional | 100 | 4 | 3 | 71 |
-| `engineering-change-analysis` | professional | 100 | 7 | 1 | 72 |
+| `engineering-change-analysis` | professional | 100 | 9 | 1 | 80 |
 | `acceptance-criteria-builder` | professional | 100 | 4 | 3 | 76 |
-| `task-dag-planner` | professional | 100 | 12 | 4 | 82 |
+| `task-dag-planner` | professional | 100 | 16 | 4 | 96 |
 | `high-risk-design-review` | professional | 100 | 4 | 3 | 65 |
 | `engineering-artifact-review` | professional | 100 | 4 | 3 | 71 |
 | `experience-impact-modeler` | professional | 100 | 4 | 3 | 69 |
@@ -25,7 +25,7 @@
 | `reliability-observability-gate` | professional | 100 | 5 | 3 | 79 |
 | `logging-design-gate` | professional | 100 | 6 | 3 | 75 |
 | `delivery-release-gate` | professional | 100 | 4 | 3 | 76 |
-| `ai-code-review-refactor` | professional | 100 | 3 | 3 | 86 |
+| `ai-code-review-refactor` | professional | 100 | 11 | 3 | 97 |
 | `change-documentation-gate` | professional | 100 | 4 | 3 | 74 |
 | `installed-client-change-builder` | professional | 100 | 7 | 5 | 83 |
 | `platform-infrastructure-change-builder` | professional | 100 | 6 | 5 | 83 |
@@ -94,7 +94,7 @@
 | `contract-testing` | foundation | 100 | 7 | 4 | 53 |
 | `e2e-testing` | foundation | 100 | 8 | 4 | 54 |
 | `test-data-management` | foundation | 100 | 7 | 3 | 52 |
-| `regression-testing` | foundation | 100 | 7 | 4 | 53 |
+| `regression-testing` | foundation | 100 | 8 | 4 | 54 |
 | `performance-budgeting` | foundation | 100 | 7 | 3 | 52 |
 | `profiling` | foundation | 100 | 7 | 3 | 52 |
 | `concurrency-control` | foundation | 100 | 5 | 2 | 55 |
@@ -108,7 +108,7 @@
 | `release-rollback` | foundation | 100 | 8 | 4 | 55 |
 | `task-handoff-context` | foundation | 100 | 8 | 4 | 72 |
 | `task-dag-decomposition` | foundation | 100 | 8 | 4 | 72 |
-| `code-review` | foundation | 100 | 7 | 3 | 52 |
+| `code-review` | foundation | 100 | 8 | 3 | 53 |
 | `refactoring` | foundation | 100 | 7 | 3 | 54 |
 | `documentation-generation` | foundation | 100 | 6 | 4 | 58 |
 | `failure-diagnosis` | foundation | 100 | 7 | 3 | 52 |

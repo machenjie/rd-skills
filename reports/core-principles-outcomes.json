@@ -131,7 +131,7 @@
       "id": "roles-authority",
       "pointer": "/roles",
       "source": "src/control-model/core-contracts.json",
-      "value_sha256": "508d49b349628d55c572f66bff1b2c6c2fddcb4414aa7241f32cc10b63a13726"
+      "value_sha256": "84d4d639cfae9348c0a1d17be607f2bf110be804c2805473e6ebfae52e8ec6fd"
     },
     {
       "consumer_results": [
@@ -237,19 +237,19 @@
             },
             {
               "id": "readability-review-current",
-              "status": "pass"
+              "status": "fail"
             },
             {
               "id": "professional-completeness-review-current",
-              "status": "pass"
+              "status": "fail"
             },
             {
               "id": "professional-review-cost-current",
-              "status": "pass"
+              "status": "fail"
             },
             {
               "id": "root-release-current",
-              "status": "pass"
+              "status": "fail"
             }
           ],
           "producer": "validate-professionalism-regression",
@@ -259,7 +259,7 @@
       "id": "final-goal-authority",
       "pointer": "/final_goal_contract",
       "source": "src/control-model/core-contracts.json",
-      "value_sha256": "89aa5b8661c5d7b2290faea0f8dfac3a67bb717bb7bd01492cdbc2ac0b436124"
+      "value_sha256": "aa2b0431565226db5a4de3c388eb6091e9fe981628a98b82b69f264ae7ebd2dd"
     },
     {
       "consumer_results": [
@@ -419,7 +419,7 @@
       "id": "task-contract-authority",
       "pointer": "/task_contract",
       "source": "src/control-model/core-contracts.json",
-      "value_sha256": "69081cfba9081401fe146d96addd6f51b6e5f23b039533bc0a70176275929b97"
+      "value_sha256": "61dea82e9b3e38583752da1d6b21cf97ddcbbf77d585928409633806f4bb0211"
     },
     {
       "consumer_results": [
@@ -695,7 +695,7 @@
       "id": "prompt-contract-authority",
       "pointer": "/prompt_contract",
       "source": "src/control-model/core-contracts.json",
-      "value_sha256": "6310a21448c580d1a12ee7a49035397b2287bffd93b4f7628c9d5d97ef60f825"
+      "value_sha256": "b3c787339309db284d88aab18275182ea882a6024eeb77ab35030c5d822b406b"
     },
     {
       "consumer_results": [
@@ -767,7 +767,7 @@
       "id": "profile-contract-authority",
       "pointer": "/profile_contract",
       "source": "src/control-model/core-contracts.json",
-      "value_sha256": "71f421e88b3df899caf6e8e88dad731da3a46c7a5ad26b5544978464788a1308"
+      "value_sha256": "92b90f8c75eaf4debe33c1f06f9518bdd41a6c3fb76cf4e73fad2036dcfbf15d"
     },
     {
       "consumer_results": [
@@ -803,22 +803,22 @@
       "id": "docs-contract-authority",
       "pointer": "/docs_contract",
       "source": "src/control-model/core-contracts.json",
-      "value_sha256": "bed3a12381f5d76e789c63b1d1fdf5931bccec638f6b7dae5a9c417a15e9da9c"
+      "value_sha256": "6b13027d261e65e25d0bb2f66a57defc52b888d083338d26393d0aa24f4d2bfe"
     }
   ],
   "command_execution_count": 33,
   "contract_errors": [],
-  "contract_sha256": "5b45f88d7724eff7bc6a7081d755a12233a1cb59c41e1a6f0028fb556381119b",
+  "contract_sha256": "cadbbc01d48350f446de6b653368da52aa5ce47d865d8429230ef31b2714c1a6",
   "contract_source": "src/control-model/core-contracts.json",
-  "formal_principles_status": "pass",
+  "formal_principles_status": "blocked",
   "input_tree": {
     "post": {
-      "file_count": 2572,
-      "sha256": "d3a4dd35cdcd68c3be1bdd7783872d729620dd84ee938cad7798655c4357abae"
+      "file_count": 2618,
+      "sha256": "bf032643dd3088a35003fe23f130f1da1eefcb2dcab4db79541b728153fb0f3b"
     },
     "pre": {
-      "file_count": 2572,
-      "sha256": "d3a4dd35cdcd68c3be1bdd7783872d729620dd84ee938cad7798655c4357abae"
+      "file_count": 2618,
+      "sha256": "bf032643dd3088a35003fe23f130f1da1eefcb2dcab4db79541b728153fb0f3b"
     },
     "unchanged": true
   },
@@ -1810,7 +1810,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "canonical_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
             "type": "boolean"
           },
           "expected": true,
@@ -1818,7 +1818,7 @@
           "pointer": "/root_content/semantic_advisories/lifecycle/snapshot_current",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -1847,7 +1847,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -3043,7 +3043,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "434c9b5ae514646bbd91b50032ca579efec8f22bf0b4aac12e65997c418e0dd6",
+            "canonical_sha256": "a46e37632fa6ca51a13fe39a567b3c23b28c2f47d8af6be9bd63e030e214ba38",
             "type": "integer"
           },
           "expected": 80,
@@ -3059,7 +3059,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "10dbd4e0df89589171745d365197dd9bccce27f05f560dac3a518f74b80e5b57",
+            "canonical_sha256": "39974fa25104e7fb29591d0235dd52b777ff51212eeadd505638b225cca47979",
             "type": "number"
           },
           "expected": 0.03,
@@ -3459,7 +3459,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "canonical_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
             "type": "boolean"
           },
           "expected": true,
@@ -3467,7 +3467,7 @@
           "pointer": "/content_readiness/aggregate/readability_review_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3483,7 +3483,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "canonical_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
             "type": "boolean"
           },
           "expected": true,
@@ -3491,7 +3491,7 @@
           "pointer": "/content_readiness/expert/readability/storage_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3507,7 +3507,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "canonical_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
             "type": "boolean"
           },
           "expected": true,
@@ -3515,7 +3515,7 @@
           "pointer": "/content_readiness/expert/readability/accepted_for_formal",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3579,7 +3579,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -3604,7 +3604,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "canonical_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
             "type": "boolean"
           },
           "expected": true,
@@ -3612,7 +3612,7 @@
           "pointer": "/content_readiness/aggregate/professional_completeness_review_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3628,7 +3628,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "canonical_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
             "type": "boolean"
           },
           "expected": true,
@@ -3636,7 +3636,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/storage_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3652,7 +3652,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "canonical_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
             "type": "boolean"
           },
           "expected": true,
@@ -3660,7 +3660,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/accepted_for_formal",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3881,7 +3881,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -3918,7 +3918,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "canonical_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
             "type": "boolean"
           },
           "expected": true,
@@ -3926,7 +3926,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_cost_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3983,7 +3983,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "07b9a953cbe76a5f41bd4adab5c4959dbf823cc55c5e3fda56438cab6d0a99c4",
+            "canonical_sha256": "090aeade8634ac52fe6597a105743fdfd7207df2f10b060c2d04655c356fedaa",
             "type": "integer"
           },
           "expected": 450000,
@@ -3999,14 +3999,14 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "6fc78faf8c7f416b3914dde43a48c46e82fd5543d2b8d64210f33eb723ecd9df",
+            "canonical_sha256": "2c81165b150faea38ac86b6ecb5404c7f8264a1a53cbe9e22b00986ec4f1bcc1",
             "length": 11,
             "type": "object"
           },
           "expected": {
             "case_count": 189,
-            "cases_fingerprint": "d60712b8cd1e96a230c2146538eb535d71af615537de2378d2fb721cbacb742e",
-            "catalog_fingerprint": "7200a46718ca4ae58739acb2fbb3fb98311aacb30b98fcc7cd4e1fb79bcd5e59",
+            "cases_fingerprint": "b257706d44e0d96f38dd220aca7a0f128b5358f10eddc28b8a015c1bb93f35a4",
+            "catalog_fingerprint": "83aa86fc03b5ce14158badc62f5a0f72e9924440c59160c7df574a18f31f5d4e",
             "fresh_target_count": {
               "max": 56,
               "mean_milli": 17148,
@@ -4014,24 +4014,24 @@
               "p95": 35,
               "sum": 3241
             },
-            "full_projection_fingerprint": "5afc06501de0b1bdbe244c0fd405de539413bd86ee3382d88740328d734a94a9",
-            "full_rereview_deduplicated_capsule_input_bytes_proxy": 117048396,
+            "full_projection_fingerprint": "16248bf7fa2949bd8a7bd52ef88eaee82ec29d6d24062080a3473bd991688d76",
+            "full_rereview_deduplicated_capsule_input_bytes_proxy": 117058467,
             "input_ratio_ppm": {
-              "max": 348284,
-              "mean": 137127,
-              "min": 34819,
-              "p95": 238428,
-              "sum": 25917087
+              "max": 348342,
+              "mean": 137186,
+              "min": 34864,
+              "p95": 238497,
+              "sum": 25928334
             },
-            "material_catalog_fingerprint": "15dc47f1b88078e6d537d45d84a93f88d4c06f5bb10c25bf508ff824484c2a56",
+            "material_catalog_fingerprint": "1350b0cb257a0560a991db7da773a6c9e65e7ed85d64aae4a3ca99dabe989f1e",
             "named_isolated_case": {
-              "canonical_capsule_input_bytes_proxy": 9952446,
+              "canonical_capsule_input_bytes_proxy": 9958404,
               "carried_forward_target_count": 181,
               "fresh_target_count": 8,
-              "input_ratio_ppm": 85028,
+              "input_ratio_ppm": 85072,
               "skill_id": "acceptance-criteria-builder"
             },
-            "professional_packages_fingerprint": "3bac086e24ee1a2ed5fcbc63b4496e1b5b8404f76876a7bff813dcf3bf341279",
+            "professional_packages_fingerprint": "76319a57c8c84643f36eb7170f3ba7d64e4058d998eafb272ff9b6985e6ede3c",
             "review_contract_fingerprint": "f80ffe96349a5cf35fc5c02ea698ede77e01c892a24fa35b1baecc1d9ec48fa1"
           },
           "expected_from": {
@@ -4062,10 +4062,10 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "0877fe4fb35840eab983755c01798b2c8a0f24ebbc65b63f7e7c109e3e06ad69",
+            "canonical_sha256": "b00b237121aaadfcba8126287841e0d634458cfef55b00a3610107dc574c53ee",
             "type": "integer"
           },
-          "expected": 117048396,
+          "expected": 117058467,
           "expected_from": {
             "authority": "final-goal-authority",
             "pointer": "/professional_review_cost_fixtures/locked_current_catalog/full_rereview_deduplicated_capsule_input_bytes_proxy"
@@ -4158,10 +4158,10 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "ed81097e9dca5128f963ba2d433a8f3da3fe0db758a555d3d7306bd1f24f8b56",
+            "canonical_sha256": "c6c30f224fecc5bd3833e99e8461d61d55ae90f9b35cef73446e4f7f06d36f50",
             "type": "integer"
           },
-          "expected": 34819,
+          "expected": 34864,
           "expected_from": {
             "authority": "final-goal-authority",
             "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/min"
@@ -4174,10 +4174,10 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "d0f1cd7f5b6adeff6e3b911c03c9fb6c678cc48bb01f745f2e818de8342085e3",
+            "canonical_sha256": "4a6279a017fced2612b701617105dc3146db52518b663ccb1c236e77a5d4e456",
             "type": "integer"
           },
-          "expected": 25917087,
+          "expected": 25928334,
           "expected_from": {
             "authority": "final-goal-authority",
             "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/sum"
@@ -4190,10 +4190,10 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "af2bc88524bd57e16db8a4af6fe08789168b284373f14dddb8daa7b7f70f6c71",
+            "canonical_sha256": "553887630f834843d3771abd5b348544d8634377a6bcb422eb6df057e96e20b5",
             "type": "integer"
           },
-          "expected": 137127,
+          "expected": 137186,
           "expected_from": {
             "authority": "final-goal-authority",
             "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/mean"
@@ -4206,10 +4206,10 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "a5c025f25d822017483c6dd90107390bad275d21722183232daf7094315d6567",
+            "canonical_sha256": "a1a8b641762035418986a1536ae9ec43867257efad1b87eb4e306e438598eea7",
             "type": "integer"
           },
-          "expected": 238428,
+          "expected": 238497,
           "expected_from": {
             "authority": "final-goal-authority",
             "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/p95"
@@ -4222,10 +4222,10 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "07b9a953cbe76a5f41bd4adab5c4959dbf823cc55c5e3fda56438cab6d0a99c4",
+            "canonical_sha256": "090aeade8634ac52fe6597a105743fdfd7207df2f10b060c2d04655c356fedaa",
             "type": "integer"
           },
-          "expected": 348284,
+          "expected": 348342,
           "expected_from": {
             "authority": "final-goal-authority",
             "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/max"
@@ -4270,10 +4270,10 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "aea1524f002d8c6e45f590490bb31a2a9ee2c1473ae3b777c6f39967efd96d46",
+            "canonical_sha256": "c40e1fc11389d5935dcd85cea49a441b7a35bef4933afb5d5360390a65ab661b",
             "type": "integer"
           },
-          "expected": 9952446,
+          "expected": 9958404,
           "expected_from": {
             "authority": "final-goal-authority",
             "pointer": "/professional_review_cost_fixtures/locked_current_catalog/named_isolated_case/canonical_capsule_input_bytes_proxy"
@@ -4286,10 +4286,10 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "45ca3a4f6e85fd9a955e497f325349e6959cde627ee8e0b4e3eb975caae4a38f",
+            "canonical_sha256": "4a38f110ee1ebfaa57697786a278f3f8ece93b3b2dd07d9e9a976b5b3f6a87ad",
             "type": "integer"
           },
-          "expected": 85028,
+          "expected": 85072,
           "expected_from": {
             "authority": "final-goal-authority",
             "pointer": "/professional_review_cost_fixtures/locked_current_catalog/named_isolated_case/input_ratio_ppm"
@@ -4302,7 +4302,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -4327,7 +4327,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
+            "canonical_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
             "type": "boolean"
           },
           "expected": true,
@@ -4335,17 +4335,17 @@
           "pointer": "/root_content_summary/semantic_lifecycle_formal_release_ready",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "fail"
     }
   ],
   "principles": [
     {
       "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "formal_release_status": "blocked",
       "id": "ai-first",
       "name": "AI First",
       "required_dimensions": [
@@ -4381,7 +4381,7 @@
           "content-audit-formal-release-current"
         ]
       },
-      "status": "pass"
+      "status": "partial"
     },
     {
       "authoring_status": "pass",
@@ -4510,7 +4510,7 @@
     },
     {
       "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "formal_release_status": "blocked",
       "id": "professional-skill-injection",
       "name": "Professional Skill Injection",
       "required_dimensions": [
@@ -4539,7 +4539,7 @@
           "professional-completeness-review-current"
         ]
       },
-      "status": "pass"
+      "status": "partial"
     },
     {
       "authoring_status": "pass",
@@ -4587,7 +4587,7 @@
     },
     {
       "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "formal_release_status": "blocked",
       "id": "single-source-of-truth",
       "name": "Single Source of Truth",
       "required_dimensions": [
@@ -4606,7 +4606,7 @@
           "root-release-current"
         ]
       },
-      "status": "pass"
+      "status": "partial"
     },
     {
       "authoring_status": "pass",
@@ -4671,7 +4671,7 @@
     },
     {
       "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "formal_release_status": "blocked",
       "id": "final-goal",
       "name": "Final Goal",
       "required_dimensions": [
@@ -4694,10 +4694,10 @@
           "professional-review-cost-current"
         ]
       },
-      "status": "pass"
+      "status": "partial"
     }
   ],
-  "principles_status": "pass",
+  "principles_status": "partial",
   "producers": [
     {
       "argv": [
@@ -4919,7 +4919,7 @@
           "fresh": true,
           "json_object": true,
           "path": "reports/skill-content-audit.json",
-          "sha256": "5459fabbd351e6a933edcac219bae35f39baeed9061b034ce1f509bb03122040"
+          "sha256": "5adc1e4be699a5564502be2313e59cd194c15a8adcc568c76ec6e1ff0c1a9116"
         }
       ],
       "source_unchanged": true,
@@ -5150,7 +5150,7 @@
           "fresh": true,
           "json_object": true,
           "path": "reports/skill-professionalism-eval.json",
-          "sha256": "9677ed02e09f8af15cdc4d90c75dd3d7ca817b4abdcb2c597510005fad0785d6"
+          "sha256": "9e33744cc3be8080912323c9c0c40c0f0429428347ff6684562b163a72e81b67"
         }
       ],
       "source_unchanged": true,
@@ -5226,7 +5226,7 @@
           "fresh": true,
           "json_object": true,
           "path": "reports/hookless-control-plane-eval.json",
-          "sha256": "b547bf42c12fe53dc1110c86cd46ee84a96a027be1b478a43985859d62ba4601"
+          "sha256": "10d03cdac956906a4d5b92eb8988365f5935581b7fc4c8ce58366813502a724e"
         }
       ],
       "source_unchanged": true,
@@ -5254,7 +5254,7 @@
           "fresh": true,
           "json_object": true,
           "path": "reports/rendered-context-budget.json",
-          "sha256": "23aef7c0e87251ccf3c8525796439fdba38f522e57a8bed415e0d91cee1f6161"
+          "sha256": "2cbe7a542d7f7947446bec3b3f89a9d340d436dea87ec6aa9dead014acf07498"
         }
       ],
       "source_unchanged": true,
@@ -5281,7 +5281,7 @@
           "fresh": true,
           "json_object": true,
           "path": "reports/context-control-plane-eval.json",
-          "sha256": "3d702107e84ff2449270f21fb7fd1f87e7912ec0f22d0aedcb927892d25750cf"
+          "sha256": "3a8bdff3c151c9de3e692024347cb0d6d41f528366a9140f74e48add7a0748c6"
         }
       ],
       "source_unchanged": true,
@@ -5382,13 +5382,13 @@
           "fresh": true,
           "json_object": true,
           "path": "reports/professionalism-regression-report.json",
-          "sha256": "f07d566a0d4ec853136390dc7aaf0a5317cbad5bf0a97c1b503e4a48c9101ce5"
+          "sha256": "a5b42a985adbfc8311f9ddf0330d65aebc498765463ad707e018b3dc1460c1c5"
         },
         {
           "fresh": true,
           "json_object": true,
           "path": "reports/professionalism-release-readiness.json",
-          "sha256": "ddf00e33af27e74a380b388abf76d03634c943332f9602c7c37ea3066b485335"
+          "sha256": "507fdc2326e717352b0462bb4f16db56dd7cc08d0271f3ec948ed8012b529434"
         }
       ],
       "source_unchanged": true,
@@ -5396,7 +5396,7 @@
       "stderr_sha256": null,
       "stdout_sha256": null,
       "timed_out": false,
-      "timeout_seconds": 1200
+      "timeout_seconds": 2700
     }
   ],
   "schema_version": 3,

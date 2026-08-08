@@ -71,8 +71,104 @@ class ControlPromptProjectionTests(unittest.TestCase):
 
         self.assertLessEqual(
             VALIDATOR.count_o200k_base_tokens(text),
-            1395,
+            min(1415, VALIDATOR.PROMPT_MAX_O200K_BASE_TOKENS),
         )
+
+    def test_main_business_execution_and_permission_gates_are_projected(
+        self,
+    ) -> None:
+        text = VALIDATOR.PROMPT.read_text(encoding="utf-8")
+        authorization = VALIDATOR.extract_section_body(text, "Authorization") or ""
+        expected_by_concept = {
+            "dispatch-only-boundary": ("execute business commands",),
+            "bounded-delegation-authorization": (
+                "permission required",
+                "scope expansion",
+                "destructive/production action",
+                "elevation",
+                "irreversible/material data change",
+                "unsupported choice",
+            ),
+        }
+        concepts = {
+            item["id"]: item
+            for item in VALIDATOR.PROMPT_CONTRACT_MODEL["concepts"]
+        }
+
+        self.assertIn("execute business commands", text.casefold())
+        for term in expected_by_concept["bounded-delegation-authorization"]:
+            with self.subTest(surface_term=term):
+                self.assertIn(term.casefold(), authorization.casefold())
+        for concept_id, terms in expected_by_concept.items():
+            with self.subTest(concept_id=concept_id):
+                self.assertTrue(
+                    set(terms).issubset(concepts[concept_id]["required_terms"]),
+                    concepts[concept_id],
+                )
+
+    def test_main_business_execution_and_permission_gate_mutations_fail(
+        self,
+    ) -> None:
+        text = VALIDATOR.PROMPT.read_text(encoding="utf-8")
+        mutations = {
+            "dispatch-only-boundary": ("execute business commands",),
+            "bounded-delegation-authorization": (
+                "permission required",
+                "scope expansion",
+                "destructive/production action",
+                "elevation",
+                "irreversible/material data change",
+                "unsupported choice",
+            ),
+        }
+
+        for concept_id, terms in mutations.items():
+            for term in terms:
+                with self.subTest(concept_id=concept_id, term=term):
+                    errors: list[str] = []
+                    VALIDATOR._validate_concepts(
+                        self._remove_term(text, term),
+                        errors,
+                    )
+                    self.assertTrue(
+                        any(concept_id in error for error in errors),
+                        errors,
+                    )
+
+    def test_analyzed_work_authority_and_scheduling_priority_are_projected(self) -> None:
+        text = VALIDATOR.PROMPT.read_text(encoding="utf-8")
+        analyzed = VALIDATOR.extract_section_body(text, "Analyzed Work") or ""
+        scheduling = VALIDATOR.extract_section_body(text, "Scheduling and Context") or ""
+
+        for term in (
+            "current Engineering Brief is the only operational analysis authority",
+            "dispatch its First Executable Slice verbatim",
+            "never regenerate or reinterpret",
+            "blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief",
+            "redispatch affected tasks",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term.casefold(), analyzed.casefold())
+        self.assertIn(
+            "current requested task > declared DAG work > current-task blockers > adjacent follow-up",
+            scheduling,
+        )
+        self.assertIn("Adjacent findings never preempt", scheduling)
+
+    def test_each_analyzed_work_authority_term_has_a_negative_control(self) -> None:
+        text = VALIDATOR.PROMPT.read_text(encoding="utf-8")
+        for section, terms in VALIDATOR.ANALYZED_WORK_PROMPT_TERMS.items():
+            for term in terms:
+                with self.subTest(section=section, term=term):
+                    errors: list[str] = []
+                    VALIDATOR._validate_analyzed_work_authority(
+                        self._remove_term(text, term),
+                        errors,
+                    )
+                    self.assertTrue(
+                        any("analyzed-work authority term" in error for error in errors),
+                        errors,
+                    )
 
     def test_managed_block_and_digest_mutations_fail(self) -> None:
         text = VALIDATOR.PROMPT.read_text(encoding="utf-8")

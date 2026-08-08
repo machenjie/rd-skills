@@ -5,6 +5,10 @@ acceptance, non-production verification, placement, and rollback; work is
 low-risk, reversible, and clear of excluded boundaries or unresolved material
 impact. Otherwise route to Analyzed Work.
 
+Direct Task is outside the Analyzed Work authority path. It keeps this
+template's existing field authority and does not create or derive authority
+from an Engineering Brief.
+
 Inspect within named owner, test, and consumer boundaries. If ownership or
 verification needs discovery, stop and route to Analyzed Work. Use `not
 applicable` for a field that has no Direct Task value.

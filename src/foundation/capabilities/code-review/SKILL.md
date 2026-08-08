@@ -21,12 +21,13 @@ Inspect a bounded code change for correctness, contract preservation, security a
 
 ## High-Value Rules
 
-- **Resolve the review surface.** Identify changed behavior, callers, consumers, data and side effects, generated or configured paths, and relevant repository contracts before judging local lines.
+- **Resolve the review surface.** Identify the Current Task Boundary, latest diff, all changed files, and reachable caller, consumer, sibling, or configuration impact before judging local lines.
 - **Trace consequential paths end to end.** Follow input, validation, authority, state mutation, external effect, failure, cleanup, and observable output far enough to test whether the change preserves its claims.
 - **Check invariants and boundary behavior.** Inspect missing, invalid, denied, duplicate, concurrent, partial, stale, timeout, cancellation, and rollback outcomes that are reachable for the changed mechanism.
 - **Verify APIs and assumptions from source.** Confirm symbols, signatures, versions, defaults, configuration, framework behavior, and generated contracts rather than accepting plausible names or comments.
 - **Evaluate proof against the failure mechanism.** Require focused evidence for the changed behavior and consequential negative outcomes; broad green status or coverage alone does not close an unexercised risk.
-- **Classify findings by consequence and evidence.** State the failing condition, reachable impact, source location, confidence, and smallest viable correction, then apply severity from the current review and release policy.
+- **Classify relation before severity.** Use `current-task` for accepted repair, `scope-blocker` for Main-to-analysis routing, or non-blocking `adjacent` with residual risk and a next step.
+- **Preserve analysis decisions.** Caller, consumer, sibling, and configuration reads are evidence without repair authority; findings cannot redefine Brief decisions or write scope.
 - **Separate defects from optional improvement.** Report behavior, safety, contract, or maintainability risks that affect the change; keep style preference and unrelated redesign outside the blocking verdict.
 
 ## Anti-Patterns

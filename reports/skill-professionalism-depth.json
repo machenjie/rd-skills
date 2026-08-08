@@ -40,9 +40,9 @@
       "path": "src/professional-skills/engineering-change-analysis/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
+      "decision_rule_count": 9,
       "gotcha_count": 1,
-      "line_count": 72
+      "line_count": 80
     },
     {
       "name": "acceptance-criteria-builder",
@@ -60,9 +60,9 @@
       "path": "src/professional-skills/task-dag-planner/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 12,
+      "decision_rule_count": 16,
       "gotcha_count": 4,
-      "line_count": 82
+      "line_count": 96
     },
     {
       "name": "high-risk-design-review",
@@ -220,9 +220,9 @@
       "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 3,
+      "decision_rule_count": 11,
       "gotcha_count": 3,
-      "line_count": 86
+      "line_count": 97
     },
     {
       "name": "change-documentation-gate",
@@ -910,9 +910,9 @@
       "path": "src/foundation/capabilities/regression-testing/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
+      "decision_rule_count": 8,
       "gotcha_count": 4,
-      "line_count": 53
+      "line_count": 54
     },
     {
       "name": "performance-budgeting",
@@ -1050,9 +1050,9 @@
       "path": "src/foundation/capabilities/code-review/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
+      "decision_rule_count": 8,
       "gotcha_count": 3,
-      "line_count": 52
+      "line_count": 53
     },
     {
       "name": "refactoring",

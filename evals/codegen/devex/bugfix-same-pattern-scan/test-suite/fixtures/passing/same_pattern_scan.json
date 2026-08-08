@@ -1,5 +1,25 @@
 {
   "decision": "cover both public and notification dereferences; keep strict export strict",
+  "finding_relations": {
+    "notification_preview": {
+      "action": "fixed",
+      "rationale": "the optional user-facing preview is covered by the current invariant",
+      "relation": "current-task",
+      "residual_risk": "notification delivery outside this formatting boundary is unverified"
+    },
+    "public_profile": {
+      "action": "fixed",
+      "rationale": "the reported endpoint directly defines current Acceptance",
+      "relation": "current-task",
+      "residual_risk": "profile persistence behavior is outside this fixture"
+    },
+    "strict_export": {
+      "action": "record-do-not-edit",
+      "rationale": "strict export owns a distinct data quality invariant and is a current Non-goal",
+      "relation": "adjacent",
+      "residual_risk": "strict export continues to reject absent profiles by design"
+    }
+  },
   "matches": [
     "public_profile",
     "notification_preview",

@@ -80,8 +80,8 @@ their strict commands and reported blockers; this document does not redefine
 packet, ballot, reviewer-assignment, carry, storage, or cost semantics.
 
 The Phase 2 inventory is current and final, so the formal target is all 189
-non-Control packages. Current static evidence selectors are r21 Readability,
-r24 Semantic Disposition, r25 Root lifecycle, and r16 schema-3 Professional
+non-Control packages. Current static evidence selectors are r25 Readability,
+r26 Semantic Disposition, r26 Root lifecycle, and r18 schema-3 Professional
 Completeness for all 189 non-Control packages. These static selectors do not
 prove that the final formal gates or same-commit remote workflow passed.
 

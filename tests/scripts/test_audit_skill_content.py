@@ -529,12 +529,12 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
     def test_current_readability_inventory_is_exact_and_unique(self) -> None:
         result = self.module._collect_ai_readability()
         self.assertEqual(2, result["schema_version"])
-        self.assertEqual(353, result["summary"]["advisory_documents"])
+        self.assertEqual(357, result["summary"]["advisory_documents"])
         # The compressed Main prompt keeps the deterministic advisory inventory bounded.
-        self.assertEqual(972, result["summary"]["advisory_sentences"])
+        self.assertEqual(978, result["summary"]["advisory_sentences"])
         finding_ids = [item["finding_id"] for item in result["findings"]]
-        self.assertEqual(972, len(finding_ids))
-        self.assertEqual(972, len(set(finding_ids)))
+        self.assertEqual(978, len(finding_ids))
+        self.assertEqual(978, len(set(finding_ids)))
 
     def test_markdown_is_independent_of_common_line_insertion_order(self) -> None:
         rows = [

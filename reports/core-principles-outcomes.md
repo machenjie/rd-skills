@@ -2,28 +2,28 @@
 
 This report evaluates the Core Principles sub-gates. It is not a repository formal release decision.
 
-- Core Principles aggregate: `pass`
+- Core Principles aggregate: `partial`
 - Core Principles authoring sub-gate: `pass`
-- Core Principles formal sub-gate: `pass`
-- Input tree: `d3a4dd35cdcd68c3be1bdd7783872d729620dd84ee938cad7798655c4357abae`
+- Core Principles formal sub-gate: `blocked`
+- Input tree: `bf032643dd3088a35003fe23f130f1da1eefcb2dcab4db79541b728153fb0f3b`
 
 | Principle | Authoring sub-gate | Formal sub-gate | Outcome |
 | --- | --- | --- | --- |
-| AI First | `pass` | `pass` | `pass` |
+| AI First | `pass` | `blocked` | `partial` |
 | Core Model | `pass` | `pass` | `pass` |
 | Control Plane Only | `pass` | `pass` | `pass` |
 | Minimum Sufficient Process | `pass` | `pass` | `pass` |
 | Explicit Task Contract | `pass` | `pass` | `pass` |
 | Safe Parallelism | `pass` | `pass` | `pass` |
 | Context Isolation | `pass` | `pass` | `pass` |
-| Professional Skill Injection | `pass` | `pass` | `pass` |
+| Professional Skill Injection | `pass` | `blocked` | `partial` |
 | Reference Loading | `pass` | `pass` | `pass` |
 | Evidence Before Completion | `pass` | `pass` | `pass` |
-| Single Source of Truth | `pass` | `pass` | `pass` |
+| Single Source of Truth | `pass` | `blocked` | `partial` |
 | Framework Transparency | `pass` | `pass` | `pass` |
 | Strong User Feedback | `pass` | `pass` | `pass` |
 | Explicit Completion State | `pass` | `pass` | `pass` |
-| Final Goal | `pass` | `pass` | `pass` |
+| Final Goal | `pass` | `blocked` | `partial` |
 
 ## Evidence Limitations
 

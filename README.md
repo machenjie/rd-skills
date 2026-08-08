@@ -78,11 +78,20 @@ Analyzed Work, and review-only examples.
 ## Boundaries
 
 - `main-control-agent` dispatches only.
-- `analysis-agent` reads and analyzes.
+- `analysis-agent` reads and analyzes; it alone may perform claim-triggered,
+  read-only external evidence lookup when the host explicitly supports it.
 - `task-agent` implements and validates bounded work.
 - `review-agent` independently reviews without repairing its own findings.
 - Shared-workspace writes are serial.
 - Foundation and Domain guidance loads only for a concrete task signal.
+
+For Analyzed Work, the current Engineering Brief is the sole operational
+analysis authority and contains the complete First Executable Slice. Main
+dispatches that Task Contract v2 verbatim; DAGs and handoffs only project it.
+Discovery does not expand repair scope: only current-task findings may enter the
+repair loop, scope blockers return to analysis, and adjacent findings are
+reported without preempting the requested task. Review depth comes from the
+existing Effective Level rather than a separate review-level system.
 
 ## Evidence Limits
 

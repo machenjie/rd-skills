@@ -99,6 +99,7 @@ ENFORCEMENT_CAPABILITIES = (
     "tool_allowlist",
     "workspace_write_protection",
     "read_only_command_semantics",
+    "external_source_read",
 )
 HOST_ENFORCEMENT_CAPABILITIES = (
     "profile_delivery",
@@ -111,6 +112,13 @@ HOST_ENFORCEMENT_CAPABILITIES = (
 HOST_MODE_VALUES = {
     contract["field"]: tuple(branch["value"] for branch in contract["branches"])
     for contract in PROMPT_CONTRACT_MODEL["host_mode_branches"]
+}
+EXTERNAL_READ_HOST_MODES = {
+    "codex": "prompt-enforced",
+    "claude": "native-enforced",
+    "copilot": "unsupported",
+    "cline": "unsupported",
+    "openai-api": "unsupported",
 }
 
 LAYER_SOURCE_ROOTS = {
@@ -1221,6 +1229,15 @@ def _load_host_enforcement() -> dict[str, Any]:
         for role, role_entry in roles.items():
             if not isinstance(role_entry, dict):
                 raise BuildError(f"{host}:{role}: enforcement entry must be an object")
+            expected_role_fields = {
+                *ENFORCEMENT_CAPABILITIES,
+                "rendered_tools",
+                "limitations",
+            }
+            if set(role_entry) != expected_role_fields:
+                raise BuildError(
+                    f"{host}:{role}: enforcement fields must match schema v3"
+                )
             for capability in ENFORCEMENT_CAPABILITIES:
                 if role_entry.get(capability) not in ENFORCEMENT_STATUSES:
                     raise BuildError(
@@ -1238,6 +1255,28 @@ def _load_host_enforcement() -> dict[str, Any]:
                 raise BuildError(f"{host}:{role}: limitations must be a string list")
     if hosts["codex"]["roles"]["main-control-agent"]["tool_allowlist"] != "prompt-enforced":
         raise BuildError("Codex main-control-agent tool allowlist must be prompt-enforced")
+    for host, expected_mode in EXTERNAL_READ_HOST_MODES.items():
+        roles = hosts[host]["roles"]
+        if roles["analysis-agent"]["external_source_read"] != expected_mode:
+            raise BuildError(
+                f"{host}:analysis-agent external_source_read must be {expected_mode}"
+            )
+        for role in set(ROLE_CONTRACT_MODEL) - {"analysis-agent"}:
+            if roles[role]["external_source_read"] != "unsupported":
+                raise BuildError(
+                    f"{host}:{role} external_source_read must be unsupported"
+                )
+    if hosts["claude"]["roles"]["analysis-agent"]["rendered_tools"] != [
+        "Skill",
+        "Read",
+        "Grep",
+        "Glob",
+        "WebSearch",
+        "WebFetch",
+    ]:
+        raise BuildError(
+            "claude:analysis-agent must expose only the native read and Web read tools"
+        )
     for host in ("claude", "copilot"):
         review = hosts[host]["roles"]["review-agent"]
         if review["read_only_command_semantics"] != "unsupported":
@@ -1311,6 +1350,15 @@ def _profile_instructions(
             f"diff_input_mode={host_entry['diff_input_mode']}; "
             f"validation_mode={host_entry['validation_mode']}; "
             f"utility_no_edit={host_entry['utility_no_edit']}."
+        )
+    elif host is not None and profile.get("name") == "analysis-agent":
+        matrix = enforcement or _load_host_enforcement()
+        mode = matrix["hosts"][host]["roles"]["analysis-agent"][
+            "external_source_read"
+        ]
+        host_modes = (
+            "\n\nCurrent external-read mode: "
+            f"external_source_read={mode}."
         )
     return f"{instructions}\n\nDeclared tool boundary: {tools}.{host_modes}"
 

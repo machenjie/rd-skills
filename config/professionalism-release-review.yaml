@@ -1,6 +1,6 @@
 schema_version: 5
 review_owner: changeforge-expert-panel-governance
-reviewed_at: "2026-08-04"
+reviewed_at: "2026-08-08"
 decisions:
   - id: release-critical-professional-coverage
     kind: professional-coverage-gate
@@ -60,35 +60,35 @@ readability_review_attestation:
   scope: ai-readability-and-density
   decision_method: three-independent-experts-majority
   source_fingerprints:
-    reference_content: e2a2201ae0660f677c0a2249b1ffd4a43aa5caad92e7de9167de703827e96a4a
-    root_content: e0eed4245eede01ba2085bcbaaa4a270e6828f23da2914e791d43b90319c51c3
-    ai_readability: c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2
-    skill_detector: 0d57d32d45961cd4a542edb99256ccba1cf1905aacc42d4af3ba803ffd21f3c3
+    reference_content: 99f628fbcd833e3ac092e09c8dc82a3323a60b2378714d8b7dfff03fb48559f3
+    root_content: c5d7fc264bed96ed3df5bf5ae175f4e55fc00f90ec5f8bf2984f2113c724d822
+    ai_readability: 7fb6c587d6c3233e2e8af64e2168d37ee3f9ee01e8fede7c96ea9940d8e15100
+    skill_detector: dd90d20b43d8cf23c81e03db672fe46d9d8f3e7daeb11d1ca70660dcf413d7cf
   panel_record:
-    path: evals/expert-panel/readability-panel-2026-08-04-r21/panel/decision.json
-    sha256: 73b95e4fede8b09687c247d6126c7b7461f3ea258a720e8241a44aef8d46a443
+    path: evals/expert-panel/readability-panel-2026-08-08-r25/panel/decision.json
+    sha256: 5846a4e145002d589ba30425944576fb192266617a1b07c747fc880eed8980fc
   limitations:
-    - The three-reviewer majority accepted all 39 density targets and all 353 readability documents. No tracked tightening, detector false positive, or rewrite requirement remains.
+    - The three-reviewer majority accepted all 43 density targets and all 357 readability documents. No tracked tightening, detector false positive, or rewrite requirement remains.
     - Reviewer declarations are static. They do not prove identity, qualifications, or experience.
     - Static panel evidence does not prove real-host Profile startup, wall-clock performance, provider behavior, production accuracy, or installed user experience.
     - Canonical byte proxies do not prove actual token use, reviewer effort, or latency.
-    - Storage currentness requires this config and the immutable r21 packet, decision, and three ballots to be tracked, byte-equal to HEAD, and clean.
+    - Storage currentness requires this config and the immutable r25 packet, decision, and three ballots to be tracked, byte-equal to HEAD, and clean.
 professional_completeness_review_attestation:
   schema_version: 5
   panel_kind: professional-completeness
   scope: professional-skill-packages
   decision_method: exact-package-carry-forward-qualified-reviewer-pool-domain-critical-fail-closed
   source_fingerprints:
-    professional_packages: 3bac086e24ee1a2ed5fcbc63b4496e1b5b8404f76876a7bff813dcf3bf341279
-    professional_review_bindings: 7200a46718ca4ae58739acb2fbb3fb98311aacb30b98fcc7cd4e1fb79bcd5e59
+    professional_packages: 76319a57c8c84643f36eb7170f3ba7d64e4058d998eafb272ff9b6985e6ede3c
+    professional_review_bindings: 83aa86fc03b5ce14158badc62f5a0f72e9924440c59160c7df574a18f31f5d4e
     professional_review_contract: f80ffe96349a5cf35fc5c02ea698ede77e01c892a24fa35b1baecc1d9ec48fa1
   panel_record:
-    path: evals/expert-panel/professional-completeness-panel-2026-08-04-r16/panel/decision.json
-    sha256: 3f63bca15d5925e83a43d54105d4ac10dd59c04a7ac471eac2fb8a2d30dff42d
+    path: evals/expert-panel/professional-completeness-panel-2026-08-07-r18/panel/decision.json
+    sha256: 2a854260411741e608379d67015d060a21f61f0bfefab87cda7e7b27492cb533
   limitations:
-    - The schema-3 decision accepted all 189 non-Control Skill packages. Professional corrections and unresolved professional disagreements are zero.
+    - The schema-3 all-carry decision accepted 0 fresh and 189 exact-carry non-Control Skill packages, for all 189 effective packages. Professional corrections and unresolved professional disagreements are zero.
     - Reviewer declarations are static. They do not prove identity, qualifications, or experience.
     - Static panel evidence does not prove real-host Profile startup, wall-clock performance, provider behavior, production accuracy, or installed user experience.
     - Canonical byte proxies do not prove actual token use, reviewer effort, or latency.
-    - The all-fresh r16 checkpoint supersedes r15 for formal selection; r15 remains its immutable audit predecessor, and the static artifact tree does not prove that historical rounds were never deleted.
-    - Storage currentness requires this config and the immutable r16 packet, decision, three ballots, three capsules, three candidate requests, three discovery capsules, and referenced chain artifacts to be tracked, byte-equal to HEAD, and clean.
+    - All-carry r18 is the direct successor of r17; r17 is the immediate baseline and r16 remains the immutable all-fresh checkpoint. The static artifact tree does not prove that historical rounds were never deleted.
+    - The r18 round has no fresh reviewer pool, ballots, capsules, or canonical capsule input bytes. Storage currentness requires this config, the immutable r18 packet and decision, and referenced r17 and r16 chain artifacts to be tracked, byte-equal to HEAD, and clean.

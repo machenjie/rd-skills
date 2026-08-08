@@ -43,7 +43,15 @@ class BugfixSamePatternScanAssertions(unittest.TestCase):
             {"public_profile", "notification_preview", "strict_export"},
         )
         self.assertIn("dereference", record["pattern_signature"])
-        self.assertIn("keep strict export strict", record["decision"])
+        by_symbol = record["finding_relations"]
+        self.assertEqual(by_symbol["public_profile"]["relation"], "current-task")
+        self.assertEqual(by_symbol["public_profile"]["action"], "fixed")
+        self.assertEqual(by_symbol["notification_preview"]["relation"], "current-task")
+        self.assertEqual(by_symbol["notification_preview"]["action"], "fixed")
+        self.assertEqual(by_symbol["strict_export"]["relation"], "adjacent")
+        self.assertEqual(by_symbol["strict_export"]["action"], "record-do-not-edit")
+        self.assertIn("data quality", by_symbol["strict_export"]["rationale"])
+        self.assertTrue(by_symbol["strict_export"]["residual_risk"])
 
 
 if __name__ == "__main__":

@@ -7,8 +7,10 @@ description: "Use `analysis-agent` to create a Task DAG from an accepted source-
 
 ## Role
 
-Support `analysis-agent` in selecting the First Executable Slice and emitting
-the sole final authoritative Task DAG and Task Contract v2 for genuine multi-task work.
+Support `analysis-agent` in projecting a Task DAG and Task Contract v2 nodes
+from the current Engineering Brief for genuine multi-task work. The Brief
+retains sole operational analysis authority and already owns the First
+Executable Slice.
 
 ## When To Use
 
@@ -26,20 +28,29 @@ the sole final authoritative Task DAG and Task Contract v2 for genuine multi-tas
 
 - Accepted source-backed Engineering Brief, owner boundaries, and observable acceptance.
 - Candidate read/write scopes, shared contracts and resources, validation entry points, rollback needs, and host workspace isolation capability.
-- Resource and review boundaries for ordinary, combined, and specialized review.
+- Resource boundaries.
+- Boundaries for each applicable review mode.
 
 ## Professional Decision Rules
 
-- Expose the First Executable Slice once remaining analysis cannot invalidate it.
+- Require the current accepted Engineering Brief.
+- Preserve its First Executable Slice verbatim.
+- Never select the First Executable Slice.
+- Never replace the First Executable Slice.
+- Never reinterpret the First Executable Slice.
 - Inspect `task-dag-decomposition` candidate-graph evidence for proposed nodes, edges, blockers, critical path, collisions, uncertainty, and proof limits.
 - Accept or reject each proposed node and edge with an evidence-backed reason before constructing the graph.
-- Select the First Executable Slice independently under this Skill's ownership.
-- Only this Skill emits the final authoritative Task DAG and Task Contract v2.
+- Project only task splitting, dependencies, parallel safety, critical path,
+  integration/merge/conflict ownership, and remaining Task Contracts from the
+  Brief.
+- Never modify Acceptance, Non-goals, Owner, Invariants, Placement, contract
+  semantics, or Rollback. A Task DAG and its nodes are derived artifacts, not a
+  parallel analysis authority.
 - Create a DAG only for two or more real tasks whose every edge expresses a blocking fact.
 - Identify the critical path and parallelize only when it shortens that path or adds independent defect discovery.
 - Mark workspace requirement and parallel safety. With shared or unknown workspace, serialize every write task.
 - Reject parallel writes that share files, contracts, schemas, migrations, generated outputs, fixtures, lockfiles, or production resources.
-- Render every node with the authoritative Task Contract v2 and one accountable Owner.
+- Render every node as a complete Task Contract v2 projection with one accountable Owner.
 - Give every parallel group an Integration Owner, Merge Owner, Conflict Resolution Owner, and workspace requirement.
 - Carry graph claims and proof limits in the visible task-local Evidence Ledger.
 
@@ -52,7 +63,7 @@ the sole final authoritative Task DAG and Task Contract v2 for genuine multi-tas
 
 ## Execution Checklist
 
-1. Identify the First Executable Slice.
+1. Verify that the Brief contains a complete First Executable Slice and retain it verbatim.
 2. Decide whether a DAG is actually required.
 3. Split only by independent owner, risk, dependency, review, or validation boundary.
 4. Check every dependency and shared mutable resource.
@@ -63,14 +74,17 @@ the sole final authoritative Task DAG and Task Contract v2 for genuine multi-tas
 
 - Stop for an unknown owner, acceptance, dependency, shared write, verification entry, or rollback boundary that changes safe scheduling.
 - Stop on cycles, placeholders, overlapping writes, or a user-owned destructive or production decision.
+- If the Brief is insufficient, a projection conflicts with it, or a protected
+  decision must change, return `blocked` through Main to analysis for an updated
+  Brief and redispatch of affected tasks.
 
 ## Output Contract
 
-- sole authoritative Markdown Task DAG Contract v2
+- derived Markdown Task DAG Contract v2 that preserves the current Brief
 - Status and complete task nodes
 - parallel-group, Integration Owner, and Review Owner boundaries
 - visible task-local Evidence Ledger
-- single Task Capsule when a DAG is unnecessary
+- unchanged Brief First Executable Slice when a DAG is unnecessary
 
 ## Targeted References
 
