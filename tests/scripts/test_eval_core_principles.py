@@ -618,7 +618,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             if row["id"] == "validate-professionalism-regression"
         )
         self.assertEqual(1200, producer["timeout_seconds"])
-        self.assertEqual(2700, EVALUATOR._producer_timeout_seconds(producer))
+        self.assertEqual(3600, EVALUATOR._producer_timeout_seconds(producer))
 
         for field, value in (
             ("id", "another-producer"),

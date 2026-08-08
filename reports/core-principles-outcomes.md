@@ -5,7 +5,7 @@ This report evaluates the Core Principles sub-gates. It is not a repository form
 - Core Principles aggregate: `partial`
 - Core Principles authoring sub-gate: `pass`
 - Core Principles formal sub-gate: `blocked`
-- Input tree: `d51f4659e89b0a8b8a2705d2faae348d7a18d014fb0f4b5308192599e9fb2121`
+- Input tree: `c049e3f4509b098752c5ad9dbcaaea57c08fd8f8843a4941c3cd5f7c60cd9bff`
 
 | Principle | Authoring sub-gate | Formal sub-gate | Outcome |
 | --- | --- | --- | --- |
