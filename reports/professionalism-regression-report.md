@@ -17,9 +17,9 @@
 - Foundation content classes: compact=124 (target<=400; hard<=500; over-target=35; over-hard=0); complex=26 (target<=500; hard<=600; over-target=0; over-hard=0); universal-hard-tokens<=900 (over-hard=0); target overages require readability disposition
 - Professional root budget: target<=550w/850t; hard<=650w/1000t; word-target=4; token-target=2; word-hard=0; token-hard=0
 - Domain root budget: target<=500w/800t; hard<=600w/900t; word-target=4; token-target=3; word-hard=0; token-hard=0
-- Readability expert review current: `false` (status=panel-majority-pending-checkin; artifact-schema=2; tracked-tightening=0; actionability=0/0; rewrite-required=0; storage-current=false)
-- Professional-completeness expert review current: `false` (status=panel-majority-pending-checkin; artifact-schema=3; evidence-contract=true; coverage=189/189; corrections=0; storage-current=false)
-- Aggregate content readiness: structural=`true`; semantic-triage=`true`; readability-review=`false`; professional-completeness-review=`false`
+- Readability expert review current: `true` (status=panel-majority-current; artifact-schema=2; tracked-tightening=0; actionability=0/0; rewrite-required=0; storage-current=true)
+- Professional-completeness expert review current: `true` (status=panel-majority-current; artifact-schema=3; evidence-contract=true; coverage=189/189; corrections=0; storage-current=true)
+- Aggregate content readiness: structural=`true`; semantic-triage=`true`; readability-review=`true`; professional-completeness-review=`true`
 - Reference preface coverage: local=520/486/486 missing; effective=0/0/0 missing
 - Reference targets: targeted <= 60; mode-contract <= 80; decision items <= 15
 - Reference semantic governance: unresolved=0; unconditional_absolute_p0_p1=0; fixed_number=0; exact_duplicate_groups=0; templated_groups=0; p2_rewrite_advisory=0; duplicate_occurrences=30; duplicate_tokens=578 dispositions=124/124
@@ -41,8 +41,6 @@
 
 ## Release Blockers
 
-- `config/professionalism-release-review.yaml#readability_review_attestation`: formal release requires a checked-in three-expert majority readability and actionability review over current Root, Reference, AI-readability, and Skill-detector fingerprints with no tracked tightening, unresolved detector false positives, or rewrite-required decisions; status=panel-majority-pending-checkin; tracked_tightening_count=0; detector_false_positive_count=0; rewrite_required_count=0
-- `config/professionalism-release-review.yaml#professional_completeness_review_attestation`: formal release requires a checked-in schema-3 Professional Completeness round with exact package carry-forward, current review contract, plan, bindings, provenance, chain head, and review-cost evidence; every fresh Skill needs two qualified domain reviewers and one architecture reviewer, and all 189 effective packages need source evidence, no required corrections, and no unresolved domain-critical disagreement; status=panel-majority-pending-checkin; applied_target_count=189; evidence_contract_satisfied=True; correction_count=0; unresolved_professional_disagreement_count=0
 - `config/skill-content-exceptions.yaml#root_semantic_dispositions.lifecycle`: formal release requires a recorded, current, classified Root disposition release snapshot; status=pending-changes; unclassified=0
 
 ## Advisories

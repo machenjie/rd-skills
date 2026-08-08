@@ -16,14 +16,14 @@ This report evaluates the Core Principles sub-gates. It is not a repository form
 | Explicit Task Contract | `pass` | `pass` | `pass` |
 | Safe Parallelism | `pass` | `pass` | `pass` |
 | Context Isolation | `pass` | `pass` | `pass` |
-| Professional Skill Injection | `pass` | `blocked` | `partial` |
+| Professional Skill Injection | `pass` | `pass` | `pass` |
 | Reference Loading | `pass` | `pass` | `pass` |
 | Evidence Before Completion | `pass` | `pass` | `pass` |
 | Single Source of Truth | `pass` | `blocked` | `partial` |
 | Framework Transparency | `pass` | `pass` | `pass` |
 | Strong User Feedback | `pass` | `pass` | `pass` |
 | Explicit Completion State | `pass` | `pass` | `pass` |
-| Final Goal | `pass` | `blocked` | `partial` |
+| Final Goal | `pass` | `pass` | `pass` |
 
 ## Evidence Limitations
 

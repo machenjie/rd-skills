@@ -374,13 +374,13 @@
         "scope": "ai-readability-and-density",
         "panel_kind": "readability",
         "decision_complete": true,
-        "storage_current": false,
+        "storage_current": true,
         "source_current": true,
-        "accepted_for_formal": false,
+        "accepted_for_formal": true,
         "decision_method": "three-independent-experts-majority",
         "panel_review_id": "readability-panel-2026-08-08-r25",
         "panel_size": 3,
-        "attestation_status": "panel-majority-pending-checkin",
+        "attestation_status": "panel-majority-current",
         "attestation_source": "config/professionalism-release-review.yaml#readability_review_attestation",
         "attestation_schema_version": 5,
         "attestation_config_fingerprint": "7e908a65385d5d99688ae9b4c8ddf9b5d17035ec55500b36024247f778bb2e38",
@@ -2842,22 +2842,21 @@
           "Reviewer declarations are static. They do not prove identity, qualifications, or experience.",
           "Static panel evidence does not prove real-host Profile startup, wall-clock performance, provider behavior, production accuracy, or installed user experience.",
           "Canonical byte proxies do not prove actual token use, reviewer effort, or latency.",
-          "Storage currentness requires this config and the immutable r25 packet, decision, and three ballots to be tracked, byte-equal to HEAD, and clean.",
-          "Formal storage binding is pending: complete expert content review default release-review config differs from its HEAD blob"
+          "Storage currentness requires this config and the immutable r25 packet, decision, and three ballots to be tracked, byte-equal to HEAD, and clean."
         ]
       },
       "professional_completeness": {
         "scope": "professional-skill-packages",
         "panel_kind": "professional-completeness",
         "decision_complete": true,
-        "storage_current": false,
+        "storage_current": true,
         "source_current": true,
-        "accepted_for_formal": false,
+        "accepted_for_formal": true,
         "decision_method": "exact-package-carry-forward-qualified-reviewer-pool-domain-critical-fail-closed",
         "panel_review_id": "professional-completeness-panel-2026-08-07-r18",
         "panel_size": 3,
         "reviewer_pool_size": 0,
-        "attestation_status": "panel-majority-pending-checkin",
+        "attestation_status": "panel-majority-current",
         "attestation_source": "config/professionalism-release-review.yaml#professional_completeness_review_attestation",
         "attestation_schema_version": 5,
         "attestation_config_fingerprint": "7e908a65385d5d99688ae9b4c8ddf9b5d17035ec55500b36024247f778bb2e38",
@@ -24131,7 +24130,7 @@
             "Static round-tree validation cannot prove that historical schema-3 rounds were not deleted."
           ]
         },
-        "review_cost_current": false,
+        "review_cost_current": true,
         "review_cost": {
           "fresh_vote_count": 0,
           "carried_forward_vote_count": 567,
@@ -24178,8 +24177,7 @@
           "Canonical byte proxies do not prove actual token use, reviewer effort, or latency.",
           "All-carry r18 is the direct successor of r17; r17 is the immediate baseline and r16 remains the immutable all-fresh checkpoint. The static artifact tree does not prove that historical rounds were never deleted.",
           "The r18 round has no fresh reviewer pool, ballots, capsules, or canonical capsule input bytes. Storage currentness requires this config, the immutable r18 packet and decision, and referenced r17 and r16 chain artifacts to be tracked, byte-equal to HEAD, and clean.",
-          "Static round-tree validation cannot prove that historical schema-3 rounds were not deleted.",
-          "Formal storage binding is pending: complete expert content review default release-review config differs from its HEAD blob"
+          "Static round-tree validation cannot prove that historical schema-3 rounds were not deleted."
         ]
       },
       "deprecated_expert_content_review_complete": false
@@ -24187,8 +24185,8 @@
     "aggregate": {
       "structural_strict_ready": true,
       "semantic_triage_complete": true,
-      "readability_review_current": false,
-      "professional_completeness_review_current": false
+      "readability_review_current": true,
+      "professional_completeness_review_current": true
     }
   },
   "coverage_gate_summary": {
@@ -24291,18 +24289,6 @@
   "release_claim": "deterministic source and captured-fixture contracts only",
   "blockers": [],
   "release_blockers": [
-    {
-      "category": "readability-review-release-gate",
-      "target": "config/professionalism-release-review.yaml#readability_review_attestation",
-      "message": "formal release requires a checked-in three-expert majority readability and actionability review over current Root, Reference, AI-readability, and Skill-detector fingerprints with no tracked tightening, unresolved detector false positives, or rewrite-required decisions; status=panel-majority-pending-checkin; tracked_tightening_count=0; detector_false_positive_count=0; rewrite_required_count=0",
-      "severity": "error"
-    },
-    {
-      "category": "professional-completeness-review-release-gate",
-      "target": "config/professionalism-release-review.yaml#professional_completeness_review_attestation",
-      "message": "formal release requires a checked-in schema-3 Professional Completeness round with exact package carry-forward, current review contract, plan, bindings, provenance, chain head, and review-cost evidence; every fresh Skill needs two qualified domain reviewers and one architecture reviewer, and all 189 effective packages need source evidence, no required corrections, and no unresolved domain-critical disagreement; status=panel-majority-pending-checkin; applied_target_count=189; evidence_contract_satisfied=True; correction_count=0; unresolved_professional_disagreement_count=0",
-      "severity": "error"
-    },
     {
       "category": "root-disposition-lifecycle-release-record-required",
       "target": "config/skill-content-exceptions.yaml#root_semantic_dispositions.lifecycle",
