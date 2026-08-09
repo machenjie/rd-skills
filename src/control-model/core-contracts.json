@@ -68,7 +68,8 @@
       {"id": "prompt-contract-authority", "pointer": "/prompt_contract", "scope": "Exact Control Prompt source and managed projection contract."},
       {"id": "profile-contract-authority", "pointer": "/profile_contract", "scope": "Exact Agent Profile roles, capabilities, and handoff projections."},
       {"id": "control-skill-contract-authority", "pointer": "/control_skill_contract", "scope": "Thin Control Skill routing and Prompt delegation."},
-      {"id": "docs-contract-authority", "pointer": "/docs_contract", "scope": "Managed documentation projections and source bindings."}
+      {"id": "docs-contract-authority", "pointer": "/docs_contract", "scope": "Managed documentation projections and source bindings."},
+      {"id": "ci-validation-authority", "pointer": "/ci_validation_contract", "scope": "Pull-request and push affected-unit-test selection, fail-closed fallback, and deterministic sharding."}
     ],
     "producers": [
       {"id": "validate-skills", "argv": ["python3", "scripts/validate-skills.py"], "depends_on": [], "reports": [], "authority_inputs": [], "timeout_seconds": 600},
@@ -77,7 +78,7 @@
       {"id": "validate-registry", "argv": ["python3", "scripts/validate-registry.py"], "depends_on": [], "reports": [], "authority_inputs": ["reference-contract-authority"], "timeout_seconds": 600},
       {"id": "validate-control-skills", "argv": ["python3", "scripts/validate-control-skills.py"], "depends_on": [], "reports": [], "authority_inputs": ["control-skill-contract-authority", "prompt-contract-authority"], "timeout_seconds": 600},
       {"id": "validate-control-plane-prompt", "argv": ["python3", "scripts/validate-control-plane-prompt.py"], "depends_on": [], "reports": [], "authority_inputs": ["roles-authority", "context-budget-authority", "task-contract-authority", "evidence-contract-authority", "completion-contract-authority", "prompt-contract-authority"], "timeout_seconds": 600},
-      {"id": "validate-task-contracts", "argv": ["python3", "scripts/validate-task-contracts.py"], "depends_on": [], "reports": [], "authority_inputs": ["task-contract-authority", "evidence-contract-authority", "completion-contract-authority"], "timeout_seconds": 600},
+      {"id": "validate-task-contracts", "argv": ["python3", "scripts/validate-task-contracts.py"], "depends_on": [], "reports": [], "authority_inputs": ["task-contract-authority", "evidence-contract-authority", "completion-contract-authority", "ci-validation-authority"], "timeout_seconds": 600},
       {"id": "validate-skill-routing", "argv": ["python3", "scripts/validate-skill-routing.py"], "depends_on": [], "reports": [], "authority_inputs": ["roles-authority", "reference-contract-authority"], "timeout_seconds": 600},
       {"id": "validate-hookless-residue", "argv": ["python3", "scripts/validate-hookless-residue.py"], "depends_on": [], "reports": [], "authority_inputs": ["roles-authority"], "timeout_seconds": 600},
       {"id": "validate-src-invariants", "argv": ["python3", "scripts/validate-src-invariants.py"], "depends_on": [], "reports": [], "authority_inputs": [], "timeout_seconds": 600},
@@ -159,6 +160,35 @@
       {"id": "root-release-current", "producer": "validate-professionalism-regression", "dimensions": ["single-source-of-truth-formal-lifecycle"], "capabilities": ["root-release-lifecycle"], "predicates": [{"source": "process", "pointer": "/exit_code", "operator": "equals", "expected": 0}, {"source": "reports/professionalism-regression-report.json", "pointer": "/root_content_summary/semantic_lifecycle_formal_release_ready", "operator": "equals", "expected": true}]}
     ]
   },
+  "ci_validation_contract": {
+    "schema_version": 1,
+    "runner": "scripts/run-ci-tests.py",
+    "shard_count": 2,
+    "full_suite": {"root": "tests", "pattern": "test*.py"},
+    "test_self_patterns": ["tests/**/test*.py"],
+    "mappings": [
+      {"id": "ci-selector", "path_patterns": ["scripts/run-ci-tests.py", ".github/workflows/ci.yml"], "producer_ids": ["validate-task-contracts"], "test_modules": ["tests/scripts/test_run_ci_tests.py"], "coverage": "unit-tests"},
+      {"id": "core-contracts", "path_patterns": ["src/control-model/core-contracts.json"], "producer_ids": ["validate-task-contracts"], "test_modules": ["tests/scripts/test_run_ci_tests.py", "tests/scripts/test_validation_utils.py", "tests/scripts/test_validate_task_contracts.py"], "coverage": "unit-tests"},
+      {"id": "validation-utils", "path_patterns": ["scripts/validation_utils.py"], "producer_ids": ["validate-task-contracts"], "test_modules": ["tests/scripts/test_validation_utils.py", "tests/scripts/test_validate_task_contracts.py"], "coverage": "unit-tests"},
+      {"id": "docs-consistency-producer", "path_patterns": ["scripts/validate-docs-consistency.py"], "producer_ids": ["validate-docs-consistency"], "test_modules": ["tests/scripts/test_validate_docs_consistency.py"], "coverage": "unit-tests"},
+      {"id": "documentation", "path_patterns": ["README.md", "GOVERNANCE.md", "docs/**"], "producer_ids": ["validate-docs-consistency"], "test_modules": ["tests/scripts/test_validate_docs_consistency.py", "tests/scripts/test_validate_productization_assets.py"], "coverage": "unit-tests"},
+      {"id": "skill-content-config", "path_patterns": ["config/skill-content-exceptions.yaml"], "producer_ids": ["audit-skill-content", "validate-root-content"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_validate_root_content.py"], "coverage": "unit-tests"},
+      {"id": "professionalism-config-and-evidence", "path_patterns": ["config/professionalism-release-review.yaml", "evals/expert-panel/**"], "producer_ids": ["eval-skill-professionalism", "validate-professionalism-regression"], "test_modules": ["tests/scripts/test_expert_panel_actionability.py", "tests/scripts/test_professional_completeness_carry_forward.py", "tests/scripts/test_professional_review_cost_fixture.py", "tests/scripts/test_professionalism_expert_panel.py", "tests/scripts/test_root_disposition_lifecycle.py"], "coverage": "unit-tests"},
+      {"id": "agent-lightweight-fixtures", "path_patterns": ["evals/agent-light-trajectories/**"], "producer_ids": ["eval-agent-lightweight"], "test_modules": ["tests/scripts/test_eval_agent_lightweight_utility.py", "tests/scripts/test_eval_agent_lightweight_layer3_references.py"], "coverage": "unit-tests"},
+      {"id": "codegen-fixtures", "path_patterns": ["evals/codegen/**"], "producer_ids": ["eval-professional-benchmarks"], "test_modules": ["tests/scripts/test_run_codegen_benchmarks.py"], "coverage": "unit-tests"},
+      {"id": "generated-reports", "path_patterns": ["reports/**"], "producer_ids": ["eval-context-control", "eval-rendered-context", "eval-skill-professionalism", "validate-professionalism-regression"], "test_modules": [], "coverage": "canonical-producer"},
+      {"id": "skill-content-collector", "path_patterns": ["scripts/audit-skill-content.py"], "producer_ids": ["audit-skill-content"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_validate_root_content.py"], "coverage": "unit-tests"},
+      {"id": "build-producer", "path_patterns": ["scripts/build.py"], "producer_ids": ["build-recommended", "build-full", "build-dev"], "test_modules": ["tests/scripts/test_build_safety.py", "tests/test_hookless_build_install.py"], "coverage": "unit-tests"},
+      {"id": "agent-lightweight-producer", "path_patterns": ["scripts/eval-agent-lightweight.py"], "producer_ids": ["eval-agent-lightweight"], "test_modules": ["tests/scripts/test_eval_agent_lightweight_layer3_references.py", "tests/scripts/test_eval_agent_lightweight_utility.py"], "coverage": "unit-tests"},
+      {"id": "core-principles-producer", "path_patterns": ["scripts/eval-core-principles.py"], "producer_ids": ["validate-task-contracts"], "test_modules": ["tests/scripts/test_eval_core_principles.py"], "coverage": "unit-tests"},
+      {"id": "agent-profile-producer", "path_patterns": ["scripts/validate-agent-profiles.py", "src/agent-profiles/**"], "producer_ids": ["validate-agent-profiles"], "test_modules": ["tests/scripts/test_validate_agent_profiles.py"], "coverage": "unit-tests"},
+      {"id": "control-prompt-producer", "path_patterns": ["scripts/validate-control-plane-prompt.py", "src/control-prompts/**"], "producer_ids": ["validate-control-plane-prompt", "validate-hookless-residue"], "test_modules": ["tests/scripts/test_validate_control_plane_prompt.py", "tests/test_hookless_architecture.py"], "coverage": "unit-tests"},
+      {"id": "task-contract-producer", "path_patterns": ["scripts/validate-task-contracts.py"], "producer_ids": ["validate-task-contracts"], "test_modules": ["tests/scripts/test_validate_task_contracts.py"], "coverage": "unit-tests"},
+      {"id": "control-skills", "path_patterns": ["src/control-skills/**"], "producer_ids": ["validate-control-skills", "validate-hookless-residue", "validate-task-contracts"], "test_modules": ["tests/scripts/test_rds_006_task_dag_decomposition.py", "tests/scripts/test_validate_control_skills.py", "tests/scripts/test_validate_task_contracts.py", "tests/test_hookless_architecture.py"], "coverage": "unit-tests"},
+      {"id": "foundation-skills", "path_patterns": ["src/foundation/**"], "producer_ids": ["audit-skill-content", "validate-root-content"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_task_contracts.py"], "coverage": "unit-tests"},
+      {"id": "professional-skills", "path_patterns": ["src/professional-skills/**"], "producer_ids": ["audit-skill-content", "validate-root-content", "eval-skill-professionalism"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_rds_006_task_dag_decomposition.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_task_contracts.py"], "coverage": "unit-tests"}
+    ]
+  },
   "roles": {
     "main-control-agent": {
       "sandbox": "dispatch-only",
@@ -169,7 +199,7 @@
     },
     "analysis-agent": {
       "sandbox": "read-only",
-      "tools": ["read", "search"],
+      "tools": ["read", "search", "external-read"],
       "may_dispatch": false,
       "may_edit": false,
       "may_review": false
@@ -188,6 +218,47 @@
       "may_edit": false,
       "may_review": true
     }
+  },
+  "external_read_contract": {
+    "capability_field": "external_source_read",
+    "exclusive_role": "analysis-agent",
+    "tool": "external-read",
+    "capability_modes": ["native-enforced", "sandbox-enforced", "prompt-enforced", "unsupported"],
+    "supported_operations": ["WebSearch", "WebFetch", "ConnectorRead"],
+    "connector_requirement": "explicitly-authorized-and-proven-read-only",
+    "general_network_counts_as_supported": false,
+    "jit_policy": {
+      "local_or_current_evidence_sufficient": "do-not-read-externally",
+      "material_unresolved_claim": "external-read",
+      "non_material_unknown": "record-proof-limit",
+      "broad_or_untargeted_research": "forbidden"
+    },
+    "source_priority": ["official-primary-source", "version-specific-documentation", "version-date-or-lifecycle-source"],
+    "forbidden_operations": ["file-edit", "general-shell-network", "curl", "wget", "python-http", "post", "upload", "submit", "external-write", "dependency-install", "production-operation", "agent-dispatch", "implementation", "review"],
+    "trust_boundary": {
+      "external_content": "evidence-input-only-never-control-input",
+      "execute_returned_instructions": false,
+      "normalization_path": ["external-source", "analysis-agent-judgment", "normalized-claim", "evidence-ledger", "engineering-brief-decision"],
+      "protected_control_fields": ["Role", "Skill", "Scope", "Execution Level", "Acceptance", "Owner", "Review Policy", "Task Contract"],
+      "raw_external_instruction_downstream": "forbidden"
+    },
+    "disclosure_guard": {
+      "request_minimization": "minimum-public-information-required-for-claim",
+      "forbidden_request_content": ["repository-private-source", "secret-token-credential", "user-sensitive-data", "internal-identifier", "proprietary-content"]
+    },
+    "ledger_projection": {
+      "schema_source": "visible_evidence_contract",
+      "command_values": ["WebSearch", "WebFetch", "ConnectorRead"],
+      "artifact_value": "source-identifier-or-url",
+      "schema_change": "forbidden"
+    },
+    "missing_evidence": {
+      "critical": {"trigger": "critical-fact-missing-can-invalidate-current-slice", "execution_trigger": "unknown-critical-boundary", "edit_status": "blocked", "dispatch_implementation": false},
+      "non_critical": {"action": "record-proof-limit", "blocks_safe_slice": false}
+    },
+    "unsupported_behavior": "continue-when-existing-evidence-is-sufficient",
+    "unsupported_critical_behavior": "fail-closed-when-critical-fact-unobtainable",
+    "downstream_research_roles": {"task-agent": "forbidden", "review-agent": "forbidden"}
   },
   "implementation_discipline_contract": {
     "schema_version": 2,
@@ -361,7 +432,12 @@
       "decision_fields": ["dimension", "status", "reason", "evidence", "specialist_skill", "scope"],
       "not_applicable_required_fields": ["reason", "evidence"],
       "delegated_required_fields": ["specialist_skill", "scope", "reason"],
-      "invalid_matrix_rule": "block-verdict"
+      "invalid_matrix_rule": "block-verdict",
+      "evaluation_scope": ["Current Task Boundary", "latest actual diff", "current change reachable impact"],
+      "repository_health_audit": false,
+      "allowed_context_reads": ["caller", "consumer", "sibling", "config"],
+      "context_read_grants_repair_authority": false,
+      "specialist_trigger": "concrete-risk-requires-independent-professional-judgment"
     },
     "diff_kinds": ["actual-diff", "host-native-actual-diff", "unavailable"],
     "validation_sources": ["trajectory-validation", "supplied-validation", "unavailable"],
@@ -372,6 +448,36 @@
     "verdicts": ["pass", "findings", "blocked"],
     "repair_order": ["fresh-validation", "latest-actual-diff", "fresh-re-review"],
     "level_extension_rule": "depth-independence-additional-evidence-only",
+    "review_scope": {
+      "task_boundary_source": "task_contract.task_boundary",
+      "handoff_projection_fields": ["Goal", "Acceptance", "Non-goals", "Allowed Write Scope"],
+      "read_grants_repair_authority": false,
+      "finding_relation_precedes": ["severity", "blocker"]
+    },
+    "finding_policy_source": "task_contract.finding_relations",
+    "effective_level_policy": {
+      "source": "execution_level_contract.effective_level",
+      "creates_review_level": false,
+      "all_levels_require_base_dimensions": true,
+      "final_review_profile": "review-agent",
+      "final_review_target": ["latest actual diff", "every changed file"],
+      "level_increases_only": ["review-depth", "evidence-strength", "independence", "actual-professional-gates"],
+      "specialist_review_replaces_final_review": false,
+      "finding_merge_owner": "review-agent",
+      "main_merges_professional_findings": false,
+      "reviewer_repairs_own_findings": false,
+      "levels": {
+        "L1": {"final_reviewers": 1, "independent_final_review": true, "professional_risk_matrix": "base", "preimplementation_review": false, "secondary_reviewer": false},
+        "L2": {"final_reviewers": 1, "independent_final_review": true, "professional_risk_matrix": "base", "preimplementation_review": false, "secondary_reviewer": false},
+        "L3": {"final_reviewers": 1, "independent_final_review": true, "professional_risk_matrix": "base", "risk_triggered_jit_lenses": true, "preimplementation_review": false, "secondary_reviewer": false},
+        "L4": {"final_reviewers": 1, "independent_final_review": true, "professional_gates": "actual-triggered-only", "specialist_condition": "concrete-risk-requires-independent-professional-judgment", "preimplementation_condition": "risk-carried-by-preimplementation-design-decision", "default_preimplementation_review": false, "default_secondary_reviewer": false},
+        "L5": {"independent_preimplementation_review": true, "independent_implementation_review": true, "declared_scope_negative_and_failure_proof": true, "exhaustive_final_review": true, "full_ci_required": false, "formal_release_required": false, "cross_model_review_required": false}
+      },
+      "new_high_risk_route": ["finding", "blocked", "main-control-agent", "analysis-agent", "update-engineering-brief", "recompute-effective-level", "redispatch"],
+      "reviewer_self_upgrades_execution_level": false,
+      "ordinary_l1_l3_agent_count_increase": false,
+      "ordinary_l1_l3_review_round_increase": false
+    },
     "profile_projection": [
       {
         "rule_id": "uniform-review-dimensions",
@@ -429,17 +535,17 @@
         "maximum_reviewer_added_unique_union_to_required_ratio_ppm": 1000000
       },
       "locked_current_catalog": {
-        "professional_packages_fingerprint": "3bac086e24ee1a2ed5fcbc63b4496e1b5b8404f76876a7bff813dcf3bf341279",
-        "catalog_fingerprint": "7200a46718ca4ae58739acb2fbb3fb98311aacb30b98fcc7cd4e1fb79bcd5e59",
-        "material_catalog_fingerprint": "15dc47f1b88078e6d537d45d84a93f88d4c06f5bb10c25bf508ff824484c2a56",
-        "full_projection_fingerprint": "5afc06501de0b1bdbe244c0fd405de539413bd86ee3382d88740328d734a94a9",
+        "professional_packages_fingerprint": "76319a57c8c84643f36eb7170f3ba7d64e4058d998eafb272ff9b6985e6ede3c",
+        "catalog_fingerprint": "83aa86fc03b5ce14158badc62f5a0f72e9924440c59160c7df574a18f31f5d4e",
+        "material_catalog_fingerprint": "1350b0cb257a0560a991db7da773a6c9e65e7ed85d64aae4a3ca99dabe989f1e",
+        "full_projection_fingerprint": "16248bf7fa2949bd8a7bd52ef88eaee82ec29d6d24062080a3473bd991688d76",
         "review_contract_fingerprint": "f80ffe96349a5cf35fc5c02ea698ede77e01c892a24fa35b1baecc1d9ec48fa1",
         "case_count": 189,
-        "cases_fingerprint": "d60712b8cd1e96a230c2146538eb535d71af615537de2378d2fb721cbacb742e",
-        "full_rereview_deduplicated_capsule_input_bytes_proxy": 117048396,
+        "cases_fingerprint": "b257706d44e0d96f38dd220aca7a0f128b5358f10eddc28b8a015c1bb93f35a4",
+        "full_rereview_deduplicated_capsule_input_bytes_proxy": 117058467,
         "fresh_target_count": {"min": 3, "sum": 3241, "mean_milli": 17148, "p95": 35, "max": 56},
-        "input_ratio_ppm": {"min": 34819, "sum": 25917087, "mean": 137127, "p95": 238428, "max": 348284},
-        "named_isolated_case": {"skill_id": "acceptance-criteria-builder", "fresh_target_count": 8, "carried_forward_target_count": 181, "canonical_capsule_input_bytes_proxy": 9952446, "input_ratio_ppm": 85028}
+        "input_ratio_ppm": {"min": 34864, "sum": 25928334, "mean": 137186, "p95": 238497, "max": 348342},
+        "named_isolated_case": {"skill_id": "acceptance-criteria-builder", "fresh_target_count": 8, "carried_forward_target_count": 181, "canonical_capsule_input_bytes_proxy": 9958404, "input_ratio_ppm": 85072}
       }
     }
   },
@@ -678,6 +784,97 @@
       "shared_or_unknown_writes": "serialize",
       "parallel_write_requirements": ["isolated workspace", "no dependency", "no shared write surface"]
     },
+    "analyzed_work_authority": {
+      "applies_to": "analyzed-work",
+      "operational_authority": "current-engineering-brief",
+      "authoritative_sections": ["Problem and Desired Behavior", "Acceptance and Non-goals", "Ownership and Invariants", "Placement and Reuse", "Contract / Data / Failure Impact", "Validation Strategy", "Risks and Rollback", "First Executable Slice", "Task Dependencies", "Integration Boundary", "Review Boundary", "Evidence Gaps and Proof Limits"],
+      "input_kinds": ["user-request", "issue-prd-change-request", "source-and-tests", "external-evidence", "specialist-analysis"],
+      "derived_artifacts": ["task-dag", "task-contract", "implementation-handoff", "review-handoff"],
+      "protected_decisions": ["Acceptance", "Non-goals", "Owner", "Invariants", "Placement", "Contract semantics", "Rollback", "First Executable Slice"],
+      "first_executable_slice": {
+        "defined_by": "engineering-brief",
+        "contract": "Task Contract v2",
+        "required_fields_source": "task_contract.template_schemas.engineering-brief-template.md.labeled_sections.First Executable Slice",
+        "dispatch": "verbatim",
+        "main_reinterpretation": "forbidden",
+        "main_generation": "forbidden",
+        "dag_reselection": "forbidden"
+      },
+      "decision_change_route": ["blocked", "main-control-agent", "analysis-agent", "update-engineering-brief", "redispatch-affected-tasks"],
+      "downstream_conflict": "return-to-analysis",
+      "specialist_policy": {
+        "authority": "input-only",
+        "source_proven_placement": "write-directly-into-engineering-brief",
+        "real_structural_choice": "invoke-corresponding-specialist",
+        "effective_after": "incorporated-into-current-engineering-brief",
+        "parallel_analysis_authority": "forbidden"
+      },
+      "dag_planner_policy": {
+        "allowed": ["task-splitting", "dependencies", "parallel-safety", "critical-path", "integration-merge-conflict-ownership", "remaining-task-contract-projection"],
+        "forbidden": ["select-first-executable-slice", "modify-acceptance-or-non-goals", "modify-owner-or-invariants", "modify-contract-semantics", "modify-rollback"],
+        "insufficient_brief": "return-to-analysis"
+      },
+      "unchanged_paths": ["direct-task", "non-implementation"]
+    },
+    "task_boundary": {
+      "name": "Current Task Boundary",
+      "fields": ["Goal", "Acceptance", "Non-goals"],
+      "allowed_read_scope": "inspection-and-discovery-boundary",
+      "allowed_write_scope": "permission-ceiling-not-work-obligation",
+      "discovery_grants_repair_authority": false,
+      "repository_clean_required": false,
+      "scheduling_priority": ["current-requested-task", "declared-dag-work", "current-task-blockers", "adjacent-follow-up"]
+    },
+    "finding_relations": {
+      "field": "Finding Relation",
+      "values": ["current-task", "scope-blocker", "adjacent"],
+      "classification_order": ["relation", "severity", "blocker"],
+      "severity_relation": "orthogonal",
+      "rules": {
+        "current-task": {
+          "match_any": ["introduced-or-regressed-by-current-diff", "directly-violates-current-acceptance", "violates-required-invariant-or-contract", "required-to-complete-current-task-correctly"],
+          "blocking_allowed": true,
+          "repair_input_allowed": true,
+          "route": "task-agent-repair"
+        },
+        "scope-blocker": {
+          "required_for_current_task": true,
+          "match_any": ["requires-expanded-allowed-write-scope", "requires-acceptance-or-non-goal-change", "requires-owner-invariant-or-contract-change", "requires-new-analysis-decision"],
+          "blocking_allowed": true,
+          "repair_input_allowed": false,
+          "route": ["blocked", "main-control-agent", "analysis-agent", "update-authoritative-task-boundary"]
+        },
+        "adjacent": {
+          "required_for_current_task": false,
+          "blocking_allowed": false,
+          "repair_input_allowed": false,
+          "actions": ["record-residual-risk", "recommend-next-step", "defer", "continue-current-task"],
+          "high_or_critical_scope_authority": false
+        }
+      },
+      "review_finding_scope_authority": false,
+      "repair_input_relations": ["current-task"]
+    },
+    "repair_routing": {
+      "scope_authority": ["original-task-boundary", "accepted-current-task-finding"],
+      "current_task_blocking": "task-agent-repair",
+      "scope_blocker": "return-main-analysis",
+      "adjacent": "report-defer-continue-primary-task",
+      "adjacent_discovered_during_repair": "record-without-repair-expansion",
+      "unrelated_changed_file": "remove-current-task-unrelated-edit-without-repairing-file"
+    },
+    "same_pattern_scan": {
+      "required": true,
+      "discovery_grants_repair_authority": false,
+      "decision_inputs": ["current Acceptance", "current Invariant", "authorized repair scope"],
+      "routes": {
+        "affects_current_inside_authorized_scope": "current-task-fix",
+        "affects_current_outside_authorized_scope": "scope-blocker-return-main",
+        "does_not_affect_current": "adjacent-record-do-not-edit"
+      },
+      "completion_requirement": "all-current-task-occurrences-inside-authorized-repair-scope-fixed",
+      "adjacent_requirement": "record-rationale-and-residual-risk"
+    },
     "template_schemas": {
       "direct-task-template.md": {
         "container": "fenced-markdown",
@@ -910,7 +1107,7 @@
   "prompt_contract": {
     "schema_version": 1,
     "path": "src/control-prompts/main-control-agent.md",
-    "document_sha256": "6e9a09252ef88e5427e612927873ae90ae600dadc7b4f64a88aaa8a2829d7964",
+    "document_sha256": "b87b34b3c4215a983519fbfa95af6df2df51a20524078966f74ccf6a39f93a99",
     "managed_projections": [
       {"id": "execution-level-contract", "section": "Execution Level and Validation", "required_contracts": ["execution_level_contract"]},
       {"id": "review-evidence-contract", "section": "Review and Repair", "required_contracts": ["visible_evidence_contract"]},
@@ -918,8 +1115,8 @@
     ],
     "ordered_headings": [[1, "Main Control Agent"], [2, "Authorization"], [2, "Choose Exactly One Path"], [2, "Direct Task Routing"], [3, "Execution Level and Validation"], [2, "Analyzed Work"], [3, "Preparation Loop Breaker"], [2, "Scheduling and Context"], [2, "Review and Repair"], [2, "Progress"], [2, "Closure"]],
     "concepts": [
-      {"id": "dispatch-only-boundary", "section": null, "required_terms": ["dispatch-only", "never inspect or search", "edit files", "review implementation"]},
-      {"id": "bounded-delegation-authorization", "section": "Authorization", "required_terms": ["bounded subagents authorized", "permission required for scope expansion"]},
+      {"id": "dispatch-only-boundary", "section": null, "required_terms": ["dispatch-only", "never inspect or search target source", "edit files", "execute business commands", "review implementation"]},
+      {"id": "bounded-delegation-authorization", "section": "Authorization", "required_terms": ["bounded subagents authorized", "permission required", "scope expansion", "destructive/production action", "elevation", "irreversible/material data change", "unsupported choice"]},
       {"id": "adaptive-path-selection", "section": "Choose Exactly One Path", "required_terms": ["choose exactly Direct Task or Analyzed Work", "explicit local behavior/scope/owner/placement", "observable acceptance", "non-production verification/rollback", "reversibility", "low risk", "no excluded boundary", "unresolved owner/placement/behavior/verification/rollback/material impact routes to Analyzed Work", "inspect named owner/test/consumer boundaries", "without ownership/verification discovery", "Inspection Boundary/stops"]},
       {"id": "assignment-initial-status", "section": null, "required_terms": ["new Direct Task", "Status: in_progress", "new DAG task assignment"]},
       {"id": "direct-task-template-authority", "section": "Direct Task Routing", "required_terms": ["references/direct-task-template.md", "Task Contract v2 field authority"]},
@@ -969,15 +1166,15 @@
     "forbidden_instruction_terms": ["In a recommended build", "In a full build", "In a dev build"],
     "capability_terms": {
       "main-prompt-single-load": [
-        {"rule_id": "authoritative-prompt", "required_terms": ["Main Control Agent prompt", "authoritative and complete"]},
-        {"rule_id": "targeted-control-skill", "required_terms": ["Load `engineering-control-plane` only"]},
-        {"rule_id": "no-duplicate-prompt", "required_terms": ["Never reload `references/main-control-agent.md`"]},
-        {"rule_id": "host-mode-authority", "required_terms": ["Generated host modes are authoritative", "absent or unrecognized", "unsupported"]}
+        {"rule_id": "authoritative-prompt", "required_terms": ["Prompt authoritative"]},
+        {"rule_id": "targeted-control-skill", "required_terms": ["Load engineering-control-plane only"]},
+        {"rule_id": "no-duplicate-prompt", "required_terms": ["never reload references/main-control-agent.md"]},
+        {"rule_id": "host-mode-authority", "required_terms": ["Host modes authoritative", "absent/unrecognized", "unsupported"]}
       ],
       "main-role-boundary": [
         {"rule_id": "main-dispatch-only", "required_terms": ["Dispatch only", "no target-code access"]},
-        {"rule_id": "main-no-worker-work", "required_terms": ["Never perform worker work"]},
-        {"rule_id": "main-no-business-or-review", "required_terms": ["Never perform worker work", "business acceptance", "placement", "Brief/DAG authoring", "implementation review"]}
+        {"rule_id": "main-no-worker-work", "required_terms": ["No worker"]},
+        {"rule_id": "main-no-business-or-review", "required_terms": ["No worker", "business acceptance", "placement", "Brief/DAG authoring", "implementation review"]}
       ],
       "layer3-jit-delivery": [
         {"rule_id": "named-skill-delivery", "required_terms": ["load and follow exactly", "generated `## Layer 3 Delivery` section"]},
@@ -1042,7 +1239,7 @@
       "review-agent": {"required_capability_ids": ["layer3-jit-delivery", "review-target-modes", "review-scope-boundary", "review-discipline"], "forbidden_capabilities": ["may_dispatch", "may_edit"], "handoff_contract": "review-handoff", "forbidden_storage_projection_ids": []}
     },
     "handoff_contracts": {
-      "control-dispatch": [{"rule_id": "control-host-mode-boundary", "required_terms": ["Generated host modes are authoritative", "absent or unrecognized", "unsupported"]}],
+      "control-dispatch": [{"rule_id": "control-host-mode-boundary", "required_terms": ["Host modes authoritative", "absent/unrecognized", "unsupported"]}],
       "analysis-handoff": [{"rule_id": "analysis-visible-handoff", "required_terms": ["source-backed", "four-state Status", "visible task-local Evidence Ledger"]}],
       "implementation-handoff": [
         {"rule_id": "implementation-current-validation", "required_terms": ["current task-agent evidence", "latest material edit", "latest-material-edit", "validation-passed"]},
@@ -1073,7 +1270,7 @@
         "id": "operating-model-task-evidence-completion",
         "path": "docs/OPERATING_MODEL.md",
         "section": "Core Contract Projection",
-        "document_sha256": "327ccc9f85d9b43386f7294a651090f3331c4a6d7e36bb3a7ae6a7af30a5bc4c",
+        "document_sha256": "d6bcee7398fe0d11fd1a525ad099a2aff13453cfe15933adcd45abdc07bf5b8a",
         "bindings": [
           {"source_path": "task_contract.required_for_direct_task", "render": "strings"},
           {"source_path": "visible_evidence_contract.fields", "render": "strings"},
@@ -1099,7 +1296,7 @@
         "id": "validation-rendered-context-budget",
         "path": "docs/VALIDATION.md",
         "section": "Rendered Context Budget Contract",
-        "document_sha256": "a3d5f4967097ec6975cb65991200cfe96266f19615e1ac54d3bfa131e40e0cec",
+        "document_sha256": "55744a6d61302781d24418959653692088680e35cd08a312524ad37b75d40bb0",
         "source_path": "context_budget_contract"
       },
       {

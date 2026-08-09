@@ -173,15 +173,21 @@ class TaskDagDecompositionContractTests(unittest.TestCase):
             "evidence-backed reason before constructing the graph.",
             planner_rules,
         )
-        self.assertIn(
-            "Select the First Executable Slice independently under this "
-            "Skill's ownership.",
+        self.assertTrue(
+            {
+                "Require the current accepted Engineering Brief.",
+                "Preserve its First Executable Slice verbatim.",
+                "Never select the First Executable Slice.",
+                "Never replace the First Executable Slice.",
+                "Never reinterpret the First Executable Slice.",
+            }.issubset(planner_rules),
             planner_rules,
         )
         self.assertIn(
-            "Only this Skill emits the final authoritative Task DAG and Task "
-            "Contract v2.",
-            planner_rules,
+            "never modify acceptance, non-goals, owner, invariants, placement, "
+            "contract semantics, or rollback. a task dag and its nodes are "
+            "derived artifacts, not a parallel analysis authority.",
+            decision_section.group("body").casefold().replace("\n  ", " "),
         )
         self.assertIn("task-dag-decomposition", self.router)
         self.assertNotIn("layer3: [task-dag-decomposition]", self.routing_scenarios)

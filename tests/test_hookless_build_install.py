@@ -457,7 +457,7 @@ class HooklessBuildInstallTests(unittest.TestCase):
         for phrase in (
             "no-repo direct-answer",
             "fully determined by user-supplied facts",
-            "Questions about control prompt files are ineligible and require source-backed analysis",
+            "Control prompt files are ineligible and require source-backed analysis.",
             "do not load a named Skill, inspect repository or source evidence, or produce an Engineering Brief or First Executable Slice",
             "only user-supplied facts",
             "answer, assumptions, limits, and four-state Status",

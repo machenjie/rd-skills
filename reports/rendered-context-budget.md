@@ -22,14 +22,14 @@ Capacity ceilings, minimum headroom ratios, and minimum release margins come fro
 
 | Context | Capacity ceiling | Required reserve | Release target | Minimum release margin | Evolution target | Observed maximum | Release margin | Evolution margin | Capacity headroom ratio |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Main always-loaded | 2200 | 220 | 1980 | 80 | 1900 | 1894 | 86 | 6 | 0.139091 |
-| Direct Task dispatch | 3200 | 0 | 3200 | 0 | 3200 | 3124 | 76 | 76 | 0.02375 |
-| Analyzed Task dispatch | 6500 | 0 | 6500 | 0 | 6500 | 6386 | 114 | 114 | 0.017538 |
-| Analysis dispatch | 5000 | 0 | 5000 | 0 | 5000 | 4885 | 115 | 115 | 0.023 |
-| Review dispatch | 4000 | 0 | 4000 | 0 | 4000 | 3357 | 643 | 643 | 0.16075 |
-| Utility dispatch | 2500 | 0 | 2500 | 0 | 2500 | 1344 | 1156 | 1156 | 0.4624 |
+| Main always-loaded | 2200 | 220 | 1980 | 80 | 1900 | 1898 | 82 | 2 | 0.137273 |
+| Direct Task dispatch | 3200 | 0 | 3200 | 0 | 3200 | 3110 | 90 | 90 | 0.028125 |
+| Analyzed Task dispatch | 6500 | 0 | 6500 | 0 | 6500 | 6372 | 128 | 128 | 0.019692 |
+| Analysis dispatch | 5000 | 0 | 5000 | 0 | 5000 | 4999 | 1 | 1 | 0.0002 |
+| Review dispatch | 4000 | 0 | 4000 | 0 | 4000 | 3344 | 656 | 656 | 0.164 |
+| Utility dispatch | 2500 | 0 | 2500 | 0 | 2500 | 1330 | 1170 | 1170 | 0.468 |
 
-Maximum exact normalized duplicate-rule ratio: **0.013804** (gate: **0.03**; margin: **0.016196**).
+Maximum exact normalized duplicate-rule ratio: **0.013953** (gate: **0.03**; margin: **0.016047**).
 
 Discovery metadata is reported separately because actual host discovery injection is not observed.
 

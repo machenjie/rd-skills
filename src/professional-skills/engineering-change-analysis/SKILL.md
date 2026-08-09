@@ -7,7 +7,10 @@ description: "Use `analysis-agent`: `implementation-preparation` for changes, `d
 
 ## Role
 
-Support `analysis-agent` in selecting exactly one source-backed analysis mode for general change-impact preparation, diagnosis, or repository answers. Structural placement remains specialist-owned.
+Support `analysis-agent` in one source-backed change, diagnosis, or answer mode.
+Specialist owns unresolved placement. For
+Analyzed Work, the current Engineering Brief is the only operational analysis
+authority; Specialist work is input until Brief incorporation.
 
 ## When To Use
 
@@ -34,8 +37,11 @@ Support `analysis-agent` in selecting exactly one source-backed analysis mode fo
 - Load supporting References independently when their own contracts trigger.
 - In one pass, prove owner, invariants, impact, and proof limits.
 - Do not invent user choices, repeat the scope, or cross modes.
-- Map general behavioral, consumer, contract, data, failure, test, release, observability, and documentation impact without selecting structural placement.
-- Analyze a behavior-preserving move with `refactoring` only after source evidence fixes its destination owner and final placement.
+- Map material behavior, consumers, contracts, data, failure, tests, release, observability, and docs.
+- Put source-proven placement and triggered Specialist results in the Brief.
+- Put a complete Task Contract v2 that Main can dispatch verbatim in the Brief,
+  not a derived Task DAG or handoff.
+- Use `refactoring` only after source proves its destination owner and placement.
 - Route flagged structural risk with source evidence to `architecture-impact-reviewer` for placement, module-boundary, and dependency-direction decisions.
 
 ## High-Value Gotchas
@@ -52,11 +58,13 @@ Support `analysis-agent` in selecting exactly one source-backed analysis mode fo
 
 - Stop for an underived user decision or a gap that can invalidate the conclusion.
 - Route structural-risk evidence to `architecture-impact-reviewer` with placement, module-boundary, and dependency-direction decisions left unresolved.
+- Return Brief conflicts or protected-decision changes `blocked` through Main
+  for analysis and redispatch.
 
 ## Output Contract
 
 - selected mode result
-- source-backed affected-consumer evidence and unresolved structural-risk handoff to `architecture-impact-reviewer`
+- implementation-preparation: authoritative Brief with verbatim-dispatchable Slice and incorporated Specialist input
 - source evidence and proof limit
 
 ## Targeted References

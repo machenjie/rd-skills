@@ -2339,6 +2339,187 @@ def professional_review_risk_matrix_block(matrix: object) -> str:
     return "\n".join(lines)
 
 
+def validate_ci_validation_contract(data: object, root: Path) -> list[str]:
+    """Validate the single Core-owned CI affected-test selection contract."""
+
+    errors: list[str] = []
+    if not isinstance(data, dict):
+        return ["authoritative control model must be an object"]
+    contract = data.get("ci_validation_contract")
+    contract_fields = {
+        "schema_version",
+        "runner",
+        "shard_count",
+        "full_suite",
+        "test_self_patterns",
+        "mappings",
+    }
+    if not isinstance(contract, dict) or set(contract) != contract_fields:
+        actual = sorted(contract) if isinstance(contract, dict) else []
+        errors.append(
+            "ci_validation_contract fields must be exactly "
+            f"{sorted(contract_fields)}, found {actual}"
+        )
+        return errors
+    if contract["schema_version"] != 1:
+        errors.append("ci_validation_contract.schema_version must be 1")
+    runner = contract["runner"]
+    if runner != "scripts/run-ci-tests.py" or not (root / str(runner)).is_file():
+        errors.append(
+            "ci_validation_contract.runner must name existing scripts/run-ci-tests.py"
+        )
+    if contract["shard_count"] != 2:
+        errors.append("ci_validation_contract.shard_count must be exactly 2")
+    if contract["full_suite"] != {"root": "tests", "pattern": "test*.py"}:
+        errors.append(
+            "ci_validation_contract.full_suite must define recursive tests/test*.py discovery"
+        )
+    if contract["test_self_patterns"] != ["tests/**/test*.py"]:
+        errors.append(
+            "ci_validation_contract.test_self_patterns must contain only tests/**/test*.py"
+        )
+
+    acceptance = data.get("principle_acceptance_contract")
+    producer_ids = (
+        {
+            producer.get("id")
+            for producer in acceptance.get("producers", [])
+            if isinstance(producer, dict)
+            and isinstance(producer.get("id"), str)
+        }
+        if isinstance(acceptance, dict)
+        else set()
+    )
+    authorities = (
+        acceptance.get("authorities", []) if isinstance(acceptance, dict) else []
+    )
+    authority_matches = [
+        authority
+        for authority in authorities
+        if isinstance(authority, dict)
+        and (
+            authority.get("id") == "ci-validation-authority"
+            or authority.get("pointer") == "/ci_validation_contract"
+        )
+    ]
+    if (
+        len(authority_matches) != 1
+        or authority_matches[0].get("id") != "ci-validation-authority"
+        or authority_matches[0].get("pointer") != "/ci_validation_contract"
+    ):
+        errors.append(
+            "ci_validation_contract must have exactly one ci-validation-authority pointer"
+        )
+
+    mappings = contract["mappings"]
+    if not isinstance(mappings, list) or not mappings:
+        errors.append("ci_validation_contract.mappings must be non-empty")
+        return errors
+    mapping_fields = {
+        "id",
+        "path_patterns",
+        "producer_ids",
+        "test_modules",
+        "coverage",
+    }
+    seen_ids: set[str] = set()
+    for index, mapping in enumerate(mappings):
+        context = f"ci_validation_contract.mappings[{index}]"
+        if not isinstance(mapping, dict) or set(mapping) != mapping_fields:
+            errors.append(f"{context} fields must be exactly {sorted(mapping_fields)}")
+            continue
+        mapping_id = mapping["id"]
+        if not isinstance(mapping_id, str) or re.fullmatch(
+            r"[a-z0-9]+(?:-[a-z0-9]+)*", mapping_id
+        ) is None:
+            errors.append(f"{context}.id must be kebab-case")
+        elif mapping_id in seen_ids:
+            errors.append("ci_validation_contract mapping ids must be unique")
+        else:
+            seen_ids.add(mapping_id)
+
+        patterns = mapping["path_patterns"]
+        if (
+            not isinstance(patterns, list)
+            or not patterns
+            or any(
+                not isinstance(pattern, str) or not pattern for pattern in patterns
+            )
+            or len(patterns) != len(set(patterns))
+        ):
+            errors.append(f"{context}.path_patterns must be non-empty unique strings")
+        else:
+            for pattern in patterns:
+                path = PurePosixPath(pattern)
+                if (
+                    path.is_absolute()
+                    or not path.parts
+                    or ".." in path.parts
+                    or "\\" in pattern
+                    or "\x00" in pattern
+                ):
+                    errors.append(
+                        f"{context}.path_patterns contains unsafe pattern {pattern!r}"
+                    )
+
+        mapped_producers = mapping["producer_ids"]
+        if (
+            not isinstance(mapped_producers, list)
+            or not mapped_producers
+            or any(
+                not isinstance(producer_id, str) or not producer_id
+                for producer_id in mapped_producers
+            )
+            or len(mapped_producers) != len(set(mapped_producers))
+        ):
+            errors.append(f"{context}.producer_ids must be non-empty unique strings")
+        else:
+            for producer_id in mapped_producers:
+                if producer_id not in producer_ids:
+                    errors.append(
+                        f"{context}.producer_ids contains unknown producer id "
+                        f"{producer_id!r}"
+                    )
+
+        test_modules = mapping["test_modules"]
+        if (
+            not isinstance(test_modules, list)
+            or any(not isinstance(module, str) or not module for module in test_modules)
+            or len(test_modules) != len(set(test_modules))
+        ):
+            errors.append(f"{context}.test_modules must be unique strings")
+            test_modules = []
+        for module in test_modules:
+            module_path = PurePosixPath(module)
+            if (
+                module_path.is_absolute()
+                or not module_path.parts
+                or module_path.parts[0] != "tests"
+                or ".." in module_path.parts
+                or module_path.suffix != ".py"
+                or not module_path.name.startswith("test")
+            ):
+                errors.append(
+                    f"{context}.test_modules must contain safe tests/ test module paths"
+                )
+            elif not (root / module_path).is_file():
+                errors.append(
+                    f"{context}.test module does not exist: {module_path.as_posix()}"
+                )
+        coverage = mapping["coverage"]
+        if coverage not in {"unit-tests", "canonical-producer"}:
+            errors.append(
+                f"{context}.coverage must be unit-tests or canonical-producer"
+            )
+        elif coverage == "unit-tests" and not test_modules:
+            errors.append(f"{context}.unit-tests coverage requires test modules")
+        elif coverage == "canonical-producer" and test_modules:
+            errors.append(
+                f"{context}.canonical-producer coverage must not duplicate unit tests"
+            )
+    return errors
+
+
 def validate_core_contracts(data: object) -> list[str]:
     """Validate the complete authoritative control-model shape and invariants."""
 
@@ -2496,7 +2677,9 @@ def validate_core_contracts(data: object) -> list[str]:
         "kind",
         "core_principles",
         "principle_acceptance_contract",
+        "ci_validation_contract",
         "roles",
+        "external_read_contract",
         "implementation_discipline_contract",
         "review_discipline_contract",
         "context_budget_contract",
@@ -2521,6 +2704,7 @@ def validate_core_contracts(data: object) -> list[str]:
         )
 
     errors.extend(validate_principle_acceptance_contract(data, ROOT))
+    errors.extend(validate_ci_validation_contract(data, ROOT))
 
     role_names = {
         "main-control-agent",
@@ -2545,6 +2729,7 @@ def validate_core_contracts(data: object) -> list[str]:
         "edit",
         "execute",
         "execute-read-only",
+        "external-read",
     }
     for role_name in sorted(role_names):
         role = roles.get(role_name)
@@ -2570,6 +2755,11 @@ def validate_core_contracts(data: object) -> list[str]:
             errors.append(f"roles.{role_name}: write tools and may_edit disagree")
         if bool(role["may_review"]) != ("execute-read-only" in tools):
             errors.append(f"roles.{role_name}: review tool and may_review disagree")
+        if ("external-read" in tools) != (role_name == "analysis-agent"):
+            errors.append(
+                "external-read must belong only to analysis-agent and be absent "
+                "from main-control-agent, task-agent, and review-agent"
+            )
         expected_sandbox = (
             "dispatch-only"
             if role["may_dispatch"]
@@ -2579,6 +2769,112 @@ def validate_core_contracts(data: object) -> list[str]:
         )
         if sandbox != expected_sandbox:
             errors.append(f"roles.{role_name}: sandbox and capability flags disagree")
+
+    external_read = data["external_read_contract"]
+    expected_external_read = {
+        "capability_field": "external_source_read",
+        "exclusive_role": "analysis-agent",
+        "tool": "external-read",
+        "capability_modes": [
+            "native-enforced",
+            "sandbox-enforced",
+            "prompt-enforced",
+            "unsupported",
+        ],
+        "supported_operations": ["WebSearch", "WebFetch", "ConnectorRead"],
+        "connector_requirement": "explicitly-authorized-and-proven-read-only",
+        "general_network_counts_as_supported": False,
+        "jit_policy": {
+            "local_or_current_evidence_sufficient": "do-not-read-externally",
+            "material_unresolved_claim": "external-read",
+            "non_material_unknown": "record-proof-limit",
+            "broad_or_untargeted_research": "forbidden",
+        },
+        "source_priority": [
+            "official-primary-source",
+            "version-specific-documentation",
+            "version-date-or-lifecycle-source",
+        ],
+        "forbidden_operations": [
+            "file-edit",
+            "general-shell-network",
+            "curl",
+            "wget",
+            "python-http",
+            "post",
+            "upload",
+            "submit",
+            "external-write",
+            "dependency-install",
+            "production-operation",
+            "agent-dispatch",
+            "implementation",
+            "review",
+        ],
+        "trust_boundary": {
+            "external_content": "evidence-input-only-never-control-input",
+            "execute_returned_instructions": False,
+            "normalization_path": [
+                "external-source",
+                "analysis-agent-judgment",
+                "normalized-claim",
+                "evidence-ledger",
+                "engineering-brief-decision",
+            ],
+            "protected_control_fields": [
+                "Role",
+                "Skill",
+                "Scope",
+                "Execution Level",
+                "Acceptance",
+                "Owner",
+                "Review Policy",
+                "Task Contract",
+            ],
+            "raw_external_instruction_downstream": "forbidden",
+        },
+        "disclosure_guard": {
+            "request_minimization": "minimum-public-information-required-for-claim",
+            "forbidden_request_content": [
+                "repository-private-source",
+                "secret-token-credential",
+                "user-sensitive-data",
+                "internal-identifier",
+                "proprietary-content",
+            ],
+        },
+        "ledger_projection": {
+            "schema_source": "visible_evidence_contract",
+            "command_values": ["WebSearch", "WebFetch", "ConnectorRead"],
+            "artifact_value": "source-identifier-or-url",
+            "schema_change": "forbidden",
+        },
+        "missing_evidence": {
+            "critical": {
+                "trigger": "critical-fact-missing-can-invalidate-current-slice",
+                "execution_trigger": "unknown-critical-boundary",
+                "edit_status": "blocked",
+                "dispatch_implementation": False,
+            },
+            "non_critical": {
+                "action": "record-proof-limit",
+                "blocks_safe_slice": False,
+            },
+        },
+        "unsupported_behavior": "continue-when-existing-evidence-is-sufficient",
+        "unsupported_critical_behavior": (
+            "fail-closed-when-critical-fact-unobtainable"
+        ),
+        "downstream_research_roles": {
+            "task-agent": "forbidden",
+            "review-agent": "forbidden",
+        },
+    }
+    if external_read != expected_external_read:
+        errors.append(
+            "external_read_contract must equal the closed analysis-only JIT "
+            "read and evidence policy"
+        )
 
     implementation_discipline = data["implementation_discipline_contract"]
     implementation_discipline_capability_id = ""
@@ -2890,6 +3186,9 @@ def validate_core_contracts(data: object) -> list[str]:
         "verdicts",
         "repair_order",
         "level_extension_rule",
+        "review_scope",
+        "finding_policy_source",
+        "effective_level_policy",
         "profile_projection",
         "handoff_projection",
     }
@@ -2987,6 +3286,11 @@ def validate_core_contracts(data: object) -> list[str]:
             "not_applicable_required_fields",
             "delegated_required_fields",
             "invalid_matrix_rule",
+            "evaluation_scope",
+            "repository_health_audit",
+            "allowed_context_reads",
+            "context_read_grants_repair_authority",
+            "specialist_trigger",
         }
         expected_professional_dimensions = [
             "correctness-invariants",
@@ -3070,6 +3374,44 @@ def validate_core_contracts(data: object) -> list[str]:
                     "review_discipline_contract.professional_risk_matrix invalid "
                     "content must block the verdict"
                 )
+            expected_matrix_scope = [
+                "Current Task Boundary",
+                "latest actual diff",
+                "current change reachable impact",
+            ]
+            if professional_risk_matrix["evaluation_scope"] != expected_matrix_scope:
+                errors.append(
+                    "review professional-risk evaluation scope must be the current "
+                    "task, latest diff, and reachable change impact"
+                )
+            if professional_risk_matrix["repository_health_audit"] is not False:
+                errors.append(
+                    "review professional-risk matrix must not become a repository "
+                    "health audit"
+                )
+            if professional_risk_matrix["allowed_context_reads"] != [
+                "caller",
+                "consumer",
+                "sibling",
+                "config",
+            ]:
+                errors.append(
+                    "review professional-risk context reads must remain bounded"
+                )
+            if (
+                professional_risk_matrix["context_read_grants_repair_authority"]
+                is not False
+            ):
+                errors.append(
+                    "review context reads must not grant repair authority"
+                )
+            if (
+                professional_risk_matrix["specialist_trigger"]
+                != "concrete-risk-requires-independent-professional-judgment"
+            ):
+                errors.append(
+                    "review specialist gates must be triggered only by concrete risk"
+                )
         closed_lists = {
             "dimension_decisions": ["verified", "finding", "not-applicable", "blocked"],
             "diff_kinds": ["actual-diff", "host-native-actual-diff", "unavailable"],
@@ -3093,6 +3435,112 @@ def validate_core_contracts(data: object) -> list[str]:
             errors.append(
                 "review_discipline_contract.level_extension_rule may add only "
                 "depth, independence, or evidence"
+            )
+        expected_review_scope = {
+            "task_boundary_source": "task_contract.task_boundary",
+            "handoff_projection_fields": [
+                "Goal",
+                "Acceptance",
+                "Non-goals",
+                "Allowed Write Scope",
+            ],
+            "read_grants_repair_authority": False,
+            "finding_relation_precedes": ["severity", "blocker"],
+        }
+        if review_discipline["review_scope"] != expected_review_scope:
+            errors.append(
+                "review_discipline_contract.review_scope must project the current "
+                "Task Boundary and write ceiling without granting repair authority"
+            )
+        if (
+            review_discipline["finding_policy_source"]
+            != "task_contract.finding_relations"
+        ):
+            errors.append(
+                "review finding classification must use task_contract.finding_relations"
+            )
+        expected_effective_level_policy = {
+            "source": "execution_level_contract.effective_level",
+            "creates_review_level": False,
+            "all_levels_require_base_dimensions": True,
+            "final_review_profile": "review-agent",
+            "final_review_target": ["latest actual diff", "every changed file"],
+            "level_increases_only": [
+                "review-depth",
+                "evidence-strength",
+                "independence",
+                "actual-professional-gates",
+            ],
+            "specialist_review_replaces_final_review": False,
+            "finding_merge_owner": "review-agent",
+            "main_merges_professional_findings": False,
+            "reviewer_repairs_own_findings": False,
+            "levels": {
+                "L1": {
+                    "final_reviewers": 1,
+                    "independent_final_review": True,
+                    "professional_risk_matrix": "base",
+                    "preimplementation_review": False,
+                    "secondary_reviewer": False,
+                },
+                "L2": {
+                    "final_reviewers": 1,
+                    "independent_final_review": True,
+                    "professional_risk_matrix": "base",
+                    "preimplementation_review": False,
+                    "secondary_reviewer": False,
+                },
+                "L3": {
+                    "final_reviewers": 1,
+                    "independent_final_review": True,
+                    "professional_risk_matrix": "base",
+                    "risk_triggered_jit_lenses": True,
+                    "preimplementation_review": False,
+                    "secondary_reviewer": False,
+                },
+                "L4": {
+                    "final_reviewers": 1,
+                    "independent_final_review": True,
+                    "professional_gates": "actual-triggered-only",
+                    "specialist_condition": (
+                        "concrete-risk-requires-independent-professional-judgment"
+                    ),
+                    "preimplementation_condition": (
+                        "risk-carried-by-preimplementation-design-decision"
+                    ),
+                    "default_preimplementation_review": False,
+                    "default_secondary_reviewer": False,
+                },
+                "L5": {
+                    "independent_preimplementation_review": True,
+                    "independent_implementation_review": True,
+                    "declared_scope_negative_and_failure_proof": True,
+                    "exhaustive_final_review": True,
+                    "full_ci_required": False,
+                    "formal_release_required": False,
+                    "cross_model_review_required": False,
+                },
+            },
+            "new_high_risk_route": [
+                "finding",
+                "blocked",
+                "main-control-agent",
+                "analysis-agent",
+                "update-engineering-brief",
+                "recompute-effective-level",
+                "redispatch",
+            ],
+            "reviewer_self_upgrades_execution_level": False,
+            "ordinary_l1_l3_agent_count_increase": False,
+            "ordinary_l1_l3_review_round_increase": False,
+        }
+        if (
+            review_discipline["effective_level_policy"]
+            != expected_effective_level_policy
+        ):
+            errors.append(
+                "review_discipline_contract.effective_level_policy must derive "
+                "closed review depth from the existing Effective Level"
             )
         review_rule_ids = list(
             instruction_rule_groups(
@@ -4249,6 +4697,11 @@ def validate_core_contracts(data: object) -> list[str]:
         "parallel_group_fields",
         "execution_level_extension",
         "scheduling_rules",
+        "analyzed_work_authority",
+        "task_boundary",
+        "finding_relations",
+        "repair_routing",
+        "same_pattern_scan",
         "template_schemas",
         "utility_projection_rules",
     }
@@ -4360,6 +4813,220 @@ def validate_core_contracts(data: object) -> list[str]:
             }:
                 errors.append("parallel write requirements are incomplete")
 
+        expected_analyzed_work_authority = {
+            "applies_to": "analyzed-work",
+            "operational_authority": "current-engineering-brief",
+            "authoritative_sections": [
+                "Problem and Desired Behavior",
+                "Acceptance and Non-goals",
+                "Ownership and Invariants",
+                "Placement and Reuse",
+                "Contract / Data / Failure Impact",
+                "Validation Strategy",
+                "Risks and Rollback",
+                "First Executable Slice",
+                "Task Dependencies",
+                "Integration Boundary",
+                "Review Boundary",
+                "Evidence Gaps and Proof Limits",
+            ],
+            "input_kinds": [
+                "user-request",
+                "issue-prd-change-request",
+                "source-and-tests",
+                "external-evidence",
+                "specialist-analysis",
+            ],
+            "derived_artifacts": [
+                "task-dag",
+                "task-contract",
+                "implementation-handoff",
+                "review-handoff",
+            ],
+            "protected_decisions": [
+                "Acceptance",
+                "Non-goals",
+                "Owner",
+                "Invariants",
+                "Placement",
+                "Contract semantics",
+                "Rollback",
+                "First Executable Slice",
+            ],
+            "first_executable_slice": {
+                "defined_by": "engineering-brief",
+                "contract": "Task Contract v2",
+                "required_fields_source": (
+                    "task_contract.template_schemas.engineering-brief-template.md."
+                    "labeled_sections.First Executable Slice"
+                ),
+                "dispatch": "verbatim",
+                "main_reinterpretation": "forbidden",
+                "main_generation": "forbidden",
+                "dag_reselection": "forbidden",
+            },
+            "decision_change_route": [
+                "blocked",
+                "main-control-agent",
+                "analysis-agent",
+                "update-engineering-brief",
+                "redispatch-affected-tasks",
+            ],
+            "downstream_conflict": "return-to-analysis",
+            "specialist_policy": {
+                "authority": "input-only",
+                "source_proven_placement": "write-directly-into-engineering-brief",
+                "real_structural_choice": "invoke-corresponding-specialist",
+                "effective_after": "incorporated-into-current-engineering-brief",
+                "parallel_analysis_authority": "forbidden",
+            },
+            "dag_planner_policy": {
+                "allowed": [
+                    "task-splitting",
+                    "dependencies",
+                    "parallel-safety",
+                    "critical-path",
+                    "integration-merge-conflict-ownership",
+                    "remaining-task-contract-projection",
+                ],
+                "forbidden": [
+                    "select-first-executable-slice",
+                    "modify-acceptance-or-non-goals",
+                    "modify-owner-or-invariants",
+                    "modify-contract-semantics",
+                    "modify-rollback",
+                ],
+                "insufficient_brief": "return-to-analysis",
+            },
+            "unchanged_paths": ["direct-task", "non-implementation"],
+        }
+        if task["analyzed_work_authority"] != expected_analyzed_work_authority:
+            errors.append(
+                "task_contract.analyzed_work_authority must keep the Engineering "
+                "Brief as the single analyzed-work decision authority"
+            )
+
+        expected_task_boundary = {
+            "name": "Current Task Boundary",
+            "fields": ["Goal", "Acceptance", "Non-goals"],
+            "allowed_read_scope": "inspection-and-discovery-boundary",
+            "allowed_write_scope": "permission-ceiling-not-work-obligation",
+            "discovery_grants_repair_authority": False,
+            "repository_clean_required": False,
+            "scheduling_priority": [
+                "current-requested-task",
+                "declared-dag-work",
+                "current-task-blockers",
+                "adjacent-follow-up",
+            ],
+        }
+        if task["task_boundary"] != expected_task_boundary:
+            errors.append(
+                "task_contract.task_boundary must equal Goal + Acceptance + "
+                "Non-goals with read/discovery and write-permission ceilings"
+            )
+
+        expected_finding_relations = {
+            "field": "Finding Relation",
+            "values": ["current-task", "scope-blocker", "adjacent"],
+            "classification_order": ["relation", "severity", "blocker"],
+            "severity_relation": "orthogonal",
+            "rules": {
+                "current-task": {
+                    "match_any": [
+                        "introduced-or-regressed-by-current-diff",
+                        "directly-violates-current-acceptance",
+                        "violates-required-invariant-or-contract",
+                        "required-to-complete-current-task-correctly",
+                    ],
+                    "blocking_allowed": True,
+                    "repair_input_allowed": True,
+                    "route": "task-agent-repair",
+                },
+                "scope-blocker": {
+                    "required_for_current_task": True,
+                    "match_any": [
+                        "requires-expanded-allowed-write-scope",
+                        "requires-acceptance-or-non-goal-change",
+                        "requires-owner-invariant-or-contract-change",
+                        "requires-new-analysis-decision",
+                    ],
+                    "blocking_allowed": True,
+                    "repair_input_allowed": False,
+                    "route": [
+                        "blocked",
+                        "main-control-agent",
+                        "analysis-agent",
+                        "update-authoritative-task-boundary",
+                    ],
+                },
+                "adjacent": {
+                    "required_for_current_task": False,
+                    "blocking_allowed": False,
+                    "repair_input_allowed": False,
+                    "actions": [
+                        "record-residual-risk",
+                        "recommend-next-step",
+                        "defer",
+                        "continue-current-task",
+                    ],
+                    "high_or_critical_scope_authority": False,
+                },
+            },
+            "review_finding_scope_authority": False,
+            "repair_input_relations": ["current-task"],
+        }
+        if task["finding_relations"] != expected_finding_relations:
+            errors.append(
+                "task_contract.finding_relations must remain the closed "
+                "current-task/scope-blocker/adjacent relation policy"
+            )
+
+        expected_repair_routing = {
+            "scope_authority": [
+                "original-task-boundary",
+                "accepted-current-task-finding",
+            ],
+            "current_task_blocking": "task-agent-repair",
+            "scope_blocker": "return-main-analysis",
+            "adjacent": "report-defer-continue-primary-task",
+            "adjacent_discovered_during_repair": "record-without-repair-expansion",
+            "unrelated_changed_file": (
+                "remove-current-task-unrelated-edit-without-repairing-file"
+            ),
+        }
+        if task["repair_routing"] != expected_repair_routing:
+            errors.append(
+                "task_contract.repair_routing must admit only current-task "
+                "findings and return scope blockers to Main/Analysis"
+            )
+
+        expected_same_pattern_scan = {
+            "required": True,
+            "discovery_grants_repair_authority": False,
+            "decision_inputs": [
+                "current Acceptance",
+                "current Invariant",
+                "authorized repair scope",
+            ],
+            "routes": {
+                "affects_current_inside_authorized_scope": "current-task-fix",
+                "affects_current_outside_authorized_scope": (
+                    "scope-blocker-return-main"
+                ),
+                "does_not_affect_current": "adjacent-record-do-not-edit",
+            },
+            "completion_requirement": (
+                "all-current-task-occurrences-inside-authorized-repair-scope-fixed"
+            ),
+            "adjacent_requirement": "record-rationale-and-residual-risk",
+        }
+        if task["same_pattern_scan"] != expected_same_pattern_scan:
+            errors.append(
+                "task_contract.same_pattern_scan must preserve discovery while "
+                "separating it from repair authorization"
+            )
+
         templates = task["template_schemas"]
         utility_projection_rules = projection_rule_map(
             task["utility_projection_rules"],
@@ -4378,6 +5045,30 @@ def validate_core_contracts(data: object) -> list[str]:
         if not isinstance(templates, dict) or set(templates) != expected_templates:
             errors.append(f"task_contract.template_schemas must be exactly {sorted(expected_templates)}")
             templates = {}
+        brief_schema = templates.get("engineering-brief-template.md")
+        if isinstance(brief_schema, dict):
+            labeled_sections = brief_schema.get("labeled_sections")
+            first_slice_fields = (
+                labeled_sections.get("First Executable Slice")
+                if isinstance(labeled_sections, dict)
+                else None
+            )
+            if not isinstance(first_slice_fields, list):
+                errors.append(
+                    "Engineering Brief First Executable Slice must define complete "
+                    "Task Contract v2 fields"
+                )
+            else:
+                projected_task_fields = [
+                    field
+                    for field in first_slice_fields
+                    if field in required_task_fields["required_for_dag_task"]
+                ]
+                if projected_task_fields != required_task_fields["required_for_dag_task"]:
+                    errors.append(
+                        "Engineering Brief First Executable Slice must project every "
+                        "required DAG Task Contract v2 field in canonical order"
+                    )
 
         def validate_headings(schema: dict[str, Any], context: str) -> list[str]:
             raw = schema.get("headings")

@@ -25,7 +25,8 @@ Prove non-recurrence of a known failure mechanism at the narrowest boundary that
 - Establish counterfactual value: observe the guard fail for the matching reason on unfixed behavior when safe, or challenge the assertion with a targeted mutation or fault. If neither is admissible, state the proof limit and compensating evidence.
 - Choose the narrowest admissible boundary that still contains the failure mechanism. A local test is insufficient when serialization, storage, browser, provider, concurrency, or deployment behavior caused the defect.
 - Preserve the triggering fixture or a minimized equivalent whose removed fields are shown irrelevant. Own redaction, schema drift, setup, and cleanup across pass, failure, and cancellation paths.
-- Scan sibling paths, consumers, variants, and duplicate implementations for the same mechanism. Map each materially reachable recurrence to a guard, an existing fresh proof, or explicit residual risk.
+- Map sibling paths, consumers, variants, and duplicate implementations for the same mechanism.
+- Classify a match `current-task` only when it affects Acceptance or a required Invariant within scope, `scope-blocker` when required work is outside scope, or `adjacent` otherwise with rationale, residual risk, and no edit.
 - Assert allowed and forbidden outcomes, including absence of unauthorized or duplicate side effects. For concurrency or eventual consistency, define admissible result sets and use bounded observation instead of fixed sleeps.
 - Do not use broad retry to certify a flaky guard. Isolate nondeterminism with owned clock, randomness, scheduling, and data seams; quarantine or non-automation needs an owner, release consequence, and revisit trigger.
 
@@ -34,7 +35,7 @@ Prove non-recurrence of a known failure mechanism at the narrowest boundary that
 - Calling a new green-only happy-path test a regression guard without showing it constrains the prior failure.
 - Following a fixed test pyramid when the original mechanism lives at a real boundary.
 - Shrinking fixtures until the triggering condition disappears, or reusing stale incident/CI evidence after material edits.
-- Claiming recurrence is closed while same-pattern paths, flakes, or technically infeasible guards have no owner.
+- Claiming recurrence is closed before all authorized `current-task` occurrences are fixed, or repairing every discovered sibling regardless of task relation.
 
 ## Stop Conditions
 

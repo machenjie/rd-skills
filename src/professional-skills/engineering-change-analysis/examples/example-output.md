@@ -1,39 +1,84 @@
 # Example Output
 
-## Problem and Acceptance
+## Problem and Desired Behavior
 
 Reject an API request with the existing stable error when the new field is
-invalid; preserve old-client behavior. Negative, compatibility, and recovery
-paths map to contract and service tests.
+invalid while preserving old-client behavior.
+
+## Acceptance and Non-goals
+
+Valid requests retain their result, invalid values receive the stable error,
+boundary values follow the schema, and forbidden invalid persistence never
+occurs. Changing unrelated request validation is a non-goal.
 
 ## Ownership and Invariants
 
 The API schema owns the wire contract; the service owns the business rule. The
 database record must never contain an invalid field value.
 
-## Placement, Contract, Data, and Failure Design
+## Placement and Reuse
 
-Source evidence identifies the existing service-boundary validator as the
-candidate placement. Affected surfaces are the schema, validation, consumer
-error handling, tests, and public documentation.
+Source evidence proves that the existing service-boundary validator owns this
+rule and is reused; no structural choice or Specialist input remains.
 
-## Non-Authoritative Slice Hypothesis
+## Contract / Data / Failure Impact
 
-After the Engineering Brief is accepted, one candidate boundary could cover the
-failing service-level regression test and the owning validator, with the
-targeted service test as evidence. This hypothesis is non-authoritative and
-non-dispatchable; it does not authorize implementation or review dispatch.
+The API schema, validation, consumer error handling, tests, and public
+documentation are affected. The database record must never contain the invalid
+value; the stable error remains the failure contract.
 
-## Candidate Task Boundaries and Scheduling Handoff
+## Validation Strategy
 
-The schema and validator form one candidate task boundary. Consumer
-compatibility and public documentation remain separate candidates when their
-owners or verification differ. After the Engineering Brief is accepted, hand
-these candidates, DAG-trigger evidence, and unresolved scheduling constraints
-to `task-dag-planner`; it independently selects the First Executable Slice and
-solely emits any authoritative Task DAG or Task Contract v2.
+Run the focused service contract tests for valid, invalid, minimum/maximum, and
+persistence-forbidden cases after the latest edit. Record consumer compatibility
+and any unavailable external-consumer proof.
 
 ## Risks and Rollback
 
 Unknown external consumers remain explicit. Rollback would revert the validator
 and schema together so mixed contract behavior is not left behind.
+
+## First Executable Slice
+
+Task ID: example-api-validation-001
+Status: in_progress
+Level: requested=unspecified; automatic=L3; default=L3; effective=L3; edit=allowed
+Basis: source=analysis_handoff:example-brief; triggers=[]; l2=[]; unresolved=[]
+L5 Evidence: not applicable — effective L3
+Goal: enforce the accepted field rule at the owning service boundary
+Owner: service validation owner
+Inputs: current Engineering Brief, schema, validator, focused tests
+Allowed Read Scope: schema, validator, direct consumers, and focused tests
+Allowed Write Scope: owning validator and focused regression tests
+Non-goals: unrelated request validation or consumer cleanup
+Dependencies: none
+Expected Output: accepted validation behavior and regression evidence
+Acceptance: valid, invalid, boundary, and forbidden outcomes above
+Verification: focused service contract tests after the latest material edit
+Evidence Requirements: current red/green proof and same-pattern scan result
+Parallel Safety: no parallel writes
+Workspace Requirement: shared; serialize writes
+Integration Owner: service validation owner
+Review Owner: independent review-agent
+Stop Conditions: ownership, contract, or write scope conflicts with this Brief
+Professional Skill: backend-change-builder
+Layer 3 Skills: none
+
+## Task Dependencies
+
+The First Executable Slice has no dependency. Consumer documentation is a
+remaining task only if its existing source proves a required contract update.
+
+## Integration Boundary
+
+The service validation owner integrates schema and validator behavior.
+
+## Review Boundary
+
+One independent implementation review covers the latest diff and every changed
+file; no Specialist review is triggered by this example.
+
+## Evidence Gaps and Proof Limits
+
+Unknown external consumers are a proof limit and do not authorize unrelated
+consumer edits.

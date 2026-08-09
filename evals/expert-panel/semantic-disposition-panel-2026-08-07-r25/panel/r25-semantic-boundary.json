@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "kind": "changeforge.semantic-disposition-panel-ballot",
+  "review_id": "semantic-disposition-panel-2026-08-07-r25",
+  "created_on": "2026-08-07",
+  "packet_sha256": "3bb4b92e746cf6b5127e0f1203a9c53756b1d64465857f242f9729a3e3e034b9",
+  "source_fingerprints": {
+    "audit": "469209ef759edfb5a428979b0faffa70dbbbb78fb52fb4974f889759ebc5b379",
+    "reference_candidates": "7ba292dd1b618d6b890633ce3127308f7d167344eb562a5a11d7858c542dab10",
+    "reference_detector": "4b04a9b693ac3079a1af6154425ed64408474d5027c0119ed6360c9288356112",
+    "reference_groups": "aa063d66e92ded0513416306d5a118f5519e9205806d70477ded8417aabb5a79",
+    "reference_source": "99f628fbcd833e3ac092e09c8dc82a3323a60b2378714d8b7dfff03fb48559f3",
+    "root_candidates": "3dd23d67e7b06a8dfaa0d1aef02bdc3f358461be3fcb441b5825d6c4d74406ce",
+    "root_context": "c587c4d206016b8559b8e1e089f98017c59688f893ecef23688c697c39168e14",
+    "root_detector": "4d8059e710c7ecca7d4c839fe63d2c2f88632aa826356280dfe76bed5043ea04",
+    "root_source": "852aa945ee4aa3f5a045dd1f293e5e5aa50e3af4b241014fb634d36bfa5dbe74"
+  },
+  "voter": {
+    "voter_id": "r25-semantic-boundary",
+    "agent_id": "semantic-boundary-agent-20260807",
+    "role": "senior-skill-reference-boundary-reviewer",
+    "expertise": [
+      "skill-layer ownership",
+      "conditional reference loading",
+      "required-output boundaries",
+      "semantic disposition governance"
+    ],
+    "independent_review": true
+  },
+  "semantic_votes": [
+    {
+      "target_id": "reference:105ecb4309cd87e75d6e2205c007af4d2bfacdb6d2cf22b6c1979110b333c828",
+      "axis": "reference",
+      "candidate_id": "105ecb4309cd87e75d6e2205c007af4d2bfacdb6d2cf22b6c1979110b333c828",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The sole-authority statement is explicitly limited to Analyzed Work and the implementation-preparation mode contract, preventing derived artifacts from competing with the accepted Brief.",
+      "authority_or_condition": "Applies only while engineering-change-analysis produces or updates the current Engineering Brief for Analyzed Work.",
+      "decision_owner": "engineering-change-analysis",
+      "mitigation": "Retain the Analyzed Work and mode-contract bounds and route protected-decision changes back through Brief revision.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:1a845349e5ff4d99fe933eb80d7d764b59a520cab704efb90d3166dd67ee6d00",
+      "axis": "reference",
+      "candidate_id": "1a845349e5ff4d99fe933eb80d7d764b59a520cab704efb90d3166dd67ee6d00",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The template correctly classifies requests, source, tests, external evidence, and Specialist results as inputs rather than parallel operational analysis authorities.",
+      "authority_or_condition": "Applies within the Engineering Brief template after source and Specialist evidence are incorporated into the current Brief.",
+      "decision_owner": "engineering-control-plane",
+      "mitigation": "Keep the input-versus-authority distinction adjacent to the incorporation rule and Brief update path.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:1c1a29b2dd6e2742b35bf9bca861c7c2a5d3a5fe89102fbf73b28e491e48781f",
+      "axis": "reference",
+      "candidate_id": "1c1a29b2dd6e2742b35bf9bca861c7c2a5d3a5fe89102fbf73b28e491e48781f",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The statement is bounded by Analyzed Work and establishes one operational Brief authority, avoiding contradictory downstream acceptance, ownership, and placement decisions.",
+      "authority_or_condition": "Applies to the current Engineering Brief produced for the active Analyzed Work lineage.",
+      "decision_owner": "engineering-control-plane",
+      "mitigation": "Preserve the Analyzed Work qualifier and require Brief regeneration when protected decisions legitimately change.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:216aea6519ff1a54c5efce0dfdd0bfe13c9ac0698be3c09ad3ba63381bc57ea5",
+      "axis": "reference",
+      "candidate_id": "216aea6519ff1a54c5efce0dfdd0bfe13c9ac0698be3c09ad3ba63381bc57ea5",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Verbatim dispatch and prohibition on reselection preserve the analysis-owned First Executable Slice across Main and DAG projection boundaries.",
+      "authority_or_condition": "Applies after the Engineering Brief has selected a complete and safe First Executable Slice.",
+      "decision_owner": "engineering-control-plane",
+      "mitigation": "Keep conflicts on slice content routed to an updated Brief and redispatch rather than downstream reinterpretation.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:2cc849e6d5adc151f322ded16d4835c813c353fb8921d02c6ea9eea86dfff80c",
+      "axis": "reference",
+      "candidate_id": "2cc849e6d5adc151f322ded16d4835c813c353fb8921d02c6ea9eea86dfff80c",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The protected-field list correctly constrains derived artifacts from silently becoming competing authorities for accepted analysis decisions.",
+      "authority_or_condition": "Applies to Task DAGs, Task Contracts, Implementation Handoffs, and Review Handoffs derived from a current Brief.",
+      "decision_owner": "engineering-control-plane",
+      "mitigation": "Retain the explicit protected fields and return any required decision change through analysis for Brief revision.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:40c9e55338bf34efecc93092f8d968063c5979cdbda35535c4a2ad7113c782c5",
+      "axis": "reference",
+      "candidate_id": "40c9e55338bf34efecc93092f8d968063c5979cdbda35535c4a2ad7113c782c5",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Main's prohibition on regeneration or reinterpretation preserves the exact analysis-selected slice and prevents dispatch-layer semantic drift.",
+      "authority_or_condition": "Applies when Main dispatches the First Executable Slice selected in the current Engineering Brief.",
+      "decision_owner": "engineering-change-analysis",
+      "mitigation": "Maintain verbatim dispatch and use the defined blocked-to-analysis path when the slice cannot be executed safely.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:47ecd1c528dae6b3241866ef22b8cf97f40bc75bda03c3c2d9b5a12e16f5ce6d",
+      "axis": "reference",
+      "candidate_id": "47ecd1c528dae6b3241866ef22b8cf97f40bc75bda03c3c2d9b5a12e16f5ce6d",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The Task DAG is a projection surface, so forbidding slice reselection and protected-decision modification preserves correct analysis ownership.",
+      "authority_or_condition": "Applies only to a Task DAG derived from an accepted current Engineering Brief for Analyzed Work.",
+      "decision_owner": "engineering-control-plane",
+      "mitigation": "Keep DAG authority limited to task decomposition, dependencies, scheduling, and integration ownership.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:b6df72015ca60c04b26d1f55b2e16d0a2c4ac7ef24dcfc025bc14680c0e49409",
+      "axis": "reference",
+      "candidate_id": "b6df72015ca60c04b26d1f55b2e16d0a2c4ac7ef24dcfc025bc14680c0e49409",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Specialist evidence may inform placement or risk decisions, but the Brief must incorporate it before it gains operational effect.",
+      "authority_or_condition": "Applies to Specialists invoked for unresolved structural choices during Engineering Brief preparation.",
+      "decision_owner": "engineering-control-plane",
+      "mitigation": "Retain explicit incorporation into the current Brief before Specialist conclusions affect implementation.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:b96a42a50ce1bb9fa39fe12a8bba10eabf3fbae5284b7b26abeeebc9cebae481",
+      "axis": "reference",
+      "candidate_id": "b96a42a50ce1bb9fa39fe12a8bba10eabf3fbae5284b7b26abeeebc9cebae481",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The word only limits the section to material impact categories while still requiring direct and transitive consumer coverage.",
+      "authority_or_condition": "Applies when populating Contract, Data, and Failure Impact in an implementation-preparation Engineering Brief.",
+      "decision_owner": "engineering-change-analysis",
+      "mitigation": "Preserve materiality as the inclusion boundary without omitting direct or transitive consumers.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:ddbb3b858e41a978d94ef6a972b60f288b0f67731193af5642b5a5d62fd41b08",
+      "axis": "reference",
+      "candidate_id": "ddbb3b858e41a978d94ef6a972b60f288b0f67731193af5642b5a5d62fd41b08",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Prohibiting a parallel analysis authority prevents Specialists and derived artifacts from producing incompatible implementation decisions outside the current Brief.",
+      "authority_or_condition": "Applies during implementation-preparation after source evidence and any Specialist result are reconciled into the Brief.",
+      "decision_owner": "engineering-change-analysis",
+      "mitigation": "Keep one Brief authority and route legitimate decision changes through explicit Brief update and redispatch.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:f053e3ef97f09a359d19822e3dee45278fa3925ee9ca2687144e5416e5bb7665",
+      "axis": "reference",
+      "candidate_id": "f053e3ef97f09a359d19822e3dee45278fa3925ee9ca2687144e5416e5bb7665",
+      "disposition": "valid-contextual-rule",
+      "rationale": "An Implementation Handoff records execution evidence and must not overwrite the accepted decisions that authorized the implementation.",
+      "authority_or_condition": "Applies to Implementation Handoffs for work dispatched from a current Engineering Brief First Executable Slice.",
+      "decision_owner": "engineering-control-plane",
+      "mitigation": "Keep the handoff evidence-only and return protected-decision conflicts to analysis before further execution.",
+      "review_after": null
+    },
+    {
+      "target_id": "reference:fb9c73a5d655534ac439f6b39a986dd886201a782979bd5e33454e603464945d",
+      "axis": "reference",
+      "candidate_id": "fb9c73a5d655534ac439f6b39a986dd886201a782979bd5e33454e603464945d",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The rule correctly protects Brief-owned acceptance, ownership, placement, contract, rollback, and slice decisions from downstream derived artifacts.",
+      "authority_or_condition": "Applies to all Task DAGs, Task Contracts, Implementation Handoffs, and Review Handoffs derived from the current Brief.",
+      "decision_owner": "engineering-change-analysis",
+      "mitigation": "Maintain the enumerated protected boundaries and use Brief revision for any authorized change.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:1b1ef90112ad11bccd229e552628b754c6091156df8dde46091ba8712e83118e",
+      "axis": "root",
+      "candidate_id": "1b1ef90112ad11bccd229e552628b754c6091156df8dde46091ba8712e83118e",
+      "disposition": "valid-contextual-rule",
+      "rationale": "A review agent cannot change its own assigned Effective Level because that would bypass the analysis and dispatch authority boundary.",
+      "authority_or_condition": "Applies during implementation review when new risk evidence may invalidate the assigned Effective Level.",
+      "decision_owner": "ai-code-review-refactor",
+      "mitigation": "Keep self-upgrade forbidden and return newly discovered L4 or L5 risk through Main for recomputation.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:2ffa565928263dfc54d8b9cc3ba7c046ba56e33d619a09d8d67bbc1c997d90c4",
+      "axis": "root",
+      "candidate_id": "2ffa565928263dfc54d8b9cc3ba7c046ba56e33d619a09d8d67bbc1c997d90c4",
+      "disposition": "valid-contextual-rule",
+      "rationale": "L4 retains one independent final implementation review while adding only risk-triggered gates, Specialists, or design-carried pre-review evidence.",
+      "authority_or_condition": "Applies when the authoritative execution-level contract sets Effective Level L4 for the implementation review.",
+      "decision_owner": "ai-code-review-refactor",
+      "mitigation": "Retain the base review and require every triggered specialist dimension without treating L4 as an automatic reviewer count.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:4baae35f1e600adf9689dcbb9893272895fa2d603c874db42e20e95fe6be8091",
+      "axis": "root",
+      "candidate_id": "4baae35f1e600adf9689dcbb9893272895fa2d603c874db42e20e95fe6be8091",
+      "disposition": "valid-contextual-rule",
+      "rationale": "L3 preserves the full independent base review and adds JIT lenses only when concrete risk triggers make them relevant.",
+      "authority_or_condition": "Applies when the authoritative execution-level contract sets Effective Level L3 for the current implementation review.",
+      "decision_owner": "ai-code-review-refactor",
+      "mitigation": "Keep all base review dimensions mandatory and add rather than substitute any risk-triggered JIT lens.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:6537235c2554b518a32c51038b8b4c1a27e704764e704ee5f9792898fbc9dad6",
+      "axis": "root",
+      "candidate_id": "6537235c2554b518a32c51038b8b4c1a27e704764e704ee5f9792898fbc9dad6",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Resolving the task boundary, latest diff, every changed file, and reachable impact is the necessary first action for any bounded code review.",
+      "authority_or_condition": "Applies whenever the code-review capability is selected for a task-local implementation or repair review.",
+      "decision_owner": "code-review",
+      "mitigation": "Keep this front-loaded root rule and stop approval when any part of the review surface remains unresolved.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:72d7cb6490fd2ebbd7cf148189f55395aaf18f1f6f061d017732f4756c2ab063",
+      "axis": "root",
+      "candidate_id": "72d7cb6490fd2ebbd7cf148189f55395aaf18f1f6f061d017732f4756c2ab063",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The control plane must not assume unavailable host capabilities because unsupported diff or validation modes require fail-closed routing.",
+      "authority_or_condition": "Applies when host diff, validation, or utility no-edit capability is absent or unrecognized during Direct Task routing.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Keep capability inference prohibited and use the named utility no-edit capsule or unsupported-mode blocker.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:a32b8e6d164969b8d3b426807f96166f939d69fde77d214944f9afcc8e2cb7c3",
+      "axis": "root",
+      "candidate_id": "a32b8e6d164969b8d3b426807f96166f939d69fde77d214944f9afcc8e2cb7c3",
+      "disposition": "false-positive",
+      "rationale": "The flagged span is compact control-plane policy for authority, scheduling, review evidence, and closure states, not tutorial or explanatory teaching content.",
+      "authority_or_condition": "The detector applies only when root text teaches through examples or extended explanation rather than defining executable control contracts.",
+      "decision_owner": "main-control-agent",
+      "mitigation": "Retain the operational clauses and treat syntax markers, state values, and routing arrows as contract notation rather than tutorial signals.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:bd9b1e2b2f73cc0d587c3e74646064e92363819e3c3ec47121381567bf704b72",
+      "axis": "root",
+      "candidate_id": "bd9b1e2b2f73cc0d587c3e74646064e92363819e3c3ec47121381567bf704b72",
+      "disposition": "valid-contextual-rule",
+      "rationale": "Focused proof must exercise the changed failure mechanism and consequential negative outcomes; broad green status cannot close an untested risk.",
+      "authority_or_condition": "Applies when code-review evaluates validation evidence for changed behavior and reachable failure outcomes.",
+      "decision_owner": "code-review",
+      "mitigation": "Keep the rule in the root review sequence and state proof limits whenever focused mechanism evidence is unavailable.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:d0b057ff13c69fe232f1369b977337c5a107005cd7900488e5d1a894fbd962ec",
+      "axis": "root",
+      "candidate_id": "d0b057ff13c69fe232f1369b977337c5a107005cd7900488e5d1a894fbd962ec",
+      "disposition": "valid-contextual-rule",
+      "rationale": "L1 and L2 still receive one independent final review covering the complete base matrix, so lower level does not remove Core dimensions.",
+      "authority_or_condition": "Applies when the authoritative execution-level contract sets Effective Level L1 or L2 for implementation review.",
+      "decision_owner": "ai-code-review-refactor",
+      "mitigation": "Retain the complete base matrix and do not treat the level as permission to omit any Core review dimension.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:e2735506386b93486240cef7622a3374cf3839fb3bfc1907c7947db6a6647151",
+      "axis": "root",
+      "candidate_id": "e2735506386b93486240cef7622a3374cf3839fb3bfc1907c7947db6a6647151",
+      "disposition": "valid-contextual-rule",
+      "rationale": "A regression guard proves recurrence prevention only when it reproduces the causal trigger instead of merely testing adjacent correct behavior.",
+      "authority_or_condition": "Applies only after an accepted defect, incident, review finding, or equivalent recurrence mechanism is known.",
+      "decision_owner": "regression-testing",
+      "mitigation": "Keep the causal-trigger rule front-loaded and require explicit proof limits when safe reproduction is infeasible.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:e6c088e78ad47b278277d5e80d01d32887185418676eb71b3854ec5a99c9737d",
+      "axis": "root",
+      "candidate_id": "e6c088e78ad47b278277d5e80d01d32887185418676eb71b3854ec5a99c9737d",
+      "disposition": "valid-contextual-rule",
+      "rationale": "The two-task threshold avoids ceremonial DAGs, while requiring every actual edge to represent a blocking fact preserves graph semantics.",
+      "authority_or_condition": "Applies when an accepted Brief contains at least two real tasks with evidenced dependency, parallel, integration, or release-order value.",
+      "decision_owner": "task-dag-planner",
+      "mitigation": "Keep zero-edge parallel DAGs permissible and reject invented nodes, edges, cycles, or placeholder work.",
+      "review_after": null
+    },
+    {
+      "target_id": "root:f7629f1d8daa1ced84faafa918934392026f78177a2c917e23511f828c01deee",
+      "axis": "root",
+      "candidate_id": "f7629f1d8daa1ced84faafa918934392026f78177a2c917e23511f828c01deee",
+      "disposition": "valid-contextual-rule",
+      "rationale": "A risk-specific Specialist covers only its named lens, so it cannot substitute for the independent final review of the whole changed scope.",
+      "authority_or_condition": "Applies whenever implementation review delegates a concrete risk dimension to a Specialist Skill.",
+      "decision_owner": "ai-code-review-refactor",
+      "mitigation": "Keep the review owner responsible for merging Specialist findings into the complete final implementation review.",
+      "review_after": null
+    }
+  ],
+  "limitations": [
+    "This ballot reviews only the 23 packet-bound semantic candidates and their current source context; it does not replace readability, professional-completeness, release, real-host, or production evidence."
+  ]
+}

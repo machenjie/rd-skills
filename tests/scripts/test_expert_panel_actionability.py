@@ -181,7 +181,7 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
             "root-body-document-context-v1",
             packet["panel_contract"]["content_source_binding_contract"],
         )
-        self.assertEqual(39, len(packet["content_targets"]))
+        self.assertEqual(43, len(packet["content_targets"]))
         advisory_paths = {
             row["path"] for row in packet["readability_targets"]
         }
@@ -207,7 +207,7 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
                 row["text"] for row in context["lines"]
             ])
             missing_advisory += target["path"] not in advisory_paths
-        self.assertEqual(7, missing_advisory)
+        self.assertEqual(8, missing_advisory)
         self.assertLess(
             len(json.dumps(packet, sort_keys=True).encode("utf-8")),
             16 * 1024 * 1024,
@@ -223,9 +223,9 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
         )
         target_ids = [row["target_id"] for row in packet["actionability_targets"]]
         self.assertEqual(sorted(set(target_ids)), target_ids)
-        self.assertEqual(353, len(packet["readability_targets"]))
+        self.assertEqual(357, len(packet["readability_targets"]))
         self.assertEqual(
-            972,
+            978,
             sum(len(row["findings"]) for row in packet["readability_targets"]),
         )
         self.assertEqual(

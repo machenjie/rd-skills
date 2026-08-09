@@ -172,8 +172,105 @@ class TaskContractTemplateTests(unittest.TestCase):
         self.assertTrue(errors, name)
         return errors
 
+    def _mutate_normalized_term(self, name: str, term: str) -> list[str]:
+        path = self.root / name
+        text = path.read_text(encoding="utf-8")
+        pattern = r"\s+".join(re.escape(part) for part in term.split())
+        mutated, count = re.subn(
+            pattern,
+            "REMOVED_ANALYZED_WORK_AUTHORITY_TERM",
+            text,
+            count=1,
+            flags=re.IGNORECASE,
+        )
+        self.assertEqual(1, count, (name, term))
+        path.write_text(mutated, encoding="utf-8")
+        errors = VALIDATOR.validate_contracts(self.root)
+        self.assertTrue(errors, name)
+        return errors
+
     def test_canonical_templates_pass(self) -> None:
         self.assertEqual([], VALIDATOR.validate_contracts(self.root))
+
+    def test_analyzed_work_authority_is_projected_to_each_template(self) -> None:
+        expected = {
+            "engineering-brief-template.md": (
+                "current Engineering Brief is the only operational analysis authority",
+                "First Executable Slice is a complete Task Contract v2",
+                "Specialist results are analysis input only",
+            ),
+            "direct-task-template.md": (
+                "outside the Analyzed Work authority path",
+            ),
+            "task-dag-template.md": (
+                "derived projection of the current Engineering Brief",
+                "must not select or replace the First Executable Slice",
+                "return to analysis",
+            ),
+            "implementation-handoff-template.md": (
+                "derived projection of the current Engineering Brief",
+                "return to analysis",
+            ),
+            "review-handoff-template.md": (
+                "derived projection of the current Engineering Brief",
+                "return to analysis",
+            ),
+        }
+        for name, terms in expected.items():
+            text = (self.root / name).read_text(encoding="utf-8")
+            normalized = " ".join(text.casefold().split())
+            for term in terms:
+                with self.subTest(template=name, term=term):
+                    self.assertIn(" ".join(term.casefold().split()), normalized)
+
+    def test_each_template_authority_projection_has_a_negative_control(self) -> None:
+        for name, terms in VALIDATOR.ANALYZED_WORK_TEMPLATE_TERMS.items():
+            for term in terms:
+                with self.subTest(template=name, term=term):
+                    errors = self._mutate_normalized_term(name, term)
+                    self.assertTrue(
+                        any("analyzed-work authority" in error for error in errors),
+                        errors,
+                    )
+                    self.tearDown()
+                    self.setUp()
+
+    def test_professional_authority_projections_reject_drift(self) -> None:
+        for relative, terms in VALIDATOR.PROFESSIONAL_AUTHORITY_TERMS.items():
+            for term in terms:
+                with self.subTest(path=relative, term=term), tempfile.TemporaryDirectory() as raw:
+                    professional_root = Path(raw) / "professional-skills"
+                    shutil.copytree(
+                        ROOT / "src" / "professional-skills" / "engineering-change-analysis",
+                        professional_root / "engineering-change-analysis",
+                    )
+                    shutil.copytree(
+                        ROOT / "src" / "professional-skills" / "task-dag-planner",
+                        professional_root / "task-dag-planner",
+                    )
+                    path = professional_root / relative
+                    text = path.read_text(encoding="utf-8")
+                    pattern = r"\s+".join(re.escape(part) for part in term.split())
+                    mutated, count = re.subn(
+                        pattern,
+                        "REMOVED_PROFESSIONAL_AUTHORITY_TERM",
+                        text,
+                        count=1,
+                        flags=re.IGNORECASE,
+                    )
+                    self.assertEqual(1, count, (relative, term))
+                    path.write_text(mutated, encoding="utf-8")
+                    errors: list[str] = []
+                    with mock.patch.object(
+                        VALIDATOR,
+                        "PROFESSIONAL_ROOT",
+                        professional_root,
+                    ):
+                        VALIDATOR._validate_professional_authority_projections(errors)
+                    self.assertTrue(
+                        any("authority term" in error for error in errors),
+                        errors,
+                    )
 
     def test_conditional_test_evidence_projection_is_exact_once(self) -> None:
         contract = CORE_CONTRACTS["visible_evidence_contract"][
@@ -873,6 +970,246 @@ class TaskContractTemplateTests(unittest.TestCase):
 
 
 class CoreContractModelTests(unittest.TestCase):
+    def test_analyzed_work_uses_the_engineering_brief_as_single_authority(self) -> None:
+        contract = CORE_CONTRACTS["task_contract"]["analyzed_work_authority"]
+        self.assertEqual("analyzed-work", contract["applies_to"])
+        self.assertEqual("current-engineering-brief", contract["operational_authority"])
+        self.assertEqual(
+            [
+                "Problem and Desired Behavior",
+                "Acceptance and Non-goals",
+                "Ownership and Invariants",
+                "Placement and Reuse",
+                "Contract / Data / Failure Impact",
+                "Validation Strategy",
+                "Risks and Rollback",
+                "First Executable Slice",
+                "Task Dependencies",
+                "Integration Boundary",
+                "Review Boundary",
+                "Evidence Gaps and Proof Limits",
+            ],
+            contract["authoritative_sections"],
+        )
+        self.assertEqual(
+            {
+                "defined_by": "engineering-brief",
+                "contract": "Task Contract v2",
+                "required_fields_source": (
+                    "task_contract.template_schemas.engineering-brief-template.md."
+                    "labeled_sections.First Executable Slice"
+                ),
+                "dispatch": "verbatim",
+                "main_reinterpretation": "forbidden",
+                "main_generation": "forbidden",
+                "dag_reselection": "forbidden",
+            },
+            contract["first_executable_slice"],
+        )
+        self.assertEqual(
+            "incorporated-into-current-engineering-brief",
+            contract["specialist_policy"]["effective_after"],
+        )
+        self.assertEqual("input-only", contract["specialist_policy"]["authority"])
+        self.assertEqual(
+            "return-to-analysis",
+            contract["dag_planner_policy"]["insufficient_brief"],
+        )
+        self.assertEqual([], validate_core_contracts(CORE_CONTRACTS))
+
+    def test_task_boundary_relations_and_same_pattern_authorization_are_closed(self) -> None:
+        task = CORE_CONTRACTS["task_contract"]
+        boundary = task["task_boundary"]
+        self.assertEqual(["Goal", "Acceptance", "Non-goals"], boundary["fields"])
+        self.assertEqual(
+            "inspection-and-discovery-boundary",
+            boundary["allowed_read_scope"],
+        )
+        self.assertEqual(
+            "permission-ceiling-not-work-obligation",
+            boundary["allowed_write_scope"],
+        )
+        self.assertFalse(boundary["discovery_grants_repair_authority"])
+        self.assertFalse(boundary["repository_clean_required"])
+
+        relations = task["finding_relations"]
+        self.assertEqual(
+            ["current-task", "scope-blocker", "adjacent"],
+            relations["values"],
+        )
+        self.assertEqual(
+            ["relation", "severity", "blocker"],
+            relations["classification_order"],
+        )
+        self.assertEqual("orthogonal", relations["severity_relation"])
+        self.assertEqual(["current-task"], relations["repair_input_relations"])
+        self.assertFalse(
+            relations["rules"]["adjacent"]["high_or_critical_scope_authority"]
+        )
+
+        scan = task["same_pattern_scan"]
+        self.assertFalse(scan["discovery_grants_repair_authority"])
+        self.assertEqual(
+            "current-task-fix",
+            scan["routes"]["affects_current_inside_authorized_scope"],
+        )
+        self.assertEqual(
+            "scope-blocker-return-main",
+            scan["routes"]["affects_current_outside_authorized_scope"],
+        )
+        self.assertEqual(
+            "adjacent-record-do-not-edit",
+            scan["routes"]["does_not_affect_current"],
+        )
+
+    def test_effective_level_review_policy_is_closed_and_task_scoped(self) -> None:
+        review = CORE_CONTRACTS["review_discipline_contract"]
+        policy = review["effective_level_policy"]
+        self.assertEqual("execution_level_contract.effective_level", policy["source"])
+        self.assertFalse(policy["creates_review_level"])
+        self.assertEqual("review-agent", policy["final_review_profile"])
+        self.assertEqual(
+            ["latest actual diff", "every changed file"],
+            policy["final_review_target"],
+        )
+        self.assertEqual(
+            ["L1", "L2", "L3", "L4", "L5"],
+            list(policy["levels"]),
+        )
+        self.assertEqual(1, policy["levels"]["L1"]["final_reviewers"])
+        self.assertEqual(1, policy["levels"]["L2"]["final_reviewers"])
+        self.assertEqual(1, policy["levels"]["L3"]["final_reviewers"])
+        self.assertTrue(policy["levels"]["L3"]["risk_triggered_jit_lenses"])
+        self.assertFalse(policy["levels"]["L4"]["default_preimplementation_review"])
+        self.assertFalse(policy["levels"]["L4"]["default_secondary_reviewer"])
+        self.assertTrue(policy["levels"]["L5"]["independent_preimplementation_review"])
+        self.assertTrue(policy["levels"]["L5"]["exhaustive_final_review"])
+        self.assertFalse(policy["levels"]["L5"]["full_ci_required"])
+        self.assertFalse(policy["levels"]["L5"]["cross_model_review_required"])
+
+        matrix = review["professional_risk_matrix"]
+        self.assertEqual(
+            [
+                "Current Task Boundary",
+                "latest actual diff",
+                "current change reachable impact",
+            ],
+            matrix["evaluation_scope"],
+        )
+        self.assertFalse(matrix["repository_health_audit"])
+        self.assertFalse(matrix["context_read_grants_repair_authority"])
+        self.assertEqual(
+            "task_contract.finding_relations",
+            review["finding_policy_source"],
+        )
+
+    def test_external_read_is_analysis_only_jit_untrusted_and_fail_safe(self) -> None:
+        contract = CORE_CONTRACTS["external_read_contract"]
+        self.assertEqual("analysis-agent", contract["exclusive_role"])
+        self.assertEqual("external-read", contract["tool"])
+        self.assertEqual(
+            [
+                "native-enforced",
+                "sandbox-enforced",
+                "prompt-enforced",
+                "unsupported",
+            ],
+            contract["capability_modes"],
+        )
+        self.assertFalse(contract["general_network_counts_as_supported"])
+        self.assertEqual(
+            ["WebSearch", "WebFetch", "ConnectorRead"],
+            contract["ledger_projection"]["command_values"],
+        )
+        self.assertEqual(
+            "visible_evidence_contract",
+            contract["ledger_projection"]["schema_source"],
+        )
+        self.assertEqual(
+            [
+                "external-source",
+                "analysis-agent-judgment",
+                "normalized-claim",
+                "evidence-ledger",
+                "engineering-brief-decision",
+            ],
+            contract["trust_boundary"]["normalization_path"],
+        )
+        self.assertEqual(
+            {
+                "trigger": "critical-fact-missing-can-invalidate-current-slice",
+                "execution_trigger": "unknown-critical-boundary",
+                "edit_status": "blocked",
+                "dispatch_implementation": False,
+            },
+            contract["missing_evidence"]["critical"],
+        )
+        self.assertEqual(
+            "continue-when-existing-evidence-is-sufficient",
+            contract["unsupported_behavior"],
+        )
+        self.assertIn("external-read", CORE_CONTRACTS["roles"]["analysis-agent"]["tools"])
+        self.assertNotIn("external-read", CORE_CONTRACTS["roles"]["task-agent"]["tools"])
+        self.assertNotIn("external-read", CORE_CONTRACTS["roles"]["review-agent"]["tools"])
+
+    def test_authority_scope_review_and_external_read_mutations_fail_closed(self) -> None:
+        mutations: list[tuple[str, dict[str, object]]] = []
+
+        regenerated_slice = copy.deepcopy(CORE_CONTRACTS)
+        regenerated_slice["task_contract"]["analyzed_work_authority"][
+            "first_executable_slice"
+        ]["main_generation"] = "allowed"
+        mutations.append(("main-regenerates-slice", regenerated_slice))
+
+        widened_relation = copy.deepcopy(CORE_CONTRACTS)
+        widened_relation["task_contract"]["finding_relations"]["values"].append(
+            "repository-health"
+        )
+        mutations.append(("finding-relation-widened", widened_relation))
+
+        sibling_repair = copy.deepcopy(CORE_CONTRACTS)
+        sibling_repair["task_contract"]["same_pattern_scan"]["routes"][
+            "does_not_affect_current"
+        ] = "repair"
+        mutations.append(("adjacent-same-pattern-repair", sibling_repair))
+
+        default_l4_prereview = copy.deepcopy(CORE_CONTRACTS)
+        default_l4_prereview["review_discipline_contract"]["effective_level_policy"][
+            "levels"
+        ]["L4"]["default_preimplementation_review"] = True
+        mutations.append(("default-l4-prereview", default_l4_prereview))
+
+        broad_network = copy.deepcopy(CORE_CONTRACTS)
+        broad_network["external_read_contract"]["general_network_counts_as_supported"] = True
+        mutations.append(("general-network-supported", broad_network))
+
+        task_external_read = copy.deepcopy(CORE_CONTRACTS)
+        task_external_read["roles"]["task-agent"]["tools"].append("external-read")
+        mutations.append(("task-agent-external-read", task_external_read))
+
+        for label, mutation in mutations:
+            with self.subTest(label=label):
+                self.assertTrue(validate_core_contracts(mutation))
+
+    def test_new_core_rules_preserve_existing_protocol_counts_and_versions(self) -> None:
+        self.assertEqual(2, CORE_CONTRACTS["task_contract"]["schema_version"])
+        self.assertEqual(
+            ["in_progress", "blocked", "partial", "completed"],
+            CORE_CONTRACTS["completion_state"]["statuses"],
+        )
+        self.assertEqual(
+            ["current", "superseded", "invalid"],
+            CORE_CONTRACTS["visible_evidence_contract"]["states"],
+        )
+        self.assertEqual(4, len(CORE_CONTRACTS["roles"]))
+        self.assertEqual(
+            ["L1", "L2", "L3", "L4", "L5"],
+            [
+                level["id"]
+                for level in CORE_CONTRACTS["execution_level_contract"]["levels"]
+            ],
+        )
+
     def _route_decision_fixture(
         self,
     ) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:

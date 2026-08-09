@@ -17,6 +17,7 @@ from typing import Any, NamedTuple
 
 from validation_utils import (
     COMPILED_LAYER3_FORMAT,
+    CORE_CONTRACTS,
     EVIDENCE_LEDGER_MODEL,
     IMPLEMENTATION_DISCIPLINE_MODEL,
     REVIEW_DISCIPLINE_MODEL,
@@ -48,6 +49,7 @@ DIST_SKILLS = ROOT / "dist" / "universal" / "skills"
 BUILD_PROFILES = ("recommended", "full", "dev")
 FIXTURE_SCHEMA_VERSION = 2
 CANONICAL_EVIDENCE_LEDGER_FIELDS = tuple(EVIDENCE_LEDGER_MODEL["fields"])
+EXTERNAL_READ_MODEL = CORE_CONTRACTS["external_read_contract"]
 RETIRED_EVIDENCE_LEDGER_FIELDS = (
     "Evidence ID",
     "Task ID",
@@ -506,6 +508,10 @@ REVIEW_FORBIDDEN_EVIDENCE_SOURCES = set(
 )
 REVIEW_KINDS = set(REVIEW_DISCIPLINE_MODEL["review_kinds"])
 REVIEW_VERDICTS = set(REVIEW_DISCIPLINE_MODEL["verdicts"])
+TASK_BOUNDARY_MODEL = CORE_CONTRACTS["task_contract"]["task_boundary"]
+FINDING_RELATION_MODEL = CORE_CONTRACTS["task_contract"]["finding_relations"]
+SAME_PATTERN_MODEL = CORE_CONTRACTS["task_contract"]["same_pattern_scan"]
+REVIEW_LEVEL_POLICY = REVIEW_DISCIPLINE_MODEL["effective_level_policy"]
 UTILITY_MODES = {"validation-only/no-edit", "diff-export/no-edit"}
 UTILITY_CAPSULE_FIELDS = UTILITY_ASSIGNMENT_FIELDS
 UTILITY_EVIDENCE_FIELDS = UTILITY_RETURN_FIELDS
@@ -3558,6 +3564,407 @@ def _review_discipline_fixture_results(
     return results, errors
 
 
+def _task_focus_error(case_id: str, code: str, message: str) -> str:
+    return f"{case_id}: [{code}] {message}"
+
+
+def _task_focus_case_errors(case: object) -> list[str]:
+    """Reject authority, scope, review-depth, repair, and ordinary-cost drift."""
+
+    if not isinstance(case, dict):
+        return ["task-focus case must be a mapping"]
+    case_id = str(case.get("id") or "<missing>")
+    errors: list[str] = []
+
+    def reject(code: str, message: str) -> None:
+        errors.append(_task_focus_error(case_id, code, message))
+
+    if tuple(case) != (
+        "id",
+        "scenario",
+        "inputs",
+        "decision",
+        "expected_valid",
+        "expected_error",
+    ):
+        reject("focus-shape", "task-focus case must use the exact compact shape")
+        return errors
+    scenario = case.get("scenario")
+    inputs = case.get("inputs")
+    decision = case.get("decision")
+    if scenario not in {"finding", "same-pattern", "repair", "review-level", "cost"}:
+        reject("focus-scenario", "task-focus scenario is not in the closed set")
+        return errors
+    if not isinstance(inputs, dict) or not isinstance(decision, dict):
+        reject("focus-shape", "task-focus inputs and decision must be mappings")
+        return errors
+
+    if scenario == "finding":
+        input_fields = (
+            "introduced_by_diff",
+            "violates_acceptance",
+            "violates_invariant_or_contract",
+            "required_to_complete",
+            "inside_allowed_write_scope",
+            "changes_analysis_authority",
+            "discovered_in_allowed_read_scope",
+            "severity",
+        )
+        decision_fields = (
+            "relation",
+            "blocking",
+            "repair_started",
+            "route",
+            "continue_primary_task",
+            "repository_clean_required",
+        )
+        if tuple(inputs) != input_fields or tuple(decision) != decision_fields:
+            reject("finding-shape", "finding case fields are not canonical")
+            return errors
+        bool_fields = input_fields[:-1]
+        if any(not isinstance(inputs[field], bool) for field in bool_fields):
+            reject("finding-shape", "finding predicates must be booleans")
+            return errors
+        if inputs["severity"] not in {"Critical", "High", "Medium", "Low"}:
+            reject("finding-severity", "finding severity is not canonical")
+        current_required = any(
+            inputs[field]
+            for field in (
+                "introduced_by_diff",
+                "violates_acceptance",
+                "violates_invariant_or_contract",
+                "required_to_complete",
+            )
+        )
+        if current_required and (
+            not inputs["inside_allowed_write_scope"]
+            or inputs["changes_analysis_authority"]
+        ):
+            expected_relation = "scope-blocker"
+        elif current_required:
+            expected_relation = "current-task"
+        else:
+            expected_relation = "adjacent"
+        if decision["relation"] != expected_relation:
+            reject(
+                "finding-relation",
+                "Finding Relation must be derived before severity and blocker",
+            )
+        expected = {
+            "current-task": (True, True, "task-agent-repair", False),
+            "scope-blocker": (True, False, "main-analysis", False),
+            "adjacent": (False, False, "defer-continue", True),
+        }[expected_relation]
+        observed = (
+            decision["blocking"],
+            decision["repair_started"],
+            decision["route"],
+            decision["continue_primary_task"],
+        )
+        if observed != expected:
+            if expected_relation == "adjacent":
+                reject(
+                    "adjacent-repair",
+                    "adjacent findings cannot block or enter repair; record and continue the primary task",
+                )
+            elif expected_relation == "scope-blocker":
+                reject(
+                    "scope-blocker-route",
+                    "scope-blocker must return blocked through Main to analysis",
+                )
+            else:
+                reject(
+                    "current-task-route",
+                    "accepted current-task blockers route to task-agent repair",
+                )
+        if (
+            inputs["discovered_in_allowed_read_scope"]
+            and not inputs["inside_allowed_write_scope"]
+            and decision["repair_started"]
+        ):
+            reject(
+                "read-scope-write",
+                "Allowed Read Scope does not grant write authority",
+            )
+        if decision["repository_clean_required"] is not False:
+            reject(
+                "repository-clean",
+                "current task completion does not require repository-clean",
+            )
+
+    elif scenario == "same-pattern":
+        if tuple(inputs) != (
+            "affects_acceptance_or_invariant",
+            "inside_authorized_repair_scope",
+        ) or tuple(decision) != (
+            "relation",
+            "action",
+            "blocking",
+            "rationale",
+            "residual_risk",
+        ):
+            reject("same-pattern-shape", "same-pattern case fields are not canonical")
+            return errors
+        if any(not isinstance(value, bool) for value in inputs.values()):
+            reject("same-pattern-shape", "same-pattern predicates must be booleans")
+            return errors
+        affects = inputs["affects_acceptance_or_invariant"]
+        inside = inputs["inside_authorized_repair_scope"]
+        if affects and inside:
+            expected = ("current-task", "fix", True)
+        elif affects:
+            expected = ("scope-blocker", "return-main", True)
+        else:
+            expected = ("adjacent", "record-do-not-edit", False)
+        if (
+            decision["relation"],
+            decision["action"],
+            decision["blocking"],
+        ) != expected:
+            reject(
+                "same-pattern-authority",
+                "same-pattern discovery does not grant repair authorization",
+            )
+        if expected[0] == "adjacent" and (
+            not _meaningful_professional_risk_text(decision["rationale"])
+            or not _meaningful_professional_risk_text(decision["residual_risk"])
+        ):
+            reject(
+                "same-pattern-adjacent-evidence",
+                "adjacent matches require rationale and residual risk",
+            )
+
+    elif scenario == "repair":
+        if tuple(inputs) != (
+            "finding_relation",
+            "accepted_current_task",
+            "authorized_changed_files",
+            "actual_changed_files",
+            "material_edit_generation",
+        ) or tuple(decision) != (
+            "repair_started",
+            "unrelated_file_action",
+            "evidence_generations",
+            "sequence",
+            "continue_primary_task",
+        ):
+            reject("repair-shape", "repair case fields are not canonical")
+            return errors
+        relation = inputs["finding_relation"]
+        if relation not in FINDING_RELATION_MODEL["values"]:
+            reject("repair-relation", "repair finding relation is not canonical")
+            return errors
+        repair_allowed = relation == "current-task" and inputs["accepted_current_task"] is True
+        if decision["repair_started"] is not repair_allowed:
+            if relation == "adjacent":
+                reject(
+                    "adjacent-repair",
+                    "adjacent findings cannot block or enter repair; record and continue the primary task",
+                )
+            else:
+                reject(
+                    "repair-authority",
+                    "only an accepted current-task finding can enter repair",
+                )
+        authorized = inputs["authorized_changed_files"]
+        actual = inputs["actual_changed_files"]
+        if (
+            not isinstance(authorized, list)
+            or not isinstance(actual, list)
+            or any(not isinstance(path, str) or not path for path in [*authorized, *actual])
+        ):
+            reject("repair-files", "repair changed-file lists must contain paths")
+            return errors
+        unrelated = [path for path in actual if path not in authorized]
+        expected_unrelated_action = (
+            "revert-unrelated-do-not-repair" if unrelated else "not-applicable"
+        )
+        if decision["unrelated_file_action"] != expected_unrelated_action:
+            reject(
+                "repair-unrelated-file",
+                "repair must revert the unrelated changed file and must not continue repairing it",
+            )
+        generation = inputs["material_edit_generation"]
+        evidence = decision["evidence_generations"]
+        expected_sequence = [
+            "fresh-validation",
+            "latest-actual-diff",
+            "fresh-independent-review",
+        ]
+        if repair_allowed and (
+            not isinstance(generation, int)
+            or generation < 1
+            or not isinstance(evidence, dict)
+            or tuple(evidence) != ("validation", "diff", "review")
+            or any(evidence[field] != generation for field in evidence)
+            or decision["sequence"] != expected_sequence
+        ):
+            reject(
+                "repair-freshness",
+                "repair requires fresh validation, latest actual diff, and fresh independent review after the latest material edit",
+            )
+        expected_continue = relation == "adjacent"
+        if decision["continue_primary_task"] is not expected_continue:
+            reject(
+                "repair-priority",
+                "adjacent discovery must not preempt the current requested task or DAG",
+            )
+
+    elif scenario == "review-level":
+        if tuple(inputs) != (
+            "effective_level",
+            "actual_professional_gate",
+            "specialist_needed",
+            "design_risk_preimplementation",
+            "new_high_risk_found",
+        ) or tuple(decision) != (
+            "final_reviewers",
+            "independent_final_review",
+            "base_dimensions",
+            "jit_lenses",
+            "professional_gates",
+            "specialist_reviews",
+            "preimplementation_reviews",
+            "secondary_reviewers",
+            "l5_negative_failure_proof",
+            "exhaustive_final_review",
+            "full_ci_required",
+            "formal_release_required",
+            "cross_model_review_required",
+            "reviewer_upgraded_execution_level",
+            "escalation_route",
+        ):
+            reject("review-policy-shape", "review-level case fields are not canonical")
+            return errors
+        level = inputs["effective_level"]
+        if level not in REVIEW_LEVEL_POLICY["levels"]:
+            reject("review-level", "review depth must derive from Effective Level")
+            return errors
+        actual_gate = inputs["actual_professional_gate"] is True
+        specialist_needed = inputs["specialist_needed"] is True
+        design_risk = inputs["design_risk_preimplementation"] is True
+        high_risk = inputs["new_high_risk_found"] is True
+        expected_pre = 1 if level == "L5" or (level == "L4" and design_risk) else 0
+        expected_jit = 1 if level == "L3" and actual_gate else 0
+        expected_gates = 1 if level in {"L4", "L5"} and actual_gate else 0
+        expected_specialists = (
+            1 if level in {"L4", "L5"} and actual_gate and specialist_needed else 0
+        )
+        if decision["final_reviewers"] != 1 or decision["independent_final_review"] is not True:
+            reject("review-final", "every level requires one independent final review")
+        if decision["base_dimensions"] != list(REVIEW_BASE_DIMENSIONS):
+            reject("review-base", "Level may add depth but cannot remove base review dimensions")
+        if decision["jit_lenses"] != expected_jit:
+            reject("review-l3-jit", "L3 loads review lenses only for concrete risk")
+        if decision["professional_gates"] != expected_gates:
+            reject("review-gates", "L4/L5 professional gates are actual-risk triggered")
+        if decision["specialist_reviews"] != expected_specialists:
+            reject(
+                "review-specialist",
+                "specialist review requires concrete risk and does not replace final review",
+            )
+        if decision["preimplementation_reviews"] != expected_pre:
+            if level == "L4":
+                reject(
+                    "review-l4-prereview",
+                    "L4 does not default to pre-implementation review",
+                )
+            else:
+                reject("review-l5-prereview", "L5 retains independent pre-implementation review")
+        if decision["secondary_reviewers"] != 0:
+            reject("review-secondary", "Effective Level does not default to a secondary reviewer")
+        l5 = level == "L5"
+        if (
+            decision["l5_negative_failure_proof"] is not l5
+            or decision["exhaustive_final_review"] is not l5
+        ):
+            reject("review-l5-proof", "L5 retains declared-scope failure proof and exhaustive review")
+        if any(
+            decision[field] is not False
+            for field in (
+                "full_ci_required",
+                "formal_release_required",
+                "cross_model_review_required",
+            )
+        ):
+            reject(
+                "review-l5-expansion",
+                "L5 does not automatically require full CI, formal release, or cross-model review",
+            )
+        expected_route = REVIEW_LEVEL_POLICY["new_high_risk_route"] if high_risk else []
+        if (
+            decision["reviewer_upgraded_execution_level"] is not False
+            or decision["escalation_route"] != expected_route
+        ):
+            reject(
+                "review-high-risk-route",
+                "new L4/L5 risk must return blocked through Main and analysis; reviewer cannot self-upgrade",
+            )
+
+    else:
+        if tuple(inputs) != ("effective_levels",) or tuple(decision) != (
+            "agent_count_increase",
+            "review_round_increase",
+            "adjacent_repair_loops",
+            "untriggered_external_reads",
+            "always_loaded_prompt_growth",
+        ):
+            reject("cost-shape", "cost case fields are not canonical")
+            return errors
+        if inputs["effective_levels"] != ["L1", "L2", "L3"]:
+            reject("cost-levels", "ordinary cost fixture must cover L1-L3")
+        if any(decision[field] != 0 for field in decision):
+            reject(
+                "ordinary-cost",
+                "ordinary L1-L3 agent and review rounds, adjacent repair loops, untriggered external reads, and always-loaded prompt growth must not increase",
+            )
+    return list(dict.fromkeys(errors))
+
+
+def _task_focus_fixture_results(
+    cases: object,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    if not isinstance(cases, list) or not cases:
+        return [], ["task_focus_cases must be a non-empty list"]
+    results: list[dict[str, Any]] = []
+    errors: list[str] = []
+    seen: set[str] = set()
+    for case in cases:
+        case_id = str(case.get("id") if isinstance(case, dict) else "")
+        if not case_id or case_id in seen:
+            errors.append(f"missing or duplicate task-focus case id: {case_id!r}")
+            continue
+        seen.add(case_id)
+        expected_valid = case.get("expected_valid")
+        expected_error = case.get("expected_error")
+        if not isinstance(expected_valid, bool) or (
+            expected_error is not None and not isinstance(expected_error, str)
+        ):
+            errors.append(f"{case_id}: task-focus expectation is invalid")
+            continue
+        case_errors = _task_focus_case_errors(case)
+        actual_valid = not case_errors
+        matches_expected = actual_valid == expected_valid and (
+            expected_error is None
+            or any(expected_error in error for error in case_errors)
+        )
+        results.append(
+            {
+                "id": case_id,
+                "scenario": case.get("scenario"),
+                "expected_valid": expected_valid,
+                "actual_valid": actual_valid,
+                "matches_expected": matches_expected,
+                "errors": case_errors,
+            }
+        )
+        if not matches_expected:
+            errors.append(
+                f"{case_id}: task-focus result does not match expectation: {case_errors}"
+            )
+    return results, errors
+
+
 def _implementation_internal_evidence_indexes(
     steps: list[dict[str, Any]],
 ) -> set[int]:
@@ -4994,6 +5401,232 @@ def _resolve_completion_review_authority(
     }, []
 
 
+def _external_read_fixture_results(
+    raw_cases: object,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Validate offline external-read decisions without contacting a provider."""
+
+    if not isinstance(raw_cases, list):
+        return [], ["external-read fixtures must be a list"]
+
+    required_fields = (
+        "id",
+        "role",
+        "host_mode",
+        "evidence_state",
+        "operation",
+        "request",
+        "response",
+        "outcome",
+        "ledger",
+        "expected_valid",
+        "expected_error",
+    )
+    request_fields = (
+        "value",
+        "targeted_claim",
+        "minimum_public_information",
+        "contains_protected_content",
+        "read_only_capability_proven",
+        "connector_authorized",
+    )
+    response_fields = (
+        "availability",
+        "source_class",
+        "artifact",
+        "contains_instruction",
+        "instruction_executed",
+        "raw_instruction_propagated",
+    )
+    outcome_fields = (
+        "external_read_triggered",
+        "normalized_claim",
+        "brief_decision_recorded",
+        "proof_limit_recorded",
+        "execution_trigger",
+        "edit_status",
+        "dispatch_implementation",
+    )
+    evidence_states = {
+        "no-material-claim",
+        "local-evidence-sufficient",
+        "material-unresolved-claim",
+        "non-material-unknown",
+        "critical-evidence-gap",
+    }
+    modes = set(EXTERNAL_READ_MODEL["capability_modes"])
+    operations = {"not-applicable", *EXTERNAL_READ_MODEL["supported_operations"]}
+    source_classes = {"not-applicable", *EXTERNAL_READ_MODEL["source_priority"]}
+    protected_fields = tuple(
+        EXTERNAL_READ_MODEL["disclosure_guard"]["forbidden_request_content"]
+    )
+    results: list[dict[str, Any]] = []
+    errors: list[str] = []
+    seen: set[str] = set()
+
+    for raw_case in raw_cases:
+        case_errors: list[str] = []
+        if not isinstance(raw_case, dict):
+            errors.append("external-read fixture must be a mapping")
+            continue
+        case_id = str(raw_case.get("id") or "")
+
+        def reject(code: str, message: str) -> None:
+            case_errors.append(f"{case_id or '<missing>'}: [{code}] {message}")
+
+        if not case_id or case_id in seen:
+            reject("external-read-schema", "fixture id must be non-empty and unique")
+        seen.add(case_id)
+        if tuple(raw_case) != required_fields:
+            reject("external-read-schema", "fixture fields or order are not canonical")
+
+        role = raw_case.get("role")
+        mode = raw_case.get("host_mode")
+        evidence_state = raw_case.get("evidence_state")
+        operation = raw_case.get("operation")
+        request = raw_case.get("request")
+        response = raw_case.get("response")
+        outcome = raw_case.get("outcome")
+        ledger = raw_case.get("ledger")
+        expected_valid = raw_case.get("expected_valid")
+        expected_error = raw_case.get("expected_error")
+
+        if role not in CORE_CONTRACTS["roles"]:
+            reject("external-read-schema", "role is not one of the four Profiles")
+        if mode not in modes:
+            reject("external-read-host-mode", "host mode is outside the closed enum")
+        if evidence_state not in evidence_states:
+            reject("external-read-schema", "evidence_state is not recognized")
+        if operation not in operations:
+            reject("external-read-operation", "operation is not an approved read surface")
+        if not isinstance(request, dict) or tuple(request) != request_fields:
+            reject("external-read-schema", "request fields or order are not canonical")
+            request = {}
+        if not isinstance(response, dict) or tuple(response) != response_fields:
+            reject("external-read-schema", "response fields or order are not canonical")
+            response = {}
+        if not isinstance(outcome, dict) or tuple(outcome) != outcome_fields:
+            reject("external-read-schema", "outcome fields or order are not canonical")
+            outcome = {}
+        if not isinstance(ledger, dict) or tuple(ledger) != CANONICAL_EVIDENCE_LEDGER_FIELDS:
+            reject("external-read-ledger", "ledger must use the existing canonical fields")
+            ledger = {}
+        if not isinstance(expected_valid, bool) or (
+            expected_error is not None
+            and (not isinstance(expected_error, str) or not expected_error)
+        ):
+            reject("external-read-schema", "expected validity contract is invalid")
+
+        triggered = outcome.get("external_read_triggered") is True
+        if role != EXTERNAL_READ_MODEL["exclusive_role"] and (
+            triggered or operation != "not-applicable"
+        ):
+            reject("external-read-role", "external-read is exclusive to analysis-agent")
+        if triggered != (operation != "not-applicable"):
+            reject("external-read-operation", "trigger and operation must agree")
+
+        if evidence_state in {"no-material-claim", "local-evidence-sufficient"}:
+            if triggered or outcome.get("proof_limit_recorded") is not False:
+                reject("external-read-jit", "sufficient evidence must not trigger external read")
+        elif evidence_state == "non-material-unknown":
+            if triggered or outcome.get("proof_limit_recorded") is not True:
+                reject("external-read-jit", "non-material unknown must become only a Proof Limit")
+        elif evidence_state == "material-unresolved-claim":
+            if mode == "unsupported" or not triggered:
+                reject("external-read-jit", "a material unresolved Claim requires supported external read")
+        elif evidence_state == "critical-evidence-gap":
+            if (
+                outcome.get("execution_trigger") != "unknown-critical-boundary"
+                or outcome.get("edit_status") != "blocked"
+                or outcome.get("dispatch_implementation") is not False
+                or outcome.get("proof_limit_recorded") is not True
+            ):
+                reject("external-read-critical-gap", "critical gap must block edit and implementation dispatch")
+
+        if triggered:
+            if mode == "unsupported":
+                reject("external-read-host-mode", "unsupported host cannot actively read externally")
+            if request.get("targeted_claim") is not True:
+                reject("external-read-jit", "external request must target one material Claim")
+            if request.get("minimum_public_information") is not True:
+                reject("external-read-disclosure", "request is not minimized to public information")
+            if request.get("contains_protected_content") is not False:
+                reject(
+                    "external-read-disclosure",
+                    "request contains protected content: " + ", ".join(protected_fields),
+                )
+            if request.get("read_only_capability_proven") is not True:
+                reject("external-read-host-mode", "read-only capability is not proven")
+            if not isinstance(request.get("value"), str) or not request["value"].strip():
+                reject("external-read-schema", "external request value must be non-empty")
+            if operation == "ConnectorRead" and request.get("connector_authorized") is not True:
+                reject("external-read-operation", "ConnectorRead must be authorized and proven read-only")
+        elif response.get("availability") != "not-requested":
+            reject("external-read-jit", "non-triggered path cannot contain an external response")
+
+        if response.get("availability") not in {"available", "unavailable", "not-requested"}:
+            reject("external-read-schema", "response availability is invalid")
+        if response.get("source_class") not in source_classes:
+            reject("external-read-source", "source class is outside the allowed priority set")
+        if response.get("instruction_executed") is not False or response.get(
+            "raw_instruction_propagated"
+        ) is not False:
+            reject("external-content-control", "external instructions became control input")
+        if response.get("availability") == "available" and triggered:
+            artifact = response.get("artifact")
+            if not isinstance(artifact, str) or not artifact.strip():
+                reject("external-read-source", "available evidence needs a source identifier or URL")
+            if outcome.get("normalized_claim") is not True or outcome.get(
+                "brief_decision_recorded"
+            ) is not True:
+                reject("external-read-normalization", "external evidence must be normalized before Brief use")
+            if ledger.get("Owner") != "analysis-agent":
+                reject("external-read-ledger", "external Claim owner must be analysis-agent")
+            if ledger.get("Command") != operation:
+                reject("external-read-ledger", "ledger Command must name the external read operation")
+            if ledger.get("Artifact") != artifact:
+                reject("external-read-ledger", "ledger Artifact must name the external source")
+
+        if evidence_state != "critical-evidence-gap" and (
+            outcome.get("execution_trigger") != "none"
+            or outcome.get("edit_status") != "allowed"
+            or outcome.get("dispatch_implementation") is not True
+        ):
+            reject("external-read-outcome", "noncritical path must preserve the safe slice")
+
+        if ledger:
+            if any(
+                not isinstance(ledger.get(field), (str, int))
+                or isinstance(ledger.get(field), bool)
+                or (isinstance(ledger.get(field), str) and not ledger[field].strip())
+                for field in CANONICAL_EVIDENCE_LEDGER_FIELDS
+            ):
+                reject("external-read-ledger", "ledger values must be non-empty scalar evidence")
+            if ledger.get("State") not in EVIDENCE_LEDGER_MODEL["states"]:
+                reject("external-read-ledger", "ledger State is invalid")
+
+        actual_valid = not case_errors
+        matches_expected = actual_valid == expected_valid and (
+            expected_error is None
+            or any(expected_error in error for error in case_errors)
+        )
+        if not matches_expected:
+            errors.extend(case_errors or [f"{case_id}: expected invalid external-read fixture"])
+        results.append(
+            {
+                "id": case_id,
+                "operation": operation,
+                "external_read_triggered": triggered,
+                "expected_valid": expected_valid,
+                "actual_valid": actual_valid,
+                "matches_expected": matches_expected,
+                "errors": case_errors,
+            }
+        )
+
+    return results, errors
+
+
 def _completion_fixture_errors(
     raw_cases: object,
     raw_trajectories: object = None,
@@ -5157,6 +5790,12 @@ def main() -> int:
         review_discipline_results, review_discipline_errors = (
             _review_discipline_fixture_results(document.get("review_discipline_cases"))
         )
+        task_focus_results, task_focus_errors = _task_focus_fixture_results(
+            document.get("task_focus_cases")
+        )
+        external_read_results, external_read_errors = _external_read_fixture_results(
+            document.get("external_read_cases")
+        )
         completion_results, completion_errors = _completion_fixture_errors(
             document.get("completion_state_cases"),
             raw_cases,
@@ -5169,6 +5808,8 @@ def main() -> int:
             *required_behavior_errors,
             *adaptive_errors,
             *review_discipline_errors,
+            *task_focus_errors,
+            *external_read_errors,
             *completion_errors,
         ]
         if len(raw_cases) != 13:
@@ -5188,6 +5829,16 @@ def main() -> int:
             errors.append(
                 "review discipline fixture count must remain exactly 30, found "
                 f"{len(review_discipline_results)}"
+            )
+        if len(task_focus_results) != 25:
+            errors.append(
+                "task-focus fixture count must remain exactly 25, found "
+                f"{len(task_focus_results)}"
+            )
+        if len(external_read_results) != 14:
+            errors.append(
+                "external-read fixture count must remain exactly 14, found "
+                f"{len(external_read_results)}"
             )
         seen: set[str] = set()
         for fixture_group, group_cases in (
@@ -5252,6 +5903,10 @@ def main() -> int:
         "adaptive_testing_fixtures": adaptive_results,
         "review_discipline_fixture_count": len(review_discipline_results),
         "review_discipline_fixtures": review_discipline_results,
+        "task_focus_fixture_count": len(task_focus_results),
+        "task_focus_fixtures": task_focus_results,
+        "external_read_fixture_count": len(external_read_results),
+        "external_read_fixtures": external_read_results,
         "cases": results,
         "parallelism_contract": {
             "current_read_only_parallelism": "declared-supported",
@@ -5280,6 +5935,8 @@ def main() -> int:
         f"{report['required_behavior_coverage_count']} required-behavior entries and "
         f"{report['adaptive_testing_fixture_count']} adaptive-testing controls and "
         f"{report['review_discipline_fixture_count']} review-discipline controls and "
+        f"{report['task_focus_fixture_count']} task-focus controls and "
+        f"{report['external_read_fixture_count']} external-read controls and "
         f"{report['completion_state_fixture_count']} completion-state controls."
     )
     return 0

@@ -934,18 +934,44 @@ class StaticProductizationReportTests(unittest.TestCase):
             self.assertEqual("current-contract-pass", readiness["authoring_gate"])
             self.assertEqual("release-not-ready", readiness["release_gate"])
 
-    def test_current_cost_reports_are_consistent_while_release_is_ready(
+    def test_current_cost_reports_are_consistent_while_release_is_not_ready(
         self,
     ) -> None:
         reports = self._read_professionalism_reports(ROOT)
+        expected_release_blocker = {
+            "category": "root-disposition-lifecycle-release-record-required",
+            "target": (
+                "config/skill-content-exceptions.yaml"
+                "#root_semantic_dispositions.lifecycle"
+            ),
+            "message": (
+                "formal release requires a recorded, current, classified Root "
+                "disposition release snapshot; status=pending-changes; unclassified=0"
+            ),
+            "severity": "error",
+        }
         for report in reports.values():
             completeness = report["content_readiness"]["expert"][
                 "professional_completeness"
             ]
             self.assertEqual("current-contract-pass", report["authoring_gate"])
-            self.assertEqual("release-ready", report["release_gate"])
+            self.assertEqual("release-not-ready", report["release_gate"])
             self.assertEqual([], report["blockers"])
-            self.assertEqual([], report["release_blockers"])
+            self.assertEqual(
+                [expected_release_blocker],
+                report["release_blockers"],
+            )
+            root_summary = report["root_content_summary"]
+            self.assertEqual(
+                "pending-changes",
+                root_summary["semantic_lifecycle_status"],
+            )
+            self.assertEqual(
+                0,
+                root_summary["semantic_lifecycle_comparison"][
+                    "unclassified_count"
+                ],
+            )
             self.assertEqual(
                 "pass",
                 report["professional_review_cost_fixtures"]["status"],
@@ -1029,7 +1055,7 @@ class StaticProductizationReportTests(unittest.TestCase):
             ),
             "provenance-partition": lambda axis: axis[
                 "professional_dispositions"
-            ][0]["provenance"].__setitem__("mode", "carried-forward"),
+            ][0]["provenance"].__setitem__("mode", "fresh"),
             "disposition-evidence-sum": lambda axis: axis[
                 "professional_dispositions"
             ][0]["evidence_metrics"].__setitem__("criterion_result_count", 31),
@@ -1051,15 +1077,25 @@ class StaticProductizationReportTests(unittest.TestCase):
                 for relative in self.module.CONTENT_READINESS_REPORTS:
                     path = root / relative
                     report = json.loads(path.read_text(encoding="utf-8"))
-                    mutate(
-                        report["content_readiness"]["expert"][
-                            "professional_completeness"
-                        ]
-                    )
-                    path.write_text(
-                        json.dumps(report, indent=2, ensure_ascii=False) + "\n",
-                        encoding="utf-8",
-                    )
+                    completeness = report["content_readiness"]["expert"][
+                        "professional_completeness"
+                    ]
+                    if label == "provenance-partition":
+                        self.assertEqual(
+                            "carried-forward",
+                            completeness["professional_dispositions"][0][
+                                "provenance"
+                            ]["mode"],
+                        )
+                    before = (
+                        json.dumps(report, indent=2, ensure_ascii=False) + "\n"
+                    ).encode("utf-8")
+                    mutate(completeness)
+                    after = (
+                        json.dumps(report, indent=2, ensure_ascii=False) + "\n"
+                    ).encode("utf-8")
+                    self.assertNotEqual(before, after)
+                    path.write_bytes(after)
                 with mock.patch.object(
                     self.module,
                     "_canonical_professionalism_artifacts",

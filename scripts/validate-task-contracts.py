@@ -18,6 +18,7 @@ from validation_utils import (
     extract_section_body,
     fail_many,
     heading_entries,
+    load_yaml_file,
     professional_review_risk_matrix_block,
     public_execution_template_spans,
     validate_core_contracts,
@@ -26,6 +27,8 @@ from validation_utils import (
 
 ROOT = Path(__file__).resolve().parents[1]
 REFERENCE_ROOT = ROOT / "src" / "control-skills" / "engineering-control-plane" / "references"
+PROFESSIONAL_ROOT = ROOT / "src" / "professional-skills"
+PROFESSIONAL_REGISTRY = ROOT / "src" / "registry" / "professional-skills.yaml"
 FORBIDDEN = (
     "runtime id",
     "runtime identity",
@@ -71,32 +74,73 @@ _PUBLIC_EXECUTION_PREAMBLE_PREFIXES = {
         "# Direct Task Contract v2 Direct Task requires explicit behavior, local scope, "
         "owner, observable acceptance, non-production verification, placement, and "
         "rollback; work is low-risk, reversible, and clear of excluded boundaries or "
-        "unresolved material impact. Otherwise route to Analyzed Work. Inspect within "
-        "named owner, test, and consumer boundaries. If ownership or verification needs "
-        "discovery, stop and route to Analyzed Work. Use `not applicable` for a field "
-        "that has no Direct Task value."
+        "unresolved material impact. Otherwise route to Analyzed Work. Direct Task is "
+        "outside the Analyzed Work authority path. It keeps this template's existing "
+        "field authority and does not create or derive authority from an Engineering "
+        "Brief. Inspect within named owner, test, and consumer boundaries. If ownership "
+        "or verification needs discovery, stop and route to Analyzed Work. Use `not "
+        "applicable` for a field that has no Direct Task value."
     ),
     "engineering-brief-template.md": (
-        "# Engineering Brief Return the First Executable Slice when current source "
-        "evidence proves it safe, verifiable, reversible, and independent of the "
-        "remaining unknowns. The slice is a complete Task Contract v2, not an informal "
-        "checklist."
+        "# Engineering Brief For Analyzed Work, the current Engineering Brief is the "
+        "only operational analysis authority. Its authoritative sections are Problem "
+        "and Desired Behavior; Acceptance and Non-goals; Ownership and Invariants; "
+        "Placement and Reuse; Contract / Data / Failure Impact; Validation Strategy; "
+        "Risks and Rollback; First Executable Slice; Task Dependencies; Integration "
+        "Boundary; Review Boundary; and Evidence Gaps and Proof Limits. User requests, "
+        "change sources, source and tests, external evidence, and Specialist results "
+        "are analysis input only. Write source-proven placement directly into the "
+        "Brief. Use a corresponding Specialist for a real structural choice, then "
+        "incorporate its result into the current Brief before it can affect "
+        "implementation. A Specialist never becomes a parallel authority. Task DAGs, "
+        "Task Contracts, Implementation Handoffs, and Review Handoffs are derived "
+        "artifacts and must not redefine Acceptance, Non-goals, Owner, Invariants, "
+        "Placement, contract semantics, Rollback, or the First Executable Slice. The "
+        "First Executable Slice is a complete Task Contract v2, not an informal "
+        "checklist. Main dispatches it verbatim and never regenerates or reinterprets "
+        "it; the DAG planner never reselects it. Return the First Executable Slice "
+        "when current evidence proves it safe, verifiable, reversible, and independent "
+        "of remaining unknowns. If the Brief is insufficient, a downstream artifact "
+        "conflicts with it, or a protected decision must change, mark the task blocked "
+        "and return through Main to analysis for an updated Brief and redispatch of "
+        "affected tasks."
     ),
     "task-dag-template.md": (
         "# Task DAG Contract v2 Use only for at least two real tasks with an evidenced "
         "dependency, parallel benefit, cross-owner boundary, integration need, or "
-        "migration/release order."
+        "migration/release order. For Analyzed Work, this DAG is a derived projection "
+        "of the current Engineering Brief. It may split Brief work, project Task "
+        "Contracts, dependencies, parallel safety, critical path, and integration, "
+        "merge, and conflict ownership. It must not select or replace the First "
+        "Executable Slice or modify Acceptance, Non-goals, Owner, Invariants, "
+        "Placement, contract semantics, or Rollback. The First Executable Slice below "
+        "names the Brief-selected Task ID; its matching task node is a verbatim "
+        "projection, and Main dispatches the Brief slice itself. If the Brief is "
+        "insufficient or any projection conflicts with it, mark the DAG blocked and "
+        "return to analysis through Main for an updated Brief and redispatch."
     ),
     "implementation-handoff-template.md": (
         "# Implementation Handoff Return this visible contract after the last material "
         "edit and its targeted validation. It records evidence, not implementer "
-        "reasoning or self-review."
+        "reasoning or self-review. For Analyzed Work, this handoff is a derived "
+        "projection of the current Engineering Brief and its verbatim-dispatched First "
+        "Executable Slice. Result and evidence may report execution but must not "
+        "redefine Acceptance, Non-goals, Owner, Invariants, Placement, contract "
+        "semantics, Rollback, or the Slice. If the assignment conflicts with the "
+        "current Brief or needs one of those decisions to change, mark it blocked and "
+        "return to analysis through Main."
     ),
     "review-handoff-template.md": (
         "# Review Handoff The review-agent receives one bounded target and does not "
         "edit. Implementation review requires observable acceptance, the latest actual "
         "diff, the declared changed-path set, current validation results, and the "
-        "Evidence Requirements."
+        "Evidence Requirements. For Analyzed Work, this handoff is a derived projection "
+        "of the current Engineering Brief. Goal, Acceptance, Non-goals, Allowed Write "
+        "Scope, Owner, and review boundaries are copied from the Brief and dispatched "
+        "Slice; review evidence and findings cannot redefine them or any other "
+        "protected Brief decision. If the handoff conflicts with the current Brief or "
+        "a protected decision must change, mark it blocked and return to analysis "
+        "through Main."
     ),
 }
 _PUBLIC_EXECUTION_PREAMBLE = (
@@ -105,6 +149,76 @@ _PUBLIC_EXECUTION_PREAMBLE = (
     "defined in [execution-level-contract.md](execution-level-contract.md). "
     "Legacy without v1 is completed/read only; active or resumed work, edit, "
     "validation, or review requires reissue."
+)
+
+ANALYZED_WORK_TEMPLATE_TERMS = {
+    "engineering-brief-template.md": (
+        "only operational analysis authority",
+        "Specialist results are analysis input only",
+        "First Executable Slice is a complete Task Contract v2",
+        "Main dispatches it verbatim",
+        "DAG planner never reselects it",
+        "return through Main to analysis",
+    ),
+    "direct-task-template.md": (
+        "outside the Analyzed Work authority path",
+        "does not create or derive authority from an Engineering Brief",
+    ),
+    "task-dag-template.md": (
+        "derived projection of the current Engineering Brief",
+        "must not select or replace the First Executable Slice",
+        "matching task node is a verbatim projection",
+        "return to analysis through Main",
+    ),
+    "implementation-handoff-template.md": (
+        "derived projection of the current Engineering Brief",
+        "must not redefine Acceptance, Non-goals, Owner, Invariants, Placement",
+        "return to analysis through Main",
+    ),
+    "review-handoff-template.md": (
+        "derived projection of the current Engineering Brief",
+        "Goal, Acceptance, Non-goals, Allowed Write Scope",
+        "findings cannot redefine",
+        "return to analysis through Main",
+    ),
+}
+
+PROFESSIONAL_AUTHORITY_TERMS = {
+    "engineering-change-analysis/SKILL.md": (
+        "only operational analysis authority",
+        "complete Task Contract v2 that Main can dispatch verbatim",
+        "Specialist work is input",
+        "derived Task DAG or handoff",
+    ),
+    "engineering-change-analysis/references/implementation-preparation.md": (
+        "only operational analysis authority",
+        "Specialist analysis are inputs",
+        "complete Task Contract v2",
+        "planner does not reselect the First Executable Slice",
+        "updated Brief and redispatch",
+    ),
+    "engineering-change-analysis/examples/example-output.md": (
+        "## First Executable Slice",
+        "Task ID: example-api-validation-001",
+        "## Evidence Gaps and Proof Limits",
+    ),
+    "task-dag-planner/SKILL.md": (
+        "Brief retains sole operational analysis authority",
+        "preserve its First Executable Slice verbatim",
+        "Never select the First Executable Slice",
+        "Never replace the First Executable Slice",
+        "Never reinterpret the First Executable Slice",
+        "derived artifacts, not a parallel analysis authority",
+        "updated Brief and redispatch of affected tasks",
+    ),
+}
+
+FORBIDDEN_PROFESSIONAL_AUTHORITY_TERMS = (
+    "Non-Authoritative Slice Hypothesis",
+    "non-authoritative and non-dispatchable",
+    "independently selects the First Executable Slice",
+    "Select the First Executable Slice independently",
+    "sole final authoritative Task DAG",
 )
 
 
@@ -359,6 +473,133 @@ def _validate_template(
                 )
 
 
+def _normalized(text: str) -> str:
+    return " ".join(text.casefold().split())
+
+
+def _validate_analyzed_work_authority_templates(
+    texts: dict[str, str], errors: list[str]
+) -> None:
+    authority = TASK_CONTRACT_MODEL["analyzed_work_authority"]
+    for name, terms in ANALYZED_WORK_TEMPLATE_TERMS.items():
+        normalized = _normalized(texts.get(name, ""))
+        for term in terms:
+            if _normalized(term) not in normalized:
+                errors.append(
+                    f"{name}: missing analyzed-work authority projection {term!r}"
+                )
+
+    brief = texts.get("engineering-brief-template.md", "")
+    fence_start = brief.find("```markdown")
+    brief_preamble = _normalized(brief if fence_start < 0 else brief[:fence_start])
+    for section in authority["authoritative_sections"]:
+        if _normalized(section) not in brief_preamble:
+            errors.append(
+                "engineering-brief-template.md: authoritative section list is "
+                f"missing {section!r}"
+            )
+    for decision in authority["protected_decisions"]:
+        if _normalized(decision) not in brief_preamble:
+            errors.append(
+                "engineering-brief-template.md: protected decision list is "
+                f"missing {decision!r}"
+            )
+
+    review_text = texts.get("review-handoff-template.md", "")
+    review_surface = _contract_surface(
+        review_text,
+        container="fenced-markdown",
+        context="review-handoff-template.md",
+        errors=errors,
+    )
+    boundary_fields = ["Goal", "Acceptance", "Non-goals", "Allowed Write Scope"]
+    if review_surface:
+        owner_position = review_surface.find("## Owner")
+        positions: list[int] = []
+        for field in boundary_fields:
+            marker = f"{field}:"
+            if review_surface.count(marker) != 1:
+                errors.append(
+                    "review-handoff-template.md: current Brief projection must "
+                    f"contain exactly one {marker!r}"
+                )
+                continue
+            position = review_surface.find(marker)
+            positions.append(position)
+            if owner_position < 0 or position > owner_position:
+                errors.append(
+                    "review-handoff-template.md: current Brief projection fields "
+                    "must precede Owner"
+                )
+        if len(positions) == len(boundary_fields) and positions != sorted(positions):
+            errors.append(
+                "review-handoff-template.md: current Brief projection fields must "
+                "preserve Goal, Acceptance, Non-goals, Allowed Write Scope order"
+            )
+
+
+def _validate_professional_authority_projections(errors: list[str]) -> None:
+    for relative, terms in PROFESSIONAL_AUTHORITY_TERMS.items():
+        path = PROFESSIONAL_ROOT / relative
+        if not path.is_file():
+            errors.append(f"missing analyzed-work projection source {relative}")
+            continue
+        text = path.read_text(encoding="utf-8")
+        normalized = _normalized(text)
+        for term in terms:
+            if _normalized(term) not in normalized:
+                errors.append(
+                    f"{relative}: missing analyzed-work authority term {term!r}"
+                )
+        for term in FORBIDDEN_PROFESSIONAL_AUTHORITY_TERMS:
+            if _normalized(term) in normalized:
+                errors.append(
+                    f"{relative}: contains conflicting analyzed-work authority "
+                    f"term {term!r}"
+                )
+
+    try:
+        registry = load_yaml_file(PROFESSIONAL_REGISTRY)
+    except OSError as exc:
+        errors.append(f"professional-skills.yaml: {exc}")
+        return
+    entries = registry.get("professional_skills") if isinstance(registry, dict) else None
+    if not isinstance(entries, list):
+        errors.append("professional-skills.yaml: professional_skills must be a list")
+        return
+    by_name = {
+        entry.get("name"): entry
+        for entry in entries
+        if isinstance(entry, dict) and isinstance(entry.get("name"), str)
+    }
+    analysis_entry = by_name.get("engineering-change-analysis")
+    planner_entry = by_name.get("task-dag-planner")
+    if not isinstance(analysis_entry, dict) or analysis_entry.get("role_support") != [
+        "analysis-agent"
+    ]:
+        errors.append(
+            "professional-skills.yaml: engineering-change-analysis must remain "
+            "analysis-agent-only"
+        )
+    if not isinstance(planner_entry, dict):
+        errors.append("professional-skills.yaml: missing task-dag-planner")
+    else:
+        required_inputs = planner_entry.get("required_inputs")
+        if not isinstance(required_inputs, list) or "accepted Engineering Brief" not in required_inputs:
+            errors.append(
+                "professional-skills.yaml: task-dag-planner must require the "
+                "accepted Engineering Brief"
+            )
+        output_contract = planner_entry.get("output_contract")
+        if not isinstance(output_contract, list) or any(
+            "authoritative" in str(item).casefold() for item in output_contract
+        ):
+            errors.append(
+                "professional-skills.yaml: task-dag-planner output must remain a "
+                "derived projection, not an authority"
+            )
+
+
 def validate_contracts(reference_root: Path = REFERENCE_ROOT) -> list[str]:
     """Return structural contract errors for one template directory."""
 
@@ -388,6 +629,9 @@ def validate_contracts(reference_root: Path = REFERENCE_ROOT) -> list[str]:
                 f"{name}: contains a self-reported or unbound digest claim"
             )
         _validate_template(name, text, schema, errors)
+
+    _validate_analyzed_work_authority_templates(texts, errors)
+    _validate_professional_authority_projections(errors)
 
     for name in _PUBLIC_EXECUTION_PREAMBLE_TEMPLATES:
         text = texts.get(name)

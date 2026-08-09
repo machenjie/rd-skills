@@ -311,7 +311,7 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
         self.assertEqual("pass", current["status"])
         self.assertEqual(189, sensitivity["case_count"])
         self.assertEqual(56, sensitivity["fresh_target_count"]["max"])
-        self.assertEqual(348284, sensitivity["input_ratio_ppm"]["max"])
+        self.assertEqual(348342, sensitivity["input_ratio_ppm"]["max"])
         self.assertEqual(
             {
                 "maximum_fresh_target_count": 56,

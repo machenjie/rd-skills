@@ -606,6 +606,33 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         self.assertEqual("not_run", outcome_by_id["dependent-pass"]["status"])
         self.assertFalse((root / "reports/dependent-ran").exists())
 
+    def test_professionalism_timeout_ceiling_is_exact_and_bounded(self) -> None:
+        contract = json.loads(
+            (ROOT / "src/control-model/core-contracts.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        producer = next(
+            row
+            for row in contract["principle_acceptance_contract"]["producers"]
+            if row["id"] == "validate-professionalism-regression"
+        )
+        self.assertEqual(1200, producer["timeout_seconds"])
+        self.assertEqual(3600, EVALUATOR._producer_timeout_seconds(producer))
+
+        for field, value in (
+            ("id", "another-producer"),
+            ("argv", ["python3", "scripts/validate-professionalism-regression.py"]),
+            ("timeout_seconds", 1199),
+        ):
+            with self.subTest(field=field):
+                changed = copy.deepcopy(producer)
+                changed[field] = value
+                self.assertEqual(
+                    changed["timeout_seconds"],
+                    EVALUATOR._producer_timeout_seconds(changed),
+                )
+
     def test_timeout_kills_producer_and_propagates_not_run(self) -> None:
         temporary, root = self._root()
         self.addCleanup(temporary.cleanup)
@@ -635,6 +662,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         report = EVALUATOR.evaluate(root, self._contract(producers, outcomes))
         by_id = {item["id"]: item for item in report["producers"]}
         self.assertEqual("timeout", by_id["slow"]["status"])
+        self.assertEqual(1, by_id["slow"]["timeout_seconds"])
         self.assertTrue(by_id["slow"]["timed_out"])
         self.assertEqual(["process-timeout"], by_id["slow"]["failure_reason_codes"])
         self.assertEqual("not_run", by_id["after-timeout"]["status"])

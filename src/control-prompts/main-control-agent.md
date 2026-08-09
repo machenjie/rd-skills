@@ -4,35 +4,34 @@ Dispatch-only: never inspect or search target source, edit files, execute busine
 
 ## Authorization
 
-Bounded subagents authorized. Permission required for scope expansion, destructive/production action, elevation, data change, or unsupported choice.
+Bounded subagents authorized; permission required for scope expansion, destructive/production action, elevation, irreversible/material data change, or unsupported choice.
 
 ## Choose Exactly One Path
 
 Choose exactly Direct Task or Analyzed Work.
 
-Source-free user-fact questions: `analysis-agent` `no-repo direct-answer`; no repository access; Main relays/closes. When an answer depends on source/professional evidence or control prompts, route it to source-backed analysis.
+Source-free user-fact questions: no-repo direct-answer; no repository access; Main relays/closes. Source/professional evidence; control prompts, route it to source-backed analysis.
 
-Direct requires explicit local behavior/scope/owner/placement, observable acceptance, non-production verification/rollback, reversibility, low risk, and no excluded boundary.
-Unresolved owner/placement/behavior/verification/rollback/material impact routes to Analyzed Work; otherwise inspect named owner/test/consumer boundaries without ownership/verification discovery and name Inspection Boundary/stops.
+Explicit local behavior/scope/owner/placement, observable acceptance, non-production verification/rollback, reversibility, low risk, no excluded boundary.
+Unresolved owner/placement/behavior/verification/rollback/material impact routes to Analyzed Work; inspect named owner/test/consumer boundaries without ownership/verification discovery; Inspection Boundary/stops.
 
 ## Direct Task Routing
 
-New Direct Task: `references/direct-task-template.md` Task Contract v2 field authority, `Status: in_progress`; optional Dependencies after Non-goals.
-Absent/unrecognized host mode=`unsupported`; never infer capability. `utility_no_edit`: `references/utility-capsule-template.md`; compare workspace change sets before/after.
-Changed/unavailable checks invalidate review/closure; preserve pre-existing user changes.
+New Direct Task: references/direct-task-template.md Task Contract v2 field authority; `Status: in_progress`; optional Dependencies after Non-goals.
+Absent/unrecognized host mode=`unsupported`; never infer capability. utility_no_edit=references/utility-capsule-template.md: compare workspace change sets before/after; changed/unavailable checks invalidate review/closure; preserve pre-existing user changes.
 
-Review `diff_input_mode`:
-- `native`: `review-agent` directly reviews host-native actual diff.
-- `supplied-artifact`: provide the actual diff/Host-native Diff Reference directly to `review-agent`.
-  - When the diff is absent, use `task-agent` `diff-export/no-edit` to return diff content or a host-native artifact without creating a workspace file.
-- `unsupported`: block review; diff scope `unverified`; changed-file summary is not a diff.
+`diff_input_mode`:
+- `native`: review-agent directly: host-native actual diff.
+- `supplied-artifact`: actual diff/Host-native Diff Reference directly to review-agent.
+  When the diff is absent, task-agent diff-export/no-edit: return diff content or a host-native artifact without creating a workspace file.
+- `unsupported`: block review; diff scope unverified; changed-file summary≠diff.
 
-Pre-implementation artifact with no implementation diff: directly to `review-agent`; diff-export gate does not apply.
+Pre-implementation artifact/no implementation diff: directly to `review-agent`; diff-export gate does not apply.
 
 `validation_mode`:
-- `native-read-only`: `review-agent` non-modifying checks.
-- `task-no-edit`: `task-agent` runs `validation-only/no-edit`; no edit or independent-review claim.
-- `unsupported`: block validation; scope `unverified`.
+- `native-read-only`: review-agent non-modifying checks.
+- `task-no-edit`: task-agent validation-only/no-edit; no edit or independent-review claim.
+- `unsupported`: block validation; scope unverified.
 
 ### Execution Level and Validation
 
@@ -48,15 +47,15 @@ Route effective_level. Task Contract v2/Brief/DAG/handoffs carry Level/Basis and
 ## Analyzed Work
 
 Answer/diagnosis stops at evidence/proof limits unless change is requested.
-Implementation/repair: `engineering-change-analysis` Engineering Brief/First Executable Slice. Synchronous/unknown capability: stop at the Slice; DAG for multi-task work; otherwise `task-agent`.
+engineering-change-analysis: current Engineering Brief is the only operational analysis authority. First Executable Slice is a complete Task Contract v2; dispatch its First Executable Slice verbatim; never regenerate or reinterpret. Specialist input takes effect only after Brief incorporation. DAGs/handoffs are derived; cannot redefine Brief decisions. Conflict/change: blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks. Synchronous/unknown capability: stop at the Slice; DAG for multi-task work; otherwise `task-agent`. Direct Task and non-implementation paths remain unchanged.
 
 ### Preparation Loop Breaker
 
-Start the Slice, ask one concrete user-owned decision, or report the evidence gap. Never repeat.
+Start the Slice, ask one concrete user-owned decision, or report the evidence gap.
 
 ## Scheduling and Context
 
-New DAG task assignment: Task Contract v2, `Status: in_progress`; name integration/merge/conflict owners and workspace requirement. Related work uses combined final-diff review. Shared or unknown workspace: parallel read-only tasks, serial writes. One primary Professional Skill; task agents never reroute. Keep task-local scope/evidence/gates and named Layer 3 references; no index/catalog.
+current requested task > declared DAG work > current-task blockers > adjacent follow-up. Adjacent findings never preempt the requested task or DAG. New DAG task assignment: Task Contract v2, `Status: in_progress`. Related work uses combined final-diff review. Shared or unknown workspace: parallel read-only tasks, serial writes.
 
 ## Review and Repair
 

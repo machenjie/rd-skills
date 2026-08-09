@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import importlib.util
 import io
 import json
@@ -114,6 +115,23 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 result = VALIDATOR.main([])
         return result, output.getvalue()
 
+    def _mutated_enforcement_result(self, mutate) -> tuple[int, str]:
+        enforcement = json.loads(
+            VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
+        )
+        mutate(enforcement)
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "host-enforcement.json"
+            path.write_text(json.dumps(enforcement), encoding="utf-8")
+            output = io.StringIO()
+            with (
+                mock.patch.object(VALIDATOR, "ENFORCEMENT_SOURCE", path),
+                redirect_stdout(output),
+                redirect_stderr(output),
+            ):
+                result = VALIDATOR.main(["--source-only"])
+        return result, output.getvalue()
+
     def test_source_descriptions_pass_readability_gate(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
         errors: list[str] = []
@@ -124,6 +142,24 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 errors,
             )
         self.assertEqual([], errors)
+
+    def test_main_wrapper_budget_and_obligations_are_exact(self) -> None:
+        source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
+        main = next(
+            item for item in source["profiles"]
+            if item["name"] == "main-control-agent"
+        )
+        expected = (
+            "- Prompt authoritative.\n"
+            "- Load engineering-control-plane only.\n"
+            "- Never reload references/main-control-agent.md.\n"
+            "- Dispatch only/no target-code access.\n"
+            "- No worker: business acceptance/placement/Brief/DAG authoring/implementation review.\n"
+            "- Host modes authoritative; absent/unrecognized unsupported."
+        )
+
+        self.assertEqual(expected, main["instructions"])
+        self.assertEqual(56, count_o200k_base_tokens(main["instructions"]))
 
     def test_all_profile_surfaces_have_no_readability_findings(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
@@ -670,10 +706,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         self.assertIn("task-contract-status", output)
 
     def test_main_profile_rejects_prompt_owned_contract_copies(self) -> None:
-        anchor = (
-            "Generated host modes are authoritative; absent or unrecognized means "
-            "unsupported."
-        )
+        anchor = "Host modes authoritative; absent/unrecognized unsupported."
         copied_rules = (
             "Task Contract v2 starts assignments.",
             "Use a visible Evidence Ledger.",
@@ -754,6 +787,97 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 self.assertEqual(1, result)
                 self.assertIn("capability", output)
                 self.assertIn("boundary", output)
+
+    def test_external_read_is_analysis_only_and_resident_rules_are_locked(self) -> None:
+        source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
+        profiles = {item["name"]: item for item in source["profiles"]}
+        self.assertIn("external-read", profiles["analysis-agent"]["tools"])
+        for role in ("main-control-agent", "task-agent", "review-agent"):
+            self.assertNotIn("external-read", profiles[role]["tools"])
+
+        analysis = profiles["analysis-agent"]["instructions"]
+        for terms in (
+            ("material unresolved Claim", "local or current evidence", "Proof Limit"),
+            ("untrusted evidence input", "normalized Claim", "Engineering Brief"),
+            ("minimum public information", "repository-private source", "credential"),
+            ("external_source_read", "unsupported", "unknown-critical-boundary"),
+        ):
+            self.assertTrue(
+                any(all(term in rule for term in terms) for rule in analysis.splitlines()),
+                terms,
+            )
+        for role in ("task-agent", "review-agent"):
+            instructions = profiles[role]["instructions"]
+            self.assertIn("Leave external-read research", instructions)
+            self.assertIn("analysis-agent", instructions)
+
+    def test_external_read_host_modes_and_native_tool_projection_are_exact(self) -> None:
+        enforcement = json.loads(
+            VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
+        )
+        expected = {
+            "codex": "prompt-enforced",
+            "claude": "native-enforced",
+            "copilot": "unsupported",
+            "cline": "unsupported",
+            "openai-api": "unsupported",
+        }
+        for host, host_entry in enforcement["hosts"].items():
+            roles = host_entry["roles"]
+            self.assertEqual(expected[host], roles["analysis-agent"]["external_source_read"])
+            for role in ("main-control-agent", "task-agent", "review-agent"):
+                self.assertEqual("unsupported", roles[role]["external_source_read"])
+        self.assertEqual(
+            ["Skill", "Read", "Grep", "Glob", "WebSearch", "WebFetch"],
+            enforcement["hosts"]["claude"]["roles"]["analysis-agent"][
+                "rendered_tools"
+            ],
+        )
+
+    def test_external_read_host_mode_drift_is_rejected(self) -> None:
+        mutations = (
+            lambda data: data["hosts"]["codex"]["roles"]["analysis-agent"].__setitem__(
+                "external_source_read", "general-network"
+            ),
+            lambda data: data["hosts"]["claude"]["roles"]["task-agent"].__setitem__(
+                "external_source_read", "native-enforced"
+            ),
+            lambda data: data["hosts"]["copilot"]["roles"]["analysis-agent"].pop(
+                "external_source_read", None
+            ),
+        )
+        for mutate in mutations:
+            with self.subTest(mutate=mutate):
+                result, output = self._mutated_enforcement_result(mutate)
+                self.assertEqual(1, result)
+                self.assertIn("external_source_read", output)
+
+    def test_external_read_mode_is_injected_only_into_analysis_profiles(self) -> None:
+        source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
+        enforcement = json.loads(
+            VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
+        )
+        profiles = {item["name"]: item for item in source["profiles"]}
+        for host, renderer in (
+            ("codex", BUILDER._render_codex_profile),
+            ("claude", BUILDER._render_claude_profile),
+            ("copilot", BUILDER._render_copilot_profile),
+        ):
+            with self.subTest(host=host):
+                analysis = renderer(profiles["analysis-agent"], enforcement)
+                expected_mode = enforcement["hosts"][host]["roles"][
+                    "analysis-agent"
+                ]["external_source_read"]
+                self.assertEqual(
+                    1,
+                    analysis.count(
+                        "Current external-read mode: "
+                        f"external_source_read={expected_mode}."
+                    ),
+                )
+                for role in ("main-control-agent", "task-agent", "review-agent"):
+                    rendered = renderer(profiles[role], enforcement)
+                    self.assertNotIn("Current external-read mode:", rendered)
 
 
 if __name__ == "__main__":

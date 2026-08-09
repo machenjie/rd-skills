@@ -1,8 +1,31 @@
 # Engineering Brief
 
-Return the First Executable Slice when current source evidence proves it safe,
-verifiable, reversible, and independent of the remaining unknowns. The slice
-is a complete Task Contract v2, not an informal checklist.
+For Analyzed Work, the current Engineering Brief is the only operational
+analysis authority. Its authoritative sections are Problem and Desired
+Behavior; Acceptance and Non-goals; Ownership and Invariants;
+
+Placement and Reuse; Contract / Data / Failure Impact; Validation Strategy; Risks and
+Rollback; First Executable Slice; Task Dependencies; Integration Boundary;
+Review Boundary; and Evidence Gaps and Proof Limits.
+
+User requests, change sources, source and tests, external evidence, and
+Specialist results are analysis input only. Write source-proven placement
+directly into the Brief. Use a corresponding Specialist for a real structural
+choice, then incorporate its result into the current Brief before it can affect
+implementation. A Specialist never becomes a parallel authority.
+
+Task DAGs, Task Contracts, Implementation Handoffs, and Review Handoffs are
+derived artifacts and must not redefine Acceptance, Non-goals, Owner,
+Invariants, Placement, contract semantics, Rollback, or the First Executable
+Slice. The First Executable Slice is a complete Task Contract v2, not an
+informal checklist. Main dispatches it verbatim and never regenerates or
+reinterprets it; the DAG planner never reselects it.
+
+Return the First Executable Slice when current evidence proves it safe,
+verifiable, reversible, and independent of remaining unknowns. If the Brief is
+insufficient, a downstream artifact conflicts with it, or a protected decision
+must change, mark the task blocked and return through Main to analysis for an
+updated Brief and redispatch of affected tasks.
 
 The public Execution Level lines use Core public `execution-level/v1`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is

@@ -25,8 +25,8 @@
 | Weak professional front-loaded action (< 60) | 0 |
 | Advisory all-items weak front-loaded action (< 60) | 0 |
 | Control boilerplate risks | 0 |
-| Density review candidates | 29 |
-| Body-tightening candidates | 10 |
+| Density review candidates | 31 |
+| Body-tightening candidates | 12 |
 | Content blockers | 0 |
 | Raw shared lines (≥ 3 files) | 3 |
 | Actionable shared lines after excluding Targeted References | 3 |
@@ -37,9 +37,9 @@ Content-budget classification distribution:
 
 | Classification | Count |
 | --- | --- |
-| KEEP | 150 |
-| REVIEW_DENSITY | 29 |
-| TIGHTEN_BODY | 10 |
+| KEEP | 146 |
+| REVIEW_DENSITY | 31 |
+| TIGHTEN_BODY | 12 |
 | BLOCK | 0 |
 
 Review-state distribution:
@@ -47,8 +47,8 @@ Review-state distribution:
 | Review state | Count |
 | --- | ---: |
 | BLOCK | 0 |
-| TIGHTEN_BODY | 10 |
-| REVIEW_READABILITY | 149 |
+| TIGHTEN_BODY | 12 |
+| REVIEW_READABILITY | 147 |
 | REVIEW_CONTEXT | 4 |
 | KEEP_WITH_ADVISORY | 1 |
 | KEEP | 25 |
@@ -60,15 +60,15 @@ Review-state distribution:
 | Skill | Kind | Lines | Efficiency | Top finding |
 | --- | --- | --- | --- | --- |
 | `repository-tooling-change-builder` | professional-skill | 81 | 67 | body 81 lines exceeds review threshold 80 |
+| `ai-code-review-refactor` | professional-skill | 93 | 69 | body 93 lines exceeds review threshold 80 |
+| `task-dag-planner` | professional-skill | 92 | 77 | body 92 lines exceeds review threshold 80 |
 | `incident-response-coordinator` | professional-skill | 85 | 77 | body 85 lines exceeds review threshold 80 |
 | `android-platform-extension` | domain-extension | 69 | 80 | governed body 557 words exceeds target 500 |
 | `iot-embedded-extension` | domain-extension | 69 | 84 | governed body 559 words exceeds target 500 |
 | `windows-platform-extension` | domain-extension | 67 | 84 | governed body 507 words exceeds target 500 |
-| `ai-code-review-refactor` | professional-skill | 82 | 85 | body 82 lines exceeds review threshold 80 |
 | `targeted-validation-selection` | foundation-capability | 70 | 92 | governed body 454 words exceeds target 400 |
 | `task-dag-decomposition` | foundation-capability | 68 | 92 | governed body 475 words exceeds target 400 |
 | `task-handoff-context` | foundation-capability | 68 | 92 | governed body 447 words exceeds target 400 |
-| `task-context-selection` | foundation-capability | 66 | 92 | governed body 420 words exceeds target 400 |
 
 ### 2.2 Lowest Professionalism
 
@@ -104,16 +104,16 @@ Review-state distribution:
 
 | Skill | Kind | Lines | Split score | Oversized sections |
 | --- | --- | --- | --- | --- |
+| `ai-code-review-refactor` | professional-skill | 93 | 18 | - |
+| `task-dag-planner` | professional-skill | 92 | 18 | - |
 | `incident-response-coordinator` | professional-skill | 85 | 18 | - |
-| `ai-code-review-refactor` | professional-skill | 82 | 18 | - |
 | `repository-tooling-change-builder` | professional-skill | 81 | 18 | - |
 | `integration-change-builder` | professional-skill | 80 | 0 | - |
 | `installed-client-change-builder` | professional-skill | 79 | 0 | - |
 | `platform-infrastructure-change-builder` | professional-skill | 79 | 0 | - |
 | `quality-test-gate` | professional-skill | 78 | 0 | - |
-| `task-dag-planner` | professional-skill | 78 | 0 | - |
+| `engineering-change-analysis` | professional-skill | 76 | 0 | - |
 | `security-privacy-gate` | professional-skill | 76 | 0 | - |
-| `reliability-observability-gate` | professional-skill | 75 | 0 | - |
 
 ### 2.5 Description Risk (frontmatter triggers)
 
@@ -142,9 +142,10 @@ Fields: `front_loaded_action_score`, `control_boilerplate_density`, `generic_con
 
 | Skill | Class | Physical lines | Governed lines | Projection lines | Words | Tokens | Prof | Ctx | Route | Front | Ctrl density | Ctrl phrases | Split | Classification | Review state | Phase | Risk |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- | --- | --- |
+| `ai-code-review-refactor` | `-` | 93 | 84 | 9 | 638 | 942 | 100 | 69 | 100 | 80 | 0.00 | 0 | 18 | TIGHTEN_BODY | TIGHTEN_BODY | P1 | low |
 | `incident-response-coordinator` | `-` | 85 | 79 | 6 | 593 | 840 | 100 | 77 | 100 | 64 | 0.00 | 0 | 18 | TIGHTEN_BODY | TIGHTEN_BODY | P1 | low |
+| `task-dag-planner` | `-` | 92 | 84 | 8 | 607 | 808 | 100 | 77 | 100 | 60 | 0.00 | 0 | 18 | TIGHTEN_BODY | TIGHTEN_BODY | P1 | low |
 | `acceptance-criteria-builder` | `-` | 72 | 65 | 7 | 387 | 529 | 100 | 100 | 100 | 76 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
-| `ai-code-review-refactor` | `-` | 82 | 73 | 9 | 456 | 678 | 100 | 85 | 100 | 80 | 0.00 | 0 | 18 | KEEP | REVIEW_READABILITY | - | low |
 | `architecture-impact-reviewer` | `-` | 72 | 64 | 8 | 454 | 647 | 100 | 100 | 100 | 80 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `backend-change-builder` | `-` | 70 | 60 | 10 | 325 | 443 | 100 | 100 | 100 | 76 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `change-documentation-gate` | `-` | 70 | 62 | 8 | 374 | 558 | 100 | 100 | 100 | 76 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
@@ -152,7 +153,7 @@ Fields: `front_loaded_action_score`, `control_boilerplate_density`, `generic_con
 | `data-middleware-change-builder` | `-` | 69 | 61 | 8 | 383 | 617 | 100 | 100 | 100 | 80 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `delivery-release-gate` | `-` | 72 | 64 | 8 | 407 | 625 | 100 | 100 | 100 | 80 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `domain-impact-modeler` | `-` | 66 | 58 | 8 | 301 | 415 | 100 | 100 | 100 | 76 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
-| `engineering-change-analysis` | `-` | 68 | 57 | 11 | 314 | 452 | 100 | 100 | 100 | 80 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
+| `engineering-change-analysis` | `-` | 76 | 65 | 11 | 364 | 520 | 100 | 100 | 100 | 80 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `experience-impact-modeler` | `-` | 65 | 57 | 8 | 302 | 424 | 100 | 100 | 100 | 76 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `frontend-change-builder` | `-` | 66 | 58 | 8 | 326 | 467 | 100 | 100 | 100 | 76 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `integration-change-builder` | `-` | 80 | 73 | 7 | 497 | 729 | 100 | 100 | 100 | 80 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
@@ -160,7 +161,6 @@ Fields: `front_loaded_action_score`, `control_boilerplate_density`, `generic_con
 | `platform-infrastructure-change-builder` | `-` | 79 | 73 | 6 | 548 | 782 | 100 | 98 | 100 | 80 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `reliability-observability-gate` | `-` | 75 | 66 | 9 | 451 | 676 | 100 | 100 | 100 | 80 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `security-privacy-gate` | `-` | 76 | 68 | 8 | 452 | 661 | 100 | 100 | 100 | 80 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
-| `task-dag-planner` | `-` | 78 | 70 | 8 | 506 | 659 | 100 | 100 | 100 | 80 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `repository-tooling-change-builder` | `-` | 81 | 74 | 7 | 585 | 861 | 100 | 67 | 100 | 60 | 0.00 | 0 | 18 | REVIEW_DENSITY | REVIEW_CONTEXT | P1 | low |
 | `installed-client-change-builder` | `-` | 79 | 73 | 6 | 526 | 720 | 100 | 98 | 100 | 80 | 0.00 | 0 | 0 | KEEP | KEEP_WITH_ADVISORY | - | low |
 | `change-intake-compiler` | `-` | 67 | 59 | 8 | 358 | 492 | 100 | 100 | 100 | 76 | 0.00 | 0 | 0 | KEEP | KEEP | - | low |
@@ -171,21 +171,29 @@ Fields: `front_loaded_action_score`, `control_boilerplate_density`, `generic_con
 
 #### Detailed findings — Professional Skills
 
+- **`ai-code-review-refactor`** (content=TIGHTEN_BODY; review=TIGHTEN_BODY; phase=P1; risk=low)
+  - Path: `src/professional-skills/ai-code-review-refactor/SKILL.md`
+  - Review reasons: `classification_tighten_body`, `ai_readability_review_as_complex`, `professional_governed_lines_over_80`
+  - Content-budget action: Keep decision-critical guidance. Trim duplication or move low-frequency detail into an existing targeted Reference.
+  - Finding: body 93 lines exceeds review threshold 80
+  - Finding: governed body 638 words exceeds target 550
+  - Finding: governed body 942 tokens exceeds target 850
 - **`incident-response-coordinator`** (content=TIGHTEN_BODY; review=TIGHTEN_BODY; phase=P1; risk=low)
   - Path: `src/professional-skills/incident-response-coordinator/SKILL.md`
   - Review reasons: `classification_tighten_body`, `ai_readability_review_as_complex`, `professional_projection_pushes_physical_lines_over_80`
   - Content-budget action: Keep decision-critical guidance. Trim duplication or move low-frequency detail into an existing targeted Reference.
   - Finding: body 85 lines exceeds review threshold 80
   - Finding: governed body 593 words exceeds target 550
+- **`task-dag-planner`** (content=TIGHTEN_BODY; review=TIGHTEN_BODY; phase=P1; risk=low)
+  - Path: `src/professional-skills/task-dag-planner/SKILL.md`
+  - Review reasons: `classification_tighten_body`, `ai_readability_review_as_complex`, `professional_governed_lines_over_80`
+  - Content-budget action: Keep decision-critical guidance. Trim duplication or move low-frequency detail into an existing targeted Reference.
+  - Finding: body 92 lines exceeds review threshold 80
+  - Finding: governed body 607 words exceeds target 550
 - **`acceptance-criteria-builder`** (content=KEEP; review=REVIEW_READABILITY; phase=-; risk=low)
   - Path: `src/professional-skills/acceptance-criteria-builder/SKILL.md`
   - Review reasons: `ai_readability_review_as_complex`
   - Content-budget action: Within governed-body targets; no density action is required.
-- **`ai-code-review-refactor`** (content=KEEP; review=REVIEW_READABILITY; phase=-; risk=low)
-  - Path: `src/professional-skills/ai-code-review-refactor/SKILL.md`
-  - Review reasons: `ai_readability_review_as_complex`, `professional_projection_pushes_physical_lines_over_80`
-  - Content-budget action: Within governed-body targets; no density action is required.
-  - Finding: body 82 lines exceeds review threshold 80
 - **`architecture-impact-reviewer`** (content=KEEP; review=REVIEW_READABILITY; phase=-; risk=low)
   - Path: `src/professional-skills/architecture-impact-reviewer/SKILL.md`
   - Review reasons: `ai_readability_review_as_complex`
@@ -246,10 +254,6 @@ Fields: `front_loaded_action_score`, `control_boilerplate_density`, `generic_con
   - Path: `src/professional-skills/security-privacy-gate/SKILL.md`
   - Review reasons: `ai_readability_review_as_complex`
   - Content-budget action: Within governed-body targets; no density action is required.
-- **`task-dag-planner`** (content=KEEP; review=REVIEW_READABILITY; phase=-; risk=low)
-  - Path: `src/professional-skills/task-dag-planner/SKILL.md`
-  - Review reasons: `ai_readability_review_as_complex`
-  - Content-budget action: Within governed-body targets; no density action is required.
 - **`repository-tooling-change-builder`** (content=REVIEW_DENSITY; review=REVIEW_CONTEXT; phase=P1; risk=low)
   - Path: `src/professional-skills/repository-tooling-change-builder/SKILL.md`
   - Review reasons: `classification_review_density`, `professional_projection_pushes_physical_lines_over_80`, `actionable_duplicate_content`
@@ -296,7 +300,7 @@ Fields: `front_loaded_action_score`, `control_boilerplate_density`, `generic_con
 | `client-lifecycle-state-restoration` | `compact` | 48 | 43 | 5 | 362 | 505 | 100 | 100 | 100 | 40 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `code-clarity-maintainability` | `compact` | 51 | 45 | 6 | 415 | 584 | 100 | 92 | 100 | 40 | 0.00 | 0 | 0 | REVIEW_DENSITY | REVIEW_READABILITY | P1 | low |
 | `code-element-professionalism` | `compact` | 53 | 46 | 7 | 427 | 654 | 100 | 92 | 100 | 36 | 0.00 | 0 | 0 | REVIEW_DENSITY | REVIEW_READABILITY | P1 | low |
-| `code-review` | `compact` | 48 | 41 | 7 | 389 | 531 | 100 | 100 | 100 | 40 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
+| `code-review` | `compact` | 49 | 42 | 7 | 407 | 570 | 100 | 92 | 100 | 40 | 0.00 | 0 | 0 | REVIEW_DENSITY | REVIEW_READABILITY | P1 | low |
 | `concurrency-control` | `compact` | 51 | 44 | 7 | 256 | 367 | 100 | 100 | 100 | 60 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `configuration-runtime-policy` | `compact` | 51 | 44 | 7 | 333 | 446 | 100 | 100 | 100 | 40 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `consumer-impact-analysis` | `compact` | 48 | 41 | 7 | 344 | 485 | 100 | 100 | 100 | 40 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
@@ -365,7 +369,7 @@ Fields: `front_loaded_action_score`, `control_boilerplate_density`, `generic_con
 | `project-initialization` | `compact` | 50 | 43 | 7 | 390 | 537 | 100 | 100 | 100 | 60 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `python-professional-usage` | `compact` | 51 | 46 | 5 | 377 | 539 | 100 | 100 | 100 | 40 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `refactoring` | `compact` | 50 | 43 | 7 | 433 | 653 | 100 | 92 | 100 | 40 | 0.00 | 0 | 0 | REVIEW_DENSITY | REVIEW_READABILITY | P1 | low |
-| `regression-testing` | `compact` | 49 | 42 | 7 | 382 | 505 | 100 | 100 | 100 | 36 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
+| `regression-testing` | `compact` | 50 | 43 | 7 | 404 | 541 | 100 | 92 | 100 | 40 | 0.00 | 0 | 0 | REVIEW_DENSITY | REVIEW_READABILITY | P1 | low |
 | `relational-database` | `compact` | 50 | 43 | 7 | 374 | 532 | 100 | 100 | 100 | 40 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `repeat-failure-analysis` | `compact` | 64 | 59 | 5 | 323 | 424 | 100 | 100 | 100 | 56 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
 | `repository-context-map` | `compact` | 55 | 48 | 7 | 398 | 558 | 100 | 100 | 100 | 60 | 0.00 | 0 | 0 | KEEP | REVIEW_READABILITY | - | low |
@@ -550,10 +554,11 @@ Fields: `front_loaded_action_score`, `control_boilerplate_density`, `generic_con
   - Review reasons: `ai_readability_review_as_complex`, `classification_review_density`
   - Content-budget action: Review density and retain the current body only with explicit expert disposition.
   - Finding: governed body 427 words exceeds target 400
-- **`code-review`** (content=KEEP; review=REVIEW_READABILITY; phase=-; risk=low)
+- **`code-review`** (content=REVIEW_DENSITY; review=REVIEW_READABILITY; phase=P1; risk=low)
   - Path: `src/foundation/capabilities/code-review/SKILL.md`
-  - Review reasons: `ai_readability_review_as_complex`
-  - Content-budget action: Within governed-body targets; no density action is required.
+  - Review reasons: `ai_readability_review_as_complex`, `classification_review_density`
+  - Content-budget action: Review density and retain the current body only with explicit expert disposition.
+  - Finding: governed body 407 words exceeds target 400
 - **`concurrency-control`** (content=KEEP; review=REVIEW_READABILITY; phase=-; risk=low)
   - Path: `src/foundation/capabilities/concurrency-control/SKILL.md`
   - Review reasons: `ai_readability_review_as_complex`
@@ -839,10 +844,11 @@ Fields: `front_loaded_action_score`, `control_boilerplate_density`, `generic_con
   - Review reasons: `ai_readability_review_as_complex`, `classification_review_density`
   - Content-budget action: Review density and retain the current body only with explicit expert disposition.
   - Finding: governed body 433 words exceeds target 400
-- **`regression-testing`** (content=KEEP; review=REVIEW_READABILITY; phase=-; risk=low)
+- **`regression-testing`** (content=REVIEW_DENSITY; review=REVIEW_READABILITY; phase=P1; risk=low)
   - Path: `src/foundation/capabilities/regression-testing/SKILL.md`
-  - Review reasons: `ai_readability_review_as_complex`
-  - Content-budget action: Within governed-body targets; no density action is required.
+  - Review reasons: `ai_readability_review_as_complex`, `classification_review_density`
+  - Content-budget action: Review density and retain the current body only with explicit expert disposition.
+  - Finding: governed body 404 words exceeds target 400
 - **`relational-database`** (content=KEEP; review=REVIEW_READABILITY; phase=-; risk=low)
   - Path: `src/foundation/capabilities/relational-database/SKILL.md`
   - Review reasons: `ai_readability_review_as_complex`
@@ -1058,17 +1064,17 @@ Fields: `front_loaded_action_score`, `control_boilerplate_density`, `generic_con
 Review states preserve every matched reason; expert dispositions do not lower them.
 
 - **BLOCK** (0): _none_
-- **TIGHTEN_BODY** (10): `android-platform-extension`, `implementation-structure-design`, `incident-response-coordinator`, `iot-embedded-extension`, `logging-error-handling`, `minimal-correct-implementation`, `module-boundary-design`, `package-dependency-management`, `targeted-validation-selection`, `task-dag-decomposition`
-- **REVIEW_READABILITY** (149): `acceptance-criteria-builder`, `acceptance-standard-definition`, `accessibility-inclusive-design`, `ai-code-review-refactor`, `algorithm-data-structure-selection`, `api-contract-design`, `architecture-enforcement-tooling`, `architecture-impact-reviewer`, `architecture-style-selection`, `architecture-tradeoff-analysis`, `async-job-design`, `audit-evidence-integrity`, `authentication-authorization`, `authentication-security`, `backend-change-builder`, `backup-recovery`, `build-tool-professional-usage`, `business-invariant-analysis`, `business-rule-extraction`, `cache-design`, `change-documentation-gate`, `ci-cd`, `cleanup-deletion-governance`, `cli-daemon-interface-design`, `client-application-testing`, `client-lifecycle-state-restoration`, `code-clarity-maintainability`, `code-element-professionalism`, `code-review`, `concurrency-control`, `configuration-runtime-policy`, `consumer-impact-analysis`, `containerization`, `contract-testing`, `controller-api-implementation`, `cryptography-key-lifecycle`, `csharp-dotnet-professional-usage`, `data-api-contract-changer`, `data-format-contract-usage`, `data-middleware-change-builder`, `data-migration-design`, `data-model-design`, `data-side-effect-flow-tracing`, `degradation-circuit-breaking`, `delivery-release-gate`, `dependency-vulnerability-scanning`, `dependency-wiring-lifecycle`, `design-pattern-selection`, `design-system-rules`, `documentation-generation`, `domain-event-modeling`, `domain-impact-modeler`, `domain-logic-implementation`, `domain-object-identification`, `dto-schema-design`, `e2e-testing`, `engineering-change-analysis`, `error-code-design`, `event-driven-architecture`, `experience-impact-modeler`, `extensibility-design`, `failure-contract-design`, `failure-diagnosis`, `file-storage-processing`, `filesystem-process-safety`, `form-validation-design`, `frontend-api-integration`, `frontend-change-builder`, `frontend-testing`, `git-professional-usage`, `go-professional-usage`, `i18n-timezone-money-safety`, `idempotency-retry-design`, `indexing-query-optimization`, `information-architecture`, `input-validation`, `integration-change-builder`, `integration-testing`, `interaction-state-modeling`, `ios-ipados-platform-extension`, `java-jvm-professional-usage`, `kubernetes-gateway`, `language-idiom-enforcement`, `language-performance-safety`, `language-runtime-selection`, `language-testing-strategy`, `layered-architecture-design`, `linux-systems-professional-usage`, `logging-design-gate`, `low-level-systems-extension`, `macos-platform-extension`, `message-queue-design`, `microservice-splitting`, `model-boundary-mapping`, `network-protocol-gateway-usage`, `nodejs-runtime-professional-usage`, `non-goal-boundary-definition`, `nosql-database`, `observability`, `offline-sync-conflict-resolution`, `page-component-decomposition`, `performance-budgeting`, `permission-boundary-modeling`, `platform-infrastructure-change-builder`, `powershell-professional-usage`, `privacy-data-lifecycle`, `profiling`, `project-initialization`, `python-professional-usage`, `refactoring`, `regression-testing`, `relational-database`, `reliability-observability-gate`, `repeat-failure-analysis`, `repository-context-map`, `repository-persistence`, `requirement-clarification`, `requirement-structuring`, `routing-navigation-design`, `scenario-decomposition`, `sdk-library-contract-design`, `search-analytics-design`, `secret-configuration-security`, `security-privacy-gate`, `senior-programming-judgment-core`, `service-business-logic`, `shell-cli-professional-usage`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `state-machine-modeling`, `state-management-design`, `task-context-selection`, `task-dag-planner`, `technology-stack-selection`, `tenant-isolation`, `test-data-management`, `test-strategy`, `testability-seam-design`, `threat-modeling`, `transaction-consistency`, `typescript-professional-usage`, `unit-testing`, `use-case-modeling`, `user-flow-modeling`, `user-role-identification`, `version-compatibility`, `web-platform-professional-usage`, `web-security`, `windows-platform-extension`
+- **TIGHTEN_BODY** (12): `ai-code-review-refactor`, `android-platform-extension`, `implementation-structure-design`, `incident-response-coordinator`, `iot-embedded-extension`, `logging-error-handling`, `minimal-correct-implementation`, `module-boundary-design`, `package-dependency-management`, `targeted-validation-selection`, `task-dag-decomposition`, `task-dag-planner`
+- **REVIEW_READABILITY** (147): `acceptance-criteria-builder`, `acceptance-standard-definition`, `accessibility-inclusive-design`, `algorithm-data-structure-selection`, `api-contract-design`, `architecture-enforcement-tooling`, `architecture-impact-reviewer`, `architecture-style-selection`, `architecture-tradeoff-analysis`, `async-job-design`, `audit-evidence-integrity`, `authentication-authorization`, `authentication-security`, `backend-change-builder`, `backup-recovery`, `build-tool-professional-usage`, `business-invariant-analysis`, `business-rule-extraction`, `cache-design`, `change-documentation-gate`, `ci-cd`, `cleanup-deletion-governance`, `cli-daemon-interface-design`, `client-application-testing`, `client-lifecycle-state-restoration`, `code-clarity-maintainability`, `code-element-professionalism`, `code-review`, `concurrency-control`, `configuration-runtime-policy`, `consumer-impact-analysis`, `containerization`, `contract-testing`, `controller-api-implementation`, `cryptography-key-lifecycle`, `csharp-dotnet-professional-usage`, `data-api-contract-changer`, `data-format-contract-usage`, `data-middleware-change-builder`, `data-migration-design`, `data-model-design`, `data-side-effect-flow-tracing`, `degradation-circuit-breaking`, `delivery-release-gate`, `dependency-vulnerability-scanning`, `dependency-wiring-lifecycle`, `design-pattern-selection`, `design-system-rules`, `documentation-generation`, `domain-event-modeling`, `domain-impact-modeler`, `domain-logic-implementation`, `domain-object-identification`, `dto-schema-design`, `e2e-testing`, `engineering-change-analysis`, `error-code-design`, `event-driven-architecture`, `experience-impact-modeler`, `extensibility-design`, `failure-contract-design`, `failure-diagnosis`, `file-storage-processing`, `filesystem-process-safety`, `form-validation-design`, `frontend-api-integration`, `frontend-change-builder`, `frontend-testing`, `git-professional-usage`, `go-professional-usage`, `i18n-timezone-money-safety`, `idempotency-retry-design`, `indexing-query-optimization`, `information-architecture`, `input-validation`, `integration-change-builder`, `integration-testing`, `interaction-state-modeling`, `ios-ipados-platform-extension`, `java-jvm-professional-usage`, `kubernetes-gateway`, `language-idiom-enforcement`, `language-performance-safety`, `language-runtime-selection`, `language-testing-strategy`, `layered-architecture-design`, `linux-systems-professional-usage`, `logging-design-gate`, `low-level-systems-extension`, `macos-platform-extension`, `message-queue-design`, `microservice-splitting`, `model-boundary-mapping`, `network-protocol-gateway-usage`, `nodejs-runtime-professional-usage`, `non-goal-boundary-definition`, `nosql-database`, `observability`, `offline-sync-conflict-resolution`, `page-component-decomposition`, `performance-budgeting`, `permission-boundary-modeling`, `platform-infrastructure-change-builder`, `powershell-professional-usage`, `privacy-data-lifecycle`, `profiling`, `project-initialization`, `python-professional-usage`, `refactoring`, `regression-testing`, `relational-database`, `reliability-observability-gate`, `repeat-failure-analysis`, `repository-context-map`, `repository-persistence`, `requirement-clarification`, `requirement-structuring`, `routing-navigation-design`, `scenario-decomposition`, `sdk-library-contract-design`, `search-analytics-design`, `secret-configuration-security`, `security-privacy-gate`, `senior-programming-judgment-core`, `service-business-logic`, `shell-cli-professional-usage`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `state-machine-modeling`, `state-management-design`, `task-context-selection`, `technology-stack-selection`, `tenant-isolation`, `test-data-management`, `test-strategy`, `testability-seam-design`, `threat-modeling`, `transaction-consistency`, `typescript-professional-usage`, `unit-testing`, `use-case-modeling`, `user-flow-modeling`, `user-role-identification`, `version-compatibility`, `web-platform-professional-usage`, `web-security`, `windows-platform-extension`
 - **REVIEW_CONTEXT** (4): `cross-platform-client-extension`, `repository-tooling-change-builder`, `solution-optimality-evaluation`, `task-handoff-context`
 - **KEEP_WITH_ADVISORY** (1): `installed-client-change-builder`
 - **KEEP** (25): `agent-execution-discipline`, `agent-tool-permission-sandbox`, `ai-product-extension`, `bigdata-product-extension`, `change-intake-compiler`, `cloud-platform-extension`, `cpp-professional-usage`, `distributed-workflow-consistency`, `engineering-artifact-review`, `high-risk-design-review`, `infrastructure-as-code-safety`, `kotlin-professional-usage`, `linux-desktop-platform-extension`, `observable-action-sequence-analysis`, `payment-trading-extension`, `plan-execution-consistency`, `prototype-description`, `quality-test-gate`, `release-rollback`, `repository-impact-inspection`, `routing-quality-review`, `rust-professional-usage`, `sql-professional-usage`, `swift-professional-usage`, `web3-product-extension`
 
 Content-budget classifications:
 
-- **KEEP** (150): `acceptance-criteria-builder`, `accessibility-inclusive-design`, `agent-execution-discipline`, `agent-tool-permission-sandbox`, `ai-code-review-refactor`, `ai-product-extension`, `algorithm-data-structure-selection`, `api-contract-design`, `architecture-enforcement-tooling`, `architecture-impact-reviewer`, `architecture-style-selection`, `architecture-tradeoff-analysis`, `async-job-design`, `audit-evidence-integrity`, `authentication-authorization`, `authentication-security`, `backend-change-builder`, `backup-recovery`, `bigdata-product-extension`, `business-invariant-analysis`, `business-rule-extraction`, `cache-design`, `change-documentation-gate`, `change-intake-compiler`, `ci-cd`, `cleanup-deletion-governance`, `cli-daemon-interface-design`, `client-application-testing`, `client-lifecycle-state-restoration`, `cloud-platform-extension`, `code-review`, `concurrency-control`, `configuration-runtime-policy`, `consumer-impact-analysis`, `containerization`, `contract-testing`, `controller-api-implementation`, `cpp-professional-usage`, `cryptography-key-lifecycle`, `csharp-dotnet-professional-usage`, `data-api-contract-changer`, `data-format-contract-usage`, `data-middleware-change-builder`, `data-migration-design`, `data-model-design`, `data-side-effect-flow-tracing`, `degradation-circuit-breaking`, `delivery-release-gate`, `dependency-vulnerability-scanning`, `dependency-wiring-lifecycle`, `design-system-rules`, `distributed-workflow-consistency`, `documentation-generation`, `domain-event-modeling`, `domain-impact-modeler`, `dto-schema-design`, `e2e-testing`, `engineering-artifact-review`, `engineering-change-analysis`, `error-code-design`, `event-driven-architecture`, `experience-impact-modeler`, `failure-contract-design`, `failure-diagnosis`, `file-storage-processing`, `filesystem-process-safety`, `form-validation-design`, `frontend-api-integration`, `frontend-change-builder`, `frontend-testing`, `go-professional-usage`, `high-risk-design-review`, `i18n-timezone-money-safety`, `idempotency-retry-design`, `infrastructure-as-code-safety`, `input-validation`, `installed-client-change-builder`, `integration-change-builder`, `integration-testing`, `interaction-state-modeling`, `ios-ipados-platform-extension`, `java-jvm-professional-usage`, `kotlin-professional-usage`, `kubernetes-gateway`, `language-performance-safety`, `layered-architecture-design`, `linux-desktop-platform-extension`, `linux-systems-professional-usage`, `logging-design-gate`, `low-level-systems-extension`, `macos-platform-extension`, `message-queue-design`, `model-boundary-mapping`, `nodejs-runtime-professional-usage`, `non-goal-boundary-definition`, `nosql-database`, `observability`, `observable-action-sequence-analysis`, `offline-sync-conflict-resolution`, `page-component-decomposition`, `payment-trading-extension`, `performance-budgeting`, `permission-boundary-modeling`, `plan-execution-consistency`, `platform-infrastructure-change-builder`, `powershell-professional-usage`, `privacy-data-lifecycle`, `profiling`, `project-initialization`, `prototype-description`, `python-professional-usage`, `quality-test-gate`, `regression-testing`, `relational-database`, `release-rollback`, `reliability-observability-gate`, `repeat-failure-analysis`, `repository-context-map`, `repository-impact-inspection`, `repository-persistence`, `requirement-clarification`, `requirement-structuring`, `routing-navigation-design`, `routing-quality-review`, `rust-professional-usage`, `scenario-decomposition`, `search-analytics-design`, `secret-configuration-security`, `security-privacy-gate`, `service-business-logic`, `shell-cli-professional-usage`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `sql-professional-usage`, `state-machine-modeling`, `state-management-design`, `swift-professional-usage`, `task-dag-planner`, `tenant-isolation`, `test-data-management`, `test-strategy`, `threat-modeling`, `transaction-consistency`, `unit-testing`, `use-case-modeling`, `user-flow-modeling`, `user-role-identification`, `version-compatibility`, `web-platform-professional-usage`, `web3-product-extension`
-- **REVIEW_DENSITY** (29): `acceptance-standard-definition`, `build-tool-professional-usage`, `code-clarity-maintainability`, `code-element-professionalism`, `cross-platform-client-extension`, `design-pattern-selection`, `domain-logic-implementation`, `domain-object-identification`, `extensibility-design`, `git-professional-usage`, `indexing-query-optimization`, `information-architecture`, `language-idiom-enforcement`, `language-runtime-selection`, `language-testing-strategy`, `microservice-splitting`, `network-protocol-gateway-usage`, `refactoring`, `repository-tooling-change-builder`, `sdk-library-contract-design`, `senior-programming-judgment-core`, `solution-optimality-evaluation`, `task-context-selection`, `task-handoff-context`, `technology-stack-selection`, `testability-seam-design`, `typescript-professional-usage`, `web-security`, `windows-platform-extension`
-- **TIGHTEN_BODY** (10): `android-platform-extension`, `implementation-structure-design`, `incident-response-coordinator`, `iot-embedded-extension`, `logging-error-handling`, `minimal-correct-implementation`, `module-boundary-design`, `package-dependency-management`, `targeted-validation-selection`, `task-dag-decomposition`
+- **KEEP** (146): `acceptance-criteria-builder`, `accessibility-inclusive-design`, `agent-execution-discipline`, `agent-tool-permission-sandbox`, `ai-product-extension`, `algorithm-data-structure-selection`, `api-contract-design`, `architecture-enforcement-tooling`, `architecture-impact-reviewer`, `architecture-style-selection`, `architecture-tradeoff-analysis`, `async-job-design`, `audit-evidence-integrity`, `authentication-authorization`, `authentication-security`, `backend-change-builder`, `backup-recovery`, `bigdata-product-extension`, `business-invariant-analysis`, `business-rule-extraction`, `cache-design`, `change-documentation-gate`, `change-intake-compiler`, `ci-cd`, `cleanup-deletion-governance`, `cli-daemon-interface-design`, `client-application-testing`, `client-lifecycle-state-restoration`, `cloud-platform-extension`, `concurrency-control`, `configuration-runtime-policy`, `consumer-impact-analysis`, `containerization`, `contract-testing`, `controller-api-implementation`, `cpp-professional-usage`, `cryptography-key-lifecycle`, `csharp-dotnet-professional-usage`, `data-api-contract-changer`, `data-format-contract-usage`, `data-middleware-change-builder`, `data-migration-design`, `data-model-design`, `data-side-effect-flow-tracing`, `degradation-circuit-breaking`, `delivery-release-gate`, `dependency-vulnerability-scanning`, `dependency-wiring-lifecycle`, `design-system-rules`, `distributed-workflow-consistency`, `documentation-generation`, `domain-event-modeling`, `domain-impact-modeler`, `dto-schema-design`, `e2e-testing`, `engineering-artifact-review`, `engineering-change-analysis`, `error-code-design`, `event-driven-architecture`, `experience-impact-modeler`, `failure-contract-design`, `failure-diagnosis`, `file-storage-processing`, `filesystem-process-safety`, `form-validation-design`, `frontend-api-integration`, `frontend-change-builder`, `frontend-testing`, `go-professional-usage`, `high-risk-design-review`, `i18n-timezone-money-safety`, `idempotency-retry-design`, `infrastructure-as-code-safety`, `input-validation`, `installed-client-change-builder`, `integration-change-builder`, `integration-testing`, `interaction-state-modeling`, `ios-ipados-platform-extension`, `java-jvm-professional-usage`, `kotlin-professional-usage`, `kubernetes-gateway`, `language-performance-safety`, `layered-architecture-design`, `linux-desktop-platform-extension`, `linux-systems-professional-usage`, `logging-design-gate`, `low-level-systems-extension`, `macos-platform-extension`, `message-queue-design`, `model-boundary-mapping`, `nodejs-runtime-professional-usage`, `non-goal-boundary-definition`, `nosql-database`, `observability`, `observable-action-sequence-analysis`, `offline-sync-conflict-resolution`, `page-component-decomposition`, `payment-trading-extension`, `performance-budgeting`, `permission-boundary-modeling`, `plan-execution-consistency`, `platform-infrastructure-change-builder`, `powershell-professional-usage`, `privacy-data-lifecycle`, `profiling`, `project-initialization`, `prototype-description`, `python-professional-usage`, `quality-test-gate`, `relational-database`, `release-rollback`, `reliability-observability-gate`, `repeat-failure-analysis`, `repository-context-map`, `repository-impact-inspection`, `repository-persistence`, `requirement-clarification`, `requirement-structuring`, `routing-navigation-design`, `routing-quality-review`, `rust-professional-usage`, `scenario-decomposition`, `search-analytics-design`, `secret-configuration-security`, `security-privacy-gate`, `service-business-logic`, `shell-cli-professional-usage`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `sql-professional-usage`, `state-machine-modeling`, `state-management-design`, `swift-professional-usage`, `tenant-isolation`, `test-data-management`, `test-strategy`, `threat-modeling`, `transaction-consistency`, `unit-testing`, `use-case-modeling`, `user-flow-modeling`, `user-role-identification`, `version-compatibility`, `web-platform-professional-usage`, `web3-product-extension`
+- **REVIEW_DENSITY** (31): `acceptance-standard-definition`, `build-tool-professional-usage`, `code-clarity-maintainability`, `code-element-professionalism`, `code-review`, `cross-platform-client-extension`, `design-pattern-selection`, `domain-logic-implementation`, `domain-object-identification`, `extensibility-design`, `git-professional-usage`, `indexing-query-optimization`, `information-architecture`, `language-idiom-enforcement`, `language-runtime-selection`, `language-testing-strategy`, `microservice-splitting`, `network-protocol-gateway-usage`, `refactoring`, `regression-testing`, `repository-tooling-change-builder`, `sdk-library-contract-design`, `senior-programming-judgment-core`, `solution-optimality-evaluation`, `task-context-selection`, `task-handoff-context`, `technology-stack-selection`, `testability-seam-design`, `typescript-professional-usage`, `web-security`, `windows-platform-extension`
+- **TIGHTEN_BODY** (12): `ai-code-review-refactor`, `android-platform-extension`, `implementation-structure-design`, `incident-response-coordinator`, `iot-embedded-extension`, `logging-error-handling`, `minimal-correct-implementation`, `module-boundary-design`, `package-dependency-management`, `targeted-validation-selection`, `task-dag-decomposition`, `task-dag-planner`
 - **BLOCK** (0): _none_
 
 ## 5. Shared / Duplicated Content (common-reference candidates)
@@ -1089,14 +1095,14 @@ Actionable lines that appear in ≥ 3 skills after excluding Targeted References
 
 Contract: ordinary target `<=24` words; complex target `<=32` words; hard maximum `<=40` words; Bullet decisions `<=1`.
 
-Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` over 915 documents.
+Fingerprint: `7fb6c587d6c3233e2e8af64e2168d37ee3f9ee01e8fede7c96ea9940d8e15100` over 915 documents.
 
 | Metric | Value |
 | --- | ---: |
 | Documents | 915 |
-| Advisory documents | 353 |
-| Review-as-complex sentences | 972 |
-| Tighten sentences | 0 |
+| Advisory documents | 357 |
+| Review-as-complex sentences | 977 |
+| Tighten sentences | 1 |
 | Hard-fail sentences | 0 |
 | Compound Bullets | 0 |
 
@@ -1107,7 +1113,7 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | `agent-profile-description` | 4 | 0 | 0 | 0 | 0 | 0 |
 | `agent-profile-instructions` | 4 | 0 | 0 | 0 | 0 | 0 |
 | `control-prompt` | 1 | 0 | 0 | 0 | 0 | 0 |
-| `control-reference` | 8 | 3 | 3 | 0 | 0 | 0 |
+| `control-reference` | 8 | 7 | 9 | 1 | 0 | 0 |
 | `control-skill-body` | 1 | 0 | 0 | 0 | 0 | 0 |
 | `control-skill-description` | 1 | 0 | 0 | 0 | 0 | 0 |
 | `domain-extension-body` | 13 | 3 | 4 | 0 | 0 | 0 |
@@ -1116,8 +1122,8 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | `foundation-capability-body` | 150 | 115 | 414 | 0 | 0 | 0 |
 | `foundation-capability-description` | 150 | 1 | 1 | 0 | 0 | 0 |
 | `foundation-reference` | 377 | 183 | 457 | 0 | 0 | 0 |
-| `professional-reference` | 93 | 31 | 72 | 0 | 0 | 0 |
-| `professional-skill-body` | 26 | 0 | 0 | 0 | 0 | 0 |
+| `professional-reference` | 93 | 30 | 70 | 0 | 0 | 0 |
+| `professional-skill-body` | 26 | 1 | 1 | 0 | 0 | 0 |
 | `professional-skill-description` | 26 | 0 | 0 | 0 | 0 | 0 |
 
 ### 6.2 Advisory Documents
@@ -1125,7 +1131,11 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | Document | Surface | Highest band | Review | Tighten |
 | --- | --- | --- | ---: | ---: |
 | `src/control-skills/engineering-control-plane/references/direct-task-template.md#reference` | `control-reference` | `review-as-complex` | 1 | 0 |
+| `src/control-skills/engineering-control-plane/references/engineering-brief-template.md#reference` | `control-reference` | `tighten` | 2 | 1 |
+| `src/control-skills/engineering-control-plane/references/implementation-handoff-template.md#reference` | `control-reference` | `review-as-complex` | 1 | 0 |
 | `src/control-skills/engineering-control-plane/references/professional-skill-router.md#reference` | `control-reference` | `review-as-complex` | 1 | 0 |
+| `src/control-skills/engineering-control-plane/references/review-handoff-template.md#reference` | `control-reference` | `review-as-complex` | 1 | 0 |
+| `src/control-skills/engineering-control-plane/references/task-dag-template.md#reference` | `control-reference` | `review-as-complex` | 2 | 0 |
 | `src/control-skills/engineering-control-plane/references/utility-capsule-template.md#reference` | `control-reference` | `review-as-complex` | 1 | 0 |
 | `src/domain-extensions/android-platform-extension/references/accessibility-representation-input-and-scaling.md#reference` | `domain-reference` | `review-as-complex` | 3 | 0 |
 | `src/domain-extensions/android-platform-extension/references/compatibility-packaging-and-performance-contracts.md#reference` | `domain-reference` | `review-as-complex` | 1 | 0 |
@@ -1192,7 +1202,7 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | `src/foundation/capabilities/code-clarity-maintainability/SKILL.md#body` | `foundation-capability-body` | `review-as-complex` | 3 | 0 |
 | `src/foundation/capabilities/code-element-professionalism/SKILL.md#body` | `foundation-capability-body` | `review-as-complex` | 2 | 0 |
 | `src/foundation/capabilities/code-element-professionalism/references/expressions.md#reference` | `foundation-reference` | `review-as-complex` | 1 | 0 |
-| `src/foundation/capabilities/code-review/SKILL.md#body` | `foundation-capability-body` | `review-as-complex` | 7 | 0 |
+| `src/foundation/capabilities/code-review/SKILL.md#body` | `foundation-capability-body` | `review-as-complex` | 6 | 0 |
 | `src/foundation/capabilities/code-review/references/evidence-patterns.md#reference` | `foundation-reference` | `review-as-complex` | 3 | 0 |
 | `src/foundation/capabilities/concurrency-control/SKILL.md#body` | `foundation-capability-body` | `review-as-complex` | 1 | 0 |
 | `src/foundation/capabilities/concurrency-control/references/benchmarks-and-patterns.md#reference` | `foundation-reference` | `review-as-complex` | 1 | 0 |
@@ -1363,7 +1373,7 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | `src/foundation/capabilities/python-professional-usage/references/benchmarks-and-patterns.md#reference` | `foundation-reference` | `review-as-complex` | 1 | 0 |
 | `src/foundation/capabilities/refactoring/SKILL.md#body` | `foundation-capability-body` | `review-as-complex` | 5 | 0 |
 | `src/foundation/capabilities/refactoring/references/behavior-preservation-evidence.md#reference` | `foundation-reference` | `review-as-complex` | 2 | 0 |
-| `src/foundation/capabilities/regression-testing/SKILL.md#body` | `foundation-capability-body` | `review-as-complex` | 1 | 0 |
+| `src/foundation/capabilities/regression-testing/SKILL.md#body` | `foundation-capability-body` | `review-as-complex` | 2 | 0 |
 | `src/foundation/capabilities/relational-database/SKILL.md#body` | `foundation-capability-body` | `review-as-complex` | 2 | 0 |
 | `src/foundation/capabilities/relational-database/references/benchmarks-and-patterns.md#reference` | `foundation-reference` | `review-as-complex` | 1 | 0 |
 | `src/foundation/capabilities/relational-database/references/evidence-patterns.md#reference` | `foundation-reference` | `review-as-complex` | 3 | 0 |
@@ -1462,7 +1472,6 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | `src/professional-skills/data-middleware-change-builder/references/recovery-patterns.md#reference` | `professional-reference` | `review-as-complex` | 1 | 0 |
 | `src/professional-skills/delivery-release-gate/references/release-evidence-patterns.md#reference` | `professional-reference` | `review-as-complex` | 3 | 0 |
 | `src/professional-skills/domain-impact-modeler/references/evidence-patterns.md#reference` | `professional-reference` | `review-as-complex` | 4 | 0 |
-| `src/professional-skills/engineering-change-analysis/references/implementation-preparation.md#reference` | `professional-reference` | `review-as-complex` | 2 | 0 |
 | `src/professional-skills/engineering-change-analysis/references/solution-optimality.md#reference` | `professional-reference` | `review-as-complex` | 3 | 0 |
 | `src/professional-skills/experience-impact-modeler/references/experience-output-and-gates.md#reference` | `professional-reference` | `review-as-complex` | 8 | 0 |
 | `src/professional-skills/frontend-change-builder/references/frontend-output-and-gates.md#reference` | `professional-reference` | `review-as-complex` | 1 | 0 |
@@ -1475,6 +1484,7 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | `src/professional-skills/reliability-observability-gate/references/evidence-patterns.md#reference` | `professional-reference` | `review-as-complex` | 2 | 0 |
 | `src/professional-skills/reliability-observability-gate/references/solution-optimality.md#reference` | `professional-reference` | `review-as-complex` | 3 | 0 |
 | `src/professional-skills/security-privacy-gate/references/evidence-patterns.md#reference` | `professional-reference` | `review-as-complex` | 1 | 0 |
+| `src/professional-skills/task-dag-planner/SKILL.md#body` | `professional-skill-body` | `review-as-complex` | 1 | 0 |
 | `src/professional-skills/task-dag-planner/references/planning-evidence-patterns.md#reference` | `professional-reference` | `review-as-complex` | 1 | 0 |
 | `src/professional-skills/task-dag-planner/references/task-contract-patterns.md#reference` | `professional-reference` | `review-as-complex` | 1 | 0 |
 
@@ -1487,8 +1497,8 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | Agent-facing root documents | 381 |
 | Foundation compact capabilities | 124 |
 | Foundation complex capabilities | 26 |
-| Foundation over class target (advisory) | 33 |
-| Foundation compact over 400-word target | 33 |
+| Foundation over class target (advisory) | 35 |
+| Foundation compact over 400-word target | 35 |
 | Foundation complex over 500-word target | 0 |
 | Foundation over class hard word limit | 0 |
 | Foundation compact over 500-word hard limit | 0 |
@@ -1500,57 +1510,59 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | Foundation long-line findings | 0 |
 | Foundation tutorial-density findings | 0 |
 | Foundation low decision-density findings | 0 |
-| Governed roots within target | 150 |
-| Governed roots requiring density review | 29 |
-| Governed roots requiring body tightening | 10 |
+| Governed roots within target | 146 |
+| Governed roots requiring density review | 31 |
+| Governed roots requiring body tightening | 12 |
 | Governed root blockers | 0 |
-| Professional over word target | 2 |
+| Professional over word target | 4 |
 | Professional over word hard gate | 0 |
-| Professional over token target | 1 |
+| Professional over token target | 2 |
 | Professional over token hard gate | 0 |
 | Domain over word target | 4 |
 | Domain over word hard gate | 0 |
 | Domain over token target | 3 |
 | Domain over token hard gate | 0 |
-| Root semantic candidates | 77 |
+| Root semantic candidates | 83 |
 | Root semantic unresolved | 0 |
 | Root P0/P1 unresolved | 0 |
 | Root fixed-number unresolved | 0 |
-| Root dispositions configured | 77 |
-| Root dispositions applied | 77 |
+| Root dispositions configured | 83 |
+| Root dispositions applied | 83 |
 | Root disposition errors | 0 |
 
 ### Root Surface Validation
 
 | Surface | Status | Documents | Candidates | Unresolved | Configured | Applied | Errors |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `control` | `pass` | 2 | 4 | 0 | 4 | 4 | 0 |
-| `professional` | `pass` | 26 | 14 | 0 | 14 | 14 | 0 |
+| `control` | `pass` | 2 | 6 | 0 | 6 | 6 | 0 |
+| `professional` | `pass` | 26 | 18 | 0 | 18 | 18 | 0 |
 | `foundation` | `pass` | 150 | 36 | 0 | 36 | 36 | 0 |
 | `domain` | `pass` | 13 | 21 | 0 | 21 | 21 | 0 |
 | `description` | `pass` | 190 | 2 | 0 | 2 | 2 | 0 |
 
 ### 7.1 Root Disposition Lifecycle
 
-- Status: `release-current`; snapshot-current=`true`; formal-release-ready=`true`.
-- Comparison: scope=`since-prior-release`; added=0; removed=0; disposition-changes=6; source-rewrites=0; detector-improvements=0; unclassified=0.
-- Age: known=32; unknown=45; max-days=16.
+- Status: `pending-changes`; snapshot-current=`false`; formal-release-ready=`false`.
+- Comparison: scope=`pending-since-current-snapshot`; added=0; removed=0; disposition-changes=0; source-rewrites=0; detector-improvements=0; unclassified=0.
+- Age: known=40; unknown=43; max-days=20.
 - Bootstrap refresh chain: valid=true; count=0; latest-delta=None.
 
 ### 7.2 Root Semantic Candidates
 
 | Candidate ID | Finding | Priority | Status | Canonical occurrence | Preview |
 | --- | --- | --- | --- | --- | --- |
-| `e74bad828c5246cf23d7cb1109f5dcaf657be1290819b8ec48e40f247da33d1d` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/control-prompts/main-control-agent.md#control-prompt:L44` | After 2 same-path failures, retry needs changed hypothesis/material/gap/transition |
+| `e74bad828c5246cf23d7cb1109f5dcaf657be1290819b8ec48e40f247da33d1d` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/control-prompts/main-control-agent.md#control-prompt:L43` | After 2 same-path failures, retry needs changed hypothesis/material/gap/transition |
 | `ebb095b4a8f88758414cdfac672d479088da0240c0202fefd2e908a11127c40e` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/failure-diagnosis/SKILL.md#body:L35` | Treat correlation, a single successful retry, one familiar failure mode |
 | `00200eb3785c29d06be353c299fd6a0c4ab66c47747974a005ba0e9445834a03` | `fixed_duration_threshold_status_candidate` | P1 | resolved-false-positive | `src/foundation/capabilities/network-protocol-gateway-usage/SKILL.md#body:L17` | 502 503 504 retry-amplification upstream-status edge origin trace context |
 | `0cb8d0b1c79bd6239265e78f5b67a274c58cefbcfb599fb2329129969f72de20` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/repeat-failure-analysis/SKILL.md#body:L35-L36` | Change at least one material dimension |
 | `021aefdb53f077686212d9dddf02c7e013263be4cceb9f8313305f87a2eab2d3` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/repeat-failure-analysis/SKILL.md#body:L33` | After two failures, do not repeat the same path without new evidence. |
 | `54fa169848411b2ebf49cf8b067d212bd6872cd9fee3fbef8796c0fffc2a5b8c` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/task-dag-decomposition/SKILL.md#body:L12` | two or more candidate work units may form a graph |
-| `24cba4fb951adedce60a07a7c67130f4f5406c0388a3db4b491af1c47e69674a` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/engineering-change-analysis/SKILL.md#body:L10` | Support `analysis-agent` in selecting exactly one source-backed analysis mode for general change-impact preparation, diagnosis |
-| `b1ec4fa794007bc0c2931862730d74b9f261a3a1f2b5b874edd8e75c79813e2e` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/engineering-change-analysis/SKILL.md#body:L47` | Classify the request into exactly one supported mode. |
+| `2ffa565928263dfc54d8b9cc3ba7c046ba56e33d619a09d8d67bbc1c997d90c4` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/ai-code-review-refactor/SKILL.md#body:L39` | Give L4 one independent final review plus only triggered gates, specialists |
+| `d0b057ff13c69fe232f1369b977337c5a107005cd7900488e5d1a894fbd962ec` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/ai-code-review-refactor/SKILL.md#body:L37` | Give L1-L2 one independent final review with the base matrix. |
+| `4baae35f1e600adf9689dcbb9893272895fa2d603c874db42e20e95fe6be8091` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/ai-code-review-refactor/SKILL.md#body:L38` | Give L3 one independent final review plus only risk-triggered JIT lenses. |
+| `b1ec4fa794007bc0c2931862730d74b9f261a3a1f2b5b874edd8e75c79813e2e` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/engineering-change-analysis/SKILL.md#body:L53` | Classify the request into exactly one supported mode. |
 | `53244a7f0aa46ccdaed5a68af5bfaa7dccd3fd17f7d372cb44d2126564dd2357` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/high-risk-design-review/SKILL.md#body:L31` | Test the brief as four connected dimensions |
-| `e6c088e78ad47b278277d5e80d01d32887185418676eb71b3854ec5a99c9737d` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/task-dag-planner/SKILL.md#body:L38` | Create a DAG only for two or more real tasks whose every edge expresses a blocking fact. |
+| `e6c088e78ad47b278277d5e80d01d32887185418676eb71b3854ec5a99c9737d` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/task-dag-planner/SKILL.md#body:L49` | Create a DAG only for two or more real tasks whose every edge expresses a blocking fact. |
 | `8dd0cd64f648cdcbe8d16dbab95b2767a11392348aab839fd9836418662ecfcd` | `fixed_duration_threshold_status_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/task-dag-planner/SKILL.md#description:L3` | Use `analysis-agent` to create a Task DAG from an accepted source-backed Brief when 2+ tasks have dependencies, parallel value, integration |
 | `0560f7038ba9ca6c7b59e84f6a7ca98ec4b988b76ad90b8e75afcceb8c3803ab` | `fixed_vendor_tool_candidate` | P1 | resolved-false-positive | `src/domain-extensions/cloud-platform-extension/SKILL.md#body:L19` | Do not use for unknown cloud scope, provider-name-only or language-only work, local Kubernetes, generic backend work without a cloud control-plane dependency |
 | `54af05b938e641a607217739b679e0b05095c6d5c1ccdb398226aa5b80745ba3` | `fixed_vendor_tool_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/kubernetes-gateway/SKILL.md#body:L46` | Return a Kubernetes runtime decision |
@@ -1563,9 +1575,11 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | `80f3031718e341444348bf7c83a910d7135f1c88c340875ec151f1a9bcffaeaa` | `mandatory_artifact_candidate` | P1 | resolved-valid-contextual-rule | `src/domain-extensions/windows-platform-extension/SKILL.md#body:L26` | Record registration, activation, COM/IPC, privilege/container, secret, DLL, service/background/notification, DPI, accessibility, artifact, signing |
 | `2d72f4b2b3206aabb86a3a453417cfdcc07eb608b2833734527762e101505e87` | `mandatory_artifact_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md#body:L30` | Require current rule inventory, negative fixture, exception policy |
 | `e59a6530f983bfee0e1f36d33148f98c866da5d49b70573c2126338276fe2300` | `mandatory_artifact_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/repository-impact-inspection/SKILL.md#body:L51` | Record affected and uninspected consumers, tests, contracts |
-| `815cf25bbdf7a73dd18b211354dac2015c9a6feb216228d6a2f387e22c981deb` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/control-prompts/main-control-agent.md#control-prompt:L66-L67` | Completion requires current review-agent evidence |
-| `c087620838ba97c47fdfa4b87f78e0483ec886655d6bbeb98d504e18b4f8f977` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/control-prompts/main-control-agent.md#control-prompt:L44` | return Main/block, never third unchanged retry. |
-| `9e420231a24227dbdd9cf8ab44af692a6d966cfd2a9afb3165af3b5b88bfccc8` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/control-prompts/main-control-agent.md#control-prompt:L69` | Give review-agent the actual diff, every changed file |
+| `a32b8e6d164969b8d3b426807f96166f939d69fde77d214944f9afcc8e2cb7c3` | `tutorial_explanatory_density_candidate` | P1 | resolved-false-positive | `src/control-prompts/main-control-agent.md#control-prompt:L50-L82` | engineering-change-analysis: current Engineering Brief is the only operational analysis authority. First Executable Slice is a complete Task Contract v2; dispatch its First Executable Slice verbatim; never regenerate or reinterpret. Specialist input takes effect only after Brief  |
+| `815cf25bbdf7a73dd18b211354dac2015c9a6feb216228d6a2f387e22c981deb` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/control-prompts/main-control-agent.md#control-prompt:L65-L66` | Completion requires current review-agent evidence |
+| `c087620838ba97c47fdfa4b87f78e0483ec886655d6bbeb98d504e18b4f8f977` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/control-prompts/main-control-agent.md#control-prompt:L43` | return Main/block, never third unchanged retry. |
+| `72d7cb6490fd2ebbd7cf148189f55395aaf18f1f6f061d017732f4756c2ab063` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/control-prompts/main-control-agent.md#control-prompt:L21` | never infer capability. utility_no_edit=references/utility-capsule-template.md |
+| `9e420231a24227dbdd9cf8ab44af692a6d966cfd2a9afb3165af3b5b88bfccc8` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/control-prompts/main-control-agent.md#control-prompt:L68` | Give review-agent the actual diff, every changed file |
 | `64829e510d6110c54d7dfc7367d9b26313ced2758d345ce51e46d756fd69ec02` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/control-skills/engineering-control-plane/SKILL.md#description:L3` | never implement or review. |
 | `7f36ce3393245d11b04b54881db0f23b17e627967a29513c6482f4c5000a8e25` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/domain-extensions/android-platform-extension/SKILL.md#body:L10` | It is never the primary Professional review owner. |
 | `95760b51f6312e893662294201ac64b2dab1131a8ae19d756ea284b3b0b41b94` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/domain-extensions/bigdata-product-extension/SKILL.md#body:L31` | verify every active consumer can read the deployed schema transition. |
@@ -1588,6 +1602,7 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | `7f9e0fcbc8c6d8ecb9c0ac1608dc0e7ce1ebc5031d4f63c403663294978c1e4d` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/client-application-testing/SKILL.md#body:L28` | **Test every external entry from cold and warm state.** Validate deep links and notifications for duplicate delivery, malformed input, wrong account, unavailable content |
 | `37ee0ef16d7169dfebcc297a4794f3f268241a7990d2f3f11a58651e21214716` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/client-lifecycle-state-restoration/SKILL.md#body:L12` | Client behavior must survive or intentionally reset across visibility changes, backgrounding, process termination, relaunch, crash, upgrade, logout |
 | `bd9b1e2b2f73cc0d587c3e74646064e92363819e3c3ec47121381567bf704b72` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/code-review/SKILL.md#body:L28` | **Evaluate proof against the failure mechanism.** Require focused evidence for the changed behavior and consequential negative outcomes |
+| `6537235c2554b518a32c51038b8b4c1a27e704764e704ee5f9792898fbc9dad6` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/code-review/SKILL.md#body:L24` | **Resolve the review surface.** Identify the Current Task Boundary, latest diff, all changed files |
 | `4f8513208a5e465926c8998b8d639c38a07d2b84cb36412e13151e7ccb9f2c40` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/data-model-design/SKILL.md#body:L24` | **Authority before shape.** Record each changed fact's source of truth, mutation authority, lifecycle evidence |
 | `e3417af7023a54eadebe84064cad566d7167ea2f157c86f84f93ceb1ddd37cd4` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/e2e-testing/SKILL.md#body:L28` | Cleanup must cover success, assertion failure, timeout |
 | `eadab0abf6618f23f50755c1ce5d68a142649950ed7446261d44109502b5b98a` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/extensibility-design/SKILL.md#body:L44` | Require concise rationale and inspected evidence for inapplicable controls. |
@@ -1600,7 +1615,6 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | `96619f0d01902aaf07aa57414a82336f86a2ae3f47c33e3b82f6159f32d1be54` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/offline-sync-conflict-resolution/SKILL.md#body:L12` | An installed or browser client must read, write, queue, reconcile, delete |
 | `9f32c6238459456587ab95007af3086bcfac2f8f7c92e56195a4a1aa7146ad0a` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/plan-execution-consistency/SKILL.md#body:L27` | Require fresh validation evidence after the final repository edit. |
 | `70ba9061836200de4569805bd3d5e32438674cb93dcfb84968946a6e5f06b071` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/plan-execution-consistency/SKILL.md#body:L28` | Require explicit validation coverage for every changed file in scope. |
-| `f07e7de4470f583e908237246ed99fd6af13da4e663384004dd1a1953f37ba62` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/regression-testing/SKILL.md#body:L28` | Map each materially reachable recurrence to a guard, an existing fresh proof |
 | `e2735506386b93486240cef7622a3374cf3839fb3bfc1907c7947db6a6647151` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/regression-testing/SKILL.md#body:L24` | Require causal-trigger reproduction rather than adjacent correct behavior as the recurrence guard. |
 | `995a2da65067c989f15b16e783b05fbe367e11d8e1eae1db094efaa3c5d038aa` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/repository-impact-inspection/SKILL.md#body:L33` | Require source-of-truth and candidate owner/change evidence from `repository-context-map` or equivalent direct inspection. |
 | `14aaa5b0bd39e0ca590c6ec806c428f2193044de760a13fa0096a29e8dbb6e54` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md#body:L27` | Define each benchmark's task, baseline, treatment, metrics, verdict, caveats |
@@ -1610,6 +1624,8 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | `2139f1437973d935ab31633c3ab0746e924be74abed660f6c5a5656020b53855` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/foundation/capabilities/web-platform-professional-usage/SKILL.md#body:L24` | **Prefer native document semantics.** Select HTML elements from content and interaction meaning before adding roles or scripted behavior that must recreate browser defaults. |
 | `f48da381697736b250485630860d6a9dc22451e8d2432a73008b8fc28fe3e7e7` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/acceptance-criteria-builder/SKILL.md#body:L46` | Map each criterion to an observable validation signal and an explicit proof limit. |
 | `491220af01d630b94a5692b217bda2b3a1cf7b39d8d333d7cb6c3b3e8be0880e` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/acceptance-criteria-builder/SKILL.md#body:L33` | Map each material criterion to a realistic validation signal and state its proof limit. |
+| `f7629f1d8daa1ced84faafa918934392026f78177a2c917e23511f828c01deee` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/ai-code-review-refactor/SKILL.md#body:L42` | specialist review never replaces final implementation review. |
+| `1b1ef90112ad11bccd229e552628b754c6091156df8dde46091ba8712e83118e` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/ai-code-review-refactor/SKILL.md#body:L74` | Never self-upgrade Effective Level during review. |
 | `b3d32c3dc89c4a8a188b0816c0d61c29e65429451f0112cb016dd9f7617e62ed` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/data-api-contract-changer/SKILL.md#body:L61` | Require current permission, redaction, approval |
 | `38c33eb72654f6bffb9f9a40c4f3874e1a37ddad60bfe56649dda31824a8b514` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/delivery-release-gate/SKILL.md#body:L57` | Require rollout approval, watch ownership, stop signals |
 | `c49edfe7eee4b0ee995f29a6be806ce1fd2f642bbce67850d31fae3232fe4bfc` | `unconditional_mechanism_candidate` | P1 | resolved-valid-contextual-rule | `src/professional-skills/engineering-artifact-review/SKILL.md#body:L33` | Verify every material claim against current source or explicit owner evidence. |
@@ -1633,8 +1649,8 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | Orphan references | 0 |
 | Template assets | 9 |
 | Unindexed template assets | 1 |
-| Indexed lines | 15779 |
-| Indexed tokens | 283720 |
+| Indexed lines | 15852 |
+| Indexed tokens | 284542 |
 | Exactly one H1 | 524 |
 | Missing H1 | 0 |
 | Multiple H1 | 1 |
@@ -1661,26 +1677,26 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | Non-template empty-heading references | 0 |
 | References over 15 decision items | 0 |
 | References with structural advisories | 0 |
-| Semantic candidates (raw) | 915 |
-| Semantic candidates (detector-downgraded) | 802 |
+| Semantic candidates (raw) | 929 |
+| Semantic candidates (detector-downgraded) | 805 |
 | Semantic candidates (untriaged) | 0 |
 | Semantic candidates (rewrite) | 0 |
-| Semantic candidates (resolved) | 113 |
+| Semantic candidates (resolved) | 124 |
 | Semantic candidates (unresolved) | 0 |
 | Semantic unresolved fixed-number | 0 |
 | Semantic unresolved templated groups | 0 |
 | Semantic unresolved absolute P0/P1 | 0 |
 | Semantic P2 rewrite advisories | 0 |
-| Semantic dispositions configured | 113 |
-| Semantic dispositions applied | 113 |
+| Semantic dispositions configured | 124 |
+| Semantic dispositions applied | 124 |
 | Semantic disposition errors | 0 |
 
 ### Reference Surface Validation
 
 | Surface | Status | Indexed | Existing | Candidates | Unresolved | Configured | Applied | Errors |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `control` | `pass` | 8 | 8 | 22 | 0 | 5 | 5 | 0 |
-| `professional` | `pass` | 93 | 93 | 162 | 0 | 16 | 16 | 0 |
+| `control` | `pass` | 8 | 8 | 31 | 0 | 12 | 12 | 0 |
+| `professional` | `pass` | 93 | 93 | 167 | 0 | 20 | 20 | 0 |
 | `foundation` | `pass` | 376 | 376 | 655 | 0 | 72 | 72 | 0 |
 | `domain` | `pass` | 48 | 48 | 77 | 0 | 21 | 21 | 0 |
 
@@ -1688,8 +1704,8 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 
 | Layer | Indexed | Existing | Missing | Physical | Orphan | Templates | Lines | Tokens | Advisory refs |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| control | 8 | 8 | 0 | 8 | 0 | 6 | 714 | 9209 | 0 |
-| professional | 93 | 93 | 0 | 93 | 0 | 1 | 2307 | 42147 | 0 |
+| control | 8 | 8 | 0 | 8 | 0 | 6 | 770 | 9855 | 0 |
+| professional | 93 | 93 | 0 | 93 | 0 | 1 | 2324 | 42323 | 0 |
 | foundation | 376 | 376 | 0 | 377 | 0 | 2 | 10734 | 210266 | 0 |
 | domain | 48 | 48 | 0 | 48 | 0 | 0 | 2024 | 22098 | 0 |
 
@@ -1698,8 +1714,8 @@ Fingerprint: `c5101a331b5620f4c062b622f9359334bb334462f9589945535fdae7d58b8bc2` 
 | Inferred kind | Indexed | Existing | Lines | Tokens | Advisory refs |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | targeted | 122 | 122 | 5210 | 79003 | 0 |
-| mode-contract | 4 | 4 | 139 | 1594 | 0 |
-| template | 8 | 8 | 744 | 5445 | 0 |
+| mode-contract | 4 | 4 | 156 | 1770 | 0 |
+| template | 8 | 8 | 800 | 6091 | 0 |
 | index | 19 | 19 | 198 | 8289 | 0 |
 
 ### 8.3 Effective Preface Contract
@@ -1736,7 +1752,7 @@ _none_
 
 | Finding | Raw | Detector-down | Untriaged | Rewrite | Resolved | Unresolved | P0/P1/P2 unresolved |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| `unconditional_absolute_candidate` | 909 | 802 | 0 | 0 | 107 | 0 | 0/0/0 |
+| `unconditional_absolute_candidate` | 923 | 805 | 0 | 0 | 118 | 0 | 0/0/0 |
 | `fixed_number_candidate` | 1 | 0 | 0 | 0 | 1 | 0 | 0/0/0 |
 | `exact_normalized_duplicate_block` | 0 | 0 | 0 | 0 | 0 | 0 | 0/0/0 |
 | `templated_block_candidate` | 5 | 0 | 0 | 0 | 5 | 0 | 0/0/0 |
@@ -1746,7 +1762,7 @@ _none_
 | `exact_normalized_duplicate_block` | 0 | 0 | 0 |
 | `templated_block_candidate` | 5 | 30 | 578 |
 
-Semantic disposition contract: schema=2; source=`config/skill-content-exceptions.yaml`; evaluated_on=2026-08-04; configured=113; applied=113; errors=0.
+Semantic disposition contract: schema=2; source=`config/skill-content-exceptions.yaml`; evaluated_on=2026-08-08; configured=124; applied=124; errors=0.
 
 > Group candidate IDs use the literal scope 'group'; evidence.fingerprint must match sorted path/owner membership and evidence.content_fingerprint must match the sorted path/owner/normalized-body multiset.
 
@@ -1798,6 +1814,7 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `a1a5c7c78a2106bf225818bfcc3f16250dcd4356a2868df57cdad3a1c6acbf6c` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/change-intake-compiler/references/evidence-patterns.md:L10` | 1 | `-` | `-` | **Stakeholder conflict:** record conflicting sources, affected contract/risk, blocking status, owner, deadline, and safe assumption only when non-blocking. |
 | `025586435efa065214dba1de4c44201ec4445f3597476750c2fe6db281612c29` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/logging-design-gate/references/logging-output-and-gates.md:L7` | 1 | `-` | `-` | Use the selection-criteria reference only when a concrete decision needs its additional detail. |
 | `be1608702047e14c60fa1f30a25d66f697e4d4fb1d8584ddea4f7029088a7992` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/domain-extensions/cross-platform-client-extension/references/framework-target-evidence-contracts.md:L14-L15` | 1 | `-` | `-` | Use framework documentation to test feasibility and version compatibility, never to infer that the repository ships every framework-supported target. |
+| `b6df72015ca60c04b26d1f55b2e16d0a2c4ac7ef24dcfc025bc14680c0e49409` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/control-skills/engineering-control-plane/references/engineering-brief-template.md:L15` | 1 | `-` | `-` | A Specialist never becomes a parallel authority. |
 | `493b94a5b2dd492e0f34add6b1d0938d7936efbfc20def7c002b019152e032e3` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/domain-extensions/linux-desktop-platform-extension/references/desktop-entry-mime-and-keyring-contracts.md:L17-L18` | 1 | `-` | `-` | Never infer keyring availability, persistence, or unlock behavior across desktops, display managers, remote sessions, or headless execution. |
 | `975d05542606a9b712d4874915824a5611433d1be5d663f30fafdb3fc5bdbc75` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/use-case-modeling/references/evidence-patterns.md:L15` | 1 | `-` | `-` | All rule variants, UI states, or downstream consumers are covered |
 | `b5f94a7a8eb3c4448bab1a2913bf8a48fc3f0ea8ed695c8d4f08a1ff0e5f4fbf` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/degradation-circuit-breaking/references/benchmarks-and-patterns.md:L31` | 1 | `-` | `-` | Model total availability/latency impact across fan-out and retry amplification; optional work may be dropped only when product semantics and audit needs allow it. |
@@ -1857,11 +1874,11 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `9ef27082a235a4128272827c7121e155d54a898a6eb2f28009f7d2f58e8a590a` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/logging-error-handling/references/evidence-patterns.md:L15` | 1 | `-` | `-` | Every repository/adapter implementation follows the same translation policy |
 | `e9435498d1b308faddb6f9667ad91fcc50df1afe10ebd23f2827793e5560c5f6` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/design-system-rules/references/benchmarks-and-patterns.md:L8` | 1 | `-` | `-` | **Variants:** add an axis only for a real product state or interaction distinction, not a screen name or one-off style flag. |
 | `1018a5621d6fe75ca387b5746f9f380cc8043a1a256f49e371fb1b7e0f073979` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/documentation-generation/references/evidence-patterns.md:L11` | 1 | `-` | `-` | All generated clients or external consumers are compatible |
-| `f1d2f4c4a8c3945d45d3f68041200758ce888c3296ba75ebba066bfd77276ca1` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/direct-task-template.md:L15-L16` | 1 | `-` | `-` | Legacy without v1 is completed/read only; active or resumed work, edit, validation, or review requires reissue. |
-| `e4a0bf2267b773523d709d9b8e3e8b050ea774e116c5ded5663651d64163c616` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/engineering-brief-template.md:L10-L11` | 1 | `-` | `-` | Legacy without v1 is completed/read only; active or resumed work, edit, validation, or review requires reissue. |
-| `3b101d219d1cbd29a671eb3abcc971f94e9c71e1e548b3c9e1cb611bb3ccc277` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/implementation-handoff-template.md:L9-L10` | 1 | `-` | `-` | Legacy without v1 is completed/read only; active or resumed work, edit, validation, or review requires reissue. |
-| `74361bfca8e771ca76adbf6c92895d7ee923fccddf54afcc5f5b2a495aaa4347` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/review-handoff-template.md:L10-L11` | 1 | `-` | `-` | Legacy without v1 is completed/read only; active or resumed work, edit, validation, or review requires reissue. |
-| `4bf99cead52e739973b19fb2b8ecbb7514195f5c463cb1670115beabe25d366b` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/task-dag-template.md:L9-L10` | 1 | `-` | `-` | Legacy without v1 is completed/read only; active or resumed work, edit, validation, or review requires reissue. |
+| `f1d2f4c4a8c3945d45d3f68041200758ce888c3296ba75ebba066bfd77276ca1` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/direct-task-template.md:L19-L20` | 1 | `-` | `-` | Legacy without v1 is completed/read only; active or resumed work, edit, validation, or review requires reissue. |
+| `e4a0bf2267b773523d709d9b8e3e8b050ea774e116c5ded5663651d64163c616` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/engineering-brief-template.md:L33-L34` | 1 | `-` | `-` | Legacy without v1 is completed/read only; active or resumed work, edit, validation, or review requires reissue. |
+| `3b101d219d1cbd29a671eb3abcc971f94e9c71e1e548b3c9e1cb611bb3ccc277` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/implementation-handoff-template.md:L16-L17` | 1 | `-` | `-` | Legacy without v1 is completed/read only; active or resumed work, edit, validation, or review requires reissue. |
+| `74361bfca8e771ca76adbf6c92895d7ee923fccddf54afcc5f5b2a495aaa4347` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/review-handoff-template.md:L17-L18` | 1 | `-` | `-` | Legacy without v1 is completed/read only; active or resumed work, edit, validation, or review requires reissue. |
+| `4bf99cead52e739973b19fb2b8ecbb7514195f5c463cb1670115beabe25d366b` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/task-dag-template.md:L19-L20` | 1 | `-` | `-` | Legacy without v1 is completed/read only; active or resumed work, edit, validation, or review requires reissue. |
 | `c42032af50ae4b66222abec800bb50155fe773aab4fd84ea22c037f9890e8e6e` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/logging-design-gate/references/logging-output-and-gates.md:L34` | 1 | `-` | `-` | Any mandate for every sink or fixed retention requires classification or policy evidence. |
 | `7ec5737707548349a8b9b5d8b2f90e166b83f1dda9adab48d2b0c52ac822e725` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/documentation-generation/references/evidence-patterns.md:L15` | 1 | `-` | `-` | The generator itself is semantically correct in every case |
 | `19ebf6b5b571efc23a7ec53b19d9f61eee640aabbc13fa3170e12ea119735804` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/security-privacy-gate/references/evidence-patterns.md:L17` | 1 | `-` | `-` | Require fix evidence or explicit approved remediation with owner and release consequence before closing Critical or High risk supported only by compensating-control language. |
@@ -1898,6 +1915,7 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `11eca81756e310d9e3ffd94d092cdb519e125ea62b86ae7708759092159d7462` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/repository-context-map/references/source-generated-boundary-map.md:L14` | 1 | `-` | `-` | Never require deleting unrelated dirty worktree changes. |
 | `959e50c086a1712e32481c3df5ee06cac2fcc34b886bfbda190426a93a5688c9` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/data-side-effect-flow-tracing/references/evidence-patterns.md:L11` | 1 | `-` | `-` | All downstream consumers are correct or idempotent |
 | `69bdc8a421f643ddbe250597a4c2cd0898ed59b17dcea87dea2c70c27aa33ee3` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/non-goal-boundary-definition/references/evidence-patterns.md:L15` | 1 | `-` | `-` | Every connector, export, or future debug artifact is safe |
+| `47ecd1c528dae6b3241866ef22b8cf97f40bc75bda03c3c2d9b5a12e16f5ce6d` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/control-skills/engineering-control-plane/references/task-dag-template.md:L8-L10` | 1 | `-` | `-` | It must not select or replace the First Executable Slice or modify Acceptance, Non-goals, Owner, Invariants, Placement, contract semantics, or Rollback. |
 | `d1deb877625d1e60d3f754e69d7301259102ec88f2acb70446e5463bba24f1d8` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/task-dag-planner/references/task-contract-patterns.md:L20` | 1 | `-` | `-` | Keep together only when a split creates artificial handoff and one owner/reviewer can verify the same artifact. |
 | `cf563884073f8aadf8877032cacfd9f0c3769f2eca9a8d7f1171ed24c2883e4d` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/secret-configuration-security/references/evidence-patterns.md:L3` | 1 | `-` | `-` | Keep raw secret values out of every artifact. |
 | `849bde6c577f42bd8c5ef168808b3742fc4ddcc18b16a677d3ad8c296e57a653` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/domain-extensions/android-platform-extension/references/jetpack-compose-contracts.md:L3-L4` | 1 | `-` | `-` | Load this Reference only when Jetpack Compose changes Android state, navigation, lifecycle, side effects, or rendering behavior. |
@@ -1950,6 +1968,7 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `e241ef8322cd0f15fbaa4d013f9e66fc8d6fdd423085a878e74e04095f0f9bb5` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/error-code-design/references/industry-benchmarks.md:L14` | 1 | `-` | `-` | Retry only after idempotency/side-effect safety is proven. |
 | `0ae83717c984743bbc40500686b9f59ad388d443e98a4bda3377e22517107d80` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/domain-extensions/cloud-platform-extension/references/iam-workload-identity-and-network-contracts.md:L3-L4` | 1 | `-` | `-` | Load this Reference only when cloud authorization, federation, cross-boundary trust, routing, filtering, DNS, endpoint, or shared-network behavior changes. |
 | `9694cd97a8d55fd87d3541fdac45434229ce23a2f33b46384de0bcc4c98a6968` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/test-data-management/references/benchmarks-and-patterns.md:L36` | 1 | `-` | `-` | Treat namespace cleanup as proof only for the queried namespace. |
+| `fb9c73a5d655534ac439f6b39a986dd886201a782979bd5e33454e603464945d` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/professional-skills/engineering-change-analysis/references/implementation-preparation.md:L11-L13` | 1 | `-` | `-` | They must not redefine Acceptance, Non-goals, Owner, Invariants, Placement, contract semantics, Rollback, or the First Executable Slice. |
 | `a5b014acf326ccfb017ee8573835e555e274e940671baad5f375e63f15861a3e` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/tenant-isolation/references/async-queue-and-execution-context-isolation.md:L47` | 1 | `-` | `-` | Tests prove only the exercised producers, consumers, identities, retries, platforms, and shared-resource configurations. |
 | `e11d3944c9f7911c70e383944459540e58285e1858e826e717bde9462e948274` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/requirement-clarification/references/checklist.md:L15` | 1 | `-` | `-` | If partially proceeding, record surfaces that can proceed, surfaces that must wait, forbidden assumptions or artifacts, plus the review boundary. |
 | `71c71323286aecac175503fa030ab408a44677224496ee974531fecfd0c62efa` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/data-model-design/references/benchmarks-and-patterns.md:L19` | 1 | `-` | `-` | Embed only when child data shares owner, lifecycle, write boundary, and access pattern. |
@@ -1995,8 +2014,10 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `cd7a48a914049f5ad247aaf2b1e1bf08bf95a7422c3e5163da452daf9fb79f2c` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/domain-extensions/linux-desktop-platform-extension/references/display-session-and-toolkit-contracts.md:L3-L4` | 1 | `-` | `-` | Load this Reference only when X11, Wayland, Xwayland, compositor, window, focus, coordinate, clipboard, input, or toolkit behavior changes the decision. |
 | `fc52bf3d76c09d8c4cea966a5134d4deca8188c3b0f285802c0c6b081f33d5b0` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/consumer-impact-analysis/references/evidence-patterns.md:L38` | 1 | `-` | `-` | Search output proves only searched paths and literal/detected references; it does not prove dynamic, external, package, dashboard, or documentation consumers. |
 | `3aef5f567358a73767bdb0a1fe8951cb6b940c44782f5c0e3a6fb3bd319ad1c3` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/test-strategy/references/evidence-patterns.md:L20` | 1 | `-` | `-` | Accept prior "covered by integration", "E2E sufficient", "no consumer", "full suite passed", or "affected tests selected correctly" claims only when current changed paths, tests, generated inputs, CI config, and reports still match. |
+| `ddbb3b858e41a978d94ef6a972b60f288b0f67731193af5642b5a5d62fd41b08` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/professional-skills/engineering-change-analysis/references/implementation-preparation.md:L24` | 1 | `-` | `-` | Never create a parallel analysis authority. |
 | `686b19ca9d10ed8659447bed68391301fed7cb632748e87e85dcdc3470141db7` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/task-dag-planner/references/task-contract-patterns.md:L33` | 1 | `-` | `-` | A complete plan proves only that the supplied facts form an executable contract. |
 | `2958effbe112f7776972e5dee7561dc656175e4a713d945b55b487d9d8016446` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/domain-extensions/windows-platform-extension/references/framework-lifecycle-and-activation-contracts.md:L3-L4` | 1 | `-` | `-` | Load this Reference only when Win32, WinUI, WPF, or Windows Forms lifecycle, activation, single-instance, or UI-thread behavior changes the decision. |
+| `1a845349e5ff4d99fe933eb80d7d764b59a520cab704efb90d3166dd67ee6d00` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/control-skills/engineering-control-plane/references/engineering-brief-template.md:L11-L12` | 1 | `-` | `-` | User requests, change sources, source and tests, external evidence, and Specialist results are analysis input only. |
 | `f3cfc1782d4b54d9bd5ee3011980365c2e0bf381e2187e20f66900a0ac3a2b8f` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/test-data-management/references/evidence-patterns.md:L13` | 1 | `-` | `-` | Production scale, all quotas, or long-term retention are proven |
 | `d4987bfeb5cd5e2e3ae52fac01845e8b86b1a240e7f85159af794578d628d1b2` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/package-dependency-management/references/evidence-patterns.md:L14` | 1 | `-` | `-` | Provenance risk is accepted, the package is immune to future compromise, or all registry mirrors are trustworthy |
 | `f29b8deff251e089223eeeee5ae578f043da16e4b000345d95b91c25266c817e` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/data-side-effect-flow-tracing/references/evidence-patterns.md:L10` | 1 | `-` | `-` | Every generated wrapper or decorator is effect-free |
@@ -2064,6 +2085,7 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `6af648679c11bea08cb69988e3329c9263091147e451cc8197032bd87c8abfb3` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/build-tool-professional-usage/references/benchmarks-and-patterns.md:L23` | 1 | `-` | `-` | Generated output is professional only when the source authority, generator version, config, output location, committed/ignored policy, and validation command are named. |
 | `7c3cfb6dc94ac76a171de84bf631cf5e02502794e19dd0184ceb074952be91a8` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/implementation-structure-design/references/evidence-patterns.md:L21` | 1 | `-` | `-` | Local search and tests cover only inspected owners, callers, generated surfaces, and fixtures. |
 | `5ef27a2f5f62aaeed8f2efa8d96bd6e6736ab18a9a9b6d0fd8c46dae70b481c1` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/change-documentation-gate/references/evidence-patterns.md:L11` | 1 | `-` | `-` | Live rollback will succeed under every incident |
+| `b96a42a50ce1bb9fa39fe12a8bba10eabf3fbae5284b7b26abeeebc9cebae481` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/professional-skills/engineering-change-analysis/references/implementation-preparation.md:L25-L27` | 1 | `-` | `-` | `## Contract / Data / Failure Impact`: direct and transitive consumers plus only material compatibility, contract, data, side-effect, failure, migration, security, reliability, release, documentation, or generated-output impact. |
 | `232a11e8d63cece76fde6edfab9a615d2944c4a4bc02a7c17d44846625769e3a` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/repository-persistence/references/evidence-patterns.md:L20` | 1 | `-` | `-` | Accept prior "repository pattern is established", "OSIV disabled", "tenant filter always applied", or "integration tests cover it" claims only when current source and validation still match. |
 | `219f6b6420659a7c6deffc33e047ffbd8ef82f2ce9945b7b0886f4d3cb594814` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/model-boundary-mapping/references/evidence-patterns.md:L14` | 1 | `-` | `-` | All external consumers are discovered |
 | `7581e70e5f205a550a3f7a2ee7de95fef61f26ec912295847ecfa42859b759d0` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/state-management-design/references/evidence-patterns.md:L11` | 1 | `-` | `-` | Deployed IdP behavior or every tab/browser variant is proven |
@@ -2156,6 +2178,7 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `839c6646d91ed0d905693d9c6720294bf49adef241d78e807b6a76258a5662cd` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/architecture-enforcement-tooling/references/evidence-patterns.md:L10` | 1 | `-` | `-` | All future dynamic or generated paths are covered |
 | `918a3a2acff6ed84aa094b2f3b27be6719414900590404057b9bde035fff6f6e` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/event-driven-architecture/references/benchmarks-and-patterns.md:L36` | 1 | `-` | `-` | Bound telemetry labels and expose publish/consume rate, age/lag, retries, duplicates/conflicts, failure/DLQ class, processing duration and replay progress only for the changed path; map signals to an owner/runbook action. |
 | `ba3abc7c8610ac9edb4f56caf3d849652bf83ab3731cb12b8805f3d0b289deea` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/task-dag-decomposition/references/candidate-graph-evidence.md:L10` | 1 | `-` | `-` | Derive the candidate critical path only from supported edges. |
+| `26264c2952e3cf3fb7cc33ac0cf4f7b74859276b6c9210e728d6c9f67e08e998` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/review-handoff-template.md:L11-L12` | 1 | `-` | `-` | If the handoff conflicts with the current Brief or a protected decision must change, mark it blocked and return to analysis through Main. |
 | `75167eb7e884ffeeeaf88869aa9fcb74a8ded71dd9e6317c2f44e7bfbceea429` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/frontend-testing/references/benchmarks-and-patterns.md:L18` | 1 | `-` | `-` | Cover each role or scope only when rendered behavior differs, while backend denial remains a separate proof. |
 | `a91282111f709ef22a88cd00b79f2a4b6681efe32c53c86642336e0b4bf9a722` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/audit-evidence-integrity/references/tamper-evidence-storage-and-access.md:L46` | 1 | `-` | `-` | CloudTrail validation covers referenced files after delivery, not source completeness or every export. |
 | `16f0d6735ff38665de64f6e66c3d737896db74c0bb672ba15ccd0fe5ef353e6f` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/cli-daemon-interface-design/references/evidence-patterns.md:L12` | 1 | `-` | `-` | All deployment environments or inherited config files are covered. |
@@ -2205,6 +2228,7 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `ff1eca99794e5c4e17695a1ef7c49a7e95069cdfdac84f038eab4e2dffcec688` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/refactoring/references/split-merge-cleanup-patterns.md:L11` | 1 | `-` | `-` | Later changes still edit all files together. |
 | `89087e9f5cb9d3d3601014a17ee6f5157abe613f5093f4bebc51e3f925da1311` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/file-storage-processing/references/evidence-patterns.md:L9` | 1 | `-` | `-` | New file classes, scanner signature quality, or all malware variants |
 | `0f7a9e9d1bd314b6011fa0a23ef85b715e53de6f00941f771163b8db97d518b1` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/powershell-professional-usage/references/remoting-provider-and-administration-contracts.md:L13` | 1 | `-` | `-` | A different installed module wins resolution or imports only on the authoring host |
+| `c3f745ad169087c7bfb7ffa5d88d3b9a7f3ad69346380ffdbbafb2c5561fe0ca` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/engineering-brief-template.md:L25-L28` | 1 | `-` | `-` | If the Brief is insufficient, a downstream artifact conflicts with it, or a protected decision must change, mark the task blocked and return through Main to analysis for an updated Brief and redispatch of affected tasks. |
 | `1a548b945d9322abf8e713da622eedb8d452b497294b3a1dfedec4ce92a4e781` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/data-side-effect-flow-tracing/references/benchmarks-and-patterns.md:L34` | 1 | `-` | `-` | Deviations are allowed only when the owner states the contract and validation. |
 | `492b3d85613777926b8d14a8280ff1b21a74622b7c61c6406066604b2481dd09` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/acceptance-criteria-builder/references/evidence-patterns.md:L3` | 1 | `-` | `-` | Keep `SKILL.md` for selection and output rules; load this file only for concrete evidence closure. |
 | `adadccfac544d2e9abbf08c0829efe51e215abbe42429d6660d30380c9670c33` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/change-intake-compiler/references/evidence-patterns.md:L3` | 1 | `-` | `-` | Keep `SKILL.md` for selection and output rules; load this file only for concrete evidence closure. |
@@ -2375,6 +2399,7 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `3618d7e34f289c47dcc602caaf39ee821d953903b974c9214c7622097e4dc737` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/dependency-wiring-lifecycle/references/evidence-patterns.md:L14` | 1 | `-` | `-` | Every test double matches provider behavior forever |
 | `d809ee015e026a4850e9979b121ff25d2e12d7f47a5da23618ffedd2ea98eeab` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/acceptance-standard-definition/references/evidence-patterns.md:L14` | 1 | `-` | `-` | prior task evidence, generated plans, repository inspection, and old tickets are selectors only until current source, owner review, or validation evidence confirms the criterion. |
 | `0edb08052597a68893629057df04f83774d1673e07c38294f35c220d91b70d77` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/package-dependency-management/references/ecosystem-command-map.md:L3` | 1 | `-` | `-` | Prefer repository scripts only when they preserve the same fail-closed contract. |
+| `2cc849e6d5adc151f322ded16d4835c813c353fb8921d02c6ea9eea86dfff80c` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/control-skills/engineering-control-plane/references/engineering-brief-template.md:L17-L20` | 1 | `-` | `-` | Task DAGs, Task Contracts, Implementation Handoffs, and Review Handoffs are derived artifacts and must not redefine Acceptance, Non-goals, Owner, Invariants, Placement, contract semantics, Rollback, or the First Executable Slice. |
 | `6698317dc10892ed6639866d1ba252a8d000ed76d7598f9a43ef845750c9c957` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/use-case-modeling/references/evidence-patterns.md:L10` | 1 | `-` | `-` | Every caller, client, job, or external integration enforces the same gates |
 | `b332c4af699a5ddef9b01150485fc59420cfe0a07f128e687ce2f68192d5449e` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/frontend-change-builder/references/index.md:L3` | 1 | `-` | `-` | Use this index to load only the local reference needed for the selected frontend risk. |
 | `59f09e7218a240a2c981b4918596c5bf25db93cf5b1a830c6e1d309a78be6c20` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/test-data-management/references/benchmarks-and-patterns.md:L22` | 1 | `-` | `-` | Treat one repeated seed as proof only for that seed. |
@@ -2431,6 +2456,7 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `540db4ac8f1153fa09d4cbb3fe7eec4765bceb93502f8f4f77cdd2f1b6a23e7f` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/domain-extensions/cloud-platform-extension/references/provider-api-and-managed-service-authority.md:L3-L4` | 1 | `-` | `-` | Load this Reference only when provider, SDK, service API compatibility, or managed-service responsibility changes implementation or operations. |
 | `23b58b28444f064921211dd38f6d4809790e0bd524f7df6b2eb6fa28927a9f89` | `unconditional_absolute_candidate` | P2 | resolved-false-positive | false-positive | `src/foundation/capabilities/language-idiom-enforcement/references/checklist.md:L19` | 1 | `-` | `-` | Reject or delete comments that repeat assignments, simple conditionals, framework mechanics, or every line of code, or that are stale, redundant, misleading, decorative, banners, or noise. |
 | `55a3ed3c0170afc2ff0db71f93f1aab3fbe7e343d29e0ad6481de454b080d5ee` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/data-model-design/references/evidence-patterns.md:L22` | 1 | `-` | `-` | Accept a prior claim only while current schema, repositories, generated clients, jobs, reports, migrations, and tests still match. |
+| `40c9e55338bf34efecc93092f8d968063c5979cdbda35535c4a2ad7113c782c5` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/professional-skills/engineering-change-analysis/references/implementation-preparation.md:L35` | 1 | `-` | `-` | Main must not regenerate or reinterpret it. |
 | `a605984fdb0aeb0de9241c43397b43627a17d546f9f9a8de60e705f23665ea39` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/state-machine-modeling/references/benchmarks-and-patterns.md:L24` | 1 | `-` | `-` | Give recovery an authorized transition, repair command, compensation, or owned runbook instead of relying only on direct database editing. |
 | `8ea04f6201d454fbb6b6013522459891eafd7a288acbb0a8795d5343b6b83a7f` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/routing-navigation-design/references/evidence-patterns.md:L12` | 1 | `-` | `-` | Live bookmarks, emails, notifications, and search indexes are all covered. |
 | `4f0d35c3b492953612bf356f2b99a6a399695f4fe080ccd787d65f2bff6effa2` | `unconditional_absolute_candidate` | P1 | resolved-false-positive | false-positive | `src/foundation/capabilities/dependency-vulnerability-scanning/references/evidence-patterns.md:L21` | 1 | `-` | `-` | Treat "dev only", "not reachable", "already approved", and "license safe" as scoped dependency claims. |
@@ -2454,6 +2480,7 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `6779d40e4d076cf2b72dedfe5927d0c1f4b7a1f0dd06abec50157e8a56a521b6` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/requirement-structuring/references/evidence-patterns.md:L12` | 1 | `-` | `-` | All consumers or side effects are known. |
 | `f54ba6501627f391dc9ee76532e7409c6a5aa437d4f434d360ace1e741ad2575` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/version-compatibility/references/evidence-patterns.md:L13` | 1 | `-` | `-` | Future calls, uninstrumented clients, or all partner schedules are exhausted |
 | `dbb63b28905084cc5c5aa809aa2695eed24c2421b961e6b82ace15645d1c7d8b` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/professional-skill-router.md:L2` | 1 | `-` | `-` | Use `high-risk-design-review` only when its row is proved; `routing-quality-review` only for ChangeForge routing authoring. |
+| `f053e3ef97f09a359d19822e3dee45278fa3925ee9ca2687144e5416e5bb7665` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/control-skills/engineering-control-plane/references/implementation-handoff-template.md:L7-L9` | 1 | `-` | `-` | Result and evidence may report execution but must not redefine Acceptance, Non-goals, Owner, Invariants, Placement, contract semantics, Rollback, or the Slice. |
 | `89b2593c570c8afdd07c07fd329eeb05a9b66b0a0a1db0a2cdbc580977cd8aca` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/professional-skills/task-dag-planner/references/checklist.md:L12` | 1 | `-` | `-` | Assign every task one complete review contract: Strategy, Skill, Scope, and Boundary. |
 | `fd59d086136e4cb804d2fe6186a4c298a568ce9902ea9197ab7a5a590421a502` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/task-dag-planner/references/planning-evidence-patterns.md:L3` | 1 | `-` | `-` | Evidence must show why the graph is safe to execute, not just that tasks are listed. |
 | `3f36cfab3898d99d78853a972f5afad13407581095a35036160150f0fd03f133` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/backend-change-builder/references/index.md:L3` | 1 | `-` | `-` | Use this index to load only the local reference needed for the selected backend risk. |
@@ -2518,6 +2545,7 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `7c59e1ffe25c2300fb9c3c5f0acce29c0249ac72bc41eedd2d06ea35697e9237` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/architecture-impact-reviewer/references/architecture-output-and-gates.md:L3` | 1 | `-` | `-` | Load only when assigned L3-L5 analysis or independent review needs mode-specific closure plus targeted proof for a proposed structure, public/indirect consumer impact, data ownership, runtime topology, or dependency-direction risk. |
 | `a7e06d5c74b73fe8ae3dd347287018b2b0ef996dd47423df0b6db5cedbe177cb` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/authentication-security/references/checklist.md:L11` | 1 | `-` | `-` | `task-agent` runs only accepted post-edit dynamic checks that the changed flow triggers: fixation, replay/reuse, logout/revocation, recovery/linking, enumeration, password verification, callback, or denied step-up. |
 | `ec65305775e7948e6bccf3f070debd4bea1f4622fddc779e02dfb722bfd8166d` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/reliability-observability-gate/references/reliability-output-and-gates.md:L26` | 1 | `-` | `-` | Include an alert strategy and operator action only when operational risk or platform policy triggers alerting. |
+| `1c1a29b2dd6e2742b35bf9bca861c7c2a5d3a5fe89102fbf73b28e491e48781f` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/control-skills/engineering-control-plane/references/engineering-brief-template.md:L3-L4` | 1 | `-` | `-` | For Analyzed Work, the current Engineering Brief is the only operational analysis authority. |
 | `3362c078cc8279dececf9db78252dd13b0d9a51fa4e2af3d1e301b640b603deb` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/backend-change-builder/references/proactive-triggers.md:L16` | 1 | `-` | `-` | Use `implementation-structure-design` only while the established module boundary stays fixed. |
 | `ee6313d42c1ead222cc615e7b7c22c77339cd4de1fa9255fbc1cee63e7d1a9ff` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/backend-change-builder/references/professional-modes.md:L16` | 1 | `-` | `-` | When an implementation or repaired diff needs independent assessment, hand its actual diff/reference and fresh validation to `ai-code-review-refactor`; the task-agent never adopts that review role. |
 | `180c194c81c60de050cd217f57f69fecad36f3beeaf49c6475619462119fa128` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/delivery-release-gate/references/delivery-output-and-gates.md:L45` | 1 | `-` | `-` | Require execution or rehearsal only when risk, policy, prior failure, or change type warrants it; a documented command alone is not proof. |
@@ -2589,7 +2617,6 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `b241ab45161769034daa82b22ec4c61750a0839dbf4de5a5e43d9ccdd46570b6` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/test-strategy/references/benchmarks-and-patterns.md:L18` | 1 | `-` | `-` | Clean empty-schema migration only. |
 | `78a7543385b04140bcd637f7a4498b60f11eeb7b243905c4f7ea8336412e5d9d` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/requirement-clarification/references/evidence-patterns.md:L20` | 1 | `-` | `-` | Accept a prior claim only while current evidence still matches. |
 | `d6919579d9804e199fc2105058b1f457bd8b15eb0e0d7e7841735fc578422fdf` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/refactoring/references/split-merge-cleanup-patterns.md:L9` | 1 | `-` | `-` | Extraction only shortens a method while increasing parameter coupling. |
-| `b71986f48092425ad85bd011351ead99b7d96ecd8e748cd910543e7216b09147` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/professional-skills/engineering-change-analysis/references/implementation-preparation.md:L14-L16` | 1 | `-` | `-` | `## Triggered Impact`: direct and transitive consumers plus only material compatibility, contract, data, side-effect, failure, migration, security, reliability, release, documentation, or generated-output impact. |
 | `c8b9adb6618ae7e9ca391128c3e8e7ccbf755d5de86ee5b997586bb4623c6cb8` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/ci-cd/references/evidence-patterns.md:L12` | 1 | `-` | `-` | Live apply behavior, drift in the provider, or all CRD/cloud side effects are reversible |
 | `e9f8496d96e598a385c480a462c55854cc99be2557b7097d10457bbe3486be27` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/utility-capsule-template.md:L4-L6` | 1 | `-` | `-` | The task-agent loads no Professional Skill or Layer 3 guidance, does not use the Implementation Handoff, and must not edit, repair, access the network, fetch, or contact remotes. |
 | `09b71410b5c68c4b4459407b4177b3dac9ad772d2234983fb5561b04d6ba7541` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/unit-testing/references/checklist.md:L10` | 1 | `-` | `-` | Challenge critical assertions with a replayable mutation or fault only when it materially improves confidence or the selected regression contract requires counterfactual proof. |
@@ -2603,9 +2630,11 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `4fc0647183ae2116bc346422c59f843a4c57bee7b7afdb52df66fefe289b9a93` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/cache-design/references/checklist.md:L4` | 1 | `-` | `-` | Prove key/value scope covers only dimensions that change representation, including tenant or permission context when applicable. |
 | `ae502d848755883f6fd507d6f99318d95403ae718bc6c61e570e50aea3604edf` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/degradation-circuit-breaking/references/evidence-patterns.md:L13` | 1 | `-` | `-` | Every downstream consumer handles degraded state correctly |
 | `0b3d55f0cec4d9873e5e7a87503d73df321ac440891f63605ea05b4e81fb70d1` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/requirement-clarification/references/benchmarks-and-patterns.md:L22` | 1 | `-` | `-` | Treat an unknown as an engineering assumption only when repository convention supports a reversible, testable choice outside product, security, or legal authority. |
+| `105ecb4309cd87e75d6e2205c007af4d2bfacdb6d2cf22b6c1979110b333c828` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/professional-skills/engineering-change-analysis/references/implementation-preparation.md:L8-L9` | 1 | `-` | `-` | The current Engineering Brief is the only operational analysis authority for Analyzed Work. |
 | `79c42fc77d7a7796c324739a5b2070200b7e28ecf92a88ccc52f6db060b36f6e` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/engineering-change-analysis/references/index.md:L3` | 1 | `-` | `-` | Use this index to load only the local reference needed for the selected impact risk. |
 | `efbff5110d5b6bef6cfdabd85c9c3b557b3014cb90e9d72753f6660d91e693c3` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/professional-skills/platform-infrastructure-change-builder/references/kubernetes-source-contracts.md:L3` | 1 | `-` | `-` | It supports source validation only. |
 | `51bb7cc783cca1867978908acdcdfdde9943023a5fd86bdb4d6f34471967ac26` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/architecture-impact-reviewer/references/index.md:L3` | 1 | `-` | `-` | Use this index to load only the local reference needed for the selected architecture risk. |
+| `216aea6519ff1a54c5efce0dfdd0bfe13c9ac0698be3c09ad3ba63381bc57ea5` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/control-skills/engineering-control-plane/references/engineering-brief-template.md:L21-L22` | 1 | `-` | `-` | Main dispatches it verbatim and never regenerates or reinterprets it; the DAG planner never reselects it. |
 | `14b614710454a854e6a52160cabad995052ce732e736849824fae4c0f458bf3a` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/message-queue-design/references/evidence-patterns.md:L12` | 1 | `-` | `-` | Triggered failure classes, retry or no-retry choice, retry limits only when selected, terminal disposition, owner, and focused proof |
 | `481addbe1655a9451820a1aa431e790877a50711e024347626ac63b8d6c9399c` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/domain-extensions/cross-platform-client-extension/references/shared-and-target-ownership-contracts.md:L21` | 1 | `-` | `-` | Exercise a shared state transition through every affected target adapter. |
 | `ad8afd5037987e753344342034249040ae509c9b35c63386eae5dcd337d69615` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/layered-architecture-design/references/evidence-patterns.md:L14` | 1 | `-` | `-` | Manual review only or stale check before package move |
@@ -2650,9 +2679,10 @@ Semantic disposition contract: schema=2; source=`config/skill-content-exceptions
 | `799123afbf62373cfd8cf5910d013e6df747a6cfaaf7c5801076aca56f7360b9` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/page-component-decomposition/references/evidence-patterns.md:L13` | 1 | `-` | `-` | Backend authorization or every object-level permission path is enforced |
 | `db4bf7166f8cae6fd64e5f38034ecbc77e5e65095496aea9569f62b357cfa561` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/frontend-api-integration/references/evidence-patterns.md:L13` | 1 | `-` | `-` | All concurrent inserts/deletes or deep page behavior are proven |
 | `bdd21534e4a48f77b9751cc8a401d5e1ddfd6344163588ebc5b4dc6b15bd76b6` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/foundation/capabilities/language-idiom-enforcement/references/evidence-patterns.md:L28` | 1 | `-` | `-` | Map every accepted idiom claim to a current command, typecheck, lint, formatter, test, static analysis, local example, owner approval, or explicit not-run residual risk. |
-| `81f823f363b1b233895d32c1bc99d0d6d275f43b6a347d292c5f4d8bc245ed65` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/engineering-brief-template.md:L103-L104` | 1 | `-` | `-` | Omit the Task Plan only when the requested result is diagnosis-only or answer-only and no implementation task exists. |
+| `81f823f363b1b233895d32c1bc99d0d6d275f43b6a347d292c5f4d8bc245ed65` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/control-skills/engineering-control-plane/references/engineering-brief-template.md:L126-L127` | 1 | `-` | `-` | Omit the Task Plan only when the requested result is diagnosis-only or answer-only and no implementation task exists. |
 | `5589999f2b8a06f61975ef02c01bf600ddad129ec2b63c22e0c9771d6dc2f56a` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/delivery-release-gate/references/delivery-output-and-gates.md:L50` | 1 | `-` | `-` | When an incident hotfix or regulated release is triggered, require only the applicable outcomes. |
 | `ff472c42f608dcfdd480bf7635a7094b92523c65722fd95eb0f691fe10b20680` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/foundation/capabilities/refactoring/references/checklist.md:L5` | 1 | `-` | `-` | Define the structural problem, target structure, and observable behavior that must not change. |
+| `e23140524e507ed8c5cf86fe0cbe353f0aafc9cfa72d4b98442ba75b68c69bfa` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/professional-skills/engineering-change-analysis/references/implementation-preparation.md:L47-L50` | 1 | `-` | `-` | Hand the current Brief to `task-dag-planner` only to project task splits, dependencies, parallel safety, critical path, integration/merge/conflict ownership, and remaining Task Contracts. |
 | `456d52b17c974c603cff84b5e05953e266f9bd511c849bf08b2314339e6eb7a3` | `unconditional_absolute_candidate` | - | detector-downgraded | - | `src/foundation/capabilities/distributed-workflow-consistency/references/compensation-convergence-and-reconciliation.md:L46` | 1 | `-` | `-` | Tests cannot prove an external participant is reversible, a compensation always succeeds, or reconciliation covers uninspected effects and concurrent changes. |
 | `ff9d89323b48425bf84fcde548c19267bb9f187e80e3d9dd838bbb8687578c85` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/foundation/capabilities/frontend-testing/references/evidence-patterns.md:L22` | 1 | `-` | `-` | Map every final frontend-testing confidence claim to a command, test, story, screenshot, accessibility artifact, schema/fixture source, review artifact, owner approval, or explicit not-run residual risk. |
 | `2663ee89a8b10aa9ac035b35cf5ef684cd805bd3219c600f161a1ddf9cbb6c05` | `unconditional_absolute_candidate` | P1 | resolved-valid-contextual-rule | valid-contextual-rule | `src/foundation/capabilities/client-lifecycle-state-restoration/references/restoration-boundaries.md:L40` | 1 | `-` | `-` | Do not infer that every client receives the same background or termination events. |

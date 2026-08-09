@@ -12,12 +12,19 @@ dereferences `profile.name`. Similar profile dereferences may exist in other
 controllers, services, or serializers. A local one-line null check is not enough
 unless the rest of the pattern is scanned and the local-only scope is justified.
 
+The current Acceptance requires optional user-facing profile views, including the
+notification preview, to render an absent profile without crashing. The strict
+export path owns a distinct data-quality invariant and is a Non-goal: discovery
+must record it as adjacent and must not weaken or repair it.
+
 ## Requirements
 
 - Identify the defect pattern signature before editing.
 - Search relevant backend modules for the same dereference or assumption.
-- Fix every occurrence that shares the same user-visible defect, or document why
-  specific occurrences are intentionally out of scope.
+- Classify every match as `current-task`, `scope-blocker`, or `adjacent` before
+  deciding whether it blocks or may enter repair.
+- Fix every authorized `current-task` occurrence; record each `adjacent` match
+  with rationale and residual risk without editing it.
 - Add regression tests for the reported endpoint and any covered sibling path.
 - Include a same-pattern scan record in the final handoff.
 
@@ -34,10 +41,10 @@ unless the rest of the pattern is scanned and the local-only scope is justified.
 - Minimal bug fix covering the scanned impact scope.
 - Regression tests for missing-profile behavior.
 - Same-pattern scan record with pattern, scope, matches, decision, validation,
-  residual risk, and handoff boundary.
+  relation, action, rationale, residual risk, and handoff boundary.
 
 ## Completion Evidence
 
 - Test output proving the reported bug no longer occurs.
 - Search output or inspected-file list for the same pattern.
-- Rationale for all matching occurrences covered or excluded.
+- Rationale and residual risk for every adjacent match.

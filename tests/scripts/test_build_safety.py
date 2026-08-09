@@ -272,7 +272,7 @@ class BuildSafetyTests(unittest.TestCase):
                 rendered,
             )
             self.assertIn(
-                "Never reload `references/main-control-agent.md`",
+                "Never reload references/main-control-agent.md.",
                 rendered,
             )
             worker = renderer(profiles["analysis-agent"])

@@ -25,20 +25,20 @@ release_contract:
 expected_outcomes:
   - The defect pattern is defined before code is edited.
   - Relevant controllers, services, serializers, and tests are scanned for the pattern.
-  - All in-scope occurrences are fixed or explicitly excluded with rationale.
+  - All authorized current-task occurrences are fixed; adjacent matches are recorded and not edited.
   - Regression tests prove missing-profile behavior at public boundaries.
 required_qualities:
-  - Same-pattern scan record includes pattern signature, scope, matches, and decision.
+  - Same-pattern scan record includes pattern signature, scope, matches, relation, action, rationale, and residual risk.
   - Fixes preserve authorization and do not hide unrelated data errors.
   - Tests cover at least the reported endpoint and one sibling path when matched.
   - Completion evidence includes validation command output and residual risk.
 forbidden_shortcuts:
   - Applying a one-line null check only at the reported line with no scan.
   - Adding a blanket try/catch or default object that hides real data problems.
-  - Ignoring a matched occurrence in another backend module without rationale.
+  - Treating discovery of an adjacent match as repair authorization.
   - Claiming completion without regression test evidence.
 evidence:
   - Pattern search output or inspected-file list.
   - Regression test for missing profile on the reported endpoint.
-  - Coverage or rationale for sibling matches.
+  - Coverage for current-task matches and rationale plus residual risk for adjacent matches.
   - Final handoff with changed files, validation results, unverified scope, and residual risk.

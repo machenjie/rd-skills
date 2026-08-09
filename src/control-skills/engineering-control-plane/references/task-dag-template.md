@@ -3,6 +3,16 @@
 Use only for at least two real tasks with an evidenced dependency, parallel
 benefit, cross-owner boundary, integration need, or migration/release order.
 
+For Analyzed Work, this DAG is a derived projection of the current Engineering
+Brief. It may split Brief work, project Task Contracts, dependencies, parallel
+safety, critical path, and integration, merge, and conflict ownership. It must
+not select or replace the First Executable Slice or modify Acceptance,
+Non-goals, Owner, Invariants, Placement, contract semantics, or Rollback.
+The First Executable Slice below names the Brief-selected Task ID; its matching
+task node is a verbatim projection, and Main dispatches the Brief slice itself.
+If the Brief is insufficient or any projection conflicts with it, mark the DAG
+blocked and return to analysis through Main for an updated Brief and redispatch.
+
 The public Execution Level lines use Core public `execution-level/v1`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is
 defined in [execution-level-contract.md](execution-level-contract.md).
