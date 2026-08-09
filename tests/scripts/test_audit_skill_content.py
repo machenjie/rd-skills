@@ -116,6 +116,7 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
             "content_blockers": content_blockers,
             "review_states": {},
         }
+        skill_detector_contract = self.module._skill_detector_contract()
         with tempfile.TemporaryDirectory() as raw:
             reports = Path(raw)
             report_json = reports / "skill-content-audit.json"
@@ -133,6 +134,11 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
                     return_value=[],
                 ),
                 mock.patch.object(self.module, "_summary", return_value=summary),
+                mock.patch.object(
+                    self.module,
+                    "_skill_detector_contract",
+                    return_value=skill_detector_contract,
+                ),
                 mock.patch.object(
                     self.module,
                     "_format_md",
@@ -1310,6 +1316,18 @@ Return security authority decisions to the service that owns the protected resou
         ):
             self.assertEqual(baseline, self.module._skill_detector_fingerprint())
 
+    def test_skill_detector_uses_versioned_explicit_source_manifest(self) -> None:
+        payload = self.module._skill_detector_payload()
+        self.assertEqual("skill-content-detector-v4", payload["contract_version"])
+        self.assertRegex(payload["aggregate_source_digest"], r"^[0-9a-f]{64}$")
+        self.assertEqual(
+            ["scripts/audit-skill-content.py", "scripts/validation_utils.py"],
+            [row["path"] for row in payload["source_manifest"]],
+        )
+        self.assertTrue(
+            all(set(row) == {"path", "sha256"} for row in payload["source_manifest"])
+        )
+
     def test_review_state_keeps_all_reasons_in_closed_priority_order(self) -> None:
         metrics = self.module.SkillMetrics(
             name="example",
@@ -1608,6 +1626,9 @@ Return security authority decisions to the service that owns the protected resou
             "analysis-agent | checklist-result |"
         )
         prefix = "---\nname: fixture\ndescription: Fixture.\n---\n"
+        root_detector_fingerprint = (
+            self.module._root_semantic_detector_fingerprint()
+        )
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             skills_root = root / "src/professional-skills"
@@ -1656,6 +1677,10 @@ Return security authority decisions to the service that owns the protected resou
                     self.module,
                     "count_o200k_base_tokens",
                     side_effect=lambda text: len(text.split()),
+                ), mock.patch.object(
+                    self.module,
+                    "_root_semantic_detector_fingerprint",
+                    return_value=root_detector_fingerprint,
                 ):
                     candidates = self.module._collect_root_semantic_advisories(
                         [body_document],

@@ -48,7 +48,7 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
             auditor._ai_readability_documents()
         )
         cls.readiness = json.loads(
-            (ROOT / "reports/professionalism-release-readiness.json").read_text(
+            (ROOT / "reports/professionalism-regression-report.json").read_text(
                 encoding="utf-8"
             )
         )

@@ -6,29 +6,50 @@ same current tree.
 
 ## Gate Paths
 
-Run the ordinary authoring gate:
+### Development Affected
 
-```bash
-python3 scripts/eval-core-principles.py --gate authoring
+Ordinary committed development validates only the changed-path projection from
+one selected base and head. The affected Core runner requires a clean checkout
+at the selected head because it executes tracked files from that commit in a
+disposable tree:
+
+```text
+python3 scripts/eval-core-principles.py --gate affected --base <base> --head <head>
+python3 scripts/run-ci-tests.py run --base <base> --head <head>
 ```
 
-Formal local evaluation requires both commands on the same final tree:
+Use focused owner checks while a change is still uncommitted. They become
+completion evidence only when followed by the affected commit check or the
+local Full Regression required by the integration boundary.
+
+### Formal Release
+
+Formal local evaluation has one complete command on one clean final commit:
 
 ```bash
 python3 scripts/eval-core-principles.py --gate formal-release
-python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review
 ```
 
-Both formal commands are mandatory. The Core evaluator loads
-`src/control-model/core-contracts.json`; its selected gate changes exit policy,
-not report content. The remote `Formal Release` workflow is separate evidence
-and must pass for the same object ID as the locally validated final tree.
+The Core evaluator loads `src/control-model/core-contracts.json` and is the
+unique owner of complete producer ordering and freshness. Its formal graph runs
+the professionalism producer once and requires
+`professionalism-formal-release-ready`, whose aggregate predicate includes
+`release_gate=release-ready`; the existing granular Root, readability,
+professional-completeness, cost, and lifecycle outcomes remain required. Its
+authoring and formal-release gates refresh their declared JSON reports;
+`formal-release` additionally requests declared Markdown release projections, including
+`reports/professionalism-regression-report.md`. The remote `Formal Release`
+workflow is separate evidence and must pass for the same object ID as the
+locally validated final tree. Formal Release is independent from both
+Development Affected and local Full Regression.
 
-## Required Repository Execution
+## Local Full Regression
 
-After the authoring gate, run this repository command set in order:
+Run this command set once, in order, on the final material tree before an
+integration handoff or release-candidate decision:
 
 ```bash
+python3 scripts/eval-core-principles.py --gate authoring
 python3 scripts/validate-examples.py
 python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md --check
 python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md --check
@@ -46,23 +67,62 @@ python3 scripts/quickstart.py --agent copilot --scope project --target /tmp/chan
 python3 scripts/quickstart.py --agent openai-api --dry-run
 ```
 
-Ordinary pull-request CI runs the authoring path. Formal remote evidence comes
-from `.github/workflows/formal-release.yml`, triggered manually or by a
-`v*` tag. It adds the formal gate, independent expert-review gate, repository
-execution set, and final generated-artifact diff check.
+Core authoring is the canonical full deterministic producer owner. The
+remaining commands are artifact consumers or non-Core repository checks; they
+must not replay a Core-owned producer merely to count a second pass.
 
-Ordinary CI keeps every canonical authoring, documentation, code-generation,
-quickstart, and freshness command, but replaces unconditional unit-test
-discovery with two deterministic affected-test shards. The selector at
-`scripts/run-ci-tests.py` projects only the mapping and fallback policy in
-`src/control-model/core-contracts.json#/ci_validation_contract`. Pull requests
-compare the event base SHA with the checked-out `github.sha`; pushes compare
-the event `before` SHA with `github.sha`. A changed test under `tests/` selects
-itself, and mapped source paths union their owner tests. Deleted, unmatched,
-malformed, empty, or unavailable revision/diff inputs fail closed to the full
-`tests/**/test*.py` suite. Selection output records each path's producer,
-tests, coverage, and fallback rationale. Local authoring and formal-release
-commands above continue to run the full suite.
+Pull-request CI runs one minimal affected check. It does not run the local Full
+Regression above. Formal remote evidence comes from
+`.github/workflows/formal-release.yml`, triggered manually or by a `v*` tag;
+that independent workflow retains the Core formal gate and its aggregate
+expert-review outcome,
+repository execution set, and final generated-artifact diff check.
+
+Pull-request CI has one job with one checkout, Python setup, isolated dependency
+install, affected producer gate, unsharded affected-test runner, and tracked
+workspace no-write check. It does not run unconditional documentation,
+productization, code-generation, quickstart, or full-suite commands. The
+[`impact_graph_contract`](../src/control-model/core-contracts.json) is the sole
+authority for changed-path classification, canonical producer dependency
+closure, owner-test selection, fail-closed outcomes, isolation, and build-profile
+projection;
+[`scripts/impact_graph.py`](../scripts/impact_graph.py) is its resolver.
+`scripts/run-ci-tests.py` and `eval-core-principles.py --gate affected --base
+<base> --head <head>` are consumers. This document does not mirror the graph's
+path rules, producer IDs, test mappings, or no-impact inventory. Inspect the
+Core contract or use `--explain` for the selected IDs and dependency chains.
+Package changes project their base and head registry entries through the actual
+`recommended`, `full`, and `dev` build graph; an unresolved package selects all
+three profiles. Build and code-generation integration tests, plus the focused
+quickstart unit test, are selected only for direct changes to their owners; the
+runner executes the selected test list once without shards.
+
+Affected producer execution uses only the selected commit's tracked files in a
+disposable tree, so selected builds and their consumers do not modify the caller
+workspace. Because `dist/` is ignored and has no checked-in artifact authority,
+pull-request CI does not claim a byte-freshness comparison for it. The final
+`git diff --exit-code` proves only that tracked caller files were not modified.
+Local Full Regression and Formal Release remain explicit independent paths.
+
+The Full Regression does not launch Core-owned producers a second time. Its three
+build checks, source-invariant check, and five evaluation checks first consume
+the Core-owned producer outcomes. That assertion proves only that the saved
+Core report has a current contract/input-tree binding, declares the named
+producer, and records a passing outcome; it does not bind `reports/` or `dist/`
+bytes because those generated surfaces are excluded from the Core input tree.
+Each build or evaluation consumer then loads its actual owned artifact and
+applies the existing semantic profile, required-file, schema, status, count,
+error, and cross-report invariants. Mutating a consumed field, required file,
+or expected Skill count fails that consumer. Arbitrary extra fields that no
+consumer reads are explicitly outside this proof. These checks do not replay
+producers or rewrite reports.
+
+`reports/core-principles-outcomes.json` is the Core execution artifact consumed
+by those full-suite checks; it must bind the same current tree and contract.
+It is not the professionalism readiness authority. Pull-request CI does not
+refresh the global Core artifact. Only the local Full Regression or Formal
+Release may produce it on its named final tree, and only Formal Release emits
+`reports/core-principles-outcomes.md` as a presentation projection.
 
 CI installs the project and declared dependencies from a `git archive` in a
 temporary directory. Packaging metadata such as `*.egg-info` must not appear
@@ -86,6 +146,15 @@ producer graph. Individual producer commands diagnose a verified failure; their
 aggregate manual success is not a substitute for orchestrator ordering,
 timeouts, freshness, input-tree checks, and outcome evaluation.
 
+`reports/professionalism-regression-report.json` is the sole machine-readable
+professionalism readiness authority, and
+`scripts/validate-professionalism-regression.py` is its only producer. Core
+Principles owns the complete ordered freshness run. Productization is a static
+semantic consumer of the saved JSON and does not rerun that producer. A formal
+Core run additionally emits `reports/professionalism-regression-report.md` as a
+release-only presentation projection; authoring does not refresh it, and no
+gate consumes it as readiness authority.
+
 Root and Reference detectors, disposition lifecycle, readability schema 2, and
 Professional Completeness schema 3 are defined only in [Skill content
 governance](SKILL_CONTENT_GOVERNANCE.md#validation). Validation operators use
@@ -93,10 +162,31 @@ their strict commands and reported blockers; this document does not redefine
 packet, ballot, reviewer-assignment, carry, storage, or cost semantics.
 
 The Phase 2 inventory is current and final, so the formal target is all 189
-non-Control packages. Current static evidence selectors are r25 Readability,
-r26 Semantic Disposition, r26 Root lifecycle, and r18 schema-3 Professional
-Completeness for all 189 non-Control packages. These static selectors do not
-prove that the final formal gates or same-commit remote workflow passed.
+non-Control packages. For selector identity only, the canonical projection is:
+Current static evidence selectors are r26 Readability, r26 Semantic
+Disposition, r26 Root lifecycle, and r19 schema-3 Professional Completeness for
+all 189 non-Control packages. “Current” in that projection identifies the
+configured records, not their formal currentness. Readability r26 and
+historical full-fresh Professional Completeness r19 have complete decisions for
+their recorded inputs. R26 is now skill-detector-stale: its configured detector
+fingerprint differs from the current detector, so it has
+`source_current=false`, status `panel-majority-stale`, remains storage-pending,
+and is not accepted for formal release. R19 is review-contract-stale because its
+bound Professional review contract differs from the current contract; it also
+remains storage-pending and is not accepted for formal release. The Semantic
+Disposition application is `invalid` because its packet is stale against the
+current audit. Root lifecycle is `pending-changes`, its snapshot is not current,
+and it is not formal-release-ready. These static selectors do not prove that
+the final formal gates or same-commit remote workflow passed.
+
+[Release](RELEASE.md#conditional-evidence-refresh) owns the later operator
+stages: refresh Semantic Disposition after the final audit, record the Root
+lifecycle snapshot after the final content tree stabilizes, create a new current
+schema-2 Readability review under the current Skill detector, create a new
+schema-3 full-fresh Professional Completeness round for all 189 current
+non-Control packages under the current review contract, check in the current
+evidence, and rerun the Core formal gate. Until then, the sole professionalism
+JSON authority remains `release-not-ready`.
 
 ## Generated Freshness and Safety
 
@@ -153,12 +243,13 @@ Tokenizer: `o200k_base`. Exact duplicate-rule ratio gate: `0.03`.
 
 ## Release Gate
 
-An ordinary authoring decision requires the authoring evaluator and the complete
-repository execution set on the same final tree. Formal release additionally
-requires both mandatory formal commands above, current Root and expert-review
-evidence under [Skill content governance](SKILL_CONTENT_GOVERNANCE.md), clean
-tracked evidence, and the remote `Formal Release` workflow for the same object
-ID.
+Ordinary committed development requires the Development Affected commands for
+the selected base and head. Integration and release-candidate decisions require
+the local Full Regression on the same final material tree. Formal release
+additionally requires the single complete formal command above, current Root
+and expert-review evidence under [Skill content
+governance](SKILL_CONTENT_GOVERNANCE.md), clean tracked evidence, and the remote
+`Formal Release` workflow for the same object ID.
 `authoring_gate=current-contract-pass` alone is not release readiness.
 
 Use [Release](RELEASE.md) for lifecycle ordering, package commands, stop and

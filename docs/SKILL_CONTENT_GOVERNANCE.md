@@ -313,7 +313,8 @@ Post-bootstrap pending,
 stale, invalid, or unclassified lifecycle state blocks formal release. The
 recorder may consume a stale current snapshot, but only freshness is relaxed:
 schema, duplicate, date, and review validation still fail closed. None of these
-release requirements redefine the ordinary authoring gate.
+release requirements redefine Development Affected selection or the local Full
+Regression authoring sub-gate.
 
 Both recorders parse and hash one exact byte sequence for the complete
 configuration. The managed writer requires that whole-file SHA-256 and the raw
@@ -565,12 +566,12 @@ Pending or stale evidence remains non-blocking for `authoring_gate`, but keeps
 `src/control-model/core-contracts.json` at
 `final_goal_contract.professional_review_cost_fixtures` owns the professional
 review cost policy, thresholds, and locked fixture.
-`reports/professionalism-regression-report.json` and
-`reports/professionalism-release-readiness.json` are derived evidence and do
-not own or override that contract.
+`reports/professionalism-regression-report.json` is the sole machine-readable
+professionalism readiness authority and is derived evidence; it does not own or
+override the cost contract.
 The current 189-package cost fixture satisfies the
 one-reviewer-added-relationship-per-target budget. This static cost result does
-not replace the final formal gates.
+not replace the final Core formal gate.
 
 When current Root or Reference evidence cannot carry an existing semantic
 disposition forward exactly, use the orthogonal `semantic-disposition` panel.
@@ -685,18 +686,21 @@ python3 scripts/validate-reference-content.py --strict
 python3 scripts/validate-root-content.py --strict
 ```
 
-Gate-bearing consumers use these exact commands independently:
+These focused entrypoints remain available for diagnosed failures. They do not
+replace Development Affected, local Full Regression, or the complete Core
+Formal Release gate:
 
 | Consumer | Authoring | Formal release |
 | --- | --- | --- |
 | Standalone content audit | `python3 scripts/audit-skill-content.py --gate authoring` | `python3 scripts/audit-skill-content.py --gate formal-release` |
 | Core Principles | `python3 scripts/eval-core-principles.py --gate authoring` | `python3 scripts/eval-core-principles.py --gate formal-release` |
-| Professionalism | `python3 scripts/validate-professionalism-regression.py --strict` | `python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review` |
+| Standalone professionalism diagnostic | `python3 scripts/validate-professionalism-regression.py --strict` | `python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review` |
 
 Core's audit producer always uses the authoring audit invocation and evaluates
-the retained sidecar only through its formal-only outcome. The standalone audit
-commands above are separate operator checks; running Core starts its declared
-producer graph and refreshes the audit report.
+the retained sidecar only through its formal-only outcome. Run a standalone
+producer only to diagnose a verified Core failure; a second unchanged producer
+pass is not additional evidence. Running Core starts its declared producer
+graph and refreshes the audit report.
 
 Size and actionable-duplication findings are review signals, but required
 decision content must not be removed merely to meet a line count. Raw shared
@@ -704,9 +708,10 @@ lines remain visible; only Targeted Reference policy lines are excluded from
 actionable duplication. Move low-frequency depth, tighten repetition, and
 preserve every layer-specific decision and proof contract.
 
-Release Readiness consumes both `reference_content` and `root_content`,
-recomputes each source fingerprint from the current tree, and rejects stale
-tracked audit evidence. `reference_content_summary.strict_ready` and
+The professionalism regression authority consumes both `reference_content`
+and `root_content`, recomputes each source fingerprint from the current tree,
+and rejects stale tracked audit evidence.
+`reference_content_summary.strict_ready` and
 `strict_ready_basis=reference-strict-v4` are Reference-only fields. Reference
 structural readiness covers inventory,
 effective-preface, size, and decision-item gates; Root structural readiness
@@ -723,18 +728,47 @@ requires both axes to be current and the Root lifecycle to contain a current,
 classified release snapshot. Readability covers every current
 `REVIEW_DENSITY`, `TIGHTEN_BODY`, and readability advisory target. Professional
 completeness covers all 189 non-Control packages. Neither panel can override an
-authoring blocker. The umbrella release check is
-`validate-professionalism-regression.py --strict --require-expert-content-review`.
-Productization reruns the strict producer against fresh Root, Reference, coverage,
-and default release-review inputs once. All four tracked professionalism
-artifacts (regression JSON/Markdown and readiness JSON/Markdown) must be present
-and byte-identical to that single canonical producer run; mismatches report both
-current and canonical SHA-256 digests. The JSON pair is also compared
-semantically with each other, so matching forged fingerprints, stale coverage,
-missing authoring or release blockers, and gate/aggregate contradictions cannot
-pass by internal mirroring alone.
+authoring blocker. The complete release check is
+`python3 scripts/eval-core-principles.py --gate formal-release`; its aggregate
+`professionalism-formal-release-ready` outcome requires the producer process to
+pass and the sole JSON authority to report `release_gate=release-ready`.
+`scripts/validate-professionalism-regression.py` is the only producer of
+`reports/professionalism-regression-report.json`; Core Principles owns the
+complete ordered freshness run against current Root, Reference, coverage, and
+default release-review inputs. Productization validates that saved JSON's
+closed schema, internal semantics, blockers, gates, and expert bindings without
+rerunning the producer. Formal-release orchestration additionally requests
+`reports/professionalism-regression-report.md` as a release-only presentation
+projection. The Markdown is not a second readiness authority, and Core
+authoring does not refresh it.
 
-Current static evidence selectors are r25 Readability, r26 Semantic
-Disposition, r26 Root lifecycle, and r18 schema-3 Professional Completeness for
-all 189 non-Control packages. These static selectors do not prove that the
-final formal gates or same-commit remote workflow passed.
+For selector identity only, the canonical projection is: Current static
+evidence selectors are r26 Readability, r26 Semantic Disposition, r26 Root
+lifecycle, and r19 schema-3 Professional Completeness for all 189 non-Control
+packages. “Current” in that projection identifies the configured records, not
+their formal currentness. Readability r26 and full-fresh Professional
+Completeness r19 have complete decisions for their recorded inputs. Readability
+r26 is historical evidence with no recorded tracked tightening, detector false
+positive, or rewrite requirement under its bound Skill detector. That detector
+is now stale against the current detector, so r26 has `source_current=false`,
+status `panel-majority-stale`, remains storage-pending, and is not accepted for
+formal release. R19 is historical full-fresh evidence for all 189 packages with
+zero carried packages, corrections, or unresolved professional disagreements
+under its bound contract; that contract is now stale against the current
+Professional review contract. R19 remains storage-pending, is not accepted for
+formal release, and cannot authorize carry across the contract change. The
+selected Semantic Disposition
+application is `invalid` because its packet is stale against the current audit.
+Root lifecycle is `pending-changes`, with `snapshot_current=false` and no
+formal-release readiness. These static selectors do not prove that the final
+formal gates or same-commit remote workflow passed.
+
+After the final source audit, refresh the Semantic Disposition decision and
+application through its owning panel stage. After the final content tree
+stabilizes, record the Root lifecycle's classified formal snapshot. Check in
+the current evidence before rerunning the strict formal gate. Formal Release
+must create a new current schema-2 Readability review under the current Skill
+detector and a new schema-3 full-fresh Professional Completeness round for all
+189 current non-Control packages under the current review contract. Preserve
+r26 and r19 as immutable historical evidence; neither can replace its required
+new review, and r19 cannot authorize carry.

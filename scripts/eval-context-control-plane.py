@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -201,7 +202,10 @@ def _load_rendered_context_report(
     return report
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--release-projection", action="store_true")
+    args = parser.parse_args(argv)
     try:
         source = _load_source_report()
         enforcement = _load_host_enforcement()
@@ -326,7 +330,8 @@ def main() -> int:
     ]
     if errors:
         lines.extend(["## Errors", "", *[f"- {error}" for error in errors], ""])
-    REPORT_MD.write_text("\n".join(lines), encoding="utf-8")
+    if args.release_projection:
+        REPORT_MD.write_text("\n".join(lines), encoding="utf-8")
     if errors:
         for error in errors:
             print(f"eval-context-control-plane: ERROR: {error}", file=sys.stderr)

@@ -187,7 +187,11 @@ def main(argv: list[str] | None = None) -> int:
         "domain_unchanged_case_ids": domain_unchanged_case_ids,
         "admission_coverage": admission_coverage,
     }
-    _write(args.reports_dir, payload)
+    _write(
+        args.reports_dir,
+        payload,
+        release_projection=args.release_projection,
+    )
     print(
         "validate-professional-routing-coverage: "
         f"cases={len(results)}; professional={len(professional)}; "
@@ -261,6 +265,7 @@ def _args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--benchmarks-dir", type=Path, default=ROOT / "evals/professional-benchmarks")
     parser.add_argument("--reports-dir", type=Path, default=ROOT / "reports")
     parser.add_argument("--baseline", type=Path, help="deprecated; Hookless coverage is current-fixture based")
+    parser.add_argument("--release-projection", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -578,11 +583,18 @@ def _case(
     return result
 
 
-def _write(directory: Path, payload: dict[str, Any]) -> None:
+def _write(
+    directory: Path,
+    payload: dict[str, Any],
+    *,
+    release_projection: bool = False,
+) -> None:
     directory.mkdir(parents=True, exist_ok=True)
     (directory / "professional-routing-coverage.json").write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
+    if not release_projection:
+        return
     lines = [
         "# Hookless Professional Routing Coverage",
         "",

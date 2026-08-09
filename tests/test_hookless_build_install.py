@@ -13,6 +13,10 @@ import zipfile
 from collections import Counter
 from pathlib import Path
 
+from tests.scripts.test_eval_core_principles import (
+    assert_core_producer_outcomes_passed,
+)
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
@@ -29,40 +33,108 @@ def load_script(name: str, relative: str):
     return module
 
 
+def assert_build_profile_artifact_semantics(
+    test_case: unittest.TestCase,
+    root: Path,
+    profile: str,
+    expected_skill_count: int,
+) -> dict:
+    test_case.assertTrue(root.is_dir(), f"build profile root is missing: {profile}")
+    skills = [
+        path
+        for path in root.iterdir()
+        if path.is_dir() and (path / "SKILL.md").is_file()
+    ]
+    test_case.assertEqual(expected_skill_count, len(skills), profile)
+    manifest_path = root / ".changeforge-build-manifest.json"
+    test_case.assertTrue(
+        manifest_path.is_file(), f"build manifest is missing: {profile}"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    test_case.assertIsInstance(manifest, dict, profile)
+    test_case.assertEqual("hookless-control-plane-v1", manifest["architecture"])
+    test_case.assertEqual(
+        "ai-consumption-v1", manifest["compiled_layer3_format"]
+    )
+    test_case.assertEqual(
+        Counter(manifest["foundation_delivery_scopes"].values()),
+        {"product": 141, "authoring-only": 1, "dev-only": 8},
+    )
+    expected_compiled_foundation = 0 if profile == "dev" else 141
+    test_case.assertEqual(
+        expected_compiled_foundation,
+        len(manifest["compiled_foundation_skills"]),
+    )
+    return manifest
+
+
+class BuildArtifactConsumerContractTests(unittest.TestCase):
+    def test_profile_artifact_consumer_rejects_real_manifest_file_and_count_mutations(
+        self,
+    ) -> None:
+        consumer = globals().get("assert_build_profile_artifact_semantics")
+        self.assertTrue(callable(consumer), "build artifact consumer is missing")
+        source_manifest = json.loads(
+            (
+                ROOT
+                / "dist/universal/skills/recommended/.changeforge-build-manifest.json"
+            ).read_text(encoding="utf-8")
+        )
+
+        def fixture(directory: Path) -> Path:
+            root = directory / "recommended"
+            root.mkdir()
+            for index in range(27):
+                skill = root / f"skill-{index:02d}"
+                skill.mkdir()
+                (skill / "SKILL.md").write_text("# fixture\n", encoding="utf-8")
+            (root / ".changeforge-build-manifest.json").write_text(
+                json.dumps(source_manifest), encoding="utf-8"
+            )
+            return root
+
+        with tempfile.TemporaryDirectory() as raw:
+            root = fixture(Path(raw))
+            manifest_path = root / ".changeforge-build-manifest.json"
+            self.assertEqual(
+                "hookless-control-plane-v1",
+                consumer(self, root, "recommended", 27)["architecture"],
+            )
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["architecture"] = "mutated"
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaises(AssertionError):
+                consumer(self, root, "recommended", 27)
+
+        with tempfile.TemporaryDirectory() as raw:
+            root = fixture(Path(raw))
+            (root / ".changeforge-build-manifest.json").unlink()
+            with self.assertRaisesRegex(AssertionError, "build manifest is missing"):
+                consumer(self, root, "recommended", 27)
+
+        with tempfile.TemporaryDirectory() as raw:
+            root = fixture(Path(raw))
+            (root / "skill-00/SKILL.md").unlink()
+            with self.assertRaises(AssertionError):
+                consumer(self, root, "recommended", 27)
+
+
 class HooklessBuildInstallTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        for profile in ("recommended", "full", "dev"):
-            result = subprocess.run(
-                [sys.executable, "scripts/build.py", "--profile", profile],
-                cwd=ROOT,
-                text=True,
-                capture_output=True,
-                check=False,
-            )
-            if result.returncode:
-                raise AssertionError(result.stderr or result.stdout)
+        assert_core_producer_outcomes_passed(
+            ROOT,
+            "build-recommended",
+            "build-full",
+            "build-dev",
+        )
 
     def test_profile_counts_and_standard_skill_roots(self) -> None:
         expected = {"recommended": 27, "full": 40, "dev": 190}
         for profile, count in expected.items():
             root = ROOT / "dist/universal/skills" / profile
-            skills = [path for path in root.iterdir() if path.is_dir() and (path / "SKILL.md").is_file()]
-            self.assertEqual(count, len(skills), profile)
-            manifest = json.loads((root / ".changeforge-build-manifest.json").read_text())
-            self.assertEqual("hookless-control-plane-v1", manifest["architecture"])
-            self.assertEqual(
-                "ai-consumption-v1",
-                manifest["compiled_layer3_format"],
-            )
-            self.assertEqual(
-                Counter(manifest["foundation_delivery_scopes"].values()),
-                {"product": 141, "authoring-only": 1, "dev-only": 8},
-            )
-            expected_compiled_foundation = 0 if profile == "dev" else 141
-            self.assertEqual(
-                expected_compiled_foundation,
-                len(manifest["compiled_foundation_skills"]),
+            manifest = assert_build_profile_artifact_semantics(
+                self, root, profile, count
             )
             self.assertEqual(
                 "prompt-enforced",

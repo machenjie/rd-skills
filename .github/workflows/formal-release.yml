@@ -26,17 +26,14 @@ jobs:
       - name: Verify portable Professional and detector contracts
         run: >-
           python3 -m unittest
-          tests.scripts.test_professional_completeness_carry_forward.ProfessionalReviewContractFingerprintTests.test_cross_version_portable_golden
-          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_v3_cross_version_portable_golden
-          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_fingerprint_binds_repository_source_operator_and_constant
-          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_fingerprint_follows_comprehension_and_cross_module_closure
-          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_source_catalog_fails_closed
-          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_payload_excludes_code_objects_and_external_source
-          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_loaded_names_respect_python_lexical_scope
-          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_skill_detector_excludes_shadowed_external_import_binding
-          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_skill_detector_includes_reachable_class_source
+          tests.scripts.test_professional_completeness_carry_forward.ProfessionalReviewContractFingerprintTests.test_review_contract_uses_versioned_explicit_source_manifest
+          tests.scripts.test_professional_completeness_carry_forward.ProfessionalReviewContractFingerprintTests.test_contract_version_and_explicit_source_bytes_change_digest
+          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_manifest_binds_version_and_explicit_source_bytes
+          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_source_manifest_fails_closed
+          tests.scripts.test_root_disposition_lifecycle.RootDispositionLifecycleTests.test_detector_fingerprint_is_independent_of_module_load_name
           tests.scripts.test_audit_skill_content.AuditSkillContentDeterminismTests.test_skill_detector_contract_is_deterministic_and_covers_report_fields
           tests.scripts.test_audit_skill_content.AuditSkillContentDeterminismTests.test_skill_detector_fingerprint_binds_repository_source
+          tests.scripts.test_audit_skill_content.AuditSkillContentDeterminismTests.test_skill_detector_uses_versioned_explicit_source_manifest
 
   validate-release:
     needs: professional-contract-portability
@@ -57,9 +54,6 @@ jobs:
 
       - name: Core Principles formal release outcome gate
         run: python3 scripts/eval-core-principles.py --gate formal-release
-
-      - name: Independent expert review and Root lifecycle gate
-        run: python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review
 
       - name: Documentation and productization release checks
         run: |

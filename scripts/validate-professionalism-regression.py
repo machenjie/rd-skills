@@ -14,6 +14,7 @@ import copy
 import hashlib
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 from collections.abc import Mapping, Sequence
@@ -27,6 +28,7 @@ from typing import Any
 
 from capability_coverage import fixture_ids, validate_capability_coverage
 from validation_utils import (
+    AFFECTED_CONTEXT_ENV,
     PROFESSIONAL_COVERAGE_STATES,
     PROFESSIONAL_REVIEW_COST_FIELDS,
     PROFESSIONAL_REVIEW_COST_LIMITATIONS,
@@ -35,6 +37,7 @@ from validation_utils import (
     PROFESSIONAL_REVIEW_FIXTURE_LIMITATIONS,
     ValidationProblem,
     load_yaml_file,
+    parse_affected_professionalism_context,
     validate_core_contracts,
 )
 import expert_panel_review as expert_panel
@@ -257,9 +260,318 @@ class Result:
     limitations: list[str] = field(default_factory=list)
 
 
+def _affected_package_ids() -> list[str]:
+    evaluator = _load_coverage_evaluator()
+    return sorted(
+        str(entry.get("name", ""))
+        for kind, entry in evaluator._load_entries()
+        if kind != "control"
+    )
+
+
+def _canonical_package_list(
+    value: object,
+    *,
+    label: str,
+    known_package_ids: set[str],
+) -> list[str]:
+    if (
+        not isinstance(value, list)
+        or any(not isinstance(item, str) or not item for item in value)
+        or value != sorted(set(value))
+    ):
+        raise ValueError(f"{label} must be a sorted unique package list")
+    unknown = sorted(set(value) - known_package_ids)
+    if unknown:
+        raise ValueError(f"{label} names unknown packages: {unknown}")
+    return value
+
+
+def _affected_reports(
+    directory: Path,
+    context: dict[str, Any],
+    known_package_ids: list[str],
+) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+    names = {
+        "skill": "skill-professionalism-eval.json",
+        "depth": "skill-professionalism-depth.json",
+        "coverage": "professional-coverage-matrix.json",
+    }
+    reports: dict[str, dict[str, Any]] = {}
+    for key, name in names.items():
+        path = directory / name
+        if not path.is_file():
+            raise ValueError(f"required affected report missing: {path}")
+        value = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(value, dict):
+            raise ValueError(f"required affected report is not a mapping: {path}")
+        reports[key] = value
+
+    execution_scope = reports["skill"].get("execution_scope")
+    expected_scope_fields = {
+        "mode",
+        "direct_package_ids",
+        "fresh_package_ids",
+        "carried_package_ids",
+        "unevaluated_package_ids",
+        "baseline_stale_no_carry",
+        "baseline_decision",
+        "reasons_by_package",
+        "reason_chains",
+        "control_skill_checked",
+    }
+    if (
+        not isinstance(execution_scope, dict)
+        or set(execution_scope) != expected_scope_fields
+        or execution_scope.get("mode") != "affected"
+    ):
+        raise ValueError("affected execution_scope is not canonical")
+    for key, report in reports.items():
+        if report.get("execution_scope") != execution_scope:
+            raise ValueError(
+                f"{names[key]} execution_scope does not match affected evidence"
+            )
+
+    known = set(known_package_ids)
+    direct = _canonical_package_list(
+        execution_scope.get("direct_package_ids"),
+        label="affected direct_package_ids",
+        known_package_ids=known,
+    )
+    fresh = _canonical_package_list(
+        execution_scope.get("fresh_package_ids"),
+        label="affected fresh_package_ids",
+        known_package_ids=known,
+    )
+    carried = _canonical_package_list(
+        execution_scope.get("carried_package_ids"),
+        label="affected carried_package_ids",
+        known_package_ids=known,
+    )
+    unevaluated = _canonical_package_list(
+        execution_scope.get("unevaluated_package_ids"),
+        label="affected unevaluated_package_ids",
+        known_package_ids=known,
+    )
+    baseline_stale_no_carry = execution_scope.get("baseline_stale_no_carry")
+    if not isinstance(baseline_stale_no_carry, bool):
+        raise ValueError("affected baseline_stale_no_carry must be boolean")
+    if any(
+        left & right
+        for left, right in (
+            (set(fresh), set(carried)),
+            (set(fresh), set(unevaluated)),
+            (set(carried), set(unevaluated)),
+        )
+    ) or set(fresh) | set(carried) | set(unevaluated) != known:
+        raise ValueError("affected package sets must partition the inventory")
+    if not set(direct).issubset(fresh):
+        raise ValueError("affected direct packages must be fresh")
+    professionalism = context["professionalism"]
+    if direct != professionalism["direct_package_ids"]:
+        raise ValueError("affected direct packages do not match canonical context")
+    if execution_scope.get("reason_chains") != professionalism["reason_chains"]:
+        raise ValueError("affected reason chains do not match canonical context")
+    if execution_scope.get("control_skill_checked") is not False:
+        raise ValueError("affected execution cannot claim Control Skill coverage")
+
+    reasons = execution_scope.get("reasons_by_package")
+    if not isinstance(reasons, dict) or set(reasons) != known:
+        raise ValueError("affected reasons_by_package must cover the inventory")
+    for package_id in known_package_ids:
+        package_reasons = reasons.get(package_id)
+        if (
+            not isinstance(package_reasons, list)
+            or any(not isinstance(item, str) or not item for item in package_reasons)
+        ):
+            raise ValueError(
+                f"affected reasons for {package_id!r} must be non-blank strings"
+            )
+        if package_id in fresh and not package_reasons:
+            raise ValueError(f"affected fresh package {package_id!r} lacks a reason")
+        if package_id in set(carried) | set(unevaluated) and package_reasons:
+            raise ValueError(
+                f"affected non-evaluated package {package_id!r} has a fresh reason"
+            )
+
+    affected_scope = professionalism["scope"]
+    baseline_decision = execution_scope.get("baseline_decision")
+    if affected_scope == "full":
+        if (
+            direct
+            or fresh != known_package_ids
+            or carried
+            or unevaluated
+            or baseline_stale_no_carry
+            or baseline_decision is not None
+        ):
+            raise ValueError("affected full scope must freshly evaluate every package")
+        if reasons != {
+            package_id: ["impact-scope-full"] for package_id in known_package_ids
+        }:
+            raise ValueError("affected full scope reasons are not canonical")
+    elif affected_scope == "packages":
+        if not direct:
+            raise ValueError("affected package scope requires direct packages")
+        if not isinstance(baseline_decision, str) or not baseline_decision:
+            raise ValueError("affected package scope lacks its carry baseline")
+        if baseline_stale_no_carry:
+            if carried:
+                raise ValueError(
+                    "stale affected baseline cannot authorize carried packages"
+                )
+        elif unevaluated:
+            raise ValueError(
+                "validated affected carry scope cannot leave packages unevaluated"
+            )
+        candidate = Path(baseline_decision)
+        if (
+            candidate.is_absolute()
+            or ".." in candidate.parts
+            or candidate.as_posix() != baseline_decision
+            or candidate.suffix != ".json"
+        ):
+            raise ValueError("affected carry baseline path is not canonical")
+    else:
+        raise ValueError("affected regression cannot run with professionalism scope none")
+
+    expected_schemas = {"skill": 2, "depth": 2, "coverage": 3}
+    for key, expected_schema in expected_schemas.items():
+        report = reports[key]
+        if report.get("schema_version") != expected_schema:
+            raise ValueError(
+                f"{names[key]} schema_version must equal {expected_schema}"
+            )
+        if report.get("errors") != []:
+            raise ValueError(f"{names[key]} contains affected validation errors")
+    for key in ("skill", "depth"):
+        rows = reports[key].get("results")
+        if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+            raise ValueError(f"{names[key]} results must be a list of mappings")
+        if [row.get("name") for row in rows] != fresh:
+            raise ValueError(f"{names[key]} results do not equal the fresh package closure")
+        if any(row.get("status") != "pass" or row.get("errors", []) for row in rows):
+            raise ValueError(f"{names[key]} contains a failing fresh package")
+    skill = reports["skill"]
+    if (
+        skill.get("architecture") != "hookless-control-plane"
+        or skill.get("skills_checked") != len(fresh)
+        or skill.get("error_count") != 0
+    ):
+        raise ValueError("skill-professionalism-eval.json summary is inconsistent")
+    coverage = reports["coverage"]
+    if (
+        coverage.get("architecture") != "hookless-control-plane"
+        or coverage.get("evaluation_kind")
+        != "affected-static-authoring-evidence"
+        or coverage.get("rows") != []
+        or coverage.get("gate_summary")
+        != {
+            "required_skill_count": 0,
+            "pass_count": 0,
+            "fail_count": 0,
+            "not_required_count": len(fresh),
+        }
+    ):
+        raise ValueError("professional-coverage-matrix.json is not affected-only")
+    return reports, execution_scope
+
+
+def _write_affected_result(
+    directory: Path,
+    *,
+    args: argparse.Namespace,
+    context: dict[str, Any],
+    execution_scope: dict[str, Any],
+) -> None:
+    payload = {
+        "schema_version": PROFESSIONALISM_REPORT_SCHEMA_VERSION,
+        "mode": "affected",
+        "status": "affected-current-contract-pass",
+        "authoring_gate": "affected-current-contract-pass",
+        "release_gate": "not-evaluated",
+        "strict": bool(args.strict),
+        "baseline_comparison": "not-evaluated",
+        "evidence_scope": "affected-partial-json",
+        "affected_context": context,
+        "execution_scope": execution_scope,
+        "blockers": [],
+        "release_blockers": [],
+        "advisories": [],
+        "summary": {
+            "direct_package_count": len(execution_scope["direct_package_ids"]),
+            "fresh_package_count": len(execution_scope["fresh_package_ids"]),
+            "carried_package_count": len(execution_scope["carried_package_ids"]),
+            "unevaluated_package_count": len(
+                execution_scope["unevaluated_package_ids"]
+            ),
+            "blocker_count": 0,
+        },
+        "limitations": [
+            "Affected evidence is isolated JSON-only authoring evidence and is not full regression authority.",
+            "Affected evidence does not establish formal release, expert-review currentness, or Markdown freshness.",
+        ]
+        + (
+            [
+                "The stale baseline authorizes no carry; unevaluated packages remain outside this PR-only evidence."
+            ]
+            if execution_scope["baseline_stale_no_carry"]
+            else []
+        ),
+    }
+    (directory / "professionalism-regression-report.json").write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _affected_main(
+    args: argparse.Namespace,
+    context: dict[str, Any],
+    known_package_ids: list[str],
+) -> int:
+    if args.release_projection or args.update_baseline or args.require_expert_content_review:
+        raise ValidationProblem(
+            "affected professionalism evidence cannot project release or lifecycle artifacts"
+        )
+    _reports_by_kind, execution_scope = _affected_reports(
+        args.reports_dir,
+        context,
+        known_package_ids,
+    )
+    _write_affected_result(
+        args.reports_dir,
+        args=args,
+        context=context,
+        execution_scope=execution_scope,
+    )
+    print(
+        "validate-professionalism-regression: "
+        "authoring_gate=affected-current-contract-pass; "
+        "release_gate=not-evaluated; evidence=affected-partial-json"
+    )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _args(sys.argv[1:] if argv is None else argv)
     args.reports_dir.mkdir(parents=True, exist_ok=True)
+    raw_affected_context = os.environ.get(AFFECTED_CONTEXT_ENV)
+    if raw_affected_context is not None:
+        try:
+            known_package_ids = _affected_package_ids()
+            context = parse_affected_professionalism_context(
+                raw_affected_context,
+                known_package_ids=known_package_ids,
+            )
+            assert context is not None
+            return _affected_main(args, context, known_package_ids)
+        except (OSError, json.JSONDecodeError, ValidationProblem, ValueError) as exc:
+            print(
+                f"validate-professionalism-regression: ERROR: {exc}",
+                file=sys.stderr,
+            )
+            return 1
     try:
         reports = _reports(args.reports_dir)
         _validate_fresh_benchmark_report(reports["benchmarks"])
@@ -483,7 +795,11 @@ def main(argv: list[str] | None = None) -> int:
         _write_snapshot(args.baseline, result, reports)
         result.mode = "baseline-snapshot-updated"
         result.baseline_comparison = "not-numerically-comparable"
-    _write(args.reports_dir, result)
+    _write(
+        args.reports_dir,
+        result,
+        release_projection=args.release_projection,
+    )
     print(
         "validate-professionalism-regression: "
         f"authoring_gate={result.authoring_gate}; release_gate={result.release_gate}; "
@@ -535,6 +851,7 @@ def _args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--update-baseline", action="store_true")
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--report-only", action="store_true")
+    parser.add_argument("--release-projection", action="store_true")
     parser.add_argument(
         "--require-expert-content-review",
         action="store_true",
@@ -572,6 +889,16 @@ def _reports(directory: Path) -> dict[str, dict[str, Any]]:
             raise ValueError(f"required report is not a mapping: {path}")
         if value.get("architecture") not in {None, "hookless-control-plane"} and key in {"skill", "benchmarks", "samples"}:
             raise ValueError(f"required report is not Hookless v2 evidence: {path}")
+        if key in {"skill", "depth", "coverage"}:
+            execution_scope = value.get("execution_scope")
+            if (
+                not isinstance(execution_scope, dict)
+                or execution_scope.get("mode") != "full"
+            ):
+                raise ValueError(
+                    f"{name} must contain full professionalism evidence; "
+                    "affected partial evidence is isolated from full regression"
+                )
         result[key] = value
     samples = result["samples"]
     expected_sample_contract = {
@@ -6315,35 +6642,18 @@ def _write_snapshot(path: Path, result: Result, reports: dict[str, dict[str, Any
     path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def _write(directory: Path, result: Result) -> None:
+def _write(
+    directory: Path,
+    result: Result,
+    *,
+    release_projection: bool = False,
+) -> None:
     payload = asdict(result)
     (directory / "professionalism-regression-report.json").write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
-    readiness = {
-        "schema_version": result.schema_version,
-        "authoring_gate": result.authoring_gate,
-        "release_gate": result.release_gate,
-        "baseline_comparison": result.baseline_comparison,
-        "evidence_scope": result.evidence_scope,
-        "content_audit_summary": result.content_audit_summary,
-        "ai_readability_summary": result.ai_readability_summary,
-        "reference_content_summary": result.reference_content_summary,
-        "root_content_summary": result.root_content_summary,
-        "content_readiness": result.content_readiness,
-        "coverage_gate_summary": result.coverage_gate_summary,
-        "professional_review_cost_fixtures": (
-            result.professional_review_cost_fixtures
-        ),
-        "limitations": result.limitations,
-        "release_claim": "deterministic source and captured-fixture contracts only",
-        "blockers": [asdict(item) for item in result.blockers],
-        "release_blockers": [asdict(item) for item in result.release_blockers],
-        "advisories": [asdict(item) for item in result.advisories],
-    }
-    (directory / "professionalism-release-readiness.json").write_text(
-        json.dumps(readiness, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    if not release_projection:
+        return
     lines = [
         "# Hookless Professionalism Gates",
         "",
@@ -6511,7 +6821,6 @@ def _write(directory: Path, result: Result) -> None:
         lines.extend(["", "## Advisories", ""] + [f"- `{item.target}`: {item.message}" for item in result.advisories])
     markdown = "\n".join(lines) + "\n"
     (directory / "professionalism-regression-report.md").write_text(markdown, encoding="utf-8")
-    (directory / "professionalism-release-readiness.md").write_text(markdown, encoding="utf-8")
 
 
 def _strings(value: Any) -> list[str]:

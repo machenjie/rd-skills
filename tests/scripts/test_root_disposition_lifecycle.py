@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import ast
 import importlib.util
 import hashlib
-import inspect
 import os
 import stat
 import sys
@@ -17,14 +15,6 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "audit-skill-content.py"
-ROOT_DETECTOR_V3_FINGERPRINT = (
-    "4d8059e710c7ecca7d4c839fe63d2c2f88632aa826356280dfe76bed5043ea04"
-)
-SKILL_DETECTOR_V3_FINGERPRINT = (
-    "dd90d20b43d8cf23c81e03db672fe46d9d8f3e7daeb11d1ca70660dcf413d7cf"
-)
-
-
 def _load_module(
     name: str = "root_disposition_lifecycle_test_auditor",
 ):
@@ -2324,19 +2314,30 @@ class RootDispositionLifecycleTests(unittest.TestCase):
         )
         self.assertTrue(any("must contain exactly" in item for item in errors), errors)
 
-    def test_detector_fingerprint_binds_repository_source_operator_and_constant(
+    def test_detector_manifest_binds_version_and_explicit_source_bytes(
         self,
     ) -> None:
+        root_payload = self.module._root_semantic_detector_payload()
+        skill_payload = self.module._skill_detector_payload()
+        self.assertEqual(
+            "root-semantic-detector-v4", root_payload["contract_version"]
+        )
+        self.assertEqual(
+            "skill-content-detector-v4", skill_payload["contract_version"]
+        )
+        expected_paths = [
+            "scripts/audit-skill-content.py",
+            "scripts/validation_utils.py",
+        ]
+        self.assertEqual(
+            expected_paths,
+            [row["path"] for row in root_payload["source_manifest"]],
+        )
+        self.assertEqual(
+            expected_paths,
+            [row["path"] for row in skill_payload["source_manifest"]],
+        )
         baseline = self.module._root_semantic_detector_fingerprint()
-        with mock.patch.object(
-            self.module,
-            "DESCRIPTION_ROOTS",
-            self.module.DESCRIPTION_ROOTS[:-1],
-        ):
-            self.assertEqual(
-                baseline, self.module._root_semantic_detector_fingerprint()
-            )
-
         with self._detector_source_change(
             "ROOT_LONG_EXAMPLE_LINES = 12",
             "ROOT_LONG_EXAMPLE_LINES = 13",
@@ -2345,54 +2346,13 @@ class RootDispositionLifecycleTests(unittest.TestCase):
                 baseline, self.module._root_semantic_detector_fingerprint()
             )
 
-        with self._detector_source_change(
-            "and section.line_count > ROOT_LONG_EXAMPLE_LINES",
-            "and section.line_count >= ROOT_LONG_EXAMPLE_LINES",
-        ):
-            self.assertNotEqual(
-                baseline, self.module._root_semantic_detector_fingerprint()
-            )
-
-    def test_detector_v3_cross_version_portable_golden(self) -> None:
-        self.assertEqual(
-            ROOT_DETECTOR_V3_FINGERPRINT,
-            self.module._root_semantic_detector_fingerprint(),
-        )
-        self.assertEqual(
-            SKILL_DETECTOR_V3_FINGERPRINT,
-            self.module._skill_detector_fingerprint(),
-        )
-        self.assertEqual(3, self.module._skill_detector_contract()["schema_version"])
-
-    def test_detector_fingerprint_follows_comprehension_and_cross_module_closure(
-        self,
-    ) -> None:
-        baseline = self.module._root_semantic_detector_fingerprint()
-        with self._detector_source_change(
-            'return f"{path}#{document_part}"',
-            'return f"{path}::{document_part}"',
-        ):
-            self.assertNotEqual(
-                baseline, self.module._root_semantic_detector_fingerprint()
-            )
-
-        with self._detector_source_change(
-            "return _simple_yaml_load(text)",
-            "return dict(_simple_yaml_load(text))",
-            relative="scripts/validation_utils.py",
-        ):
-            self.assertNotEqual(
-                baseline, self.module._root_semantic_detector_fingerprint()
-            )
-
-    def test_detector_source_catalog_fails_closed(self) -> None:
-        source_files = self.module._DETECTOR_REPOSITORY_SOURCE_FILES
+    def test_detector_source_manifest_fails_closed(self) -> None:
         with mock.patch.object(
             self.module,
-            "_DETECTOR_REPOSITORY_SOURCE_FILES",
+            "_DETECTOR_REPOSITORY_SOURCE_PATHS",
             (
-                ("audit-skill-content", ROOT / "missing-audit-detector.py"),
-                source_files[1],
+                "scripts/audit-skill-content.py",
+                "scripts/missing-detector-source.py",
             ),
         ):
             with self.assertRaisesRegex(
@@ -2401,190 +2361,18 @@ class RootDispositionLifecycleTests(unittest.TestCase):
             ):
                 self.module._root_semantic_detector_fingerprint()
 
-        source_reader = self.module._detector_repository_source_text
-
-        def duplicate_source(path: Path) -> str:
-            text = source_reader(path)
-            if path.resolve() == SCRIPT.resolve():
-                return text + (
-                    "\n\ndef _root_document_id(path: str, document_part: str) -> str:\n"
-                    "    return f'{path}#{document_part}'\n"
-                )
-            return text
-
-        with mock.patch.object(
-            self.module,
-            "_detector_repository_source_text",
-            side_effect=duplicate_source,
-        ):
-            with self.assertRaisesRegex(
-                self.module.ValidationProblem,
-                "duplicate detector source symbol",
-            ):
-                self.module._root_semantic_detector_fingerprint()
-
-        def unparseable_source(path: Path) -> str:
-            text = source_reader(path)
-            return text + "\nif (\n" if path.resolve() == SCRIPT.resolve() else text
-
-        with mock.patch.object(
-            self.module,
-            "_detector_repository_source_text",
-            side_effect=unparseable_source,
-        ):
-            with self.assertRaisesRegex(
-                self.module.ValidationProblem,
-                "cannot parse detector source",
-            ):
-                self.module._root_semantic_detector_fingerprint()
-
-    def test_detector_payload_excludes_code_objects_and_external_source(self) -> None:
-        payload = self.module._root_semantic_detector_payload()
-        self.assertEqual("root-semantic-detector-v3", payload["contract"])
-
-        def keys(value: object) -> set[str]:
-            if isinstance(value, dict):
-                return {
-                    *(str(key) for key in value),
-                    *(item for child in value.values() for item in keys(child)),
-                }
-            if isinstance(value, list):
-                return {item for child in value for item in keys(child)}
-            return set()
-
-        self.assertTrue(
-            {
-                "bytecode_sha256",
-                "names",
-                "varnames",
-                "argcount",
-                "posonlyargcount",
-                "kwonlyargcount",
-                "flags",
-            }.isdisjoint(keys(payload))
-        )
-        baseline = self.module._root_semantic_detector_fingerprint()
-        with mock.patch.object(
-            inspect,
-            "getsource",
-            side_effect=AssertionError("external callable source must not be read"),
-        ):
-            self.assertEqual(
-                baseline, self.module._root_semantic_detector_fingerprint()
-            )
-
-    def test_detector_loaded_names_respect_python_lexical_scope(self) -> None:
-        function = ast.parse(
-            """
-def root(parameter):
-    assigned = module_assignment_source
-    for loop_value in module_iterable:
-        sink(loop_value)
-    with module_context() as entered:
-        sink(entered)
-    try:
-        sink(module_try)
-    except ModuleError as caught:
-        sink(caught)
-    import dataclasses as imported_module
-    from pathlib import Path as imported_name
-    local_lambda = lambda lambda_arg: lambda_arg + lambda_global
-    closure_value = closure_seed
-    def nested(nested_arg):
-        nested_local = nested_seed
-        return nested_arg + nested_local + nested_global
-    def mutate_closure():
-        nonlocal closure_value
-        closure_value += nonlocal_rhs
-        return closure_value + nested_nonlocal_global
-    def force_global():
-        global forced_global
-        return forced_global
-    class Nested:
-        class_local = class_seed
-        def method(self):
-            method_local = method_seed
-            return self, method_local, method_global
-    comp_result = [
-        comp_item + comp_global
-        for comp_item in comp_iterable
-        if comp_item
-    ]
-    return (
-        parameter, assigned, loop_value, entered, caught,
-        imported_module, imported_name, local_lambda, nested,
-        mutate_closure, force_global, Nested, comp_result, module_return,
-    )
-"""
-        ).body[0]
-
+    def test_skill_detector_contract_exposes_manifest_and_digest(self) -> None:
+        contract = self.module._skill_detector_contract()
+        payload = contract["detector_source_manifest"]
         self.assertEqual(
-            {
-                "ModuleError",
-                "class_seed",
-                "closure_seed",
-                "comp_global",
-                "comp_iterable",
-                "forced_global",
-                "lambda_global",
-                "method_global",
-                "method_seed",
-                "module_assignment_source",
-                "module_context",
-                "module_iterable",
-                "module_return",
-                "module_try",
-                "nested_global",
-                "nested_nonlocal_global",
-                "nested_seed",
-                "nonlocal_rhs",
-                "sink",
-            },
-            set(self.module._detector_loaded_names(function)),
+            payload["aggregate_source_digest"],
+            contract["detector_fingerprint"]["value"],
         )
-
-    def test_skill_detector_excludes_shadowed_external_import_binding(self) -> None:
-        payload = self.module._skill_detector_payload()
-        self.assertNotIn(
-            "audit-skill-content._readability_by_owner:field",
-            payload["bindings"],
-        )
-
-    def test_skill_detector_includes_reachable_class_source(self) -> None:
-        payload = self.module._skill_detector_payload()
-        class_id = "audit-skill-content.SkillMetrics"
-        self.assertIn(class_id, payload["symbols"])
         self.assertEqual(
-            {
-                "kind": "repository-symbol",
-                "target": class_id,
-            },
-            payload["bindings"]["audit-skill-content._base_metrics:SkillMetrics"],
+            self.module._skill_detector_fingerprint(),
+            contract["detector_fingerprint"]["value"],
         )
-        self.assertEqual("class", payload["symbols"][class_id]["kind"])
-        self.assertTrue(
-            payload["symbols"][class_id]["source"].startswith(
-                "@dataclass\nclass SkillMetrics:"
-            )
-        )
-
-        baseline = self.module._skill_detector_fingerprint()
-        with self._detector_source_change(
-            'risk_of_change: str = "low"',
-            'risk_of_change: str = "medium"',
-        ):
-            self.assertNotEqual(baseline, self.module._skill_detector_fingerprint())
-
-        with self._detector_source_change(
-            "class SkillMetrics:",
-            "class RemovedSkillMetrics:",
-        ):
-            with self.assertRaisesRegex(
-                self.module.ValidationProblem,
-                "unknown detector source symbol.*SkillMetrics",
-            ):
-                self.module._skill_detector_fingerprint()
-
+        self.assertEqual(3, contract["schema_version"])
     def test_detector_fingerprint_is_independent_of_module_load_name(self) -> None:
         alias = "root_disposition_lifecycle_alias_auditor"
         try:

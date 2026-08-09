@@ -370,41 +370,32 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             expected_vote_count * len(PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA)
         )
         self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, target_count)
-        self.assertEqual([], record["voters"])
-        self.assertEqual(0, cost["fresh_vote_count"])
-        self.assertEqual(expected_vote_count, cost["carried_forward_vote_count"])
+        self.assertEqual(3, len(record["voters"]))
+        self.assertEqual(expected_vote_count, cost["fresh_vote_count"])
+        self.assertEqual(0, cost["carried_forward_vote_count"])
         self.assertEqual(expected_vote_count, cost["effective_vote_count"])
-        self.assertEqual(0, cost["fresh_criterion_result_count"])
         self.assertEqual(
             expected_criterion_result_count,
+            cost["fresh_criterion_result_count"],
+        )
+        self.assertEqual(
+            0,
             cost["carried_forward_criterion_result_count"],
         )
         self.assertEqual(
             expected_criterion_result_count,
             cost["effective_criterion_result_count"],
         )
-        for field in (
-            "canonical_capsule_input_bytes_proxy",
-            "input_ratio_ppm",
-            "required_only_capsule_input_bytes_proxy",
-            "required_only_input_ratio_ppm",
-            "required_only_source_material_input_bytes_proxy",
-            "source_material_input_bytes_proxy",
-            "source_material_coverage_ratio_ppm",
-            "reviewer_added_source_material_input_bytes_proxy",
-            "reviewer_added_relationship_evidence_metadata_overhead_bytes_proxy",
-            "reviewer_added_relationship_evidence_metadata_overhead_ratio_ppm",
-            "reviewer_added_request_count",
-            "reviewer_added_unique_relationship_count",
-            "maximum_reviewer_added_unique_union_to_required_ratio_ppm",
-        ):
-            self.assertEqual(0, cost[field], field)
-        self.assertEqual("all-carry-zero-input", cost["policy_status"])
+        self.assertGreater(cost["canonical_capsule_input_bytes_proxy"], 0)
+        self.assertEqual(1_000_000, cost["input_ratio_ppm"])
+        self.assertEqual(1_000_000, cost["required_only_input_ratio_ppm"])
+        self.assertEqual(1_000_000, cost["source_material_coverage_ratio_ppm"])
+        self.assertEqual("contract-change-full-review", cost["policy_status"])
         self.assertTrue(
             REGRESSION._professional_review_cost_policy_satisfied(
                 cost,
-                fresh_target_count=0,
-                carried_forward_target_count=target_count,
+                fresh_target_count=target_count,
+                carried_forward_target_count=0,
             )
         )
         self.assertFalse(
@@ -433,15 +424,14 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 packet=packet,
             )
 
-        _baseline_path, baseline = (
-            REGRESSION._read_professional_artifact_reference(
-                packet["review_plan"]["baseline"]["decision"],
-                label="tracked schema-3 Professional baseline decision",
-            )
-        )
         malformed_voters = copy.deepcopy(record)
-        malformed_voters["voters"].append(copy.deepcopy(baseline["voters"][0]))
-        with self.assertRaises(ValueError):
+        malformed_voters["voters"].append(
+            copy.deepcopy(record["voters"][0])
+        )
+        malformed_voters["voters"][-1]["capsule_input_blocks_proxy"][0][
+            "sha256"
+        ] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "conflicts across voters"):
             REGRESSION._professional_schema3_review_cost(
                 malformed_voters,
                 packet=packet,
@@ -478,7 +468,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         config_bytes = config_path.read_bytes()
         config = REGRESSION.load_yaml_file(config_path)
         evaluation_date = date.fromisoformat(config["reviewed_at"])
-        self.assertEqual(date(2026, 8, 8), evaluation_date)
+        self.assertEqual(date(2026, 8, 9), evaluation_date)
         attestation = config["professional_completeness_review_attestation"]
         record, _record_path, _evidence = REGRESSION._load_dual_panel_record(
             config_path,
@@ -486,7 +476,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             field_name="professional_completeness_review_attestation",
             expected_kind=PANEL.PROFESSIONAL_COMPLETENESS_DECISION_KIND,
         )
-        self.assertEqual("2026-08-07", record["decided_on"])
+        self.assertEqual("2026-08-09", record["decided_on"])
         result = REGRESSION._professional_completeness_review_axis(
             config_path,
             config_bytes=config_bytes,
@@ -514,17 +504,17 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             )
         with self.assertRaisesRegex(ValueError, "non-future ISO date"):
             REGRESSION._validated_iso_date(
-                "2026-08-09",
+                "2026-08-10",
                 label="test future decision date",
                 evaluation_date=evaluation_date,
             )
         self.assertEqual(target_count, result["required_target_count"])
         self.assertEqual(target_count, result["applied_target_count"])
-        self.assertEqual(0, result["fresh_target_count"])
-        self.assertEqual(target_count, result["carried_forward_target_count"])
-        self.assertEqual(0, result["reviewer_pool_size"])
+        self.assertEqual(target_count, result["fresh_target_count"])
+        self.assertEqual(0, result["carried_forward_target_count"])
+        self.assertEqual(3, result["reviewer_pool_size"])
         self.assertEqual(
-            0,
+            3,
             result["qualification_summary"]["fresh_reviewer_pool_size"],
         )
         self.assertEqual(
@@ -537,45 +527,29 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 "effective_architecture_vote_count"
             ],
         )
-        self.assertEqual(0, result["review_cost"]["fresh_vote_count"])
         self.assertEqual(
             expected_vote_count,
-            result["review_cost"]["carried_forward_vote_count"],
+            result["review_cost"]["fresh_vote_count"],
         )
+        self.assertEqual(0, result["review_cost"]["carried_forward_vote_count"])
         self.assertEqual(
             expected_vote_count,
             result["review_cost"]["effective_vote_count"],
         )
         self.assertEqual(
-            0,
+            expected_criterion_result_count,
             result["review_cost"]["fresh_criterion_result_count"],
         )
         self.assertEqual(
-            expected_criterion_result_count,
+            0,
             result["review_cost"]["carried_forward_criterion_result_count"],
         )
         self.assertEqual(
             expected_criterion_result_count,
             result["review_cost"]["effective_criterion_result_count"],
         )
-        for field in (
-            "canonical_capsule_input_bytes_proxy",
-            "input_ratio_ppm",
-            "required_only_capsule_input_bytes_proxy",
-            "required_only_input_ratio_ppm",
-            "required_only_source_material_input_bytes_proxy",
-            "source_material_input_bytes_proxy",
-            "source_material_coverage_ratio_ppm",
-            "reviewer_added_source_material_input_bytes_proxy",
-            "reviewer_added_relationship_evidence_metadata_overhead_bytes_proxy",
-            "reviewer_added_relationship_evidence_metadata_overhead_ratio_ppm",
-            "reviewer_added_request_count",
-            "reviewer_added_unique_relationship_count",
-            "maximum_reviewer_added_unique_union_to_required_ratio_ppm",
-        ):
-            self.assertEqual(0, result["review_cost"][field], field)
         self.assertEqual(
-            "all-carry-zero-input",
+            "contract-change-full-review",
             result["review_cost"]["policy_status"],
         )
         self.assertTrue(result["source_current"])
@@ -585,10 +559,12 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         self.assertTrue(result["provenance_current"])
         self.assertTrue(result["round_lifecycle_current"])
         self.assertTrue(result["evidence_contract_satisfied"])
-        self.assertEqual("panel-majority-current", result["attestation_status"])
-        self.assertTrue(result["storage_current"])
-        self.assertTrue(result["review_cost_current"])
-        self.assertTrue(result["accepted_for_formal"])
+        self.assertEqual(
+            "panel-majority-pending-checkin", result["attestation_status"]
+        )
+        self.assertFalse(result["storage_current"])
+        self.assertFalse(result["review_cost_current"])
+        self.assertFalse(result["accepted_for_formal"])
 
     def test_legacy_review_normalizes_to_two_non_authoritative_axes(self) -> None:
         legacy = {

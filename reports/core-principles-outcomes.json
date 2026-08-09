@@ -130,8 +130,7 @@
       ],
       "id": "roles-authority",
       "pointer": "/roles",
-      "source": "src/control-model/core-contracts.json",
-      "value_sha256": "84d4d639cfae9348c0a1d17be607f2bf110be804c2805473e6ebfae52e8ec6fd"
+      "source": "src/control-model/core-contracts.json"
     },
     {
       "consumer_results": [
@@ -182,8 +181,7 @@
       ],
       "id": "context-budget-authority",
       "pointer": "/context_budget_contract",
-      "source": "src/control-model/core-contracts.json",
-      "value_sha256": "454030221e8fe476f80513f330c2a9567b36c006ee9326da9847b6328cab1891"
+      "source": "src/control-model/core-contracts.json"
     },
     {
       "consumer_results": [
@@ -237,15 +235,19 @@
             },
             {
               "id": "readability-review-current",
-              "status": "pass"
+              "status": "fail"
             },
             {
               "id": "professional-completeness-review-current",
-              "status": "pass"
+              "status": "fail"
             },
             {
               "id": "professional-review-cost-current",
-              "status": "pass"
+              "status": "fail"
+            },
+            {
+              "id": "professionalism-formal-release-ready",
+              "status": "fail"
             },
             {
               "id": "root-release-current",
@@ -258,8 +260,7 @@
       ],
       "id": "final-goal-authority",
       "pointer": "/final_goal_contract",
-      "source": "src/control-model/core-contracts.json",
-      "value_sha256": "aa2b0431565226db5a4de3c388eb6091e9fe981628a98b82b69f264ae7ebd2dd"
+      "source": "src/control-model/core-contracts.json"
     },
     {
       "consumer_results": [
@@ -336,8 +337,7 @@
       ],
       "id": "reference-contract-authority",
       "pointer": "/reference_contract",
-      "source": "src/control-model/core-contracts.json",
-      "value_sha256": "261b43c8d5ba01b6a326eb9476cd95af3571453e6b715f944cb62ec6b7c3e1a1"
+      "source": "src/control-model/core-contracts.json"
     },
     {
       "consumer_results": [
@@ -418,8 +418,7 @@
       ],
       "id": "task-contract-authority",
       "pointer": "/task_contract",
-      "source": "src/control-model/core-contracts.json",
-      "value_sha256": "61dea82e9b3e38583752da1d6b21cf97ddcbbf77d585928409633806f4bb0211"
+      "source": "src/control-model/core-contracts.json"
     },
     {
       "consumer_results": [
@@ -510,8 +509,7 @@
       ],
       "id": "evidence-contract-authority",
       "pointer": "/visible_evidence_contract",
-      "source": "src/control-model/core-contracts.json",
-      "value_sha256": "02a459cfba78d4cff253471a0d2e358710674cb3e8962c124fa7fd11a61ba9b0"
+      "source": "src/control-model/core-contracts.json"
     },
     {
       "consumer_results": [
@@ -602,8 +600,7 @@
       ],
       "id": "completion-contract-authority",
       "pointer": "/completion_state",
-      "source": "src/control-model/core-contracts.json",
-      "value_sha256": "c2c75fe14f60b6f981c9db3ce5ba14afc5c6016d5ecd279fddef7312f444fd30"
+      "source": "src/control-model/core-contracts.json"
     },
     {
       "consumer_results": [
@@ -694,8 +691,7 @@
       ],
       "id": "prompt-contract-authority",
       "pointer": "/prompt_contract",
-      "source": "src/control-model/core-contracts.json",
-      "value_sha256": "b3c787339309db284d88aab18275182ea882a6024eeb77ab35030c5d822b406b"
+      "source": "src/control-model/core-contracts.json"
     },
     {
       "consumer_results": [
@@ -766,8 +762,7 @@
       ],
       "id": "profile-contract-authority",
       "pointer": "/profile_contract",
-      "source": "src/control-model/core-contracts.json",
-      "value_sha256": "92b90f8c75eaf4debe33c1f06f9518bdd41a6c3fb76cf4e73fad2036dcfbf15d"
+      "source": "src/control-model/core-contracts.json"
     },
     {
       "consumer_results": [
@@ -784,8 +779,7 @@
       ],
       "id": "control-skill-contract-authority",
       "pointer": "/control_skill_contract",
-      "source": "src/control-model/core-contracts.json",
-      "value_sha256": "07008420311603b6368b470ec5771c4c4b8a0891c59eef658558e38278e04733"
+      "source": "src/control-model/core-contracts.json"
     },
     {
       "consumer_results": [
@@ -802,23 +796,39 @@
       ],
       "id": "docs-contract-authority",
       "pointer": "/docs_contract",
-      "source": "src/control-model/core-contracts.json",
-      "value_sha256": "6b13027d261e65e25d0bb2f66a57defc52b888d083338d26393d0aa24f4d2bfe"
+      "source": "src/control-model/core-contracts.json"
+    },
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
+              "id": "task-contracts-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "validate-task-contracts",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "impact-graph-authority",
+      "pointer": "/impact_graph_contract",
+      "source": "src/control-model/core-contracts.json"
     }
   ],
   "command_execution_count": 33,
   "contract_errors": [],
-  "contract_sha256": "cadbbc01d48350f446de6b653368da52aa5ce47d865d8429230ef31b2714c1a6",
+  "contract_sha256": "74130044b1eedb0e3b28b5660818ffb0adbc86b636364a70d3409235182c4e37",
   "contract_source": "src/control-model/core-contracts.json",
   "formal_principles_status": "blocked",
   "input_tree": {
     "post": {
-      "file_count": 2618,
-      "sha256": "c049e3f4509b098752c5ad9dbcaaea57c08fd8f8843a4941c3cd5f7c60cd9bff"
+      "file_count": 2646,
+      "sha256": "2fe10d3aaa8c52bae2b81cdb814a94ff0a6c5ad9ae9b492aaaa4e4e9869f08be"
     },
     "pre": {
-      "file_count": 2618,
-      "sha256": "c049e3f4509b098752c5ad9dbcaaea57c08fd8f8843a4941c3cd5f7c60cd9bff"
+      "file_count": 2646,
+      "sha256": "2fe10d3aaa8c52bae2b81cdb814a94ff0a6c5ad9ae9b492aaaa4e4e9869f08be"
     },
     "unchanged": true
   },
@@ -840,7 +850,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -865,7 +874,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -890,7 +898,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -915,7 +922,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -941,7 +947,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -974,7 +979,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1003,7 +1007,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1029,7 +1032,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1054,7 +1056,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1079,7 +1080,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1104,7 +1104,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1129,7 +1128,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1155,7 +1153,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1167,7 +1164,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
             "type": "integer"
           },
           "expected": 9,
@@ -1179,7 +1175,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -1204,7 +1199,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1216,8 +1210,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
-            "length": 4,
+            "length": 7,
             "type": "string"
           },
           "expected": "pass",
@@ -1225,11 +1218,10 @@
           "pointer": "/gate_status/formal_release/status",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "694df57a7909d9f9edbd3acb4ccfce5fbee156fab749383121f17fef16bbab57",
             "length": 7,
             "type": "string"
           },
@@ -1238,11 +1230,11 @@
           "pointer": "/semantic_disposition_application/status",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -1255,7 +1247,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1267,7 +1258,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
             "type": "integer"
           },
           "expected": 9,
@@ -1279,7 +1269,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
             "type": "integer"
           },
           "expected": 7,
@@ -1291,7 +1280,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
             "type": "integer"
           },
           "expected": 1,
@@ -1303,7 +1291,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -1316,7 +1303,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -1329,7 +1315,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -1357,7 +1342,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1369,7 +1353,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
             "type": "integer"
           },
           "expected": 9,
@@ -1381,7 +1364,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
             "type": "integer"
           },
           "expected": 7,
@@ -1393,7 +1375,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
             "type": "integer"
           },
           "expected": 1,
@@ -1405,7 +1386,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -1418,7 +1398,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -1431,7 +1410,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -1459,7 +1437,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1471,7 +1448,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
             "type": "integer"
           },
           "expected": 9,
@@ -1483,7 +1459,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
             "type": "integer"
           },
           "expected": 7,
@@ -1495,7 +1470,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
             "type": "integer"
           },
           "expected": 1,
@@ -1507,7 +1481,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -1520,7 +1493,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -1533,7 +1505,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -1561,7 +1532,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1573,7 +1543,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
             "type": "integer"
           },
           "expected": 9,
@@ -1585,7 +1554,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
             "type": "integer"
           },
           "expected": 7,
@@ -1597,7 +1565,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
             "type": "integer"
           },
           "expected": 1,
@@ -1609,7 +1576,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -1622,7 +1588,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -1635,7 +1600,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -1662,7 +1626,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1674,7 +1637,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
             "type": "integer"
           },
           "expected": 9,
@@ -1686,7 +1648,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
             "type": "integer"
           },
           "expected": 7,
@@ -1698,7 +1659,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
             "type": "integer"
           },
           "expected": 1,
@@ -1710,7 +1670,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -1723,7 +1682,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -1736,7 +1694,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -1762,7 +1719,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1774,7 +1730,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
             "type": "integer"
           },
           "expected": 9,
@@ -1786,7 +1741,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
             "type": "integer"
           },
           "expected": 7,
@@ -1798,7 +1752,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
             "type": "integer"
           },
           "expected": 4,
@@ -1810,7 +1763,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
             "type": "boolean"
           },
           "expected": true,
@@ -1822,7 +1774,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -1834,7 +1785,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -1862,7 +1812,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1874,7 +1823,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
             "type": "integer"
           },
           "expected": 9,
@@ -1886,7 +1834,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
             "type": "integer"
           },
           "expected": 4,
@@ -1898,7 +1845,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
             "type": "integer"
           },
           "expected": 1,
@@ -1910,7 +1856,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -1923,7 +1868,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -1936,7 +1880,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -1965,7 +1908,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -1977,7 +1919,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
             "type": "integer"
           },
           "expected": 9,
@@ -1989,7 +1930,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
             "type": "integer"
           },
           "expected": 4,
@@ -2001,7 +1941,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
             "type": "integer"
           },
           "expected": 1,
@@ -2013,7 +1952,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -2026,7 +1964,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -2039,7 +1976,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -2068,7 +2004,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2080,7 +2015,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
             "type": "integer"
           },
           "expected": 9,
@@ -2092,7 +2026,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
             "type": "integer"
           },
           "expected": 4,
@@ -2104,7 +2037,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
             "type": "integer"
           },
           "expected": 1,
@@ -2116,7 +2048,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -2129,7 +2060,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -2142,7 +2072,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -2171,7 +2100,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2183,7 +2111,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "19581e27de7ced00ff1ce50b2047e7a567c76b1cbaebabe5ef03f7c3017bb5b7",
             "type": "integer"
           },
           "expected": 9,
@@ -2195,7 +2122,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
             "type": "integer"
           },
           "expected": 4,
@@ -2207,7 +2133,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
             "type": "integer"
           },
           "expected": 1,
@@ -2219,7 +2144,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -2232,7 +2156,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -2245,7 +2168,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -2273,7 +2195,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2299,7 +2220,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2324,7 +2244,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2349,7 +2268,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2374,7 +2292,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2405,7 +2322,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2430,7 +2346,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2457,7 +2372,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2482,7 +2396,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2494,7 +2407,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
             "type": "integer"
           },
           "expected": 2,
@@ -2506,7 +2418,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -2519,7 +2430,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -2545,7 +2455,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2557,7 +2466,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "e7f6c011776e8db7cd330b54174fd76f7d0216b612387a5ffcfb81e6f0919683",
             "type": "integer"
           },
           "expected": 6,
@@ -2569,7 +2477,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -2582,7 +2489,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -2609,7 +2515,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2621,7 +2526,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
             "type": "integer"
           },
           "expected": 2,
@@ -2633,7 +2537,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -2642,6 +2545,52 @@
           "pointer": "/errors",
           "resolution_status": "resolved",
           "source": "reports/skill-professionalism-eval.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "type": "integer"
+          },
+          "expected": 2,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/skill-professionalism-depth.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/errors",
+          "resolution_status": "resolved",
+          "source": "reports/skill-professionalism-depth.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "type": "integer"
+          },
+          "expected": 3,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/professional-coverage-matrix.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/errors",
+          "resolution_status": "resolved",
+          "source": "reports/professional-coverage-matrix.json",
           "status": "pass"
         }
       ],
@@ -2659,7 +2608,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2671,7 +2619,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
             "type": "integer"
           },
           "expected": 3,
@@ -2683,7 +2630,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -2692,6 +2638,29 @@
           "pointer": "/errors",
           "resolution_status": "resolved",
           "source": "reports/professional-benchmarks-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "type": "integer"
+          },
+          "expected": 3,
+          "operator": "equals",
+          "pointer": "/schema_version",
+          "resolution_status": "resolved",
+          "source": "reports/professional-benchmarks-eval.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "length": 0,
+            "type": "array"
+          },
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/errors",
+          "resolution_status": "resolved",
+          "source": "reports/professional-benchmarks-eval.json",
           "status": "pass"
         }
       ],
@@ -2709,7 +2678,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2721,7 +2689,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d",
             "type": "integer"
           },
           "expected": 5,
@@ -2733,7 +2700,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -2766,7 +2732,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2778,7 +2743,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
             "type": "integer"
           },
           "expected": 2,
@@ -2790,7 +2754,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -2803,7 +2766,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -2830,7 +2792,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2842,7 +2803,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
             "type": "integer"
           },
           "expected": 5,
@@ -2858,7 +2818,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5",
             "type": "integer"
           },
           "expected": 11,
@@ -2874,7 +2833,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2890,7 +2848,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
             "type": "integer"
           },
           "expected": 4,
@@ -2920,7 +2877,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2932,7 +2888,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
             "type": "integer"
           },
           "expected": 2,
@@ -2944,7 +2899,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -2957,7 +2911,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -2983,7 +2936,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -2995,7 +2947,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "2f8375d2a98f83f0aed5fb0d64b6e805901267915321ceb9d3a2063b60d05cbb",
             "type": "integer"
           },
           "expected": 2200,
@@ -3011,7 +2962,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "14be4b45f18e0d8c67b4f719b5144eee88497e413709d11d85b096d8e2346310",
             "type": "number"
           },
           "expected": 0.1,
@@ -3027,7 +2977,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "48449a14a4ff7d79bb7a1b6f3d488eba397c36ef25634c111b49baf362511afc",
             "type": "integer"
           },
           "expected": 80,
@@ -3043,7 +2992,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "a46e37632fa6ca51a13fe39a567b3c23b28c2f47d8af6be9bd63e030e214ba38",
             "type": "integer"
           },
           "expected": 80,
@@ -3059,7 +3007,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "39974fa25104e7fb29591d0235dd52b777ff51212eeadd505638b225cca47979",
             "type": "number"
           },
           "expected": 0.03,
@@ -3092,7 +3039,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3104,7 +3050,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
             "type": "integer"
           },
           "expected": 2,
@@ -3116,7 +3061,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
             "length": 4,
             "type": "string"
           },
@@ -3129,7 +3073,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -3159,7 +3102,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3184,7 +3126,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3196,7 +3137,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
             "type": "integer"
           },
           "expected": 2,
@@ -3208,7 +3148,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
             "length": 0,
             "type": "array"
           },
@@ -3236,7 +3175,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3262,7 +3200,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3274,7 +3211,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
             "type": "integer"
           },
           "expected": 3,
@@ -3286,7 +3222,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "99ed75255a375e37ddad9d98b844e334552add7574b1bfee1c8db2edf35eab73",
             "length": 21,
             "type": "string"
           },
@@ -3299,7 +3234,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "9e318183567cae90c0a7f1faf7e389b026b6aa886bcb5f188815a5f1823dc9ed",
             "length": 25,
             "type": "string"
           },
@@ -3312,7 +3246,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3324,7 +3257,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3336,7 +3268,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3348,7 +3279,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3360,7 +3290,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3368,31 +3297,6 @@
           "pointer": "/root_content_summary/semantic_disposition_errors",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
-            "type": "integer"
-          },
-          "expected": 3,
-          "operator": "equals",
-          "pointer": "/schema_version",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-release-readiness.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "canonical_sha256": "99ed75255a375e37ddad9d98b844e334552add7574b1bfee1c8db2edf35eab73",
-            "length": 21,
-            "type": "string"
-          },
-          "expected": "current-contract-pass",
-          "operator": "equals",
-          "pointer": "/authoring_gate",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-release-readiness.json",
           "status": "pass"
         }
       ],
@@ -3410,7 +3314,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3422,7 +3325,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
             "type": "integer"
           },
           "expected": 1,
@@ -3447,7 +3349,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3459,7 +3360,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3467,11 +3367,10 @@
           "pointer": "/content_readiness/aggregate/readability_review_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3483,7 +3382,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3491,11 +3389,10 @@
           "pointer": "/content_readiness/expert/readability/storage_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3503,11 +3400,10 @@
           "pointer": "/content_readiness/expert/readability/source_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3515,11 +3411,10 @@
           "pointer": "/content_readiness/expert/readability/accepted_for_formal",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
             "type": "integer"
           },
           "expected": 2,
@@ -3531,7 +3426,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3543,7 +3437,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3555,7 +3448,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3567,7 +3459,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3579,7 +3470,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -3592,7 +3483,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3604,7 +3494,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3612,11 +3501,10 @@
           "pointer": "/content_readiness/aggregate/professional_completeness_review_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3628,7 +3516,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3636,11 +3523,10 @@
           "pointer": "/content_readiness/expert/professional_completeness/storage_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3648,11 +3534,10 @@
           "pointer": "/content_readiness/expert/professional_completeness/source_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3660,11 +3545,10 @@
           "pointer": "/content_readiness/expert/professional_completeness/accepted_for_formal",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "0b9fd54c2af2b50d5c143eb6145c3c59b41e983a09a2af5ad8d1c54242105480",
             "length": 79,
             "type": "string"
           },
@@ -3677,7 +3561,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
             "type": "integer"
           },
           "expected": 3,
@@ -3689,7 +3572,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
             "type": "integer"
           },
           "expected": 3,
@@ -3701,7 +3583,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3713,7 +3594,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3721,11 +3601,10 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_contract_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3733,11 +3612,10 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_plan_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3749,7 +3627,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3761,7 +3638,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3773,7 +3649,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "7045d16ae7f043ec25774a0a85d6f479e5bb019e9c5a1584bc76736d116b8f33",
             "type": "integer"
           },
           "expected": 189,
@@ -3785,7 +3660,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
             "type": "integer"
           },
           "expected": 2,
@@ -3797,7 +3671,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
             "type": "integer"
           },
           "expected": 1,
@@ -3809,7 +3682,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "bd14620394b6083fbf735bbfc55773765de1d750ec053f281fe77d7764d7b36b",
             "type": "integer"
           },
           "expected": 5670,
@@ -3821,7 +3693,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "7045d16ae7f043ec25774a0a85d6f479e5bb019e9c5a1584bc76736d116b8f33",
             "type": "integer"
           },
           "expected": 189,
@@ -3833,7 +3704,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "7045d16ae7f043ec25774a0a85d6f479e5bb019e9c5a1584bc76736d116b8f33",
             "type": "integer"
           },
           "expected": 189,
@@ -3845,7 +3715,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "7045d16ae7f043ec25774a0a85d6f479e5bb019e9c5a1584bc76736d116b8f33",
             "type": "integer"
           },
           "expected": 189,
@@ -3857,7 +3726,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3869,7 +3737,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3881,7 +3748,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -3894,7 +3761,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -3906,7 +3772,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
             "type": "integer"
           },
           "expected": 3,
@@ -3918,7 +3783,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b",
             "type": "boolean"
           },
           "expected": true,
@@ -3926,11 +3790,10 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_cost_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "97a6d21df7c51e8289ac1a8c026aaac143e15aa1957f54f42e30d8f8a85c3a55",
             "type": "integer"
           },
           "expected": 567,
@@ -3942,7 +3805,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "bd14620394b6083fbf735bbfc55773765de1d750ec053f281fe77d7764d7b36b",
             "type": "integer"
           },
           "expected": 5670,
@@ -3954,8 +3816,7 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fedce8e8af485c2586f54c43a9b656dc70b41eb9be8c64b69c98391847dd4baf",
-            "length": 4,
+            "length": 18,
             "type": "string"
           },
           "expected": "pass",
@@ -3963,11 +3824,10 @@
           "pointer": "/professional_review_cost_fixtures/status",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "7688b6ef52555962d008fff894223582c484517cea7da49ee67800adc7fc8866",
             "type": "integer"
           },
           "expected": 56,
@@ -3983,7 +3843,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "090aeade8634ac52fe6597a105743fdfd7207df2f10b060c2d04655c356fedaa",
             "type": "integer"
           },
           "expected": 450000,
@@ -3999,7 +3858,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "2c81165b150faea38ac86b6ecb5404c7f8264a1a53cbe9e22b00986ec4f1bcc1",
             "length": 11,
             "type": "object"
           },
@@ -4042,11 +3900,10 @@
           "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "7045d16ae7f043ec25774a0a85d6f479e5bb019e9c5a1584bc76736d116b8f33",
             "type": "integer"
           },
           "expected": 189,
@@ -4062,7 +3919,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b00b237121aaadfcba8126287841e0d634458cfef55b00a3610107dc574c53ee",
             "type": "integer"
           },
           "expected": 117058467,
@@ -4078,7 +3934,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
             "type": "integer"
           },
           "expected": 3,
@@ -4094,7 +3949,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "b3b130b344c28e52c7bd5347314547502cb39fec8ea539a78087539c236c6501",
             "type": "integer"
           },
           "expected": 3241,
@@ -4110,7 +3964,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fc2a469f632123744e40d97fecb9fe8ce740518f1613c1d2dc10b571b5038570",
             "type": "integer"
           },
           "expected": 17148,
@@ -4126,7 +3979,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "9f14025af0065b30e47e23ebb3b491d39ae8ed17d33739e5ff3827ffb3634953",
             "type": "integer"
           },
           "expected": 35,
@@ -4142,7 +3994,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "7688b6ef52555962d008fff894223582c484517cea7da49ee67800adc7fc8866",
             "type": "integer"
           },
           "expected": 56,
@@ -4158,7 +4009,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "c6c30f224fecc5bd3833e99e8461d61d55ae90f9b35cef73446e4f7f06d36f50",
             "type": "integer"
           },
           "expected": 34864,
@@ -4174,7 +4024,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4a6279a017fced2612b701617105dc3146db52518b663ccb1c236e77a5d4e456",
             "type": "integer"
           },
           "expected": 25928334,
@@ -4190,7 +4039,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "553887630f834843d3771abd5b348544d8634377a6bcb422eb6df057e96e20b5",
             "type": "integer"
           },
           "expected": 137186,
@@ -4206,7 +4054,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "a1a8b641762035418986a1536ae9ec43867257efad1b87eb4e306e438598eea7",
             "type": "integer"
           },
           "expected": 238497,
@@ -4222,7 +4069,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "090aeade8634ac52fe6597a105743fdfd7207df2f10b060c2d04655c356fedaa",
             "type": "integer"
           },
           "expected": 348342,
@@ -4238,7 +4084,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "2c624232cdd221771294dfbb310aca000a0df6ac8b66b696d90ef06fdefb64a3",
             "type": "integer"
           },
           "expected": 8,
@@ -4254,7 +4099,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "580811fa95269f3ecd4f22d176e079d36093573680b6ef66fa341e687a15b5da",
             "type": "integer"
           },
           "expected": 181,
@@ -4270,7 +4114,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "c40e1fc11389d5935dcd85cea49a441b7a35bef4933afb5d5360390a65ab661b",
             "type": "integer"
           },
           "expected": 9958404,
@@ -4286,7 +4129,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "4a38f110ee1ebfaa57697786a278f3f8ece93b3b2dd07d9e9a976b5b3f6a87ad",
             "type": "integer"
           },
           "expected": 85072,
@@ -4302,7 +4144,43 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "fail"
+    },
+    {
+      "capabilities": [
+        "professionalism-formal-release-readiness"
+      ],
+      "dimensions": [
+        "final-goal-verification-and-professionalism-cost"
+      ],
+      "id": "professionalism-formal-release-ready",
+      "predicates": [
+        {
+          "actual_metadata": {
+            "type": "integer"
+          },
+          "expected": 0,
+          "operator": "equals",
+          "pointer": "/exit_code",
+          "resolution_status": "resolved",
+          "source": "process",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "length": 17,
+            "type": "string"
+          },
+          "expected": "release-ready",
+          "operator": "equals",
+          "pointer": "/release_gate",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        }
+      ],
+      "producer": "validate-professionalism-regression",
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -4315,7 +4193,6 @@
       "predicates": [
         {
           "actual_metadata": {
-            "canonical_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
             "type": "integer"
           },
           "expected": 0,
@@ -4327,7 +4204,6 @@
         },
         {
           "actual_metadata": {
-            "canonical_sha256": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
             "type": "boolean"
           },
           "expected": true,
@@ -4510,7 +4386,7 @@
     },
     {
       "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "formal_release_status": "blocked",
       "id": "professional-skill-injection",
       "name": "Professional Skill Injection",
       "required_dimensions": [
@@ -4539,7 +4415,7 @@
           "professional-completeness-review-current"
         ]
       },
-      "status": "pass"
+      "status": "partial"
     },
     {
       "authoring_status": "pass",
@@ -4671,7 +4547,7 @@
     },
     {
       "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "formal_release_status": "blocked",
       "id": "final-goal",
       "name": "Final Goal",
       "required_dimensions": [
@@ -4691,10 +4567,11 @@
           "professional-review-cost-fixtures-valid"
         ],
         "formal_release": [
-          "professional-review-cost-current"
+          "professional-review-cost-current",
+          "professionalism-formal-release-ready"
         ]
       },
-      "status": "pass"
+      "status": "partial"
     }
   ],
   "principles_status": "partial",
@@ -4708,11 +4585,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-skills",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4725,11 +4601,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-capabilities",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4742,11 +4617,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-domain-extensions",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4759,11 +4633,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-registry",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4776,11 +4649,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-control-skills",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4793,11 +4665,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-control-plane-prompt",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4810,11 +4681,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-task-contracts",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4827,11 +4697,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-skill-routing",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4844,11 +4713,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-hookless-residue",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4861,11 +4729,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-src-invariants",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4878,11 +4745,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-skill-body-links",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4895,11 +4761,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-skill-content-size",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4914,18 +4779,16 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "audit-skill-content",
+      "release_reports": [],
       "reports": [
         {
           "fresh": true,
           "json_object": true,
-          "path": "reports/skill-content-audit.json",
-          "sha256": "5adc1e4be699a5564502be2313e59cd194c15a8adcc568c76ec6e1ff0c1a9116"
+          "path": "reports/skill-content-audit.json"
         }
       ],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4941,11 +4804,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-reference-content",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4961,11 +4823,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-root-content",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4980,11 +4841,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "build-recommended",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4999,11 +4859,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "build-full",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5018,11 +4877,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "build-dev",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5039,11 +4897,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-agent-profiles",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5056,11 +4913,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-docs-consistency",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5077,11 +4933,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-built-links",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5097,18 +4952,16 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-installation",
+      "release_reports": [],
       "reports": [
         {
           "fresh": true,
           "json_object": true,
-          "path": "reports/installation-validation.json",
-          "sha256": "74c4869e97a3f992c24f9737064b2749c0a1ff9002eb35916156e595128272c2"
+          "path": "reports/installation-validation.json"
         }
       ],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5121,18 +4974,16 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "eval-routing",
+      "release_reports": [],
       "reports": [
         {
           "fresh": true,
           "json_object": true,
-          "path": "reports/routing-eval.json",
-          "sha256": "f0ea6c07db4a2e6fa19b40ee8e1efff99e1eba0e23585c5f16b82dea492bb12c"
+          "path": "reports/routing-eval.json"
         }
       ],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5145,18 +4996,26 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "eval-skill-professionalism",
+      "release_reports": [],
       "reports": [
         {
           "fresh": true,
           "json_object": true,
-          "path": "reports/skill-professionalism-eval.json",
-          "sha256": "9e33744cc3be8080912323c9c0c40c0f0429428347ff6684562b163a72e81b67"
+          "path": "reports/skill-professionalism-eval.json"
+        },
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/skill-professionalism-depth.json"
+        },
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/professional-coverage-matrix.json"
         }
       ],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5169,18 +5028,21 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "eval-professional-benchmarks",
+      "release_reports": [],
       "reports": [
         {
           "fresh": true,
           "json_object": true,
-          "path": "reports/professional-benchmarks-report.json",
-          "sha256": "f6189277c383dfe665925c527abb3e19b0228cc901dcc86400b3139764e8b71c"
+          "path": "reports/professional-benchmarks-report.json"
+        },
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/professional-benchmarks-eval.json"
         }
       ],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5197,18 +5059,16 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-professional-routing",
+      "release_reports": [],
       "reports": [
         {
           "fresh": true,
           "json_object": true,
-          "path": "reports/professional-routing-coverage.json",
-          "sha256": "6d83145db6ebcff81eb2e92dd87a4ad70300b9d2c87637ae43987de71cfaec9a"
+          "path": "reports/professional-routing-coverage.json"
         }
       ],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5221,18 +5081,16 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "eval-agent-lightweight",
+      "release_reports": [],
       "reports": [
         {
           "fresh": true,
           "json_object": true,
-          "path": "reports/hookless-control-plane-eval.json",
-          "sha256": "10d03cdac956906a4d5b92eb8988365f5935581b7fc4c8ce58366813502a724e"
+          "path": "reports/hookless-control-plane-eval.json"
         }
       ],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5249,18 +5107,16 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "eval-rendered-context",
+      "release_reports": [],
       "reports": [
         {
           "fresh": true,
           "json_object": true,
-          "path": "reports/rendered-context-budget.json",
-          "sha256": "2cbe7a542d7f7947446bec3b3f89a9d340d436dea87ec6aa9dead014acf07498"
+          "path": "reports/rendered-context-budget.json"
         }
       ],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5276,18 +5132,16 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "eval-context-control",
+      "release_reports": [],
       "reports": [
         {
           "fresh": true,
           "json_object": true,
-          "path": "reports/context-control-plane-eval.json",
-          "sha256": "3a8bdff3c151c9de3e692024347cb0d6d41f528366a9140f74e48add7a0748c6"
+          "path": "reports/context-control-plane-eval.json"
         }
       ],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5304,11 +5158,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "eval-agent-behavior",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5323,18 +5176,16 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "eval-professional-samples",
+      "release_reports": [],
       "reports": [
         {
           "fresh": true,
           "json_object": true,
-          "path": "reports/professional-agent-samples-report.json",
-          "sha256": "e4df82720dc12ba2f8ff257b12f2b1c5801530bc73feb6a0827009bff917a519"
+          "path": "reports/professional-agent-samples-report.json"
         }
       ],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5351,11 +5202,10 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "eval-pressure-behavior",
+      "release_reports": [],
       "reports": [],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -5377,29 +5227,22 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-professionalism-regression",
+      "release_reports": [],
       "reports": [
         {
           "fresh": true,
           "json_object": true,
-          "path": "reports/professionalism-regression-report.json",
-          "sha256": "4f6d78da8cce90fdea14c408d262180061fa6833f0eaa699b817f834c2d696cc"
-        },
-        {
-          "fresh": true,
-          "json_object": true,
-          "path": "reports/professionalism-release-readiness.json",
-          "sha256": "dfc200b798451f7fe812beec0db896af140a9d694a17fb8d4023a39fadafb4b3"
+          "path": "reports/professionalism-regression-report.json"
         }
       ],
       "source_unchanged": true,
       "status": "pass",
-      "stderr_sha256": null,
-      "stdout_sha256": null,
       "timed_out": false,
       "timeout_seconds": 3600
     }
   ],
-  "schema_version": 3,
+  "release_projection": false,
+  "schema_version": 4,
   "uncovered_mandatory_release_gates": [
     "examples-validation",
     "showcase-freshness",

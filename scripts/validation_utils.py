@@ -5,10 +5,12 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import io
 import subprocess
 import re
 import sys
 import json
+import tokenize
 import unicodedata
 from decimal import Decimal, InvalidOperation, ROUND_CEILING
 from functools import lru_cache
@@ -23,6 +25,7 @@ except Exception:  # pragma: no cover - depends on local environment
 
 
 ROOT = Path(__file__).resolve().parents[1]
+AFFECTED_CONTEXT_ENV = "CHANGEFORGE_AFFECTED_CONTEXT"
 FOUNDATION_DECISION_CARD_MODEL = "foundation-decision-card-v1"
 FOUNDATION_DECISION_CARD_FRONT_LINES = 60
 FOUNDATION_DECISION_RULE_MIN = 3
@@ -1783,6 +1786,7 @@ def validate_principle_acceptance_contract(
     producer_rows: dict[str, dict[str, object]] = {}
     argv_owners: dict[tuple[str, ...], str] = {}
     report_owners: dict[str, str] = {}
+    machine_report_owners: dict[str, str] = {}
     producers = acceptance["producers"]
     if not isinstance(producers, list) or not producers:
         errors.append("principle_acceptance_contract.producers must be non-empty")
@@ -1797,6 +1801,7 @@ def validate_principle_acceptance_contract(
                 "argv",
                 "depends_on",
                 "reports",
+                "release_reports",
                 "authority_inputs",
                 "timeout_seconds",
             },
@@ -1808,6 +1813,9 @@ def validate_principle_acceptance_contract(
         argv = strings(producer["argv"], f"{context}.argv", nonempty=True)
         dependencies = strings(producer["depends_on"], f"{context}.depends_on")
         reports = strings(producer["reports"], f"{context}.reports")
+        release_reports = strings(
+            producer["release_reports"], f"{context}.release_reports"
+        )
         authority_inputs = strings(
             producer["authority_inputs"], f"{context}.authority_inputs"
         )
@@ -1881,6 +1889,35 @@ def validate_principle_acceptance_contract(
                 )
             else:
                 report_owners[report] = producer_id
+                machine_report_owners[report] = producer_id
+        for report in release_reports:
+            report_path = PurePosixPath(report)
+            if (
+                report_path.is_absolute()
+                or not report_path.parts
+                or report_path.parts[0] != "reports"
+                or report_path.suffix != ".md"
+                or ".." in report_path.parts
+            ):
+                errors.append(
+                    f"{context}.release_reports contains an unsafe Markdown report path {report!r}"
+                )
+                continue
+            if report == "reports/core-principles-outcomes.md":
+                errors.append(
+                    f"{context}.release_reports must not include the evaluator's own projection"
+                )
+            prior_report_owner = report_owners.get(report)
+            if prior_report_owner is not None:
+                errors.append(
+                    f"{context}.release_reports reuses {report!r} from producer {prior_report_owner!r}"
+                )
+            else:
+                report_owners[report] = producer_id
+        if release_reports and not reports:
+            errors.append(
+                f"{context}.release_reports requires a canonical JSON report"
+            )
         if producer_id in dependencies:
             errors.append(f"{context}.depends_on must not contain the producer itself")
 
@@ -2197,10 +2234,12 @@ def validate_principle_acceptance_contract(
     orphan_producers = sorted(producer_ids - set(producer_outcomes))
     if orphan_producers:
         errors.append(f"principle acceptance producers contain orphans {orphan_producers}")
-    orphan_reports = sorted(set(report_owners) - report_predicate_consumers)
+    orphan_reports = sorted(set(machine_report_owners) - report_predicate_consumers)
     if orphan_reports:
         errors.append(f"principle acceptance reports contain orphans {orphan_reports}")
-    reports_without_schema = sorted(set(report_owners) - report_schema_consumers)
+    reports_without_schema = sorted(
+        set(machine_report_owners) - report_schema_consumers
+    )
     if reports_without_schema:
         errors.append(
             "principle acceptance reports lack a closed schema_version predicate "
@@ -2339,45 +2378,286 @@ def professional_review_risk_matrix_block(matrix: object) -> str:
     return "\n".join(lines)
 
 
-def validate_ci_validation_contract(data: object, root: Path) -> list[str]:
-    """Validate the single Core-owned CI affected-test selection contract."""
+TEST_LAYER_ORDER = ["unit", "integration", "contract", "governance", "release"]
+
+
+def _test_layer_for_module(test_selection: dict[str, Any], module: str) -> str:
+    overrides = {
+        row["module"]: row["layer"]
+        for row in test_selection.get("module_overrides", [])
+        if isinstance(row, dict)
+        and isinstance(row.get("module"), str)
+        and isinstance(row.get("layer"), str)
+    }
+    return overrides.get(module, str(test_selection.get("default_layer", "")))
+
+
+def unit_test_dependency_errors(
+    root: Path,
+    test_selection: dict[str, Any],
+) -> list[str]:
+    """Reject unit tests coupled to workspace outputs or another test layer."""
+
+    errors: list[str] = []
+    policy = test_selection.get("unit_dependency_policy", {})
+    forbidden_roots = policy.get("forbidden_workspace_roots", [])
+    forbidden_layers = set(policy.get("forbidden_test_layers", []))
+    overrides = {
+        row["module"]: row["layer"]
+        for row in test_selection.get("module_overrides", [])
+        if isinstance(row, dict)
+        and isinstance(row.get("module"), str)
+        and isinstance(row.get("layer"), str)
+    }
+    tests_root = root / "tests"
+    if not tests_root.is_dir():
+        return errors
+    def canonical_test_import(dotted: str) -> str | None:
+        parts = dotted.split(".")
+        if not parts or parts[0] != "tests":
+            return None
+        for index, part in enumerate(parts):
+            if part != "tests" and part.startswith("test"):
+                return "/".join(parts[: index + 1]) + ".py"
+        return None
+
+    def imported_test_modules(
+        tokens: list[tokenize.TokenInfo],
+    ) -> list[tuple[str, int]]:
+        imports: list[tuple[str, int]] = []
+        for index, token in enumerate(tokens):
+            if token.type != tokenize.NAME or token.string not in {"from", "import"}:
+                continue
+            if token.string == "from":
+                cursor = index + 1
+                package_parts: list[str] = []
+                while cursor < len(tokens):
+                    current = tokens[cursor]
+                    if current.type == tokenize.NAME and current.string == "import":
+                        break
+                    if current.type == tokenize.NEWLINE:
+                        break
+                    if current.type == tokenize.NAME or (
+                        current.type == tokenize.OP and current.string == "."
+                    ):
+                        package_parts.append(current.string)
+                    cursor += 1
+                if cursor >= len(tokens) or tokens[cursor].string != "import":
+                    continue
+                package = "".join(package_parts)
+                package_test = canonical_test_import(package)
+                if package_test is not None:
+                    imports.append((package_test, token.start[0]))
+                    continue
+                expect_name = True
+                skip_alias = False
+                cursor += 1
+                while cursor < len(tokens) and tokens[cursor].type != tokenize.NEWLINE:
+                    current = tokens[cursor]
+                    if current.type == tokenize.OP and current.string == ",":
+                        expect_name = True
+                        skip_alias = False
+                    elif current.type == tokenize.NAME and current.string == "as":
+                        skip_alias = True
+                    elif current.type == tokenize.NAME and expect_name:
+                        if not skip_alias:
+                            imported = canonical_test_import(
+                                f"{package}.{current.string}"
+                            )
+                            if imported is not None:
+                                imports.append((imported, current.start[0]))
+                        expect_name = False
+                    cursor += 1
+                continue
+
+            cursor = index + 1
+            module_parts: list[str] = []
+            while cursor < len(tokens) and tokens[cursor].type != tokenize.NEWLINE:
+                current = tokens[cursor]
+                if current.type == tokenize.OP and current.string == ",":
+                    imported = canonical_test_import("".join(module_parts))
+                    if imported is not None:
+                        imports.append((imported, token.start[0]))
+                    module_parts = []
+                elif current.type == tokenize.NAME and current.string == "as":
+                    imported = canonical_test_import("".join(module_parts))
+                    if imported is not None:
+                        imports.append((imported, token.start[0]))
+                    module_parts = []
+                    cursor += 1
+                elif current.type == tokenize.NAME or (
+                    current.type == tokenize.OP and current.string == "."
+                ):
+                    module_parts.append(current.string)
+                cursor += 1
+            imported = canonical_test_import("".join(module_parts))
+            if imported is not None:
+                imports.append((imported, token.start[0]))
+        return imports
+
+    for path in sorted(tests_root.rglob("test*.py")):
+        module = path.relative_to(root).as_posix()
+        if overrides.get(module, test_selection.get("default_layer")) != "unit":
+            continue
+        try:
+            source = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            errors.append(f"unit test dependency audit cannot read {module}: {exc}")
+            continue
+        tokens = list(tokenize.generate_tokens(io.StringIO(source).readline))
+        significant = [
+            token
+            for token in tokens
+            if token.type
+            not in {
+                tokenize.ENCODING,
+                tokenize.ENDMARKER,
+                tokenize.INDENT,
+                tokenize.DEDENT,
+                tokenize.NEWLINE,
+                tokenize.NL,
+                tokenize.COMMENT,
+            }
+        ]
+        for index in range(len(significant) - 2):
+            owner, slash, literal = significant[index : index + 3]
+            if owner.type != tokenize.NAME or owner.string not in {
+                "ROOT",
+                "REPOSITORY_ROOT",
+            }:
+                continue
+            if slash.type != tokenize.OP or slash.string != "/":
+                continue
+            if literal.type != tokenize.STRING:
+                continue
+            matched_literal = re.fullmatch(
+                r"(?i:[rubf]*)(?:'([^'\n]*)'|\"([^\"\n]*)\")",
+                literal.string,
+            )
+            if matched_literal is None:
+                continue
+            value = matched_literal.group(1) or matched_literal.group(2) or ""
+            workspace_root = value.split("/", 1)[0]
+            if workspace_root in forbidden_roots:
+                errors.append(
+                    f"unit test {module}:{owner.start[0]} depends on workspace "
+                    f"{workspace_root}/"
+                )
+        for imported_path, line_number in imported_test_modules(tokens):
+            imported_layer = overrides.get(
+                imported_path, test_selection.get("default_layer")
+            )
+            if imported_layer in forbidden_layers:
+                errors.append(
+                    f"unit test {module}:{line_number} imports {imported_layer} "
+                    f"test {imported_path}"
+                )
+    return errors
+
+
+def validate_impact_graph_contract(
+    data: object,
+    root: Path = ROOT,
+) -> list[str]:
+    """Validate the single Core-owned affected producer and test graph."""
 
     errors: list[str] = []
     if not isinstance(data, dict):
         return ["authoritative control model must be an object"]
-    contract = data.get("ci_validation_contract")
+    contract = data.get("impact_graph_contract")
     contract_fields = {
         "schema_version",
-        "runner",
-        "shard_count",
-        "full_suite",
-        "test_self_patterns",
-        "mappings",
+        "resolver",
+        "producer_source",
+        "test_selection",
+        "stages",
+        "known_no_impact_patterns",
+        "rules",
     }
     if not isinstance(contract, dict) or set(contract) != contract_fields:
         actual = sorted(contract) if isinstance(contract, dict) else []
         errors.append(
-            "ci_validation_contract fields must be exactly "
+            "impact_graph_contract fields must be exactly "
             f"{sorted(contract_fields)}, found {actual}"
         )
         return errors
     if contract["schema_version"] != 1:
-        errors.append("ci_validation_contract.schema_version must be 1")
-    runner = contract["runner"]
-    if runner != "scripts/run-ci-tests.py" or not (root / str(runner)).is_file():
+        errors.append("impact_graph_contract.schema_version must be 1")
+    resolver = contract["resolver"]
+    if resolver != "scripts/impact_graph.py" or not (root / str(resolver)).is_file():
         errors.append(
-            "ci_validation_contract.runner must name existing scripts/run-ci-tests.py"
+            "impact_graph_contract.resolver must name existing scripts/impact_graph.py"
         )
-    if contract["shard_count"] != 2:
-        errors.append("ci_validation_contract.shard_count must be exactly 2")
-    if contract["full_suite"] != {"root": "tests", "pattern": "test*.py"}:
+    if contract["producer_source"] != "/principle_acceptance_contract/producers":
         errors.append(
-            "ci_validation_contract.full_suite must define recursive tests/test*.py discovery"
+            "impact_graph_contract.producer_source must reference canonical producers"
         )
-    if contract["test_self_patterns"] != ["tests/**/test*.py"]:
+
+    test_selection = contract["test_selection"]
+    test_selection_fields = {
+        "order",
+        "default_layer",
+        "module_overrides",
+        "unit_dependency_policy",
+    }
+    if (
+        not isinstance(test_selection, dict)
+        or set(test_selection) != test_selection_fields
+    ):
         errors.append(
-            "ci_validation_contract.test_self_patterns must contain only tests/**/test*.py"
+            "impact_graph_contract.test_selection fields must be exactly "
+            f"{sorted(test_selection_fields)}"
         )
+        return errors
+    if test_selection["order"] != TEST_LAYER_ORDER:
+        errors.append(
+            "impact_graph_contract.test_selection.order must be exactly "
+            f"{TEST_LAYER_ORDER}"
+        )
+    if test_selection["default_layer"] != "unit":
+        errors.append("impact graph default test layer must be unit")
+    overrides = test_selection["module_overrides"]
+    override_modules: list[str] = []
+    if not isinstance(overrides, list):
+        errors.append("test selection module_overrides must be a list")
+        overrides = []
+    for index, override in enumerate(overrides):
+        context = f"impact_graph_contract.test_selection.module_overrides[{index}]"
+        if not isinstance(override, dict) or set(override) != {"module", "layer"}:
+            errors.append(f"{context} fields must be module and layer")
+            continue
+        module = override["module"]
+        layer = override["layer"]
+        module_path = PurePosixPath(module) if isinstance(module, str) else None
+        if (
+            module_path is None
+            or module_path.is_absolute()
+            or not module_path.parts
+            or module_path.parts[0] != "tests"
+            or ".." in module_path.parts
+            or module_path.suffix != ".py"
+            or not module_path.name.startswith("test")
+        ):
+            errors.append(f"{context}.module must be a safe tests/ test module")
+        else:
+            override_modules.append(module)
+            if not (root / module_path).is_file():
+                errors.append(f"{context}.module does not exist: {module}")
+        if layer not in TEST_LAYER_ORDER or layer == "unit":
+            errors.append(f"{context}.layer must name one non-unit canonical layer")
+    if len(override_modules) != len(set(override_modules)):
+        errors.append("test selection module override paths must be unique")
+    unit_policy = test_selection["unit_dependency_policy"]
+    if unit_policy != {
+        "forbidden_workspace_roots": ["dist", "reports"],
+        "forbidden_test_layers": [
+            "integration",
+            "contract",
+            "governance",
+            "release",
+        ],
+    }:
+        errors.append("unit dependency policy must forbid dist, reports, and non-unit tests")
 
     acceptance = data.get("principle_acceptance_contract")
     producer_ids = (
@@ -2398,81 +2678,267 @@ def validate_ci_validation_contract(data: object, root: Path) -> list[str]:
         for authority in authorities
         if isinstance(authority, dict)
         and (
-            authority.get("id") == "ci-validation-authority"
-            or authority.get("pointer") == "/ci_validation_contract"
+            authority.get("id") == "impact-graph-authority"
+            or authority.get("pointer") == "/impact_graph_contract"
         )
     ]
     if (
         len(authority_matches) != 1
-        or authority_matches[0].get("id") != "ci-validation-authority"
-        or authority_matches[0].get("pointer") != "/ci_validation_contract"
+        or authority_matches[0].get("id") != "impact-graph-authority"
+        or authority_matches[0].get("pointer") != "/impact_graph_contract"
     ):
         errors.append(
-            "ci_validation_contract must have exactly one ci-validation-authority pointer"
+            "impact_graph_contract must have exactly one impact-graph-authority pointer"
         )
 
-    mappings = contract["mappings"]
-    if not isinstance(mappings, list) or not mappings:
-        errors.append("ci_validation_contract.mappings must be non-empty")
+    stages = contract["stages"]
+    if not isinstance(stages, dict) or set(stages) != {"affected", "ci-tests"}:
+        errors.append("impact_graph_contract.stages must be affected and ci-tests")
         return errors
-    mapping_fields = {
-        "id",
-        "path_patterns",
-        "producer_ids",
-        "test_modules",
-        "coverage",
+    affected = stages["affected"]
+    affected_fields = {
+        "build_profile_projection",
+        "dependency_closure",
+        "isolated_execution",
+        "test_policy",
+        "eligible_producer_ids",
+        "professionalism",
     }
+    if not isinstance(affected, dict) or set(affected) != affected_fields:
+        errors.append(
+            "impact_graph_contract.stages.affected fields must be exactly "
+            f"{sorted(affected_fields)}"
+        )
+        return errors
+    eligible = affected["eligible_producer_ids"]
+    if (
+        not isinstance(eligible, list)
+        or not eligible
+        or any(not isinstance(item, str) or not item for item in eligible)
+        or len(eligible) != len(set(eligible))
+    ):
+        errors.append("affected eligible_producer_ids must be non-empty unique strings")
+        eligible = []
+    unknown_eligible = sorted(set(eligible) - producer_ids)
+    if unknown_eligible:
+        errors.append(
+            f"affected eligible_producer_ids contain unknown producers {unknown_eligible}"
+        )
+    if affected["dependency_closure"] is not True:
+        errors.append("affected stage must enable canonical producer dependency closure")
+    if affected["isolated_execution"] is not True:
+        errors.append("affected stage must require isolated execution")
+    build_projection = affected["build_profile_projection"]
+    expected_build_projection = {
+        "profiles": ["recommended", "full", "dev"],
+        "producer_ids": {
+            "recommended": "build-recommended",
+            "full": "build-full",
+            "dev": "build-dev",
+        },
+        "professional_candidate_field": "layer3_candidates",
+        "foundation_scope_field": "delivery_scope",
+        "foundation_shared_scope": "product",
+        "unknown_package_policy": "all-profiles",
+    }
+    if build_projection != expected_build_projection:
+        errors.append(
+            "affected build_profile_projection must match the canonical build graph"
+        )
+    elif not set(build_projection["producer_ids"].values()).issubset(set(eligible)):
+        errors.append("affected build profile producers must be stage-eligible")
+    if affected["test_policy"] != {
+        "always_layers": ["unit", "contract"],
+        "direct_only_layers": ["integration", "governance"],
+        "forbidden_layers": ["release"],
+    }:
+        errors.append(
+            "affected test policy must always select unit/contract, select "
+            "integration/governance only by direct impact, and forbid release"
+        )
+    professionalism = affected["professionalism"]
+    professionalism_fields = {
+        "schema_version",
+        "context_environment",
+        "producer_id",
+        "registry_sources",
+        "full_scope_patterns",
+    }
+    if (
+        not isinstance(professionalism, dict)
+        or set(professionalism) != professionalism_fields
+    ):
+        errors.append(
+            "affected professionalism fields must be exactly "
+            f"{sorted(professionalism_fields)}"
+        )
+        return errors
+    if professionalism["schema_version"] != 1:
+        errors.append("affected professionalism schema_version must be 1")
+    if professionalism["context_environment"] != "CHANGEFORGE_AFFECTED_CONTEXT":
+        errors.append(
+            "affected professionalism context_environment must be "
+            "CHANGEFORGE_AFFECTED_CONTEXT"
+        )
+    if professionalism["producer_id"] != "eval-skill-professionalism":
+        errors.append(
+            "affected professionalism producer_id must be eval-skill-professionalism"
+        )
+    if professionalism["producer_id"] not in eligible:
+        errors.append("affected professionalism producer must be stage-eligible")
+    registry_sources = professionalism["registry_sources"]
+    expected_registry_sources = [
+        {
+            "path": "src/registry/professional-skills.yaml",
+            "collection": "professional_skills",
+            "layer": "professional",
+        },
+        {
+            "path": "src/registry/foundation-skills.yaml",
+            "collection": "foundation_skills",
+            "layer": "foundation",
+        },
+        {
+            "path": "src/registry/domain-skills.yaml",
+            "collection": "domain_skills",
+            "layer": "domain",
+        },
+    ]
+    if registry_sources != expected_registry_sources:
+        errors.append(
+            "affected professionalism registry_sources must name the three "
+            "canonical non-Control registries"
+        )
+    full_scope_patterns_value = professionalism["full_scope_patterns"]
+    if (
+        not isinstance(full_scope_patterns_value, list)
+        or not full_scope_patterns_value
+        or any(
+            not isinstance(item, str) or not item
+            for item in full_scope_patterns_value
+        )
+        or len(full_scope_patterns_value) != len(set(full_scope_patterns_value))
+    ):
+        errors.append(
+            "impact_graph_contract.stages.affected.professionalism."
+            "full_scope_patterns must be non-empty unique strings"
+        )
+        full_scope_patterns: list[str] = []
+    else:
+        full_scope_patterns = list(full_scope_patterns_value)
+        for pattern in full_scope_patterns:
+            candidate = PurePosixPath(pattern)
+            if (
+                candidate.is_absolute()
+                or not candidate.parts
+                or ".." in candidate.parts
+                or "\\" in pattern
+                or "\x00" in pattern
+            ):
+                errors.append(
+                    "impact_graph_contract.stages.affected.professionalism."
+                    f"full_scope_patterns contains unsafe pattern {pattern!r}"
+                )
+    required_review_sources = {
+        "scripts/audit-skill-content.py",
+        "scripts/eval-skill-professionalism.py",
+        "scripts/expert_panel_review.py",
+        "scripts/professional_completeness_carry_forward.py",
+        "scripts/validation_utils.py",
+    }
+    if not required_review_sources.issubset(set(full_scope_patterns)):
+        errors.append(
+            "affected professionalism full_scope_patterns must include the "
+            "explicit detector and review-contract source manifest"
+        )
+    ci_tests = stages["ci-tests"]
+    ci_fields = {"runner", "test_self_patterns"}
+    if not isinstance(ci_tests, dict) or set(ci_tests) != ci_fields:
+        errors.append(
+            "impact_graph_contract.stages.ci-tests fields must be exactly "
+            f"{sorted(ci_fields)}"
+        )
+        return errors
+    runner = ci_tests["runner"]
+    if runner != "scripts/run-ci-tests.py" or not (root / str(runner)).is_file():
+        errors.append("ci-tests runner must name existing scripts/run-ci-tests.py")
+    if ci_tests["test_self_patterns"] != ["tests/**/test*.py"]:
+        errors.append("ci-tests test_self_patterns must contain only tests/**/test*.py")
+
+    def safe_patterns(value: object, context: str, *, nonempty: bool) -> list[str]:
+        if (
+            not isinstance(value, list)
+            or (nonempty and not value)
+            or any(not isinstance(item, str) or not item for item in value)
+            or len(value) != len(set(value))
+        ):
+            errors.append(f"{context} must be {'non-empty ' if nonempty else ''}unique strings")
+            return []
+        result = list(value)
+        for pattern in result:
+            path = PurePosixPath(pattern)
+            if (
+                path.is_absolute()
+                or not path.parts
+                or ".." in path.parts
+                or "\\" in pattern
+                or "\x00" in pattern
+            ):
+                errors.append(f"{context} contains unsafe pattern {pattern!r}")
+        return result
+
+    no_impact_patterns = safe_patterns(
+        contract["known_no_impact_patterns"],
+        "impact_graph_contract.known_no_impact_patterns",
+        nonempty=True,
+    )
+    rules = contract["rules"]
+    if not isinstance(rules, list) or not rules:
+        errors.append("impact_graph_contract.rules must be non-empty")
+        return errors
+    rule_fields = {"id", "path_patterns", "producer_ids", "test_modules"}
     seen_ids: set[str] = set()
-    for index, mapping in enumerate(mappings):
-        context = f"ci_validation_contract.mappings[{index}]"
-        if not isinstance(mapping, dict) or set(mapping) != mapping_fields:
-            errors.append(f"{context} fields must be exactly {sorted(mapping_fields)}")
+    pattern_owners: dict[str, str] = {
+        pattern: "known-no-impact" for pattern in no_impact_patterns
+    }
+    for index, rule in enumerate(rules):
+        context = f"impact_graph_contract.rules[{index}]"
+        if not isinstance(rule, dict) or set(rule) != rule_fields:
+            errors.append(f"{context} fields must be exactly {sorted(rule_fields)}")
             continue
-        mapping_id = mapping["id"]
-        if not isinstance(mapping_id, str) or re.fullmatch(
-            r"[a-z0-9]+(?:-[a-z0-9]+)*", mapping_id
+        rule_id = rule["id"]
+        if not isinstance(rule_id, str) or re.fullmatch(
+            r"[a-z0-9]+(?:-[a-z0-9]+)*", rule_id
         ) is None:
             errors.append(f"{context}.id must be kebab-case")
-        elif mapping_id in seen_ids:
-            errors.append("ci_validation_contract mapping ids must be unique")
+        elif rule_id in seen_ids:
+            errors.append("impact_graph_contract rule ids must be unique")
         else:
-            seen_ids.add(mapping_id)
+            seen_ids.add(rule_id)
+        patterns = safe_patterns(
+            rule["path_patterns"], f"{context}.path_patterns", nonempty=True
+        )
+        for pattern in patterns:
+            prior = pattern_owners.get(pattern)
+            if prior is not None:
+                errors.append(
+                    f"impact graph path pattern {pattern!r} is declared by both "
+                    f"{prior!r} and {rule_id!r}"
+                )
+            elif isinstance(rule_id, str):
+                pattern_owners[pattern] = rule_id
 
-        patterns = mapping["path_patterns"]
-        if (
-            not isinstance(patterns, list)
-            or not patterns
-            or any(
-                not isinstance(pattern, str) or not pattern for pattern in patterns
-            )
-            or len(patterns) != len(set(patterns))
-        ):
-            errors.append(f"{context}.path_patterns must be non-empty unique strings")
-        else:
-            for pattern in patterns:
-                path = PurePosixPath(pattern)
-                if (
-                    path.is_absolute()
-                    or not path.parts
-                    or ".." in path.parts
-                    or "\\" in pattern
-                    or "\x00" in pattern
-                ):
-                    errors.append(
-                        f"{context}.path_patterns contains unsafe pattern {pattern!r}"
-                    )
-
-        mapped_producers = mapping["producer_ids"]
+        mapped_producers = rule["producer_ids"]
         if (
             not isinstance(mapped_producers, list)
-            or not mapped_producers
             or any(
                 not isinstance(producer_id, str) or not producer_id
                 for producer_id in mapped_producers
             )
             or len(mapped_producers) != len(set(mapped_producers))
         ):
-            errors.append(f"{context}.producer_ids must be non-empty unique strings")
+            errors.append(f"{context}.producer_ids must be unique strings")
+            mapped_producers = []
         else:
             for producer_id in mapped_producers:
                 if producer_id not in producer_ids:
@@ -2480,8 +2946,13 @@ def validate_ci_validation_contract(data: object, root: Path) -> list[str]:
                         f"{context}.producer_ids contains unknown producer id "
                         f"{producer_id!r}"
                     )
+                elif producer_id not in eligible:
+                    errors.append(
+                        f"{context}.producer_ids contains stage-ineligible producer id "
+                        f"{producer_id!r}"
+                    )
 
-        test_modules = mapping["test_modules"]
+        test_modules = rule["test_modules"]
         if (
             not isinstance(test_modules, list)
             or any(not isinstance(module, str) or not module for module in test_modules)
@@ -2506,21 +2977,104 @@ def validate_ci_validation_contract(data: object, root: Path) -> list[str]:
                 errors.append(
                     f"{context}.test module does not exist: {module_path.as_posix()}"
                 )
-        coverage = mapping["coverage"]
-        if coverage not in {"unit-tests", "canonical-producer"}:
+        if not mapped_producers and not test_modules:
+            errors.append(f"{context} must select a producer or test module")
+
+    producer_rows = {
+        producer.get("id"): producer
+        for producer in acceptance.get("producers", [])
+        if isinstance(producer, dict) and isinstance(producer.get("id"), str)
+    } if isinstance(acceptance, dict) else {}
+    for producer_id in eligible:
+        producer = producer_rows.get(producer_id)
+        if not isinstance(producer, dict):
+            continue
+        ineligible_dependencies = sorted(
+            set(producer.get("depends_on", [])) - set(eligible)
+        )
+        if ineligible_dependencies:
             errors.append(
-                f"{context}.coverage must be unit-tests or canonical-producer"
+                f"affected producer {producer_id!r} depends on stage-ineligible "
+                f"producers {ineligible_dependencies}"
             )
-        elif coverage == "unit-tests" and not test_modules:
-            errors.append(f"{context}.unit-tests coverage requires test modules")
-        elif coverage == "canonical-producer" and test_modules:
-            errors.append(
-                f"{context}.canonical-producer coverage must not duplicate unit tests"
-            )
+    errors.extend(unit_test_dependency_errors(root, test_selection))
     return errors
 
 
-def validate_core_contracts(data: object) -> list[str]:
+def parse_affected_professionalism_context(
+    raw: str | None,
+    *,
+    known_package_ids: Iterable[str] | None = None,
+) -> dict[str, Any] | None:
+    """Parse the one closed affected context shared by isolated producers."""
+
+    if raw is None:
+        return None
+    try:
+        context = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValidationProblem("affected context is not valid JSON") from exc
+    expected_top = {
+        "schema_version",
+        "mode",
+        "base_sha",
+        "head_sha",
+        "professionalism",
+    }
+    if not isinstance(context, dict) or set(context) != expected_top:
+        raise ValidationProblem("affected context fields are not canonical")
+    if context.get("schema_version") != 1 or context.get("mode") != "affected":
+        raise ValidationProblem("affected context identity is invalid")
+    for field in ("base_sha", "head_sha"):
+        value = context.get(field)
+        if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{40}", value) is None:
+            raise ValidationProblem(f"affected context {field} is invalid")
+    professionalism = context.get("professionalism")
+    if not isinstance(professionalism, dict) or set(professionalism) != {
+        "scope",
+        "direct_package_ids",
+        "reason_chains",
+    }:
+        raise ValidationProblem("affected professionalism fields are not canonical")
+    scope = professionalism.get("scope")
+    direct = professionalism.get("direct_package_ids")
+    reason_chains = professionalism.get("reason_chains")
+    if scope not in {"none", "packages", "full"}:
+        raise ValidationProblem("affected professionalism scope is invalid")
+    if (
+        not isinstance(direct, list)
+        or any(not isinstance(item, str) or not item for item in direct)
+        or direct != sorted(set(direct))
+    ):
+        raise ValidationProblem("affected direct package IDs are not canonical")
+    if scope == "packages" and not direct:
+        raise ValidationProblem("package affected scope requires direct packages")
+    if scope in {"none", "full"} and direct:
+        raise ValidationProblem(f"{scope} affected scope cannot name direct packages")
+    if (
+        not isinstance(reason_chains, list)
+        or any(
+            not isinstance(chain, list)
+            or not chain
+            or any(not isinstance(item, str) or not item for item in chain)
+            for chain in reason_chains
+        )
+    ):
+        raise ValidationProblem("affected professionalism reason chains are invalid")
+    if known_package_ids is not None:
+        known = set(known_package_ids)
+        unknown = sorted(set(direct) - known)
+        if unknown:
+            raise ValidationProblem(
+                f"affected context names unknown packages: {unknown}"
+            )
+    return context
+
+
+def validate_core_contracts(
+    data: object,
+    root: Path = ROOT,
+) -> list[str]:
     """Validate the complete authoritative control-model shape and invariants."""
 
     errors: list[str] = []
@@ -2677,7 +3231,7 @@ def validate_core_contracts(data: object) -> list[str]:
         "kind",
         "core_principles",
         "principle_acceptance_contract",
-        "ci_validation_contract",
+        "impact_graph_contract",
         "roles",
         "external_read_contract",
         "implementation_discipline_contract",
@@ -2703,8 +3257,8 @@ def validate_core_contracts(data: object) -> list[str]:
             "authoritative control model must use changeforge.core_contracts schema 1"
         )
 
-    errors.extend(validate_principle_acceptance_contract(data, ROOT))
-    errors.extend(validate_ci_validation_contract(data, ROOT))
+    errors.extend(validate_principle_acceptance_contract(data, root))
+    errors.extend(validate_impact_graph_contract(data, root))
 
     role_names = {
         "main-control-agent",

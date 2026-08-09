@@ -17,7 +17,22 @@ This repository exists only to author, validate, build, package, install, upgrad
 
 ## Change Discipline
 
-Every change to the Skill system must be validated before handoff. At minimum, run:
+Ordinary development uses the affected graph against one selected base and
+head commit. The head checkout must be clean because the Core affected runner
+executes only tracked files from that commit:
+
+```text
+python3 scripts/eval-core-principles.py --gate affected --base <base> --head <head>
+python3 scripts/run-ci-tests.py run --base <base> --head <head>
+```
+
+Pull-request CI applies those two selectors in one unsharded `pr-ci` job. It is
+pull-request-only and does not run the full repository regression set.
+
+Run the local Full Regression once on the final material tree before an
+integration handoff or release-candidate decision. Core authoring is the single
+owner of its deterministic producer graph; the commands after it are consumers
+or non-Core checks and must not replay Core-owned producers:
 
 ```bash
 python3 scripts/eval-core-principles.py --gate authoring
@@ -38,15 +53,21 @@ python3 scripts/quickstart.py --agent copilot --scope project --target /tmp/chan
 python3 scripts/quickstart.py --agent openai-api --dry-run
 ```
 
-The command set above is the ordinary authoring gate. A formal release also
-requires both commands below on the final tree. The independent
-`.github/workflows/formal-release.yml` workflow is the remote release evidence;
-ordinary pull-request CI remains authoring-only.
+Formal Release is independent from Development Affected and local Full
+Regression. It requires the single Core command below on one clean final commit.
+The independent `.github/workflows/formal-release.yml` workflow is remote
+release evidence for that same object ID; it is not part of pull-request CI.
 
 ```bash
 python3 scripts/eval-core-principles.py --gate formal-release
-python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review
 ```
+
+Core is the only complete formal orchestrator. It runs
+`scripts/validate-professionalism-regression.py` once through its declared
+producer graph and requires the aggregate
+`professionalism-formal-release-ready` outcome, including
+`release_gate=release-ready`. Run that producer directly only to diagnose a
+verified Core failure; a second direct pass is not additional release evidence.
 
 Release evidence is limited to static contracts, deterministic fixtures,
 code-generation definitions and harness/negative-control checks, builds, and
@@ -54,7 +75,10 @@ simulated installation. It does not prove real-host Profile startup, wall-clock
 performance, production accuracy, provider behavior, or the installed user
 experience. State those limits in every release handoff.
 
-If a listed evaluator is intentionally replaced, update this command set and the CI workflow in the same change. Do not report success from a stale generated report.
+If an affected selector or Full Regression command is intentionally replaced,
+update this command discipline, `docs/VALIDATION.md`, the owning Core impact
+graph, and the applicable workflow in the same change. Do not report success
+from a stale generated report.
 
 `scripts/audit-skill-content.py` is the single source collector for root Skill
 content and indexed/physical Reference content. The required strict
@@ -138,7 +162,21 @@ eight rounds before a full-fresh checkpoint. A review-contract change forces
 all 189 packages fresh; a local binding change reopens only the package and its
 machine-derived affected dependencies.
 
-The Phase 2 inventory is the current and final inventory. Selected r21 Readability and r16 schema-3 Professional Completeness evidence is checked in and current for all 189 non-Control packages; formal release still requires the final-tree formal gates and same-commit remote workflow.
+The Phase 2 inventory is the current and final inventory. Selected r26
+Readability is immutable historical evidence, but its Skill detector binding is
+stale against the current detector. It has `source_current=false`, status
+`panel-majority-stale`, remains storage-pending, and is not accepted for formal
+release. Formal Release requires a new current schema-2 Readability review under
+the current Skill detector. Selected r19 schema-3 Professional Completeness is
+immutable historical full-fresh evidence for all 189 non-Control packages, but
+its bound Professional review contract is stale against the current contract.
+It remains storage-pending and is not accepted for formal release. Because a
+review-contract change forces every package fresh, Formal Release must create a
+new schema-3 full-fresh round for all 189 current non-Control packages; r19
+cannot authorize carry. The selected Semantic Disposition application is
+invalid against the current audit and the Root lifecycle is `pending-changes`;
+formal release remains blocked until those bindings are current and the
+final-tree Core formal gate plus same-commit remote workflow pass.
 
 Use the four Profile boundaries defined in `src/agent-profiles/role-agents.json`. The main agent dispatches only; analysis reads and searches; task agents implement bounded work; review agents perform independent non-modifying review. Shared-workspace writes are serial unless the host supplies isolated workspaces and the tasks have no dependency or shared write surface.
 

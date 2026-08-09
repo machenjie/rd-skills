@@ -93,7 +93,13 @@ def main(argv: list[str] | None = None) -> int:
         "errors": errors,
         "results": [asdict(row) for row in results],
     }
-    _write(args.reports_dir, payload, args.format)
+    _write(
+        args.reports_dir,
+        payload,
+        "all"
+        if args.release_projection or args.format in {"all", "markdown"}
+        else "json",
+    )
     print(
         "eval-professional-agent-samples: "
         f"checked={len(results)}; promoted={payload['promoted_checked']}; "
@@ -115,7 +121,8 @@ def _args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--promoted-only", action="store_true")
     parser.add_argument("--candidates-only", action="store_true")
     parser.add_argument("--strict", action="store_true")
-    parser.add_argument("--format", choices=("all", "markdown", "json"), default="all")
+    parser.add_argument("--format", choices=("all", "markdown", "json"), default="json")
+    parser.add_argument("--release-projection", action="store_true")
     return parser.parse_args(argv)
 
 

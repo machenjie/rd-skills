@@ -20,8 +20,6 @@ internal error occurs. Thresholds are centralized in THRESHOLDS below.
 from __future__ import annotations
 
 import argparse
-import ast
-import builtins
 import hashlib
 import json
 import math
@@ -6616,30 +6614,14 @@ def _root_document_fingerprints(documents: list[dict]) -> dict[str, str]:
     }
 
 
-_ROOT_SKILL_DOCUMENTS_FINGERPRINT_SOURCE = _root_skill_documents
-_ROOT_DOCUMENT_FINGERPRINTS_FINGERPRINT_SOURCE = _root_document_fingerprints
-
-
-_DETECTOR_REPOSITORY_SOURCE_FILES = (
-    ("audit-skill-content", Path(__file__).resolve()),
-    ("validation_utils", (ROOT / "scripts" / "validation_utils.py").resolve()),
-)
-_DETECTOR_SOURCE_WALKER_CONTRACT = "repository-source-ast-walker-v1"
-_DETECTOR_IMPLICIT_MODULE_NAMES = frozenset(
-    {
-        "__builtins__",
-        "__cached__",
-        "__file__",
-        "__loader__",
-        "__name__",
-        "__package__",
-        "__spec__",
-    }
+_DETECTOR_REPOSITORY_SOURCE_PATHS = (
+    "scripts/audit-skill-content.py",
+    "scripts/validation_utils.py",
 )
 
 
 def _detector_repository_source_text(path: Path) -> str:
-    """Read one explicitly allowlisted detector source or fail closed."""
+    """Read one explicitly declared detector source or fail closed."""
 
     if not path.is_file():
         raise ValidationProblem(f"detector source is missing: {path}")
@@ -6649,619 +6631,50 @@ def _detector_repository_source_text(path: Path) -> str:
         raise ValidationProblem(f"detector source is unreadable: {path}: {exc}") from exc
 
 
-def _detector_ast_source(source: str, node: ast.AST) -> str:
-    start = getattr(node, "lineno", None)
-    end = getattr(node, "end_lineno", None)
-    if not isinstance(start, int) or not isinstance(end, int):
-        raise ValidationProblem("detector source node lacks a stable line span")
-    decorators = getattr(node, "decorator_list", ())
-    decorator_lines = [
-        item.lineno for item in decorators if isinstance(item.lineno, int)
-    ]
-    if decorator_lines:
-        start = min(start, *decorator_lines)
-    return "".join(source.splitlines(keepends=True)[start - 1 : end])
-
-
-def _detector_assignment_names(node: ast.AST) -> list[str]:
-    targets: list[ast.AST] = []
-    if isinstance(node, ast.Assign):
-        targets.extend(node.targets)
-    elif isinstance(node, ast.AnnAssign):
-        targets.append(node.target)
-    names: list[str] = []
-    for target in targets:
-        names.extend(
-            child.id
-            for child in ast.walk(target)
-            if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store)
-        )
-    return sorted(set(names))
-
-
-def _detector_compound_binding_names(node: ast.AST) -> list[str]:
-    """Collect module bindings in one compound statement without child scopes."""
-
-    names: set[str] = set()
-    pending = list(ast.iter_child_nodes(node))
-    while pending:
-        child = pending.pop()
-        if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            names.add(child.name)
-            continue
-        if isinstance(
-            child,
-            (ast.Lambda, ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp),
-        ):
-            continue
-        if isinstance(child, ast.Import):
-            names.update(alias.asname or alias.name.split(".")[0] for alias in child.names)
-            continue
-        if isinstance(child, ast.ImportFrom):
-            names.update(alias.asname or alias.name for alias in child.names)
-            continue
-        if isinstance(child, ast.ExceptHandler) and isinstance(child.name, str):
-            names.add(child.name)
-        if isinstance(child, ast.MatchAs) and isinstance(child.name, str):
-            names.add(child.name)
-        if isinstance(child, ast.MatchStar) and isinstance(child.name, str):
-            names.add(child.name)
-        if isinstance(child, ast.MatchMapping) and isinstance(child.rest, str):
-            names.add(child.rest)
-        if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store):
-            names.add(child.id)
-        pending.extend(ast.iter_child_nodes(child))
-    return sorted(names)
-
-
-def _detector_source_catalog() -> dict[str, dict[str, object]]:
-    catalog: dict[str, dict[str, object]] = {}
-    seen_paths: dict[Path, str] = {}
-    for namespace, path in _DETECTOR_REPOSITORY_SOURCE_FILES:
-        resolved = path.resolve()
-        if namespace in catalog:
-            raise ValidationProblem(
-                f"duplicate detector source namespace: {namespace}"
-            )
-        prior_namespace = seen_paths.get(resolved)
-        if prior_namespace is not None:
-            raise ValidationProblem(
-                "duplicate detector source path: "
-                f"{resolved} ({prior_namespace}, {namespace})"
-            )
-        seen_paths[resolved] = namespace
-        source = _detector_repository_source_text(resolved)
-        try:
-            tree = ast.parse(source, filename=resolved.as_posix())
-        except SyntaxError as exc:
-            raise ValidationProblem(
-                f"cannot parse detector source {resolved}: {exc.msg}"
-            ) from exc
-        symbols: dict[str, dict[str, object]] = {}
-        imports: dict[str, dict[str, str | None]] = {}
-        for node in tree.body:
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-                if node.name in symbols:
-                    raise ValidationProblem(
-                        "duplicate detector source symbol: "
-                        f"{namespace}.{node.name}"
-                    )
-                symbols[node.name] = {
-                    "kind": "class" if isinstance(node, ast.ClassDef) else "function",
-                    "node": node,
-                    "source": _detector_ast_source(source, node),
-                }
-                continue
-            assignment_names = _detector_assignment_names(node)
-            if not assignment_names and not isinstance(node, (ast.Import, ast.ImportFrom)):
-                assignment_names = _detector_compound_binding_names(node)
-            for name in assignment_names:
-                if name in symbols:
-                    raise ValidationProblem(
-                        "duplicate detector source symbol: "
-                        f"{namespace}.{name}"
-                    )
-                symbols[name] = {
-                    "kind": "binding",
-                    "node": node,
-                    "source": _detector_ast_source(source, node),
-                }
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    imports[alias.asname or alias.name.split(".")[0]] = {
-                        "module": alias.name,
-                        "name": None,
-                    }
-            elif isinstance(node, ast.ImportFrom) and node.module is not None:
-                for alias in node.names:
-                    imports[alias.asname or alias.name] = {
-                        "module": node.module,
-                        "name": alias.name,
-                    }
-        catalog[namespace] = {
-            "path": resolved,
-            "symbols": symbols,
-            "imports": imports,
-        }
-    return catalog
-
-
-def _detector_root_selector(
-    function: object,
-    catalog: dict[str, dict[str, object]],
-) -> tuple[str, str]:
-    function_globals = getattr(function, "__globals__", None)
-    function_name = getattr(function, "__name__", None)
-    source_path = (
-        function_globals.get("__file__")
-        if isinstance(function_globals, dict)
-        else None
-    )
-    if not isinstance(function_name, str) or not isinstance(source_path, str):
-        raise ValidationProblem("detector root is not a repository source function")
-    matches = [
-        namespace
-        for namespace, module in catalog.items()
-        if module["path"] == Path(source_path).resolve()
-    ]
-    if len(matches) != 1:
-        raise ValidationProblem(
-            f"detector root source selector is not unique: {function_name}"
-        )
-    namespace = matches[0]
-    symbols = catalog[namespace]["symbols"]
-    assert isinstance(symbols, dict)
-    symbol = symbols.get(function_name)
-    if not isinstance(symbol, dict) or symbol.get("kind") != "function":
-        raise ValidationProblem(
-            f"detector root function is missing from allowlisted source: "
-            f"{namespace}.{function_name}"
-        )
-    return namespace, function_name
-
-
-def _detector_target_names(node: ast.AST) -> set[str]:
-    return {
-        child.id
-        for child in ast.walk(node)
-        if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store)
-    }
-
-
-def _detector_argument_names(arguments: ast.arguments) -> set[str]:
-    return {
-        argument.arg
-        for argument in (
-            *arguments.posonlyargs,
-            *arguments.args,
-            *arguments.kwonlyargs,
-            *(() if arguments.vararg is None else (arguments.vararg,)),
-            *(() if arguments.kwarg is None else (arguments.kwarg,)),
-        )
-    }
-
-
-class _DetectorScopeBindingCollector(ast.NodeVisitor):
-    """Collect bindings owned by one lexical scope without entering child scopes."""
-
-    def __init__(self) -> None:
-        self.local_names: set[str] = set()
-        self.global_names: set[str] = set()
-        self.nonlocal_names: set[str] = set()
-
-    def visit_Name(self, node: ast.Name) -> None:
-        if isinstance(node.ctx, ast.Store):
-            self.local_names.add(node.id)
-
-    def visit_Global(self, node: ast.Global) -> None:
-        self.global_names.update(node.names)
-
-    def visit_Nonlocal(self, node: ast.Nonlocal) -> None:
-        self.nonlocal_names.update(node.names)
-
-    def visit_Import(self, node: ast.Import) -> None:
-        self.local_names.update(
-            alias.asname or alias.name.split(".")[0] for alias in node.names
-        )
-
-    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
-        self.local_names.update(alias.asname or alias.name for alias in node.names)
-
-    def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
-        if isinstance(node.name, str):
-            self.local_names.add(node.name)
-        self.generic_visit(node)
-
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        self.local_names.add(node.name)
-        self._visit_definition_expressions(node)
-
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-        self.local_names.add(node.name)
-        self._visit_definition_expressions(node)
-
-    def _visit_definition_expressions(
-        self,
-        node: ast.FunctionDef | ast.AsyncFunctionDef,
-    ) -> None:
-        for expression in (
-            *node.decorator_list,
-            *node.args.defaults,
-            *(item for item in node.args.kw_defaults if item is not None),
-        ):
-            self.visit(expression)
-
-    def visit_ClassDef(self, node: ast.ClassDef) -> None:
-        self.local_names.add(node.name)
-        for expression in (*node.decorator_list, *node.bases):
-            self.visit(expression)
-        for keyword in node.keywords:
-            self.visit(keyword.value)
-
-    def visit_Lambda(self, node: ast.Lambda) -> None:
-        for expression in (
-            *node.args.defaults,
-            *(item for item in node.args.kw_defaults if item is not None),
-        ):
-            self.visit(expression)
-
-    def visit_ListComp(self, node: ast.ListComp) -> None:
-        self._visit_comprehension_bindings(node)
-
-    def visit_SetComp(self, node: ast.SetComp) -> None:
-        self._visit_comprehension_bindings(node)
-
-    def visit_DictComp(self, node: ast.DictComp) -> None:
-        self._visit_comprehension_bindings(node)
-
-    def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
-        self._visit_comprehension_bindings(node)
-
-    def _visit_comprehension_bindings(
-        self,
-        node: ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp,
-    ) -> None:
-        collector = _DetectorNamedExpressionBindingCollector()
-        collector.visit(node)
-        self.local_names.update(collector.names)
-
-
-class _DetectorNamedExpressionBindingCollector(ast.NodeVisitor):
-    """Collect walrus targets that Python binds outside a comprehension scope."""
-
-    def __init__(self) -> None:
-        self.names: set[str] = set()
-
-    def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
-        self.names.update(_detector_target_names(node.target))
-        self.visit(node.value)
-
-    def visit_Lambda(self, node: ast.Lambda) -> None:
-        return
-
-
-def _detector_scope_bindings(
-    body: list[ast.stmt],
-    arguments: ast.arguments | None = None,
-) -> tuple[set[str], set[str], set[str]]:
-    collector = _DetectorScopeBindingCollector()
-    for statement in body:
-        collector.visit(statement)
-    local_names = set(collector.local_names)
-    if arguments is not None:
-        local_names.update(_detector_argument_names(arguments))
-    local_names.difference_update(collector.global_names)
-    local_names.difference_update(collector.nonlocal_names)
-    return local_names, collector.global_names, collector.nonlocal_names
-
-
-class _DetectorGlobalLoadCollector(ast.NodeVisitor):
-    """Resolve source loads that reach the repository module namespace."""
-
-    def __init__(
-        self,
-        *,
-        scope_kind: str,
-        local_names: set[str] | None = None,
-        global_names: set[str] | None = None,
-        nonlocal_names: set[str] | None = None,
-        enclosing_function_locals: tuple[frozenset[str], ...] = (),
-        loaded_names: set[str] | None = None,
-    ) -> None:
-        self.scope_kind = scope_kind
-        self.local_names = local_names or set()
-        self.global_names = global_names or set()
-        self.nonlocal_names = nonlocal_names or set()
-        self.enclosing_function_locals = enclosing_function_locals
-        self.loaded_names = loaded_names if loaded_names is not None else set()
-
-    def _child_enclosing_function_locals(self) -> tuple[frozenset[str], ...]:
-        if self.scope_kind in {"function", "lambda", "comprehension"}:
-            return (
-                frozenset(self.local_names),
-                *self.enclosing_function_locals,
-            )
-        return self.enclosing_function_locals
-
-    def _child(
-        self,
-        *,
-        scope_kind: str,
-        local_names: set[str],
-        global_names: set[str] | None = None,
-        nonlocal_names: set[str] | None = None,
-    ) -> _DetectorGlobalLoadCollector:
-        return _DetectorGlobalLoadCollector(
-            scope_kind=scope_kind,
-            local_names=local_names,
-            global_names=global_names,
-            nonlocal_names=nonlocal_names,
-            enclosing_function_locals=self._child_enclosing_function_locals(),
-            loaded_names=self.loaded_names,
-        )
-
-    def _resolves_to_module(self, name: str) -> bool:
-        if self.scope_kind == "module" or name in self.global_names:
-            return True
-        if name in self.local_names or name in self.nonlocal_names:
-            return False
-        return not any(
-            name in scope_names for scope_names in self.enclosing_function_locals
-        )
-
-    def visit_Name(self, node: ast.Name) -> None:
-        if isinstance(node.ctx, ast.Load) and self._resolves_to_module(node.id):
-            self.loaded_names.add(node.id)
-
-    def _visit_function_definition(
-        self,
-        node: ast.FunctionDef | ast.AsyncFunctionDef,
-    ) -> None:
-        for expression in (
-            *node.decorator_list,
-            *node.args.defaults,
-            *(item for item in node.args.kw_defaults if item is not None),
-        ):
-            self.visit(expression)
-        for argument in (
-            *node.args.posonlyargs,
-            *node.args.args,
-            *node.args.kwonlyargs,
-            *(() if node.args.vararg is None else (node.args.vararg,)),
-            *(() if node.args.kwarg is None else (node.args.kwarg,)),
-        ):
-            if argument.annotation is not None:
-                self.visit(argument.annotation)
-        if node.returns is not None:
-            self.visit(node.returns)
-        for type_parameter in getattr(node, "type_params", ()):
-            self.visit(type_parameter)
-        local_names, global_names, nonlocal_names = _detector_scope_bindings(
-            node.body,
-            node.args,
-        )
-        child = self._child(
-            scope_kind="function",
-            local_names=local_names,
-            global_names=global_names,
-            nonlocal_names=nonlocal_names,
-        )
-        for statement in node.body:
-            child.visit(statement)
-
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        self._visit_function_definition(node)
-
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-        self._visit_function_definition(node)
-
-    def visit_Lambda(self, node: ast.Lambda) -> None:
-        for expression in (
-            *node.args.defaults,
-            *(item for item in node.args.kw_defaults if item is not None),
-        ):
-            self.visit(expression)
-        collector = _DetectorScopeBindingCollector()
-        collector.visit(node.body)
-        local_names = _detector_argument_names(node.args) | collector.local_names
-        local_names.difference_update(collector.global_names)
-        local_names.difference_update(collector.nonlocal_names)
-        self._child(
-            scope_kind="lambda",
-            local_names=local_names,
-            global_names=collector.global_names,
-            nonlocal_names=collector.nonlocal_names,
-        ).visit(node.body)
-
-    def visit_ClassDef(self, node: ast.ClassDef) -> None:
-        for expression in (*node.decorator_list, *node.bases):
-            self.visit(expression)
-        for keyword in node.keywords:
-            self.visit(keyword.value)
-        for type_parameter in getattr(node, "type_params", ()):
-            self.visit(type_parameter)
-        local_names, global_names, nonlocal_names = _detector_scope_bindings(node.body)
-        child = self._child(
-            scope_kind="class",
-            local_names=local_names,
-            global_names=global_names,
-            nonlocal_names=nonlocal_names,
-        )
-        for statement in node.body:
-            child.visit(statement)
-
-    def _visit_comprehension(
-        self,
-        node: ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp,
-        result_expressions: tuple[ast.expr, ...],
-    ) -> None:
-        if not node.generators:
-            raise ValidationProblem("detector comprehension has no generator")
-        self.visit(node.generators[0].iter)
-        local_names = set().union(
-            *(_detector_target_names(item.target) for item in node.generators)
-        )
-        child = self._child(scope_kind="comprehension", local_names=local_names)
-        for index, generator in enumerate(node.generators):
-            if index:
-                child.visit(generator.iter)
-            for condition in generator.ifs:
-                child.visit(condition)
-        for expression in result_expressions:
-            child.visit(expression)
-
-    def visit_ListComp(self, node: ast.ListComp) -> None:
-        self._visit_comprehension(node, (node.elt,))
-
-    def visit_SetComp(self, node: ast.SetComp) -> None:
-        self._visit_comprehension(node, (node.elt,))
-
-    def visit_DictComp(self, node: ast.DictComp) -> None:
-        self._visit_comprehension(node, (node.key, node.value))
-
-    def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
-        self._visit_comprehension(node, (node.elt,))
-
-
-def _detector_loaded_names(node: ast.AST) -> list[str]:
-    collector = _DetectorGlobalLoadCollector(scope_kind="module")
-    collector.visit(node)
-    return sorted(collector.loaded_names)
-
-
-def _detector_repository_payload(
-    roots: tuple[object, ...],
+def _explicit_detector_source_manifest(
     *,
-    contract: str,
-    fields: dict[str, object] | None = None,
+    contract_version: str,
+    contract_fields: dict[str, object] | None = None,
 ) -> dict[str, object]:
-    catalog = _detector_source_catalog()
-    import_namespaces = {
-        namespace: namespace for namespace in catalog if namespace != "audit-skill-content"
-    }
-    pending = [_detector_root_selector(function, catalog) for function in roots]
-    root_ids = sorted(f"{namespace}.{name}" for namespace, name in pending)
-    symbols_payload: dict[str, dict[str, str]] = {}
-    bindings: dict[str, dict[str, str]] = {}
-    while pending:
-        namespace, symbol_name = pending.pop()
-        symbol_id = f"{namespace}.{symbol_name}"
-        if symbol_id in symbols_payload:
-            continue
-        module = catalog[namespace]
-        symbols = module["symbols"]
-        imports = module["imports"]
-        assert isinstance(symbols, dict) and isinstance(imports, dict)
-        symbol = symbols.get(symbol_name)
-        if not isinstance(symbol, dict):
-            raise ValidationProblem(
-                f"reachable detector symbol is missing: {symbol_id}"
-            )
-        node = symbol.get("node")
-        source = symbol.get("source")
-        kind = symbol.get("kind")
-        if not isinstance(node, ast.AST) or not isinstance(source, str) or not isinstance(kind, str):
-            raise ValidationProblem(f"reachable detector symbol is malformed: {symbol_id}")
-        symbols_payload[symbol_id] = {"kind": kind, "source": source}
-        for loaded_name in _detector_loaded_names(node):
-            binding_id = f"{symbol_id}:{loaded_name}"
-            if loaded_name in symbols:
-                target = f"{namespace}.{loaded_name}"
-                bindings[binding_id] = {
-                    "kind": "repository-symbol",
-                    "target": target,
-                }
-                pending.append((namespace, loaded_name))
-                continue
-            imported = imports.get(loaded_name)
-            if not isinstance(imported, dict):
-                if hasattr(builtins, loaded_name):
-                    bindings[binding_id] = {
-                        "kind": "external-builtin",
-                        "target": f"builtins.{loaded_name}",
-                    }
-                    continue
-                if loaded_name in _DETECTOR_IMPLICIT_MODULE_NAMES:
-                    bindings[binding_id] = {
-                        "kind": "module-implicit",
-                        "target": f"python.{loaded_name}",
-                    }
-                    continue
-                raise ValidationProblem(
-                    "unknown detector source symbol: "
-                    f"{namespace}.{loaded_name} loaded by {symbol_id}"
-                )
-            imported_module = imported.get("module")
-            imported_name = imported.get("name")
-            target_namespace = (
-                import_namespaces.get(imported_module)
-                if isinstance(imported_module, str)
-                else None
-            )
-            target_symbols = (
-                catalog[target_namespace]["symbols"]
-                if target_namespace is not None
-                else None
-            )
-            if (
-                isinstance(imported_name, str)
-                and isinstance(target_symbols, dict)
-                and imported_name in target_symbols
-            ):
-                target = f"{target_namespace}.{imported_name}"
-                bindings[binding_id] = {
-                    "kind": "repository-symbol",
-                    "target": target,
-                }
-                pending.append((target_namespace, imported_name))
-            else:
-                external_target = str(imported_module)
-                if isinstance(imported_name, str):
-                    external_target = f"{external_target}.{imported_name}"
-                bindings[binding_id] = {
-                    "kind": "external-import",
-                    "target": external_target,
-                }
+    """Bind a versioned contract to an explicit repository source manifest."""
+
+    source_manifest = []
+    for relative in _DETECTOR_REPOSITORY_SOURCE_PATHS:
+        source = _detector_repository_source_text(ROOT / relative)
+        source_manifest.append(
+            {
+                "path": relative,
+                "sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
+            }
+        )
     payload: dict[str, object] = {
-        "contract": contract,
-        "walker_contract": _DETECTOR_SOURCE_WALKER_CONTRACT,
-        "roots": root_ids,
-        "symbols": {
-            key: symbols_payload[key] for key in sorted(symbols_payload)
-        },
-        "bindings": {key: bindings[key] for key in sorted(bindings)},
+        "contract_version": contract_version,
+        "source_manifest": source_manifest,
+        "contract_fields": contract_fields or {},
     }
-    if fields:
-        payload.update(fields)
-    return payload
-
-
-def _root_semantic_detector_payload() -> dict[str, object]:
-    """Return the portable source/AST contract for Root detector behavior."""
-
-    return _detector_repository_payload(
-        (
-            _ROOT_SKILL_DOCUMENTS_FINGERPRINT_SOURCE,
-            _ROOT_DOCUMENT_FINGERPRINTS_FINGERPRINT_SOURCE,
-            _root_sentence_candidates,
-            _root_document_candidates,
-            _fold_root_candidates,
-        ),
-        contract="root-semantic-detector-v3",
-    )
-
-
-def _root_semantic_detector_fingerprint() -> str:
-    """Bind reachable repository detector source without runtime bytecode."""
-
-    return hashlib.sha256(
+    payload["aggregate_source_digest"] = hashlib.sha256(
         json.dumps(
-            _root_semantic_detector_payload(),
+            payload,
+            ensure_ascii=False,
             sort_keys=True,
             separators=(",", ":"),
         ).encode("utf-8")
     ).hexdigest()
+    return payload
 
+
+def _root_semantic_detector_payload() -> dict[str, object]:
+    """Return the explicit source manifest for Root detector behavior."""
+
+    return _explicit_detector_source_manifest(
+        contract_version="root-semantic-detector-v4",
+    )
+
+
+def _root_semantic_detector_fingerprint() -> str:
+    """Return the aggregate digest of the explicit Root detector sources."""
+
+    return str(_root_semantic_detector_payload()["aggregate_source_digest"])
 
 def _root_lifecycle_lineage_id(entry: dict) -> str:
     payload = "\0".join(
@@ -13235,23 +12648,11 @@ def _classify(metrics: SkillMetrics) -> None:
 
 
 def _skill_detector_payload() -> dict[str, object]:
-    """Return the portable source/AST contract for Skill detector behavior."""
+    """Return the explicit source manifest for Skill detector behavior."""
 
-    return _detector_repository_payload(
-        (
-            _base_metrics,
-            _control_boilerplate_density,
-            _generic_control_phrase_count,
-            _control_scaffold_findings,
-            _high_confidence_control_scaffold,
-            _score,
-            _classify,
-            _readability_by_owner,
-            _review_state_and_reasons,
-            _assign_review_state,
-        ),
-        contract="skill-content-detector-v3",
-        fields={
+    return _explicit_detector_source_manifest(
+        contract_version="skill-content-detector-v4",
+        contract_fields={
             "required_skill_fields": list(SKILL_DETECTOR_REQUIRED_SKILL_FIELDS),
             "finding_fields": list(SKILL_DETECTOR_FINDING_FIELDS),
             "review_state_values": list(REVIEW_STATE_PRIORITY),
@@ -13261,15 +12662,9 @@ def _skill_detector_payload() -> dict[str, object]:
 
 
 def _skill_detector_fingerprint() -> str:
-    """Bind Skill classification, review state, and line metrics to source."""
+    """Return the aggregate digest of the explicit Skill detector sources."""
 
-    return hashlib.sha256(
-        json.dumps(
-            _skill_detector_payload(),
-            sort_keys=True,
-            separators=(",", ":"),
-        ).encode("utf-8")
-    ).hexdigest()
+    return str(_skill_detector_payload()["aggregate_source_digest"])
 
 
 def _skill_detector_contract() -> dict[str, object]:
@@ -13287,6 +12682,7 @@ def _skill_detector_contract() -> dict[str, object]:
             "algorithm": "sha256",
             "value": _skill_detector_fingerprint(),
         },
+        "detector_source_manifest": _skill_detector_payload(),
     }
 
 
@@ -14429,6 +13825,11 @@ def _args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--release-projection",
+        action="store_true",
+        help="Also emit the human-readable Markdown release projection.",
+    )
+    parser.add_argument(
         "--refresh-root-disposition-bootstrap",
         action="append",
         nargs=2,
@@ -14665,12 +14066,19 @@ def main(argv: list[str] | None = None) -> int:
     JSON_REPORT.write_text(
         json.dumps(json_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    MARKDOWN_REPORT.write_text(_format_md(result), encoding="utf-8")
+    if args.release_projection:
+        MARKDOWN_REPORT.write_text(_format_md(result), encoding="utf-8")
 
     summary = json_payload["summary"]
     print(
         "audit-skill-content: wrote "
-        f"{MARKDOWN_REPORT.relative_to(ROOT)} and {JSON_REPORT.relative_to(ROOT)} "
+        f"{JSON_REPORT.relative_to(ROOT)}"
+        + (
+            f" and {MARKDOWN_REPORT.relative_to(ROOT)}"
+            if args.release_projection
+            else ""
+        )
+        + " "
         f"({summary['professional_skills']} professional, "
         f"{summary['foundation_capabilities']} foundation, "
         f"{summary['domain_extensions']} domain; "

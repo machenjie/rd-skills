@@ -3,11 +3,32 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
+from tests.scripts.test_eval_core_principles import (
+    assert_core_producer_outcomes_passed,
+)
+
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def load_owned_eval_report(
+    test_case: unittest.TestCase,
+    root: Path,
+    relative: str,
+    expected_fields: dict[str, object],
+) -> dict:
+    path = root / relative
+    test_case.assertTrue(path.is_file(), f"owned eval report is missing: {relative}")
+    report = json.loads(path.read_text(encoding="utf-8"))
+    test_case.assertIsInstance(report, dict, relative)
+    for field, expected in expected_fields.items():
+        test_case.assertIn(field, report, f"required field is missing: {relative}:{field}")
+        test_case.assertEqual(expected, report[field], (relative, field))
+    return report
 
 
 class HooklessEvaluationTests(unittest.TestCase):
@@ -21,18 +42,23 @@ class HooklessEvaluationTests(unittest.TestCase):
         )
 
     def test_routing_evaluation(self) -> None:
-        result = self.run_script("scripts/eval-routing.py")
-        self.assertEqual(0, result.returncode, result.stderr or result.stdout)
-        report = json.loads((ROOT / "reports/routing-eval.json").read_text())
-        self.assertEqual(6, report["schema_version"])
-        self.assertEqual("pass", report["status"])
+        assert_core_producer_outcomes_passed(ROOT, "eval-routing")
+        report = load_owned_eval_report(
+            self,
+            ROOT,
+            "reports/routing-eval.json",
+            {
+                "schema_version": 6,
+                "status": "pass",
+                "negative_case_count": 69,
+                "domain_family_case_count": 44,
+                "domain_anti_case_count": 26,
+                "domain_transition_case_count": 13,
+                "domain_unchanged_case_count": 14,
+            },
+        )
         self.assertEqual(report["case_count"], report["passed_count"])
         self.assertEqual(report["case_count"], len(report["results"]))
-        self.assertEqual(69, report["negative_case_count"])
-        self.assertEqual(44, report["domain_family_case_count"])
-        self.assertEqual(26, report["domain_anti_case_count"])
-        self.assertEqual(13, report["domain_transition_case_count"])
-        self.assertEqual(14, report["domain_unchanged_case_count"])
         self.assertTrue(
             all(
                 item["negative_passed"]
@@ -176,15 +202,50 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertIn("installed user experience", folded)
         self.assertIn("deterministic regression oracle", folded)
 
+    def test_owned_eval_report_consumer_rejects_required_field_mutation_only(
+        self,
+    ) -> None:
+        consumer = globals().get("load_owned_eval_report")
+        self.assertTrue(callable(consumer), "owned eval report consumer is missing")
+        source = json.loads(
+            (ROOT / "reports/routing-eval.json").read_text(encoding="utf-8")
+        )
+        expected = {
+            "schema_version": 6,
+            "status": "pass",
+            "negative_case_count": 69,
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            (root / "reports").mkdir()
+            path = root / "reports/routing-eval.json"
+            mutated = dict(source)
+            mutated.pop("status")
+            path.write_text(json.dumps(mutated), encoding="utf-8")
+            with self.assertRaisesRegex(AssertionError, "required field"):
+                consumer(self, root, "reports/routing-eval.json", expected)
+
+            with_extra = dict(source)
+            with_extra["unconsumed_future_field"] = {"value": "out-of-scope"}
+            path.write_text(json.dumps(with_extra), encoding="utf-8")
+            loaded = consumer(
+                self, root, "reports/routing-eval.json", expected
+            )
+            self.assertEqual(with_extra, loaded)
+
     def test_observable_trajectory_and_context_evaluations(self) -> None:
-        for script in (
-            "scripts/eval-agent-lightweight.py",
-            "scripts/eval-rendered-context-budget.py",
-            "scripts/eval-context-control-plane.py",
-        ):
-            result = self.run_script(script)
-            self.assertEqual(0, result.returncode, result.stderr or result.stdout)
-        report = json.loads((ROOT / "reports/hookless-control-plane-eval.json").read_text())
+        assert_core_producer_outcomes_passed(
+            ROOT,
+            "eval-agent-lightweight",
+            "eval-rendered-context",
+            "eval-context-control",
+        )
+        report = load_owned_eval_report(
+            self,
+            ROOT,
+            "reports/hookless-control-plane-eval.json",
+            {"status": "pass", "fixture_count": 16},
+        )
         self.assertEqual("pass", report["status"])
         self.assertEqual(16, report["fixture_count"])
         self.assertEqual(13, report["release_fixture_count"])
@@ -209,7 +270,17 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertNotIn("adoption_threshold_status", report)
         self.assertNotIn("efficiency_improvement_claim", report)
 
-        rendered = json.loads((ROOT / "reports/rendered-context-budget.json").read_text())
+        rendered = load_owned_eval_report(
+            self,
+            ROOT,
+            "reports/rendered-context-budget.json",
+            {
+                "status": "pass",
+                "evidence_scope": "deterministic-rendered-artifacts",
+                "compiled_layer3_format": "ai-consumption-v1",
+                "tokenizer": "o200k_base",
+            },
+        )
         self.assertEqual("pass", rendered["status"])
         self.assertEqual("deterministic-rendered-artifacts", rendered["evidence_scope"])
         self.assertEqual("ai-consumption-v1", rendered["compiled_layer3_format"])
@@ -246,7 +317,12 @@ class HooklessEvaluationTests(unittest.TestCase):
             rendered["budget_calibration"]["duplicate_rule_token_ratio_max"],
         )
 
-        context = json.loads((ROOT / "reports/context-control-plane-eval.json").read_text())
+        context = load_owned_eval_report(
+            self,
+            ROOT,
+            "reports/context-control-plane-eval.json",
+            {"status": "pass", "evidence_scope": "deterministic-fixtures"},
+        )
         self.assertEqual("pass", context["status"])
         self.assertEqual("deterministic-fixtures", context["evidence_scope"])
         self.assertTrue(set(report["limitations"]).issubset(context["limitations"]))
@@ -265,9 +341,19 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertIn("unrecognized arguments", result.stderr)
 
     def test_professional_static_evaluation_contract(self) -> None:
-        result = self.run_script("scripts/eval-skill-professionalism.py")
-        self.assertEqual(0, result.returncode, result.stderr or result.stdout)
-        report = json.loads((ROOT / "reports/skill-professionalism-eval.json").read_text())
+        assert_core_producer_outcomes_passed(
+            ROOT, "eval-skill-professionalism"
+        )
+        report = load_owned_eval_report(
+            self,
+            ROOT,
+            "reports/skill-professionalism-eval.json",
+            {
+                "evaluation_kind": "static-authoring-structure",
+                "skills_checked": 190,
+                "error_count": 0,
+            },
+        )
         self.assertEqual("static-authoring-structure", report["evaluation_kind"])
         self.assertEqual(190, report["skills_checked"])
         self.assertEqual(0, report["error_count"])

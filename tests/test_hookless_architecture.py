@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib.util
 import json
 import re
-import subprocess
 import sys
 import unittest
 from collections import Counter
@@ -20,6 +19,9 @@ from validation_utils import (  # noqa: E402
     load_yaml_file,
     public_execution_template_block,
     public_execution_template_spans,
+)
+from tests.scripts.test_eval_core_principles import (  # noqa: E402
+    assert_core_producer_outcomes_passed,
 )
 
 
@@ -701,14 +703,10 @@ class HooklessArchitectureTests(unittest.TestCase):
         self.assertIn('"ledger_source_kind"', cache)
 
     def test_composite_source_validator_passes(self) -> None:
-        result = subprocess.run(
-            [sys.executable, "scripts/validate-src-invariants.py"],
-            cwd=ROOT,
-            text=True,
-            capture_output=True,
-            check=False,
+        assert_core_producer_outcomes_passed(
+            ROOT,
+            "validate-src-invariants",
         )
-        self.assertEqual(0, result.returncode, result.stderr or result.stdout)
 
 
 if __name__ == "__main__":

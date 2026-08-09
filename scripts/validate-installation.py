@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import subprocess
@@ -83,7 +84,10 @@ def _build_input_freshness_errors(
     return [f"{manifest_path}: {error}" for error in errors]
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--release-projection", action="store_true")
+    args = parser.parse_args(argv)
     errors: list[str] = []
     built_count = _validate_skill_roots(errors)
     profile_count = _validate_profile_roots(errors)
@@ -99,6 +103,7 @@ def main() -> int:
         profile_count=profile_count,
         zip_count=zip_count,
         residue_count=residue_count,
+        release_projection=args.release_projection,
     )
     if errors:
         return fail_many("validate-installation", errors)
@@ -117,6 +122,7 @@ def _write_report(
     profile_count: int,
     zip_count: int,
     residue_count: int,
+    release_projection: bool = False,
 ) -> None:
     report_dir = ROOT / "reports"
     report_dir.mkdir(parents=True, exist_ok=True)
@@ -144,6 +150,8 @@ def _write_report(
         json.dumps(payload, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    if not release_projection:
+        return
     summary = payload["summary"]
     lines = [
         "# Hookless Installation Validation",

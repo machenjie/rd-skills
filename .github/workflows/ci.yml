@@ -1,19 +1,21 @@
 name: CI
 
 on:
-  pull_request:
-  push:
-    branches:
-      - master
-      - main
+  pull_request: {}
+
+permissions:
+  contents: read
 
 jobs:
-  canonical-validation:
+  pr-ci:
     runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -24,60 +26,17 @@ jobs:
           git archive --format=tar HEAD | tar -xf - -C "$install_root"
           python3 -m pip install --disable-pip-version-check "$install_root"
 
-      - name: Core Principles authoring outcome gate
-        run: python3 scripts/eval-core-principles.py --gate authoring
-
-      - name: Documentation and productization
-        run: |
-          python3 scripts/validate-examples.py
-          python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md --check
-          python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md --check
-          python3 scripts/validate-marketplace-index.py --profile recommended
-          python3 scripts/validate-marketplace-index.py --profile full
-          python3 scripts/validate-marketplace-index.py --profile dev
-          python3 scripts/validate-productization-assets.py
-          python3 scripts/validate-open-source-readiness.py --require-pass
-
-      - name: Code generation
-        run: |
-          python3 scripts/validate-codegen-benchmarks.py
-          python3 scripts/run-codegen-benchmarks.py --limit 3
-
-      - name: Quickstart dry runs
-        run: |
-          python3 scripts/quickstart.py --agent codex --scope user --dry-run
-          python3 scripts/quickstart.py --agent claude --scope project --target /tmp/changeforge-quickstart-claude --dry-run
-          python3 scripts/quickstart.py --agent copilot --scope project --target /tmp/changeforge-quickstart-copilot --dry-run
-          python3 scripts/quickstart.py --agent openai-api --dry-run
-
-      - name: Generated artifact freshness
-        run: git diff --exit-code
-
-  affected-unit-tests:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [0, 1]
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install validation dependencies from isolated source
-        run: |
-          install_root="$(mktemp -d)"
-          git archive --format=tar HEAD | tar -xf - -C "$install_root"
-          python3 -m pip install --disable-pip-version-check "$install_root"
-
-      - name: Run affected unit-test shard
+      - name: Run affected producer gate
         env:
-          CI_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
-          CI_HEAD_SHA: ${{ github.sha }}
-        run: python3 scripts/run-ci-tests.py run --shard "${{ matrix.shard }}"
+          CI_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          CI_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/eval-core-principles.py --gate affected --base "$CI_BASE_SHA" --head "$CI_HEAD_SHA"
 
-      - name: Generated artifact freshness
-        run: git diff --exit-code
+      - name: Run affected tests
+        env:
+          CI_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          CI_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/run-ci-tests.py run
+
+      - name: Verify tracked checkout is unchanged
+        run: git diff --exit-code --no-ext-diff --no-textconv HEAD --

@@ -48,6 +48,129 @@ def _module_without_tiktoken() -> Iterator[tuple[ModuleType, list[str]]]:
 
 
 class ValidationUtilsDependencyBoundaryTests(unittest.TestCase):
+    def test_unit_dependency_audit_rejects_workspace_outputs_not_temp_fixture_text(self) -> None:
+        with _module_without_tiktoken() as (module, _imports), tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            tests = root / "tests/scripts"
+            tests.mkdir(parents=True)
+            fixture_only = tests / "test_fixture_only.py"
+            fixture_only.write_text(
+                "from pathlib import Path\n"
+                "def fixture(root: Path) -> None:\n"
+                "    (root / 'reports').mkdir()\n"
+                "    (root / 'dist/example.txt').write_text('fixture')\n",
+                encoding="utf-8",
+            )
+            contract = {
+                "default_layer": "unit",
+                "module_overrides": [],
+                "unit_dependency_policy": {
+                    "forbidden_workspace_roots": ["dist", "reports"],
+                    "forbidden_test_layers": [
+                        "integration",
+                        "contract",
+                        "governance",
+                        "release",
+                    ],
+                },
+            }
+            self.assertEqual(
+                [], module.unit_test_dependency_errors(root, contract)
+            )
+
+            fixture_only.write_text(
+                "from pathlib import Path\n"
+                "ROOT = Path(__file__).resolve().parents[2]\n"
+                "REPORT = ROOT / 'reports/result.json'\n",
+                encoding="utf-8",
+            )
+            errors = module.unit_test_dependency_errors(root, contract)
+            self.assertTrue(any("reports" in item for item in errors), errors)
+
+            integration = tests / "test_integration.py"
+            integration.write_text("import unittest\n", encoding="utf-8")
+            fixture_only.write_text(
+                "import tests.scripts.test_integration\n", encoding="utf-8"
+            )
+            contract["module_overrides"] = [
+                {
+                    "module": "tests/scripts/test_integration.py",
+                    "layer": "integration",
+                }
+            ]
+            errors = module.unit_test_dependency_errors(root, contract)
+            self.assertTrue(any("integration" in item for item in errors), errors)
+
+            import_forms = (
+                "from tests.scripts import test_integration\n",
+                "from tests.scripts.test_integration import fixture\n",
+                "import tests.scripts.test_integration as integration\n",
+            )
+            for source in import_forms:
+                with self.subTest(source=source):
+                    fixture_only.write_text(source, encoding="utf-8")
+                    errors = module.unit_test_dependency_errors(root, contract)
+                    self.assertTrue(
+                        any("test_integration.py" in item for item in errors),
+                        errors,
+                    )
+
+    def test_impact_graph_schema_and_stage_references_fail_closed(self) -> None:
+        with _module_without_tiktoken() as (module, _imports):
+            canonical = copy.deepcopy(module.CORE_CONTRACTS)
+            self.assertEqual(
+                [], module.validate_impact_graph_contract(canonical, ROOT)
+            )
+            cases = []
+            missing = copy.deepcopy(canonical)
+            del missing["impact_graph_contract"]
+            cases.append((missing, "impact_graph_contract fields"))
+            malformed = copy.deepcopy(canonical)
+            malformed["impact_graph_contract"]["rules"][0]["extra"] = True
+            cases.append((malformed, "fields must be exactly"))
+            unknown = copy.deepcopy(canonical)
+            unknown["impact_graph_contract"]["rules"][0]["producer_ids"] = [
+                "unknown-producer"
+            ]
+            cases.append((unknown, "unknown producer"))
+            ineligible = copy.deepcopy(canonical)
+            eligible = ineligible["impact_graph_contract"]["stages"]["affected"][
+                "eligible_producer_ids"
+            ]
+            producer_id = eligible.pop(0)
+            ineligible["impact_graph_contract"]["rules"][0]["producer_ids"] = [
+                producer_id
+            ]
+            cases.append((ineligible, "stage-ineligible"))
+            for mutation, expected in cases:
+                with self.subTest(expected=expected):
+                    errors = module.validate_impact_graph_contract(mutation, ROOT)
+                    self.assertTrue(any(expected in item for item in errors), errors)
+
+            release_enabled = copy.deepcopy(canonical)
+            policy = release_enabled["impact_graph_contract"]["stages"][
+                "affected"
+            ]["test_policy"]
+            policy["forbidden_layers"].remove("release")
+            policy["always_layers"].append("release")
+            errors = module.validate_impact_graph_contract(release_enabled, ROOT)
+            self.assertTrue(any("release" in item for item in errors), errors)
+
+            duplicate_override = copy.deepcopy(canonical)
+            overrides = duplicate_override["impact_graph_contract"]["test_selection"][
+                "module_overrides"
+            ]
+            overrides.append(copy.deepcopy(overrides[0]))
+            errors = module.validate_impact_graph_contract(duplicate_override, ROOT)
+            self.assertTrue(any("unique" in item for item in errors), errors)
+
+            unknown_layer = copy.deepcopy(canonical)
+            unknown_layer["impact_graph_contract"]["test_selection"][
+                "module_overrides"
+            ][0]["layer"] = "system"
+            errors = module.validate_impact_graph_contract(unknown_layer, ROOT)
+            self.assertTrue(any("canonical layer" in item for item in errors), errors)
+
     def test_reference_type_exact_semantic_overrides_are_closed(self) -> None:
         with _module_without_tiktoken() as (module, _imports):
             expected = {

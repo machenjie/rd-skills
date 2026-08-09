@@ -121,6 +121,37 @@ class BuildSafetyTests(unittest.TestCase):
                     BUILD.build_profile("recommended")
             self.assertEqual("unchanged\n", sentinel.read_text(encoding="utf-8"))
 
+    def test_all_profiles_build_with_canonical_manifest_in_isolated_layout(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+            expected_counts = {"recommended": 27, "full": 40, "dev": 190}
+
+            with self._layout(root) as dist:
+                for profile in BUILD.PROFILES:
+                    with self.subTest(profile=profile):
+                        result = BUILD.build_profile(profile)
+                        manifest_path = (
+                            dist
+                            / "universal/skills"
+                            / profile
+                            / BUILD.BUILD_MANIFEST_NAME
+                        )
+                        manifest = BUILD.json.loads(
+                            manifest_path.read_text(encoding="utf-8")
+                        )
+                        self.assertEqual(profile, result["profile"])
+                        self.assertEqual(expected_counts[profile], result["top_level_count"])
+                        self.assertEqual(profile, manifest["profile"])
+                        self.assertEqual(
+                            "changeforge.authoritative_build_inputs",
+                            manifest["authoritative_build_inputs"]["kind"],
+                        )
+                        self.assertEqual(
+                            expected_counts[profile], len(manifest["top_level_skills"])
+                        )
+                        self.assertEqual(4, len(manifest["agent_profiles"]))
+
     def test_malicious_skill_name_and_noncanonical_path_fail_before_reset(self) -> None:
         self._assert_registry_failure_preserves_dist(
             "name: engineering-control-plane",

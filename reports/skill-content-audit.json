@@ -160129,11 +160129,17 @@
       "status": "pass"
     },
     "formal_release": {
-      "blockers": [],
-      "status": "pass"
+      "blockers": [
+        {
+          "id": "semantic-decision-application-invalid",
+          "message": "semantic disposition packet is stale against the current audit"
+        }
+      ],
+      "status": "blocked"
     },
     "limitations": [
-      "The authoring gate validates deterministic source content and does not attest semantic disposition application currentness."
+      "The authoring gate validates deterministic source content and does not attest semantic disposition application currentness.",
+      "Formal release remains blocked: semantic-decision-application-invalid: semantic disposition packet is stale against the current audit"
     ],
     "schema_version": 1,
     "selected_gate": "authoring"
@@ -279257,7 +279263,7 @@
           }
         ],
         "errors": [],
-        "evaluated_on": "2026-08-08",
+        "evaluated_on": "2026-08-09",
         "group_scope": "Group candidate IDs use the literal scope 'group'; evidence.fingerprint must match sorted path/owner membership and evidence.content_fingerprint must match the sorted path/owner/normalized-body multiset.",
         "schema_version": 2,
         "source": "config/skill-content-exceptions.yaml",
@@ -294799,7 +294805,7 @@
           }
         ],
         "errors": [],
-        "evaluated_on": "2026-08-08",
+        "evaluated_on": "2026-08-09",
         "schema_version": 6,
         "source": "config/skill-content-exceptions.yaml",
         "surface_errors": {
@@ -296915,7 +296921,7 @@
           },
           "schema_version": 4
         },
-        "detector_fingerprint": "4d8059e710c7ecca7d4c839fe63d2c2f88632aa826356280dfe76bed5043ea04",
+        "detector_fingerprint": "994b571813d28aacda7e64ccd40adbe50e9d2df2b1f74231478b4e9d010dae96",
         "errors": [],
         "formal_release_ready": false,
         "schema_version": 4,
@@ -297147,19 +297153,22 @@
   },
   "schema_version": 9,
   "semantic_disposition_application": {
-    "applied_count": 83,
+    "applied_count": 0,
     "completed_rewrite_count": 0,
     "decision": {
       "path": "evals/expert-panel/semantic-disposition-panel-2026-08-07-r26/panel/decision.json",
       "sha256": "3a34f46307dc6019be8fdfe303a230397198207370fa02394d611cb70f71b52c"
     },
     "decision_kind": "changeforge.semantic-disposition-panel-decision",
-    "error": null,
+    "error": {
+      "id": "semantic-decision-application-invalid",
+      "message": "semantic disposition packet is stale against the current audit"
+    },
     "kind": "changeforge.semantic-disposition-application",
     "review_id": "semantic-disposition-panel-2026-08-07-r26",
     "schema_version": 1,
-    "status": "current",
-    "target_count": 83
+    "status": "invalid",
+    "target_count": 0
   },
   "skill_detector": {
     "classification_values": [
@@ -297170,7 +297179,76 @@
     ],
     "detector_fingerprint": {
       "algorithm": "sha256",
-      "value": "dd90d20b43d8cf23c81e03db672fe46d9d8f3e7daeb11d1ca70660dcf413d7cf"
+      "value": "01b1a560b8050be27fbd7611461885fc0eb1535c19be2c1378a0982a9233c6d8"
+    },
+    "detector_source_manifest": {
+      "aggregate_source_digest": "01b1a560b8050be27fbd7611461885fc0eb1535c19be2c1378a0982a9233c6d8",
+      "contract_fields": {
+        "finding_fields": [
+          "family",
+          "section",
+          "line",
+          "text",
+          "match"
+        ],
+        "required_skill_fields": [
+          "actionability_applicable",
+          "actionability_findings",
+          "actionability_model",
+          "actionable_repeated_phrase_count",
+          "classification",
+          "control_boilerplate_density",
+          "control_scaffold_families",
+          "control_scaffold_findings",
+          "description_findings",
+          "front_loaded_action_score",
+          "generic_control_phrase_count",
+          "governed_line_count",
+          "high_confidence_control_scaffold",
+          "kind",
+          "line_count",
+          "name",
+          "projection_overhead_lines",
+          "review_reasons",
+          "review_state",
+          "split_candidate_score"
+        ],
+        "review_reason_values": [
+          "classification_block",
+          "ai_readability_hard_fail",
+          "ai_readability_compound_bullet",
+          "classification_tighten_body",
+          "ai_readability_tighten",
+          "ai_readability_review_as_complex",
+          "classification_review_density",
+          "professional_governed_lines_over_80",
+          "professional_projection_pushes_physical_lines_over_80",
+          "weak_front_loaded_action",
+          "control_boilerplate_risk",
+          "actionable_duplicate_content",
+          "description_authoring_advisory",
+          "split_candidate"
+        ],
+        "review_state_values": [
+          "BLOCK",
+          "TIGHTEN_BODY",
+          "REVIEW_READABILITY",
+          "REVIEW_CONTEXT",
+          "KEEP_WITH_ADVISORY",
+          "KEEP"
+        ]
+      },
+      "contract_version": "skill-content-detector-v4",
+      "source_manifest": [
+        {
+          "path": "scripts/audit-skill-content.py",
+          "sha256": "14b4793d96009a58ff4102506bd1cc9862dad4ce4edd0d10c4eaed80c28a49fe"
+        },
+        {
+          "path": "scripts/validation_utils.py",
+          "sha256": "27e3de0c41cec1185fb46cd601fad702acd20da337c80eba294ea08e1607add3"
+        }
+      ]
     },
     "finding_fields": [
       "family",

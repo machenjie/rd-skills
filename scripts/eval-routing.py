@@ -649,10 +649,11 @@ def evaluate_routes(
     }
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Evaluate hookless Skill routing.")
     parser.add_argument("--candidate-output-dir", type=Path)
-    args = parser.parse_args()
+    parser.add_argument("--release-projection", action="store_true")
+    args = parser.parse_args(argv)
     try:
         report = evaluate_routes()
     except ValidationProblem as exc:
@@ -681,7 +682,8 @@ def main() -> int:
         json.dumps(report, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    REPORT_MD.write_text(_render_markdown(report), encoding="utf-8")
+    if args.release_projection:
+        REPORT_MD.write_text(_render_markdown(report), encoding="utf-8")
     if errors:
         return fail_many("eval-routing", errors)
     print(f"eval-routing: {report['passed_count']} hookless routing case(s) passed.")

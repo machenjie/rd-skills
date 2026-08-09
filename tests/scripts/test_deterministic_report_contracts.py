@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import importlib.util
 import hashlib
 import io
@@ -34,7 +35,6 @@ TRACKED_JSON_REPORTS = (
     "reports/professional-routing-coverage.json",
     "reports/professional-agent-samples-report.json",
     "reports/professionalism-regression-report.json",
-    "reports/professionalism-release-readiness.json",
     "reports/installation-validation.json",
 )
 
@@ -1072,7 +1072,7 @@ class DeterministicReportContractTests(unittest.TestCase):
             "python3 scripts/validate-reference-content.py",
             pull_request_template,
         )
-        for relative in ("AGENTS.md", ".github/workflows/ci.yml"):
+        for relative in ("AGENTS.md",):
             text = (ROOT / relative).read_text(encoding="utf-8")
             self.assertIn(
                 "python3 scripts/eval-core-principles.py --gate authoring",
@@ -1084,17 +1084,142 @@ class DeterministicReportContractTests(unittest.TestCase):
                 "python3 scripts/validate-reference-content.py", text, relative
             )
 
-    def test_mandatory_quickstart_commands_match_agents_validation_and_ci(self) -> None:
+    def test_mandatory_quickstart_commands_match_agents_and_validation(self) -> None:
         commands = (
             "python3 scripts/quickstart.py --agent codex --scope user --dry-run",
             "python3 scripts/quickstart.py --agent claude --scope project --target /tmp/changeforge-quickstart-claude --dry-run",
             "python3 scripts/quickstart.py --agent copilot --scope project --target /tmp/changeforge-quickstart-copilot --dry-run",
             "python3 scripts/quickstart.py --agent openai-api --dry-run",
         )
-        for relative in ("AGENTS.md", "docs/VALIDATION.md", ".github/workflows/ci.yml"):
+        for relative in ("AGENTS.md", "docs/VALIDATION.md"):
             text = (ROOT / relative).read_text(encoding="utf-8")
             for command in commands:
                 self.assertEqual(1, text.count(command), (relative, command))
+
+    def test_formal_workflow_delegates_professionalism_to_core_once(self) -> None:
+        workflow = (ROOT / ".github/workflows/formal-release.yml").read_text(
+            encoding="utf-8"
+        )
+        release_validation = workflow.split(
+            "      - name: Core Principles formal release outcome gate\n", 1
+        )[1]
+        commands = [
+            line.strip().removeprefix("run: ")
+            for line in release_validation.splitlines()
+            if line.strip().startswith("run: python3 scripts/")
+            or line.strip().startswith("python3 scripts/")
+            or line.strip().startswith("python3 -m unittest")
+            or line.strip() == "run: git diff --exit-code"
+        ]
+        self.assertEqual(17, len(commands), commands)
+        self.assertEqual(
+            1,
+            commands.count(
+                "python3 scripts/eval-core-principles.py --gate formal-release"
+            ),
+        )
+        self.assertFalse(
+            any(
+                command.startswith(
+                    "python3 scripts/validate-professionalism-regression.py"
+                )
+                for command in commands
+            ),
+            commands,
+        )
+
+    def test_formal_portability_unittest_selectors_all_resolve_without_execution(self) -> None:
+        workflow = (ROOT / ".github/workflows/formal-release.yml").read_text(
+            encoding="utf-8"
+        )
+        portability = workflow.split("          python3 -m unittest\n", 1)[1].split(
+            "\n\n  validate-release:", 1
+        )[0]
+        selectors = [
+            token.strip()
+            for token in portability.split()
+            if token.strip().startswith("tests.")
+        ]
+        self.assertTrue(selectors)
+        for selector in selectors:
+            with self.subTest(selector=selector):
+                suite = unittest.defaultTestLoader.loadTestsFromName(selector)
+                failures: list[str] = []
+
+                def collect(candidate: unittest.TestSuite) -> None:
+                    for test in candidate:
+                        if isinstance(test, unittest.TestSuite):
+                            collect(test)
+                        elif test.__class__.__name__ == "_FailedTest":
+                            failures.append(str(test))
+
+                collect(suite)
+                self.assertEqual([], failures)
+                self.assertEqual(1, suite.countTestCases())
+
+    def test_full_suite_tests_consume_nine_core_producer_results(self) -> None:
+        expected = {
+            "tests/test_hookless_build_install.py": {
+                "build-recommended",
+                "build-full",
+                "build-dev",
+            },
+            "tests/test_hookless_architecture.py": {"validate-src-invariants"},
+            "tests/test_hookless_evaluations.py": {
+                "eval-routing",
+                "eval-agent-lightweight",
+                "eval-rendered-context",
+                "eval-context-control",
+                "eval-skill-professionalism",
+            },
+        }
+        forbidden_scripts = {
+            "scripts/build.py",
+            "scripts/validate-src-invariants.py",
+            "scripts/eval-routing.py",
+            "scripts/eval-agent-lightweight.py",
+            "scripts/eval-rendered-context-budget.py",
+            "scripts/eval-context-control-plane.py",
+            "scripts/eval-skill-professionalism.py",
+        }
+
+        for relative, expected_producers in expected.items():
+            tree = ast.parse((ROOT / relative).read_text(encoding="utf-8"))
+            consumed: set[str] = set()
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.Call):
+                    continue
+                function_name = (
+                    node.func.id
+                    if isinstance(node.func, ast.Name)
+                    else node.func.attr
+                    if isinstance(node.func, ast.Attribute)
+                    else None
+                )
+                if function_name == "assert_core_producer_outcomes_passed":
+                    consumed.update(
+                        argument.value
+                        for argument in node.args
+                        if isinstance(argument, ast.Constant)
+                        and isinstance(argument.value, str)
+                    )
+                if (
+                    isinstance(node.func, ast.Attribute)
+                    and isinstance(node.func.value, ast.Name)
+                    and node.func.value.id == "subprocess"
+                    and node.func.attr == "run"
+                ):
+                    rendered = ast.unparse(node)
+                    self.assertTrue(
+                        forbidden_scripts.isdisjoint(
+                            script
+                            for script in forbidden_scripts
+                            if script in rendered
+                        ),
+                        (relative, rendered),
+                    )
+            self.assertEqual(expected_producers, consumed, relative)
+        self.assertEqual(9, sum(len(producers) for producers in expected.values()))
 
     def test_ci_installs_project_from_isolated_source_copy(self) -> None:
         text = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
@@ -1143,8 +1268,8 @@ class DeterministicReportContractTests(unittest.TestCase):
             "python3 scripts/validate-professionalism-regression.py --strict "
             "--report-only"
         )
-        self.assertEqual(1, text.count(formal_professionalism_command))
-        self.assertEqual(1, gate_lines.count(formal_professionalism_command))
+        self.assertEqual(0, text.count(formal_professionalism_command))
+        self.assertNotIn(formal_professionalism_command, gate_lines)
         self.assertNotIn(formal_professionalism_command, diagnostic_lines)
         self.assertEqual(1, text.count(report_only_command))
         self.assertEqual(1, diagnostic_lines.count(report_only_command))
@@ -1809,7 +1934,7 @@ class DeterministicReportContractTests(unittest.TestCase):
         }
         expert_review = _incomplete_expert_review_fixture()
         locked_cost_fixture = json.loads(
-            (ROOT / "reports/professionalism-release-readiness.json").read_text(
+            (ROOT / "reports/professionalism-regression-report.json").read_text(
                 encoding="utf-8"
             )
         )["professional_review_cost_fixtures"]
@@ -1843,7 +1968,7 @@ class DeterministicReportContractTests(unittest.TestCase):
             )
             self.assertEqual(0, returncode)
             readiness = json.loads(
-                (Path(raw) / "professionalism-release-readiness.json").read_text(
+                (Path(raw) / "professionalism-regression-report.json").read_text(
                     encoding="utf-8"
                 )
             )
@@ -2171,7 +2296,7 @@ class DeterministicReportContractTests(unittest.TestCase):
     def test_release_requirement_changes_exit_only_and_preserves_report_payload(self) -> None:
         reports = self.regression._reports(ROOT / "reports")
         tracked = json.loads(
-            (ROOT / "reports/professionalism-release-readiness.json").read_text(
+            (ROOT / "reports/professionalism-regression-report.json").read_text(
                 encoding="utf-8"
             )
         )
@@ -2233,7 +2358,7 @@ class DeterministicReportContractTests(unittest.TestCase):
                 path.name: path.read_bytes() for path in sorted(directory.iterdir())
             }
             readiness = json.loads(
-                (directory / "professionalism-release-readiness.json").read_text(
+                (directory / "professionalism-regression-report.json").read_text(
                     encoding="utf-8"
                 )
             )
@@ -2253,7 +2378,7 @@ class DeterministicReportContractTests(unittest.TestCase):
 
     def test_d_stale_application_is_release_only_and_exactly_reported(self) -> None:
         tracked = json.loads(
-            (ROOT / "reports/professionalism-release-readiness.json").read_text(
+            (ROOT / "reports/professionalism-regression-report.json").read_text(
                 encoding="utf-8"
             )
         )
@@ -2333,7 +2458,7 @@ class DeterministicReportContractTests(unittest.TestCase):
                 path.name: path.read_bytes() for path in sorted(directory.iterdir())
             }
             readiness = json.loads(
-                (directory / "professionalism-release-readiness.json").read_text(
+                (directory / "professionalism-regression-report.json").read_text(
                     encoding="utf-8"
                 )
             )
@@ -2460,7 +2585,7 @@ class DeterministicReportContractTests(unittest.TestCase):
             for evidence, expected in (
                 ([], "requires checked-in evidence"),
                 (
-                    [_expert_evidence("reports/professionalism-release-readiness.json")],
+                    [_expert_evidence("reports/professionalism-regression-report.json")],
                     "generated artifact",
                 ),
             ):
@@ -2741,6 +2866,10 @@ class DeterministicReportContractTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             directory = Path(raw)
             self.regression._write(directory, result)
+            self.assertEqual(
+                ["professionalism-regression-report.json"],
+                sorted(path.name for path in directory.iterdir()),
+            )
             first = {
                 path.name: path.read_bytes() for path in sorted(directory.iterdir())
             }
@@ -2755,20 +2884,13 @@ class DeterministicReportContractTests(unittest.TestCase):
                     encoding="utf-8"
                 )
             )
-            readiness = json.loads(
-                (directory / "professionalism-release-readiness.json").read_text(
-                    encoding="utf-8"
-                )
-            )
             self.assertIs(type(result.schema_version), int)
             self.assertEqual(
                 self.regression.PROFESSIONALISM_REPORT_SCHEMA_VERSION,
                 result.schema_version,
             )
             self.assertIs(type(regression["schema_version"]), int)
-            self.assertIs(type(readiness["schema_version"]), int)
             self.assertEqual(result.schema_version, regression["schema_version"])
-            self.assertEqual(result.schema_version, readiness["schema_version"])
             self.assertEqual(
                 [
                     "schema_version",
@@ -2794,43 +2916,22 @@ class DeterministicReportContractTests(unittest.TestCase):
                 ],
                 list(regression),
             )
-            self.assertEqual(
-                [
-                    "schema_version",
-                    "authoring_gate",
-                    "release_gate",
-                    "baseline_comparison",
-                    "evidence_scope",
-                    "content_audit_summary",
-                    "ai_readability_summary",
-                    "reference_content_summary",
-                    "root_content_summary",
-                    "content_readiness",
-                    "coverage_gate_summary",
-                    "professional_review_cost_fixtures",
-                    "limitations",
-                    "release_claim",
-                    "blockers",
-                    "release_blockers",
-                    "advisories",
-                ],
-                list(readiness),
-            )
-            self.assertFalse(readiness["reference_content_summary"]["strict_ready"])
-            self.assertTrue(readiness["root_content_summary"]["strict_ready"])
-            self.assertEqual(9, readiness["content_readiness"]["schema_version"])
+            self.assertFalse(regression["reference_content_summary"]["strict_ready"])
+            self.assertTrue(regression["root_content_summary"]["strict_ready"])
+            self.assertEqual(9, regression["content_readiness"]["schema_version"])
             self.assertFalse(
-                readiness["content_readiness"]["aggregate"][
+                regression["content_readiness"]["aggregate"][
                     "readability_review_current"
                 ]
             )
             self.assertFalse(
-                readiness["content_readiness"]["aggregate"][
+                regression["content_readiness"]["aggregate"][
                     "professional_completeness_review_current"
                 ]
             )
+            self.regression._write(directory, result, release_projection=True)
             markdown = (
-                directory / "professionalism-release-readiness.md"
+                directory / "professionalism-regression-report.md"
             ).read_text(encoding="utf-8")
             self.assertIn("Reference strict gate: `false`", markdown)
             self.assertIn("Root strict gate: `true`", markdown)

@@ -8,7 +8,9 @@ import importlib.util
 import io
 import json
 import os
+import subprocess
 import sys
+import tarfile
 import tempfile
 import time
 import unittest
@@ -28,6 +30,8 @@ EVALUATOR = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = EVALUATOR
 SPEC.loader.exec_module(EVALUATOR)
 
+import impact_graph  # noqa: E402
+
 
 PROCESS_PASS = {
     "source": "process",
@@ -41,6 +45,45 @@ REPORT_SCHEMA = {
     "operator": "equals",
     "expected": 1,
 }
+
+
+def assert_core_producer_outcomes_passed(
+    root: Path,
+    *producer_ids: str,
+) -> None:
+    report_path = root / EVALUATOR.JSON_REPORT
+    if not report_path.is_file():
+        raise AssertionError(
+            f"Core saved report is missing: {EVALUATOR.JSON_REPORT}; "
+            "run the owning Core gate before consuming producer outcomes"
+        )
+    original = report_path.read_bytes()
+    try:
+        report = json.loads(original)
+    except json.JSONDecodeError as exc:
+        raise AssertionError(
+            f"Core saved report is invalid: {EVALUATOR.JSON_REPORT}: {exc}"
+        ) from exc
+    errors = EVALUATOR.validate_saved_report(root, report)
+    if original != report_path.read_bytes():
+        raise AssertionError("Core outcome consumer mutated the saved report")
+    if errors:
+        raise AssertionError(
+            "Core saved report contract/tree is invalid: " + "; ".join(errors)
+        )
+    producers = {
+        row.get("id"): row
+        for row in report.get("producers", [])
+        if isinstance(row, dict)
+    }
+    for producer_id in producer_ids:
+        producer = producers.get(producer_id)
+        if producer is None:
+            raise AssertionError(
+                f"Core saved report does not own producer outcome: {producer_id}"
+            )
+        if producer.get("status") != "pass":
+            raise AssertionError(f"Core producer outcome did not pass: {producer_id}")
 
 
 class CorePrinciplesOutcomeTests(unittest.TestCase):
@@ -130,6 +173,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         *,
         depends_on: list[str] | None = None,
         reports: list[str] | None = None,
+        release_reports: list[str] | None = None,
         authority_inputs: list[str] | None = None,
     ) -> dict:
         return {
@@ -137,6 +181,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             "argv": ["python3", script],
             "depends_on": depends_on or [],
             "reports": reports or [],
+            "release_reports": release_reports or [],
             "authority_inputs": (
                 ["fixture-authority"]
                 if authority_inputs is None
@@ -169,6 +214,50 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
                 cursor = cursor.setdefault(part, {})
             cursor[parts[-1]] = copy.deepcopy(expected)
         return payload
+
+    def test_core_outcome_consumer_is_read_only_and_fails_closed(self) -> None:
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        (root / "reports").mkdir()
+        helper = globals().get("assert_core_producer_outcomes_passed")
+        self.assertTrue(callable(helper), "narrow Core outcome helper is missing")
+
+        with self.assertRaisesRegex(AssertionError, "Core saved report is missing"):
+            helper(root, "producer-a")
+
+        report_path = root / EVALUATOR.JSON_REPORT
+        report_path.write_text(
+            json.dumps(
+                {
+                    "producers": [
+                        {
+                            "id": "producer-a",
+                            "status": "pass",
+                            "reports": [],
+                        }
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+        original = report_path.read_bytes()
+        with mock.patch.object(
+            EVALUATOR,
+            "validate_saved_report",
+            return_value=["input tree digest is stale"],
+        ):
+            with self.assertRaisesRegex(
+                AssertionError, "Core saved report contract/tree is invalid"
+            ):
+                helper(root, "producer-a")
+        self.assertEqual(original, report_path.read_bytes())
+
+        with mock.patch.object(
+            EVALUATOR, "validate_saved_report", return_value=[]
+        ):
+            helper(root, "producer-a")
+        self.assertEqual(original, report_path.read_bytes())
 
     def test_repository_professional_injection_is_surface_scoped(self) -> None:
         contract = json.loads(
@@ -368,6 +457,72 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             )
         )
 
+    def test_formal_professionalism_has_one_aggregate_release_outcome(self) -> None:
+        contract = json.loads(
+            (ROOT / "src/control-model/core-contracts.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        acceptance = contract["principle_acceptance_contract"]
+        principles = {row["id"]: row for row in contract["core_principles"]}
+        dimensions = {row["id"]: row for row in acceptance["dimensions"]}
+        outcomes = {row["id"]: row for row in acceptance["outcomes"]}
+
+        outcome_id = "professionalism-formal-release-ready"
+        self.assertEqual(
+            ["professional-review-cost-current", outcome_id],
+            principles["final-goal"]["required_outcomes"]["formal_release"],
+        )
+        self.assertTrue(
+            {
+                "root-lifecycle-current",
+                "readability-review-current",
+                "content-audit-formal-release-current",
+                "professional-completeness-review-current",
+                "professional-review-cost-current",
+                "root-release-current",
+                outcome_id,
+            }
+            <= {
+                required
+                for principle in principles.values()
+                for required in principle["required_outcomes"]["formal_release"]
+            }
+        )
+        self.assertIn(
+            "professionalism-formal-release-readiness",
+            dimensions["final-goal-verification-and-professionalism-cost"][
+                "capabilities"
+            ],
+        )
+        self.assertEqual(
+            {
+                "id": outcome_id,
+                "producer": "validate-professionalism-regression",
+                "dimensions": [
+                    "final-goal-verification-and-professionalism-cost"
+                ],
+                "capabilities": [
+                    "professionalism-formal-release-readiness"
+                ],
+                "predicates": [
+                    {
+                        "source": "process",
+                        "pointer": "/exit_code",
+                        "operator": "equals",
+                        "expected": 0,
+                    },
+                    {
+                        "source": "reports/professionalism-regression-report.json",
+                        "pointer": "/release_gate",
+                        "operator": "equals",
+                        "expected": "release-ready",
+                    },
+                ],
+            },
+            outcomes[outcome_id],
+        )
+
     def test_pending_root_lifecycle_blocks_formal_but_not_ready_authoring(
         self,
     ) -> None:
@@ -396,13 +551,11 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             return payload
 
         regression_source = "reports/professionalism-regression-report.json"
-        readiness_source = "reports/professionalism-release-readiness.json"
         audit_source = "reports/skill-content-audit.json"
         regression = passing_payload(professionalism, regression_source)
         regression["root_content_summary"][
             "semantic_lifecycle_snapshot_current"
         ] = False
-        readiness = passing_payload(professionalism, readiness_source)
         audit = passing_payload(lifecycle, audit_source)
         audit["root_content"]["semantic_advisories"]["lifecycle"][
             "snapshot_current"
@@ -420,8 +573,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             root,
             "professionalism",
             "from pathlib import Path\n"
-            f"Path({regression_source!r}).write_text({json.dumps(regression)!r})\n"
-            f"Path({readiness_source!r}).write_text({json.dumps(readiness)!r})\n",
+            f"Path({regression_source!r}).write_text({json.dumps(regression)!r})\n",
         )
         contract = self._contract(
             [
@@ -433,7 +585,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
                 self._producer(
                     "validate-professionalism-regression",
                     professionalism_script,
-                    reports=[regression_source, readiness_source],
+                    reports=[regression_source],
                 ),
             ],
             [
@@ -939,7 +1091,10 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             ],
         )
         self.assertEqual(
-            ["professional-review-cost-current"],
+            [
+                "professional-review-cost-current",
+                "professionalism-formal-release-ready",
+            ],
             principles["final-goal"]["required_outcomes"]["formal_release"],
         )
         outcomes = {
@@ -1402,7 +1557,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             ),
         )
 
-    def test_report_must_be_fresh_json_and_records_sha256(self) -> None:
+    def test_report_must_be_fresh_json_without_scalar_hashes(self) -> None:
         temporary, root = self._root()
         self.addCleanup(temporary.cleanup)
         stale_script = self._script(root, "stale", "raise SystemExit(0)\n")
@@ -1451,11 +1606,11 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         fresh = EVALUATOR.evaluate(root, contract)
         artifact = fresh["producers"][0]["reports"][0]
         self.assertEqual("pass", fresh["producers"][0]["status"])
-        self.assertIsNone(fresh["producers"][0]["stdout_sha256"])
-        self.assertIsNone(fresh["producers"][0]["stderr_sha256"])
+        self.assertNotIn("stdout_sha256", fresh["producers"][0])
+        self.assertNotIn("stderr_sha256", fresh["producers"][0])
         self.assertTrue(artifact["fresh"])
         self.assertTrue(artifact["json_object"])
-        self.assertEqual(hashlib.sha256(report_path.read_bytes()).hexdigest(), artifact["sha256"])
+        self.assertNotIn("sha256", artifact)
 
     def test_report_schema_missing_wrong_type_and_wrong_version_fail_closed(self) -> None:
         cases = (
@@ -1620,18 +1775,9 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         self.assertTrue(all(item["status"] == "pass" for item in report["outcomes"]))
         authority = report["authorities"][0]
         self.assertNotIn("status", authority)
+        self.assertNotIn("value_sha256", authority)
         self.assertEqual("once", authority["consumer_results"][0]["producer"])
         self.assertEqual("pass", authority["consumer_results"][0]["producer_status"])
-        self.assertEqual(
-            hashlib.sha256(
-                json.dumps(
-                    contract["authority_data"],
-                    sort_keys=True,
-                    separators=(",", ":"),
-                ).encode()
-            ).hexdigest(),
-            authority["value_sha256"],
-        )
 
     def test_authoring_pass_and_formal_release_blocked_is_partial(self) -> None:
         temporary, root = self._root()
@@ -1712,7 +1858,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         self.assertEqual("fail", report["authoring_principles_status"])
         self.assertEqual("fail", report["principles_status"])
 
-    def test_failure_report_contains_only_hashes_and_closed_reason_codes(self) -> None:
+    def test_failure_report_contains_only_closed_reason_codes(self) -> None:
         temporary, root = self._root()
         self.addCleanup(temporary.cleanup)
         script = self._script(
@@ -1727,13 +1873,11 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         report = EVALUATOR.evaluate(root, contract)
         producer = report["producers"][0]
         self.assertEqual(["process-exit-nonzero"], producer["failure_reason_codes"])
-        self.assertEqual(
-            hashlib.sha256(("x" * 5000 + "SECRET_END\n").encode()).hexdigest(),
-            producer["stdout_sha256"],
-        )
         serialized = json.dumps(report)
         self.assertNotIn("SECRET_END", serialized)
         self.assertNotIn("failure_summary", producer)
+        self.assertNotIn("stdout_sha256", producer)
+        self.assertNotIn("stderr_sha256", producer)
         self.assertNotIn("stdout", producer)
         self.assertNotIn("stderr", producer)
 
@@ -1848,16 +1992,15 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         )
         self.assertEqual(0, authoring_exit)
         authoring_json = (root / EVALUATOR.JSON_REPORT).read_bytes()
-        authoring_markdown = (root / EVALUATOR.MARKDOWN_REPORT).read_bytes()
+        self.assertFalse((root / EVALUATOR.MARKDOWN_REPORT).exists())
         formal_exit = EVALUATOR.main(
             ["--root", str(root), "--gate", "formal-release"]
         )
         self.assertEqual(1, formal_exit)
         self.assertTrue((root / EVALUATOR.JSON_REPORT).is_file())
         self.assertTrue((root / EVALUATOR.MARKDOWN_REPORT).is_file())
-        self.assertEqual(authoring_json, (root / EVALUATOR.JSON_REPORT).read_bytes())
-        self.assertEqual(
-            authoring_markdown, (root / EVALUATOR.MARKDOWN_REPORT).read_bytes()
+        self.assertNotEqual(
+            authoring_json, (root / EVALUATOR.JSON_REPORT).read_bytes()
         )
         report = json.loads((root / EVALUATOR.JSON_REPORT).read_text())
         self.assertEqual("partial", report["principles_status"])
@@ -2046,6 +2189,38 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             with self.assertRaises(SystemExit) as raised:
                 EVALUATOR._args(["--contract", "alternate.json"])
         self.assertEqual(2, raised.exception.code)
+
+    def test_success_evidence_omits_same_run_and_scalar_hashes(self) -> None:
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        script = self._script(
+            root,
+            "hash-free",
+            "from pathlib import Path\n"
+            "Path('reports/result.json').write_text('{\"schema_version\":1}\\n')\n",
+        )
+        outcome = {
+            "id": "hash-free-pass",
+            "producer": "hash-free",
+            "predicates": [PROCESS_PASS, REPORT_SCHEMA],
+        }
+        report = EVALUATOR.evaluate(
+            root,
+            self._contract(
+                [self._producer("hash-free", script, reports=["reports/result.json"])],
+                [outcome],
+            ),
+        )
+
+        producer = report["producers"][0]
+        self.assertNotIn("stdout_sha256", producer)
+        self.assertNotIn("stderr_sha256", producer)
+        self.assertNotIn("sha256", producer["reports"][0])
+        self.assertNotIn("value_sha256", report["authorities"][0])
+        self.assertNotIn(
+            "canonical_sha256",
+            report["outcomes"][0]["predicates"][1]["actual_metadata"],
+        )
 
 
 if __name__ == "__main__":

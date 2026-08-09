@@ -13,10 +13,12 @@ Contributors propose issues, pull requests, documentation, tests, examples, and 
 Routine fixes may be accepted after maintainer review and passing validation.
 
 Documentation-only wording changes can remain documentation-only in file scope.
-Every Skill-system change still runs the complete ordinary authoring gate.
-Changes to validation commands, quality levels, routing, operating-model
-semantics, benchmark interpretation, eval fixtures, or release evidence also
-require maintainer review because they change execution or evidence semantics.
+Every committed Skill-system change still runs Development Affected validation.
+The local Full Regression is required at the integration or release-candidate
+boundary. Changes to validation commands, quality levels, routing,
+operating-model semantics, benchmark interpretation, eval fixtures, or release
+evidence also require maintainer review because they change execution or
+evidence semantics.
 
 Changes require explicit maintainer agreement when they affect:
 
@@ -483,8 +485,8 @@ refresh current evidence.
 
 ### RDS-011 — Regenerate Semantic Evidence Last
 
-- **Status:** `resolved`; deterministic Root/Reference authoring and all four
-  selected static evidence surfaces are current. This status is not a formal
+- **Status:** `partially resolved`; deterministic Root/Reference authoring
+  passes, but formal evidence currentness remains pending. This is not a formal
   release claim.
 - **Sections:** authoritative final requirements §§1 and 16; post-content formal
   evidence, prior audit category: semantic-evidence freshness. This is not a
@@ -494,28 +496,64 @@ refresh current evidence.
   storage, or decision currentness fails. Authoring still requires deterministic
   Root structural strictness, completed semantic triage, zero unresolved
   candidates, and zero disposition errors.
-- **Authoritative owner / scope:** `evals/expert-panel/`, checked-in derived
-  reports, `scripts/audit-skill-content.py`, expert-panel tooling, and the
-  strict professionalism/release validators.
+- **Authoritative owner / scope:** `evals/expert-panel/`,
+  `config/professionalism-release-review.yaml`,
+  `scripts/audit-skill-content.py`, expert-panel tooling, and
+  `scripts/validate-professionalism-regression.py`. The producer's sole
+  machine-readable readiness authority is
+  `reports/professionalism-regression-report.json`; Core Principles owns the
+  complete ordered freshness run.
 - **Acceptance:** Current selectors and their required lineage bind to the final
   source tree, are tracked and byte-equal to `HEAD`, and report no stale,
   corrected, or unresolved result. A new round is not required when existing
   evidence remains current.
-- **Targeted validation:** the ordinary authoring gate followed by
-  `python3 scripts/eval-core-principles.py --gate formal-release` and
-  `python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review`.
-- **Current evidence:** Current static evidence selectors are r25 Readability,
-  r26 Semantic Disposition, r26 Root lifecycle, and r18 schema-3 Professional
-  Completeness for all 189 non-Control packages. Their selected configuration,
-  decisions, required ballots, and required schema-3 lineage are checked in.
-  Readability has no tracked tightening, unresolved detector false positive, or
-  rewrite requirement. Professional Completeness has zero corrections and zero
-  unresolved professional disagreements.
+- **Targeted validation:** the local Full Regression followed by
+  `python3 scripts/eval-core-principles.py --gate formal-release`. Core is the
+  unique complete formal orchestrator and requires the aggregate
+  `professionalism-formal-release-ready` outcome; a direct producer run is a
+  diagnostic, not a second formal gate.
+- **Selected evidence and current state:** For selector identity only, the
+  canonical projection is: Current static evidence selectors are r26
+  Readability, r26 Semantic Disposition, r26 Root lifecycle, and r19 schema-3
+  Professional Completeness for all 189 non-Control packages. “Current” in that
+  projection identifies the configured selector set; it does not assert that
+  each selected surface is current. Readability r26 and full-fresh Professional
+  Completeness r19 have complete decisions for their recorded inputs.
+  Readability r26 is historical evidence whose bound Skill detector is stale
+  against the current detector. It has `source_current=false`, status
+  `panel-majority-stale`, remains storage-pending, and is not accepted for formal
+  release. R19 is historical full-fresh evidence whose bound Professional
+  review contract is now stale against the current contract; it remains
+  storage-pending, is not accepted for formal release, and cannot authorize
+  carry across the contract change. The selected Semantic Disposition application
+  is `invalid` because its packet is stale against the current audit. The Root
+  lifecycle is `pending-changes`, with no current snapshot and no formal-release
+  readiness. The sole JSON authority therefore reports
+  `release_gate=release-not-ready`.
+- **Next owning stage:** After final content and audit stabilization, the
+  Semantic Disposition owner refreshes the stale decision/application and the
+  Root lifecycle owner records the classified formal snapshot. Formal Release
+  must create a new current schema-2 Readability review under the current Skill
+  detector and a new schema-3 full-fresh Professional Completeness round for all
+  189 current non-Control packages under the current review contract. R26 and
+  r19 remain immutable historical evidence; neither can replace its required
+  new review, and r19 cannot authorize carry. Current evidence must be tracked,
+  byte-equal to `HEAD`, and clean before the formal gates are rerun.
+- **Report projection and freshness:**
+  `scripts/validate-professionalism-regression.py` is the only producer of the
+  authoritative JSON. Core Principles requires that JSON to be refreshed by
+  its declared producer run. Formal-release orchestration additionally requests
+  `reports/professionalism-regression-report.md` as a release-only presentation
+  projection; Markdown is not a second readiness authority and Core authoring
+  does not refresh it. Productization validates the saved JSON's
+  closed semantics without rerunning the producer.
 - **Authoring/formal split:** These static selectors do not prove that the final
   formal gates or same-commit remote workflow passed. Stale or tampered Root,
   Semantic Disposition, Readability, or Professional Completeness evidence
   remains invalid and blocks formal release.
-- **Dependency:** RDS-001 through RDS-010 and no pending content rewrite.
+- **Dependency:** RDS-001 through RDS-010, final content stabilization, the
+  Semantic Disposition and Root lifecycle refresh stages, and expert-evidence
+  check-in.
 - **Proof limit:** Static qualification claims and panel artifacts do not prove
   reviewer identity, credentials, real-host startup, wall-clock performance,
   production accuracy, or installed user experience.

@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import re
 import sys
 from dataclasses import asdict, dataclass, field
@@ -20,11 +21,13 @@ from types import ModuleType
 from typing import Any
 
 from validation_utils import (
+    AFFECTED_CONTEXT_ENV,
     CORE_CONTRACTS,
     ValidationProblem,
     empty_markdown_headings,
     load_yaml_file,
     load_professional_coverage_policy,
+    parse_affected_professionalism_context,
     parse_frontmatter,
     professional_review_skill_ids,
     reference_paths,
@@ -37,6 +40,7 @@ DEFAULT_RELEASE_REVIEW_CONFIG = ROOT / "config/professionalism-release-review.ya
 ROUTING_EVALUATOR = ROOT / "scripts/eval-routing.py"
 BENCHMARK_EVALUATOR = ROOT / "scripts/eval-professional-benchmarks.py"
 PRESSURE_EVALUATOR = ROOT / "scripts/eval-pressure-behavior.py"
+EXPERT_PANEL_REVIEW = ROOT / "scripts/expert_panel_review.py"
 CAPABILITY_ROUTING_FIXTURES = (
     ROOT / "evals/routing/capability-coverage-cases.yaml"
 )
@@ -117,11 +121,15 @@ def main(argv: list[str] | None = None) -> int:
     args = _args(sys.argv[1:] if argv is None else argv)
     try:
         entries = _load_entries()
+        execution_scope, selected_entries = _execution_scope(
+            entries,
+            release_review_config=args.release_review_config,
+        )
     except ValidationProblem as exc:
         print(f"eval-skill-professionalism: ERROR: {exc}", file=sys.stderr)
         return 1
 
-    results = [_evaluate(kind, entry) for kind, entry in entries]
+    results = [_evaluate(kind, entry) for kind, entry in selected_entries]
     professional_entries = [entry for kind, entry in entries if kind == "professional"]
     try:
         review_skill_ids = professional_review_skill_ids(
@@ -132,10 +140,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"eval-skill-professionalism: ERROR: {exc}", file=sys.stderr)
         return 1
     try:
-        coverage = build_coverage_matrix(
-            args.release_review_config,
-            results=results,
+        coverage = (
+            build_coverage_matrix(
+                args.release_review_config,
+                results=results,
+            )
+            if execution_scope["mode"] == "full"
+            else _affected_coverage_matrix(results, execution_scope)
         )
+        coverage["execution_scope"] = execution_scope
     except ValidationProblem as exc:
         print(f"eval-skill-professionalism: ERROR: {exc}", file=sys.stderr)
         return 1
@@ -145,6 +158,7 @@ def main(argv: list[str] | None = None) -> int:
         "schema_version": 2,
         "architecture": "hookless-control-plane",
         "evaluation_kind": "static-authoring-structure",
+        "execution_scope": execution_scope,
         "evidence_limitations": [
             "No model or agent was executed.",
             "Scores measure source and registry completeness, not engineering accuracy.",
@@ -169,12 +183,24 @@ def main(argv: list[str] | None = None) -> int:
 
     reports_dir = args.reports_dir or REPORTS
     reports_dir.mkdir(parents=True, exist_ok=True)
+    release_projection = args.release_projection or args.format in {
+        "all",
+        "markdown",
+    }
     if args.coverage_matrix:
-        _write_coverage(reports_dir, coverage)
+        _write_coverage(
+            reports_dir, coverage, release_projection=release_projection
+        )
     else:
-        _write_primary(reports_dir, payload)
-        _write_depth(reports_dir, payload)
-        _write_coverage(reports_dir, coverage)
+        _write_primary(
+            reports_dir, payload, release_projection=release_projection
+        )
+        _write_depth(
+            reports_dir, payload, release_projection=release_projection
+        )
+        _write_coverage(
+            reports_dir, coverage, release_projection=release_projection
+        )
 
     print(
         "eval-skill-professionalism: "
@@ -187,6 +213,275 @@ def main(argv: list[str] | None = None) -> int:
     for error in coverage["errors"]:
         print(f"eval-skill-professionalism: ERROR: {error}", file=sys.stderr)
     return 1 if errors or coverage["errors"] else 0
+
+
+def _execution_scope(
+    entries: list[tuple[str, dict[str, Any]]],
+    *,
+    release_review_config: Path,
+) -> tuple[dict[str, Any], list[tuple[str, dict[str, Any]]]]:
+    non_control = {
+        str(entry.get("name", "")): (kind, entry)
+        for kind, entry in entries
+        if kind != "control"
+    }
+    context = parse_affected_professionalism_context(
+        os.environ.get(AFFECTED_CONTEXT_ENV),
+        known_package_ids=non_control,
+    )
+    if context is None:
+        return _full_execution_scope(entries), entries
+    professionalism = context.get("professionalism")
+    assert isinstance(professionalism, dict)
+    scope = professionalism.get("scope")
+    direct = professionalism.get("direct_package_ids")
+    reason_chains = professionalism.get("reason_chains")
+    assert isinstance(direct, list)
+    assert isinstance(reason_chains, list)
+    if scope == "none":
+        raise ValidationProblem(
+            "affected professionalism evaluator cannot run with scope none"
+        )
+    if scope == "full":
+        fresh = sorted(non_control)
+        carried: list[str] = []
+        unevaluated: list[str] = []
+        baseline_stale_no_carry = False
+        baseline = None
+        reasons = {skill_id: ["impact-scope-full"] for skill_id in fresh}
+    else:
+        plan = _affected_review_plan(
+            release_review_config,
+            direct_package_ids=direct,
+        )
+        fresh = plan.get("fresh_target_ids")
+        carried = plan.get("carry_target_ids")
+        unevaluated = plan.get("unevaluated_target_ids", [])
+        baseline_stale_no_carry = plan.get("baseline_stale_no_carry", False)
+        reasons = plan.get("reasons_by_target")
+        baseline = plan.get("baseline_decision")
+        if (
+            not isinstance(fresh, list)
+            or fresh != sorted(set(fresh))
+            or not isinstance(carried, list)
+            or carried != sorted(set(carried))
+            or not isinstance(unevaluated, list)
+            or unevaluated != sorted(set(unevaluated))
+            or not isinstance(baseline_stale_no_carry, bool)
+            or any(
+                left & right
+                for left, right in (
+                    (set(fresh), set(carried)),
+                    (set(fresh), set(unevaluated)),
+                    (set(carried), set(unevaluated)),
+                )
+            )
+            or set(fresh) | set(carried) | set(unevaluated) != set(non_control)
+            or not isinstance(reasons, dict)
+            or set(reasons) != set(non_control)
+        ):
+            raise ValidationProblem("affected plan does not partition all packages")
+        if baseline_stale_no_carry:
+            if carried:
+                raise ValidationProblem(
+                    "stale affected baseline cannot authorize carried packages"
+                )
+        elif unevaluated:
+            raise ValidationProblem(
+                "validated affected carry plan cannot leave packages unevaluated"
+            )
+        if not set(direct).issubset(set(fresh)):
+            raise ValidationProblem(
+                "affected direct packages are not fresh in the validated carry plan"
+            )
+    selected = [non_control[skill_id] for skill_id in fresh]
+    return (
+        {
+            "mode": "affected",
+            "direct_package_ids": direct,
+            "fresh_package_ids": fresh,
+            "carried_package_ids": carried,
+            "unevaluated_package_ids": unevaluated,
+            "baseline_stale_no_carry": baseline_stale_no_carry,
+            "baseline_decision": baseline,
+            "reasons_by_package": reasons,
+            "reason_chains": reason_chains,
+            "control_skill_checked": False,
+        },
+        selected,
+    )
+
+
+def _full_execution_scope(
+    entries: list[tuple[str, dict[str, Any]]],
+) -> dict[str, Any]:
+    package_ids = sorted(
+        str(entry.get("name", ""))
+        for kind, entry in entries
+        if kind != "control"
+    )
+    return {
+        "mode": "full",
+        "direct_package_ids": [],
+        "fresh_package_ids": package_ids,
+        "carried_package_ids": [],
+        "baseline_decision": None,
+        "reasons_by_package": {
+            skill_id: ["full-evaluation"] for skill_id in package_ids
+        },
+        "reason_chains": [],
+        "control_skill_checked": True,
+    }
+
+
+def _affected_review_plan(
+    release_review_config: Path,
+    *,
+    direct_package_ids: list[str],
+) -> dict[str, Any]:
+    config = load_yaml_file(release_review_config)
+    if not isinstance(config, dict):
+        raise ValidationProblem("release review config must be a mapping")
+    attestation = config.get("professional_completeness_review_attestation")
+    panel_record = (
+        attestation.get("panel_record") if isinstance(attestation, dict) else None
+    )
+    relative = panel_record.get("path") if isinstance(panel_record, dict) else None
+    reviewed_at = config.get("reviewed_at")
+    if (
+        not isinstance(relative, str)
+        or not relative
+        or not isinstance(reviewed_at, str)
+        or not reviewed_at
+    ):
+        raise ValidationProblem(
+            "release review config lacks the selected Professional decision"
+        )
+    candidate = Path(relative)
+    if candidate.is_absolute() or ".." in candidate.parts or candidate.as_posix() != relative:
+        raise ValidationProblem("selected Professional decision path is not canonical")
+    module = _load_evaluator(EXPERT_PANEL_REVIEW, "affected_professional_expert_panel")
+    try:
+        packet = module.prepare_professional_completeness_packet_v3(
+            review_id="affected-professionalism",
+            created_on=reviewed_at,
+            baseline_decision_path=ROOT / candidate,
+            root=ROOT,
+            validation_root=ROOT,
+        )
+    except (OSError, ValueError) as exc:
+        raise ValidationProblem(f"affected Professional baseline is invalid: {exc}") from exc
+    plan = packet.get("review_plan")
+    if not isinstance(plan, dict):
+        raise ValidationProblem("affected Professional carry plan is missing")
+    baseline = plan.get("baseline")
+    baseline_decision = (
+        baseline.get("decision", {}).get("path")
+        if isinstance(baseline, dict)
+        and isinstance(baseline.get("decision"), dict)
+        else None
+    )
+    fresh_target_ids = [
+        row["skill_id"] for row in plan.get("fresh_targets", [])
+    ]
+    carry_target_ids = [
+        row["skill_id"] for row in plan.get("carried_targets", [])
+    ]
+    reasons_by_target = {
+        row["skill_id"]: list(row["reason_codes"])
+        for row in plan.get("fresh_targets", [])
+    } | {
+        row["skill_id"]: [] for row in plan.get("carried_targets", [])
+    }
+    stale_contract_only = (
+        bool(fresh_target_ids)
+        and not carry_target_ids
+        and set(reasons_by_target) == set(fresh_target_ids)
+        and all(
+            reasons_by_target[skill_id] == ["review-contract-changed"]
+            for skill_id in fresh_target_ids
+        )
+    )
+    if stale_contract_only:
+        try:
+            targets = module._professional_v3_base_targets(
+                packet.get("professional_targets")
+            )
+            bindings = module.professional_carry.professional_review_bindings(
+                targets
+            )
+        except (AttributeError, TypeError, ValueError) as exc:
+            raise ValidationProblem(
+                f"affected Professional bindings are invalid: {exc}"
+            ) from exc
+        unknown = sorted(set(direct_package_ids) - set(bindings))
+        if unknown:
+            raise ValidationProblem(
+                f"affected Professional direct packages are unknown: {unknown}"
+            )
+        direct_set = set(direct_package_ids)
+        dependent_ids = {
+            skill_id
+            for skill_id, binding in bindings.items()
+            if direct_set
+            & {
+                row["skill_id"]
+                for row in binding["required_candidate_material_bindings"]
+            }
+        }
+        selected = sorted(direct_set | dependent_ids)
+        reasons_by_target = {skill_id: [] for skill_id in bindings}
+        for skill_id in selected:
+            reasons_by_target[skill_id] = [
+                "baseline-stale-no-carry",
+                (
+                    "impact-direct-package"
+                    if skill_id in direct_set
+                    else "required-candidate-material-changed"
+                ),
+            ]
+        return {
+            "baseline_decision": baseline_decision,
+            "fresh_target_ids": selected,
+            "carry_target_ids": [],
+            "unevaluated_target_ids": sorted(set(bindings) - set(selected)),
+            "baseline_stale_no_carry": True,
+            "reasons_by_target": reasons_by_target,
+        }
+    return {
+        "baseline_decision": baseline_decision,
+        "fresh_target_ids": fresh_target_ids,
+        "carry_target_ids": carry_target_ids,
+        "unevaluated_target_ids": [],
+        "baseline_stale_no_carry": False,
+        "reasons_by_target": reasons_by_target,
+    }
+
+
+def _affected_coverage_matrix(
+    results: list[SkillResult], execution_scope: dict[str, Any]
+) -> dict[str, Any]:
+    errors = [f"{row.path}: {message}" for row in results for message in row.errors]
+    return {
+        "schema_version": 3,
+        "architecture": "hookless-control-plane",
+        "evaluation_kind": "affected-static-authoring-evidence",
+        "execution_scope": execution_scope,
+        "evidence_limitations": [
+            "Affected coverage reuses unchanged full evidence and does not rerun routing, benchmark, or pressure fixtures.",
+            "This partial JSON cannot satisfy full regression or release validation.",
+        ],
+        "state_definitions": {},
+        "coverage_policy": None,
+        "errors": errors,
+        "gate_summary": {
+            "required_skill_count": 0,
+            "pass_count": 0,
+            "fail_count": 0,
+            "not_required_count": len(results),
+        },
+        "rows": [],
+    }
 
 
 def _args(argv: list[str]) -> argparse.Namespace:
@@ -203,7 +498,8 @@ def _args(argv: list[str]) -> argparse.Namespace:
         help="write only the Layer 1/2/3 coverage matrix reports",
     )
     # Kept for release scripts that previously selected report formats.
-    parser.add_argument("--format", choices=("all", "markdown", "json"), default="all")
+    parser.add_argument("--format", choices=("all", "markdown", "json"), default="json")
+    parser.add_argument("--release-projection", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -510,6 +806,9 @@ def build_coverage_matrix(
         "schema_version": 3,
         "architecture": "hookless-control-plane",
         "evaluation_kind": "deterministic-coverage-evidence",
+        "execution_scope": _full_execution_scope(
+            [(row.kind, {"name": row.name}) for row in results]
+        ),
         "evidence_limitations": [
             "Registered means Registry presence only; authoring_status reports static source quality separately.",
             "Route coverage uses deterministic fixtures and does not prove live router precision or recall.",
@@ -556,10 +855,17 @@ def _load_evaluator(path: Path, module_name: str) -> ModuleType:
     return module
 
 
-def _write_primary(directory: Path, payload: dict[str, Any]) -> None:
+def _write_primary(
+    directory: Path,
+    payload: dict[str, Any],
+    *,
+    release_projection: bool = False,
+) -> None:
     (directory / "skill-professionalism-eval.json").write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
+    if not release_projection:
+        return
     lines = [
         "# Hookless Skill Professionalism Evaluation",
         "",
@@ -584,10 +890,16 @@ def _write_primary(directory: Path, payload: dict[str, Any]) -> None:
     (directory / "skill-professionalism-eval.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _write_depth(directory: Path, payload: dict[str, Any]) -> None:
+def _write_depth(
+    directory: Path,
+    payload: dict[str, Any],
+    *,
+    release_projection: bool = False,
+) -> None:
     depth = {
         "schema_version": 2,
         "evaluation_kind": "static-authoring-depth",
+        "execution_scope": payload["execution_scope"],
         "score_semantics": "section, registry, reference, and root-concision completeness; not model performance",
         "errors": payload["errors"],
         "results": [
@@ -607,6 +919,8 @@ def _write_depth(directory: Path, payload: dict[str, Any]) -> None:
     (directory / "skill-professionalism-depth.json").write_text(
         json.dumps(depth, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
+    if not release_projection:
+        return
     lines = [
         "# Hookless Skill Authoring Depth",
         "",
@@ -623,10 +937,17 @@ def _write_depth(directory: Path, payload: dict[str, Any]) -> None:
     (directory / "skill-professionalism-depth.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _write_coverage(directory: Path, coverage: dict[str, Any]) -> None:
+def _write_coverage(
+    directory: Path,
+    coverage: dict[str, Any],
+    *,
+    release_projection: bool = False,
+) -> None:
     (directory / "professional-coverage-matrix.json").write_text(
         json.dumps(coverage, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
+    if not release_projection:
+        return
     lines = [
         "# Hookless Professional Coverage Matrix",
         "",

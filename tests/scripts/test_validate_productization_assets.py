@@ -797,7 +797,7 @@ class StaticProductizationReportTests(unittest.TestCase):
     def _current_professionalism_artifacts(self) -> dict[str, bytes]:
         return {
             relative: (ROOT / relative).read_bytes()
-            for relative in self.module.PROFESSIONALISM_CANONICAL_ARTIFACTS
+            for relative in self.module.CONTENT_READINESS_REPORTS
         }
 
     def _write_current_professionalism_artifacts(self, root: Path) -> None:
@@ -816,7 +816,7 @@ class StaticProductizationReportTests(unittest.TestCase):
                 self.module.STATIC_REPORT_CONTRACTS,
             )
             self.assertEqual(
-                [], self.module._static_report_errors(root, enforce_fresh=False)
+                [], self.module._static_report_errors(root)
             )
 
             path = root / "reports/hookless-control-plane-eval.json"
@@ -825,7 +825,7 @@ class StaticProductizationReportTests(unittest.TestCase):
             report["limitations"] = []
             path.write_text(json.dumps(report), encoding="utf-8")
 
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(any("evidence_scope" in error for error in errors), errors)
             self.assertTrue(any("non-empty limitations" in error for error in errors), errors)
 
@@ -842,7 +842,7 @@ class StaticProductizationReportTests(unittest.TestCase):
                 report.pop("limitations")
                 path.write_text(json.dumps(report), encoding="utf-8")
 
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(any("routing-eval.json" in error for error in errors), errors)
             self.assertTrue(
                 any("installation-validation.json" in error for error in errors), errors
@@ -852,11 +852,11 @@ class StaticProductizationReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._write_reports(root)
-            path = root / "reports/professionalism-release-readiness.json"
+            path = root / "reports/professionalism-regression-report.json"
             report = json.loads(path.read_text(encoding="utf-8"))
             report.pop("root_content_summary")
             path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(
                 any("must contain root_content_summary" in error for error in errors),
                 errors,
@@ -866,12 +866,12 @@ class StaticProductizationReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._write_reports(root)
-            path = root / "reports/professionalism-release-readiness.json"
+            path = root / "reports/professionalism-regression-report.json"
             report = json.loads(path.read_text(encoding="utf-8"))
             report["unexpected"] = True
             path.write_text(json.dumps(report), encoding="utf-8")
 
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
 
             self.assertTrue(
                 any("closed professionalism report envelope" in error for error in errors),
@@ -882,14 +882,14 @@ class StaticProductizationReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._write_reports(root)
-            path = root / "reports/professionalism-release-readiness.json"
+            path = root / "reports/professionalism-regression-report.json"
             report = json.loads(path.read_text(encoding="utf-8"))
             report["content_audit_summary"]["review_reasons"].pop(
                 "weak_front_loaded_action"
             )
             path.write_text(json.dumps(report), encoding="utf-8")
 
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
 
             self.assertTrue(
                 any("review_reasons must be the complete closed" in error for error in errors),
@@ -900,11 +900,11 @@ class StaticProductizationReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._write_reports(root)
-            path = root / "reports/professionalism-release-readiness.json"
+            path = root / "reports/professionalism-regression-report.json"
             report = json.loads(path.read_text(encoding="utf-8"))
             report["root_content_summary"]["semantic_triage_complete"] = "true"
             path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(any("must be a boolean" in error for error in errors), errors)
 
             self._write_reports(root)
@@ -913,7 +913,7 @@ class StaticProductizationReportTests(unittest.TestCase):
             report["content_readiness"]["root"]["structural_strict_ready"] = False
             report["content_readiness"]["aggregate"]["structural_strict_ready"] = False
             path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(
                 any("cannot pass while Root structural_strict_ready=false" in error for error in errors),
                 errors,
@@ -924,11 +924,11 @@ class StaticProductizationReportTests(unittest.TestCase):
             root = Path(raw)
             self._write_reports(root)
             self.assertEqual(
-                [], self.module._static_report_errors(root, enforce_fresh=False)
+                [], self.module._static_report_errors(root)
             )
             readiness = json.loads(
                 (
-                    root / "reports/professionalism-release-readiness.json"
+                    root / "reports/professionalism-regression-report.json"
                 ).read_text(encoding="utf-8")
             )
             self.assertEqual("current-contract-pass", readiness["authoring_gate"])
@@ -938,18 +938,9 @@ class StaticProductizationReportTests(unittest.TestCase):
         self,
     ) -> None:
         reports = self._read_professionalism_reports(ROOT)
-        expected_release_blocker = {
-            "category": "root-disposition-lifecycle-release-record-required",
-            "target": (
-                "config/skill-content-exceptions.yaml"
-                "#root_semantic_dispositions.lifecycle"
-            ),
-            "message": (
-                "formal release requires a recorded, current, classified Root "
-                "disposition release snapshot; status=pending-changes; unclassified=0"
-            ),
-            "severity": "error",
-        }
+        self.assertEqual(
+            {"reports/professionalism-regression-report.json"}, set(reports)
+        )
         for report in reports.values():
             completeness = report["content_readiness"]["expert"][
                 "professional_completeness"
@@ -957,25 +948,7 @@ class StaticProductizationReportTests(unittest.TestCase):
             self.assertEqual("current-contract-pass", report["authoring_gate"])
             self.assertEqual("release-not-ready", report["release_gate"])
             self.assertEqual([], report["blockers"])
-            self.assertEqual(
-                [expected_release_blocker],
-                report["release_blockers"],
-            )
-            root_summary = report["root_content_summary"]
-            self.assertEqual(
-                "pending-changes",
-                root_summary["semantic_lifecycle_status"],
-            )
-            self.assertEqual(
-                0,
-                root_summary["semantic_lifecycle_comparison"][
-                    "unclassified_count"
-                ],
-            )
-            self.assertEqual(
-                "pass",
-                report["professional_review_cost_fixtures"]["status"],
-            )
+            self.assertTrue(report["release_blockers"])
             applied_target_count = completeness["applied_target_count"]
             required_target_count = completeness["required_target_count"]
             qualification = completeness["qualification_summary"]
@@ -1006,8 +979,15 @@ class StaticProductizationReportTests(unittest.TestCase):
             self.assertLessEqual(applied_target_count, required_target_count)
             if completeness["source_current"]:
                 self.assertEqual(required_target_count, applied_target_count)
+                self.assertEqual(
+                    completeness["source_fingerprints"],
+                    completeness["current_source_fingerprints"],
+                )
             else:
-                self.assertLess(applied_target_count, required_target_count)
+                self.assertNotEqual(
+                    completeness["source_fingerprints"],
+                    completeness["current_source_fingerprints"],
+                )
             self.assertEqual(
                 applied_target_count,
                 qualification["covered_target_count"],
@@ -1035,41 +1015,28 @@ class StaticProductizationReportTests(unittest.TestCase):
                 ]["fresh_target_count"]["max"],
             )
 
-        canonical = self._current_professionalism_artifacts()
-        with mock.patch.object(
-            self.module,
-            "_canonical_professionalism_artifacts",
-            return_value=canonical,
-        ):
-            self.assertEqual([], self.module._static_report_errors(ROOT))
+        self.assertEqual([], self.module._static_report_errors(ROOT))
 
-    def test_nested_formal_tampers_fail_at_the_canonical_artifact_boundary(
+    def test_professional_report_semantic_envelope_rejects_tampers(
         self,
     ) -> None:
         mutations = {
-            "nested-shape": lambda axis: axis["qualification_summary"].__setitem__(
-                "unexpected", 1
+            "unexpected-field": lambda axis: axis.__setitem__("unexpected", 1),
+            "wrong-scope": lambda axis: axis.__setitem__("scope", "readability"),
+            "wrong-kind": lambda axis: axis.__setitem__("panel_kind", "readability"),
+            "non-boolean-currentness": lambda axis: axis.__setitem__(
+                "source_current", "true"
             ),
-            "nested-sha": lambda axis: axis["professional_dispositions"][0].__setitem__(
-                "package_fingerprint", "0" * 64
+            "invalid-status": lambda axis: axis.__setitem__(
+                "attestation_status", "current"
             ),
-            "provenance-partition": lambda axis: axis[
-                "professional_dispositions"
-            ][0]["provenance"].__setitem__("mode", "fresh"),
-            "disposition-evidence-sum": lambda axis: axis[
-                "professional_dispositions"
-            ][0]["evidence_metrics"].__setitem__("criterion_result_count", 31),
-            "effective-domain-votes": lambda axis: axis[
-                "qualification_summary"
-            ].__setitem__("effective_domain_vote_count", 325),
-            "effective-criteria": lambda axis: axis["evidence_summary"].__setitem__(
-                "criterion_result_count", 4861
+            "invalid-schema-version": lambda axis: axis.__setitem__(
+                "attestation_schema_version", "5"
             ),
-            "review-cost-ratio": lambda axis: axis["review_cost"].__setitem__(
-                "input_ratio_ppm", 1011968
+            "contradictory-formal-acceptance": lambda axis: axis.__setitem__(
+                "accepted_for_formal", True
             ),
         }
-        canonical = self._current_professionalism_artifacts()
         for label, mutate in mutations.items():
             with self.subTest(label=label), tempfile.TemporaryDirectory() as raw:
                 root = Path(raw)
@@ -1080,13 +1047,6 @@ class StaticProductizationReportTests(unittest.TestCase):
                     completeness = report["content_readiness"]["expert"][
                         "professional_completeness"
                     ]
-                    if label == "provenance-partition":
-                        self.assertEqual(
-                            "carried-forward",
-                            completeness["professional_dispositions"][0][
-                                "provenance"
-                            ]["mode"],
-                        )
                     before = (
                         json.dumps(report, indent=2, ensure_ascii=False) + "\n"
                     ).encode("utf-8")
@@ -1096,22 +1056,10 @@ class StaticProductizationReportTests(unittest.TestCase):
                     ).encode("utf-8")
                     self.assertNotEqual(before, after)
                     path.write_bytes(after)
-                with mock.patch.object(
-                    self.module,
-                    "_canonical_professionalism_artifacts",
-                    return_value=canonical,
-                ):
-                    errors = self.module._static_report_errors(root)
-                self.assertTrue(
-                    any(
-                        "differs from fresh canonical producer bytes" in error
-                        for error in errors
-                    ),
-                    errors,
-                )
+                errors = self.module._static_report_errors(root)
+                self.assertTrue(errors)
 
     def test_current_cost_status_cannot_be_rewritten_as_non_current(self) -> None:
-        canonical = self._current_professionalism_artifacts()
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._write_current_professionalism_artifacts(root)
@@ -1120,20 +1068,15 @@ class StaticProductizationReportTests(unittest.TestCase):
                 report = json.loads(path.read_text(encoding="utf-8"))
                 report["professional_review_cost_fixtures"][
                     "status"
-                ] = "formal-non-current"
+                ] = "invalid"
                 path.write_text(
                     json.dumps(report, indent=2, ensure_ascii=False) + "\n",
                     encoding="utf-8",
                 )
-            with mock.patch.object(
-                self.module,
-                "_canonical_professionalism_artifacts",
-                return_value=canonical,
-            ):
-                errors = self.module._static_report_errors(root)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(
                 any(
-                    "differs from fresh canonical producer bytes" in error
+                    "professional_review_cost_fixtures.status" in error
                     for error in errors
                 ),
                 errors,
@@ -1177,7 +1120,7 @@ class StaticProductizationReportTests(unittest.TestCase):
                     json.dumps(report, indent=2, ensure_ascii=False) + "\n",
                     encoding="utf-8",
                 )
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(
                 any("cannot be release-ready with release blockers" in error for error in errors),
                 errors,
@@ -1206,7 +1149,7 @@ class StaticProductizationReportTests(unittest.TestCase):
                     json.dumps(report, indent=2, ensure_ascii=False) + "\n",
                     encoding="utf-8",
                 )
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(
                 any(
                     "release_gate does not match authoring, readability review, "
@@ -1221,13 +1164,13 @@ class StaticProductizationReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._write_reports(root)
-            path = root / "reports/professionalism-release-readiness.json"
+            path = root / "reports/professionalism-regression-report.json"
             report = json.loads(path.read_text(encoding="utf-8"))
             report["root_content_summary"]["semantic_lifecycle_comparison"][
                 "added_count"
             ] = 0
             path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(
                 any("bootstrap lifecycle must preserve null deltas" in item for item in errors),
                 errors,
@@ -1237,7 +1180,7 @@ class StaticProductizationReportTests(unittest.TestCase):
             report = json.loads(path.read_text(encoding="utf-8"))
             report["content_readiness"]["expert"].pop("readability")
             path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(
                 any("content_readiness.expert fields" in error for error in errors),
                 errors,
@@ -1247,13 +1190,13 @@ class StaticProductizationReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._write_reports(root)
-            path = root / "reports/professionalism-release-readiness.json"
+            path = root / "reports/professionalism-regression-report.json"
             report = json.loads(path.read_text(encoding="utf-8"))
             report["root_content_summary"].pop(
                 "semantic_lifecycle_bootstrap_refresh_chain_valid"
             )
             path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(
                 any("bootstrap_refresh_chain_valid must be a boolean" in item for item in errors),
                 errors,
@@ -1265,7 +1208,7 @@ class StaticProductizationReportTests(unittest.TestCase):
                 "semantic_lifecycle_bootstrap_refresh_count"
             ] = 1
             path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(
                 any("latest delta must match its closed schema" in item for item in errors),
                 errors,
@@ -1275,13 +1218,13 @@ class StaticProductizationReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._write_reports(root)
-            release = root / "reports/professionalism-release-readiness.json"
+            release = root / "reports/professionalism-regression-report.json"
             report = json.loads(release.read_text(encoding="utf-8"))
             report["release_gate"] = "release-ready"
             report["release_blockers"] = []
             release.write_text(json.dumps(report), encoding="utf-8")
 
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
 
             self.assertTrue(
                 any(
@@ -1301,14 +1244,14 @@ class StaticProductizationReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._write_reports(root)
-            path = root / "reports/professionalism-release-readiness.json"
+            path = root / "reports/professionalism-regression-report.json"
             report = json.loads(path.read_text(encoding="utf-8"))
             report["content_readiness"]["expert"]["readability"][
                 "attestation_schema_version"
             ] = None
             path.write_text(json.dumps(report), encoding="utf-8")
 
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
 
             self.assertTrue(
                 any("attestation_schema_version" in error for error in errors),
@@ -1356,7 +1299,7 @@ class StaticProductizationReportTests(unittest.TestCase):
                 path.write_text(json.dumps(report), encoding="utf-8")
 
             self.assertEqual(
-                [], self.module._static_report_errors(root, enforce_fresh=False)
+                [], self.module._static_report_errors(root)
             )
 
     def test_schema_one_readability_remains_auditable_with_legacy_fingerprints(self) -> None:
@@ -1774,7 +1717,7 @@ class StaticProductizationReportTests(unittest.TestCase):
             "src/control-model/core-contracts.json",
             "final_goal_contract.professional_review_cost_fixtures",
             "reports/professionalism-regression-report.json",
-            "reports/professionalism-release-readiness.json",
+            "reports/professionalism-regression-report.json",
         ):
             with self.subTest(authority=authority):
                 self.assertIn(authority, cost_section)
@@ -2021,25 +1964,20 @@ case is `9` fresh
         report["release_gate"] = "release-ready"
         self.assertEqual([], self.module._release_gate_errors("fixture.json", report))
 
-    def test_professionalism_reports_must_match_each_other_completely(self) -> None:
+    def test_professional_report_internal_fingerprints_must_match(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._write_reports(root)
-            release = root / "reports/professionalism-release-readiness.json"
-            report = json.loads(release.read_text(encoding="utf-8"))
+            path = root / "reports/professionalism-regression-report.json"
+            report = json.loads(path.read_text(encoding="utf-8"))
             report["root_content_summary"]["source_fingerprint"] = "e" * 64
             report["content_readiness"]["root"]["source_fingerprint"] = "e" * 64
-            report["coverage_gate_summary"]["pass_count"] = 3
-            release.write_text(json.dumps(report), encoding="utf-8")
+            path.write_text(json.dumps(report), encoding="utf-8")
 
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
 
             self.assertTrue(
-                any("complete root_content_summary" in error for error in errors),
-                errors,
-            )
-            self.assertTrue(
-                any("complete coverage_gate_summary" in error for error in errors),
+                any("current readability fingerprints" in error for error in errors),
                 errors,
             )
 
@@ -2060,7 +1998,7 @@ case is `9` fresh
                 if relative.endswith("regression-report.json"):
                     report["summary"]["blocker_count"] = 1
                 path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(any("cannot pass with error blockers" in item for item in errors), errors)
 
             self._write_reports(root)
@@ -2072,8 +2010,8 @@ case is `9` fresh
                 else:
                     report["authoring_gate"] = "current-contract-fail"
                 path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
-            self.assertTrue(any("cannot fail without an error blocker" in item for item in errors), errors)
+            errors = self.module._static_report_errors(root)
+            self.assertTrue(any("status must match authoring_gate" in item for item in errors), errors)
 
             self._write_reports(root)
             for relative in self.module.CONTENT_READINESS_REPORTS:
@@ -2081,253 +2019,72 @@ case is `9` fresh
                 report = json.loads(path.read_text(encoding="utf-8"))
                 report.pop("blockers")
                 path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root, enforce_fresh=False)
+            errors = self.module._static_report_errors(root)
             self.assertTrue(any("must contain a blockers list" in item for item in errors), errors)
 
-    def test_freshness_rejects_consistent_stale_source_and_same_fingerprint_tamper(self) -> None:
+    def test_semantic_validation_rejects_invalid_source_fingerprint_shape(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._write_reports(root)
-            canonical = self._read_professionalism_reports(root)
-            reports = copy.deepcopy(canonical)
-            for report in reports.values():
-                report["root_content_summary"]["agent_facing_root_documents"] = 999
-            self.assertEqual(
-                {
-                    report["root_content_summary"]["source_fingerprint"]
-                    for report in reports.values()
-                },
-                {"b" * 64},
-            )
+            path = root / "reports/professionalism-regression-report.json"
+            report = json.loads(path.read_text(encoding="utf-8"))
+            report["root_content_summary"]["source_fingerprint"] = "not-a-sha256"
+            path.write_text(json.dumps(report), encoding="utf-8")
 
-            errors = self.module._professionalism_freshness_errors(
-                reports, canonical
-            )
+            errors = self.module._static_report_errors(root)
 
             self.assertTrue(
-                any("non-canonical root_content_summary" in item for item in errors),
+                any("Root source fingerprint mismatch" in item for item in errors),
                 errors,
             )
 
-    def test_freshness_rejects_consistent_forged_expert_attestation(self) -> None:
+    def test_semantic_validation_rejects_forged_expert_attestation(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._write_reports(root)
-            canonical = self._read_professionalism_reports(root)
-            reports = copy.deepcopy(canonical)
-            for report in reports.values():
-                expert = report["content_readiness"]["expert"]
-                expert["deprecated_expert_content_review_complete"] = True
-                report["content_readiness"]["aggregate"][
-                    "readability_review_current"
-                ] = True
+            path = root / "reports/professionalism-regression-report.json"
+            report = json.loads(path.read_text(encoding="utf-8"))
+            report["content_readiness"]["expert"][
+                "deprecated_expert_content_review_complete"
+            ] = True
+            path.write_text(json.dumps(report), encoding="utf-8")
 
-            self.assertEqual([], self.module._professionalism_cross_report_errors(reports))
-            errors = self.module._professionalism_freshness_errors(
-                reports, canonical
-            )
+            errors = self.module._static_report_errors(root)
             self.assertTrue(
-                any("non-canonical content_readiness" in item for item in errors),
+                any("deprecated expert compatibility flag" in item for item in errors),
                 errors,
             )
 
-    def test_all_four_professionalism_artifacts_are_byte_canonical(self) -> None:
-        markdown = {
-            "reports/professionalism-regression-report.md",
-            "reports/professionalism-release-readiness.md",
-        }
-        self.assertTrue(markdown.issubset(set(self.module.REQUIRED)))
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            expected = {
-                relative: f"canonical:{relative}\n".encode("utf-8")
-                for relative in self.module.PROFESSIONALISM_CANONICAL_ARTIFACTS
-            }
-            for relative, content in expected.items():
-                path = root / relative
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(content)
-            self.assertEqual(
-                [],
-                self.module._professionalism_artifact_freshness_errors(
-                    root, expected
-                ),
-            )
-
-            for relative in sorted(markdown):
-                path = root / relative
-                with self.subTest(relative=relative, mutation="deleted"):
-                    path.unlink()
-                    errors = self.module._professionalism_artifact_freshness_errors(
-                        root, expected
-                    )
-                    self.assertTrue(
-                        any(
-                            f"missing canonical professionalism artifact: {relative}"
-                            in item
-                            for item in errors
-                        ),
-                        errors,
-                    )
-                    path.write_bytes(expected[relative])
-                with self.subTest(relative=relative, mutation="tampered"):
-                    path.write_bytes(expected[relative] + b"tampered\n")
-                    errors = self.module._professionalism_artifact_freshness_errors(
-                        root, expected
-                    )
-                    self.assertTrue(
-                        any(
-                            f"professionalism artifact {relative} differs" in item
-                            and "current_sha256=" in item
-                            and "canonical_sha256=" in item
-                            for item in errors
-                        ),
-                        errors,
-                    )
-                    path.write_bytes(expected[relative])
-
-            json_relative = "reports/professionalism-release-readiness.json"
-            (root / json_relative).write_bytes(expected[json_relative] + b" \n")
-            errors = self.module._professionalism_artifact_freshness_errors(
-                root, expected
-            )
-            self.assertTrue(
-                any(
-                    f"professionalism artifact {json_relative} differs" in item
-                    for item in errors
-                ),
-                errors,
-            )
-
-    def test_core_principles_outcome_reports_are_required_assets(self) -> None:
+    def test_core_principles_global_report_is_not_a_productization_asset(self) -> None:
         self.assertTrue(
             {
-                "reports/core-principles-outcomes.json",
-                "reports/core-principles-outcomes.md",
                 "scripts/eval-core-principles.py",
                 "src/control-model/core-contracts.json",
             }.issubset(set(self.module.REQUIRED))
         )
+        self.assertNotIn("reports/core-principles-outcomes.json", self.module.REQUIRED)
+        self.assertNotIn("reports/core-principles-outcomes.md", self.module.REQUIRED)
 
-    def test_core_principles_report_rejects_alternate_contract_source(self) -> None:
+    def test_productization_ignores_stale_or_missing_core_global_report(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            (root / "scripts").mkdir()
-            (root / "reports").mkdir()
-            (root / "scripts/eval-core-principles.py").write_text(
-                "def validate_saved_report(root, report):\n    return []\n\n"
-                "def render_markdown(report):\n    return '# projection\\n'\n",
-                encoding="utf-8",
-            )
-            (root / "reports/core-principles-outcomes.json").write_text(
-                json.dumps(
-                    {
-                        "contract_source": "src/control-model/alternate.json"
-                    }
-                ),
-                encoding="utf-8",
-            )
-            (root / "reports/core-principles-outcomes.md").write_text(
-                "# projection\n", encoding="utf-8"
-            )
-
-            errors = self.module._core_principles_report_errors(root)
-
-            self.assertTrue(
-                any("contract_source must equal the canonical" in error for error in errors),
-                errors,
-            )
-
-    def test_core_principles_productization_accepts_canonical_stub_report(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            (root / "scripts").mkdir()
-            (root / "reports").mkdir()
-            (root / "scripts/eval-core-principles.py").write_text(
-                "def validate_saved_report(root, report):\n    return []\n\n"
-                "def render_markdown(report):\n    return '# projection\\n'\n",
-                encoding="utf-8",
-            )
-            (root / "reports/core-principles-outcomes.json").write_text(
-                json.dumps(
-                    {
-                        "contract_source": self.module.CORE_PRINCIPLES_CONTRACT_SOURCE
-                    }
-                ),
-                encoding="utf-8",
-            )
-            (root / "reports/core-principles-outcomes.md").write_text(
-                "# projection\n", encoding="utf-8"
-            )
-
-            self.assertEqual(
-                [], self.module._core_principles_report_errors(root)
-            )
-
-    def test_core_principles_productization_bounds_malformed_report_errors(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            (root / "scripts").mkdir()
-            (root / "reports").mkdir()
-            script = root / "scripts/eval-core-principles.py"
+            self._write_reports(root)
             report_path = root / "reports/core-principles-outcomes.json"
-            markdown_path = root / "reports/core-principles-outcomes.md"
-            markdown_path.write_text("# projection\n", encoding="utf-8")
+            self.assertEqual([], self.module._static_report_errors(root))
+            report_path.write_text("not-json\n", encoding="utf-8")
+            self.assertEqual([], self.module._static_report_errors(root))
+            report_path.unlink()
+            self.assertEqual([], self.module._static_report_errors(root))
 
-            script.write_text(
-                "def validate_saved_report(root, report):\n"
-                "    return ['closed schema rejection']\n\n"
-                "def render_markdown(report):\n    raise AssertionError('must not run')\n",
-                encoding="utf-8",
-            )
-            report_path.write_text("[]\n", encoding="utf-8")
-            errors = self.module._core_principles_report_errors(root)
+            owned_path = root / "reports/professionalism-regression-report.json"
+            owned = json.loads(owned_path.read_text(encoding="utf-8"))
+            owned["unexpected"] = True
+            owned_path.write_text(json.dumps(owned), encoding="utf-8")
+            errors = self.module._static_report_errors(root)
             self.assertTrue(
-                any("contract_source must equal the canonical" in item for item in errors),
+                any("closed professionalism report envelope" in item for item in errors),
                 errors,
             )
-            self.assertTrue(
-                any("closed schema rejection" in item for item in errors), errors
-            )
-
-            script.write_text(
-                "def validate_saved_report(root, report):\n"
-                "    raise TypeError('PRIVATE_SCHEMA_DETAIL')\n\n"
-                "def render_markdown(report):\n    return '# projection\\n'\n",
-                encoding="utf-8",
-            )
-            report_path.write_text(
-                json.dumps(
-                    {
-                        "contract_source": self.module.CORE_PRINCIPLES_CONTRACT_SOURCE
-                    }
-                ),
-                encoding="utf-8",
-            )
-            errors = self.module._core_principles_report_errors(root)
-            self.assertTrue(
-                any("validation raised TypeError" in item for item in errors), errors
-            )
-            self.assertNotIn("PRIVATE_SCHEMA_DETAIL", json.dumps(errors))
-
-            script.write_text(
-                "def validate_saved_report(root, report):\n"
-                "    raise SystemExit(7)\n\n"
-                "def render_markdown(report):\n    return '# projection\\n'\n",
-                encoding="utf-8",
-            )
-            with self.assertRaises(SystemExit) as raised:
-                self.module._core_principles_report_errors(root)
-            self.assertEqual(7, raised.exception.code)
-
-            script.write_text(
-                "def validate_saved_report(root, report):\n"
-                "    raise KeyboardInterrupt()\n\n"
-                "def render_markdown(report):\n    return '# projection\\n'\n",
-                encoding="utf-8",
-            )
-            with self.assertRaises(KeyboardInterrupt):
-                self.module._core_principles_report_errors(root)
 
     def test_missing_core_principles_evaluator_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -2336,8 +2093,6 @@ case is `9` fresh
                 self.module, "_docs_errors", return_value=[]
             ), mock.patch.object(
                 self.module, "_static_report_errors", return_value=[]
-            ), mock.patch.object(
-                self.module, "_core_principles_report_errors", return_value=[]
             ):
                 errors = self.module.validate_productization_assets(root)
             self.assertTrue(
@@ -2348,6 +2103,36 @@ case is `9` fresh
                 ),
                 errors,
             )
+
+    def test_productization_validates_professional_json_without_rerunning_producer(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._write_reports(root)
+            self.assertFalse(
+                hasattr(self.module, "_canonical_professionalism_artifacts")
+            )
+            with mock.patch.object(
+                self.module.importlib.util,
+                "spec_from_file_location",
+                side_effect=AssertionError("producer must not load"),
+            ):
+                self.module._static_report_errors(root)
+
+    def test_authoring_assets_exclude_release_only_markdown_and_duplicate_json(
+        self,
+    ) -> None:
+        self.assertIn(
+            "reports/professionalism-regression-report.json", self.module.REQUIRED
+        )
+        self.assertFalse(
+            any(path.endswith(".md") and path.startswith("reports/") for path in self.module.REQUIRED)
+        )
+        self.assertEqual(
+            {"reports/professionalism-regression-report.json"},
+            self.module.CONTENT_READINESS_REPORTS,
+        )
 
 
 if __name__ == "__main__":

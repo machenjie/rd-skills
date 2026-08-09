@@ -74,7 +74,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"eval-professional-benchmarks: ERROR: {exc}", file=sys.stderr)
         return 1
     errors = payload["errors"]
-    _write(reports_dir, payload, args.format)
+    _write(
+        reports_dir,
+        payload,
+        "all"
+        if args.release_projection or args.format in {"all", "markdown"}
+        else "json",
+    )
     print(
         "eval-professional-benchmarks: "
         f"checked {payload['cases_checked']} cases; "
@@ -125,7 +131,8 @@ def _args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--benchmarks-dir", type=Path)
     parser.add_argument("--reports-dir", type=Path)
-    parser.add_argument("--format", choices=("all", "markdown", "json"), default="all")
+    parser.add_argument("--format", choices=("all", "markdown", "json"), default="json")
+    parser.add_argument("--release-projection", action="store_true")
     parser.add_argument("--mode", choices=("auto", "schema-only", "comparison"), default="auto")
     parser.add_argument("--actual-output-dir", type=Path, help="deprecated; captured outputs live beside each case")
     return parser.parse_args(argv)

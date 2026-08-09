@@ -21,7 +21,14 @@ Core reproducible reports:
   captured professional quality evidence.
 - `installation-validation.*`: standard Skill/Profile installation evidence.
 
-Regenerate the principal reports with:
+The local Full Regression regenerates the principal reports once through Core:
+
+```bash
+python3 scripts/eval-core-principles.py --gate authoring
+```
+
+The individual owners below are diagnostics for a verified Core failure, not a
+second regression path:
 
 ```bash
 python3 scripts/build.py --profile recommended
@@ -39,13 +46,15 @@ python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-installation.py
 ```
 
-Those commands regenerate authoring evidence. A formal release decision also
-runs `python3 scripts/validate-professionalism-regression.py --strict
---require-expert-content-review`; it leaves report payloads unchanged and fails
-unless the tracked expert attestation is current.
-`validate-productization-assets.py` independently runs the strict producer once
-and requires the regression/readiness JSON and Markdown artifacts to match that
-canonical output byte-for-byte.
+The complete Formal Release entrypoint is
+`python3 scripts/eval-core-principles.py --gate formal-release`; Core runs each
+declared producer once in dependency order. The sole machine-readable
+professionalism readiness authority is
+`professionalism-regression-report.json`. Formal Release additionally emits
+`professionalism-regression-report.md` as a human presentation projection;
+Markdown is not a second authority and Core authoring does not refresh it.
+`validate-productization-assets.py` validates the saved JSON's closed semantics
+without rerunning the professionalism producer.
 
 Code-generation definitions and their checked-in harness/negative controls are
 validated separately:

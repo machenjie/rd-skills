@@ -2,6 +2,774 @@
   "schema_version": 2,
   "architecture": "hookless-control-plane",
   "evaluation_kind": "static-authoring-structure",
+  "execution_scope": {
+    "mode": "full",
+    "direct_package_ids": [],
+    "fresh_package_ids": [
+      "acceptance-criteria-builder",
+      "acceptance-standard-definition",
+      "accessibility-inclusive-design",
+      "agent-execution-discipline",
+      "agent-tool-permission-sandbox",
+      "ai-code-review-refactor",
+      "ai-product-extension",
+      "algorithm-data-structure-selection",
+      "android-platform-extension",
+      "api-contract-design",
+      "architecture-enforcement-tooling",
+      "architecture-impact-reviewer",
+      "architecture-style-selection",
+      "architecture-tradeoff-analysis",
+      "async-job-design",
+      "audit-evidence-integrity",
+      "authentication-authorization",
+      "authentication-security",
+      "backend-change-builder",
+      "backup-recovery",
+      "bigdata-product-extension",
+      "build-tool-professional-usage",
+      "business-invariant-analysis",
+      "business-rule-extraction",
+      "cache-design",
+      "change-documentation-gate",
+      "change-intake-compiler",
+      "ci-cd",
+      "cleanup-deletion-governance",
+      "cli-daemon-interface-design",
+      "client-application-testing",
+      "client-lifecycle-state-restoration",
+      "cloud-platform-extension",
+      "code-clarity-maintainability",
+      "code-element-professionalism",
+      "code-review",
+      "concurrency-control",
+      "configuration-runtime-policy",
+      "consumer-impact-analysis",
+      "containerization",
+      "contract-testing",
+      "controller-api-implementation",
+      "cpp-professional-usage",
+      "cross-platform-client-extension",
+      "cryptography-key-lifecycle",
+      "csharp-dotnet-professional-usage",
+      "data-api-contract-changer",
+      "data-format-contract-usage",
+      "data-middleware-change-builder",
+      "data-migration-design",
+      "data-model-design",
+      "data-side-effect-flow-tracing",
+      "degradation-circuit-breaking",
+      "delivery-release-gate",
+      "dependency-vulnerability-scanning",
+      "dependency-wiring-lifecycle",
+      "design-pattern-selection",
+      "design-system-rules",
+      "distributed-workflow-consistency",
+      "documentation-generation",
+      "domain-event-modeling",
+      "domain-impact-modeler",
+      "domain-logic-implementation",
+      "domain-object-identification",
+      "dto-schema-design",
+      "e2e-testing",
+      "engineering-artifact-review",
+      "engineering-change-analysis",
+      "error-code-design",
+      "event-driven-architecture",
+      "experience-impact-modeler",
+      "extensibility-design",
+      "failure-contract-design",
+      "failure-diagnosis",
+      "file-storage-processing",
+      "filesystem-process-safety",
+      "form-validation-design",
+      "frontend-api-integration",
+      "frontend-change-builder",
+      "frontend-testing",
+      "git-professional-usage",
+      "go-professional-usage",
+      "high-risk-design-review",
+      "i18n-timezone-money-safety",
+      "idempotency-retry-design",
+      "implementation-structure-design",
+      "incident-response-coordinator",
+      "indexing-query-optimization",
+      "information-architecture",
+      "infrastructure-as-code-safety",
+      "input-validation",
+      "installed-client-change-builder",
+      "integration-change-builder",
+      "integration-testing",
+      "interaction-state-modeling",
+      "ios-ipados-platform-extension",
+      "iot-embedded-extension",
+      "java-jvm-professional-usage",
+      "kotlin-professional-usage",
+      "kubernetes-gateway",
+      "language-idiom-enforcement",
+      "language-performance-safety",
+      "language-runtime-selection",
+      "language-testing-strategy",
+      "layered-architecture-design",
+      "linux-desktop-platform-extension",
+      "linux-systems-professional-usage",
+      "logging-design-gate",
+      "logging-error-handling",
+      "low-level-systems-extension",
+      "macos-platform-extension",
+      "message-queue-design",
+      "microservice-splitting",
+      "minimal-correct-implementation",
+      "model-boundary-mapping",
+      "module-boundary-design",
+      "network-protocol-gateway-usage",
+      "nodejs-runtime-professional-usage",
+      "non-goal-boundary-definition",
+      "nosql-database",
+      "observability",
+      "observable-action-sequence-analysis",
+      "offline-sync-conflict-resolution",
+      "package-dependency-management",
+      "page-component-decomposition",
+      "payment-trading-extension",
+      "performance-budgeting",
+      "permission-boundary-modeling",
+      "plan-execution-consistency",
+      "platform-infrastructure-change-builder",
+      "powershell-professional-usage",
+      "privacy-data-lifecycle",
+      "profiling",
+      "project-initialization",
+      "prototype-description",
+      "python-professional-usage",
+      "quality-test-gate",
+      "refactoring",
+      "regression-testing",
+      "relational-database",
+      "release-rollback",
+      "reliability-observability-gate",
+      "repeat-failure-analysis",
+      "repository-context-map",
+      "repository-impact-inspection",
+      "repository-persistence",
+      "repository-tooling-change-builder",
+      "requirement-clarification",
+      "requirement-structuring",
+      "routing-navigation-design",
+      "routing-quality-review",
+      "rust-professional-usage",
+      "scenario-decomposition",
+      "sdk-library-contract-design",
+      "search-analytics-design",
+      "secret-configuration-security",
+      "security-privacy-gate",
+      "senior-programming-judgment-core",
+      "service-business-logic",
+      "shell-cli-professional-usage",
+      "skill-authoring-expert",
+      "skill-efficacy-benchmark",
+      "solution-optimality-evaluation",
+      "sql-professional-usage",
+      "state-machine-modeling",
+      "state-management-design",
+      "swift-professional-usage",
+      "targeted-validation-selection",
+      "task-context-selection",
+      "task-dag-decomposition",
+      "task-dag-planner",
+      "task-handoff-context",
+      "technology-stack-selection",
+      "tenant-isolation",
+      "test-data-management",
+      "test-strategy",
+      "testability-seam-design",
+      "threat-modeling",
+      "transaction-consistency",
+      "typescript-professional-usage",
+      "unit-testing",
+      "use-case-modeling",
+      "user-flow-modeling",
+      "user-role-identification",
+      "version-compatibility",
+      "web-platform-professional-usage",
+      "web-security",
+      "web3-product-extension",
+      "windows-platform-extension"
+    ],
+    "carried_package_ids": [],
+    "baseline_decision": null,
+    "reasons_by_package": {
+      "acceptance-criteria-builder": [
+        "full-evaluation"
+      ],
+      "acceptance-standard-definition": [
+        "full-evaluation"
+      ],
+      "accessibility-inclusive-design": [
+        "full-evaluation"
+      ],
+      "agent-execution-discipline": [
+        "full-evaluation"
+      ],
+      "agent-tool-permission-sandbox": [
+        "full-evaluation"
+      ],
+      "ai-code-review-refactor": [
+        "full-evaluation"
+      ],
+      "ai-product-extension": [
+        "full-evaluation"
+      ],
+      "algorithm-data-structure-selection": [
+        "full-evaluation"
+      ],
+      "android-platform-extension": [
+        "full-evaluation"
+      ],
+      "api-contract-design": [
+        "full-evaluation"
+      ],
+      "architecture-enforcement-tooling": [
+        "full-evaluation"
+      ],
+      "architecture-impact-reviewer": [
+        "full-evaluation"
+      ],
+      "architecture-style-selection": [
+        "full-evaluation"
+      ],
+      "architecture-tradeoff-analysis": [
+        "full-evaluation"
+      ],
+      "async-job-design": [
+        "full-evaluation"
+      ],
+      "audit-evidence-integrity": [
+        "full-evaluation"
+      ],
+      "authentication-authorization": [
+        "full-evaluation"
+      ],
+      "authentication-security": [
+        "full-evaluation"
+      ],
+      "backend-change-builder": [
+        "full-evaluation"
+      ],
+      "backup-recovery": [
+        "full-evaluation"
+      ],
+      "bigdata-product-extension": [
+        "full-evaluation"
+      ],
+      "build-tool-professional-usage": [
+        "full-evaluation"
+      ],
+      "business-invariant-analysis": [
+        "full-evaluation"
+      ],
+      "business-rule-extraction": [
+        "full-evaluation"
+      ],
+      "cache-design": [
+        "full-evaluation"
+      ],
+      "change-documentation-gate": [
+        "full-evaluation"
+      ],
+      "change-intake-compiler": [
+        "full-evaluation"
+      ],
+      "ci-cd": [
+        "full-evaluation"
+      ],
+      "cleanup-deletion-governance": [
+        "full-evaluation"
+      ],
+      "cli-daemon-interface-design": [
+        "full-evaluation"
+      ],
+      "client-application-testing": [
+        "full-evaluation"
+      ],
+      "client-lifecycle-state-restoration": [
+        "full-evaluation"
+      ],
+      "cloud-platform-extension": [
+        "full-evaluation"
+      ],
+      "code-clarity-maintainability": [
+        "full-evaluation"
+      ],
+      "code-element-professionalism": [
+        "full-evaluation"
+      ],
+      "code-review": [
+        "full-evaluation"
+      ],
+      "concurrency-control": [
+        "full-evaluation"
+      ],
+      "configuration-runtime-policy": [
+        "full-evaluation"
+      ],
+      "consumer-impact-analysis": [
+        "full-evaluation"
+      ],
+      "containerization": [
+        "full-evaluation"
+      ],
+      "contract-testing": [
+        "full-evaluation"
+      ],
+      "controller-api-implementation": [
+        "full-evaluation"
+      ],
+      "cpp-professional-usage": [
+        "full-evaluation"
+      ],
+      "cross-platform-client-extension": [
+        "full-evaluation"
+      ],
+      "cryptography-key-lifecycle": [
+        "full-evaluation"
+      ],
+      "csharp-dotnet-professional-usage": [
+        "full-evaluation"
+      ],
+      "data-api-contract-changer": [
+        "full-evaluation"
+      ],
+      "data-format-contract-usage": [
+        "full-evaluation"
+      ],
+      "data-middleware-change-builder": [
+        "full-evaluation"
+      ],
+      "data-migration-design": [
+        "full-evaluation"
+      ],
+      "data-model-design": [
+        "full-evaluation"
+      ],
+      "data-side-effect-flow-tracing": [
+        "full-evaluation"
+      ],
+      "degradation-circuit-breaking": [
+        "full-evaluation"
+      ],
+      "delivery-release-gate": [
+        "full-evaluation"
+      ],
+      "dependency-vulnerability-scanning": [
+        "full-evaluation"
+      ],
+      "dependency-wiring-lifecycle": [
+        "full-evaluation"
+      ],
+      "design-pattern-selection": [
+        "full-evaluation"
+      ],
+      "design-system-rules": [
+        "full-evaluation"
+      ],
+      "distributed-workflow-consistency": [
+        "full-evaluation"
+      ],
+      "documentation-generation": [
+        "full-evaluation"
+      ],
+      "domain-event-modeling": [
+        "full-evaluation"
+      ],
+      "domain-impact-modeler": [
+        "full-evaluation"
+      ],
+      "domain-logic-implementation": [
+        "full-evaluation"
+      ],
+      "domain-object-identification": [
+        "full-evaluation"
+      ],
+      "dto-schema-design": [
+        "full-evaluation"
+      ],
+      "e2e-testing": [
+        "full-evaluation"
+      ],
+      "engineering-artifact-review": [
+        "full-evaluation"
+      ],
+      "engineering-change-analysis": [
+        "full-evaluation"
+      ],
+      "error-code-design": [
+        "full-evaluation"
+      ],
+      "event-driven-architecture": [
+        "full-evaluation"
+      ],
+      "experience-impact-modeler": [
+        "full-evaluation"
+      ],
+      "extensibility-design": [
+        "full-evaluation"
+      ],
+      "failure-contract-design": [
+        "full-evaluation"
+      ],
+      "failure-diagnosis": [
+        "full-evaluation"
+      ],
+      "file-storage-processing": [
+        "full-evaluation"
+      ],
+      "filesystem-process-safety": [
+        "full-evaluation"
+      ],
+      "form-validation-design": [
+        "full-evaluation"
+      ],
+      "frontend-api-integration": [
+        "full-evaluation"
+      ],
+      "frontend-change-builder": [
+        "full-evaluation"
+      ],
+      "frontend-testing": [
+        "full-evaluation"
+      ],
+      "git-professional-usage": [
+        "full-evaluation"
+      ],
+      "go-professional-usage": [
+        "full-evaluation"
+      ],
+      "high-risk-design-review": [
+        "full-evaluation"
+      ],
+      "i18n-timezone-money-safety": [
+        "full-evaluation"
+      ],
+      "idempotency-retry-design": [
+        "full-evaluation"
+      ],
+      "implementation-structure-design": [
+        "full-evaluation"
+      ],
+      "incident-response-coordinator": [
+        "full-evaluation"
+      ],
+      "indexing-query-optimization": [
+        "full-evaluation"
+      ],
+      "information-architecture": [
+        "full-evaluation"
+      ],
+      "infrastructure-as-code-safety": [
+        "full-evaluation"
+      ],
+      "input-validation": [
+        "full-evaluation"
+      ],
+      "installed-client-change-builder": [
+        "full-evaluation"
+      ],
+      "integration-change-builder": [
+        "full-evaluation"
+      ],
+      "integration-testing": [
+        "full-evaluation"
+      ],
+      "interaction-state-modeling": [
+        "full-evaluation"
+      ],
+      "ios-ipados-platform-extension": [
+        "full-evaluation"
+      ],
+      "iot-embedded-extension": [
+        "full-evaluation"
+      ],
+      "java-jvm-professional-usage": [
+        "full-evaluation"
+      ],
+      "kotlin-professional-usage": [
+        "full-evaluation"
+      ],
+      "kubernetes-gateway": [
+        "full-evaluation"
+      ],
+      "language-idiom-enforcement": [
+        "full-evaluation"
+      ],
+      "language-performance-safety": [
+        "full-evaluation"
+      ],
+      "language-runtime-selection": [
+        "full-evaluation"
+      ],
+      "language-testing-strategy": [
+        "full-evaluation"
+      ],
+      "layered-architecture-design": [
+        "full-evaluation"
+      ],
+      "linux-desktop-platform-extension": [
+        "full-evaluation"
+      ],
+      "linux-systems-professional-usage": [
+        "full-evaluation"
+      ],
+      "logging-design-gate": [
+        "full-evaluation"
+      ],
+      "logging-error-handling": [
+        "full-evaluation"
+      ],
+      "low-level-systems-extension": [
+        "full-evaluation"
+      ],
+      "macos-platform-extension": [
+        "full-evaluation"
+      ],
+      "message-queue-design": [
+        "full-evaluation"
+      ],
+      "microservice-splitting": [
+        "full-evaluation"
+      ],
+      "minimal-correct-implementation": [
+        "full-evaluation"
+      ],
+      "model-boundary-mapping": [
+        "full-evaluation"
+      ],
+      "module-boundary-design": [
+        "full-evaluation"
+      ],
+      "network-protocol-gateway-usage": [
+        "full-evaluation"
+      ],
+      "nodejs-runtime-professional-usage": [
+        "full-evaluation"
+      ],
+      "non-goal-boundary-definition": [
+        "full-evaluation"
+      ],
+      "nosql-database": [
+        "full-evaluation"
+      ],
+      "observability": [
+        "full-evaluation"
+      ],
+      "observable-action-sequence-analysis": [
+        "full-evaluation"
+      ],
+      "offline-sync-conflict-resolution": [
+        "full-evaluation"
+      ],
+      "package-dependency-management": [
+        "full-evaluation"
+      ],
+      "page-component-decomposition": [
+        "full-evaluation"
+      ],
+      "payment-trading-extension": [
+        "full-evaluation"
+      ],
+      "performance-budgeting": [
+        "full-evaluation"
+      ],
+      "permission-boundary-modeling": [
+        "full-evaluation"
+      ],
+      "plan-execution-consistency": [
+        "full-evaluation"
+      ],
+      "platform-infrastructure-change-builder": [
+        "full-evaluation"
+      ],
+      "powershell-professional-usage": [
+        "full-evaluation"
+      ],
+      "privacy-data-lifecycle": [
+        "full-evaluation"
+      ],
+      "profiling": [
+        "full-evaluation"
+      ],
+      "project-initialization": [
+        "full-evaluation"
+      ],
+      "prototype-description": [
+        "full-evaluation"
+      ],
+      "python-professional-usage": [
+        "full-evaluation"
+      ],
+      "quality-test-gate": [
+        "full-evaluation"
+      ],
+      "refactoring": [
+        "full-evaluation"
+      ],
+      "regression-testing": [
+        "full-evaluation"
+      ],
+      "relational-database": [
+        "full-evaluation"
+      ],
+      "release-rollback": [
+        "full-evaluation"
+      ],
+      "reliability-observability-gate": [
+        "full-evaluation"
+      ],
+      "repeat-failure-analysis": [
+        "full-evaluation"
+      ],
+      "repository-context-map": [
+        "full-evaluation"
+      ],
+      "repository-impact-inspection": [
+        "full-evaluation"
+      ],
+      "repository-persistence": [
+        "full-evaluation"
+      ],
+      "repository-tooling-change-builder": [
+        "full-evaluation"
+      ],
+      "requirement-clarification": [
+        "full-evaluation"
+      ],
+      "requirement-structuring": [
+        "full-evaluation"
+      ],
+      "routing-navigation-design": [
+        "full-evaluation"
+      ],
+      "routing-quality-review": [
+        "full-evaluation"
+      ],
+      "rust-professional-usage": [
+        "full-evaluation"
+      ],
+      "scenario-decomposition": [
+        "full-evaluation"
+      ],
+      "sdk-library-contract-design": [
+        "full-evaluation"
+      ],
+      "search-analytics-design": [
+        "full-evaluation"
+      ],
+      "secret-configuration-security": [
+        "full-evaluation"
+      ],
+      "security-privacy-gate": [
+        "full-evaluation"
+      ],
+      "senior-programming-judgment-core": [
+        "full-evaluation"
+      ],
+      "service-business-logic": [
+        "full-evaluation"
+      ],
+      "shell-cli-professional-usage": [
+        "full-evaluation"
+      ],
+      "skill-authoring-expert": [
+        "full-evaluation"
+      ],
+      "skill-efficacy-benchmark": [
+        "full-evaluation"
+      ],
+      "solution-optimality-evaluation": [
+        "full-evaluation"
+      ],
+      "sql-professional-usage": [
+        "full-evaluation"
+      ],
+      "state-machine-modeling": [
+        "full-evaluation"
+      ],
+      "state-management-design": [
+        "full-evaluation"
+      ],
+      "swift-professional-usage": [
+        "full-evaluation"
+      ],
+      "targeted-validation-selection": [
+        "full-evaluation"
+      ],
+      "task-context-selection": [
+        "full-evaluation"
+      ],
+      "task-dag-decomposition": [
+        "full-evaluation"
+      ],
+      "task-dag-planner": [
+        "full-evaluation"
+      ],
+      "task-handoff-context": [
+        "full-evaluation"
+      ],
+      "technology-stack-selection": [
+        "full-evaluation"
+      ],
+      "tenant-isolation": [
+        "full-evaluation"
+      ],
+      "test-data-management": [
+        "full-evaluation"
+      ],
+      "test-strategy": [
+        "full-evaluation"
+      ],
+      "testability-seam-design": [
+        "full-evaluation"
+      ],
+      "threat-modeling": [
+        "full-evaluation"
+      ],
+      "transaction-consistency": [
+        "full-evaluation"
+      ],
+      "typescript-professional-usage": [
+        "full-evaluation"
+      ],
+      "unit-testing": [
+        "full-evaluation"
+      ],
+      "use-case-modeling": [
+        "full-evaluation"
+      ],
+      "user-flow-modeling": [
+        "full-evaluation"
+      ],
+      "user-role-identification": [
+        "full-evaluation"
+      ],
+      "version-compatibility": [
+        "full-evaluation"
+      ],
+      "web-platform-professional-usage": [
+        "full-evaluation"
+      ],
+      "web-security": [
+        "full-evaluation"
+      ],
+      "web3-product-extension": [
+        "full-evaluation"
+      ],
+      "windows-platform-extension": [
+        "full-evaluation"
+      ]
+    },
+    "reason_chains": [],
+    "control_skill_checked": true
+  },
   "evidence_limitations": [
     "No model or agent was executed.",
     "Scores measure source and registry completeness, not engineering accuracy.",

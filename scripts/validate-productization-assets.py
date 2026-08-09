@@ -4,14 +4,10 @@
 from __future__ import annotations
 
 import argparse
-import contextlib
 import hashlib
 import importlib.util
-import io
 import json
-import shutil
 import sys
-import tempfile
 from pathlib import Path
 
 from validation_utils import (
@@ -42,11 +38,6 @@ REQUIRED = (
     "reports/routing-eval.json",
     "reports/skill-professionalism-eval.json",
     "reports/professionalism-regression-report.json",
-    "reports/professionalism-regression-report.md",
-    "reports/professionalism-release-readiness.json",
-    "reports/professionalism-release-readiness.md",
-    "reports/core-principles-outcomes.json",
-    "reports/core-principles-outcomes.md",
     "reports/installation-validation.json",
     "schemas/marketplace-index.schema.json",
     "src/control-model/core-contracts.json",
@@ -77,7 +68,6 @@ STATIC_REPORT_CONTRACTS = {
     "reports/context-control-plane-eval.json": ("status", "pass"),
     "reports/routing-eval.json": ("status", "pass"),
     "reports/professionalism-regression-report.json": ("status", "current-contract-pass"),
-    "reports/professionalism-release-readiness.json": ("authoring_gate", "current-contract-pass"),
     "reports/installation-validation.json": ("status", "pass"),
 }
 STATIC_REPORT_EVIDENCE_SCOPES = {
@@ -85,14 +75,7 @@ STATIC_REPORT_EVIDENCE_SCOPES = {
 }
 CONTENT_READINESS_REPORTS = {
     "reports/professionalism-regression-report.json",
-    "reports/professionalism-release-readiness.json",
 }
-PROFESSIONALISM_CANONICAL_ARTIFACTS = (
-    "reports/professionalism-regression-report.json",
-    "reports/professionalism-regression-report.md",
-    "reports/professionalism-release-readiness.json",
-    "reports/professionalism-release-readiness.md",
-)
 AUTHORING_GATE_PASS = "current-contract-pass"
 AUTHORING_GATE_FAIL = "current-contract-fail"
 RELEASE_GATE_PASS = "release-ready"
@@ -105,45 +88,29 @@ ROOT_LIFECYCLE_RELEASE_BLOCKER_CATEGORY = (
     "root-disposition-lifecycle-release-record-required"
 )
 CORE_PRINCIPLES_CONTRACT_SOURCE = "src/control-model/core-contracts.json"
-PROFESSIONALISM_INPUT_REPORTS = (
-    "skill-professionalism-eval.json",
-    "skill-professionalism-depth.json",
-    "professional-coverage-matrix.json",
-    "professional-benchmarks-report.json",
-    "professional-agent-samples-report.json",
-    "skill-content-audit.json",
-)
-PROFESSIONALISM_SHARED_FIELDS = (
-    "authoring_gate",
-    "release_gate",
-    "baseline_comparison",
-    "evidence_scope",
-    "content_audit_summary",
-    "ai_readability_summary",
-    "reference_content_summary",
-    "root_content_summary",
-    "content_readiness",
-    "coverage_gate_summary",
-    "professional_review_cost_fixtures",
-    "limitations",
-    "blockers",
-    "release_blockers",
-    "advisories",
-)
 PROFESSIONALISM_REPORT_FIELDS = {
     "reports/professionalism-regression-report.json": {
-        *PROFESSIONALISM_SHARED_FIELDS,
         "schema_version",
         "status",
         "mode",
         "strict",
+        "authoring_gate",
+        "release_gate",
+        "baseline_comparison",
+        "evidence_scope",
+        "content_audit_summary",
+        "ai_readability_summary",
+        "reference_content_summary",
+        "root_content_summary",
+        "content_readiness",
+        "coverage_gate_summary",
+        "professional_review_cost_fixtures",
+        "limitations",
+        "blockers",
+        "release_blockers",
+        "advisories",
         "summary",
-    },
-    "reports/professionalism-release-readiness.json": {
-        *PROFESSIONALISM_SHARED_FIELDS,
-        "schema_version",
-        "release_claim",
-    },
+    }
 }
 SKILL_REVIEW_STATES = {
     "BLOCK",
@@ -2269,66 +2236,6 @@ def _docs_errors(root: Path) -> list[str]:
     return [f"docs: {error}" for error in module.validate_docs_consistency(root)]
 
 
-def _core_principles_report_errors(root: Path) -> list[str]:
-    """Require current report truth without requiring the formal gate to pass."""
-
-    script = root / "scripts/eval-core-principles.py"
-    report_path = root / "reports/core-principles-outcomes.json"
-    markdown_path = root / "reports/core-principles-outcomes.md"
-    if not script.is_file() or not report_path.is_file() or not markdown_path.is_file():
-        return []
-    spec = importlib.util.spec_from_file_location(
-        "changeforge_core_principles_evaluator", script
-    )
-    if spec is None or spec.loader is None:
-        return ["cannot load Core Principles evaluator"]
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    try:
-        spec.loader.exec_module(module)
-        report = json.loads(report_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, ImportError, ValueError) as exc:
-        return [f"core principles report is unreadable: {exc}"]
-    errors: list[str] = []
-    if (
-        type(report) is not dict
-        or report.get("contract_source") != CORE_PRINCIPLES_CONTRACT_SOURCE
-    ):
-        errors.append(
-            "core principles report contract_source must equal the canonical "
-            f"{CORE_PRINCIPLES_CONTRACT_SOURCE}"
-        )
-    try:
-        saved_report_errors = module.validate_saved_report(root, report)
-    except Exception as exc:
-        errors.append(
-            "core principles saved-report validation raised "
-            f"{type(exc).__name__}"
-        )
-        return errors
-    if type(saved_report_errors) is not list or any(
-        type(error) is not str for error in saved_report_errors
-    ):
-        errors.append(
-            "core principles saved-report validation returned malformed errors"
-        )
-        return errors
-    errors.extend(f"core principles: {error}" for error in saved_report_errors)
-    if saved_report_errors:
-        return errors
-    try:
-        expected_markdown = module.render_markdown(report)
-    except Exception as exc:
-        errors.append(
-            "core principles Markdown projection raised "
-            f"{type(exc).__name__}"
-        )
-        return errors
-    if markdown_path.read_text(encoding="utf-8") != expected_markdown:
-        errors.append("core principles Markdown report is not the exact JSON projection")
-    return errors
-
-
 def _content_readiness_errors(
     relative: str, report: dict, *, root: Path = ROOT
 ) -> list[str]:
@@ -2990,137 +2897,8 @@ def _release_gate_errors(relative: str, report: dict) -> list[str]:
     return errors
 
 
-def _professionalism_cross_report_errors(
-    reports: dict[str, dict],
-) -> list[str]:
-    errors: list[str] = []
-    regression_relative = "reports/professionalism-regression-report.json"
-    readiness_relative = "reports/professionalism-release-readiness.json"
-    regression = reports.get(regression_relative)
-    readiness = reports.get(readiness_relative)
-    if not isinstance(regression, dict) or not isinstance(readiness, dict):
-        return errors
-    if regression.get("status") != regression.get("authoring_gate"):
-        errors.append(
-            "professionalism regression status disagrees with its authoring_gate"
-        )
-    if regression.get("authoring_gate") != readiness.get("authoring_gate"):
-        errors.append(
-            "professionalism reports disagree on authoring_gate"
-        )
-    for field in PROFESSIONALISM_SHARED_FIELDS:
-        if regression.get(field) != readiness.get(field):
-            errors.append(
-                f"professionalism reports disagree on complete {field}"
-            )
-    return errors
-
-
-def _load_regression_module(root: Path):
-    path = root / "scripts/validate-professionalism-regression.py"
-    scripts = str(root / "scripts")
-    if scripts not in sys.path:
-        sys.path.insert(0, scripts)
-    name = "productization_fresh_professionalism_regression"
-    spec = importlib.util.spec_from_file_location(name, path)
-    if spec is None or spec.loader is None:
-        raise ValueError(f"cannot load fresh professionalism producer: {path}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-def _canonical_professionalism_artifacts(root: Path) -> dict[str, bytes]:
-    module = _load_regression_module(root)
-    with tempfile.TemporaryDirectory() as raw:
-        directory = Path(raw)
-        for name in PROFESSIONALISM_INPUT_REPORTS:
-            source = root / "reports" / name
-            if not source.is_file():
-                raise ValueError(f"required professionalism input report missing: {source}")
-            shutil.copyfile(source, directory / name)
-        stdout = io.StringIO()
-        stderr = io.StringIO()
-        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-            returncode = module.main(
-                [
-                    "--reports-dir",
-                    str(directory),
-                    "--release-review-config",
-                    str(root / "config/professionalism-release-review.yaml"),
-                    "--strict",
-                    "--report-only",
-                ]
-            )
-        if returncode != 0:
-            detail = stderr.getvalue().strip() or stdout.getvalue().strip()
-            raise ValueError(
-                "fresh professionalism producer failed"
-                + (f": {detail}" if detail else "")
-            )
-        return {
-            relative: (directory / Path(relative).name).read_bytes()
-            for relative in PROFESSIONALISM_CANONICAL_ARTIFACTS
-        }
-
-
-def _professionalism_artifact_freshness_errors(
-    root: Path, expected: dict[str, bytes]
-) -> list[str]:
-    errors: list[str] = []
-    for relative in PROFESSIONALISM_CANONICAL_ARTIFACTS:
-        path = root / relative
-        canonical = expected.get(relative)
-        if not path.is_file():
-            errors.append(
-                f"missing canonical professionalism artifact: {relative}"
-            )
-            continue
-        if not isinstance(canonical, bytes):
-            errors.append(
-                f"fresh producer omitted canonical professionalism artifact: {relative}"
-            )
-            continue
-        current = path.read_bytes()
-        if current != canonical:
-            errors.append(
-                f"professionalism artifact {relative} differs from fresh canonical "
-                "producer bytes; "
-                f"current_sha256={hashlib.sha256(current).hexdigest()}; "
-                f"canonical_sha256={hashlib.sha256(canonical).hexdigest()}"
-            )
-    return errors
-
-
-def _professionalism_freshness_errors(
-    reports: dict[str, dict], expected: dict[str, dict]
-) -> list[str]:
-    errors: list[str] = []
-    for relative in sorted(CONTENT_READINESS_REPORTS):
-        report = reports.get(relative)
-        canonical = expected.get(relative)
-        if not isinstance(report, dict) or not isinstance(canonical, dict):
-            continue
-        for field in (
-            "reference_content_summary",
-            "root_content_summary",
-            "content_readiness",
-            "coverage_gate_summary",
-            "blockers",
-        ):
-            if report.get(field) != canonical.get(field):
-                errors.append(
-                    f"static report {relative} has stale or non-canonical {field}"
-                )
-        if report != canonical:
-            errors.append(
-                f"static report {relative} differs from fresh canonical producer output"
-            )
-    return errors
-
-
-def _static_report_errors(root: Path, *, enforce_fresh: bool = True) -> list[str]:
+def _static_report_errors(root: Path) -> list[str]:
+    """Validate checked-in JSON semantics without re-executing any producer."""
     errors: list[str] = []
     loaded_reports: dict[str, dict] = {}
     for relative, (status_field, expected_status) in STATIC_REPORT_CONTRACTS.items():
@@ -3166,27 +2944,6 @@ def _static_report_errors(root: Path, *, enforce_fresh: bool = True) -> list[str
             errors.extend(_content_readiness_errors(relative, report, root=root))
             errors.extend(_status_blocker_errors(relative, report))
             errors.extend(_release_gate_errors(relative, report))
-    errors.extend(_professionalism_cross_report_errors(loaded_reports))
-    if enforce_fresh and CONTENT_READINESS_REPORTS.issubset(loaded_reports):
-        try:
-            canonical_artifacts = _canonical_professionalism_artifacts(root)
-            canonical_reports = {
-                relative: json.loads(canonical_artifacts[relative])
-                for relative in CONTENT_READINESS_REPORTS
-            }
-        except (OSError, json.JSONDecodeError, ValueError) as exc:
-            errors.append(f"cannot recompute fresh professionalism reports: {exc}")
-        else:
-            errors.extend(
-                _professionalism_freshness_errors(
-                    loaded_reports, canonical_reports
-                )
-            )
-            errors.extend(
-                _professionalism_artifact_freshness_errors(
-                    root, canonical_artifacts
-                )
-            )
     return errors
 
 
@@ -3195,7 +2952,6 @@ def validate_productization_assets(root: Path = ROOT) -> list[str]:
     errors.extend(f"forbidden product path remains: {path}" for path in FORBIDDEN if (root / path).exists())
     errors.extend(_docs_errors(root))
     errors.extend(_static_report_errors(root))
-    errors.extend(_core_principles_report_errors(root))
 
     schema_path = root / "schemas/marketplace-index.schema.json"
     if schema_path.is_file():

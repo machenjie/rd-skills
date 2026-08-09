@@ -704,45 +704,306 @@ class DocsCoreProjectionTests(unittest.TestCase):
 
             self.assertTrue(any("missing source-backed installation fact" in error for error in errors), errors)
 
-    def test_ordinary_authoring_gate_surfaces_are_consistent(self) -> None:
-        self.assertEqual([], self.validator._authoring_gate_consistency_errors(ROOT))
+    def test_validation_path_surfaces_are_consistent(self) -> None:
+        self.assertEqual([], self.validator._validation_path_consistency_errors(ROOT))
 
-    def test_out_of_order_ordinary_gate_command_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            path = Path(raw) / "AGENTS.md"
-            commands = list(self.validator.ORDINARY_GATE_COMMANDS)
-            commands[0], commands[1] = commands[1], commands[0]
-            path.write_text("\n".join(commands), encoding="utf-8")
+    def test_out_of_order_validation_path_command_is_rejected(self) -> None:
+        command_sets = (
+            (
+                self.validator.DEVELOPMENT_AFFECTED_COMMANDS,
+                "Development Affected",
+            ),
+            (self.validator.FULL_REGRESSION_COMMANDS, "local Full Regression"),
+        )
+        for source_commands, label in command_sets:
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as raw:
+                path = Path(raw) / "AGENTS.md"
+                commands = list(source_commands)
+                commands[0], commands[1] = commands[1], commands[0]
+                path.write_text("\n".join(commands), encoding="utf-8")
 
-            errors = self.validator._ordered_command_errors(path)
+                errors = self.validator._ordered_command_errors(
+                    path, tuple(source_commands), label
+                )
 
-            self.assertTrue(any("out-of-order" in error for error in errors), errors)
+                self.assertTrue(
+                    any("out-of-order" in error for error in errors), errors
+                )
 
-    def test_ci_requires_affected_runner_instead_of_unconditional_discovery(self) -> None:
+    def _ci_errors(self, text: str) -> list[str]:
         with tempfile.TemporaryDirectory() as raw:
             path = Path(raw) / "ci.yml"
-            commands = [
-                command
-                for command in self.validator.ORDINARY_GATE_COMMANDS
-                if command != "python3 -m unittest discover -s tests"
-            ]
-            path.write_text(
-                "\n".join(
-                    [*commands, "python3 scripts/run-ci-tests.py run --shard 0"]
-                ),
-                encoding="utf-8",
-            )
-            self.assertEqual([], self.validator._ci_authoring_gate_errors(path))
+            path.write_text(text, encoding="utf-8")
+            return self.validator._ci_affected_check_errors(path)
 
-            path.write_text(
-                "\n".join(
-                    [*commands, "python3 -m unittest discover -s tests"]
+    def test_ci_requires_one_minimal_pull_request_job(self) -> None:
+        text = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        self.assertEqual([], self._ci_errors(text))
+
+        mutations = {
+            "push-only flow trigger": (
+                text.replace("on:\n  pull_request: {}\n", "on: [push]\n", 1),
+                "pull_request only",
+            ),
+            "block schedule trigger": (
+                text.replace(
+                    "on:\n  pull_request: {}\n",
+                    "on:\n  pull_request: {}\n  schedule:\n",
+                    1,
                 ),
-                encoding="utf-8",
-            )
-            errors = self.validator._ci_authoring_gate_errors(path)
-            self.assertTrue(any("replace unconditional" in error for error in errors))
-            self.assertTrue(any("exactly one affected-test" in error for error in errors))
+                "pull_request only",
+            ),
+            "flow workflow_dispatch trigger": (
+                text.replace(
+                    "on:\n  pull_request: {}\n",
+                    "on: {pull_request: null, workflow_dispatch: null}\n",
+                    1,
+                ),
+                "pull_request only",
+            ),
+            "pull-request path filter": (
+                text.replace(
+                    "on:\n  pull_request: {}\n",
+                    "on:\n  pull_request:\n    paths: ['src/**']\n",
+                    1,
+                ),
+                "must not define path filters",
+            ),
+            "job-name pull_request lookalike": (
+                text.replace("on:\n  pull_request: {}\n", "on: {}\n", 1).replace(
+                    "  pr-ci:\n", "  pull_request:\n", 1
+                ),
+                "pull_request only",
+            ),
+            "wrong job id": (
+                text.replace("  pr-ci:\n", "  other:\n", 1),
+                "exactly the pr-ci job",
+            ),
+            "matrix": (
+                text.replace(
+                    "    runs-on: ubuntu-latest\n",
+                    "    runs-on: ubuntu-latest\n"
+                    "    strategy:\n"
+                    "      matrix:\n"
+                    "        python-version: ['3.11']\n",
+                    1,
+                ),
+                "must not define a matrix",
+            ),
+            "duplicate affected runner": (
+                text.replace(
+                    "        run: git diff --exit-code --no-ext-diff --no-textconv HEAD --\n",
+                    "        run: git diff --exit-code --no-ext-diff --no-textconv HEAD --\n"
+                    "      - run: python3 scripts/run-ci-tests.py run\n",
+                    1,
+                ),
+                "exactly one unsharded affected-test runner",
+            ),
+            "duplicate affected gate": (
+                text.replace(
+                    "        run: git diff --exit-code --no-ext-diff --no-textconv HEAD --\n",
+                    "        run: git diff --exit-code --no-ext-diff --no-textconv HEAD --\n"
+                    "      - run: python3 scripts/eval-core-principles.py --gate affected "
+                    "--base \"$CI_BASE_SHA\" --head \"$CI_HEAD_SHA\"\n",
+                    1,
+                ),
+                "exactly one affected producer gate",
+            ),
+            "unconditional full suite": (
+                text.replace(
+                    "        run: git diff --exit-code --no-ext-diff --no-textconv HEAD --\n",
+                    "        run: git diff --exit-code --no-ext-diff --no-textconv HEAD --\n"
+                    "      - run: python3 -m unittest discover -s tests\n",
+                    1,
+                ),
+                "unconditional Full Regression",
+            ),
+            "sharded runner": (
+                text.replace(
+                    "python3 scripts/run-ci-tests.py run",
+                    "python3 scripts/run-ci-tests.py run --shard 0",
+                    1,
+                ),
+                "unsharded",
+            ),
+        }
+        for label, (mutated, expected) in mutations.items():
+            with self.subTest(label=label):
+                errors = self._ci_errors(mutated)
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+    def test_ci_requires_exact_pull_request_sha_wiring(self) -> None:
+        text = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        mutations = {
+            "wrong base": text.replace(
+                "CI_BASE_SHA: ${{ github.event.pull_request.base.sha }}",
+                "CI_BASE_SHA: ${{ github.event.pull_request.head.sha }}",
+                1,
+            ),
+            "missing head": text.replace(
+                "          CI_HEAD_SHA: ${{ github.event.pull_request.head.sha }}\n",
+                "",
+                1,
+            ),
+        }
+        for label, mutated in mutations.items():
+            with self.subTest(label=label):
+                errors = self._ci_errors(mutated)
+                self.assertTrue(
+                    any("exact pull-request base/head environment" in error for error in errors),
+                    errors,
+                )
+
+    def test_ci_requires_only_read_contents_permission(self) -> None:
+        text = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        permission_block = "permissions:\n  contents: read\n\n"
+        mutations = {
+            "absent": text.replace(permission_block, "", 1),
+            "write": text.replace("  contents: read\n", "  contents: write\n", 1),
+            "broader": text.replace(
+                "  contents: read\n", "  contents: read\n  issues: read\n", 1
+            ),
+        }
+        for label, mutated in mutations.items():
+            with self.subTest(label=label):
+                errors = self._ci_errors(mutated)
+                self.assertTrue(any("contents: read only" in error for error in errors), errors)
+
+        job_level = text.replace(permission_block, "", 1).replace(
+            "  pr-ci:\n",
+            "  pr-ci:\n    permissions:\n      contents: read\n",
+            1,
+        )
+        self.assertEqual([], self._ci_errors(job_level))
+
+    def test_ci_top_level_and_pull_request_config_are_closed(self) -> None:
+        text = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        mutations = {
+            "empty sequence": (
+                text.replace(
+                    "on:\n  pull_request: {}\n",
+                    "on:\n  pull_request: []\n",
+                    1,
+                ),
+                "pull_request configuration must be empty",
+            ),
+            "opened type": (
+                text.replace(
+                    "on:\n  pull_request: {}\n",
+                    "on:\n  pull_request:\n    types: [opened]\n",
+                    1,
+                ),
+                "pull_request configuration must be empty",
+            ),
+            "main branch": (
+                text.replace(
+                    "on:\n  pull_request: {}\n",
+                    "on:\n  pull_request:\n    branches: [main]\n",
+                    1,
+                ),
+                "pull_request configuration must be empty",
+            ),
+            "top-level env": (
+                text.replace(
+                    "jobs:\n",
+                    "env:\n  PYTHONPATH: scripts\n\njobs:\n",
+                    1,
+                ),
+                "closed top-level workflow keys",
+            ),
+            "top-level defaults": (
+                text.replace(
+                    "jobs:\n",
+                    "defaults:\n  run:\n    shell: python\n\njobs:\n",
+                    1,
+                ),
+                "closed top-level workflow keys",
+            ),
+        }
+        for label, (mutated, expected) in mutations.items():
+            with self.subTest(label=label):
+                errors = self._ci_errors(mutated)
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+    def test_ci_steps_are_a_closed_ordered_six_step_sequence(self) -> None:
+        text = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        no_write = "        run: git diff --exit-code --no-ext-diff --no-textconv HEAD --\n"
+        checkout = (
+            "      - uses: actions/checkout@v4\n"
+            "        with:\n"
+            "          fetch-depth: 0\n"
+            "          ref: ${{ github.event.pull_request.head.sha }}\n"
+        )
+        setup = (
+            "      - uses: actions/setup-python@v5\n"
+            "        with:\n"
+            "          python-version: \"3.11\"\n"
+        )
+        mutations = {
+            "extra vendor action": (
+                text.replace(
+                no_write,
+                no_write + "      - uses: vendor/extra-action@v1\n",
+                1,
+                ),
+                "exact closed six-step order",
+            ),
+            "extra run": (
+                text.replace(
+                no_write,
+                no_write + "      - run: echo unexpected\n",
+                1,
+                ),
+                "exact closed six-step order",
+            ),
+            "wrong order": (
+                text.replace(checkout + setup, setup + checkout, 1),
+                "exact closed six-step order",
+            ),
+            "wrong checkout action ref": (
+                text.replace("actions/checkout@v4", "actions/checkout@feature", 1),
+                "exact closed six-step order",
+            ),
+            "wrong setup action ref": (
+                text.replace("actions/setup-python@v5", "actions/setup-python@main", 1),
+                "exact closed six-step order",
+            ),
+            "job if": (
+                text.replace(
+                    "    runs-on: ubuntu-latest\n",
+                    "    runs-on: ubuntu-latest\n    if: false\n",
+                    1,
+                ),
+                "closed pr-ci job keys",
+            ),
+            "job continue-on-error": (
+                text.replace(
+                    "    runs-on: ubuntu-latest\n",
+                    "    runs-on: ubuntu-latest\n    continue-on-error: true\n",
+                    1,
+                ),
+                "closed pr-ci job keys",
+            ),
+            "step if": (
+                text.replace(no_write, no_write + "        if: false\n", 1),
+                "exact closed six-step order",
+            ),
+            "step continue-on-error": (
+                text.replace(
+                    no_write,
+                    no_write + "        continue-on-error: true\n",
+                    1,
+                ),
+                "exact closed six-step order",
+            ),
+        }
+        for label, (mutated, expected) in mutations.items():
+            with self.subTest(label=label):
+                errors = self._ci_errors(mutated)
+                self.assertTrue(
+                    any(expected in error for error in errors),
+                    errors,
+                )
 
     def test_completion_term_drift_fails_docs_projection(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -1154,7 +1415,6 @@ class DocsCoreProjectionTests(unittest.TestCase):
             ROOT
             / "docs/skill_professionalism_standard/SKILL_PROFESSIONALISM_EVALUATION_AND_GOVERNANCE.md",
             ROOT / "reports/professionalism-regression-report.md",
-            ROOT / "reports/professionalism-release-readiness.md",
         )
         forbidden = (
             "professional completeness panel is schema 2",

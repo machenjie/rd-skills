@@ -29,15 +29,15 @@ Paste commands and results:
 
 Required for Skill-system changes:
 
-- [ ] `python3 scripts/eval-core-principles.py --gate authoring`
-- [ ] The required repository execution set in `docs/VALIDATION.md` ran on the same final tree.
-- [ ] Generated artifacts are fresh and the working tree contains only intended changes.
-- [ ] Authoring CI passed for the current commit.
+- [ ] Development Affected selected the expected producer/test closure for this base and head.
+- [ ] The single PR-only `CI / pr-ci` affected check passed for the current head.
+- [ ] If this is an integration handoff or release candidate, the local Full Regression in `docs/VALIDATION.md` ran once on the final material tree.
+- [ ] Generated artifacts required by the selected path are fresh and the working tree contains only intended changes.
 
 Required only when this PR claims formal-release readiness:
 
 - [ ] `python3 scripts/eval-core-principles.py --gate formal-release`
-- [ ] `python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review`
+- [ ] Core reports `professionalism-formal-release-ready=pass` and the sole professionalism JSON reports `release_gate=release-ready`; no direct producer rerun is counted as separate evidence.
 - [ ] Root lifecycle is `release-current` with no unclassified change.
 - [ ] Readability schema-2 review is current, covers all actionability targets, and has zero tracked tightening, unresolved detector false positives, or required rewrites.
 - [ ] Professional-completeness schema-3 review is current: exact carry uses direct fresh origins, fresh Skills receive two qualified domain votes plus one architecture vote, all 189 effective packages are accepted, correction/unresolved counts are zero, and contract/plan/bindings/provenance/chain/storage/cost are current.

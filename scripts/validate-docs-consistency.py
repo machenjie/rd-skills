@@ -292,7 +292,11 @@ REQUIRED_NAVIGATION = {
         "evals/pressure/README.md",
     ),
 }
-ORDINARY_GATE_COMMANDS = (
+DEVELOPMENT_AFFECTED_COMMANDS = (
+    "python3 scripts/eval-core-principles.py --gate affected --base <base> --head <head>",
+    "python3 scripts/run-ci-tests.py run --base <base> --head <head>",
+)
+FULL_REGRESSION_COMMANDS = (
     "python3 scripts/eval-core-principles.py --gate authoring",
     "python3 scripts/validate-examples.py",
     "python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md --check",
@@ -1549,72 +1553,263 @@ def _required_content_errors(root: Path) -> list[str]:
     return errors
 
 
-def _ordered_command_errors(path: Path) -> list[str]:
+def _ordered_command_errors(
+    path: Path,
+    commands: tuple[str, ...],
+    label: str,
+) -> list[str]:
     text = path.read_text(encoding="utf-8")
     position = 0
     errors: list[str] = []
-    for command in ORDINARY_GATE_COMMANDS:
-        found = text.find(command, position)
-        if found < 0:
-            errors.append(f"{path.name}: missing or out-of-order ordinary gate command {command}")
-            continue
-        position = found + len(command)
-    return errors
-
-
-def _ci_authoring_gate_errors(path: Path) -> list[str]:
-    """Require the canonical CI gates with affected tests replacing full discovery."""
-
-    text = path.read_text(encoding="utf-8")
-    full_discovery = "python3 -m unittest discover -s tests"
-    affected_runner = "python3 scripts/run-ci-tests.py run"
-    errors: list[str] = []
-    position = 0
-    for command in ORDINARY_GATE_COMMANDS:
-        if command == full_discovery:
-            continue
+    for command in commands:
         found = text.find(command, position)
         if found < 0:
             errors.append(
-                f"{path.name}: missing or out-of-order ordinary gate command {command}"
+                f"{path.name}: missing or out-of-order {label} command {command}"
             )
             continue
         position = found + len(command)
-    if full_discovery in text:
-        errors.append(
-            f"{path.name}: CI must replace unconditional full discovery with affected tests"
-        )
-    if text.count(affected_runner) != 1:
-        errors.append(
-            f"{path.name}: CI must contain exactly one affected-test runner projection"
-        )
     return errors
 
 
-def _authoring_gate_consistency_errors(root: Path) -> list[str]:
+def _ci_affected_check_errors(path: Path) -> list[str]:
+    """Require one minimal pull-request-only affected CI check."""
+
+    errors: list[str] = []
+    try:
+        workflow = load_yaml_file(path)
+    except (OSError, UnicodeError, ValidationProblem) as exc:
+        return [f"{path.name}: invalid CI workflow YAML: {exc}"]
+    if not isinstance(workflow, dict):
+        return [f"{path.name}: CI workflow must be a top-level mapping"]
+
+    # PyYAML's YAML 1.1 resolver treats the unquoted GitHub Actions key `on`
+    # as boolean true. The repository fallback parser retains it as a string;
+    # accept either semantic representation without adding another parser.
+    normalized_top_keys = {
+        "on" if key is True else key
+        for key in workflow
+    }
+    allowed_top_keys = {"name", "on", "permissions", "jobs"}
+    required_top_keys = {"name", "on", "jobs"}
+    if (
+        len(workflow) != len(normalized_top_keys)
+        or not required_top_keys.issubset(normalized_top_keys)
+        or not normalized_top_keys.issubset(allowed_top_keys)
+    ):
+        errors.append(f"{path.name}: CI must use the closed top-level workflow keys")
+
+    on_present = "on" in workflow or True in workflow
+    on_value = workflow.get("on") if "on" in workflow else workflow.get(True)
+    if isinstance(on_value, str):
+        trigger_names = {on_value}
+        pull_request_config: object = None
+    elif isinstance(on_value, list) and all(
+        isinstance(item, str) for item in on_value
+    ):
+        trigger_names = set(on_value)
+        pull_request_config = None
+    elif isinstance(on_value, dict) and all(
+        isinstance(item, str) for item in on_value
+    ):
+        trigger_names = set(on_value)
+        pull_request_config = on_value.get("pull_request")
+    else:
+        trigger_names = set()
+        pull_request_config = None
+    if not on_present or trigger_names != {"pull_request"}:
+        errors.append(f"{path.name}: ordinary CI must trigger on pull_request only")
+    if pull_request_config != {}:
+        errors.append(f"{path.name}: pull_request configuration must be empty")
+    if isinstance(pull_request_config, dict) and any(
+        key in pull_request_config for key in ("paths", "paths-ignore")
+    ):
+        errors.append(f"{path.name}: pull-request CI must not define path filters")
+
+    jobs = workflow.get("jobs")
+    if not isinstance(jobs, dict) or set(jobs) != {"pr-ci"}:
+        errors.append(f"{path.name}: CI must contain exactly the pr-ci job/check")
+        job: dict[str, Any] = {}
+    else:
+        candidate = jobs["pr-ci"]
+        job = candidate if isinstance(candidate, dict) else {}
+        if not job:
+            errors.append(f"{path.name}: pr-ci job must be a mapping")
+
+    strategy = job.get("strategy")
+    if "matrix" in job or (
+        isinstance(strategy, dict) and "matrix" in strategy
+    ):
+        errors.append(f"{path.name}: pull-request CI must not define a matrix")
+
+    permission_configs = []
+    if "permissions" in workflow:
+        permission_configs.append(workflow["permissions"])
+    if "permissions" in job:
+        permission_configs.append(job["permissions"])
+    if permission_configs != [{"contents": "read"}]:
+        errors.append(f"{path.name}: CI permissions must grant contents: read only")
+
+    expected_job_keys = {"runs-on", "env", "steps"}
+    if "permissions" in job:
+        expected_job_keys.add("permissions")
+    if (
+        set(job) != expected_job_keys
+        or job.get("runs-on") != "ubuntu-latest"
+        or job.get("env") != {"PYTHONDONTWRITEBYTECODE": "1"}
+    ):
+        errors.append(f"{path.name}: CI must use the closed pr-ci job keys")
+
+    affected_gate = (
+        "python3 scripts/eval-core-principles.py --gate affected "
+        '--base "$CI_BASE_SHA" --head "$CI_HEAD_SHA"'
+    )
+    affected_runner = "python3 scripts/run-ci-tests.py run"
+    no_write = "git diff --exit-code --no-ext-diff --no-textconv HEAD --"
+    install_run = (
+        'install_root="$(mktemp -d)"\n'
+        'git archive --format=tar HEAD | tar -xf - -C "$install_root"\n'
+        'python3 -m pip install --disable-pip-version-check "$install_root"'
+    )
+    expected_sha_env = {
+        "CI_BASE_SHA": "${{ github.event.pull_request.base.sha }}",
+        "CI_HEAD_SHA": "${{ github.event.pull_request.head.sha }}",
+    }
+    raw_steps = job.get("steps")
+    steps = (
+        [step for step in raw_steps if isinstance(step, dict)]
+        if isinstance(raw_steps, list)
+        else []
+    )
+    run_steps = [
+        (step, step["run"].strip())
+        for step in steps
+        if isinstance(step.get("run"), str)
+    ]
+    checkout_steps = [
+        step
+        for step in steps
+        if isinstance(step.get("uses"), str)
+        and step["uses"] == "actions/checkout@v4"
+    ]
+    setup_steps = [
+        step
+        for step in steps
+        if isinstance(step.get("uses"), str)
+        and step["uses"] == "actions/setup-python@v5"
+    ]
+    closed_sequence = (
+        len(steps) == 6
+        and len(raw_steps) == 6
+        and set(steps[0]) == {"uses", "with"}
+        and steps[0].get("uses") == "actions/checkout@v4"
+        and steps[0].get("with")
+        == {
+            "fetch-depth": 0,
+            "ref": "${{ github.event.pull_request.head.sha }}",
+        }
+        and set(steps[1]) == {"uses", "with"}
+        and steps[1].get("uses") == "actions/setup-python@v5"
+        and steps[1].get("with") == {"python-version": "3.11"}
+        and set(steps[2]) == {"name", "run"}
+        and steps[2].get("run") == install_run
+        and set(steps[3]) == {"name", "env", "run"}
+        and steps[3].get("run") == affected_gate
+        and steps[3].get("env") == expected_sha_env
+        and set(steps[4]) == {"name", "env", "run"}
+        and steps[4].get("run") == affected_runner
+        and steps[4].get("env") == expected_sha_env
+        and set(steps[5]) == {"name", "run"}
+        and steps[5].get("run") == no_write
+    )
+    if not closed_sequence:
+        errors.append(
+            f"{path.name}: CI must use the exact closed six-step order"
+        )
+    if len(checkout_steps) != 1:
+        errors.append(f"{path.name}: CI must contain exactly one checkout")
+    else:
+        checkout_with = checkout_steps[0].get("with")
+        if not isinstance(checkout_with, dict) or checkout_with.get("ref") != (
+            "${{ github.event.pull_request.head.sha }}"
+        ):
+            errors.append(
+                f"{path.name}: CI must contain exactly one pull-request head checkout"
+            )
+    if len(setup_steps) != 1:
+        errors.append(f"{path.name}: CI must contain exactly one Python setup")
+
+    install_token = "python3 -m pip install --disable-pip-version-check"
+    if sum(run.count(install_token) for _step, run in run_steps) != 1:
+        errors.append(f"{path.name}: CI must contain exactly one isolated install")
+
+    exact_commands = {
+        "affected producer gate": affected_gate,
+        "unsharded affected-test runner": affected_runner,
+        "tracked no-write check": no_write,
+    }
+    matched_steps: dict[str, list[dict[str, Any]]] = {}
+    for label, command in exact_commands.items():
+        matches = [step for step, run in run_steps if run == command]
+        matched_steps[label] = matches
+        if len(matches) != 1:
+            errors.append(f"{path.name}: CI must contain exactly one {label}")
+
+    for label in ("affected producer gate", "unsharded affected-test runner"):
+        matches = matched_steps[label]
+        if len(matches) != 1 or matches[0].get("env") != expected_sha_env:
+            errors.append(
+                f"{path.name}: {label} must use the exact pull-request base/head environment"
+            )
+
+    forbidden_commands = [
+        command
+        for command in FULL_REGRESSION_COMMANDS
+        if command != "python3 -m unittest discover -s tests"
+    ]
+    if (
+        any("python3 -m unittest discover -s tests" in run for _step, run in run_steps)
+        or any(
+            command in run
+            for _step, run in run_steps
+            for command in forbidden_commands
+        )
+    ):
+        errors.append(f"{path.name}: CI must not run the unconditional Full Regression")
+    if any("shard" in run.casefold() for _step, run in run_steps):
+        errors.append(f"{path.name}: affected-test execution must be unsharded")
+    return errors
+
+
+def _validation_path_consistency_errors(root: Path) -> list[str]:
     errors: list[str] = []
     for relative in ("AGENTS.md", "docs/VALIDATION.md"):
         path = root / relative
         if not path.is_file():
-            errors.append(f"missing ordinary authoring gate owner: {relative}")
+            errors.append(f"missing validation path owner: {relative}")
             continue
-        errors.extend(
-            error.replace(path.name, relative, 1)
-            for error in _ordered_command_errors(path)
-        )
+        for commands, label in (
+            (DEVELOPMENT_AFFECTED_COMMANDS, "Development Affected"),
+            (FULL_REGRESSION_COMMANDS, "local Full Regression"),
+        ):
+            errors.extend(
+                error.replace(path.name, relative, 1)
+                for error in _ordered_command_errors(path, commands, label)
+            )
     ci_path = root / ".github/workflows/ci.yml"
     if not ci_path.is_file():
-        errors.append("missing ordinary authoring gate owner: .github/workflows/ci.yml")
+        errors.append("missing pull-request affected CI owner: .github/workflows/ci.yml")
     else:
         errors.extend(
             error.replace(ci_path.name, ".github/workflows/ci.yml", 1)
-            for error in _ci_authoring_gate_errors(ci_path)
+            for error in _ci_affected_check_errors(ci_path)
         )
 
     references = {
-        "CONTRIBUTING.md": ("complete ordinary authoring gate", "docs/VALIDATION.md"),
+        "CONTRIBUTING.md": ("Development Affected", "docs/VALIDATION.md"),
         ".github/pull_request_template.md": (
-            "python3 scripts/eval-core-principles.py --gate authoring",
+            "CI / pr-ci",
+            "local Full Regression",
             "docs/VALIDATION.md",
         ),
     }
@@ -1625,7 +1820,7 @@ def _authoring_gate_consistency_errors(root: Path) -> list[str]:
         text = path.read_text(encoding="utf-8")
         for phrase in phrases:
             if phrase not in text:
-                errors.append(f"{relative}: missing ordinary gate reference {phrase}")
+                errors.append(f"{relative}: missing validation path reference {phrase}")
 
     release = root / "docs/RELEASE.md"
     if release.is_file() and re.search(
@@ -1635,8 +1830,8 @@ def _authoring_gate_consistency_errors(root: Path) -> list[str]:
         re.DOTALL,
     ):
         errors.append(
-            "docs/RELEASE.md: must link to the ordinary authoring path instead of "
-            "duplicating its authoring-gate command"
+            "docs/RELEASE.md: must link to local Full Regression instead of "
+            "duplicating its Core authoring command"
         )
     return errors
 
@@ -1809,7 +2004,7 @@ def validate_docs_consistency(root: Path = ROOT) -> list[str]:
 
     errors.extend(_navigation_errors(root))
     errors.extend(_required_content_errors(root))
-    errors.extend(_authoring_gate_consistency_errors(root))
+    errors.extend(_validation_path_consistency_errors(root))
     errors.extend(_volatile_fact_errors(root))
     errors.extend(_current_evidence_projection_errors(root))
     errors.extend(_slash_invocation_errors(root))

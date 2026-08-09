@@ -40,7 +40,8 @@ Security fixes must preserve repository boundaries:
 
 ## Security Validation
 
-Security-sensitive changes must complete the ordinary authoring gate from
+Security-sensitive committed changes must complete Development Affected from
 [docs/VALIDATION.md](docs/VALIDATION.md), plus the targeted reproducer or
-regression test needed for the report. Run the formal gate only when preparing
-a formal release.
+regression test needed for the report. Run the local Full Regression before an
+integration handoff or release candidate, and run the Formal Release gate only
+when preparing a formal release.

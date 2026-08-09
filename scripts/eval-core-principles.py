@@ -9,19 +9,28 @@ import errno
 import hashlib
 import json
 import math
+import ntpath
 import os
 import signal
+import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 import time
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from impact_graph import ImpactGraphError, select as select_impact
+
 from validation_utils import (
+    AFFECTED_CONTEXT_ENV,
     CANONICAL_CORE_PRINCIPLE_IDENTITIES,
     PRINCIPLE_PREDICATE_OPERATORS,
+    ValidationProblem,
+    parse_affected_professionalism_context,
     resolve_json_pointer,
+    validate_core_contracts,
     validate_principle_acceptance_contract,
 )
 
@@ -30,7 +39,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CANONICAL_CONTRACT_SOURCE = "src/control-model/core-contracts.json"
 JSON_REPORT = "reports/core-principles-outcomes.json"
 MARKDOWN_REPORT = "reports/core-principles-outcomes.md"
-REPORT_SCHEMA_VERSION = 3
+REPORT_SCHEMA_VERSION = 4
 MAX_SAVED_REPORT_SCHEMA_ERRORS = 64
 MAX_SAVED_REPORT_COLLECTION_ITEMS = 10_000
 TIMEOUT_DESCENDANT_DISCOVERY_SECONDS = 0.20
@@ -54,6 +63,8 @@ PRODUCER_FAILURE_REASON_CODES = {
     "process-tree-cleanup-failed",
     "report-not-json-object",
     "report-not-refreshed",
+    "release-report-not-refreshed",
+    "release-report-not-text",
     "source-tree-mutated",
 }
 PROFESSIONALISM_PRODUCER_ID = "validate-professionalism-regression"
@@ -96,8 +107,6 @@ EXCLUDED_TREE_PREFIXES = (
     "reports/",
 )
 EXCLUDED_TREE_PARTS = {"__pycache__"}
-
-
 def _canonical_json(value: object) -> bytes:
     return json.dumps(
         value,
@@ -157,13 +166,12 @@ def input_tree_digest(root: Path) -> dict[str, object]:
 
 def _file_snapshot(path: Path) -> dict[str, object]:
     if not path.is_file():
-        return {"exists": False, "mtime_ns": None, "size": None, "sha256": None}
+        return {"exists": False, "mtime_ns": None, "size": None}
     stat = path.stat()
     return {
         "exists": True,
         "mtime_ns": stat.st_mtime_ns,
         "size": stat.st_size,
-        "sha256": _sha256_bytes(path.read_bytes()),
     }
 
 
@@ -175,17 +183,7 @@ def _fresh_report(before: dict[str, object], after: dict[str, object]) -> bool:
     return (
         before["mtime_ns"] != after["mtime_ns"]
         or before["size"] != after["size"]
-        or before["sha256"] != after["sha256"]
     )
-
-
-def _sha256_stream(stream: Any) -> str:
-    stream.flush()
-    stream.seek(0)
-    digest = hashlib.sha256()
-    while chunk := stream.read(1024 * 1024):
-        digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _json_value_type(value: object) -> str:
@@ -211,10 +209,7 @@ def _json_value_type(value: object) -> str:
 def _actual_metadata(value: object) -> dict[str, object]:
     """Close actual predicate evidence without persisting the resolved value."""
 
-    result: dict[str, object] = {
-        "type": _json_value_type(value),
-        "canonical_sha256": _sha256_bytes(_canonical_json(value)),
-    }
+    result: dict[str, object] = {"type": _json_value_type(value)}
     if isinstance(value, (str, list, dict)):
         result["length"] = len(value)
     return result
@@ -654,9 +649,8 @@ def _producer_result_without_execution(
         "status": status,
         "exit_code": None,
         "timed_out": False,
-        "stdout_sha256": None,
-        "stderr_sha256": None,
         "reports": [],
+        "release_reports": [],
         "failure_reason_codes": [reason],
         "source_unchanged": True,
     }
@@ -684,6 +678,9 @@ def _run_producers(
     root: Path,
     producers: list[dict[str, Any]],
     initial_tree: dict[str, object],
+    *,
+    release_projection: bool = False,
+    producer_environment: dict[str, str] | None = None,
 ) -> tuple[list[dict[str, object]], dict[str, dict[str, object]], dict[str, object]]:
     results: list[dict[str, object]] = []
     by_id: dict[str, dict[str, object]] = {}
@@ -713,7 +710,13 @@ def _run_producers(
         report_before = {
             path: _file_snapshot(root / path) for path in producer["reports"]
         }
+        release_before = {
+            path: _file_snapshot(root / path)
+            for path in producer["release_reports"]
+        }
         command = [sys.executable, *producer["argv"][1:]]
+        if release_projection and producer["release_reports"]:
+            command.append("--release-projection")
         exit_code: int | None = None
         timed_out = False
         process_started = False
@@ -727,7 +730,11 @@ def _run_producers(
                     cwd=root,
                     stdout=stdout_stream,
                     stderr=stderr_stream,
-                    env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+                    env={
+                        **os.environ,
+                        "PYTHONDONTWRITEBYTECODE": "1",
+                        **(producer_environment or {}),
+                    },
                     start_new_session=os.name == "posix",
                     creationflags=(
                         subprocess.CREATE_NEW_PROCESS_GROUP
@@ -747,8 +754,6 @@ def _run_producers(
                         )
             except OSError:
                 failure_reason_codes.append("process-start-failed")
-            stdout_sha256 = _sha256_stream(stdout_stream)
-            stderr_sha256 = _sha256_stream(stderr_stream)
         if process_started and not timed_out and exit_code != 0:
             failure_reason_codes.append("process-exit-nonzero")
         report_results: list[dict[str, object]] = []
@@ -773,9 +778,31 @@ def _run_producers(
                     "path": report,
                     "fresh": fresh,
                     "json_object": json_object,
-                    "sha256": after["sha256"],
                 }
             )
+        release_report_results: list[dict[str, object]] = []
+        if release_projection:
+            for report in producer["release_reports"]:
+                path = root / report
+                after = _file_snapshot(path)
+                fresh = _fresh_report(release_before[report], after)
+                text_report = False
+                if after["exists"]:
+                    try:
+                        text_report = bool(path.read_text(encoding="utf-8").strip())
+                    except (OSError, UnicodeError):
+                        text_report = False
+                if not fresh:
+                    failure_reason_codes.append("release-report-not-refreshed")
+                if not text_report:
+                    failure_reason_codes.append("release-report-not-text")
+                release_report_results.append(
+                    {
+                        "path": report,
+                        "fresh": fresh,
+                        "text_report": text_report,
+                    }
+                )
         next_tree = input_tree_digest(root)
         if timed_out:
             time.sleep(TIMEOUT_TREE_RECHECK_SECONDS)
@@ -798,9 +825,8 @@ def _run_producers(
             "status": status,
             "exit_code": exit_code,
             "timed_out": timed_out,
-            "stdout_sha256": None if status == "pass" else stdout_sha256,
-            "stderr_sha256": None if status == "pass" else stderr_sha256,
             "reports": report_results,
+            "release_reports": release_report_results,
             "failure_reason_codes": failure_reason_codes,
             "source_unchanged": source_unchanged,
         }
@@ -975,13 +1001,11 @@ def _authority_results(
             consumers[authority_id].append(producer["id"])
     results: list[dict[str, object]] = []
     for authority in acceptance["authorities"]:
-        value = resolve_json_pointer(contract, authority["pointer"])
         results.append(
             {
                 "id": authority["id"],
                 "source": "src/control-model/core-contracts.json",
                 "pointer": authority["pointer"],
-                "value_sha256": _sha256_bytes(_canonical_json(value)),
                 "consumer_results": [
                     {
                         "producer": producer_id,
@@ -1005,6 +1029,8 @@ def _invalid_report(
     root: Path,
     contract_sha256: str | None,
     errors: list[str],
+    *,
+    release_projection: bool = False,
 ) -> dict[str, object]:
     tree = input_tree_digest(root)
     return {
@@ -1012,6 +1038,7 @@ def _invalid_report(
         "kind": "changeforge.core_principles_outcomes",
         "contract_source": CANONICAL_CONTRACT_SOURCE,
         "contract_sha256": contract_sha256,
+        "release_projection": release_projection,
         "input_tree": {"pre": tree, "post": tree, "unchanged": True},
         "principles_status": "fail",
         "authoring_principles_status": "fail",
@@ -1032,16 +1059,25 @@ def evaluate(
     contract: dict[str, Any],
     *,
     contract_sha256: str | None = None,
+    release_projection: bool = False,
 ) -> dict[str, object]:
     """Run one complete outcome evaluation and return the deterministic report."""
 
     errors = validate_principle_acceptance_contract(contract, root)
     if errors:
-        return _invalid_report(root, contract_sha256, errors)
+        return _invalid_report(
+            root,
+            contract_sha256,
+            errors,
+            release_projection=release_projection,
+        )
     acceptance = contract["principle_acceptance_contract"]
     pre_tree = input_tree_digest(root)
     producers, producers_by_id, post_tree = _run_producers(
-        root, acceptance["producers"], pre_tree
+        root,
+        acceptance["producers"],
+        pre_tree,
+        release_projection=release_projection,
     )
     authority_values = {
         authority["id"]: resolve_json_pointer(contract, authority["pointer"])
@@ -1066,6 +1102,7 @@ def evaluate(
         "kind": "changeforge.core_principles_outcomes",
         "contract_source": CANONICAL_CONTRACT_SOURCE,
         "contract_sha256": contract_sha256,
+        "release_projection": release_projection,
         "input_tree": {
             "pre": pre_tree,
             "post": post_tree,
@@ -1084,6 +1121,268 @@ def evaluate(
             contract, producers_by_id, outcomes_by_id
         ),
         "principles": principles,
+    }
+
+
+def evaluate_affected(
+    root: Path,
+    contract: dict[str, Any],
+    producer_ids: list[str],
+    affected_context: dict[str, Any] | None = None,
+) -> dict[str, object]:
+    """Execute one selected canonical producer closure without writing a report."""
+
+    validated_context: dict[str, Any] | None = None
+    if affected_context is not None:
+        try:
+            validated_context = parse_affected_professionalism_context(
+                json.dumps(
+                    affected_context,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+            )
+        except ValidationProblem as exc:
+            raise ImpactGraphError(
+                "invalid-impact-selection",
+                f"affected producer context is invalid: {exc}",
+            ) from exc
+    acceptance = contract["principle_acceptance_contract"]
+    rows = {row["id"]: row for row in acceptance["producers"]}
+    if len(producer_ids) != len(set(producer_ids)):
+        raise ImpactGraphError(
+            "invalid-impact-selection", "selected producer IDs are duplicated"
+        )
+    unknown = sorted(set(producer_ids) - set(rows))
+    if unknown:
+        raise ImpactGraphError(
+            "invalid-impact-selection", f"selected producers are unknown: {unknown}"
+        )
+    selected_set = set(producer_ids)
+    for producer_id in producer_ids:
+        missing = sorted(set(rows[producer_id]["depends_on"]) - selected_set)
+        if missing:
+            raise ImpactGraphError(
+                "invalid-impact-selection",
+                f"producer {producer_id!r} lacks dependency closure {missing}",
+            )
+    selected = [
+        producer for producer in acceptance["producers"]
+        if producer["id"] in selected_set
+    ]
+    pre_tree = input_tree_digest(root)
+    producers, producers_by_id, post_tree = _run_producers(
+        root,
+        selected,
+        pre_tree,
+        producer_environment=(
+            {
+                AFFECTED_CONTEXT_ENV: json.dumps(
+                    validated_context,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+            }
+            if validated_context is not None
+            else None
+        ),
+    )
+    authoring_outcome_ids = {
+        outcome_id
+        for principle in contract["core_principles"]
+        for outcome_id in principle["required_outcomes"]["authoring"]
+    }
+    selected_outcomes = [
+        outcome for outcome in acceptance["outcomes"]
+        if outcome["producer"] in selected_set
+        and outcome["id"] in authoring_outcome_ids
+        and not (
+            validated_context is not None
+            and outcome["producer"] == PROFESSIONALISM_PRODUCER_ID
+            and validated_context["professionalism"]["scope"] != "none"
+        )
+    ]
+    authority_values = {
+        authority["id"]: resolve_json_pointer(contract, authority["pointer"])
+        for authority in acceptance["authorities"]
+    }
+    outcomes, _outcomes_by_id = _evaluate_outcomes(
+        root,
+        selected_outcomes,
+        producers_by_id,
+        authority_values,
+    ) if selected_outcomes else ([], {})
+    status = (
+        "pass"
+        if all(item["status"] == "pass" for item in producers)
+        and all(item["status"] == "pass" for item in outcomes)
+        else "fail"
+    )
+    return {
+        "schema_version": 1,
+        "kind": "changeforge.affected_core_principles",
+        "status": status,
+        "execution_mode": "isolated-selected-commit-archive",
+        "input_tree": {
+            "pre": pre_tree,
+            "post": post_tree,
+            "unchanged": pre_tree == post_tree,
+        },
+        "command_execution_count": sum(
+            item["status"] != "not_run" for item in producers
+        ),
+        "producers": producers,
+        "outcomes": outcomes,
+    }
+
+
+def _extract_tracked_archive(archive: object, destination: Path) -> None:
+    """Extract regular tracked files without accepting link or traversal entries."""
+
+    with tarfile.open(fileobj=archive, mode="r:") as tracked:
+        resolved_destination = destination.resolve(strict=False)
+        validated: list[tuple[tarfile.TarInfo, Path]] = []
+        for member in tracked.getmembers():
+            name = member.name
+            components = name.split("/")
+            windows_drive, _windows_tail = ntpath.splitdrive(name)
+            relative = PurePosixPath(name)
+            if (
+                not name
+                or "\\" in name
+                or windows_drive
+                or relative.is_absolute()
+                or any(component in {"", ".", ".."} for component in components)
+            ):
+                raise ImpactGraphError(
+                    "unsafe-archive-entry", "selected commit contains an unsafe path"
+                )
+            if not member.isdir() and not member.isfile():
+                raise ImpactGraphError(
+                    "unsafe-archive-entry",
+                    "selected commit contains an unsupported non-file entry",
+                )
+            target = destination.joinpath(*components)
+            resolved_target = target.resolve(strict=False)
+            try:
+                common = Path(
+                    os.path.commonpath((resolved_destination, resolved_target))
+                )
+            except ValueError as exc:
+                raise ImpactGraphError(
+                    "unsafe-archive-entry",
+                    "selected commit target is outside the extraction root",
+                ) from exc
+            if common != resolved_destination or resolved_target == resolved_destination:
+                raise ImpactGraphError(
+                    "unsafe-archive-entry",
+                    "selected commit target is outside the extraction root",
+                )
+            validated.append((member, target))
+
+        destination.mkdir()
+        for member, target in validated:
+            if member.isdir():
+                target.mkdir(parents=True, exist_ok=True)
+                continue
+            source = tracked.extractfile(member)
+            if source is None:
+                raise ImpactGraphError(
+                    "isolation-archive-failed", "could not read a tracked file"
+                )
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with target.open("xb") as output:
+                shutil.copyfileobj(source, output)
+            target.chmod(member.mode & 0o777)
+
+
+def run_affected_isolated(
+    root: Path,
+    contract: dict[str, Any],
+    producer_ids: list[str],
+    head_sha: str,
+    affected_context: dict[str, Any] | None = None,
+) -> dict[str, object]:
+    """Run affected producers from the selected tracked commit in a disposable tree."""
+    git_environment = {
+        **os.environ,
+        "GIT_OPTIONAL_LOCKS": "0",
+        "LC_ALL": "C",
+    }
+    current = subprocess.run(
+        ["git", "rev-parse", "--verify", "HEAD^{commit}"],
+        cwd=root,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=git_environment,
+        text=True,
+    )
+    dirty = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        cwd=root,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=git_environment,
+    )
+    if (
+        current.returncode != 0
+        or current.stdout.strip() != head_sha
+        or dirty.returncode != 0
+        or dirty.stdout
+    ):
+        raise ImpactGraphError(
+            "head-worktree-mismatch",
+            "affected execution requires a clean checkout at the selected head",
+        )
+    with tempfile.TemporaryDirectory(prefix="changeforge-affected-") as temporary:
+        isolated_root = Path(temporary) / "repository"
+        with tempfile.TemporaryFile(mode="w+b") as archive:
+            archived = subprocess.run(
+                ["git", "archive", "--format=tar", head_sha],
+                cwd=root,
+                check=False,
+                stdout=archive,
+                stderr=subprocess.PIPE,
+                env=git_environment,
+            )
+            if archived.returncode != 0:
+                raise ImpactGraphError(
+                    "isolation-archive-failed",
+                    "Git could not archive the selected tracked commit",
+                )
+            archive.seek(0)
+            try:
+                _extract_tracked_archive(archive, isolated_root)
+            except (OSError, tarfile.TarError) as exc:
+                raise ImpactGraphError(
+                    "isolation-archive-failed",
+                    "could not extract the selected tracked commit",
+                ) from exc
+        return evaluate_affected(
+            isolated_root,
+            contract,
+            producer_ids,
+            affected_context=affected_context,
+        )
+
+
+def _affected_professionalism_context(
+    selection: dict[str, Any],
+) -> dict[str, Any]:
+    professionalism = selection.get("professionalism")
+    if not isinstance(professionalism, dict):
+        raise ImpactGraphError(
+            "invalid-impact-selection",
+            "affected selection lacks Professionalism scope",
+        )
+    return {
+        "schema_version": 1,
+        "mode": "affected",
+        "base_sha": selection["base_sha"],
+        "head_sha": selection["head_sha"],
+        "professionalism": professionalism,
     }
 
 
@@ -1118,7 +1417,12 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def write_reports(root: Path, report: dict[str, Any]) -> None:
+def write_reports(
+    root: Path,
+    report: dict[str, Any],
+    *,
+    release_projection: bool = False,
+) -> None:
     json_path = root / JSON_REPORT
     markdown_path = root / MARKDOWN_REPORT
     json_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1126,7 +1430,8 @@ def write_reports(root: Path, report: dict[str, Any]) -> None:
         json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    markdown_path.write_text(render_markdown(report), encoding="utf-8")
+    if release_projection:
+        markdown_path.write_text(render_markdown(report), encoding="utf-8")
 
 
 def _saved_report_schema_errors(report: object) -> list[str]:
@@ -1168,7 +1473,12 @@ def _saved_report_schema_errors(report: object) -> list[str]:
             return False
         return True
 
-    def report_path(value: object, context: str) -> bool:
+    def report_path(
+        value: object,
+        context: str,
+        *,
+        suffix: str = ".json",
+    ) -> bool:
         if not string(value, context):
             return False
         assert isinstance(value, str)
@@ -1177,10 +1487,10 @@ def _saved_report_schema_errors(report: object) -> list[str]:
             path.is_absolute()
             or not path.parts
             or path.parts[0] != "reports"
-            or path.suffix != ".json"
+            or path.suffix != suffix
             or ".." in path.parts
         ):
-            add(f"{context} must be a safe reports/*.json path")
+            add(f"{context} must be a safe reports/*{suffix} path")
             return False
         return True
 
@@ -1277,6 +1587,7 @@ def _saved_report_schema_errors(report: object) -> list[str]:
         "kind",
         "contract_source",
         "contract_sha256",
+        "release_projection",
         "input_tree",
         "principles_status",
         "authoring_principles_status",
@@ -1301,6 +1612,10 @@ def _saved_report_schema_errors(report: object) -> list[str]:
         top["contract_sha256"],
         "core principles report.contract_sha256",
         nullable=True,
+    )
+    boolean(
+        top["release_projection"],
+        "core principles report.release_projection",
     )
     closed_value(
         top["principles_status"],
@@ -1367,13 +1682,13 @@ def _saved_report_schema_errors(report: object) -> list[str]:
         "status",
         "exit_code",
         "timed_out",
-        "stdout_sha256",
-        "stderr_sha256",
         "reports",
+        "release_reports",
         "failure_reason_codes",
         "source_unchanged",
     }
-    artifact_fields = {"path", "fresh", "json_object", "sha256"}
+    artifact_fields = {"path", "fresh", "json_object"}
+    release_artifact_fields = {"path", "fresh", "text_report"}
     producers = closed_list(top["producers"], "core principles report.producers")
     if producers is not None:
         for index, value in enumerate(producers):
@@ -1400,16 +1715,6 @@ def _saved_report_schema_errors(report: object) -> list[str]:
                 producer["exit_code"], f"{context}.exit_code", nullable=True
             )
             boolean(producer["timed_out"], f"{context}.timed_out")
-            sha256(
-                producer["stdout_sha256"],
-                f"{context}.stdout_sha256",
-                nullable=True,
-            )
-            sha256(
-                producer["stderr_sha256"],
-                f"{context}.stderr_sha256",
-                nullable=True,
-            )
             string_list(
                 producer["failure_reason_codes"],
                 f"{context}.failure_reason_codes",
@@ -1433,10 +1738,31 @@ def _saved_report_schema_errors(report: object) -> list[str]:
                     artifact["json_object"],
                     f"{artifact_context}.json_object",
                 )
-                sha256(
-                    artifact["sha256"],
-                    f"{artifact_context}.sha256",
-                    nullable=True,
+            release_artifacts = closed_list(
+                producer["release_reports"], f"{context}.release_reports"
+            )
+            if release_artifacts is None:
+                continue
+            for artifact_index, artifact_value in enumerate(release_artifacts):
+                artifact_context = (
+                    f"{context}.release_reports[{artifact_index}]"
+                )
+                artifact = closed_object(
+                    artifact_value,
+                    release_artifact_fields,
+                    artifact_context,
+                )
+                if artifact is None:
+                    continue
+                report_path(
+                    artifact["path"],
+                    f"{artifact_context}.path",
+                    suffix=".md",
+                )
+                boolean(artifact["fresh"], f"{artifact_context}.fresh")
+                boolean(
+                    artifact["text_report"],
+                    f"{artifact_context}.text_report",
                 )
 
     outcome_fields = {
@@ -1546,7 +1872,7 @@ def _saved_report_schema_errors(report: object) -> list[str]:
                     )
                     continue
                 actual_type = metadata_value.get("type")
-                metadata_fields = {"type", "canonical_sha256"}
+                metadata_fields = {"type"}
                 if type(actual_type) is str and actual_type in {
                     "string",
                     "array",
@@ -1573,10 +1899,6 @@ def _saved_report_schema_errors(report: object) -> list[str]:
                     },
                     f"{predicate_context}.actual_metadata.type",
                 )
-                sha256(
-                    metadata["canonical_sha256"],
-                    f"{predicate_context}.actual_metadata.canonical_sha256",
-                )
                 if "length" in metadata:
                     integer(
                         metadata["length"],
@@ -1588,7 +1910,6 @@ def _saved_report_schema_errors(report: object) -> list[str]:
         "id",
         "source",
         "pointer",
-        "value_sha256",
         "consumer_results",
     }
     consumer_fields = {"producer", "producer_status", "outcomes"}
@@ -1607,7 +1928,6 @@ def _saved_report_schema_errors(report: object) -> list[str]:
             string(authority["id"], f"{context}.id")
             string(authority["source"], f"{context}.source")
             string(authority["pointer"], f"{context}.pointer")
-            sha256(authority["value_sha256"], f"{context}.value_sha256")
             consumers = closed_list(
                 authority["consumer_results"], f"{context}.consumer_results"
             )
@@ -1776,9 +2096,8 @@ def validate_saved_report(root: Path, report: object) -> list[str]:
             "status",
             "exit_code",
             "timed_out",
-            "stdout_sha256",
-            "stderr_sha256",
             "reports",
+            "release_reports",
             "failure_reason_codes",
             "source_unchanged",
         }
@@ -1790,20 +2109,38 @@ def validate_saved_report(root: Path, report: object) -> list[str]:
             if not isinstance(artifact, dict):
                 errors.append("core principles report artifact entry is invalid")
                 continue
-            if set(artifact) != {"path", "fresh", "json_object", "sha256"}:
+            if set(artifact) != {"path", "fresh", "json_object"}:
                 errors.append("core principles report artifact schema is invalid")
                 continue
             path = artifact.get("path")
             if not isinstance(path, str) or not (root / path).is_file():
                 errors.append(f"core principles producer report is missing: {path!r}")
-            elif artifact.get("sha256") != _sha256_bytes((root / path).read_bytes()):
-                errors.append(f"core principles producer report hash is stale: {path}")
             if producer.get("status") == "pass" and (
                 artifact.get("fresh") is not True
                 or artifact.get("json_object") is not True
             ):
                 errors.append(
                     f"passing core principles producer report was not fresh JSON: {path}"
+                )
+        for artifact in producer.get("release_reports", []):
+            if not isinstance(artifact, dict):
+                errors.append("core principles release report entry is invalid")
+                continue
+            if set(artifact) != {"path", "fresh", "text_report"}:
+                errors.append("core principles release report schema is invalid")
+                continue
+            path = artifact.get("path")
+            if not isinstance(path, str) or not (root / path).is_file():
+                errors.append(
+                    f"core principles release report is missing: {path!r}"
+                )
+            if producer.get("status") == "pass" and (
+                artifact.get("fresh") is not True
+                or artifact.get("text_report") is not True
+            ):
+                errors.append(
+                    "passing core principles release report was not fresh text: "
+                    f"{path}"
                 )
     if isinstance(contract, dict):
         contract_errors = validate_principle_acceptance_contract(contract, root)
@@ -1857,8 +2194,6 @@ def validate_saved_report(root: Path, report: object) -> list[str]:
                 or saved.get("timed_out") is not False
                 or saved.get("source_unchanged") is not True
                 or failure_reason_codes
-                or saved.get("stdout_sha256") is not None
-                or saved.get("stderr_sha256") is not None
             ):
                 errors.append(
                     f"passing core principles producer evidence is inconsistent: {declared.get('id')}"
@@ -1874,22 +2209,11 @@ def validate_saved_report(root: Path, report: object) -> list[str]:
             if producer_status == "not_run" and (
                 saved.get("exit_code") is not None
                 or saved.get("timed_out") is not False
-                or saved.get("stdout_sha256") is not None
-                or saved.get("stderr_sha256") is not None
                 or failure_reason_codes != ["dependency-not-pass"]
             ):
                 errors.append(
                     f"not-run core principles producer evidence is inconsistent: {declared.get('id')}"
                 )
-            if producer_status in {"fail", "timeout"}:
-                for stream_name in ("stdout_sha256", "stderr_sha256"):
-                    digest = saved.get(stream_name)
-                    if not isinstance(digest, str) or len(digest) != 64 or any(
-                        char not in "0123456789abcdef" for char in digest
-                    ):
-                        errors.append(
-                            f"core principles producer {stream_name} is invalid: {declared.get('id')}"
-                        )
             artifact_paths = [
                 artifact.get("path")
                 for artifact in saved.get("reports", [])
@@ -1901,6 +2225,21 @@ def validate_saved_report(root: Path, report: object) -> list[str]:
             if artifact_paths != expected_artifact_paths:
                 errors.append(
                     f"core principles producer report list is stale: {declared.get('id')}"
+                )
+            release_artifact_paths = [
+                artifact.get("path")
+                for artifact in saved.get("release_reports", [])
+                if isinstance(artifact, dict)
+            ]
+            expected_release_artifact_paths = (
+                declared.get("release_reports")
+                if report["release_projection"] and producer_status != "not_run"
+                else []
+            )
+            if release_artifact_paths != expected_release_artifact_paths:
+                errors.append(
+                    "core principles producer release report list is stale: "
+                    f"{declared.get('id')}"
                 )
         if report["command_execution_count"] != sum(
             item.get("status") != "not_run"
@@ -1931,16 +2270,6 @@ def validate_saved_report(root: Path, report: object) -> list[str]:
             )
             if report["authorities"] != expected_authorities:
                 errors.append("core principles authority consumers are stale or inconsistent")
-        authority_by_id = {
-            item.get("id"): item
-            for item in report["authorities"]
-            if isinstance(item, dict)
-        }
-        for authority in contract.get("principle_acceptance_contract", {}).get("authorities", []):
-            saved = authority_by_id.get(authority.get("id"))
-            value = resolve_json_pointer(contract, authority["pointer"])
-            if not isinstance(saved, dict) or saved.get("value_sha256") != _sha256_bytes(_canonical_json(value)):
-                errors.append(f"core principles authority hash is stale: {authority.get('id')}")
     return errors[:MAX_SAVED_REPORT_SCHEMA_ERRORS]
 
 
@@ -1948,10 +2277,17 @@ def _args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--gate",
-        choices=("authoring", "formal-release"),
+        choices=("authoring", "formal-release", "affected"),
         default="authoring",
     )
     parser.add_argument("--root", type=Path, default=ROOT)
+    parser.add_argument("--base")
+    parser.add_argument("--head")
+    parser.add_argument(
+        "--explain",
+        action="store_true",
+        help="print the affected selection without executing producers",
+    )
     return parser.parse_args(argv)
 
 
@@ -1959,6 +2295,58 @@ def main(argv: list[str] | None = None) -> int:
     args = _args(sys.argv[1:] if argv is None else argv)
     root = args.root.resolve()
     contract_path = root / CANONICAL_CONTRACT_SOURCE
+    if args.gate == "affected":
+        try:
+            contract = json.loads(contract_path.read_text(encoding="utf-8"))
+            errors = validate_core_contracts(contract, root)
+            if errors:
+                raise ImpactGraphError("invalid-impact-graph", "; ".join(errors))
+            selection = select_impact(root, contract, args.base, args.head)
+            if args.explain:
+                print(json.dumps(selection, indent=2, sort_keys=True))
+                return 0
+            affected = run_affected_isolated(
+                root,
+                contract,
+                selection["selected_producer_ids"],
+                selection["head_sha"],
+                affected_context=_affected_professionalism_context(selection),
+            )
+            print(
+                json.dumps(
+                    {
+                        "selection": selection,
+                        "execution": affected,
+                    },
+                    sort_keys=True,
+                )
+            )
+            return 0 if affected["status"] == "pass" else 1
+        except (
+            ImpactGraphError,
+            OSError,
+            UnicodeError,
+            json.JSONDecodeError,
+            ValueError,
+        ) as exc:
+            reason = (
+                exc.reason if isinstance(exc, ImpactGraphError)
+                else "invalid-impact-graph"
+            )
+            print(
+                "eval-core-principles: affected selection failed: "
+                + json.dumps(
+                    {"reason": reason, "detail": str(exc)}, sort_keys=True
+                ),
+                file=sys.stderr,
+            )
+            return 2
+    if args.explain:
+        print(
+            "eval-core-principles: --explain requires --gate affected",
+            file=sys.stderr,
+        )
+        return 2
     try:
         contract_bytes = contract_path.read_bytes()
         contract = json.loads(contract_bytes)
@@ -1969,10 +2357,20 @@ def main(argv: list[str] | None = None) -> int:
             root,
             contract,
             contract_sha256=contract_sha256,
+            release_projection=args.gate == "formal-release",
         )
     except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
-        report = _invalid_report(root, None, [str(exc)])
-    write_reports(root, report)
+        report = _invalid_report(
+            root,
+            None,
+            [str(exc)],
+            release_projection=args.gate == "formal-release",
+        )
+    write_reports(
+        root,
+        report,
+        release_projection=args.gate == "formal-release",
+    )
     selected_gate_status = (
         report["authoring_principles_status"]
         if args.gate == "authoring"

@@ -5724,7 +5724,11 @@ def _aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
     return summary
 
 
-def _write_reports(report: dict[str, Any]) -> None:
+def _write_reports(
+    report: dict[str, Any],
+    *,
+    release_projection: bool = False,
+) -> None:
     REPORT_JSON.parent.mkdir(parents=True, exist_ok=True)
     REPORT_JSON.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     lines = [
@@ -5757,17 +5761,19 @@ def _write_reports(report: dict[str, Any]) -> None:
     lines.extend(["", "## Limitations", "", *[f"- {item}" for item in report["limitations"]], ""])
     if report["errors"]:
         lines.extend(["## Errors", "", *[f"- {error}" for error in report["errors"]], ""])
-    REPORT_MD.write_text("\n".join(lines), encoding="utf-8")
+    if release_projection:
+        REPORT_MD.write_text("\n".join(lines), encoding="utf-8")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--no-write-report",
         action="store_true",
         help="validate fixtures without updating checked-in report artifacts",
     )
-    args = parser.parse_args()
+    parser.add_argument("--release-projection", action="store_true")
+    args = parser.parse_args(argv)
     try:
         professional, layer3_entries = _skill_registries()
         document = _load_json(FIXTURES)
@@ -5922,7 +5928,10 @@ def main() -> int:
         "errors": errors,
     }
     if not args.no_write_report:
-        _write_reports(report)
+        _write_reports(
+            report,
+            release_projection=args.release_projection,
+        )
     if errors:
         for error in errors:
             print(f"eval-agent-lightweight: ERROR: {error}", file=sys.stderr)

@@ -8,15 +8,16 @@ workflow for the same commit.
 Semantic Disposition, Readability, and Professional Completeness evidence
 semantics. This page owns only operator order and stop conditions.
 
-## Build And Ordinary Validation
+## Build And Local Full Regression
 
 Build the final tree through [Installation](INSTALLATION.md#build).
 [Build profiles](BUILD_PROFILES.md) owns profile composition and the generated
 manifest contract.
 
-Run the complete ordinary authoring path in [Validation](VALIDATION.md) once,
-after the last material edit. Do not duplicate individual producers before a
-failure identifies them as the diagnostic owner.
+Run the [local Full Regression](VALIDATION.md#local-full-regression) once after
+the last material edit. Core authoring owns its deterministic producer graph;
+do not duplicate individual producers before a failure identifies them as the
+diagnostic owner.
 
 ## Efficient Formal Release Flow
 
@@ -24,22 +25,23 @@ failure identifies them as the diagnostic owner.
    and generated-output repairs first. Require a clean tree and current tracked
    artifacts before formal validation.
 
-2. **Run the ordinary authoring path once.** A failure selects a targeted
+2. **Run the local Full Regression once.** A failure selects a targeted
    diagnostic. Repair the verified cause, rerun its targeted check, then rerun
-   the complete ordinary path once after the final repair.
+   the Full Regression once after the final repair.
 
 3. **Check current formal evidence before creating anything.** Check the four
-   selected evidence surfaces before creating review artifacts. Run both formal
-   gates on the frozen commit:
+   selected evidence surfaces before creating review artifacts. Run the Core
+   formal gate on the frozen commit:
 
 ```bash
 python3 scripts/eval-core-principles.py --gate formal-release
-python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review
 ```
 
-   If all four surfaces are current, create no expert panel. Continue only when
-   both commands pass. A failing command must name the stale or invalid surface;
-   do not infer that every surface needs replacement.
+   If all four surfaces are current, create no expert panel. This is a
+   conditional operator rule, not a statement of present status. Continue only
+   when Core's formal outcomes pass, including
+   `professionalism-formal-release-ready`. A failing outcome must name the stale or invalid
+   surface; do not infer that every surface needs replacement.
 
 4. **Refresh only diagnosed evidence.** Refresh only the stale surface. Batch
    every diagnosed repair for that surface, complete its independent review,
@@ -50,14 +52,49 @@ python3 scripts/validate-professionalism-regression.py --strict --require-expert
    exact locally validated commit or release tag. Package and publish only when
    that workflow passes for the same object ID.
 
-This flow has one ordinary pass and one formal pass on a successful candidate.
+This flow has one local Full Regression and one formal pass on a successful candidate.
 A repair invalidates only evidence affected by that repair. The final complete
 passes still run once after the last material edit.
 
-Current static evidence selectors are r25 Readability, r26 Semantic
-Disposition, r26 Root lifecycle, and r18 schema-3 Professional Completeness for
-all 189 non-Control packages. These static selectors do not prove that the
-final formal gates or same-commit remote workflow passed.
+For selector identity only, the canonical projection is: Current static
+evidence selectors are r26 Readability, r26 Semantic Disposition, r26 Root
+lifecycle, and r19 schema-3 Professional Completeness for all 189 non-Control
+packages. “Current” in that projection names the configured selector set; it
+does not attest the four surfaces' currentness. Readability r26 and full-fresh
+Professional Completeness r19 have complete decisions for their recorded
+inputs. Readability r26 is historical evidence with no recorded tracked
+tightening, detector false positive, or rewrite requirement under its bound
+Skill detector, but that detector is now stale against the current detector. R26 has
+`source_current=false`, status `panel-majority-stale`, remains storage-pending,
+and is not accepted for formal release. R19 is historical full-fresh evidence
+with no professional correction or unresolved professional disagreement under
+its bound contract, but that contract is now stale against the current
+Professional review contract. R19 remains storage-pending, is not accepted for
+formal release, and cannot authorize carry across the contract change. The
+Semantic Disposition application is `invalid` because its packet is stale
+against the current audit. Root lifecycle is
+`pending-changes`, with `snapshot_current=false` and no formal-release
+readiness. These static selectors do not prove that the final formal gates or
+same-commit remote workflow passed.
+
+The later owning refresh stages are [Semantic Disposition](#semantic-disposition)
+after the final audit and [Root lifecycle](#root-lifecycle) after the final
+content tree stabilizes. Formal Release requires a new current schema-2
+Readability review under the current Skill detector and a new schema-3
+full-fresh Professional Completeness round for all 189 current non-Control
+packages under the current review contract. Preserve r26 and r19 as immutable
+historical evidence; neither can satisfy its required new review, and r19
+cannot authorize carry. Until those stages complete, the professionalism JSON
+correctly reports `release_gate=release-not-ready`.
+
+`reports/professionalism-regression-report.json` is the sole machine-readable
+professionalism readiness authority. Its only producer is
+`scripts/validate-professionalism-regression.py`, which the Core Principles
+orchestrator runs and freshness-checks in dependency order. The formal-release
+Core run also requests `reports/professionalism-regression-report.md` as a
+release-only presentation projection. That Markdown is not an input or a
+second authority, and the authoring gate does not refresh it. Productization
+validates the saved JSON semantically without rerunning the producer.
 
 ## Conditional Evidence Refresh
 
@@ -156,8 +193,9 @@ authority.
 Regenerate only artifacts with a named generator. The
 [Scorecard](SCORECARD.md) is a handwritten expectations table, not generated
 status and not a current-tree pass report. Release status comes from current
-producer output and tracked evidence. The handoff records commands, the source
-commit, freshness, skipped checks, Unverified scope, and Residual risk.
+producer JSON and tracked evidence; the release-only Markdown is a human
+projection of that result. The handoff records commands, the source commit,
+freshness, skipped checks, Unverified scope, and Residual risk.
 
 ## Evidence Scope
 
@@ -171,8 +209,9 @@ marketplace publication, or installed user experience.
 ## Release Checklist
 
 - [ ] The candidate is one clean commit with current generated artifacts.
-- [ ] The complete ordinary path passed after the final material edit.
-- [ ] Both local formal commands passed for that commit.
+- [ ] The local Full Regression passed after the final material edit.
+- [ ] The local Core formal gate and its aggregate professionalism readiness
+      outcome passed for that commit.
 - [ ] Root, Semantic Disposition, Readability, and Professional Completeness
       selectors are current, tracked, byte-equal to `HEAD`, and clean.
 - [ ] Professional Completeness accepts all 189 packages with required fresh or

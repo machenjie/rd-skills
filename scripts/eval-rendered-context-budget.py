@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import re
@@ -1109,7 +1110,11 @@ def evaluate() -> dict[str, Any]:
     }
 
 
-def _write_reports(report: dict[str, Any]) -> None:
+def _write_reports(
+    report: dict[str, Any],
+    *,
+    release_projection: bool = False,
+) -> None:
     REPORT_JSON.parent.mkdir(parents=True, exist_ok=True)
     REPORT_JSON.write_text(
         json.dumps(report, indent=2, ensure_ascii=False) + "\n",
@@ -1195,16 +1200,20 @@ def _write_reports(report: dict[str, Any]) -> None:
     )
     if report["errors"]:
         lines.extend(["## Errors", "", *[f"- {item}" for item in report["errors"]], ""])
-    REPORT_MD.write_text("\n".join(lines), encoding="utf-8")
+    if release_projection:
+        REPORT_MD.write_text("\n".join(lines), encoding="utf-8")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--release-projection", action="store_true")
+    args = parser.parse_args(argv)
     try:
         report = evaluate()
     except (OSError, RuntimeError, ValueError) as exc:
         print(f"eval-rendered-context-budget: ERROR: {exc}", file=sys.stderr)
         return 1
-    _write_reports(report)
+    _write_reports(report, release_projection=args.release_projection)
     if report["errors"]:
         for error in report["errors"]:
             print(f"eval-rendered-context-budget: ERROR: {error}", file=sys.stderr)

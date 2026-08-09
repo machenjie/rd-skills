@@ -49,13 +49,25 @@ reports/professional-benchmarks-report.md
 reports/professional-benchmarks-report.json
 reports/professional-benchmarks-eval.md
 reports/professional-benchmarks-eval.json
-reports/professionalism-regression-report.md
 reports/professionalism-regression-report.json
-reports/professionalism-release-readiness.md
-reports/professionalism-release-readiness.json
 reports/skill-content-audit.md
 reports/skill-content-audit.json
 ```
+
+`reports/professionalism-regression-report.json` is the sole machine-readable
+professionalism readiness authority. Its only producer is
+`scripts/validate-professionalism-regression.py`; Core Principles owns the
+complete ordered freshness run. A formal-release Core run additionally emits
+`reports/professionalism-regression-report.md` as a release-only presentation
+projection. The Markdown is not a second authority, Core authoring does not
+refresh it, and productization validates the saved JSON semantically without
+rerunning the producer.
+
+The unique complete formal entrypoint is
+`python3 scripts/eval-core-principles.py --gate formal-release`. Core runs the
+producer once and requires `professionalism-formal-release-ready`, combining a
+successful producer result with `release_gate=release-ready` without replacing
+the granular expert, Root, lifecycle, or review-cost outcomes.
 
 `skill-professionalism-eval` remains a compatibility report for the current mixed
 static evaluation. `skill-professionalism-depth` is the professional-depth
@@ -88,24 +100,51 @@ not prove real-host
 accuracy, wall-clock performance, provider behavior, or installed user
 experience.
 
-Current static evidence selectors are r25 Readability, r26 Semantic
-Disposition, r26 Root lifecycle, and r18 schema-3 Professional Completeness for
-all 189 non-Control packages. These static selectors do not prove that the
-final formal gates or same-commit remote workflow passed.
+For selector identity only, the canonical projection is: Current static
+evidence selectors are r26 Readability, r26 Semantic Disposition, r26 Root
+lifecycle, and r19 schema-3 Professional Completeness for all 189 non-Control
+packages. “Current” in that projection identifies configured records, not
+formal currentness. Readability r26 and full-fresh Professional Completeness
+r19 have complete decisions for their recorded inputs. Readability remains
+historical evidence with no recorded tracked tightening, detector false
+positive, or rewrite requirement under its bound Skill detector. That detector
+is now stale against the current detector, so r26 has `source_current=false`,
+status `panel-majority-stale`, remains storage-pending, and is not accepted for
+formal release. R19 is historical full-fresh evidence that accepted all 189
+packages with no carry, correction, or unresolved professional disagreement
+under its bound contract. That contract is now stale against the current
+Professional review contract; r19 remains storage-pending, is not accepted for
+formal release, and cannot authorize carry across the contract change. The
+Semantic Disposition
+application is `invalid`
+because its packet is stale against the current audit. Root lifecycle is
+`pending-changes`, its snapshot is not current, and it is not
+formal-release-ready. These static selectors do not prove that the final formal
+gates or same-commit remote workflow passed.
 
-`content_readiness` schema 9 requires productization to regenerate the strict
-reports from fresh Root, Reference, coverage, and default release-review inputs.
-One producer run must reproduce all four regression/readiness JSON and Markdown
-artifacts byte-for-byte; the JSON reports must also agree semantically. The
-release-review config uses two schema-5 attestations. Each points to a separate
+The release operator later refreshes Semantic Disposition after the final
+audit, records the Root lifecycle snapshot after the final content tree
+stabilizes, creates a new current schema-2 Readability review under the current
+Skill detector, creates a new schema-3 full-fresh Professional Completeness
+round for all 189 current non-Control packages under the current review
+contract, checks in the current evidence, and reruns the Core formal gate.
+Preserve r26 and r19 as immutable historical evidence; neither can satisfy its
+required new review, and r19 cannot authorize carry.
+
+`content_readiness` schema 9 requires the producer to regenerate the strict
+report from fresh Root, Reference, coverage, and default release-review inputs.
+Core Principles enforces that freshness during its declared producer run;
+productization checks the resulting JSON's closed semantics without creating a
+second producer path. The release-review config uses two schema-5 attestations.
+Each points to a separate
 kind-specific packet, three unique no-abstention ballots, and a majority
 decision record. The default config and every declared artifact must match
 current bytes and the tracked `HEAD` blob.
 
-Do not cite target names such as `skill-professionalism-release-readiness.*` or
-`skill-professionalism-regression.*` as release evidence unless scripts generate
-them. The current release evidence is `professionalism-release-readiness.*` and
-`professionalism-regression-report.*`.
+Do not cite removed or unimplemented readiness aliases as release evidence.
+Machine consumers use `professionalism-regression-report.json`; the optional
+`professionalism-regression-report.md` exists only as the formal-release human
+projection.
 
 Recommended naming split:
 
@@ -733,7 +772,8 @@ python3 scripts/eval-professional-benchmarks.py
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/eval-professional-agent-samples.py --promoted-only --strict
 python3 scripts/validate-professionalism-regression.py --strict
-python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review  # formal release umbrella: both panels plus Root lifecycle
+python3 scripts/validate-professionalism-regression.py --strict --require-expert-content-review  # focused formal diagnostic; Core is the complete gate
+python3 scripts/eval-core-principles.py --gate formal-release
 python3 scripts/audit-skill-content.py --gate authoring
 python3 scripts/validate-skill-content-size.py
 ```

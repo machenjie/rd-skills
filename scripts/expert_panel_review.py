@@ -6164,148 +6164,32 @@ def _professional_review_bindings(
     return professional_carry.professional_review_bindings(targets)
 
 
+PROFESSIONAL_EVIDENCE_REVIEW_SOURCE_PATHS = (
+    "scripts/audit-skill-content.py",
+    "scripts/expert_panel_review.py",
+    "scripts/professional_completeness_carry_forward.py",
+    "scripts/validation_utils.py",
+)
+
+
+def _professional_evidence_review_contract_manifest() -> dict[str, object]:
+    """Return the versioned explicit repository source binding."""
+
+    return professional_carry.versioned_explicit_source_manifest(
+        contract_version="professional-evidence-review-and-carry-v2",
+        source_paths=PROFESSIONAL_EVIDENCE_REVIEW_SOURCE_PATHS,
+        repository_root=ROOT,
+    )
+
+
 @lru_cache(maxsize=1)
 def _professional_evidence_review_contract_fingerprint() -> str:
-    """Bind the focused evidence, qualification, adjacency, and carry rules.
+    """Return the aggregate digest of the explicit review-contract sources."""
 
-    The actual schema-2 rules remain owned by this panel module, so the focused
-    wrapper lives here.  The generic code-aware walker and pure carry/capsule
-    helpers live in the focused dependency-free module; it never imports this
-    6,000-line artifact/CLI module, which avoids a circular dependency.  Only
-    the reachable allowlisted callable closure and explicit contract constants
-    are hashed, not this whole script.
-    """
-
-    auditor = _load_skill_content_auditor()
-    roots = (
-        auditor._strip_fenced,
-        _markdown_frontmatter_lines,
-        _detector_unfenced_line_numbers,
-        _is_substantive_markdown_line,
-        _substantive_excerpt,
-        _markdown_source_declared_excluded_lines,
-        _markdown_table_cells,
-        _markdown_table_separator,
-        _source_declared_table_header,
-        _source_declared_narrative_fragments,
-        _professional_source_declared_skill_ids,
-        _professional_required_adjacency_candidates,
-        _professional_assertion_excerpt_sha256,
-        _professional_anchor_text,
-        _require_anchor_skills,
-        _require_evidence_token_overlap,
-        _validate_professional_examined_items,
-        _professional_voter_kind,
-        _validate_professional_target_qualification,
-        _validate_professional_qualification_claims,
-        _validate_professional_completeness_ballot_v2,
-        professional_carry.professional_materials_by_skill,
-        professional_carry.professional_review_bindings,
-        professional_carry.professional_prior_decision_dependencies,
-        professional_carry.plan_exact_professional_carry_forward,
-        professional_carry.project_professional_discovery_capsule,
-        professional_carry.validate_professional_discovery_capsule,
-        professional_carry.project_professional_review_capsule,
-        professional_carry.validate_professional_review_capsule,
-        _validate_professional_v3_review_plan_shape,
-        _professional_v3_review_plan,
-        _professional_v3_packet_limitations,
-        _professional_v3_full_rereview_input_projection,
-        _professional_v3_capsule_input_projection,
-        _professional_v3_packet_state,
-        _load_professional_v3_baseline,
-        validate_professional_discovery_capsule_v3,
-        validate_professional_candidate_request_v3,
-        validate_professional_review_capsule_v3,
-        _load_professional_v3_discovery_capsule_reference,
-        _load_professional_v3_candidate_request_reference,
-        _load_professional_v3_capsule_reference,
-        _professional_v3_target_scoped_capsule_materials,
-        _professional_v3_capsule_adjacency,
-        _professional_v3_ballot_scope_contract,
-        _validate_professional_v3_semantic_grounding,
-        _validate_professional_completeness_ballot_v3,
-        _professional_v3_fresh_target_decision,
-        _professional_v3_carried_target_decision,
-        _load_professional_v3_fresh_origin_target,
-        _professional_v3_validate_decision_projection,
-        _professional_v3_summary_from_rows,
-    )
-    constants = {
-        "criteria": PROFESSIONAL_COMPLETENESS_CRITERIA,
-        "domain_critical_criteria": PROFESSIONAL_DOMAIN_CRITICAL_CRITERIA,
-        "ordinary_criteria": PROFESSIONAL_ORDINARY_CRITERIA,
-        "criterion_values": PROFESSIONAL_CRITERION_VALUES,
-        "review_outcomes": PROFESSIONAL_REVIEW_OUTCOMES,
-        "qualification_expertise_tags": SKILL_EXPERTISE_TAGS,
-        "architecture_expertise_tag": PROFESSIONAL_ARCHITECTURE_EXPERTISE_TAG,
-        "adjacency_algorithm": PROFESSIONAL_ADJACENCY_ALGORITHM,
-        "adjacency_signal_weights": PROFESSIONAL_ADJACENCY_SIGNAL_WEIGHTS,
-        "adjacency_review_origins": PROFESSIONAL_ADJACENCY_REVIEW_ORIGINS,
-        "adjacency_dispositions": PROFESSIONAL_ADJACENCY_DISPOSITIONS,
-        "adjacency_selection_contract": (
-            _professional_adjacency_selection_contract()
-        ),
-        "panel_contract": _professional_completeness_panel_contract(),
-        "evidence_anchor_fields": PROFESSIONAL_EVIDENCE_ANCHOR_FIELDS,
-        "evidence_assertion_fields": PROFESSIONAL_EVIDENCE_ASSERTION_FIELDS,
-        "failure_mode_fields": PROFESSIONAL_FAILURE_MODE_FIELDS,
-        "omission_candidate_fields": PROFESSIONAL_OMISSION_CANDIDATE_FIELDS,
-        "adjacency_review_fields": PROFESSIONAL_ADJACENCY_REVIEW_FIELDS,
-        "carry_contract": professional_carry.PROFESSIONAL_CARRY_CONTRACT,
-        "capsule_contract": professional_carry.PROFESSIONAL_CAPSULE_CONTRACT,
-        "discovery_capsule_contract": (
-            professional_carry.PROFESSIONAL_DISCOVERY_CAPSULE_CONTRACT
-        ),
-        "schema3_packet_fields": PROFESSIONAL_V3_PACKET_FIELDS,
-        "schema3_ballot_fields": PROFESSIONAL_V3_BALLOT_FIELDS,
-        "schema3_capsule_fields": PROFESSIONAL_V3_CAPSULE_FIELDS,
-        "schema3_discovery_capsule_fields": (
-            PROFESSIONAL_V3_DISCOVERY_CAPSULE_FIELDS
-        ),
-        "schema3_candidate_request_fields": (
-            PROFESSIONAL_V3_CANDIDATE_REQUEST_FIELDS
-        ),
-        "schema3_candidate_request_row_fields": (
-            PROFESSIONAL_V3_CANDIDATE_REQUEST_ROW_FIELDS
-        ),
-        "schema3_decision_fields": PROFESSIONAL_V3_DECISION_FIELDS,
-        "schema3_target_decision_fields": (
-            PROFESSIONAL_V3_TARGET_DECISION_FIELDS
-        ),
-        "schema3_semantic_grounding_contract": (
-            _professional_v3_grounding_contract()
-        ),
-        "schema3_grounding_stop_words": sorted(
-            PROFESSIONAL_V3_GROUNDING_STOP_WORDS
-        ),
-        "schema3_incremental_decision_method": (
-            PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD
-        ),
-        "schema3_max_plan_lineage_depth": (
-            PROFESSIONAL_COMPLETENESS_MAX_PLAN_LINEAGE_DEPTH
-        ),
-    }
-    return professional_carry.code_aware_contract_fingerprint(
-        contract_name="professional-evidence-review-and-carry-v1",
-        root_callables=roots,
-        constants=constants,
-        repository_root=ROOT,
-        opaque_repository_callables=(
-            _professional_v3_packet_state,
-            _load_professional_v3_discovery_capsule_reference,
-            _load_professional_v3_candidate_request_reference,
-            _load_professional_v3_capsule_reference,
-            validate_professional_discovery_capsule_v3,
-            validate_professional_candidate_request_v3,
-            validate_professional_review_capsule_v3,
-            _load_professional_v3_baseline,
-            _read_validated_json_artifact_reference,
-            _professional_v3_invocation_cache,
-            _professional_v3_cached_json_artifact,
-            _professional_v3_bind_json_artifact_path,
-            _professional_v3_cached_canonical_size,
-        ),
+    return str(
+        _professional_evidence_review_contract_manifest()[
+            "aggregate_source_digest"
+        ]
     )
 
 
@@ -14235,7 +14119,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         )
         prepare.add_argument("--audit", default="reports/skill-content-audit.json")
         prepare.add_argument(
-            "--readiness", default="reports/professionalism-release-readiness.json"
+            "--readiness", default="reports/professionalism-regression-report.json"
         )
         prepare.add_argument("--review-id", required=True)
         prepare.add_argument("--created-on", required=True)
