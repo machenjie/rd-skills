@@ -1562,9 +1562,38 @@ def _ordered_command_errors(path: Path) -> list[str]:
     return errors
 
 
+def _ci_authoring_gate_errors(path: Path) -> list[str]:
+    """Require the canonical CI gates with affected tests replacing full discovery."""
+
+    text = path.read_text(encoding="utf-8")
+    full_discovery = "python3 -m unittest discover -s tests"
+    affected_runner = "python3 scripts/run-ci-tests.py run"
+    errors: list[str] = []
+    position = 0
+    for command in ORDINARY_GATE_COMMANDS:
+        if command == full_discovery:
+            continue
+        found = text.find(command, position)
+        if found < 0:
+            errors.append(
+                f"{path.name}: missing or out-of-order ordinary gate command {command}"
+            )
+            continue
+        position = found + len(command)
+    if full_discovery in text:
+        errors.append(
+            f"{path.name}: CI must replace unconditional full discovery with affected tests"
+        )
+    if text.count(affected_runner) != 1:
+        errors.append(
+            f"{path.name}: CI must contain exactly one affected-test runner projection"
+        )
+    return errors
+
+
 def _authoring_gate_consistency_errors(root: Path) -> list[str]:
     errors: list[str] = []
-    for relative in ("AGENTS.md", "docs/VALIDATION.md", ".github/workflows/ci.yml"):
+    for relative in ("AGENTS.md", "docs/VALIDATION.md"):
         path = root / relative
         if not path.is_file():
             errors.append(f"missing ordinary authoring gate owner: {relative}")
@@ -1572,6 +1601,14 @@ def _authoring_gate_consistency_errors(root: Path) -> list[str]:
         errors.extend(
             error.replace(path.name, relative, 1)
             for error in _ordered_command_errors(path)
+        )
+    ci_path = root / ".github/workflows/ci.yml"
+    if not ci_path.is_file():
+        errors.append("missing ordinary authoring gate owner: .github/workflows/ci.yml")
+    else:
+        errors.extend(
+            error.replace(ci_path.name, ".github/workflows/ci.yml", 1)
+            for error in _ci_authoring_gate_errors(ci_path)
         )
 
     references = {

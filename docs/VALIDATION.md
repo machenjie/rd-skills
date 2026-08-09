@@ -51,6 +51,19 @@ from `.github/workflows/formal-release.yml`, triggered manually or by a
 `v*` tag. It adds the formal gate, independent expert-review gate, repository
 execution set, and final generated-artifact diff check.
 
+Ordinary CI keeps every canonical authoring, documentation, code-generation,
+quickstart, and freshness command, but replaces unconditional unit-test
+discovery with two deterministic affected-test shards. The selector at
+`scripts/run-ci-tests.py` projects only the mapping and fallback policy in
+`src/control-model/core-contracts.json#/ci_validation_contract`. Pull requests
+compare the event base SHA with the checked-out `github.sha`; pushes compare
+the event `before` SHA with `github.sha`. A changed test under `tests/` selects
+itself, and mapped source paths union their owner tests. Deleted, unmatched,
+malformed, empty, or unavailable revision/diff inputs fail closed to the full
+`tests/**/test*.py` suite. Selection output records each path's producer,
+tests, coverage, and fallback rationale. Local authoring and formal-release
+commands above continue to run the full suite.
+
 CI installs the project and declared dependencies from a `git archive` in a
 temporary directory. Packaging metadata such as `*.egg-info` must not appear
 in or be hidden from the validation checkout.

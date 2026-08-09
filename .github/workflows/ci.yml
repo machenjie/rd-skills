@@ -8,10 +8,12 @@ on:
       - main
 
 jobs:
-  validate:
+  canonical-validation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -36,9 +38,8 @@ jobs:
           python3 scripts/validate-productization-assets.py
           python3 scripts/validate-open-source-readiness.py --require-pass
 
-      - name: Unit tests and code generation
+      - name: Code generation
         run: |
-          python3 -m unittest discover -s tests
           python3 scripts/validate-codegen-benchmarks.py
           python3 scripts/run-codegen-benchmarks.py --limit 3
 
@@ -48,6 +49,35 @@ jobs:
           python3 scripts/quickstart.py --agent claude --scope project --target /tmp/changeforge-quickstart-claude --dry-run
           python3 scripts/quickstart.py --agent copilot --scope project --target /tmp/changeforge-quickstart-copilot --dry-run
           python3 scripts/quickstart.py --agent openai-api --dry-run
+
+      - name: Generated artifact freshness
+        run: git diff --exit-code
+
+  affected-unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install validation dependencies from isolated source
+        run: |
+          install_root="$(mktemp -d)"
+          git archive --format=tar HEAD | tar -xf - -C "$install_root"
+          python3 -m pip install --disable-pip-version-check "$install_root"
+
+      - name: Run affected unit-test shard
+        env:
+          CI_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          CI_HEAD_SHA: ${{ github.sha }}
+        run: python3 scripts/run-ci-tests.py run --shard "${{ matrix.shard }}"
 
       - name: Generated artifact freshness
         run: git diff --exit-code

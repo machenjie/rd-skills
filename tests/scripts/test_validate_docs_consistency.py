@@ -718,6 +718,32 @@ class DocsCoreProjectionTests(unittest.TestCase):
 
             self.assertTrue(any("out-of-order" in error for error in errors), errors)
 
+    def test_ci_requires_affected_runner_instead_of_unconditional_discovery(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "ci.yml"
+            commands = [
+                command
+                for command in self.validator.ORDINARY_GATE_COMMANDS
+                if command != "python3 -m unittest discover -s tests"
+            ]
+            path.write_text(
+                "\n".join(
+                    [*commands, "python3 scripts/run-ci-tests.py run --shard 0"]
+                ),
+                encoding="utf-8",
+            )
+            self.assertEqual([], self.validator._ci_authoring_gate_errors(path))
+
+            path.write_text(
+                "\n".join(
+                    [*commands, "python3 -m unittest discover -s tests"]
+                ),
+                encoding="utf-8",
+            )
+            errors = self.validator._ci_authoring_gate_errors(path)
+            self.assertTrue(any("replace unconditional" in error for error in errors))
+            self.assertTrue(any("exactly one affected-test" in error for error in errors))
+
     def test_completion_term_drift_fails_docs_projection(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)

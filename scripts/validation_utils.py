@@ -2339,6 +2339,187 @@ def professional_review_risk_matrix_block(matrix: object) -> str:
     return "\n".join(lines)
 
 
+def validate_ci_validation_contract(data: object, root: Path) -> list[str]:
+    """Validate the single Core-owned CI affected-test selection contract."""
+
+    errors: list[str] = []
+    if not isinstance(data, dict):
+        return ["authoritative control model must be an object"]
+    contract = data.get("ci_validation_contract")
+    contract_fields = {
+        "schema_version",
+        "runner",
+        "shard_count",
+        "full_suite",
+        "test_self_patterns",
+        "mappings",
+    }
+    if not isinstance(contract, dict) or set(contract) != contract_fields:
+        actual = sorted(contract) if isinstance(contract, dict) else []
+        errors.append(
+            "ci_validation_contract fields must be exactly "
+            f"{sorted(contract_fields)}, found {actual}"
+        )
+        return errors
+    if contract["schema_version"] != 1:
+        errors.append("ci_validation_contract.schema_version must be 1")
+    runner = contract["runner"]
+    if runner != "scripts/run-ci-tests.py" or not (root / str(runner)).is_file():
+        errors.append(
+            "ci_validation_contract.runner must name existing scripts/run-ci-tests.py"
+        )
+    if contract["shard_count"] != 2:
+        errors.append("ci_validation_contract.shard_count must be exactly 2")
+    if contract["full_suite"] != {"root": "tests", "pattern": "test*.py"}:
+        errors.append(
+            "ci_validation_contract.full_suite must define recursive tests/test*.py discovery"
+        )
+    if contract["test_self_patterns"] != ["tests/**/test*.py"]:
+        errors.append(
+            "ci_validation_contract.test_self_patterns must contain only tests/**/test*.py"
+        )
+
+    acceptance = data.get("principle_acceptance_contract")
+    producer_ids = (
+        {
+            producer.get("id")
+            for producer in acceptance.get("producers", [])
+            if isinstance(producer, dict)
+            and isinstance(producer.get("id"), str)
+        }
+        if isinstance(acceptance, dict)
+        else set()
+    )
+    authorities = (
+        acceptance.get("authorities", []) if isinstance(acceptance, dict) else []
+    )
+    authority_matches = [
+        authority
+        for authority in authorities
+        if isinstance(authority, dict)
+        and (
+            authority.get("id") == "ci-validation-authority"
+            or authority.get("pointer") == "/ci_validation_contract"
+        )
+    ]
+    if (
+        len(authority_matches) != 1
+        or authority_matches[0].get("id") != "ci-validation-authority"
+        or authority_matches[0].get("pointer") != "/ci_validation_contract"
+    ):
+        errors.append(
+            "ci_validation_contract must have exactly one ci-validation-authority pointer"
+        )
+
+    mappings = contract["mappings"]
+    if not isinstance(mappings, list) or not mappings:
+        errors.append("ci_validation_contract.mappings must be non-empty")
+        return errors
+    mapping_fields = {
+        "id",
+        "path_patterns",
+        "producer_ids",
+        "test_modules",
+        "coverage",
+    }
+    seen_ids: set[str] = set()
+    for index, mapping in enumerate(mappings):
+        context = f"ci_validation_contract.mappings[{index}]"
+        if not isinstance(mapping, dict) or set(mapping) != mapping_fields:
+            errors.append(f"{context} fields must be exactly {sorted(mapping_fields)}")
+            continue
+        mapping_id = mapping["id"]
+        if not isinstance(mapping_id, str) or re.fullmatch(
+            r"[a-z0-9]+(?:-[a-z0-9]+)*", mapping_id
+        ) is None:
+            errors.append(f"{context}.id must be kebab-case")
+        elif mapping_id in seen_ids:
+            errors.append("ci_validation_contract mapping ids must be unique")
+        else:
+            seen_ids.add(mapping_id)
+
+        patterns = mapping["path_patterns"]
+        if (
+            not isinstance(patterns, list)
+            or not patterns
+            or any(
+                not isinstance(pattern, str) or not pattern for pattern in patterns
+            )
+            or len(patterns) != len(set(patterns))
+        ):
+            errors.append(f"{context}.path_patterns must be non-empty unique strings")
+        else:
+            for pattern in patterns:
+                path = PurePosixPath(pattern)
+                if (
+                    path.is_absolute()
+                    or not path.parts
+                    or ".." in path.parts
+                    or "\\" in pattern
+                    or "\x00" in pattern
+                ):
+                    errors.append(
+                        f"{context}.path_patterns contains unsafe pattern {pattern!r}"
+                    )
+
+        mapped_producers = mapping["producer_ids"]
+        if (
+            not isinstance(mapped_producers, list)
+            or not mapped_producers
+            or any(
+                not isinstance(producer_id, str) or not producer_id
+                for producer_id in mapped_producers
+            )
+            or len(mapped_producers) != len(set(mapped_producers))
+        ):
+            errors.append(f"{context}.producer_ids must be non-empty unique strings")
+        else:
+            for producer_id in mapped_producers:
+                if producer_id not in producer_ids:
+                    errors.append(
+                        f"{context}.producer_ids contains unknown producer id "
+                        f"{producer_id!r}"
+                    )
+
+        test_modules = mapping["test_modules"]
+        if (
+            not isinstance(test_modules, list)
+            or any(not isinstance(module, str) or not module for module in test_modules)
+            or len(test_modules) != len(set(test_modules))
+        ):
+            errors.append(f"{context}.test_modules must be unique strings")
+            test_modules = []
+        for module in test_modules:
+            module_path = PurePosixPath(module)
+            if (
+                module_path.is_absolute()
+                or not module_path.parts
+                or module_path.parts[0] != "tests"
+                or ".." in module_path.parts
+                or module_path.suffix != ".py"
+                or not module_path.name.startswith("test")
+            ):
+                errors.append(
+                    f"{context}.test_modules must contain safe tests/ test module paths"
+                )
+            elif not (root / module_path).is_file():
+                errors.append(
+                    f"{context}.test module does not exist: {module_path.as_posix()}"
+                )
+        coverage = mapping["coverage"]
+        if coverage not in {"unit-tests", "canonical-producer"}:
+            errors.append(
+                f"{context}.coverage must be unit-tests or canonical-producer"
+            )
+        elif coverage == "unit-tests" and not test_modules:
+            errors.append(f"{context}.unit-tests coverage requires test modules")
+        elif coverage == "canonical-producer" and test_modules:
+            errors.append(
+                f"{context}.canonical-producer coverage must not duplicate unit tests"
+            )
+    return errors
+
+
 def validate_core_contracts(data: object) -> list[str]:
     """Validate the complete authoritative control-model shape and invariants."""
 
@@ -2496,6 +2677,7 @@ def validate_core_contracts(data: object) -> list[str]:
         "kind",
         "core_principles",
         "principle_acceptance_contract",
+        "ci_validation_contract",
         "roles",
         "external_read_contract",
         "implementation_discipline_contract",
@@ -2522,6 +2704,7 @@ def validate_core_contracts(data: object) -> list[str]:
         )
 
     errors.extend(validate_principle_acceptance_contract(data, ROOT))
+    errors.extend(validate_ci_validation_contract(data, ROOT))
 
     role_names = {
         "main-control-agent",
